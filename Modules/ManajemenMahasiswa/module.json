@@ -1,0 +1,11 @@
+{
+    "name": "ManajemenMahasiswa",
+    "alias": "manajemenmahasiswa",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\ManajemenMahasiswa\\Providers\\ManajemenMahasiswaServiceProvider"
+    ],
+    "files": []
+}

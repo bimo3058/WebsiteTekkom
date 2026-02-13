@@ -1,0 +1,11 @@
+{
+    "name": "BankSoal",
+    "alias": "banksoal",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\BankSoal\\Providers\\BankSoalServiceProvider"
+    ],
+    "files": []
+}

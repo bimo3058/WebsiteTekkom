@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/manajemenmahasiswa",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\ManajemenMahasiswa\\": "app/",
+            "Modules\\ManajemenMahasiswa\\Database\\Factories\\": "database/factories/",
+            "Modules\\ManajemenMahasiswa\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\ManajemenMahasiswa\\Tests\\": "tests/"
+        }
+    }
+}
