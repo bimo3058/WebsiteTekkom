@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🎓 Sistem Web Akademik Terintegrasi Teknik Komputer
+# 🎓 Web Akademik Terintegrasi Teknik Komputer
 
 ### *Laravel Modular Monolith Architecture*
 
@@ -37,7 +37,7 @@
 
 ## 🌟 Overview
 
-**Integrated Academic System** adalah platform akademik terpusat yang dibangun dengan **Laravel Modular Architecture** dan **Supabase** sebagai database backend, menggabungkan empat sistem utama dalam satu codebase untuk efisiensi dan konsistensi data.
+**Web Akademik Terintegrasi Teknik Komputer** adalah platform akademik terpusat yang dibangun dengan **Laravel Modular Architecture** dan **Supabase** sebagai database backend, menggabungkan empat sistem utama dalam satu codebase untuk efisiensi dan konsistensi data.
 
 ### ✨ Key Features
 
@@ -156,8 +156,8 @@ integrated-academic-system/
 
 ### Prerequisites
 
-- PHP >= 8.2
-- Composer >= 2.x
+- PHP >= 8.2.12
+- Composer >= 2.9.5
 - Supabase Account (or PostgreSQL >= 14)
 - Node.js >= 18 (optional, for frontend assets)
 
