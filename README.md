@@ -123,7 +123,7 @@ Surat menyurat dan manajemen dokumen internal
 ## 📂 Project Structure
 
 ```
-integrated-academic-system/
+WebsiteTekkom/
 ├── app/
 │   ├── Http/
 │   ├── Models/
@@ -164,8 +164,8 @@ integrated-academic-system/
 ### 1️⃣ Clone Repository
 
 ```bash
-git clone <repository-url>
-cd integrated-academic-system
+git clone https://github.com/bimo3058/WebsiteTekkom.git
+cd WebsiteTekkom
 ```
 
 ### 2️⃣ Install Dependencies
