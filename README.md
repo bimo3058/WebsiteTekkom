@@ -32,6 +32,7 @@
 - [Performance Configuration](#-performance-configuration)
 - [Troubleshooting](#-troubleshooting)
 - [Future Roadmap](#-future-roadmap)
+- [Contributor](#-contributor)
 
 ---
 
@@ -728,7 +729,7 @@ Struktur modular ini mendukung pengembangan ke arah:
 
 ---
 
-## 🤝 Contributing
+## 🤝 Contributor
 
 ### Development Team
 
@@ -741,8 +742,6 @@ Struktur modular ini mendukung pengembangan ke arah:
 ---
 
 <div align="center">
-
-**⭐ Star this repository if you find it helpful!**
 
 Made with ❤️ by Tim Capstone
 
