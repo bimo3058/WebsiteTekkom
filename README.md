@@ -249,7 +249,7 @@ Visit: **http://127.0.0.1:8000**
 1. Visit [Supabase Dashboard](https://app.supabase.com)
 2. Click **New Project**
 3. Fill in project details:
-   - **Name:** `integrated-academic-system`
+   - **Name:** `laravel`
    - **Database Password:** (save this securely)
    - **Region:** Choose closest to your users
 
