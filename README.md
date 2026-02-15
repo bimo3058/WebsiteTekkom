@@ -727,8 +727,6 @@ Struktur modular ini mendukung pengembangan ke arah:
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTING.md) first.
-
 ### Development Team
 
 - **Project Lead:** Bimo Kusumo Putro Wicaksono
@@ -743,8 +741,6 @@ Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTIN
 
 **⭐ Star this repository if you find it helpful!**
 
-Made with ❤️ by [Your Team Name]
-
-[🔝 Back to Top](#-sistem-web-akademik-terintegrasi-teknik-komputer)
+Made with ❤️ by Tim Capstone
 
 </div>
