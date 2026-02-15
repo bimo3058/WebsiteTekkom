@@ -1,10 +1,11 @@
 <div align="center">
 
-# 🎓 Integrated Academic System
+# 🎓 Sistem Web Akademik Terintegrasi Teknik Komputer
 
 ### *Laravel Modular Monolith Architecture*
 
 [![Laravel](https://img.shields.io/badge/Laravel-11.x-FF2D20?style=for-the-badge&logo=laravel&logoColor=white)](https://laravel.com)
+[![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?style=for-the-badge&logo=supabase&logoColor=white)](https://supabase.com)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org)
 [![PHP](https://img.shields.io/badge/PHP-8.2+-777BB4?style=for-the-badge&logo=php&logoColor=white)](https://php.net)
 
@@ -36,11 +37,12 @@
 
 ## 🌟 Overview
 
-**Integrated Academic System** adalah platform akademik terpusat yang dibangun dengan **Laravel Modular Architecture**, menggabungkan empat sistem utama dalam satu codebase untuk efisiensi dan konsistensi data.
+**Integrated Academic System** adalah platform akademik terpusat yang dibangun dengan **Laravel Modular Architecture** dan **Supabase** sebagai database backend, menggabungkan empat sistem utama dalam satu codebase untuk efisiensi dan konsistensi data.
 
 ### ✨ Key Features
 
 - 🎯 **Modular Architecture** - Setiap modul independen namun terintegrasi
+- 🟢 **Supabase Backend** - PostgreSQL hosting dengan realtime features
 - 🗄️ **Single Database** - Satu database PostgreSQL terpusat
 - 🔐 **Role-Based Access Control** - 4 level user roles
 - ⚡ **Optimized Performance** - Siap untuk production environment
@@ -112,7 +114,7 @@ Surat menyurat dan manajemen dokumen internal
 └──────────────────┬──────────────────────────┘
                    │
 ┌──────────────────▼──────────────────────────┐
-│    PostgreSQL Database (Supabase/Local)     │
+│      🟢 Supabase (PostgreSQL Database)      │
 └─────────────────────────────────────────────┘
 ```
 
@@ -156,7 +158,7 @@ integrated-academic-system/
 
 - PHP >= 8.2
 - Composer >= 2.x
-- PostgreSQL >= 14
+- Supabase Account (or PostgreSQL >= 14)
 - Node.js >= 18 (optional, for frontend assets)
 
 ### 1️⃣ Clone Repository
@@ -184,16 +186,35 @@ php artisan key:generate
 
 ### 4️⃣ Configure Database
 
+#### Option A: Using Supabase (Recommended)
+
+1. Create a new project at [Supabase Dashboard](https://app.supabase.com)
+2. Go to **Project Settings** → **Database**
+3. Copy connection details
+
 Edit `.env` file:
 
 ```env
 DB_CONNECTION=pgsql
-DB_HOST=your-database-host
+DB_HOST=db.your-project-ref.supabase.co
+DB_PORT=5432
+DB_DATABASE=postgres
+DB_USERNAME=postgres
+DB_PASSWORD=your-supabase-password
+```
+
+#### Option B: Using Local PostgreSQL
+
+```env
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
 DB_PORT=5432
 DB_DATABASE=your-database-name
 DB_USERNAME=your-username
 DB_PASSWORD=your-password
 ```
+
+> 💡 **Tip:** Supabase menyediakan hosting database gratis dengan 500MB storage dan realtime features.
 
 ### 5️⃣ Run Migrations
 
@@ -208,6 +229,156 @@ php artisan serve
 ```
 
 Visit: **http://127.0.0.1:8000**
+
+---
+
+## 🟢 Supabase Configuration
+
+### Why Supabase?
+
+- ✅ **Free Tier:** 500MB database, unlimited API requests
+- ✅ **Auto Backup:** Automatic daily backups
+- ✅ **Realtime:** Built-in realtime subscriptions
+- ✅ **Global CDN:** Fast worldwide access
+- ✅ **SSL Connection:** Secure by default
+
+### Setup Guide
+
+#### 1. Create Supabase Project
+
+1. Visit [Supabase Dashboard](https://app.supabase.com)
+2. Click **New Project**
+3. Fill in project details:
+   - **Name:** `integrated-academic-system`
+   - **Database Password:** (save this securely)
+   - **Region:** Choose closest to your users
+
+#### 2. Get Connection String
+
+Go to **Project Settings** → **Database** → **Connection String**
+
+**URI Format:**
+```
+postgresql://postgres:[YOUR-PASSWORD]@db.your-ref.supabase.co:5432/postgres
+```
+
+**Connection pooling (recommended for production):**
+```
+postgresql://postgres:[YOUR-PASSWORD]@db.your-ref.supabase.co:6543/postgres?pgbouncer=true
+```
+
+#### 3. Configure Laravel
+
+Update `.env`:
+
+```env
+# Supabase Database
+DB_CONNECTION=pgsql
+DB_HOST=db.xxxxxxxxxxxxxx.supabase.co
+DB_PORT=5432
+DB_DATABASE=postgres
+DB_USERNAME=postgres
+DB_PASSWORD=your-secure-password
+
+# For connection pooling (production)
+# DB_PORT=6543
+```
+
+#### 4. Test Connection
+
+```bash
+php artisan db:show
+```
+
+Expected output:
+```
+PostgreSQL ................................................ 15.x
+Database .................................................. postgres
+Host ...................................................... db.xxxxx.supabase.co
+Port ...................................................... 5432
+Username .................................................. postgres
+```
+
+### Supabase Features Integration
+
+#### Row Level Security (RLS)
+
+Supabase mendukung RLS untuk keamanan ekstra. Aktifkan di Supabase Dashboard:
+
+```sql
+-- Example: Enable RLS for capstone_topics
+ALTER TABLE capstone_topics ENABLE ROW LEVEL SECURITY;
+
+-- Create policy
+CREATE POLICY "Students can view their own topics"
+ON capstone_topics FOR SELECT
+USING (auth.uid() = student_id);
+```
+
+#### Realtime Subscriptions
+
+Enable realtime untuk tabel tertentu di **Database** → **Replication**:
+
+```javascript
+// Frontend example
+const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
+
+supabase
+  .channel('capstone-changes')
+  .on('postgres_changes', 
+    { event: '*', schema: 'public', table: 'capstone_topics' },
+    (payload) => console.log('Change detected:', payload)
+  )
+  .subscribe()
+```
+
+#### Storage for Files
+
+Gunakan Supabase Storage untuk upload file:
+
+```php
+// Laravel integration with Supabase Storage
+// Install: composer require supabase/supabase-php
+
+use Supabase\SupabaseClient;
+
+$supabase = new SupabaseClient(
+    env('SUPABASE_URL'),
+    env('SUPABASE_KEY')
+);
+
+// Upload file
+$file = $request->file('document');
+$supabase->storage
+    ->from('capstone-documents')
+    ->upload("documents/{$filename}", $file);
+```
+
+### Supabase CLI (Optional)
+
+Install Supabase CLI untuk local development:
+
+```bash
+# Install
+npm install -g supabase
+
+# Login
+supabase login
+
+# Link project
+supabase link --project-ref your-project-ref
+
+# Pull remote schema
+supabase db pull
+```
+
+### Monitoring & Analytics
+
+Akses **Database** → **Reports** untuk:
+- Query performance
+- Connection pooling stats
+- Database size
+- API usage
 
 ---
 
@@ -480,6 +651,46 @@ php artisan clear-compiled
 ```
 </details>
 
+<details>
+<summary><b>❌ Supabase connection timeout</b></summary>
+
+**Solution:**
+1. Check if your IP is allowed in Supabase Dashboard
+   - Go to **Project Settings** → **Database** → **Connection Pooling**
+   - Disable "Restrict database access to dedicated IPs" for development
+   
+2. Try connection pooling port:
+```env
+DB_PORT=6543  # Instead of 5432
+```
+
+3. Test connection:
+```bash
+php artisan db:show
+php artisan tinker
+>>> DB::connection()->getPdo();
+```
+</details>
+
+<details>
+<summary><b>❌ SSL connection error with Supabase</b></summary>
+
+**Solution:**
+Add SSL mode to database config in `config/database.php`:
+
+```php
+'pgsql' => [
+    // ... other config
+    'sslmode' => env('DB_SSLMODE', 'prefer'),
+],
+```
+
+Then in `.env`:
+```env
+DB_SSLMODE=require
+```
+</details>
+
 ---
 
 ## 🚀 Future Roadmap
@@ -500,9 +711,17 @@ Struktur modular ini mendukung pengembangan ke arah:
 ## 📚 Documentation
 
 - [Laravel Documentation](https://laravel.com/docs)
+- [Supabase Documentation](https://supabase.com/docs)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
 - [Module Architecture Guide](docs/ARCHITECTURE.md)
 - [API Documentation](docs/API.md)
+
+### Supabase Resources
+
+- 📖 [Supabase with Laravel Guide](https://supabase.com/docs/guides/getting-started/tutorials/with-laravel)
+- 🔐 [Row Level Security](https://supabase.com/docs/guides/auth/row-level-security)
+- 💾 [Storage Management](https://supabase.com/docs/guides/storage)
+- ⚡ [Realtime Subscriptions](https://supabase.com/docs/guides/realtime)
 
 ---
 
@@ -512,26 +731,11 @@ Contributions are welcome! Please read our [Contributing Guidelines](CONTRIBUTIN
 
 ### Development Team
 
-- **Project Lead:** [Your Name]
-- **Backend Team:** [Team Members]
-- **Frontend Team:** [Team Members]
-- **Database Admin:** [Team Members]
-
----
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
----
-
-## 📞 Support
-
-Butuh bantuan? Hubungi kami:
-
-- 📧 Email: support@yourdomain.com
-- 💬 Slack: [workspace-name]
-- 🐛 Issues: [GitHub Issues](link-to-issues)
+- **Project Lead:** Bimo Kusumo Putro Wicaksono
+- **Bank Soal:** Dzaki Eka Atmaja, Evan Adkara Christian P, Nabil Bintang Ardiansyah P.  
+- **Capstone + TA:** Ananda Prida Yusuf S, Fayyadh Muhammad Habibie, Muhammad Riza Saputra
+- **E-Office:** Andhinee Clarisaa Tanasale, Cetta Masinda Amany, Elvina Nasywa Ariyani
+- **Manajemen Kemahasiswaan + KP:** Devarlo Rahadyan Razan, Muhammad Reswara Suryawan, Surya Hari Putra, Syahbana Hatab
 
 ---
 
@@ -541,6 +745,6 @@ Butuh bantuan? Hubungi kami:
 
 Made with ❤️ by [Your Team Name]
 
-[🔝 Back to Top](#-integrated-academic-system)
+[🔝 Back to Top](#-sistem-web-akademik-terintegrasi-teknik-komputer)
 
 </div>
