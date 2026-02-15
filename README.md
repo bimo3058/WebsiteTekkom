@@ -449,6 +449,8 @@ php artisan make:migration create_users_table
 **Module-specific migration:**
 ```bash
 php artisan make:migration create_capstone_periods_table --path=Modules/Capstone/Database/Migrations
+atau
+php artisan module:make-migration create_capstone_periods_table <nama module yang dituju>
 ```
 
 ---
