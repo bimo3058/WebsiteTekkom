@@ -19,6 +19,7 @@
 
 ## 📋 Table of Contents
 
+- [Contributor](#-contributor)
 - [Overview](#-overview)
 - [System Modules](#-system-modules)
 - [System Architecture](#-system-architecture)
@@ -32,7 +33,18 @@
 - [Performance Configuration](#-performance-configuration)
 - [Troubleshooting](#-troubleshooting)
 - [Future Roadmap](#-future-roadmap)
-- [Contributor](#-contributor)
+
+---
+
+## 🤝 Contributor
+
+### Development Team
+
+- **Project Lead:** Bimo Kusumo Putro Wicaksono
+- **Bank Soal:** Dzaki Eka Atmaja, Evan Adkara Christian P, Nabil Bintang Ardiansyah P.  
+- **Capstone + TA:** Ananda Prida Yusuf S, Fayyadh Muhammad Habibie, Muhammad Riza Saputra
+- **E-Office:** Andhinee Clarisaa Tanasale, Cetta Masinda Amany, Elvina Nasywa Ariyani
+- **Manajemen Kemahasiswaan + KP:** Devarlo Rahadyan Razan, Muhammad Reswara Suryawan, Surya Hari Putra, Syahbana Hatab
 
 ---
 
@@ -726,18 +738,6 @@ Struktur modular ini mendukung pengembangan ke arah:
 - 🔐 [Row Level Security](https://supabase.com/docs/guides/auth/row-level-security)
 - 💾 [Storage Management](https://supabase.com/docs/guides/storage)
 - ⚡ [Realtime Subscriptions](https://supabase.com/docs/guides/realtime)
-
----
-
-## 🤝 Contributor
-
-### Development Team
-
-- **Project Lead:** Bimo Kusumo Putro Wicaksono
-- **Bank Soal:** Dzaki Eka Atmaja, Evan Adkara Christian P, Nabil Bintang Ardiansyah P.  
-- **Capstone + TA:** Ananda Prida Yusuf S, Fayyadh Muhammad Habibie, Muhammad Riza Saputra
-- **E-Office:** Andhinee Clarisaa Tanasale, Cetta Masinda Amany, Elvina Nasywa Ariyani
-- **Manajemen Kemahasiswaan + KP:** Devarlo Rahadyan Razan, Muhammad Reswara Suryawan, Surya Hari Putra, Syahbana Hatab
 
 ---
 
