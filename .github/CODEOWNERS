@@ -1,0 +1,29 @@
+############################################################
+# DEFAULT OWNER
+############################################################
+
+* @bimo3058
+
+
+############################################################
+# GLOBAL / CORE SYSTEM
+############################################################
+
+/app/ @bimo3058
+/bootstrap/ @bimo3058
+/config/ @bimo3058
+/database/ @bimo3058
+/routes/ @bimo3058
+/composer.json @bimo3058
+/composer.lock @bimo3058
+/.github/CODEOWNERS @bimo3058
+
+
+############################################################
+# MODULE OWNERS
+############################################################
+
+/Modules/BankSoal/ @bimo3058 @ChinChinMarux @nabwell
+/Modules/EOffice/ @eo1 @eo2 @eo3
+/Modules/ManajemenMahasiswa/ @mm1 @mm2 @mm3 @mm4
+/Modules/Capstone/ @cap1 @cap2 @cap3
