@@ -235,8 +235,16 @@ DB_PASSWORD=your-password
 ```bash
 php artisan migrate
 ```
+### 6️⃣ Start Frontend
 
-### 6️⃣ Start Development Server
+```bash
+npm run dev
+```
+Visit: **http://localhost:8000**
+
+---
+
+### 6️⃣ Start Backend Server
 
 ```bash
 php artisan serve
@@ -245,6 +253,11 @@ php artisan serve
 Visit: **http://127.0.0.1:8000**
 
 ---
+
+### Start FE & BE
+```bash
+composer run dev
+```
 
 ## 🟢 Supabase Configuration
 
