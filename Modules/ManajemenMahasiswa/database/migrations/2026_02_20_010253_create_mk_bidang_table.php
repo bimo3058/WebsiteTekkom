@@ -11,16 +11,9 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lecturers', function (Blueprint $table) {
+        Schema::create('mk_bidang', function (Blueprint $table) {
             $table->id();
-
-            $table->foreignId('user_id')
-                  ->unique()
-                  ->constrained('users')
-                  ->cascadeOnDelete();
-
-            $table->string('employee_number', 100)->unique();
-
+            $table->string('nama_bidang', 100);
             $table->timestamps();
         });
     }
@@ -30,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lecturers_tables');
+        Schema::dropIfExists('mk_bidang');
     }
 };

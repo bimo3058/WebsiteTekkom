@@ -11,15 +11,20 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lecturers', function (Blueprint $table) {
+        Schema::create('mk_discussion', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('user_id')
-                  ->unique()
-                  ->constrained('users')
-                  ->cascadeOnDelete();
+            $table->foreignId('forum_id')
+                ->constrained('mk_forum_mahasiswa')
+                ->cascadeOnDelete();
 
-            $table->string('employee_number', 100)->unique();
+            $table->foreignId('user_id')
+                ->constrained('users')
+                ->cascadeOnDelete();
+
+            $table->string('judul_discussion', 150);
+            $table->text('isi_discussion');
+            $table->string('status', 20);
 
             $table->timestamps();
         });
@@ -30,6 +35,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lecturers_tables');
+        Schema::dropIfExists('mk_discussion');
     }
 };
