@@ -15,11 +15,11 @@ return new class extends Migration
             $table->id();
 
             $table->foreignId('user_id')
-                ->unique()
-                ->constrained('users')
-                ->onDelete('cascade');
+                  ->unique()
+                  ->constrained('users')
+                  ->cascadeOnDelete();
 
-            $table->string('student_number')->unique();
+            $table->string('student_number', 100)->unique();
             $table->integer('cohort_year');
 
             $table->timestamps();

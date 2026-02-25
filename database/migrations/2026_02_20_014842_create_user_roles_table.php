@@ -11,17 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lecturers', function (Blueprint $table) {
-            $table->id();
-
+        Schema::create('user_roles', function (Blueprint $table) {
             $table->foreignId('user_id')
-                  ->unique()
                   ->constrained('users')
                   ->cascadeOnDelete();
 
-            $table->string('employee_number', 100)->unique();
+            $table->foreignId('role_id')
+                  ->constrained('roles')
+                  ->cascadeOnDelete();
 
             $table->timestamps();
+
+            $table->primary(['user_id', 'role_id']);
         });
     }
 
@@ -30,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lecturers_tables');
+        Schema::dropIfExists('user_roles');
     }
 };

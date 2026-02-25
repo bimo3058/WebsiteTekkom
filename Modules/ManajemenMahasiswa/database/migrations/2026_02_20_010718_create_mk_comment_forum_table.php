@@ -11,15 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('lecturers', function (Blueprint $table) {
+        Schema::create('mk_comment_forum', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('user_id')
-                  ->unique()
-                  ->constrained('users')
-                  ->cascadeOnDelete();
+            $table->foreignId('discussion_id')
+                ->constrained('mk_discussion')
+                ->cascadeOnDelete();
 
-            $table->string('employee_number', 100)->unique();
+            $table->foreignId('user_id')
+                ->constrained('users')
+                ->cascadeOnDelete();
+
+            $table->text('isi_comment');
 
             $table->timestamps();
         });
@@ -30,6 +33,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('lecturers_tables');
+        Schema::dropIfExists('mk_comment_forum');
     }
 };
