@@ -33,7 +33,7 @@ return new class extends Migration
                 ->onDelete('cascade');
 
             $table->timestamp('changed_at')->nullable();
-        });
+        }); 
     }
 
     /**
