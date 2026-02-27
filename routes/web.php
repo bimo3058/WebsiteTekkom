@@ -2,22 +2,10 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\MicrosoftController;
+use App\Http\Controllers\SuperAdminController;
 use Illuminate\Support\Facades\Route;
 
-/*
-|--------------------------------------------------------------------------
-| ROOT
-|--------------------------------------------------------------------------
-*/
-
 Route::redirect('/', '/login');
-
-
-/*
-|--------------------------------------------------------------------------
-| GUEST ROUTES
-|--------------------------------------------------------------------------
-*/
 
 Route::middleware('guest')->group(function () {
 
@@ -34,34 +22,45 @@ Route::middleware('guest')->group(function () {
         ->name('microsoft.callback');
 });
 
-
-/*
-|--------------------------------------------------------------------------
-| AUTHENTICATED ROUTES
-|--------------------------------------------------------------------------
-*/
-
 Route::middleware('auth')->group(function () {
 
-    // Dashboard redirect berdasarkan role
+    Route::middleware('role:superadmin')->prefix('superadmin')->name('superadmin.')->group(function () {
+        
+        // Dashboard - Superadmin only
+        Route::get('/dashboard', [SuperAdminController::class, 'index'])
+            ->name('dashboard');
+
+        // User Management
+        Route::get('/users', [SuperAdminController::class, 'users'])
+            ->name('users.index');
+        Route::post('/users/{user}/update-role', [SuperAdminController::class, 'updateRole'])
+            ->name('users.update-role');
+
+        // Module Management
+        Route::get('/modules', [SuperAdminController::class, 'modules'])
+            ->name('modules');
+
+        // Audit Logs
+        Route::get('/audit-logs', [SuperAdminController::class, 'auditLogs'])
+            ->name('audit-logs');
+    });
+
     Route::get('/dashboard', function () {
+        $user = auth()->user();
+        
+        // HANYA superadmin yang redirect langsung
+        if ($user->roles()->where('name', 'superadmin')->exists()) {
+            return redirect()->route('superadmin.dashboard');
+        }
+        
+        // Sisanya (dosen, mahasiswa, admin, gpm) ke global dashboard
         return view('dashboard');
     })->name('dashboard');
 
-    Route::middleware('role:SUPERADMIN')->group(function () {
-        Route::get('/superadmin/dashboard', [\App\Http\Controllers\SuperAdminController::class, 'index'])
-            ->name('superadmin.dashboard');
-
-        Route::post('/superadmin/update-role/{user}', [\App\Http\Controllers\SuperAdminController::class, 'updateRole'])
-            ->name('superadmin.updateRole');
-    });
-
-    // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
-    // Logout
     Route::post('/logout', function () {
 
         \App\Models\UserAuditLog::create([
@@ -78,11 +77,5 @@ Route::middleware('auth')->group(function () {
     })->name('logout');
 });
 
-
-/*
-|--------------------------------------------------------------------------
-| AUTH SCAFFOLDING
-|--------------------------------------------------------------------------
-*/
 
 require __DIR__.'/auth.php';

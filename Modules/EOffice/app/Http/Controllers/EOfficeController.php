@@ -16,6 +16,24 @@ class EOfficeController extends Controller
     }
 
     /**
+     * Show the dashboard for eoffice module.
+     */
+    public function dashboard()
+    {
+        $user = auth()->user();
+
+        if ($user->roles()->whereIn('name', ['superadmin', 'admin'])->exists()) {
+            return view('eoffice::dashboard.admin');
+        }
+
+        if ($user->roles()->where('name', 'dosen')->exists()) {
+            return view('eoffice::dashboard.dosen');
+        }
+
+        return view('eoffice::dashboard.mahasiswa');
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()
