@@ -45,14 +45,16 @@ Route::middleware('auth')->group(function () {
 
     // Dashboard redirect berdasarkan role
     Route::get('/dashboard', function () {
-        return match (auth()->user()->role) {
-            'SUPERADMIN' => redirect()->route('superadmin.dashboard'),
-            'ADMIN'      => redirect()->route('admin.dashboard'),
-            'LECTURER'   => redirect()->route('lecturer.dashboard'),
-            'STUDENT'    => redirect()->route('student.dashboard'),
-            default      => view('dashboard'),
-        };
+        return view('dashboard');
     })->name('dashboard');
+
+    Route::middleware('role:SUPERADMIN')->group(function () {
+        Route::get('/superadmin/dashboard', [\App\Http\Controllers\SuperAdminController::class, 'index'])
+            ->name('superadmin.dashboard');
+
+        Route::post('/superadmin/update-role/{user}', [\App\Http\Controllers\SuperAdminController::class, 'updateRole'])
+            ->name('superadmin.updateRole');
+    });
 
     // Profile
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
