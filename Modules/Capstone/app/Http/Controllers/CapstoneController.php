@@ -16,6 +16,30 @@ class CapstoneController extends Controller
     }
 
     /**
+     * Show the dashboard for capstone module.
+     */
+    public function dashboard()
+    {
+        $user = auth()->user();
+
+        // Tentukan view berdasarkan role
+        if ($user->roles()->whereIn('name', ['superadmin', 'admin'])->exists()) {
+            return view('capstone::dashboard.admin');
+        }
+
+        if ($user->roles()->where('name', 'dosen')->exists()) {
+            return view('capstone::dashboard.dosen');
+        }
+
+        if ($user->roles()->where('name', 'mahasiswa')->exists()) {
+            return view('capstone::dashboard.mahasiswa');
+        }
+
+        // Default
+        return view('capstone::dashboard.mahasiswa');
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()

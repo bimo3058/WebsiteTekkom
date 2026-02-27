@@ -16,6 +16,24 @@ class ManajemenMahasiswaController extends Controller
     }
 
     /**
+     * Show the dashboard for manajemen mahasiswa module.
+     */
+    public function dashboard()
+    {
+        $user = auth()->user();
+
+        if ($user->roles()->whereIn('name', ['superadmin', 'admin'])->exists()) {
+            return view('manajemenmahasiswa::dashboard.admin');
+        }
+
+        if ($user->roles()->where('name', 'dosen')->exists()) {
+            return view('manajemenmahasiswa::dashboard.dosen');
+        }
+
+        return view('manajemenmahasiswa::dashboard.mahasiswa');
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()
