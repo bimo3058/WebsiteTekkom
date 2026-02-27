@@ -36,6 +36,11 @@ class User extends Authenticatable
     ];
 
     // Audit log relation
+    public function roles()
+    {
+        return $this->belongsToMany(Role::class, 'user_roles');
+    }
+    
     public function auditLogs()
     {
         return $this->hasMany(UserAuditLog::class);
