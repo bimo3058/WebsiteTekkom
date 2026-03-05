@@ -3,78 +3,101 @@
 namespace Modules\Capstone\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Services\Capstone\BidService;
+use App\Services\Capstone\GroupService;
+use App\Services\Capstone\NotificationService;
+use App\Services\Capstone\PeriodService;
+use App\Services\Capstone\TitleService;
 use Illuminate\Http\Request;
 
 class CapstoneController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    public function __construct(
+        private PeriodService       $periodService,
+        private GroupService        $groupService,
+        private TitleService        $titleService,
+        private BidService          $bidService,
+        private NotificationService $notificationService,
+    ) {}
+
     public function index()
     {
         return view('capstone::index');
     }
 
-    /**
-     * Show the dashboard for capstone module.
-     */
     public function dashboard()
     {
-        $user = auth()->user();
+        $user  = auth()->user();
+        $roles = $user->roles->pluck('name'); // load sekali
 
-        // Tentukan view berdasarkan role
-        if ($user->roles()->whereIn('name', ['superadmin', 'admin'])->exists()) {
-            return view('capstone::dashboard.admin');
+        if ($roles->intersect(['superadmin', 'admin'])->isNotEmpty()) {
+            return $this->adminDashboard();
         }
 
-        if ($user->roles()->where('name', 'dosen')->exists()) {
-            return view('capstone::dashboard.dosen');
+        if ($roles->contains('dosen')) {
+            return $this->dosenDashboard();
         }
 
-        if ($user->roles()->where('name', 'mahasiswa')->exists()) {
-            return view('capstone::dashboard.mahasiswa');
-        }
-
-        // Default
-        return view('capstone::dashboard.mahasiswa');
+        return $this->mahasiswaDashboard();
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    private function adminDashboard()
+    {
+        $period      = $this->periodService->getActivePeriod();
+        $groupStats  = $period ? $this->groupService->getStatusStats($period->id) : collect();
+        $allPeriods  = $this->periodService->getAllPeriods();
+
+        return view('capstone::dashboard.admin', compact('period', 'groupStats', 'allPeriods'));
+    }
+
+    private function dosenDashboard()
+    {
+        $user    = auth()->user();
+        $period  = $this->periodService->getActivePeriod();
+        $titles  = $this->titleService->getByLecturer($user->lecturer->id);
+        $unread  = $this->notificationService->getUnreadCount($user->id);
+
+        return view('capstone::dashboard.dosen', compact('period', 'titles', 'unread'));
+    }
+
+    private function mahasiswaDashboard()
+    {
+        $user   = auth()->user();
+        $period = $this->periodService->getActivePeriod();
+        $unread = $this->notificationService->getUnreadCount($user->id);
+
+        // Cari grup mahasiswa di period aktif
+        $group = null;
+        if ($period) {
+            $group = \App\Models\CapstoneGroupMember::where('student_id', $user->student->id)
+                ->where('period_id', $period->id)
+                ->with('group:id,status,title_id,period_id')
+                ->select('id', 'group_id', 'student_id', 'period_id', 'is_leader')
+                ->first()
+                ?->group;
+        }
+
+        return view('capstone::dashboard.mahasiswa', compact('period', 'group', 'unread'));
+    }
+
     public function create()
     {
         return view('capstone::create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request) {}
 
-    /**
-     * Show the specified resource.
-     */
     public function show($id)
     {
         return view('capstone::show');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         return view('capstone::edit');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id) {}
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id) {}
 }
