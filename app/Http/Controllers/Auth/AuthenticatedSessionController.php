@@ -7,45 +7,54 @@ use App\Http\Requests\Auth\LoginRequest;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\View\View;
 
 class AuthenticatedSessionController extends Controller
 {
-    /**
-     * Display the login view.
-     */
     public function create(): View
     {
         return view('auth.login');
     }
 
-    /**
-     * Handle an incoming authentication request.
-     */
     public function store(LoginRequest $request): RedirectResponse
     {
         $request->authenticate();
-
         $request->session()->regenerate();
 
-        return redirect()->intended(
-            match (auth()->user()->role) {
-                'SUPERADMIN' => route('superadmin.dashboard'),
-                default      => route('dashboard'),
-            }
-        );
-        // return redirect()->intended(route('dashboard', absolute: false));
+        $user      = auth()->user();
+        $userRoles = $user->roles()->get();
+
+        // Cache user data + roles sekaligus — pakai cacheUserData() supaya
+        // remember_token ikut tersimpan dan tidak ada missing attribute error
+        $user->cacheUserData();
+        Cache::put("user:{$user->id}:roles", $userRoles->toArray(), now()->addHours(8));
+
+        $roleNames = $userRoles->pluck('name');
+
+        if ($roleNames->intersect(['superadmin', 'admin'])->isNotEmpty()) {
+            return redirect()->intended(route('superadmin.dashboard'));
+        }
+
+        if ($roleNames->contains('dosen')) {
+            return redirect()->intended(route('dashboard'));
+        }
+
+        return redirect()->intended(route('dashboard'));
     }
 
-    /**
-     * Destroy an authenticated session.
-     */
     public function destroy(Request $request): RedirectResponse
     {
+        $user = auth()->user();
+
         Auth::guard('web')->logout();
 
-        $request->session()->invalidate();
+        // Hapus cache user saat logout
+        if ($user) {
+            $user->clearUserCache();
+        }
 
+        $request->session()->invalidate();
         $request->session()->regenerateToken();
 
         return redirect('/');
