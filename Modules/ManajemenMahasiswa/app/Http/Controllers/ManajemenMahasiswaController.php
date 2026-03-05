@@ -3,72 +3,90 @@
 namespace Modules\ManajemenMahasiswa\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Services\Kemahasiswaan\DashboardService;
+use App\Services\Kemahasiswaan\ForumService;
+use App\Services\Kemahasiswaan\KegiatanService;
+use App\Services\Kemahasiswaan\KemahasiswaanService;
+use App\Services\Kemahasiswaan\PengumumanService;
 use Illuminate\Http\Request;
 
 class ManajemenMahasiswaController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
+    public function __construct(
+        private KemahasiswaanService $kemahasiswaanService,
+        private KegiatanService      $kegiatanService,
+        private PengumumanService    $pengumumanService,
+        private ForumService         $forumService,
+        private DashboardService     $dashboardService,
+    ) {}
+
     public function index()
     {
         return view('manajemenmahasiswa::index');
     }
 
-    /**
-     * Show the dashboard for manajemen mahasiswa module.
-     */
     public function dashboard()
     {
-        $user = auth()->user();
+        $user  = auth()->user();
+        $roles = $user->roles->pluck('name'); // load sekali
 
-        if ($user->roles()->whereIn('name', ['superadmin', 'admin'])->exists()) {
-            return view('manajemenmahasiswa::dashboard.admin');
+        if ($roles->intersect(['superadmin', 'admin'])->isNotEmpty()) {
+            return $this->adminDashboard();
         }
 
-        if ($user->roles()->where('name', 'dosen')->exists()) {
-            return view('manajemenmahasiswa::dashboard.dosen');
+        if ($roles->contains('dosen')) {
+            return $this->dosenDashboard();
         }
 
-        return view('manajemenmahasiswa::dashboard.mahasiswa');
+        return $this->mahasiswaDashboard();
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    private function adminDashboard()
+    {
+        $stats        = $this->dashboardService->getDashboardStats();
+        $pengumuman   = $this->pengumumanService->getPublished();
+        $kegiatan     = $this->kegiatanService->getAll();
+
+        return view('manajemenmahasiswa::dashboard.admin', compact('stats', 'pengumuman', 'kegiatan'));
+    }
+
+    private function dosenDashboard()
+    {
+        $stats      = $this->dashboardService->getDashboardStats();
+        $pengumuman = $this->pengumumanService->getPublished('dosen');
+        $forums     = $this->forumService->getAllForums();
+
+        return view('manajemenmahasiswa::dashboard.dosen', compact('stats', 'pengumuman', 'forums'));
+    }
+
+    private function mahasiswaDashboard()
+    {
+        $user       = auth()->user();
+        $pengumuman = $this->pengumumanService->getPublished('mahasiswa');
+        $forums     = $this->forumService->getAllForums();
+        $profil     = $this->kemahasiswaanService->getByUser($user->id);
+
+        return view('manajemenmahasiswa::dashboard.mahasiswa', compact('pengumuman', 'forums', 'profil'));
+    }
+
     public function create()
     {
         return view('manajemenmahasiswa::create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
     public function store(Request $request) {}
 
-    /**
-     * Show the specified resource.
-     */
     public function show($id)
     {
         return view('manajemenmahasiswa::show');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         return view('manajemenmahasiswa::edit');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
     public function update(Request $request, $id) {}
 
-    /**
-     * Remove the specified resource from storage.
-     */
     public function destroy($id) {}
 }

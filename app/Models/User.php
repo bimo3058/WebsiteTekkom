@@ -2,21 +2,16 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 
 class User extends Authenticatable
 {
     use HasFactory, Notifiable, SoftDeletes;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var array<int, string>
-     */
     protected $fillable = [
         'external_id',
         'name',
@@ -27,27 +22,18 @@ class User extends Authenticatable
         'last_login',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var array<int, string>
-     */
     protected $hidden = [
         'password',
-        'remember_token',
+        // remember_token TIDAK di-hidden supaya ikut ter-cache
+        // dan tidak trigger strict mode error saat rebuild dari cache array
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
-            'email_verified_at' => 'datetime',
-            'sso_data' => 'json',
-            'last_login' => 'datetime',
+            'email_verified_at'    => 'datetime',
+            'sso_data'             => 'json',
+            'last_login'           => 'datetime',
             'last_synced_from_sso' => 'datetime',
         ];
     }
@@ -58,78 +44,105 @@ class User extends Authenticatable
     |--------------------------------------------------------------------------
     */
 
-    /**
-     * Get all roles for this user
-     */
     public function roles()
     {
-        return $this->belongsToMany(Role::class, 'user_roles');
+        return $this->belongsToMany(Role::class, 'user_roles')
+                    ->select('roles.id', 'roles.name', 'roles.module');
     }
 
-    /**
-     * Check if user has a specific role
-     */
-    public function hasRole($roleName)
-    {
-        // Lowercase untuk consistency
-        return $this->roles()->where('name', strtolower($roleName))->exists();
-    }
-
-    public function hasAnyRole($roleNames)
-    {
-        if (is_string($roleNames)) {
-            return $this->hasRole($roleNames);
-        }
-
-        foreach ($roleNames as $roleName) {
-            if ($this->hasRole(strtolower($roleName))) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * Check if user has all of the given roles
-     */
-    public function hasAllRoles($roleNames)
-    {
-        if (is_string($roleNames)) {
-            return $this->hasRole($roleNames);
-        }
-
-        foreach ($roleNames as $roleName) {
-            if (!$this->hasRole($roleName)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
-     * Get associated student record if exists
-     */
     public function student()
     {
         return $this->hasOne(Student::class);
     }
 
-    /**
-     * Get associated lecturer record if exists
-     */
     public function lecturer()
     {
         return $this->hasOne(Lecturer::class);
     }
 
-    /**
-     * Get user audit logs
-     */
     public function auditLogs()
     {
         return $this->hasMany(UserAuditLog::class);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | ROLE HELPERS
+    |--------------------------------------------------------------------------
+    */
+
+    public function hasRole(string $roleName, ?string $module = null): bool
+    {
+        return $this->getCachedRoles()
+            ->when($module, fn($c) => $c->where('module', $module))
+            ->contains('name', strtolower($roleName));
+    }
+
+    public function hasAnyRole(array|string $roleNames, ?string $module = null): bool
+    {
+        $roleNames = collect(is_string($roleNames) ? [$roleNames] : $roleNames)
+            ->map(fn($r) => strtolower($r));
+
+        return $this->getCachedRoles()
+            ->when($module, fn($c) => $c->where('module', $module))
+            ->whereIn('name', $roleNames)
+            ->isNotEmpty();
+    }
+
+    public function hasAllRoles(array|string $roleNames, ?string $module = null): bool
+    {
+        $roleNames = collect(is_string($roleNames) ? [$roleNames] : $roleNames)
+            ->map(fn($r) => strtolower($r));
+
+        $userRoleNames = $this->getCachedRoles()
+            ->when($module, fn($c) => $c->where('module', $module))
+            ->pluck('name');
+
+        return $roleNames->every(fn($r) => $userRoleNames->contains($r));
+    }
+
+    /**
+     * Ambil roles dari Redis cache, fallback ke DB kalau miss.
+     */
+    protected function getCachedRoles(): \Illuminate\Support\Collection
+    {
+        if ($this->relationLoaded('roles')) {
+            return $this->roles;
+        }
+
+        $cached = Cache::get("user:{$this->id}:roles");
+
+        if ($cached) {
+            return collect($cached);
+        }
+
+        $roles = $this->roles()->get();
+        Cache::put("user:{$this->id}:roles", $roles->toArray(), now()->addHours(8));
+
+        return $roles;
+    }
+
+    /**
+     * Cache user data ke Redis setelah login.
+     * makeVisible(['remember_token']) supaya semua kolom ikut tersimpan
+     * dan tidak ada missing attribute error saat di-rebuild dari cache.
+     */
+    public function cacheUserData(): void
+    {
+        Cache::put(
+            "user:{$this->id}:data",
+            $this->makeVisible(['remember_token'])->withoutRelations()->toArray(),
+            now()->addHours(8)
+        );
+    }
+
+    /**
+     * Hapus semua cache user — dipanggil saat logout atau update profil.
+     */
+    public function clearUserCache(): void
+    {
+        Cache::forget("user:{$this->id}:data");
+        Cache::forget("user:{$this->id}:roles");
     }
 
     /*
@@ -138,34 +151,19 @@ class User extends Authenticatable
     |--------------------------------------------------------------------------
     */
 
-    /**
-     * Scope to get superadmin users
-     */
     public function scopeSuperadmins($query)
     {
-        return $query->whereHas('roles', function ($q) {
-            $q->where('name', 'SUPERADMIN');
-        });
+        return $query->whereHas('roles', fn($q) => $q->where('name', 'superadmin'));
     }
 
-    /**
-     * Scope to get lecturer users
-     */
     public function scopeLecturers($query)
     {
-        return $query->whereHas('roles', function ($q) {
-            $q->where('name', 'DOSEN');
-        });
+        return $query->whereHas('roles', fn($q) => $q->where('name', 'dosen'));
     }
 
-    /**
-     * Scope to get student users
-     */
     public function scopeStudents($query)
     {
-        return $query->whereHas('roles', function ($q) {
-            $q->where('name', 'MAHASISWA');
-        });
+        return $query->whereHas('roles', fn($q) => $q->where('name', 'mahasiswa'));
     }
 
     /*
@@ -174,11 +172,10 @@ class User extends Authenticatable
     |--------------------------------------------------------------------------
     */
 
-    /**
-     * Update last login timestamp
-     */
-    public function recordLogin()
+    public function recordLogin(): void
     {
-        $this->update(['last_login' => now()]);
+        dispatch(function () {
+            $this->updateQuietly(['last_login' => now()]);
+        })->afterResponse();
     }
 }
