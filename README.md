@@ -11,7 +11,7 @@
 
 *Sistem terintegrasi berbasis Laravel Modular Monolith yang terdiri dari empat aplikasi akademik dalam satu proyek terpusat.*
 
-[📖 Documentation](#-documentation) • [🚀 Quick Start](#-quick-start) • [🏗️ Architecture](#-system-architecture) • [🤝 Contributing](#-development-rules)
+[📖 Documentation](#-documentation) • [🚀 Quick Start](#-quick-start) • [🏗️ Architecture](#-system-architecture) • [⚡ Performance](#-performance-configuration) • [🤝 Contributing](#-development-rules)
 
 </div>
 
@@ -31,6 +31,7 @@
 - [User Role System](#-user-role-system)
 - [Development Rules](#-development-rules)
 - [Performance Configuration](#-performance-configuration)
+- [Redis Setup](#-redis-setup)
 - [Troubleshooting](#-troubleshooting)
 - [Future Roadmap](#-future-roadmap)
 
@@ -58,7 +59,7 @@
 - 🟢 **Supabase Backend** - PostgreSQL hosting dengan realtime features
 - 🗄️ **Single Database** - Satu database PostgreSQL terpusat
 - 🔐 **Role-Based Access Control** - 4 level user roles
-- ⚡ **Optimized Performance** - Siap untuk production environment
+- ⚡ **Optimized Performance** - Redis caching + persistent DB connection
 - 🔄 **Scalable Design** - Mudah dikembangkan ke microservices
 
 ---
@@ -126,9 +127,13 @@ Surat menyurat dan manajemen dokumen internal
 │  └───────────────────────────────────────┘  │
 └──────────────────┬──────────────────────────┘
                    │
-┌──────────────────▼──────────────────────────┐
-│      🟢 Supabase (PostgreSQL Database)      │
-└─────────────────────────────────────────────┘
+       ┌───────────┴───────────┐
+       ▼                       ▼
+┌─────────────┐     ┌──────────────────────┐
+│ 🔴 Redis    │     │ 🟢 Supabase          │
+│ (Cache +    │     │ (PostgreSQL Database) │
+│  Session)   │     │                      │
+└─────────────┘     └──────────────────────┘
 ```
 
 ---
@@ -139,25 +144,25 @@ Surat menyurat dan manajemen dokumen internal
 WebsiteTekkom/
 ├── app/
 │   ├── Http/
+│   │   └── Middleware/
+│   │       └── CheckRole.php     # Role-based access dengan Redis cache
 │   ├── Models/
+│   │   └── User.php              # getCachedRoles(), cacheUserData()
 │   └── Providers/
+│       └── AppServiceProvider.php # Cached Eloquent User Provider
+├── config/
+│   ├── auth.php                  # cached-eloquent driver
+│   ├── database.php              # PDO persistent connection
+│   └── cache.php
 ├── database/
-│   ├── migrations/          # ← Global migrations (core tables)
+│   ├── migrations/
 │   └── seeders/
 ├── Modules/
 │   ├── Capstone/
-│   │   ├── Database/
-│   │   │   └── Migrations/  # ← Capstone-specific migrations
-│   │   ├── Http/
-│   │   │   └── Controllers/
-│   │   ├── Models/
-│   │   └── Routes/
 │   ├── BankSoal/
 │   ├── Kemahasiswaan/
 │   └── EOffice/
 ├── routes/
-│   ├── web.php
-│   └── api.php
 ├── .env.example
 ├── composer.json
 └── README.md
@@ -174,6 +179,7 @@ WebsiteTekkom/
 - Composer >= 2.9.5
 - Supabase Account (or PostgreSQL >= 14)
 - Node.js >= 18 (optional, for frontend assets)
+- Redis (Memurai untuk Windows, atau Redis untuk Linux/Mac)
 
 ### 1️⃣ Clone Repository
 
@@ -186,226 +192,477 @@ cd WebsiteTekkom
 
 ```bash
 composer install
+composer require predis/predis
 ```
 
 ### 3️⃣ Environment Setup
 
 ```bash
-# Copy environment file
 cp .env.example .env
-
-# Generate application key
 php artisan key:generate
 ```
 
-### 4️⃣ Configure Database
+### 4️⃣ Configure Database & Redis
 
-#### Option A: Using Supabase (Recommended)
-
-1. Create a new project at [Supabase Dashboard](https://app.supabase.com)
-2. Go to **Project Settings** → **Database**
-3. Copy connection details
-
-Edit `.env` file:
+Edit `.env`:
 
 ```env
+# Database - Supabase Singapore (ap-southeast-1)
 DB_CONNECTION=pgsql
-DB_HOST=db.your-project-ref.supabase.co
-DB_PORT=5432
+DB_HOST=aws-0-ap-southeast-1.pooler.supabase.com
+DB_PORT=6543
 DB_DATABASE=postgres
-DB_USERNAME=postgres
+DB_USERNAME=postgres.your-project-ref
 DB_PASSWORD=your-supabase-password
+
+# Redis Cache
+CACHE_STORE=redis
+SESSION_DRIVER=redis
+QUEUE_CONNECTION=redis
+REDIS_CLIENT=predis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
 ```
-
-#### Option B: Using Local PostgreSQL
-
-```env
-DB_CONNECTION=pgsql
-DB_HOST=127.0.0.1
-DB_PORT=5432
-DB_DATABASE=your-database-name
-DB_USERNAME=your-username
-DB_PASSWORD=your-password
-```
-
-> 💡 **Tip:** Supabase menyediakan hosting database gratis dengan 500MB storage dan realtime features.
 
 ### 5️⃣ Run Migrations
 
 ```bash
 php artisan migrate
 ```
-### 6️⃣ Start Frontend
+
+### 6️⃣ Add Database Indexes
+
+Jalankan di **Supabase SQL Editor** untuk optimasi query:
+
+```sql
+-- Index untuk login query
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_email_active
+    ON users(email) WHERE deleted_at IS NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_users_id_active
+    ON users(id) WHERE deleted_at IS NULL;
+
+-- Index untuk roles lookup
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_user_roles_user_id
+    ON user_roles(user_id);
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_roles_name
+    ON roles(name);
+
+-- Index untuk capstone
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_capstone_groups_period_status
+    ON capstone_groups(period_id, status) WHERE deleted_at IS NULL;
+
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_capstone_titles_status
+    ON capstone_titles(status, approved_by_admin) WHERE deleted_at IS NULL;
+
+-- Index untuk bank soal
+CREATE INDEX CONCURRENTLY IF NOT EXISTS idx_pertanyaan_mk_status
+    ON bs_pertanyaan(mk_id, status);
+```
+
+### 7️⃣ Update Auth Config
+
+Edit `config/auth.php`:
+
+```php
+'providers' => [
+    'users' => [
+        'driver' => 'cached-eloquent', // pakai cached provider
+        'model'  => App\Models\User::class,
+    ],
+],
+```
+
+### 8️⃣ Start Development Server
 
 ```bash
-npm run dev
+# Start Redis dulu (pastikan Memurai jalan di Windows)
+# Lalu jalankan Laravel
+composer run dev
 ```
+
 Visit: **http://localhost:8000**
 
 ---
 
-### 6️⃣ Start Backend Server
+## ⚡ Performance Configuration
 
-```bash
-php artisan serve
-```
+Sistem ini telah dioptimasi dari response time **~3200ms → <1000ms** melalui beberapa teknik berikut.
 
-Visit: **http://127.0.0.1:8000**
+### Hasil Optimasi
+
+| Request | Sebelum | Sesudah | Improvement |
+|---|---|---|---|
+| POST /login | ~3200ms | ~400ms | **87% faster** |
+| GET /dashboard | ~2580ms | <1000ms | **~60% faster** |
+| GET /superadmin/dashboard | ~2580ms | <1000ms | **~60% faster** |
 
 ---
 
-### Start FE & BE
-```bash
-composer run dev
-```
+### 1. Persistent Database Connection
 
-## 🟢 Supabase Configuration
+**File:** `config/database.php`
 
-### Why Supabase?
-
-- ✅ **Free Tier:** 500MB database, unlimited API requests
-- ✅ **Auto Backup:** Automatic daily backups
-- ✅ **Realtime:** Built-in realtime subscriptions
-- ✅ **Global CDN:** Fast worldwide access
-- ✅ **SSL Connection:** Secure by default
-
-### Setup Guide
-
-#### 1. Create Supabase Project
-
-1. Visit [Supabase Dashboard](https://app.supabase.com)
-2. Click **New Project**
-3. Fill in project details:
-   - **Name:** `laravel`
-   - **Database Password:** (save this securely)
-   - **Region:** Choose closest to your users
-
-#### 2. Get Connection String
-
-Go to **Project Settings** → **Database** → **Connection String**
-
-**URI Format:**
-```
-postgresql://postgres:[YOUR-PASSWORD]@db.your-ref.supabase.co:5432/postgres
-```
-
-**Connection pooling (recommended for production):**
-```
-postgresql://postgres:[YOUR-PASSWORD]@db.your-ref.supabase.co:6543/postgres?pgbouncer=true
-```
-
-#### 3. Configure Laravel
-
-Update `.env`:
-
-```env
-# Supabase Database
-DB_CONNECTION=pgsql
-DB_HOST=db.xxxxxxxxxxxxxx.supabase.co
-DB_PORT=5432
-DB_DATABASE=postgres
-DB_USERNAME=postgres
-DB_PASSWORD=your-secure-password
-
-# For connection pooling (production)
-# DB_PORT=6543
-```
-
-#### 4. Test Connection
-
-```bash
-php artisan db:show
-```
-
-Expected output:
-```
-PostgreSQL ................................................ 15.x
-Database .................................................. postgres
-Host ...................................................... db.xxxxx.supabase.co
-Port ...................................................... 5432
-Username .................................................. postgres
-```
-
-### Supabase Features Integration
-
-#### Row Level Security (RLS)
-
-Supabase mendukung RLS untuk keamanan ekstra. Aktifkan di Supabase Dashboard:
-
-```sql
--- Example: Enable RLS for capstone_topics
-ALTER TABLE capstone_topics ENABLE ROW LEVEL SECURITY;
-
--- Create policy
-CREATE POLICY "Students can view their own topics"
-ON capstone_topics FOR SELECT
-USING (auth.uid() = student_id);
-```
-
-#### Realtime Subscriptions
-
-Enable realtime untuk tabel tertentu di **Database** → **Replication**:
-
-```javascript
-// Frontend example
-const supabase = createClient(SUPABASE_URL, SUPABASE_KEY)
-
-supabase
-  .channel('capstone-changes')
-  .on('postgres_changes', 
-    { event: '*', schema: 'public', table: 'capstone_topics' },
-    (payload) => console.log('Change detected:', payload)
-  )
-  .subscribe()
-```
-
-#### Storage for Files
-
-Gunakan Supabase Storage untuk upload file:
+Tambahkan `PDO::ATTR_PERSISTENT` di konfigurasi pgsql agar koneksi ke Supabase di-reuse antar request, menghilangkan overhead TCP handshake (~500ms) di setiap request.
 
 ```php
-// Laravel integration with Supabase Storage
-// Install: composer require supabase/supabase-php
-
-use Supabase\SupabaseClient;
-
-$supabase = new SupabaseClient(
-    env('SUPABASE_URL'),
-    env('SUPABASE_KEY')
-);
-
-// Upload file
-$file = $request->file('document');
-$supabase->storage
-    ->from('capstone-documents')
-    ->upload("documents/{$filename}", $file);
+'pgsql' => [
+    'driver'         => 'pgsql',
+    'url'            => env('DB_URL'),
+    'host'           => env('DB_HOST', '127.0.0.1'),
+    'port'           => env('DB_PORT', '5432'),
+    'database'       => env('DB_DATABASE', 'laravel'),
+    'username'       => env('DB_USERNAME', 'root'),
+    'password'       => env('DB_PASSWORD', ''),
+    'charset'        => env('DB_CHARSET', 'utf8'),
+    'prefix'         => '',
+    'prefix_indexes' => true,
+    'search_path'    => 'public',
+    'sslmode'        => 'require',
+    'options'        => [
+        PDO::ATTR_PERSISTENT => true,  // reuse koneksi antar request
+        PDO::ATTR_TIMEOUT    => 10,
+    ],
+],
 ```
 
-### Supabase CLI (Optional)
+---
 
-Install Supabase CLI untuk local development:
+### 2. Cached Eloquent User Provider
+
+**File:** `app/Providers/AppServiceProvider.php`
+
+Laravel memanggil `retrieveById()` di **setiap request** untuk re-authenticate user dari session. Override ini mengambil user dari Redis (~1ms) bukan DB (~1150ms).
+
+```php
+use Illuminate\Auth\EloquentUserProvider;
+use Illuminate\Contracts\Auth\Authenticatable;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Cache;
+
+public function register(): void
+{
+    Auth::resolved(function ($auth) {
+        $auth->provider('cached-eloquent', function ($app, array $config) {
+            return new class($app['hash'], $config['model']) extends EloquentUserProvider {
+                public function retrieveById($identifier): ?Authenticatable
+                {
+                    $cacheKey = "user:{$identifier}:data";
+                    $cached   = Cache::get($cacheKey);
+
+                    if ($cached) {
+                        $model = $this->createModel();
+                        return $model->newFromBuilder($cached);
+                    }
+
+                    $user = parent::retrieveById($identifier);
+                    if ($user) {
+                        Cache::put($cacheKey, $user->withoutRelations()->toArray(), now()->addHours(8));
+                    }
+
+                    return $user;
+                }
+            };
+        });
+    });
+
+    // ... singleton registrations
+}
+```
+
+Daftarkan di `config/auth.php`:
+
+```php
+'providers' => [
+    'users' => [
+        'driver' => 'cached-eloquent',
+        'model'  => App\Models\User::class,
+    ],
+],
+```
+
+---
+
+### 3. Cached Roles di User Model
+
+**File:** `app/Models/User.php`
+
+`hasRole()`, `hasAnyRole()`, `hasAllRoles()` mengambil roles dari Redis cache bukan query DB setiap kali dipanggil.
+
+```php
+use Illuminate\Support\Facades\Cache;
+
+// Relasi dengan select kolom spesifik
+public function roles()
+{
+    return $this->belongsToMany(Role::class, 'user_roles')
+                ->select('roles.id', 'roles.name', 'roles.module');
+}
+
+// Semua role helper pakai getCachedRoles()
+public function hasRole(string $roleName, ?string $module = null): bool
+{
+    return $this->getCachedRoles()
+        ->when($module, fn($c) => $c->where('module', $module))
+        ->contains('name', strtolower($roleName));
+}
+
+protected function getCachedRoles(): \Illuminate\Support\Collection
+{
+    if ($this->relationLoaded('roles')) {
+        return collect($this->roles);
+    }
+
+    $cached = Cache::get("user:{$this->id}:roles");
+    if ($cached) {
+        return collect($cached);
+    }
+
+    $roles = $this->roles()->get();
+    Cache::put("user:{$this->id}:roles", $roles->toArray(), now()->addHours(8));
+
+    return $roles;
+}
+
+// Cache semua data user setelah login
+public function cacheUserData(): void
+{
+    Cache::put(
+        "user:{$this->id}:data",
+        $this->makeVisible(['remember_token'])->withoutRelations()->toArray(),
+        now()->addHours(8)
+    );
+}
+
+// Hapus cache saat logout atau data user berubah
+public function clearUserCache(): void
+{
+    Cache::forget("user:{$this->id}:data");
+    Cache::forget("user:{$this->id}:roles");
+}
+```
+
+---
+
+### 4. Cache Saat Login & Clear Saat Logout
+
+**File:** `app/Http/Controllers/Auth/AuthenticatedSessionController.php`
+
+Simpan user data + roles ke Redis segera setelah login berhasil, sehingga request berikutnya (dashboard) tidak perlu query DB sama sekali.
+
+```php
+public function store(LoginRequest $request): RedirectResponse
+{
+    $request->authenticate();
+    $request->session()->regenerate();
+
+    $user      = auth()->user();
+    $userRoles = $user->roles()->get();
+
+    // Cache sekaligus setelah login
+    $user->cacheUserData();
+    Cache::put("user:{$user->id}:roles", $userRoles->toArray(), now()->addHours(8));
+
+    $roleNames = $userRoles->pluck('name');
+
+    if ($roleNames->intersect(['superadmin', 'admin'])->isNotEmpty()) {
+        return redirect()->intended(route('superadmin.dashboard'));
+    }
+
+    if ($roleNames->contains('dosen')) {
+        return redirect()->intended(route('dashboard'));
+    }
+
+    return redirect()->intended(route('dashboard'));
+}
+
+public function destroy(Request $request): RedirectResponse
+{
+    $user = auth()->user();
+    Auth::guard('web')->logout();
+
+    if ($user) {
+        $user->clearUserCache(); // hapus cache saat logout
+    }
+
+    $request->session()->invalidate();
+    $request->session()->regenerateToken();
+
+    return redirect('/');
+}
+```
+
+---
+
+### 5. Cached Role Middleware
+
+**File:** `app/Http/Middleware/CheckRole.php`
+
+Middleware ini jalan di setiap request. Tanpa cache, tiap halaman akan query roles ke DB. Dengan cache, cukup 1ms dari Redis.
+
+```php
+public function handle(Request $request, Closure $next, string $role): Response
+{
+    if (!auth()->check()) {
+        return redirect('/login');
+    }
+
+    $userId = auth()->id(); // tidak trigger DB query
+    $cached = Cache::get("user:{$userId}:roles");
+
+    if ($cached) {
+        $userRoles = collect($cached)->pluck('name');
+    } else {
+        $rolesCollection = auth()->user()->roles()->get();
+        Cache::put("user:{$userId}:roles", $rolesCollection->toArray(), now()->addHours(8));
+        $userRoles = $rolesCollection->pluck('name');
+    }
+
+    $roles   = collect(explode('|', $role))->map(fn($r) => strtolower($r));
+    $hasRole = $roles->some(fn($r) => $userRoles->contains($r));
+
+    if (!$hasRole) {
+        abort(403, 'Unauthorized');
+    }
+
+    return $next($request);
+}
+```
+
+> ⚠️ **Penting:** Setiap kali update roles user, wajib panggil `$user->clearUserCache()` supaya perubahan langsung efektif.
+
+---
+
+### 6. Cache Data per Modul
+
+Untuk data yang jarang berubah tapi sering dibaca, gunakan pola `Cache::remember()`:
+
+```php
+// Contoh di service class
+public function getActivePeriod(): ?CapstonePeriod
+{
+    return Cache::remember('capstone:period:active', now()->addHour(), fn() =>
+        CapstonePeriod::where('is_active', true)->first()
+    );
+}
+
+public function getMataKuliahList(): Collection
+{
+    return Cache::remember('banksoal:mk:all', now()->addDay(), fn() =>
+        MataKuliah::with('cpls')->orderBy('kode')->get()
+    );
+}
+```
+
+**Cache key convention:**
+```
+{modul}:{entity}:{scope}:{id}
+
+user:1:data          → data user
+user:1:roles         → roles user
+capstone:period:active
+banksoal:mk:all
+banksoal:statistik:mk:42
+```
+
+---
+
+## 🔴 Redis Setup
+
+Redis digunakan sebagai cache dan session driver untuk menghindari query DB berulang di setiap request.
+
+### Windows (Memurai)
+
+**1. Install Memurai**
+
+Download di [memurai.com/get-memurai](https://www.memurai.com/get-memurai) → install. Memurai otomatis berjalan sebagai Windows Service.
+
+Verifikasi:
+```bash
+memurai-cli ping
+# PONG
+```
+
+**2. Install Predis**
 
 ```bash
-# Install
-npm install -g supabase
-
-# Login
-supabase login
-
-# Link project
-supabase link --project-ref your-project-ref
-
-# Pull remote schema
-supabase db pull
+composer require predis/predis
 ```
 
-### Monitoring & Analytics
+**3. Hapus php_redis.dll dari php.ini**
 
-Akses **Database** → **Reports** untuk:
-- Query performance
-- Connection pooling stats
-- Database size
-- API usage
+Buka `C:\xampp\php\php.ini`, comment out jika ada:
+```ini
+;extension=php_redis.dll
+```
+
+**4. Update `.env`**
+
+```env
+CACHE_STORE=redis
+SESSION_DRIVER=redis
+QUEUE_CONNECTION=redis
+REDIS_CLIENT=predis
+REDIS_HOST=127.0.0.1
+REDIS_PASSWORD=null
+REDIS_PORT=6379
+```
+
+**5. Clear config**
+
+```bash
+php artisan config:clear
+php artisan cache:clear
+```
+
+**6. Verifikasi**
+
+```bash
+php artisan tinker
+Cache::put('test', 'redis working!', 60);
+Cache::get('test'); // → "redis working!"
+```
+
+---
+
+### Linux / Mac
+
+```bash
+# Ubuntu/Debian
+sudo apt install redis-server
+sudo systemctl enable redis-server
+sudo systemctl start redis-server
+
+# Mac (Homebrew)
+brew install redis
+brew services start redis
+
+# Verifikasi
+redis-cli ping  # PONG
+```
+
+Lanjutkan dari langkah **2. Install Predis** di atas.
+
+---
+
+### Laragon (Alternatif XAMPP)
+
+Laragon sudah include Redis bawaan — lebih simpel dari setup manual:
+
+1. Download di [laragon.org](https://laragon.org/download)
+2. Install → klik kanan tray icon → centang **Redis**
+3. Pindahkan project ke `C:\laragon\www\webtekkom`
+4. Update `.env` seperti di atas
+
+---
+
+### Catatan Penting Redis
+
+> ⚠️ **Redis harus jalan sebelum Laravel dijalankan.** Karena session disimpan di Redis, kalau Redis mati semua user tidak bisa login.
+
+> ⚠️ **Jalankan `php artisan cache:clear` setelah mengubah data cache** untuk menghindari stale data.
 
 ---
 
@@ -426,9 +683,9 @@ Tabel global **tanpa prefix**:
 | Module | Prefix | Example Tables |
 |--------|--------|----------------|
 | 📘 Capstone | `capstone_` | `capstone_periods`, `capstone_topics` |
-| 📗 Bank Soal | `bank_soal_` | `bank_soal_questions`, `bank_soal_exams` |
-| 📙 Kemahasiswaan | `kemahasiswaan_` | `kemahasiswaan_events`, `kemahasiswaan_organizations` |
-| 📕 E-Office | `eoffice_` | `eoffice_letters`, `eoffice_documents` |
+| 📗 Bank Soal | `bs_` | `bs_pertanyaan`, `bs_mata_kuliah` |
+| 📙 Kemahasiswaan | `mk_` | `mk_kegiatan`, `mk_pengumuman` |
+| 📕 E-Office | `eo_` | `eo_surat`, `eo_dokumen` |
 
 > ⚠️ **IMPORTANT:** Semua tabel module **WAJIB** menggunakan prefix yang sesuai.
 
@@ -445,38 +702,26 @@ php artisan migrate
 ### Run Specific Module Migration
 
 ```bash
-# Capstone module
 php artisan migrate --path=Modules/Capstone/Database/Migrations
-
-# Bank Soal module
 php artisan migrate --path=Modules/BankSoal/Database/Migrations
-
-# Kemahasiswaan module
 php artisan migrate --path=Modules/Kemahasiswaan/Database/Migrations
-
-# E-Office module
 php artisan migrate --path=Modules/EOffice/Database/Migrations
 ```
 
 ### Reset Database (⚠️ Danger Zone)
 
 ```bash
-# This will drop all tables and re-run migrations
 php artisan migrate:fresh
 ```
 
 ### Create New Migration
 
-**Global migration:**
 ```bash
+# Global migration
 php artisan make:migration create_users_table
-```
 
-**Module-specific migration:**
-```bash
+# Module-specific migration
 php artisan make:migration create_capstone_periods_table --path=Modules/Capstone/Database/Migrations
-atau
-php artisan module:make-migration create_capstone_periods_table <nama module yang dituju>
 ```
 
 ---
@@ -485,18 +730,13 @@ php artisan module:make-migration create_capstone_periods_table <nama module yan
 
 ### Cache Management
 
-**Clear all caches (run after route/config changes):**
-
 ```bash
 php artisan route:clear
 php artisan config:clear
 php artisan cache:clear
 php artisan view:clear
-```
 
-**Or clear all at once:**
-
-```bash
+# Clear semua sekaligus
 php artisan optimize:clear
 ```
 
@@ -504,22 +744,18 @@ php artisan optimize:clear
 
 ```bash
 php artisan optimize
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
 composer dump-autoload -o
 ```
 
 ### Development Tools
 
 ```bash
-# List all routes
 php artisan route:list
-
-# List routes for specific module
 php artisan route:list | grep capstone
-
-# Check database connection
 php artisan db:show
-
-# Create symbolic link for storage
 php artisan storage:link
 ```
 
@@ -531,18 +767,39 @@ php artisan storage:link
 
 | Role | Code | Description |
 |------|------|-------------|
-| 🔴 **Superadmin** | `SUPERADMIN` | Full system access |
-| 🟠 **Admin** | `ADMIN` | Administrative access |
-| 🟡 **Lecturer** | `LECTURER` | Lecturer/faculty access |
-| 🟢 **Student** | `STUDENT` | Student access (default) |
+| 🔴 **Superadmin** | `superadmin` | Full system access |
+| 🟠 **Admin** | `admin` | Administrative access |
+| 🟡 **Dosen** | `dosen` | Lecturer/faculty access |
+| 🟢 **Mahasiswa** | `mahasiswa` | Student access (default) |
 
-> ⚠️ **Important:** Role values are **case-sensitive** and must match database enum constraints.
+### Usage di Controller / Middleware
 
-### Default Configuration
+```php
+// Cek single role
+$user->hasRole('dosen');
 
-- **Default role:** `STUDENT`
-- **Role field:** `users.role` (enum type)
-- **Case-sensitive:** Yes (use UPPERCASE)
+// Cek salah satu dari beberapa role
+$user->hasAnyRole(['superadmin', 'admin']);
+
+// Cek dengan filter module
+$user->hasRole('dosen', 'capstone');
+
+// Di route middleware
+Route::middleware(['auth', 'role:superadmin|admin'])->group(function () {
+    // ...
+});
+```
+
+### Invalidasi Cache Saat Update Role
+
+```php
+// Wajib dipanggil setiap kali roles user diubah
+public function updateUserRoles(User $user, array $roleIds): void
+{
+    $user->roles()->sync($roleIds);
+    $user->clearUserCache(); // hapus cache lama agar langsung efektif
+}
+```
 
 ---
 
@@ -556,22 +813,18 @@ php artisan storage:link
 | 📛 **Use Prefix** | Gunakan prefix sesuai module untuk semua tabel |
 | 🔄 **Clear Cache** | Selalu clear cache setelah ubah route/config |
 | 🔒 **No .env Commit** | Jangan commit file `.env` ke repository |
-| 🔤 **Uppercase Enum** | Gunakan UPPERCASE untuk semua enum role |
 | ⚡ **Eager Loading** | Gunakan `with()` untuk menghindari N+1 query problem |
+| 🗑️ **Clear User Cache** | Panggil `clearUserCache()` setiap kali update data/roles user |
 | 📝 **Code Documentation** | Tambahkan docblock untuk function public |
 | 🧪 **Test Before Commit** | Test fitur sebelum commit ke branch utama |
+| 🔴 **Redis First** | Pastikan Redis/Memurai jalan sebelum start Laravel |
 
 ### Git Workflow
 
 ```bash
-# Create feature branch
 git checkout -b feature/module-name-feature
-
-# Commit changes
 git add .
 git commit -m "feat(module): description"
-
-# Push to remote
 git push origin feature/module-name-feature
 ```
 
@@ -582,51 +835,16 @@ feat(capstone): add topic submission feature
 fix(bank-soal): resolve question duplication bug
 docs(readme): update installation guide
 refactor(kemahasiswaan): optimize event query
-```
-
----
-
-## ⚡ Performance Configuration
-
-### Development Environment
-
-```env
-APP_ENV=local
-APP_DEBUG=true
-SESSION_DRIVER=file
-CACHE_DRIVER=file
-QUEUE_CONNECTION=sync
-```
-
-### Production Environment
-
-```env
-APP_ENV=production
-APP_DEBUG=false
-SESSION_DRIVER=database
-CACHE_DRIVER=redis
-QUEUE_CONNECTION=redis
-```
-
-### After Deployment
-
-```bash
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
-php artisan optimize
+perf(auth): add redis caching for user roles
 ```
 
 ---
 
 ## 🧪 Troubleshooting
 
-### Common Issues
-
 <details>
 <summary><b>❌ Route tidak berubah setelah edit</b></summary>
 
-**Solution:**
 ```bash
 php artisan route:clear
 php artisan config:clear
@@ -636,95 +854,131 @@ php artisan config:clear
 <details>
 <summary><b>❌ Migration error "table already exists"</b></summary>
 
-**Solution:**
 ```bash
-# Check migration status
 php artisan migrate:status
 
-# If needed, reset (⚠️ data will be lost)
+# Jika perlu reset (⚠️ data hilang)
 php artisan migrate:fresh
 ```
 </details>
 
 <details>
-<summary><b>❌ Enum role error / constraint violation</b></summary>
+<summary><b>❌ Laravel terasa lambat / response > 2 detik</b></summary>
 
-**Solution:**
-- Pastikan value role menggunakan UPPERCASE
-- Check database enum constraint: `SUPERADMIN`, `ADMIN`, `LECTURER`, `STUDENT`
-</details>
+Pastikan checklist berikut:
 
-<details>
-<summary><b>❌ Laravel terasa lambat di development</b></summary>
+1. Redis/Memurai sudah jalan
+2. `.env` sudah set `CACHE_STORE=redis` dan `SESSION_DRIVER=redis`
+3. `config/auth.php` sudah pakai `cached-eloquent` driver
+4. Index database sudah dibuat di Supabase SQL Editor
+5. `config/database.php` sudah ada `PDO::ATTR_PERSISTENT => true`
 
-**Solution:**
-```env
-# Set in .env
-SESSION_DRIVER=file
-CACHE_DRIVER=file
-```
-
-Then run:
 ```bash
-php artisan optimize:clear
+php artisan config:clear
+php artisan cache:clear
 ```
 </details>
 
 <details>
-<summary><b>❌ Class not found error</b></summary>
+<summary><b>❌ Redis connection refused</b></summary>
 
-**Solution:**
+**Windows:** Pastikan Memurai sudah jalan. Buka Start Menu → cari "Memurai" → Start. Atau cek di `services.msc`.
+
+**Linux/Mac:**
 ```bash
-composer dump-autoload
-php artisan clear-compiled
+sudo systemctl start redis-server  # Linux
+brew services start redis          # Mac
+```
+
+Verifikasi:
+```bash
+memurai-cli ping  # Windows
+redis-cli ping    # Linux/Mac
+# Harus balik: PONG
+```
+</details>
+
+<details>
+<summary><b>❌ Unable to load php_redis.dll</b></summary>
+
+Buka `C:\xampp\php\php.ini`, cari dan comment out:
+```ini
+;extension=php_redis.dll
+```
+
+Restart XAMPP/Laragon, lalu jalankan ulang Laravel.
+</details>
+
+<details>
+<summary><b>❌ Call to a member function contains() on array</b></summary>
+
+Ini terjadi karena data dari cache berupa array biasa, bukan Collection. Pastikan selalu wrap dengan `collect()` sebelum memanggil method Collection:
+
+```php
+// ❌ Salah
+$cached = Cache::get("user:{$id}:roles");
+$cached->contains('superadmin');
+
+// ✅ Benar
+$userRoles = collect(Cache::get("user:{$id}:roles"))->pluck('name');
+$userRoles->contains('superadmin');
+```
+
+Jalankan `php artisan cache:clear` untuk hapus cache lama yang formatnya mungkin berbeda.
+</details>
+
+<details>
+<summary><b>❌ The attribute [remember_token] does not exist</b></summary>
+
+Pastikan `remember_token` tidak ada di `$hidden` di `User.php`, dan `cacheUserData()` menggunakan `makeVisible(['remember_token'])` sebelum serialize ke cache.
+
+```php
+// User.php — jangan masukkan remember_token ke $hidden
+protected $hidden = [
+    'password',
+    // remember_token TIDAK di-hidden
+];
+```
+</details>
+
+<details>
+<summary><b>❌ Authentication user provider [cached-eloquent] is not defined</b></summary>
+
+Pastikan dua hal:
+
+1. `AppServiceProvider.php` sudah ada `Auth::resolved(...)` di method `register()`
+2. `config/auth.php` sudah diupdate:
+
+```php
+'providers' => [
+    'users' => [
+        'driver' => 'cached-eloquent',
+        'model'  => App\Models\User::class,
+    ],
+],
+```
+
+Lalu jalankan:
+```bash
+php artisan config:clear
 ```
 </details>
 
 <details>
 <summary><b>❌ Supabase connection timeout</b></summary>
 
-**Solution:**
-1. Check if your IP is allowed in Supabase Dashboard
-   - Go to **Project Settings** → **Database** → **Connection Pooling**
-   - Disable "Restrict database access to dedicated IPs" for development
-   
-2. Try connection pooling port:
-```env
-DB_PORT=6543  # Instead of 5432
-```
+1. Gunakan connection pooling port `6543` bukan `5432`
+2. Pastikan region Supabase project di **Singapore** (`ap-southeast-1`) bukan Mumbai
+3. Test koneksi:
 
-3. Test connection:
 ```bash
 php artisan db:show
-php artisan tinker
->>> DB::connection()->getPdo();
-```
-</details>
-
-<details>
-<summary><b>❌ SSL connection error with Supabase</b></summary>
-
-**Solution:**
-Add SSL mode to database config in `config/database.php`:
-
-```php
-'pgsql' => [
-    // ... other config
-    'sslmode' => env('DB_SSLMODE', 'prefer'),
-],
-```
-
-Then in `.env`:
-```env
-DB_SSLMODE=require
 ```
 </details>
 
 ---
 
 ## 🚀 Future Roadmap
-
-Struktur modular ini mendukung pengembangan ke arah:
 
 - [ ] 🔄 **Microservices Migration** - Isolasi per module
 - [ ] 🗄️ **Database Per Module** - Separate database untuk setiap modul
@@ -742,15 +996,8 @@ Struktur modular ini mendukung pengembangan ke arah:
 - [Laravel Documentation](https://laravel.com/docs)
 - [Supabase Documentation](https://supabase.com/docs)
 - [PostgreSQL Documentation](https://www.postgresql.org/docs/)
-- [Module Architecture Guide](docs/ARCHITECTURE.md)
-- [API Documentation](docs/API.md)
-
-### Supabase Resources
-
-- 📖 [Supabase with Laravel Guide](https://supabase.com/docs/guides/getting-started/tutorials/with-laravel)
-- 🔐 [Row Level Security](https://supabase.com/docs/guides/auth/row-level-security)
-- 💾 [Storage Management](https://supabase.com/docs/guides/storage)
-- ⚡ [Realtime Subscriptions](https://supabase.com/docs/guides/realtime)
+- [Predis Documentation](https://github.com/predis/predis)
+- [Memurai (Redis for Windows)](https://www.memurai.com)
 
 ---
 
