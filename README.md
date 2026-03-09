@@ -748,7 +748,10 @@ Seeding digunakan untuk mengisi database dengan data awal (roles, user dummy, da
 ```
 database/
 └── seeders/
-    └── DatabaseSeeder.php          ← Entry point utama (global)
+    ├── DatabaseSeeder.php          ← Entry point utama (global)
+    ├── RoleSeeder.php              ← Seed semua roles (global + per-modul)
+    ├── SuperAdminSeeder.php        ← Seed akun superadmin
+    └── UserSeeder.php              ← Seed dosen, mahasiswa & assign roles
 
 Modules/
 ├── Capstone/
@@ -777,7 +780,9 @@ Modules/
 
 ### Global Seeder
 
-**`database/seeders/DatabaseSeeder.php`** adalah entry point utama. Seeder ini berisi data inti yang dibutuhkan semua modul: roles, superadmin, dan data referensi global seperti data mahasiswa dan dosen.
+**`database/seeders/DatabaseSeeder.php`** adalah entry point utama. Cukup memanggil `RoleSeeder` (wajib duluan) lalu `UserSeeder` yang sudah mencakup semua user dummy beserta assignment role-nya.
+
+> ⚠️ **Urutan wajib dijaga:** `RoleSeeder` harus dijalankan sebelum `UserSeeder` karena `UserSeeder` akan langsung `firstOrFail()` ke tabel roles. Kalau roles belum ada, seeder langsung error.
 
 ```php
 <?php
@@ -791,47 +796,53 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
-            RoleSeeder::class,       // seed tabel roles
-            UserSeeder::class,       // seed superadmin & user dummy
-            StudentSeeder::class,    // seed data mahasiswa
-            LecturerSeeder::class,   // seed data dosen
+            RoleSeeder::class,   // WAJIB pertama — UserSeeder bergantung pada ini
+            UserSeeder::class,   // seed dosen, mahasiswa + assign roles
         ]);
     }
 }
 ```
 
-**Contoh `RoleSeeder.php`:**
+---
+
+**`RoleSeeder.php`** — seed semua roles, termasuk role spesifik per modul seperti `gpm` untuk Bank Soal:
 
 ```php
 <?php
 
 namespace Database\Seeders;
 
+use App\Models\Role;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\DB;
 
 class RoleSeeder extends Seeder
 {
     public function run(): void
     {
         $roles = [
-            ['name' => 'superadmin', 'module' => null],
-            ['name' => 'admin',      'module' => null],
-            ['name' => 'dosen',      'module' => null],
-            ['name' => 'mahasiswa',  'module' => null],
+            // Global roles
+            ['name' => 'superadmin', 'module' => 'global'],
+            ['name' => 'admin',      'module' => 'global'],
+            ['name' => 'dosen',      'module' => 'global'],
+            ['name' => 'mahasiswa',  'module' => 'global'],
+
+            // Module-specific roles
+            ['name' => 'gpm', 'module' => 'bank_soal'],
         ];
 
         foreach ($roles as $role) {
-            DB::table('roles')->updateOrInsert(
-                ['name' => $role['name']],
-                array_merge($role, ['created_at' => now(), 'updated_at' => now()])
+            Role::firstOrCreate(
+                ['name' => $role['name'], 'module' => $role['module']],
+                $role
             );
         }
     }
 }
 ```
 
-**Contoh `UserSeeder.php`** (superadmin default):
+---
+
+**`SuperAdminSeeder.php`** — seed akun superadmin saja, bisa dijalankan terpisah jika dibutuhkan:
 
 ```php
 <?php
@@ -842,22 +853,178 @@ use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
+class SuperAdminSeeder extends Seeder
+{
+    public function run(): void
+    {
+        User::updateOrCreate(
+            ['email' => 'superadmin@kampus.ac.id'],
+            [
+                'name'     => 'Super Admin',
+                'password' => Hash::make('password123'),
+            ]
+        );
+    }
+}
+```
+
+> 💡 `SuperAdminSeeder` tidak dipanggil dari `DatabaseSeeder` karena pembuatan akun superadmin sudah ditangani di dalam `UserSeeder`. Seeder ini tersedia sebagai **utilitas terpisah** — berguna jika akun superadmin terhapus dan perlu di-restore cepat tanpa harus seed ulang semua data.
+
+---
+
+**`UserSeeder.php`** — seed semua user (dosen, dosen+gpm, mahasiswa) sekaligus membuat record terkait di tabel `lecturers` dan `students`, serta assign roles:
+
+```php
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\Lecturer;
+use App\Models\Role;
+use App\Models\Student;
+use App\Models\User;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+
 class UserSeeder extends Seeder
 {
     public function run(): void
     {
-        $superadmin = User::updateOrCreate(
-            ['email' => 'superadmin@tekkom.id'],
+        // Load semua role di awal — langsung error kalau RoleSeeder belum dijalankan
+        $roles = [
+            'superadmin' => Role::where('name', 'superadmin')->where('module', 'global')->firstOrFail(),
+            'dosen'      => Role::where('name', 'dosen')->where('module', 'global')->firstOrFail(),
+            'mahasiswa'  => Role::where('name', 'mahasiswa')->where('module', 'global')->firstOrFail(),
+            'gpm'        => Role::where('name', 'gpm')->where('module', 'bank_soal')->firstOrFail(),
+        ];
+
+        // 1. SUPERADMIN
+        $superadmin = User::firstOrCreate(
+            ['email' => 'superadmin@kampus.ac.id'],
             [
-                'name'     => 'Super Admin',
-                'password' => Hash::make('password'),
+                'external_id' => 'EXT-SUPERADMIN-001',
+                'name'        => 'Super Admin',
+                'password'    => Hash::make('password'),
             ]
         );
+        $superadmin->roles()->syncWithoutDetaching([$roles['superadmin']->id]);
 
-        // Assign role superadmin
-        $superadminRole = \App\Models\Role::where('name', 'superadmin')->first();
-        if ($superadminRole) {
-            $superadmin->roles()->syncWithoutDetaching([$superadminRole->id]);
+        // 2. DOSEN
+        $dosenUsers = [
+            [
+                'external_id'     => 'EXT-DSN-001',
+                'name'            => 'Dr. Budi Santoso',
+                'email'           => 'budi.santoso@kampus.ac.id',
+                'employee_number' => 'NIP-2001-001',
+            ],
+            [
+                'external_id'     => 'EXT-DSN-002',
+                'name'            => 'Dr. Siti Rahayu',
+                'email'           => 'siti.rahayu@kampus.ac.id',
+                'employee_number' => 'NIP-2001-002',
+            ],
+        ];
+
+        foreach ($dosenUsers as $data) {
+            $user = User::firstOrCreate(
+                ['email' => $data['email']],
+                [
+                    'external_id' => $data['external_id'],
+                    'name'        => $data['name'],
+                    'password'    => Hash::make('password'),
+                ]
+            );
+            $user->roles()->syncWithoutDetaching([$roles['dosen']->id]);
+
+            Lecturer::firstOrCreate(
+                ['user_id' => $user->id],
+                ['employee_number' => $data['employee_number']]
+            );
+        }
+
+        // 3. DOSEN + GPM (punya dua role sekaligus)
+        $dosenGpmUsers = [
+            [
+                'external_id'     => 'EXT-GPM-001',
+                'name'            => 'Prof. Ahmad Fauzi',
+                'email'           => 'ahmad.fauzi@kampus.ac.id',
+                'employee_number' => 'NIP-2001-003',
+            ],
+            [
+                'external_id'     => 'EXT-GPM-002',
+                'name'            => 'Prof. Dewi Lestari',
+                'email'           => 'dewi.lestari@kampus.ac.id',
+                'employee_number' => 'NIP-2001-004',
+            ],
+        ];
+
+        foreach ($dosenGpmUsers as $data) {
+            $user = User::firstOrCreate(
+                ['email' => $data['email']],
+                [
+                    'external_id' => $data['external_id'],
+                    'name'        => $data['name'],
+                    'password'    => Hash::make('password'),
+                ]
+            );
+            $user->roles()->syncWithoutDetaching([$roles['dosen']->id, $roles['gpm']->id]);
+
+            Lecturer::firstOrCreate(
+                ['user_id' => $user->id],
+                ['employee_number' => $data['employee_number']]
+            );
+        }
+
+        // 4. MAHASISWA
+        $mahasiswaUsers = [
+            [
+                'external_id'    => 'EXT-MHS-001',
+                'name'           => 'Andi Pratama',
+                'email'          => 'andi.pratama@student.kampus.ac.id',
+                'student_number' => '2021001001',
+                'cohort_year'    => 2021,
+            ],
+            [
+                'external_id'    => 'EXT-MHS-002',
+                'name'           => 'Bela Safitri',
+                'email'          => 'bela.safitri@student.kampus.ac.id',
+                'student_number' => '2021001002',
+                'cohort_year'    => 2021,
+            ],
+            [
+                'external_id'    => 'EXT-MHS-003',
+                'name'           => 'Cahyo Nugroho',
+                'email'          => 'cahyo.nugroho@student.kampus.ac.id',
+                'student_number' => '2021001003',
+                'cohort_year'    => 2021,
+            ],
+            [
+                'external_id'    => 'EXT-MHS-004',
+                'name'           => 'Dina Marlina',
+                'email'          => 'dina.marlina@student.kampus.ac.id',
+                'student_number' => '2022001001',
+                'cohort_year'    => 2022,
+            ],
+        ];
+
+        foreach ($mahasiswaUsers as $data) {
+            $user = User::firstOrCreate(
+                ['email' => $data['email']],
+                [
+                    'external_id' => $data['external_id'],
+                    'name'        => $data['name'],
+                    'password'    => Hash::make('password'),
+                ]
+            );
+            $user->roles()->syncWithoutDetaching([$roles['mahasiswa']->id]);
+
+            Student::firstOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'student_number' => $data['student_number'],
+                    'cohort_year'    => $data['cohort_year'],
+                ]
+            );
         }
     }
 }
