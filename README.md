@@ -27,6 +27,7 @@
 - [Quick Start](#-quick-start)
 - [Database Convention](#-database-convention)
 - [Migration Guide](#-migration-guide)
+- [Database Seeding](#-database-seeding)
 - [Essential Commands](#-essential-commands)
 - [User Role System](#-user-role-system)
 - [Development Rules](#-development-rules)
@@ -157,11 +158,20 @@ WebsiteTekkom/
 ├── database/
 │   ├── migrations/
 │   └── seeders/
+│       └── DatabaseSeeder.php    # Global seeder entry point
 ├── Modules/
 │   ├── Capstone/
+│   │   └── Database/
+│   │       └── Seeders/
 │   ├── BankSoal/
+│   │   └── Database/
+│   │       └── Seeders/
 │   ├── Kemahasiswaan/
+│   │   └── Database/
+│   │       └── Seeders/
 │   └── EOffice/
+│       └── Database/
+│           └── Seeders/
 ├── routes/
 ├── .env.example
 ├── composer.json
@@ -726,6 +736,314 @@ php artisan make:migration create_capstone_periods_table --path=Modules/Capstone
 
 ---
 
+## 🌱 Database Seeding
+
+Seeding digunakan untuk mengisi database dengan data awal (roles, user dummy, data referensi, dll). Proyek ini menggunakan dua lapisan seeder: **global** di `database/seeders/` dan **per-modul** di `Modules/{Nama}/Database/Seeders/`.
+
+---
+
+### Struktur Seeder
+
+```
+database/
+└── seeders/
+    └── DatabaseSeeder.php          ← Entry point utama (global)
+
+Modules/
+├── Capstone/
+│   └── Database/
+│       └── Seeders/
+│           ├── CapstoneSeeder.php  ← Seeder utama modul Capstone
+│           └── ...
+├── BankSoal/
+│   └── Database/
+│       └── Seeders/
+│           ├── BankSoalSeeder.php
+│           └── ...
+├── Kemahasiswaan/
+│   └── Database/
+│       └── Seeders/
+│           ├── KemahasiswaanSeeder.php
+│           └── ...
+└── EOffice/
+    └── Database/
+        └── Seeders/
+            ├── EOfficeSeeder.php
+            └── ...
+```
+
+---
+
+### Global Seeder
+
+**`database/seeders/DatabaseSeeder.php`** adalah entry point utama. Seeder ini berisi data inti yang dibutuhkan semua modul: roles, superadmin, dan data referensi global seperti data mahasiswa dan dosen.
+
+```php
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+
+class DatabaseSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $this->call([
+            RoleSeeder::class,       // seed tabel roles
+            UserSeeder::class,       // seed superadmin & user dummy
+            StudentSeeder::class,    // seed data mahasiswa
+            LecturerSeeder::class,   // seed data dosen
+        ]);
+    }
+}
+```
+
+**Contoh `RoleSeeder.php`:**
+
+```php
+<?php
+
+namespace Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class RoleSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $roles = [
+            ['name' => 'superadmin', 'module' => null],
+            ['name' => 'admin',      'module' => null],
+            ['name' => 'dosen',      'module' => null],
+            ['name' => 'mahasiswa',  'module' => null],
+        ];
+
+        foreach ($roles as $role) {
+            DB::table('roles')->updateOrInsert(
+                ['name' => $role['name']],
+                array_merge($role, ['created_at' => now(), 'updated_at' => now()])
+            );
+        }
+    }
+}
+```
+
+**Contoh `UserSeeder.php`** (superadmin default):
+
+```php
+<?php
+
+namespace Database\Seeders;
+
+use App\Models\User;
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Hash;
+
+class UserSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $superadmin = User::updateOrCreate(
+            ['email' => 'superadmin@tekkom.id'],
+            [
+                'name'     => 'Super Admin',
+                'password' => Hash::make('password'),
+            ]
+        );
+
+        // Assign role superadmin
+        $superadminRole = \App\Models\Role::where('name', 'superadmin')->first();
+        if ($superadminRole) {
+            $superadmin->roles()->syncWithoutDetaching([$superadminRole->id]);
+        }
+    }
+}
+```
+
+---
+
+### Module Seeder
+
+Setiap modul punya seeder sendiri untuk data spesifik modulnya. Seeder modul **tidak dipanggil otomatis** dari `DatabaseSeeder` — harus didaftarkan secara eksplisit atau dijalankan manual.
+
+**Contoh `CapstoneSeeder.php`:**
+
+```php
+<?php
+
+namespace Modules\Capstone\Database\Seeders;
+
+use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
+
+class CapstoneSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $this->call([
+            CapstonePeriodSeeder::class,   // seed periode capstone
+            CapstoneTopicSeeder::class,    // seed topik/judul dummy
+        ]);
+    }
+}
+```
+
+**Contoh `BankSoalSeeder.php`:**
+
+```php
+<?php
+
+namespace Modules\BankSoal\Database\Seeders;
+
+use Illuminate\Database\Seeder;
+
+class BankSoalSeeder extends Seeder
+{
+    public function run(): void
+    {
+        $this->call([
+            MataKuliahSeeder::class,   // seed daftar mata kuliah
+            BankSoalDummySeeder::class, // seed soal dummy
+        ]);
+    }
+}
+```
+
+---
+
+### Cara Menjalankan Seeder
+
+#### ▶ Jalankan semua seeder global
+
+```bash
+php artisan db:seed
+```
+
+> Menjalankan `DatabaseSeeder` beserta semua seeder yang didaftarkan di dalamnya.
+
+---
+
+#### ▶ Jalankan seeder global tertentu saja
+
+```bash
+# Hanya seed roles
+php artisan db:seed --class=RoleSeeder
+
+# Hanya seed user
+php artisan db:seed --class=UserSeeder
+```
+
+---
+
+#### ▶ Jalankan seeder modul tertentu
+
+Karena seeder modul berada di namespace berbeda, gunakan flag `--class` dengan **fully qualified class name**:
+
+```bash
+# Capstone
+php artisan db:seed --class="Modules\Capstone\Database\Seeders\CapstoneSeeder"
+
+# Bank Soal
+php artisan db:seed --class="Modules\BankSoal\Database\Seeders\BankSoalSeeder"
+
+# Kemahasiswaan
+php artisan db:seed --class="Modules\Kemahasiswaan\Database\Seeders\KemahasiswaanSeeder"
+
+# E-Office
+php artisan db:seed --class="Modules\EOffice\Database\Seeders\EOfficeSeeder"
+```
+
+---
+
+#### ▶ Migrate fresh + seed sekaligus (⚠️ data lama terhapus)
+
+```bash
+# Hanya global seeder
+php artisan migrate:fresh --seed
+
+# Migrate fresh + seed semua modul sekaligus
+php artisan migrate:fresh --seed && \
+php artisan db:seed --class="Modules\Capstone\Database\Seeders\CapstoneSeeder" && \
+php artisan db:seed --class="Modules\BankSoal\Database\Seeders\BankSoalSeeder" && \
+php artisan db:seed --class="Modules\Kemahasiswaan\Database\Seeders\KemahasiswaanSeeder" && \
+php artisan db:seed --class="Modules\EOffice\Database\Seeders\EOfficeSeeder"
+```
+
+---
+
+#### ▶ Daftarkan modul seeder ke DatabaseSeeder (opsional)
+
+Jika ingin semua modul ikut ter-seed saat `php artisan db:seed` atau `migrate:fresh --seed`, tambahkan ke `DatabaseSeeder`:
+
+```php
+// database/seeders/DatabaseSeeder.php
+public function run(): void
+{
+    $this->call([
+        // Global
+        RoleSeeder::class,
+        UserSeeder::class,
+        StudentSeeder::class,
+        LecturerSeeder::class,
+
+        // Modules — uncomment sesuai kebutuhan
+        \Modules\Capstone\Database\Seeders\CapstoneSeeder::class,
+        \Modules\BankSoal\Database\Seeders\BankSoalSeeder::class,
+        \Modules\Kemahasiswaan\Database\Seeders\KemahasiswaanSeeder::class,
+        \Modules\EOffice\Database\Seeders\EOfficeSeeder::class,
+    ]);
+}
+```
+
+> 💡 **Tips:** Di environment development, daftarkan semua modul seeder agar mudah reset & rebuild data. Di production, jalankan modul seeder secara manual sesuai kebutuhan untuk menghindari data dummy masuk ke production.
+
+---
+
+### Membuat Seeder Baru
+
+```bash
+# Global seeder
+php artisan make:seeder NamaSeeder
+
+# Module seeder (buat manual di folder yang sesuai)
+# Contoh: Modules/Capstone/Database/Seeders/CapstonePeriodSeeder.php
+```
+
+Untuk module seeder yang dibuat manual, gunakan namespace yang sesuai:
+
+```php
+<?php
+
+namespace Modules\Capstone\Database\Seeders;
+
+use Illuminate\Database\Seeder;
+
+class CapstonePeriodSeeder extends Seeder
+{
+    public function run(): void
+    {
+        // ...
+    }
+}
+```
+
+---
+
+### Tips Seeding
+
+> ⚠️ **Urutan penting!** Seed global (`roles`, `users`) **selalu duluan** sebelum modul, karena modul seeder biasanya butuh foreign key ke tabel global.
+
+> ✅ Gunakan `updateOrInsert()` atau `firstOrCreate()` agar seeder **aman dijalankan berulang** tanpa duplikasi data.
+
+> 🔄 Setelah seeding, clear cache Redis agar data lama tidak tersisa:
+> ```bash
+> php artisan cache:clear
+> ```
+
+---
+
 ## 🛠️ Essential Commands
 
 ### Cache Management
@@ -818,6 +1136,7 @@ public function updateUserRoles(User $user, array $roleIds): void
 | 📝 **Code Documentation** | Tambahkan docblock untuk function public |
 | 🧪 **Test Before Commit** | Test fitur sebelum commit ke branch utama |
 | 🔴 **Redis First** | Pastikan Redis/Memurai jalan sebelum start Laravel |
+| 🌱 **Safe Seeder** | Gunakan `updateOrInsert` / `firstOrCreate` agar seeder idempotent |
 
 ### Git Workflow
 
@@ -836,6 +1155,7 @@ fix(bank-soal): resolve question duplication bug
 docs(readme): update installation guide
 refactor(kemahasiswaan): optimize event query
 perf(auth): add redis caching for user roles
+seed(capstone): add period and topic dummy data
 ```
 
 ---
@@ -973,6 +1293,46 @@ php artisan config:clear
 
 ```bash
 php artisan db:show
+```
+</details>
+
+<details>
+<summary><b>❌ Seeder error: Class not found (module seeder)</b></summary>
+
+Pastikan namespace di file seeder modul sudah benar, lalu regenerate autoload:
+
+```bash
+composer dump-autoload
+```
+
+Jalankan ulang seeder dengan fully qualified class name:
+
+```bash
+php artisan db:seed --class="Modules\Capstone\Database\Seeders\CapstoneSeeder"
+```
+</details>
+
+<details>
+<summary><b>❌ Seeder error: Duplicate entry / unique constraint violation</b></summary>
+
+Seeder dijalankan lebih dari sekali tanpa guard idempotent. Ganti `insert()` dengan `updateOrInsert()` atau `firstOrCreate()`:
+
+```php
+// ❌ Akan error jika dijalankan dua kali
+DB::table('roles')->insert(['name' => 'superadmin']);
+
+// ✅ Aman dijalankan berulang
+DB::table('roles')->updateOrInsert(
+    ['name' => 'superadmin'],
+    ['updated_at' => now()]
+);
+```
+
+Atau truncate tabel dulu sebelum insert (hati-hati di production):
+
+```php
+DB::table('roles')->truncate();
+DB::table('roles')->insert([...]);
 ```
 </details>
 
