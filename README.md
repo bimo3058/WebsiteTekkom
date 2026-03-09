@@ -33,6 +33,7 @@
 - [Development Rules](#-development-rules)
 - [Performance Configuration](#-performance-configuration)
 - [Redis Setup](#-redis-setup)
+- [Laravel Telescope (Opsional)](#-laravel-telescope-opsional)
 - [Troubleshooting](#-troubleshooting)
 - [Future Roadmap](#-future-roadmap)
 
@@ -1157,6 +1158,206 @@ refactor(kemahasiswaan): optimize event query
 perf(auth): add redis caching for user roles
 seed(capstone): add period and topic dummy data
 ```
+
+---
+
+## 🔭 Laravel Telescope (Opsional)
+
+Laravel Telescope adalah **debug assistant** bawaan Laravel yang memungkinkan kamu memantau setiap request yang masuk: berapa lama prosesnya, query apa saja yang dijalankan, apakah ada query lambat, exception apa yang terjadi, dan masih banyak lagi — semuanya lewat UI web yang rapi.
+
+> ⚠️ **Telescope hanya untuk environment `local` / `development`.** Jangan aktifkan di production karena menyimpan seluruh data request ke database dan berpotensi membocorkan informasi sensitif.
+
+---
+
+### Instalasi
+
+```bash
+composer require laravel/telescope --dev
+php artisan telescope:install
+php artisan migrate
+```
+
+Perintah `telescope:install` akan:
+- Mempublish config ke `config/telescope.php`
+- Mempublish assets (CSS/JS) ke `public/vendor/telescope`
+- Mendaftarkan `TelescopeServiceProvider` ke `bootstrap/providers.php`
+
+---
+
+### Konfigurasi Agar Hanya Aktif di Local
+
+Pastikan Telescope **tidak pernah load di production**. Buka `app/Providers/TelescopeServiceProvider.php` dan verifikasi method `register()`:
+
+```php
+// app/Providers/TelescopeServiceProvider.php
+
+public function register(): void
+{
+    // Telescope hanya aktif di environment local
+    if ($this->app->isLocal()) {
+        $this->app->register(\Laravel\Telescope\TelescopeApplicationServiceProvider::class);
+    }
+}
+```
+
+Atau bisa juga via `config/telescope.php`:
+
+```php
+// config/telescope.php
+'enabled' => env('TELESCOPE_ENABLED', false),
+```
+
+Dan di `.env` development:
+
+```env
+TELESCOPE_ENABLED=true
+```
+
+> ✅ Dengan cara ini, Telescope tidak akan aktif kecuali kamu eksplisit menyalakannya di `.env` lokal.
+
+---
+
+### Akses Dashboard
+
+Setelah server berjalan, buka:
+
+```
+http://localhost:8000/telescope
+```
+
+---
+
+### Memantau Request & Response Time
+
+Ini adalah fitur utama yang paling berguna untuk profiling performa.
+
+#### Tab **Requests**
+
+Buka **Telescope → Requests**. Kamu akan melihat tabel seperti ini:
+
+| Method | Path | Status | Duration | Time |
+|--------|------|--------|----------|------|
+| POST | /login | 302 | **387ms** | 14:32:01 |
+| GET | /dashboard | 200 | **210ms** | 14:32:02 |
+| GET | /superadmin/dashboard | 200 | **950ms** | 14:32:05 |
+
+Kolom **Duration** menunjukkan total waktu dari request masuk hingga response keluar.
+
+#### Detail Request
+
+Klik salah satu request untuk melihat breakdown lengkapnya:
+
+```
+Request Detail
+├── 📋 Request Info
+│   ├── Method, URL, Status Code
+│   ├── Controller & Action yang dipanggil
+│   └── Middleware yang dijalankan
+│
+├── 🗄️ Queries (paling penting untuk profiling!)
+│   ├── Jumlah query yang dieksekusi
+│   ├── Durasi tiap query (ms)
+│   └── Raw SQL dengan binding-nya
+│
+├── ⚡ Cache
+│   ├── Cache hit / miss
+│   └── Key yang diakses
+│
+├── 📦 Session
+│   └── Data session yang aktif
+│
+└── 🔢 Response
+    └── Status & response body (jika JSON)
+```
+
+---
+
+### Mengidentifikasi Request Lambat
+
+Telescope bisa **highlight otomatis** request yang melebihi threshold tertentu. Konfigurasi di `config/telescope.php`:
+
+```php
+// config/telescope.php
+
+'slow_queries' => [
+    'enabled'   => true,
+    'threshold' => 100, // query > 100ms dianggap lambat (dalam ms)
+],
+
+'slow_requests' => [
+    'enabled'   => true,
+    'threshold' => 1000, // request > 1000ms dianggap lambat (dalam ms)
+],
+```
+
+Request dan query yang melewati threshold akan **ditandai merah** di dashboard Telescope.
+
+---
+
+### Tips Membaca Hasil Telescope
+
+**Cek N+1 Query Problem:**
+
+Kalau kamu buka satu halaman dan di tab Queries muncul puluhan query dengan pola yang mirip-mirip, itu tanda N+1. Solusinya pakai eager loading `with()`:
+
+```php
+// ❌ Tanpa eager loading → muncul N+1 di Telescope
+$groups = CapstoneGroup::all();
+foreach ($groups as $group) {
+    echo $group->students->count(); // query baru tiap iterasi
+}
+
+// ✅ Dengan eager loading → hanya 2 query di Telescope
+$groups = CapstoneGroup::with('students')->get();
+```
+
+**Cek Cache Hit/Miss:**
+
+Di tab **Cache**, pastikan key seperti `user:{id}:roles` dan `user:{id}:data` berstatus **hit** (bukan miss) setelah login pertama. Kalau terus miss, berarti caching belum bekerja.
+
+**Bandingkan Before/After Optimasi:**
+
+Gunakan Telescope sebelum dan sesudah menerapkan perubahan (tambah index, eager loading, caching) untuk melihat penurunan duration secara konkret.
+
+---
+
+### Membersihkan Data Telescope
+
+Data Telescope tersimpan di tabel `telescope_entries` dan `telescope_entries_tags`. Bersihkan secara berkala agar tidak memberatkan database lokal:
+
+```bash
+# Hapus semua data Telescope
+php artisan telescope:clear
+
+# Atau jalankan pruning otomatis (hapus data > 24 jam)
+php artisan telescope:prune
+
+# Jalankan pruning dengan custom hours
+php artisan telescope:prune --hours=48
+```
+
+Bisa juga dijadwalkan di `routes/console.php`:
+
+```php
+use Illuminate\Support\Facades\Schedule;
+
+Schedule::command('telescope:prune')->daily();
+```
+
+---
+
+### Uninstall Telescope (Jika Tidak Diperlukan)
+
+Jika teammate tidak ingin install Telescope (misal di mesin yang resource-nya terbatas):
+
+```bash
+composer remove laravel/telescope
+php artisan migrate:rollback  # rollback migration telescope
+```
+
+Hapus juga `TelescopeServiceProvider` dari `bootstrap/providers.php` jika masih terdaftar.
+
+> 💡 Karena diinstall dengan flag `--dev`, Telescope **tidak akan ikut ter-install** di production saat `composer install --no-dev`.
 
 ---
 
