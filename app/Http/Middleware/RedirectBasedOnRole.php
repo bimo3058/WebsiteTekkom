@@ -33,21 +33,22 @@ class RedirectBasedOnRole
 
     private function redirectBasedOnRole($user)
     {
-        // Check if user is superadmin
-        if ($user->roles()->where('name', 'SUPERADMIN')->exists()) {
+        if ($user->roles()->whereIn('name', ['SUPERADMIN', 'superadmin'])->exists()) {
             return redirect()->route('superadmin.dashboard');
         }
 
-        // Check other roles and redirect accordingly
-        if ($user->roles()->where('name', 'DOSEN')->exists()) {
-            return redirect()->route('banksoal.dashboard'); // Sesuaikan
+        if ($user->roles()->whereIn('name', ['ADMIN', 'admin'])->exists()) {
+            return redirect()->route('admin.dashboard'); // sesuaikan kalau nanti ada route admin tersendiri
         }
 
-        if ($user->roles()->where('name', 'MAHASISWA')->exists()) {
-            return redirect()->route('mahasiswa.dashboard'); // Sesuaikan
+        if ($user->roles()->whereIn('name', ['DOSEN', 'dosen'])->exists()) {
+            return redirect()->route('banksoal.dashboard');
         }
 
-        // Default fallback to global dashboard
+        if ($user->roles()->whereIn('name', ['MAHASISWA', 'mahasiswa'])->exists()) {
+            return redirect()->route('mahasiswa.dashboard');
+        }
+
         return redirect()->route('dashboard');
     }
 }
