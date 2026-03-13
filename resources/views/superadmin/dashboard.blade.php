@@ -1,143 +1,108 @@
 <x-app-layout>
-    <x-slot name="header">
-        <h2 class="font-semibold text-xl text-gray-800 dark:text-gray-200 leading-tight">
-            Superadmin Dashboard
-        </h2>
-    </x-slot>
+<x-sidebar :user="auth()->user()">
+    <div class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-8">
+        <div class="max-w-7xl mx-auto">
 
-    <div class="py-12">
-        <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
-            <p class="text-gray-600 dark:text-gray-400 mb-8">Welcome, {{ auth()->user()->name }}</p>
+            {{-- Header --}}
+            <div class="mb-8">
+                <h1 class="text-4xl font-bold text-white mb-2">Superadmin Dashboard</h1>
+                <p class="text-slate-400">Welcome back, <span class="text-white font-medium">{{ auth()->user()->name }}</span></p>
+            </div>
 
-            <!-- Quick Stats -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <!-- Total Users -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+            {{-- Quick Stats --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+                <div class="bg-slate-800 border border-slate-700 rounded-lg p-5">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Total Users</p>
-                            <p class="text-3xl font-bold text-gray-900 dark:text-white mt-2">{{ $total_users }}</p>
+                            <p class="text-slate-400 text-sm font-medium">Total Users</p>
+                            <p class="text-3xl font-bold text-white mt-2">{{ $total_users }}</p>
                         </div>
-                        <div class="bg-blue-100 dark:bg-blue-900 p-3 rounded-lg">
-                            <svg class="w-8 h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM12 14a8 8 0 00-8 8v2h16v-2a8 8 0 00-8-8z"></path>
+                        <div class="bg-blue-500/20 p-3 rounded-lg">
+                            <svg class="w-8 h-8 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM12 14a8 8 0 00-8 8v2h16v-2a8 8 0 00-8-8z"/>
                             </svg>
                         </div>
                     </div>
                 </div>
 
-                <!-- Superadmins -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+                <div class="bg-slate-800 border border-slate-700 rounded-lg p-5">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Superadmins</p>
-                            <p class="text-3xl font-bold text-purple-600 dark:text-purple-400 mt-2">{{ $total_superadmins }}</p>
+                            <p class="text-slate-400 text-sm font-medium">Superadmins</p>
+                            <p class="text-3xl font-bold text-purple-400 mt-2">{{ $total_superadmins }}</p>
                         </div>
-                        <div class="bg-purple-100 dark:bg-purple-900 p-3 rounded-lg">
-                            <svg class="w-8 h-8 text-purple-600 dark:text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
+                        <div class="bg-purple-500/20 p-3 rounded-lg">
+                            <svg class="w-8 h-8 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/>
                             </svg>
                         </div>
                     </div>
                 </div>
 
-                <!-- Lecturers -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+                <div class="bg-slate-800 border border-slate-700 rounded-lg p-5">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Lecturers (DOSEN)</p>
-                            <p class="text-3xl font-bold text-green-600 dark:text-green-400 mt-2">{{ $total_lecturers }}</p>
+                            <p class="text-slate-400 text-sm font-medium">Dosen</p>
+                            <p class="text-3xl font-bold text-green-400 mt-2">{{ $total_lecturers }}</p>
                         </div>
-                        <div class="bg-green-100 dark:bg-green-900 p-3 rounded-lg">
-                            <svg class="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C6.248 6.253 2 10.998 2 16.5c0 5.502 4.248 10.247 10 10.247s10-4.745 10-10.247c0-5.502-4.248-10.247-10-10.247z"></path>
+                        <div class="bg-green-500/20 p-3 rounded-lg">
+                            <svg class="w-8 h-8 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
                             </svg>
                         </div>
                     </div>
                 </div>
 
-                <!-- Students -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow">
+                <div class="bg-slate-800 border border-slate-700 rounded-lg p-5">
                     <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-gray-600 dark:text-gray-400 text-sm font-medium">Students (MAHASISWA)</p>
-                            <p class="text-3xl font-bold text-orange-600 dark:text-orange-400 mt-2">{{ $total_students }}</p>
+                            <p class="text-slate-400 text-sm font-medium">Mahasiswa</p>
+                            <p class="text-3xl font-bold text-orange-400 mt-2">{{ $total_students }}</p>
                         </div>
-                        <div class="bg-orange-100 dark:bg-orange-900 p-3 rounded-lg">
-                            <svg class="w-8 h-8 text-orange-600 dark:text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C6.248 6.253 2 10.998 2 16.5c0 5.502 4.248 10.247 10 10.247s10-4.745 10-10.247c0-5.502-4.248-10.247-10-10.247z"></path>
+                        <div class="bg-orange-500/20 p-3 rounded-lg">
+                            <svg class="w-8 h-8 text-orange-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
                             </svg>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- Modules Overview -->
+            {{-- Modules Section --}}
             <div class="mb-8">
-                <div class="flex items-center justify-between mb-6">
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Modules</h2>
-                    <a href="{{ route('superadmin.modules') }}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium">
-                        View All →
-                    </a>
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-2xl font-bold text-white">Modules</h2>
+                    <a href="{{ route('superadmin.modules') }}" class="text-blue-400 hover:text-blue-300 text-sm font-medium">View All →</a>
                 </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     @foreach($modules as $moduleKey => $module)
-                    <div class="bg-white dark:bg-gray-800 rounded-lg p-6 shadow hover:shadow-lg transition">
+                    @php
+                        $moduleColor = match($moduleKey) {
+                            'bank_soal' => ['border' => 'border-yellow-500/30', 'bg' => 'bg-yellow-500/10', 'text' => 'text-yellow-400'],
+                            'capstone' => ['border' => 'border-cyan-500/30', 'bg' => 'bg-cyan-500/10', 'text' => 'text-cyan-400'],
+                            'eoffice' => ['border' => 'border-purple-500/30', 'bg' => 'bg-purple-500/10', 'text' => 'text-purple-400'],
+                            'manajemen_mahasiswa' => ['border' => 'border-orange-500/30', 'bg' => 'bg-orange-500/10', 'text' => 'text-orange-400'],
+                            default => ['border' => 'border-blue-500/30', 'bg' => 'bg-blue-500/10', 'text' => 'text-blue-400'],
+                        };
+                    @endphp
+                    <div class="bg-slate-800 border {{ $moduleColor['border'] }} rounded-lg p-5 hover:bg-slate-700/50 transition">
                         <div class="flex items-start justify-between mb-4">
-                            <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
-                                    {{ $module['name'] }}
-                                </h3>
-                            </div>
-                            <div class="bg-gray-100 dark:bg-gray-700 p-2 rounded-lg">
-                                <svg class="w-6 h-6 text-gray-600 dark:text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"></path>
+                            <h3 class="text-lg font-semibold text-white">{{ $module['name'] }}</h3>
+                            <div class="{{ $moduleColor['bg'] }} p-2 rounded-lg">
+                                <svg class="w-5 h-5 {{ $moduleColor['text'] }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/>
                                 </svg>
                             </div>
                         </div>
-
-                        <!-- Module Stats -->
                         <div class="space-y-2 mb-4">
-                            @if(isset($module['pertanyaan']))
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-gray-600 dark:text-gray-400">Questions</span>
-                                <span class="font-semibold text-gray-900 dark:text-white">{{ $module['pertanyaan'] }}</span>
-                            </div>
-                            @endif
-
-                            @if(isset($module['mata_kuliah']))
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-gray-600 dark:text-gray-400">Courses</span>
-                                <span class="font-semibold text-gray-900 dark:text-white">{{ $module['mata_kuliah'] }}</span>
-                            </div>
-                            @endif
-
-                            @if(isset($module['groups']))
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-gray-600 dark:text-gray-400">Groups</span>
-                                <span class="font-semibold text-gray-900 dark:text-white">{{ $module['groups'] }}</span>
-                            </div>
-                            @endif
-
-                            @if(isset($module['students']))
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-gray-600 dark:text-gray-400">Students</span>
-                                <span class="font-semibold text-gray-900 dark:text-white">{{ $module['students'] }}</span>
-                            </div>
-                            @endif
-
-                            @if(isset($module['alumni']))
-                            <div class="flex items-center justify-between text-sm">
-                                <span class="text-gray-600 dark:text-gray-400">Alumni</span>
-                                <span class="font-semibold text-gray-900 dark:text-white">{{ $module['alumni'] }}</span>
-                            </div>
-                            @endif
+                            @foreach(collect($module)->except(['name', 'route']) as $label => $value)
+                                <div class="flex items-center justify-between text-sm">
+                                    <span class="text-slate-400">{{ str_replace('_', ' ', ucfirst($label)) }}</span>
+                                    <span class="font-semibold text-white">{{ $value }}</span>
+                                </div>
+                            @endforeach
                         </div>
-
-                        <!-- Action Button -->
-                        <a href="{{ route($module['route']) }}" 
-                           class="block text-center bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium py-2 px-4 rounded-lg transition">
+                        <a href="{{ route($module['route']) }}" class="block text-center bg-slate-700 hover:bg-slate-600 text-white text-sm font-medium py-2 px-4 rounded-lg transition border border-slate-600">
                             Manage
                         </a>
                     </div>
@@ -145,129 +110,81 @@
                 </div>
             </div>
 
-            <!-- Recent Users -->
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <div class="lg:col-span-2">
-                    <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Recent Users</h2>
-                        <a href="{{ route('superadmin.users.index') }}" class="text-blue-600 dark:text-blue-400 hover:underline text-sm font-medium">
-                            View All →
-                        </a>
-                    </div>
+            {{-- Recent Users & Recent Activity --}}
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                        <div class="overflow-x-auto">
-                            <table class="w-full">
-                                <thead>
-                                    <tr class="border-b border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-700">
-                                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Name</th>
-                                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Email</th>
-                                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Roles</th>
-                                        <th class="px-6 py-3 text-left text-sm font-semibold text-gray-900 dark:text-white">Joined</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @forelse($recent_users as $user)
-                                    <tr class="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 transition">
-                                        <td class="px-6 py-4">
-                                            <span class="text-gray-900 dark:text-white font-medium">{{ $user->name }}</span>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <span class="text-gray-600 dark:text-gray-400 text-sm">{{ $user->email }}</span>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <div class="flex gap-2 flex-wrap">
-                                                @forelse($user->roles as $role)
-                                                <span class="inline-block bg-blue-100 dark:bg-blue-900 text-blue-800 dark:text-blue-200 text-xs font-medium px-2.5 py-0.5 rounded-full">
-                                                    {{ $role->name }}
-                                                </span>
-                                                @empty
-                                                <span class="text-gray-500 dark:text-gray-400 text-sm">No role</span>
-                                                @endforelse
-                                            </div>
-                                        </td>
-                                        <td class="px-6 py-4">
-                                            <span class="text-gray-600 dark:text-gray-400 text-sm">
-                                                {{ $user->created_at->format('M d, Y') }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    @empty
-                                    <tr>
-                                        <td colspan="4" class="px-6 py-8 text-center text-gray-500 dark:text-gray-400">
-                                            No users yet
-                                        </td>
-                                    </tr>
-                                    @endforelse
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quick Actions -->
+                {{-- Recent Users --}}
                 <div>
-                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-6">Quick Actions</h2>
-
-                    <div class="space-y-4">
-                        <!-- User Management -->
-                        <a href="{{ route('superadmin.users.index') }}" 
-                           class="block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-blue-500 dark:hover:border-blue-500 transition group">
-                            <div class="flex items-start justify-between">
-                                <div>
-                                    <h3 class="text-gray-900 dark:text-white font-semibold group-hover:text-blue-600 dark:group-hover:text-blue-400 transition">Manage Users</h3>
-                                    <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">Add, edit, or remove users</p>
-                                </div>
-                                <svg class="w-6 h-6 text-gray-400 dark:text-gray-600 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
-                                </svg>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-white">Recent Users</h2>
+                        <a href="{{ route('superadmin.users.index') }}" class="text-blue-400 hover:text-blue-300 text-sm font-medium">View All →</a>
+                    </div>
+                    <div class="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+                        @forelse($recent_users->take(5) as $user)
+                        @php
+                            $roleColors = [
+                                'superadmin' => 'bg-purple-500/20 text-purple-300',
+                                'dosen'      => 'bg-green-500/20 text-green-300',
+                                'mahasiswa'  => 'bg-orange-500/20 text-orange-300',
+                            ];
+                        @endphp
+                        <div class="flex items-center gap-3 px-4 py-3 border-b border-slate-700 last:border-0 hover:bg-slate-700/30 transition">
+                            <div class="w-8 h-8 rounded-full bg-blue-600/30 flex items-center justify-center flex-shrink-0">
+                                <span class="text-blue-300 font-semibold text-sm">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
                             </div>
-                        </a>
-
-                        <!-- Audit Logs -->
-                        <a href="{{ route('superadmin.audit-logs') }}" 
-                           class="block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-green-500 dark:hover:border-green-500 transition group">
-                            <div class="flex items-start justify-between">
-                                <div>
-                                    <h3 class="text-gray-900 dark:text-white font-semibold group-hover:text-green-600 dark:group-hover:text-green-400 transition">Audit Logs</h3>
-                                    <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">View system activity</p>
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <p class="text-white text-sm font-medium truncate">{{ $user->name }}</p>
+                                    @foreach($user->roles as $role)
+                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold {{ $roleColors[$role->name] ?? 'bg-slate-500/20 text-slate-300' }}">
+                                            {{ $role->name }}
+                                        </span>
+                                    @endforeach
                                 </div>
-                                <svg class="w-6 h-6 text-gray-400 dark:text-gray-600 group-hover:text-green-600 dark:group-hover:text-green-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                                </svg>
+                                <p class="text-slate-500 text-xs truncate">{{ $user->email }}</p>
                             </div>
-                        </a>
-
-                        <!-- System Settings -->
-                        <a href="{{ route('superadmin.modules') }}" 
-                           class="block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-purple-500 dark:hover:border-purple-500 transition group">
-                            <div class="flex items-start justify-between">
-                                <div>
-                                    <h3 class="text-gray-900 dark:text-white font-semibold group-hover:text-purple-600 dark:group-hover:text-purple-400 transition">Module Settings</h3>
-                                    <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">Manage system modules</p>
-                                </div>
-                                <svg class="w-6 h-6 text-gray-400 dark:text-gray-600 group-hover:text-purple-600 dark:group-hover:text-purple-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path>
-                                </svg>
-                            </div>
-                        </a>
-
-                        <!-- User Profile -->
-                        <a href="{{ route('profile.edit') }}" 
-                           class="block bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:border-orange-500 dark:hover:border-orange-500 transition group">
-                            <div class="flex items-start justify-between">
-                                <div>
-                                    <h3 class="text-gray-900 dark:text-white font-semibold group-hover:text-orange-600 dark:group-hover:text-orange-400 transition">My Profile</h3>
-                                    <p class="text-gray-600 dark:text-gray-400 text-sm mt-1">Edit your account</p>
-                                </div>
-                                <svg class="w-6 h-6 text-gray-400 dark:text-gray-600 group-hover:text-orange-600 dark:group-hover:text-orange-400 transition" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                                </svg>
-                            </div>
-                        </a>
+                        </div>
+                        @empty
+                        <div class="px-4 py-8 text-center text-slate-500 text-sm">Belum ada user</div>
+                        @endforelse
                     </div>
                 </div>
+
+                {{-- Recent Activity --}}
+                <div>
+                    <div class="flex items-center justify-between mb-4">
+                        <h2 class="text-xl font-bold text-white">Recent Activity</h2>
+                        <a href="{{ route('superadmin.audit-logs') }}" class="text-blue-400 hover:text-blue-300 text-sm font-medium">View All →</a>
+                    </div>
+                    <div class="bg-slate-800 border border-slate-700 rounded-lg overflow-hidden">
+                        @forelse($recent_logs->take(5) as $log)
+                        @php
+                            $actionColor = match($log->action) {
+                                'CREATE' => 'bg-green-500/20 text-green-300',
+                                'UPDATE' => 'bg-yellow-500/20 text-yellow-300',
+                                'DELETE' => 'bg-red-500/20 text-red-300',
+                                'LOGIN'  => 'bg-purple-500/20 text-purple-300',
+                                default  => 'bg-blue-500/20 text-blue-300',
+                            };
+                        @endphp
+                        <div class="px-4 py-3 border-b border-slate-700 last:border-0 hover:bg-slate-700/30 transition">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold {{ $actionColor }}">
+                                    {{ $log->action }}
+                                </span>
+                                <span class="text-slate-500 text-xs">{{ $log->created_at->diffForHumans() }}</span>
+                            </div>
+                            <p class="text-slate-300 text-xs truncate">{{ $log->description }}</p>
+                        </div>
+                        @empty
+                        <div class="px-4 py-8 text-center text-slate-500 text-sm">Belum ada aktivitas</div>
+                        @endforelse
+                    </div>
+                </div>
+
             </div>
+
         </div>
     </div>
+</x-sidebar>
 </x-app-layout>
