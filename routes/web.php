@@ -3,18 +3,17 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\MicrosoftController;
 use App\Http\Controllers\SuperAdminController;
+use App\Http\Controllers\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
 
 Route::middleware('guest')->group(function () {
 
-    // Login page (pilih metode login)
     Route::get('/login', function () {
         return view('auth.login');
     })->name('login');
 
-    // Microsoft SSO
     Route::get('/auth/microsoft/redirect', [MicrosoftController::class, 'redirect'])
         ->name('microsoft.redirect');
 
@@ -25,49 +24,54 @@ Route::middleware('guest')->group(function () {
 Route::middleware('auth')->group(function () {
 
     Route::middleware('role:superadmin')->prefix('superadmin')->name('superadmin.')->group(function () {
-        
-        // Dashboard - Superadmin only
+
         Route::get('/dashboard', [SuperAdminController::class, 'index'])
             ->name('dashboard');
 
-        // User Management
         Route::get('/users', [SuperAdminController::class, 'users'])
             ->name('users.index');
+
+        // Tambah user baru
+        Route::post('/users', [SuperAdminController::class, 'storeUser'])
+            ->name('users.store');
+
+        // Update role user (ganti dari POST ke PATCH, nama route tetap bisa dipakai keduanya)
         Route::post('/users/{user}/update-role', [SuperAdminController::class, 'updateRole'])
             ->name('users.update-role');
+        Route::patch('/users/{user}/roles', [SuperAdminController::class, 'updateRole'])
+            ->name('users.update-roles');
 
-        // Module Management
+        // Hapus user (soft-delete)
+        Route::delete('/users/{user}', [SuperAdminController::class, 'destroyUser'])
+            ->name('users.destroy');
+
         Route::get('/modules', [SuperAdminController::class, 'modules'])
             ->name('modules');
 
-        // Audit Logs
         Route::get('/audit-logs', [SuperAdminController::class, 'auditLogs'])
             ->name('audit-logs');
+
+        Route::get('/audit-logs/table', [SuperAdminController::class, 'auditLogsTable'])
+            ->name('audit-logs.table');
     });
 
-    Route::get('/dashboard', function () {
-        $user = auth()->user();
-        
-        // HANYA superadmin yang redirect langsung
-        if ($user->roles()->where('name', 'superadmin')->exists()) {
-            return redirect()->route('superadmin.dashboard');
-        }
-        
-        // Sisanya (dosen, mahasiswa, admin, gpm) ke global dashboard
-        return view('dashboard');
-    })->name('dashboard');
+    // Global dashboard — pakai DashboardController
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     Route::post('/logout', function () {
+        $user = auth()->user();
 
         \App\Models\UserAuditLog::create([
-            'user_id' => auth()->user()->id,
+            'user_id' => $user->id,
             'action'  => 'logout',
             'source'  => 'manual',
         ]);
+
+        $user->clearUserCache();
 
         auth()->logout();
         request()->session()->invalidate();
@@ -76,6 +80,5 @@ Route::middleware('auth')->group(function () {
         return redirect('/login')->with('status', 'You have been logged out.');
     })->name('logout');
 });
-
 
 require __DIR__.'/auth.php';

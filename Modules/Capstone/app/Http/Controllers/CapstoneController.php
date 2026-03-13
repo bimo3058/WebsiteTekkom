@@ -3,11 +3,12 @@
 namespace Modules\Capstone\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Services\Capstone\BidService;
-use App\Services\Capstone\GroupService;
-use App\Services\Capstone\NotificationService;
-use App\Services\Capstone\PeriodService;
-use App\Services\Capstone\TitleService;
+use App\Services\AuditLogger;
+use Modules\Capstone\Services\BidService;
+use Modules\Capstone\Services\GroupService;
+use Modules\Capstone\Services\NotificationService;
+use Modules\Capstone\Services\PeriodService;
+use Modules\Capstone\Services\TitleService;
 use Illuminate\Http\Request;
 
 class CapstoneController extends Controller
@@ -28,7 +29,7 @@ class CapstoneController extends Controller
     public function dashboard()
     {
         $user  = auth()->user();
-        $roles = $user->roles->pluck('name'); // load sekali
+        $roles = $user->roles->pluck('name');
 
         if ($roles->intersect(['superadmin', 'admin'])->isNotEmpty()) {
             return $this->adminDashboard();
@@ -43,20 +44,18 @@ class CapstoneController extends Controller
 
     private function adminDashboard()
     {
-        $period      = $this->periodService->getActivePeriod();
-        $groupStats  = $period ? $this->groupService->getStatusStats($period->id) : collect();
-        $allPeriods  = $this->periodService->getAllPeriods();
-
+        $period     = $this->periodService->getActivePeriod();
+        $groupStats = $period ? $this->groupService->getStatusStats($period->id) : collect();
+        $allPeriods = $this->periodService->getAllPeriods();
         return view('capstone::dashboard.admin', compact('period', 'groupStats', 'allPeriods'));
     }
 
     private function dosenDashboard()
     {
-        $user    = auth()->user();
-        $period  = $this->periodService->getActivePeriod();
-        $titles  = $this->titleService->getByLecturer($user->lecturer->id);
-        $unread  = $this->notificationService->getUnreadCount($user->id);
-
+        $user   = auth()->user();
+        $period = $this->periodService->getActivePeriod();
+        $titles = $this->titleService->getByLecturer($user->lecturer->id);
+        $unread = $this->notificationService->getUnreadCount($user->id);
         return view('capstone::dashboard.dosen', compact('period', 'titles', 'unread'));
     }
 
@@ -66,7 +65,6 @@ class CapstoneController extends Controller
         $period = $this->periodService->getActivePeriod();
         $unread = $this->notificationService->getUnreadCount($user->id);
 
-        // Cari grup mahasiswa di period aktif
         $group = null;
         if ($period) {
             $group = \App\Models\CapstoneGroupMember::where('student_id', $user->student->id)
@@ -76,7 +74,6 @@ class CapstoneController extends Controller
                 ->first()
                 ?->group;
         }
-
         return view('capstone::dashboard.mahasiswa', compact('period', 'group', 'unread'));
     }
 
@@ -85,10 +82,16 @@ class CapstoneController extends Controller
         return view('capstone::create');
     }
 
-    public function store(Request $request) {}
+    public function store(Request $request)
+    {
+        // TODO: implementasi
+        // AuditLogger::create('capstone', "Membuat group capstone: {$group->name}", $group, $group->toArray());
+    }
 
     public function show($id)
     {
+        // TODO: implementasi
+        // AuditLogger::view('capstone', "Melihat capstone ID {$id}");
         return view('capstone::show');
     }
 
@@ -97,7 +100,15 @@ class CapstoneController extends Controller
         return view('capstone::edit');
     }
 
-    public function update(Request $request, $id) {}
+    public function update(Request $request, $id)
+    {
+        // TODO: implementasi
+        // AuditLogger::update('capstone', "Mengubah capstone ID {$id}", $model, $oldData, $newData);
+    }
 
-    public function destroy($id) {}
+    public function destroy($id)
+    {
+        // TODO: implementasi
+        // AuditLogger::delete('capstone', "Menghapus capstone ID {$id}", $model, $oldData);
+    }
 }
