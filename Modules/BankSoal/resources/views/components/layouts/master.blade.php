@@ -14,11 +14,15 @@
         <meta name="author" content="{{ $author ?? '' }}">
 
         <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.bunny.net">
-        <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+        <link rel="stylesheet" href="{{ asset('modules/banksoal/css/dashboard.css') }}">
 
         {{-- Vite CSS --}}
         {{-- {{ module_vite('build-banksoal', 'resources/assets/sass/app.scss') }} --}}
+
+        @stack('styles')
     </head>
 
     <body>
