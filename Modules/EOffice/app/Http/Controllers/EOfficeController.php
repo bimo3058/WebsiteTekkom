@@ -3,54 +3,63 @@
 namespace Modules\EOffice\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Services\AuditLogger;
 use Illuminate\Http\Request;
 
 class EOfficeController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index()
     {
         return view('eoffice::index');
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
+    public function dashboard()
+    {
+        $user = auth()->user();
+
+        if ($user->roles()->whereIn('name', ['superadmin', 'admin'])->exists()) {
+            return view('eoffice::dashboard.admin');
+        }
+
+        if ($user->roles()->where('name', 'dosen')->exists()) {
+            return view('eoffice::dashboard.dosen');
+        }
+
+        return view('eoffice::dashboard.mahasiswa');
+    }
+
     public function create()
     {
         return view('eoffice::create');
     }
 
-    /**
-     * Store a newly created resource in storage.
-     */
-    public function store(Request $request) {}
+    public function store(Request $request)
+    {
+        // TODO: implementasi
+        // AuditLogger::create('eoffice', "Membuat dokumen: {$dokumen->judul}", $dokumen, $dokumen->toArray());
+    }
 
-    /**
-     * Show the specified resource.
-     */
     public function show($id)
     {
+        // TODO: implementasi
+        // AuditLogger::view('eoffice', "Melihat dokumen ID {$id}");
         return view('eoffice::show');
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
     public function edit($id)
     {
         return view('eoffice::edit');
     }
 
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(Request $request, $id) {}
+    public function update(Request $request, $id)
+    {
+        // TODO: implementasi
+        // AuditLogger::update('eoffice', "Mengubah dokumen ID {$id}", $model, $oldData, $newData);
+    }
 
-    /**
-     * Remove the specified resource from storage.
-     */
-    public function destroy($id) {}
+    public function destroy($id)
+    {
+        // TODO: implementasi
+        // AuditLogger::delete('eoffice', "Menghapus dokumen ID {$id}", $model, $oldData);
+    }
 }

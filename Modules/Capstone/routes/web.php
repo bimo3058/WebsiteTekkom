@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Capstone\Http\Controllers\CapstoneController;
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('capstones', CapstoneController::class)->names('capstone');
+Route::middleware('auth')->group(function () {
+    Route::get('/capstone/dashboard', [CapstoneController::class, 'dashboard'])
+        ->name('capstone.dashboard');
 });
