@@ -4,11 +4,6 @@ namespace Modules\BankSoal\Models\Shared;
 
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * [Shared - Model] Mata Kuliah
- * 
- * Model ini digunakan oleh semua role
- */
 class MataKuliah extends Model
 {
     protected $table    = 'bs_mata_kuliah';

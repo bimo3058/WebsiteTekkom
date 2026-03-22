@@ -4,12 +4,8 @@ namespace Modules\BankSoal\Models\Shared;
 
 use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
+use Modules\BankSoal\Models\RpsDetail;
 
-/**
- * [Shared - Model] Rencana Pembelajaran Semester
- * 
- * Model ini digunakan oleh semua role
- */
 class Rps extends Model
 {
     protected $table    = 'bs_rps';

@@ -1,26 +1,26 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use app\Http\Middleware\RoleMiddleware;
 use Modules\BankSoal\Http\Controllers\DashboardController;
 use Modules\BankSoal\Http\Controllers\RPS\Dosen\RpsController as DosenRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\RpsController as GpmRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Admin\RpsController as AdminRpsController;
 
 Route::middleware(['auth'])->prefix('bank-soal')->group(function () {
-    ##Dashboard
+    #Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('banksoal.dashboard');
     
-    ##RPS Routes
+    #RPS Routes
     Route::prefix('rps')->name('banksoal.rps.')->group(function () {
         // RPS - Dosen
         Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
             Route::get('/', [DosenRpsController::class, 'index'])->name('index');
             Route::post('/submit', [DosenRpsController::class, 'store'])->name('store');
-            Route::get('/cpl/{mkId}', [DosenRpsController::class, 'getCplByMk'])->name('cpl');
-            Route::get('/cpmk/{mkId}', [DosenRpsController::class, 'getCpmkByCpl'])->name('cpmk');
-            Route::get('/dosen/{mkId}', [DosenRpsController::class, 'getDosenByMk'])->name('dosen');
+            Route::get('/cpl/{mkId?}', [DosenRpsController::class, 'getCplByMk'])->name('cpl');
+            Route::get('/cpmk', [DosenRpsController::class, 'getCpmkByCpl'])->name('cpmk');
+            Route::get('/dosen', [DosenRpsController::class, 'getDosenByMk'])->name('dosen');
+            Route::get('/preview/{rpsId}', [DosenRpsController::class, 'previewDokumen'])->name('preview');
         });
         
         // RPS - GPM
@@ -35,7 +35,7 @@ Route::middleware(['auth'])->prefix('bank-soal')->group(function () {
         
     });
     
-    ##Bank Soal Routes
+    #Bank Soal Routes
     Route::prefix('bank-soal')->name('banksoal.banksoal.')->group(function () {
         // Bank Soal - Dosen
         Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
@@ -60,7 +60,7 @@ Route::middleware(['auth'])->prefix('bank-soal')->group(function () {
         
     });
 
-    ##Arsip Routes
+    #Arsip Routes
     Route::prefix('arsip')->name('banksoal.arsip.')->group(function () {
         // Arsip - Dosen
         Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
@@ -85,3 +85,7 @@ Route::middleware(['auth'])->prefix('bank-soal')->group(function () {
  
     });
 });
+// Route::middleware(['auth', 'verified'])->group(function () {
+//     Route::resource('banksoal', BankSoalController::class)->names('banksoal');
+// });
+
