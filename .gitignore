@@ -22,3 +22,12 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+package-lock.json
+boost.json
+composer.json
+Modules/BankSoal/node_modules
+database/migrations/
+/bootstrap/*
+composer.json
+composer.lock
+bootstrap/providers.php
