@@ -2,5 +2,7 @@
     "Capstone": true,
     "BankSoal": true,
     "EOffice": true,
-    "ManajemenMahasiswa": true
+    "ManajemenMahasiswa": true,
+    "Migration": true,
+    "CreateBsAuditLogsTable.php": true
 }
