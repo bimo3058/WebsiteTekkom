@@ -5,6 +5,7 @@
     margin: 0;
     padding: 0;
 }
+
 /* #ColorVariables & #LayoutVariables - CSS custom properties untuk theme warna dan layout */
 :root {
     --blue: #1b4fd8;
@@ -24,6 +25,7 @@
     --sidebar-w: 240px;
     --topbar-h: 64px;
 }
+
 /* #BodyLayout - Layout dasar dashboard dengan flexbox */
 body {
     font-family: "Plus Jakarta Sans", sans-serif;
@@ -46,6 +48,7 @@ body {
     height: 100vh;
     z-index: 100;
 }
+
 /* #SidebarBrand - Logo dan nama aplikasi di sidebar */
 .sidebar-brand {
     display: flex;
@@ -54,6 +57,7 @@ body {
     padding: 20px 20px 24px;
     border-bottom: 1px solid var(--gray-100);
 }
+
 /* #BrandIcon - Icon box untuk logo brand */
 .brand-icon {
     width: 40px;
@@ -66,6 +70,7 @@ body {
     color: #fff;
     font-size: 18px;
 }
+
 /* #BrandText - Teks nama dan tagline brand */
 .brand-text strong {
     display: block;
@@ -76,11 +81,13 @@ body {
     font-size: 12px;
     color: var(--gray-400);
 }
+
 /* #SidebarNav - Container item navigasi sidebar */
 .sidebar-nav {
     padding: 16px 12px;
     flex: 1;
 }
+
 /* #NavItem - Item menu navigasi dengan hover dan active state */
 .nav-item {
     display: flex;
@@ -103,6 +110,7 @@ body {
     background: var(--blue);
     color: #fff;
 }
+
 /* #NavIcon - Icon untuk setiap menu item */
 .nav-icon {
     width: 18px;
@@ -126,6 +134,7 @@ body {
     gap: 12px;
     z-index: 90;
 }
+
 /* #TopbarButton - Tombol icon di topbar */
 .topbar-btn {
     width: 38px;
@@ -144,6 +153,7 @@ body {
 .topbar-btn:hover {
     background: var(--gray-100);
 }
+
 /* #NotificationButton - Tombol notifikasi dengan red dot indicator */
 .notif-btn {
     position: relative;
@@ -158,6 +168,7 @@ body {
     border-radius: 50%;
     border: 1.5px solid #fff;
 }
+
 /* #UserChip - Chip profil user di topbar dengan avatar */
 .user-chip {
     display: flex;
@@ -181,6 +192,7 @@ body {
     font-size: 13px;
     font-weight: 700;
 }
+
 /* #UserInfo - Teks nama dan role user di chip */
 .user-info strong {
     display: block;
@@ -213,6 +225,7 @@ body {
     gap: 16px;
     margin-bottom: 24px;
 }
+
 /* #AlertContent - Konten icon dan teks untuk alert banner */
 .alert-icon-wrap {
     width: 42px;
@@ -237,6 +250,7 @@ body {
     color: var(--gray-500);
     margin-top: 2px;
 }
+
 /* #AlertButton - Tombol aksi di dalam alert banner */
 .alert-btn {
     margin-left: auto;
@@ -324,6 +338,7 @@ body {
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
+
 /* #ChartLegend - Legend untuk chart dengan colored dots */
 .legend {
     display: grid;
@@ -366,6 +381,7 @@ body {
     font-weight: 800;
     margin-bottom: 20px;
 }
+
 /* #CourseTags - Label dan tag untuk daftar course/mata kuliah */
 .courses-label {
     font-size: 11px;
@@ -419,6 +435,7 @@ body {
     font-weight: 600;
     margin-bottom: 16px;
 }
+
 /* #UpdateButton - Tombol update/edit full width */
 .update-btn {
     width: 100%;
@@ -471,23 +488,19 @@ body {
 
 /* #PageHeader - Header halaman dengan judul dan deskripsi */
 .page-header {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    gap: 16px;
     margin-bottom: 24px;
-    flex-wrap: wrap;
 }
-.page-header-left h1 {
+.page-header h1 {
     font-size: 26px;
     font-weight: 800;
     color: var(--gray-900);
     margin-bottom: 4px;
 }
-.page-header-left p {
+.page-header p {
     font-size: 14px;
     color: var(--gray-500);
 }
+
 /* #StatisticsCards - Row berisi 4 cards statistik dengan icon */
 .tats-row {
     display: grid;
@@ -559,10 +572,21 @@ body {
     gap: 12px;
     flex-wrap: wrap;
 }
-s .section-title {
+.section-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+}
+.section-title {
     font-size: 17px;
     font-weight: 700;
     color: var(--gray-900);
+}
+.section-desc {
+    font-size: 13px;
+    color: var(--gray-500);
+    margin-bottom: 20px;
 }
 
 /* #Toolbar - Container untuk search, filter, dan tombol aksi */
@@ -574,6 +598,7 @@ s .section-title {
     margin-bottom: 18px;
     flex-wrap: wrap;
 }
+
 /* #SearchBox - Input pencarian dengan icon */
 .search-wrap {
     position: relative;
@@ -641,9 +666,11 @@ table {
     border-collapse: collapse;
 }
 thead th {
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 700;
-    color: var(--gray-500);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--gray-400);
     padding: 10px 14px;
     text-align: left;
     border-bottom: 1.5px solid var(--gray-100);
@@ -678,13 +705,16 @@ tbody tr:hover td {
     font-weight: 600;
 }
 
-/* #StatusBadges - Badge untuk berbagai status (hard, medium, easy, active, dsb) */
+/* #StatusBadges - Badge untuk berbagai status */
 .badge {
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
     padding: 4px 10px;
     border-radius: 20px;
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.3px;
 }
 .badge-hard {
     background: #fee2e2;
@@ -709,6 +739,18 @@ tbody tr:hover td {
 .badge-archived {
     background: #f3e8ff;
     color: #9333ea;
+}
+.badge-verified {
+    background: #dcfce7;
+    color: #15803d;
+}
+.badge-pending {
+    background: #fef9c3;
+    color: #a16207;
+}
+.badge-rejected {
+    background: #fee2e2;
+    color: #dc2626;
 }
 
 /* #YearDivider - Pemisah visual untuk grup tahun/periode */
@@ -803,7 +845,7 @@ tbody tr:hover td {
     pointer-events: none;
 }
 
-/* #ButtonOutline - Tombol outline/secondary style */
+/* #Buttons - Semua variant tombol */
 .btn-outline {
     display: inline-flex;
     align-items: center;
@@ -864,7 +906,22 @@ tbody tr:hover td {
     background: #15803d;
 }
 
-/* Split button */
+.btn-cancel {
+    border: 1.5px solid var(--gray-200);
+    background: #fff;
+    border-radius: 9px;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--gray-700);
+    cursor: pointer;
+    transition: 0.2s;
+}
+.btn-cancel:hover {
+    background: var(--gray-100);
+}
+
+/* #SplitButton - Split button dengan dropdown trigger */
 .btn-split {
     display: flex;
 }
@@ -903,40 +960,24 @@ tbody tr:hover td {
     background: var(--gray-100);
 }
 
-/* EKSTRAKSI SECTION */
-.section-header {
-    display: flex;
+/* #ActionLink - Link untuk aksi di dalam tabel */
+.action-link {
+    display: inline-flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 6px;
-}
-.section-title {
-    font-size: 17px;
-    font-weight: 700;
-    color: var(--gray-900);
-}
-.section-desc {
+    gap: 5px;
     font-size: 13px;
-    color: var(--gray-500);
-    margin-bottom: 20px;
+    font-weight: 600;
+    color: var(--blue);
+    text-decoration: none;
+    transition: 0.2s;
+}
+.action-link:hover {
+    text-decoration: underline;
 }
 
-/* ── PAGE STYLES ─────────────────────────────── */
-.page-header {
-    margin-bottom: 24px;
-}
-.page-header h1 {
-    font-size: 26px;
-    font-weight: 800;
-    color: var(--gray-900);
-    margin-bottom: 4px;
-}
-.page-header p {
-    font-size: 14px;
-    color: var(--gray-500);
-}
-
-/* #StatusBanner - Banner untuk menampilkan status upload file */
+/* ════════════════════════════════════════════════════════
+   #StatusBanner - Banner untuk menampilkan status upload
+   ════════════════════════════════════════════════════════ */
 .status-bar {
     display: flex;
     align-items: center;
@@ -979,6 +1020,7 @@ tbody tr:hover td {
     color: var(--gray-500);
     margin-top: 1px;
 }
+
 /* #GuideButton - Tombol untuk membuka panduan/help */
 .panduan-btn {
     display: flex;
@@ -1004,7 +1046,9 @@ tbody tr:hover td {
     font-size: 15px;
 }
 
-/* #FormCard - Card container untuk form dengan title */
+/* ════════════════════════════════════════════════════════
+   #FormCard - Card container untuk form
+   ════════════════════════════════════════════════════════ */
 .form-card {
     background: #fff;
     border: 1px solid var(--gray-200);
@@ -1019,7 +1063,7 @@ tbody tr:hover td {
     color: var(--gray-900);
 }
 
-/* #FormLayout - Grid 2 kolom dan form-group untuk input fields */
+/* #FormLayout - Grid 2 kolom untuk form fields */
 .form-grid-2 {
     display: grid;
     grid-template-columns: 1fr 1fr;
@@ -1042,20 +1086,38 @@ tbody tr:hover td {
     color: var(--gray-700);
 }
 
-/* #FormControl - Input, select, textarea styling untuk form */
+/* #FormHint - Helper text untuk form fields */
+.form-hint {
+    font-size: 12px;
+    color: var(--gray-400);
+    margin-top: 2px;
+    display: block;
+}
+
+/* ════════════════════════════════════════════════════════
+   #FormControl - Base style untuk SEMUA kontrol form
+   (native select, input, textarea, ms-trigger)
+   Tinggi seragam 42px, padding horizontal 12px, border sama
+   ════════════════════════════════════════════════════════ */
 .form-control {
+    display: block;
+    width: 100%;
+    height: 42px;
+    padding: 0 12px;
     border: 1.5px solid var(--gray-200);
     border-radius: 9px;
-    padding: 10px 14px;
     font-size: 14px;
     font-family: inherit;
     color: var(--gray-900);
     background: #fff;
-    transition:
-        border-color 0.2s,
-        box-shadow 0.2s;
+    box-sizing: border-box;
     outline: none;
-    width: 100%;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
+}
+.form-control:hover {
+    border-color: var(--gray-400);
 }
 .form-control:focus {
     border-color: var(--blue);
@@ -1065,20 +1127,310 @@ tbody tr:hover td {
     color: var(--gray-400);
 }
 
+/* Native select — custom arrow, hapus default appearance */
 select.form-control {
     appearance: none;
+    -webkit-appearance: none;
+    padding-right: 36px;
+    cursor: pointer;
     background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394A3B8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
-    padding-right: 36px;
+    background-color: #fff;
+    /* line-height trick agar teks center di semua browser */
+    line-height: 42px;
 }
 
 textarea.form-control {
-    resize: vertical;
+    height: auto;
     min-height: 96px;
+    padding: 10px 12px;
+    resize: vertical;
+    line-height: 1.5;
 }
 
-/* #UploadForm - Drag-drop area untuk upload file */
+/* ════════════════════════════════════════════════════════
+   #MultiSelectDropdown - Custom multi-select component
+   ════════════════════════════════════════════════════════ */
+.ms-wrapper {
+    position: relative;
+    width: 100%;
+    font-family: inherit;
+}
+
+.ms-trigger {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    width: 100%;
+    height: 42px;
+    padding: 0 10px 0 12px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 9px;
+    background: #fff;
+    cursor: pointer;
+    box-sizing: border-box;
+    user-select: none;
+    overflow: hidden;
+    transition:
+        border-color 0.15s,
+        box-shadow 0.15s;
+}
+.ms-trigger:hover:not(.disabled) {
+    border-color: var(--gray-400);
+}
+.ms-trigger.open {
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(27, 79, 216, 0.08);
+    overflow: hidden;
+}
+.ms-trigger.disabled {
+    background: var(--gray-50);
+    cursor: not-allowed;
+    border-color: var(--gray-200);
+}
+
+.ms-placeholder {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    color: var(--gray-400);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1; /* cegah line-height dorong tinggi */
+}
+.ms-selected-labels {
+    flex: 1;
+    min-width: 0;
+    font-size: 14px;
+    color: var(--gray-900);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1;
+}
+
+/* Chevron — tidak boleh ada height hardcoded */
+.ms-chevron {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    min-width: 20px;
+    width: 20px;
+    /* TIDAK ada height: 42px — itu penyebab stretch sebelumnya */
+    color: var(--gray-400);
+    font-size: 13px;
+    margin-left: auto;
+    padding: 0;
+    transition: transform 0.2s;
+}
+.ms-trigger.open .ms-chevron {
+    transform: rotate(180deg);
+}
+
+/* Badge untuk count selected */
+.ms-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    background: var(--blue);
+    color: #fff;
+    border-radius: 999px;
+    padding: 3px 8px 3px 10px;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+    line-height: 1;
+    white-space: nowrap;
+}
+.ms-badge[data-tooltip]:hover::after {
+    content: attr(data-tooltip);
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--gray-900);
+    color: #fff;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 500;
+    white-space: pre-wrap; /* wrap panjang agar tidak keluar layar */
+    max-width: 320px;
+    z-index: 10000;
+    pointer-events: none;
+    line-height: 1.5;
+}
+.ms-badge-clear {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    color: #fff;
+    cursor: pointer;
+    padding: 0;
+    line-height: 1;
+    font-size: 14px;
+    opacity: 0.75;
+    transition: opacity 0.1s;
+}
+.ms-badge-clear:hover {
+    opacity: 1;
+}
+
+/* Search input saat dropdown open */
+.ms-search-input {
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 14px;
+    font-family: inherit;
+    color: var(--gray-900);
+    min-width: 60px;
+    line-height: 1;
+    padding: 0;
+}
+.ms-search-input::placeholder {
+    color: var(--gray-400);
+}
+
+/* #MultiSelectDropdownPanel */
+.ms-dropdown {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #fff;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+    z-index: 9999;
+    overflow: hidden;
+    display: none;
+}
+.ms-dropdown.open {
+    display: block;
+}
+
+/* #MultiSelectOptionList */
+.ms-option-list {
+    max-height: 220px;
+    overflow-y: auto;
+    padding: 4px 0;
+}
+.ms-option-list::-webkit-scrollbar {
+    width: 4px;
+}
+.ms-option-list::-webkit-scrollbar-thumb {
+    background: var(--gray-200);
+    border-radius: 2px;
+}
+.ms-option-list::-webkit-scrollbar-thumb:hover {
+    background: var(--gray-400);
+}
+
+/* #MultiSelectOption */
+.ms-option {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    cursor: pointer;
+    transition: background 0.1s;
+    color: var(--gray-900);
+    font-size: 14px;
+    min-height: 36px;
+}
+.ms-option:hover {
+    background: var(--gray-50);
+}
+.ms-option.select-all {
+    border-bottom: 1px solid var(--gray-100);
+    font-weight: 500;
+    color: var(--gray-700);
+    font-size: 13px;
+}
+.ms-option.selected {
+    color: var(--blue);
+}
+.ms-option.selected .ms-cb {
+    background: var(--blue);
+    border-color: var(--blue);
+}
+.ms-option.selected .ms-cb::after {
+    opacity: 1;
+}
+.ms-option.indeterminate .ms-cb {
+    background: var(--blue);
+    border-color: var(--blue);
+}
+.ms-option.indeterminate .ms-cb::after {
+    content: "";
+    position: absolute;
+    left: 3px;
+    top: 50%;
+    width: 8px;
+    height: 2px;
+    background: #fff;
+    border: none;
+    transform: translateY(-50%);
+    border-radius: 1px;
+    opacity: 1;
+}
+
+/* #MultiSelectCheckbox */
+.ms-cb {
+    width: 16px;
+    height: 16px;
+    min-width: 16px;
+    min-height: 16px;
+    border: 1.5px solid var(--gray-200);
+    border-radius: 4px;
+    flex-shrink: 0;
+    position: relative;
+    transition:
+        background 0.15s,
+        border-color 0.15s;
+    background: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.ms-cb::after {
+    content: "";
+    position: absolute;
+    left: 4px;
+    top: 1px;
+    width: 4px;
+    height: 7px;
+    border: 1.5px solid #fff;
+    border-top: none;
+    border-left: none;
+    transform: rotate(43deg);
+    opacity: 0;
+    transition: opacity 0.1s;
+}
+
+/* #MultiSelectNoResults */
+.ms-no-results {
+    padding: 12px 14px;
+    color: var(--gray-400);
+    font-size: 13px;
+    text-align: center;
+}
+
+/* ms-trigger-content tidak dipakai oleh JS — sembunyikan */
+.ms-trigger-content {
+    display: none;
+}
+
+/* ════════════════════════════════════════════════════════
+   #UploadForm - Drag-drop area untuk upload file
+   ════════════════════════════════════════════════════════ */
 .upload-zone {
     border: 2px dashed var(--gray-200);
     border-radius: 12px;
@@ -1089,6 +1441,7 @@ textarea.form-control {
         border-color 0.2s,
         background 0.2s;
     background: var(--gray-50);
+    display: block;
 }
 .upload-zone:hover {
     border-color: var(--blue);
@@ -1115,46 +1468,25 @@ textarea.form-control {
     display: none;
 }
 
-/* #FormActions - Tombol submit dan cancel di form */
+/* ════════════════════════════════════════════════════════
+   #FormActions - Tombol submit dan cancel
+   ════════════════════════════════════════════════════════ */
 .form-actions {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
     margin-top: 8px;
 }
-.btn-cancel {
-    border: 1.5px solid var(--gray-200);
-    background: #fff;
-    border-radius: 9px;
+
+/* Override btn-primary untuk form (sedikit lebih besar) */
+.form-actions .btn-primary {
     padding: 10px 22px;
     font-size: 14px;
-    font-weight: 600;
-    color: var(--gray-700);
-    cursor: pointer;
-    transition: 0.2s;
-}
-.btn-cancel:hover {
-    background: var(--gray-100);
-}
-.btn-primary {
-    background: var(--blue);
-    color: #fff;
-    border: none;
-    border-radius: 9px;
-    padding: 10px 22px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    transition: 0.2s;
-}
-.btn-primary:hover {
-    background: var(--blue-mid);
 }
 
-/* #HistoryTable - Card untuk menampilkan history/riwayat */
+/* ════════════════════════════════════════════════════════
+   #HistoryTable - Card untuk riwayat pengunggahan
+   ════════════════════════════════════════════════════════ */
 .history-card {
     background: #fff;
     border: 1px solid var(--gray-200);
@@ -1166,464 +1498,4 @@ textarea.form-control {
     font-weight: 700;
     margin-bottom: 20px;
     color: var(--gray-900);
-}
-
-/* #HistoryTableStyles - Styling tabel di history card */
-.table-wrap {
-    overflow-x: auto;
-}
-table {
-    width: 100%;
-    border-collapse: collapse;
-}
-thead th {
-    font-size: 11px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--gray-400);
-    padding: 10px 14px;
-    text-align: left;
-    border-bottom: 1px solid var(--gray-100);
-}
-tbody td {
-    font-size: 14px;
-    color: var(--gray-700);
-    padding: 14px 14px;
-    border-bottom: 1px solid var(--gray-100);
-    vertical-align: middle;
-}
-tbody tr:last-child td {
-    border-bottom: none;
-}
-tbody tr:hover td {
-    background: var(--gray-50);
-}
-
-/* #HistoryTableBadges - Badge variant untuk tabel history dengan inline flex */
-.badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    padding: 4px 10px;
-    border-radius: 20px;
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.3px;
-}
-/* #HistoryBadges - Badge untuk status history (verified, pending, rejected) */
-.badge-verified {
-    background: #dcfce7;
-    color: #15803d;
-}
-.badge-pending {
-    background: #fef9c3;
-    color: #a16207;
-}
-.badge-rejected {
-    background: #fee2e2;
-    color: #dc2626;
-}
-
-/* #ActionLink - Link untuk aksi di dalam tabel */
-.action-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--blue);
-    text-decoration: none;
-    transition: 0.2s;
-}
-.action-link:hover {
-    text-decoration: underline;
-}
-/* #TabletExtendedButtonStyles - Extended button styles untuk tabel */
-.btn-outline i {
-    font-size: 12px;
-}
-
-/* #TableButtonPrimary - Button primary style di tabel */
-.btn-primary {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    background: var(--blue);
-    color: #fff;
-    border: none;
-    border-radius: 9px;
-    padding: 8px 16px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    transition: 0.2s;
-}
-.btn-primary:hover {
-    background: var(--blue-mid);
-}
-
-/* #TableButtonGreen - Button green style di tabel */
-.btn-green {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    background: #16a34a;
-    color: #fff;
-    border: none;
-    border-radius: 9px;
-    padding: 8px 16px;
-    font-size: 13px;
-    font-weight: 600;
-    cursor: pointer;
-    text-decoration: none;
-    transition: 0.2s;
-}
-.btn-green:hover {
-    background: #15803d;
-}
-
-/* #SplitButtonTable - Tombol split button untuk tabel */
-.btn-split {
-    display: flex;
-}
-.btn-split .btn-primary {
-    border-radius: 9px 0 0 9px;
-}
-.btn-split .btn-divider {
-    background: var(--blue-mid);
-    color: #fff;
-    border: none;
-    border-left: 1px solid rgba(255, 255, 255, 0.3);
-    border-radius: 0 9px 9px 0;
-    padding: 8px 10px;
-    cursor: pointer;
-    transition: 0.2s;
-}
-.btn-split .btn-divider:hover {
-    background: #2d5be3;
-}
-
-/* #FilterButtonTable - Tombol filter untuk table view */
-.filter-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 7px;
-    border: 1.5px solid var(--gray-200);
-    background: #fff;
-    border-radius: 9px;
-    padding: 8px 14px;
-    font-size: 13px;
-    font-weight: 600;
-    color: var(--gray-700);
-    cursor: pointer;
-    transition: 0.2s;
-}
-.filter-btn:hover {
-    background: var(--gray-100);
-}
-
-/* #SectionHeaderExtraction - Header ekstraksi dengan title dan deskripsi */
-.section-header {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    margin-bottom: 6px;
-}
-.section-title {
-    font-size: 17px;
-    font-weight: 700;
-    color: var(--gray-900);
-}
-.section-desc {
-    font-size: 13px;
-    color: var(--gray-500);
-    margin-bottom: 20px;
-}
-
-/* #MultiSelectDropdown - Custom multi-select component */
-.ms-wrapper {
-    position: relative;
-    width: 100%;
-    font-family: inherit;
-    font-size: 0.875rem;
-}
-
-/* #MultiSelectTrigger - Trigger button untuk membuka multi-select */
-.ms-trigger {
-    display: flex;
-    align-items: stretch;
-    gap: 0;
-    width: 100%;
-    height: 42px;
-    border: 1px solid #d1d5db;
-    border-radius: 8px;
-    background: #fff;
-    cursor: pointer;
-    box-sizing: border-box;
-    transition:
-        border-color 0.15s,
-        box-shadow 0.15s;
-    user-select: none;
-    overflow: visible;
-    pointer-events: auto;
-}
-
-/* #MultiSelectContent - Content area di trigger dengan selected items */
-.ms-trigger-content {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    flex: 1;
-    padding: 6px 12px;
-    overflow-x: auto;
-    overflow-y: hidden;
-    scroll-behavior: smooth;
-    pointer-events: auto;
-}
-
-.ms-trigger-content::-webkit-scrollbar {
-    height: 4px;
-}
-.ms-trigger-content::-webkit-scrollbar-thumb {
-    background: #d1d5db;
-    border-radius: 2px;
-}
-.ms-trigger-content::-webkit-scrollbar-thumb:hover {
-    background: #9ca3af;
-}
-
-/* #MultiSelectStates - Hover, open, dan disabled states */
-.ms-trigger:hover {
-    border-color: #9ca3af;
-}
-.ms-trigger.open {
-    border-color: #1b4fd8;
-    box-shadow: 0 0 0 3px rgba(27, 79, 216, 0.12);
-}
-.ms-trigger.disabled {
-    background: #f9fafb;
-    color: #9ca3af;
-    cursor: not-allowed;
-    border-color: #e5e7eb;
-}
-
-/* #MultiSelectLabels - Placeholder dan selected labels text */
-.ms-placeholder {
-    flex: 1;
-    color: #9ca3af;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 0.875rem;
-}
-
-.ms-selected-labels {
-    flex: 1;
-    color: #111827;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    font-size: 0.875rem;
-}
-
-/* #MultiSelectBadge - Badge untuk selected items dengan clear button */
-.ms-badge {
-    display: inline-flex;
-    align-items: center;
-    gap: 5px;
-    background: #1b4fd8;
-    color: #fff;
-    border-radius: 999px;
-    padding: 4px 10px 4px 12px;
-    font-size: 0.8rem;
-    font-weight: 600;
-    flex-shrink: 0;
-    height: fit-content;
-    margin: 0 2px;
-}
-.ms-badge-clear {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    background: none;
-    border: none;
-    color: #fff;
-    cursor: pointer;
-    padding: 0;
-    line-height: 1;
-    font-size: 0.9rem;
-    opacity: 0.8;
-    transition: opacity 0.1s;
-}
-.ms-badge-clear:hover {
-    opacity: 1;
-}
-
-/* #MultiSelectChevron - Icon chevron yang rotate saat open */
-.ms-chevron {
-    color: #6b7280;
-    font-size: 14px;
-    flex-shrink: 0;
-    margin-left: auto;
-    transition: transform 0.2s;
-    position: relative;
-    z-index: 1;
-    width: 24px;
-    height: 42px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 24px;
-    padding: 0 8px;
-}
-
-.ms-trigger {
-    overflow: visible;
-}
-.ms-trigger > .ms-chevron {
-    flex-shrink: 0;
-    min-width: 24px;
-}
-.ms-trigger.open .ms-chevron {
-    transform: rotate(180deg);
-}
-
-/* #MultiSelectInput - Search input field di dropdown */
-.ms-search-input {
-    flex: 1;
-    border: none;
-    outline: none;
-    background: transparent;
-    font-size: 0.875rem;
-    color: #111827;
-    min-width: 60px;
-}
-
-/* #MultiSelectDropdownPanel - Dropdown panel dengan options */
-.ms-dropdown {
-    position: absolute;
-    top: calc(100% + 4px);
-    left: 0;
-    right: 0;
-    background: #fff;
-    border: 1px solid #e5e7eb;
-    border-radius: 10px;
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
-    z-index: 9999;
-    overflow: hidden;
-    display: none;
-}
-.ms-dropdown.open {
-    display: block;
-}
-
-/* #MultiSelectOptionList - Scrollable list dari options */
-.ms-option-list {
-    max-height: 220px;
-    overflow-y: auto;
-    padding: 4px 0;
-}
-.ms-option-list::-webkit-scrollbar {
-    width: 4px;
-}
-.ms-option-list::-webkit-scrollbar-thumb {
-    background: #e5e7eb;
-    border-radius: 2px;
-}
-
-/* #MultiSelectOption - Individual option item dengan checkbox dan states */
-.ms-option {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    gap: 10px;
-    padding: 9px 14px;
-    cursor: pointer;
-    transition: background 0.1s;
-    color: #111827;
-    font-size: 0.875rem;
-    min-height: 36px;
-}
-.ms-option:hover {
-    background: #f3f4f6;
-}
-.ms-option.select-all {
-    border-bottom: 1px solid #f3f4f6;
-    font-weight: 500;
-    color: #374151;
-}
-.ms-option.selected .ms-cb {
-    background: #1b4fd8;
-    border-color: #1b4fd8;
-}
-.ms-option.selected .ms-cb::after {
-    opacity: 1;
-}
-.ms-option.indeterminate .ms-cb {
-    background: #1b4fd8;
-    border-color: #1b4fd8;
-}
-.ms-option.indeterminate .ms-cb::after {
-    content: "";
-    position: absolute;
-    left: 3px;
-    top: 50%;
-    width: 8px;
-    height: 2px;
-    background: #fff;
-    border: none;
-    transform: translateY(-50%);
-    border-radius: 1px;
-    opacity: 1;
-}
-
-/* #MultiSelectCheckbox - Custom checkbox styling */
-.ms-cb {
-    width: 18px;
-    height: 18px;
-    min-width: 18px;
-    min-height: 18px;
-    border: 1.5px solid #d1d5db;
-    border-radius: 4px;
-    flex-shrink: 0;
-    position: relative;
-    transition:
-        background 0.15s,
-        border-color 0.15s;
-    background: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.ms-cb::after {
-    content: "";
-    position: absolute;
-    left: 5px;
-    top: 2px;
-    width: 4px;
-    height: 8px;
-    border: 2px solid #fff;
-    border-top: none;
-    border-left: none;
-    transform: rotate(43deg);
-    opacity: 0;
-    transition: opacity 0.1s;
-}
-
-/* #MultiSelectNoResults - Empty state message untuk no results */
-.ms-no-results {
-    padding: 12px 14px;
-    color: #9ca3af;
-    font-size: 0.85rem;
-    text-align: center;
-}
-
-/* #FormHint - Helper text untuk form fields */
-.form-hint {
-    font-size: 12px;
-    color: #6b7280;
-    margin-top: 4px;
-    display: block;
 }
