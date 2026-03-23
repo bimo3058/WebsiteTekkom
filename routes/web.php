@@ -35,11 +35,17 @@ Route::middleware('auth')->group(function () {
         Route::post('/users', [SuperAdminController::class, 'storeUser'])
             ->name('users.store');
 
+        Route::post('/storage/upload', [SuperAdminController::class, 'testUpload'])
+            ->name('storage.upload');
+
+        Route::delete('/storage/delete', [SuperAdminController::class, 'testDelete'])
+            ->name('storage.delete');
+
         // Update role user (ganti dari POST ke PATCH, nama route tetap bisa dipakai keduanya)
         Route::post('/users/{user}/update-role', [SuperAdminController::class, 'updateRole'])
             ->name('users.update-role');
         Route::patch('/users/{user}/roles', [SuperAdminController::class, 'updateRole'])
-            ->name('users.update-roles');
+            ->name('users.update-roles');       
 
         // Hapus user (soft-delete)
         Route::delete('/users/{user}', [SuperAdminController::class, 'destroyUser'])

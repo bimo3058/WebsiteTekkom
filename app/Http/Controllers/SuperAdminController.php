@@ -324,6 +324,55 @@ class SuperAdminController extends Controller
         return view('superadmin.modules.index', compact('modules'));
     }
 
+    // ── Storage Test — Upload ──────────────────────────────────────────────────
+ 
+    public function testUpload(Request $request)
+    {
+        $request->validate([
+            'file' => [
+                'required',
+                'file',
+                'max:10240', // max 10MB
+                'mimes:jpeg,jpg,png,webp,pdf,doc,docx',
+            ],
+        ]);
+ 
+        $storage = new \App\Services\SupabaseStorage();
+        $path    = $storage->upload($request->file('file'), 'test-uploads');
+ 
+        if (!$path) {
+            return back()->with('upload_error', 'Upload ke Supabase gagal. Cek service role key dan nama bucket.');
+        }
+ 
+        $publicUrl = $storage->publicUrl($path);
+ 
+        return back()->with([
+            'upload_success' => true,
+            'upload_path'    => $path,
+            'upload_url'     => $publicUrl,
+            'upload_name'    => $request->file('file')->getClientOriginalName(),
+            'upload_size'    => $request->file('file')->getSize(),
+        ]);
+    }
+ 
+    // ── Storage Test — Delete ──────────────────────────────────────────────────
+ 
+    public function testDelete(Request $request)
+    {
+        $request->validate([
+            'path' => ['required', 'string'],
+        ]);
+ 
+        $storage = new \App\Services\SupabaseStorage();
+        $deleted = $storage->delete($request->input('path'));
+ 
+        if (!$deleted) {
+            return back()->with('upload_error', 'Gagal menghapus file dari Supabase.');
+        }
+ 
+        return back()->with('delete_success', 'File berhasil dihapus dari Supabase Storage.');
+    }
+
     // ── Audit Logs ─────────────────────────────────────────────────────────────
 
     public function auditLogs(Request $request)

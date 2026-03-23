@@ -13,10 +13,7 @@
         "genealabs/laravel-model-caching": "*",
         "laravel/framework": "^12.0",
         "laravel/socialite": "*",
-<<<<<<< HEAD
         "laravel/telescope": "*",
-=======
->>>>>>> main
         "laravel/tinker": "^2.10.1",
         "nwidart/laravel-modules": "*",
         "predis/predis": "*",

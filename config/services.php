@@ -41,4 +41,10 @@ return [
         'redirect' => env('MICROSOFT_REDIRECT_URI'),
         'tenant' => env('MICROSOFT_TENANT', 'common'),
     ],
+
+    'supabase' => [
+        'url' => env('SUPABASE_URL'),
+        'key' => env('SUPABASE_KEY'),
+        'bucket' => env('SUPABASE_BUCKET'),
+    ],
 ];

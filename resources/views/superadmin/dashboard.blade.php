@@ -183,8 +183,271 @@
                 </div>
 
             </div>
-
+            {{-- Storage Test ──────────────────────────────────────────────────────────── --}}
+            <div class="mt-8">
+                <h2 class="text-2xl font-bold text-white mb-4">Supabase Storage — Test Upload</h2>
+            
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            
+                    {{-- Form Upload --}}
+                    <div class="bg-slate-800 border border-slate-700 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-white mb-1">Upload File</h3>
+                        <p class="text-slate-400 text-sm mb-4">Format: JPG, PNG, WEBP, PDF, DOC, DOCX — maks 10 MB</p>
+            
+                        @if(session('upload_error'))
+                            <div class="mb-4 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-red-400 text-sm">
+                                {{ session('upload_error') }}
+                            </div>
+                        @endif
+            
+                        @if(session('delete_success'))
+                            <div class="mb-4 bg-green-500/10 border border-green-500/30 rounded-lg px-4 py-3 text-green-400 text-sm">
+                                {{ session('delete_success') }}
+                            </div>
+                        @endif
+            
+                        @if($errors->has('file'))
+                            <div class="mb-4 bg-red-500/10 border border-red-500/30 rounded-lg px-4 py-3 text-red-400 text-sm">
+                                {{ $errors->first('file') }}
+                            </div>
+                        @endif
+            
+                        {{-- PENTING: enctype wajib ada untuk upload file --}}
+                        <form action="{{ route('superadmin.storage.upload') }}"
+                            method="POST"
+                            enctype="multipart/form-data"
+                            id="upload-form">
+                            @csrf
+            
+                            {{-- Drop zone --}}
+                            <div class="border-2 border-dashed border-slate-600 rounded-lg p-6 text-center mb-4 hover:border-slate-500 transition cursor-pointer"
+                                id="drop-zone"
+                                onclick="document.getElementById('file-input').click()">
+            
+                                {{-- Icon --}}
+                                <svg class="w-10 h-10 text-slate-500 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+            
+                                {{-- Label default --}}
+                                <p class="text-slate-400 text-sm" id="file-label">Klik untuk pilih file</p>
+                                <p class="text-slate-600 text-xs mt-1">atau drag & drop di sini</p>
+            
+                                <input id="file-input"
+                                    type="file"
+                                    name="file"
+                                    class="hidden"
+                                    accept=".jpg,.jpeg,.png,.webp,.pdf,.doc,.docx">
+                            </div>
+            
+                            {{-- Detail file yang dipilih (tersembunyi sampai ada file) --}}
+                            <div id="file-detail" class="hidden mb-4 bg-slate-900 rounded-lg p-3 flex items-center gap-3">
+                                <div class="bg-blue-500/20 p-2 rounded-lg flex-shrink-0">
+                                    <svg id="file-icon" class="w-5 h-5 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                    </svg>
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p id="detail-name" class="text-white text-sm font-medium truncate"></p>
+                                    <p id="detail-meta" class="text-slate-400 text-xs mt-0.5"></p>
+                                </div>
+                                {{-- Tombol clear --}}
+                                <button type="button"
+                                        id="clear-file"
+                                        class="text-slate-500 hover:text-red-400 transition flex-shrink-0"
+                                        title="Hapus pilihan">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                    </svg>
+                                </button>
+                            </div>
+            
+                            {{-- Pratinjau gambar sebelum upload --}}
+                            <div id="image-preview-wrap" class="hidden mb-4">
+                                <p class="text-slate-400 text-xs mb-1">Pratinjau:</p>
+                                <img id="image-preview"
+                                    src=""
+                                    alt="preview"
+                                    class="rounded-lg max-h-40 object-contain border border-slate-700 w-full">
+                            </div>
+            
+                            {{-- Button upload — disabled sampai ada file --}}
+                            <button type="submit"
+                                    id="upload-btn"
+                                    disabled
+                                    class="w-full bg-blue-600 hover:bg-blue-500 disabled:bg-slate-700 disabled:text-slate-500 disabled:cursor-not-allowed text-white font-medium py-2.5 px-4 rounded-lg transition flex items-center justify-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                                </svg>
+                                <span id="upload-btn-label">Pilih file terlebih dahulu</span>
+                            </button>
+                        </form>
+                    </div>
+            
+                    {{-- Hasil Upload --}}
+                    <div class="bg-slate-800 border border-slate-700 rounded-lg p-6">
+                        <h3 class="text-lg font-semibold text-white mb-4">Hasil Upload</h3>
+            
+                        @if(session('upload_success'))
+                            <div class="space-y-3">
+                                <div class="bg-green-500/10 border border-green-500/30 rounded-lg px-4 py-3 text-green-400 text-sm font-medium">
+                                    ✓ Upload berhasil!
+                                </div>
+            
+                                {{-- Info file --}}
+                                <div class="bg-slate-900 rounded-lg p-4 space-y-2 text-sm">
+                                    <div class="flex justify-between gap-2">
+                                        <span class="text-slate-400 flex-shrink-0">Nama file</span>
+                                        <span class="text-white font-medium truncate text-right">{{ session('upload_name') }}</span>
+                                    </div>
+                                    <div class="flex justify-between gap-2">
+                                        <span class="text-slate-400 flex-shrink-0">Ukuran</span>
+                                        <span class="text-white">{{ number_format(session('upload_size') / 1024, 1) }} KB</span>
+                                    </div>
+                                    <div class="pt-1 border-t border-slate-700">
+                                        <p class="text-slate-400 mb-1">Path (disimpan ke DB):</p>
+                                        <code class="block bg-slate-800 text-green-400 text-xs rounded px-2 py-1.5 break-all select-all">{{ session('upload_path') }}</code>
+                                    </div>
+                                    <div class="pt-1 border-t border-slate-700">
+                                        <p class="text-slate-400 mb-1">Public URL:</p>
+                                        <a href="{{ session('upload_url') }}" target="_blank"
+                                        class="text-blue-400 hover:text-blue-300 text-xs break-all underline">
+                                            {{ session('upload_url') }}
+                                        </a>
+                                    </div>
+                                </div>
+            
+                                {{-- Pratinjau gambar hasil upload --}}
+                                @php $ext = strtolower(pathinfo(session('upload_name'), PATHINFO_EXTENSION)); @endphp
+                                @if(in_array($ext, ['jpg', 'jpeg', 'png', 'webp']))
+                                    <div>
+                                        <p class="text-slate-400 text-xs mb-2">Pratinjau dari Supabase:</p>
+                                        <img src="{{ session('upload_url') }}"
+                                            alt="preview"
+                                            class="rounded-lg max-h-48 object-contain border border-slate-700 w-full">
+                                    </div>
+                                @endif
+            
+                                {{-- Tombol hapus --}}
+                                <form action="{{ route('superadmin.storage.delete') }}" method="POST">
+                                    @csrf
+                                    @method('DELETE')
+                                    <input type="hidden" name="path" value="{{ session('upload_path') }}">
+                                    <button type="submit"
+                                            class="w-full bg-red-600/20 hover:bg-red-600/40 border border-red-500/30 text-red-400 font-medium py-2 px-4 rounded-lg transition text-sm">
+                                        Hapus file ini dari Storage
+                                    </button>
+                                </form>
+                            </div>
+                        @else
+                            <div class="flex flex-col items-center justify-center h-48 text-slate-600">
+                                <svg class="w-12 h-12 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                                        d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                                </svg>
+                                <p class="text-sm">Belum ada file yang diupload</p>
+                            </div>
+                        @endif
+                    </div>
+            
+                </div>
+            </div>
         </div>
     </div>
+<script>
+(function () {
+    const input      = document.getElementById('file-input');
+    const dropZone   = document.getElementById('drop-zone');
+    const fileDetail = document.getElementById('file-detail');
+    const detailName = document.getElementById('detail-name');
+    const detailMeta = document.getElementById('detail-meta');
+    const clearBtn   = document.getElementById('clear-file');
+    const uploadBtn  = document.getElementById('upload-btn');
+    const btnLabel   = document.getElementById('upload-btn-label');
+    const previewWrap= document.getElementById('image-preview-wrap');
+    const previewImg = document.getElementById('image-preview');
+ 
+    const imageTypes = ['image/jpeg', 'image/png', 'image/webp'];
+ 
+    function formatSize(bytes) {
+        if (bytes < 1024)       return bytes + ' B';
+        if (bytes < 1024*1024)  return (bytes/1024).toFixed(1) + ' KB';
+        return (bytes/1024/1024).toFixed(2) + ' MB';
+    }
+ 
+    function showFile(file) {
+        detailName.textContent = file.name;
+        detailMeta.textContent = formatSize(file.size) + ' · ' + (file.type || 'unknown type');
+        fileDetail.classList.remove('hidden');
+ 
+        // Pratinjau gambar
+        if (imageTypes.includes(file.type)) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                previewImg.src = e.target.result;
+                previewWrap.classList.remove('hidden');
+            };
+            reader.readAsDataURL(file);
+        } else {
+            previewWrap.classList.add('hidden');
+            previewImg.src = '';
+        }
+ 
+        // Aktifkan tombol upload
+        uploadBtn.disabled = false;
+        btnLabel.textContent = 'Upload ke Supabase';
+    }
+ 
+    function clearFile() {
+        input.value = '';
+        fileDetail.classList.add('hidden');
+        previewWrap.classList.add('hidden');
+        previewImg.src = '';
+        uploadBtn.disabled = true;
+        btnLabel.textContent = 'Pilih file terlebih dahulu';
+    }
+ 
+    // Event: pilih file via input
+    input.addEventListener('change', () => {
+        if (input.files.length > 0) showFile(input.files[0]);
+    });
+ 
+    // Event: clear file
+    clearBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        clearFile();
+    });
+ 
+    // Event: drag & drop
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('border-blue-500');
+    });
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('border-blue-500');
+    });
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('border-blue-500');
+        const file = e.dataTransfer.files[0];
+        if (!file) return;
+ 
+        // Inject ke input
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        input.files = dt.files;
+        showFile(file);
+    });
+ 
+    // Loading state saat submit
+    document.getElementById('upload-form').addEventListener('submit', () => {
+        uploadBtn.disabled = true;
+        btnLabel.textContent = 'Mengupload...';
+    });
+})();
+</script>
 </x-sidebar>
 </x-app-layout>
