@@ -40,21 +40,21 @@ Route::middleware(['auth'])->prefix('bank-soal')->group(function () {
         // Bank Soal - Dosen
         Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
             Route::get('/', function () {
-                return view('banksoal::pages.bank-soal.index');
+                return view('banksoal::pages.bank-soal.Dosen.index');
             })->name('index');
         });
         
         // Bank Soal - GPM
         Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
             Route::get('/', function () {
-                return view('banksoal::pages.bank-soal.index');
+                return view('banksoal::pages.bank-soal.Gpm.index');
             })->name('index');
         });
         
         // Bank Soal - Admin
         Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
             Route::get('/', function () {
-                return view('banksoal::pages.bank-soal.index');
+                return view('banksoal::pages.bank-soal.Admin.index');
             })->name('index');
         });
         
@@ -65,21 +65,21 @@ Route::middleware(['auth'])->prefix('bank-soal')->group(function () {
         // Arsip - Dosen
         Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
             Route::get('/', function () {
-                return view('banksoal::pages.arsip.index');
+                return view('banksoal::pages.arsip.Dosen.index');
             })->name('index');
         });
         
         // Arsip - GPM
         Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
             Route::get('/', function () {
-                return view('banksoal::pages.arsip.index');
+                return view('banksoal::pages.arsip.Gpm.index');
             })->name('index');
         });
         
         // Arsip - Admin
         Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
             Route::get('/', function () {
-                return view('banksoal::pages.arsip.index');
+                return view('banksoal::pages.arsip.Admin.index');
             })->name('index');
         });
  

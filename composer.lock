@@ -4,11 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-<<<<<<< HEAD
     "content-hash": "dc6229ba1117a0de2777e48e8dd67085",
-=======
-    "content-hash": "3cafafb9b7ee16b9b130b9cab9df9fd5",
->>>>>>> main
     "packages": [
         {
             "name": "brick/math",
@@ -1661,7 +1657,6 @@
             "time": "2026-01-10T16:07:28+00:00"
         },
         {
-<<<<<<< HEAD
             "name": "laravel/telescope",
             "version": "5.18.0",
             "source": {
@@ -1731,8 +1726,6 @@
             "time": "2026-02-20T19:55:06+00:00"
         },
         {
-=======
->>>>>>> main
             "name": "laravel/tinker",
             "version": "v2.11.1",
             "source": {
