@@ -85,6 +85,25 @@ Route::middleware(['auth'])->prefix('bank-soal')->group(function () {
  
     });
 });
+
+// Route khusus ujian komprehensif untuk mahasiswa (Module Bank Soal)
+Route::middleware(['auth', 'role:mahasiswa'])
+    ->prefix('ujian-komprehensif')
+    ->name('komprehensif.mahasiswa.')
+    ->group(function () {
+        Route::get('/dashboard', function () {
+            return view('banksoal::mahasiswa.beranda'); 
+        })->name('dashboard');
+        
+        Route::get('/pengajuan-pendaftaran', function () {
+            return view('banksoal::mahasiswa.pendaftaran');
+        })->name('pendaftaran');
+        
+        Route::get('/riwayat-ujian', function () {
+            return view('banksoal::mahasiswa.riwayat');
+        })->name('riwayat');
+});
+
 // Route::middleware(['auth', 'verified'])->group(function () {
 //     Route::resource('banksoal', BankSoalController::class)->names('banksoal');
 // });
