@@ -4,7 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
+return new class extends Migration 
 {
     public function up(): void
     {
@@ -14,6 +14,7 @@ return new class extends Migration
             $table->string('judul', 255);
             $table->text('konten')->comment('rich text (HTML)');
             $table->string('target_audience', 50)->comment('enum: semua, mahasiswa, alumni, dosen');
+            $table->string('kategori', 100)->nullable()->comment('enum: akademik, himpunan, lowongan, event_prodi');
             $table->string('status_publish', 50)->comment('enum: draft, published, scheduled');
             $table->boolean('is_draft')->default(false);
             $table->timestamp('published_at')->nullable();

@@ -18,6 +18,7 @@ class Pengumuman extends Model
         'user_id',
         'judul',
         'konten',
+        'kategori',
         'target_audience',
         'status_publish',
         'scheduled_at',
@@ -55,6 +56,20 @@ class Pengumuman extends Model
         self::AUDIENCE_ALUMNI,
         self::AUDIENCE_PENGURUS,
         self::AUDIENCE_DOSEN,
+    ];
+
+    const KATEGORI_AKADEMIK    = 'akademik';
+    const KATEGORI_HIMPUNAN    = 'himpunan';
+    const KATEGORI_LOWONGAN    = 'lowongan';
+    const KATEGORI_EVENT_PRODI = 'event_prodi';
+    const KATEGORI_LAINNYA     = 'lainnya';
+
+    const KATEGORI_LIST = [
+        self::KATEGORI_AKADEMIK,
+        self::KATEGORI_HIMPUNAN,
+        self::KATEGORI_LOWONGAN,
+        self::KATEGORI_EVENT_PRODI,
+        self::KATEGORI_LAINNYA,
     ];
 
     // -------------------------------------------------------------------------
