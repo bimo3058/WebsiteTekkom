@@ -32,10 +32,10 @@ class Pengumuman extends Model
     // Constants
     // -------------------------------------------------------------------------
 
-    const STATUS_DRAFT     = 'draft';
+    const STATUS_DRAFT = 'draft';
     const STATUS_PUBLISHED = 'published';
     const STATUS_SCHEDULED = 'scheduled';
-    const STATUS_ARCHIVED  = 'archived';
+    const STATUS_ARCHIVED = 'archived';
 
     const STATUS_LIST = [
         self::STATUS_DRAFT,
@@ -44,11 +44,11 @@ class Pengumuman extends Model
         self::STATUS_ARCHIVED,
     ];
 
-    const AUDIENCE_ALL        = 'all';
-    const AUDIENCE_MAHASISWA  = 'mahasiswa';
-    const AUDIENCE_ALUMNI     = 'alumni';
-    const AUDIENCE_PENGURUS   = 'pengurus';
-    const AUDIENCE_DOSEN      = 'dosen';
+    const AUDIENCE_ALL = 'all';
+    const AUDIENCE_MAHASISWA = 'mahasiswa';
+    const AUDIENCE_ALUMNI = 'alumni';
+    const AUDIENCE_PENGURUS = 'pengurus';
+    const AUDIENCE_DOSEN = 'dosen';
 
     const AUDIENCE_LIST = [
         self::AUDIENCE_ALL,
@@ -58,18 +58,15 @@ class Pengumuman extends Model
         self::AUDIENCE_DOSEN,
     ];
 
-    const KATEGORI_AKADEMIK    = 'akademik';
-    const KATEGORI_HIMPUNAN    = 'himpunan';
-    const KATEGORI_LOWONGAN    = 'lowongan';
+    const KATEGORI_AKADEMIK = 'akademik';
+    const KATEGORI_HIMPUNAN = 'himpunan';
+    const KATEGORI_LOWONGAN = 'lowongan';
     const KATEGORI_EVENT_PRODI = 'event_prodi';
-    const KATEGORI_LAINNYA     = 'lainnya';
-
     const KATEGORI_LIST = [
         self::KATEGORI_AKADEMIK,
         self::KATEGORI_HIMPUNAN,
         self::KATEGORI_LOWONGAN,
         self::KATEGORI_EVENT_PRODI,
-        self::KATEGORI_LAINNYA,
     ];
 
     // -------------------------------------------------------------------------
@@ -81,12 +78,12 @@ class Pengumuman extends Model
         return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
-    public function repoMulmed(): HasMany
+    public function repoMulmed(): HasMany 
     {
         return $this->hasMany(RepoMulmed::class, 'pengumuman_id');
     }
 
-    // -------------------------------------------------------------------------
+    // ---------------------------------------- ---------------------------------
     // Scopes
     // -------------------------------------------------------------------------
 
@@ -102,14 +99,14 @@ class Pengumuman extends Model
               ->orWhere('target_audience', $audience);
         });
     }
-
+  
     public function scopeScheduledReady(Builder $query): Builder
     {
         return $query->where('status_publish', self::STATUS_SCHEDULED)
                      ->where('scheduled_at', '<=', now());
     }
 
-    // -------------------------------------------------------------------------
+    // ----------------------------------------------------------------
     // Accessors / Helpers
     // -------------------------------------------------------------------------
 
