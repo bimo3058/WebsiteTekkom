@@ -27,7 +27,7 @@ class DashboardController extends Controller
                     : ($isDosen
                         ? 'Buat dan kelola RPS mata kuliah.'
                         : 'Kelola soal, RPS, dan kompre.'),
-                'route'       => 'banksoal.dashboard',
+                'route'       => $isMahasiswa ? 'komprehensif.mahasiswa.dashboard' : 'banksoal.dashboard',
                 'color'       => 'blue',
             ],
             [
