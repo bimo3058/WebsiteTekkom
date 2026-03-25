@@ -108,3 +108,35 @@ Route::middleware(['auth', 'role:mahasiswa'])
 //     Route::resource('banksoal', BankSoalController::class)->names('banksoal');
 // });
 
+Route::middleware(['auth'])->prefix('bank-soal')->group(function () {
+    // Route khusus halaman Validasi RPS (GPM)
+    Route::get('/gpm/validasi-rps', function () {
+        return view('banksoal::gpm.validasi-rps');
+    })->name('gpm.validasi-rps');
+
+    Route::get('/gpm/validasi-rps/review', function () {
+        return view('banksoal::gpm.validasi-rps-review');
+    })->name('gpm.validasi-rps.review');
+
+    // Route khusus halaman Validasi Bank Soal (GPM)
+    Route::get('/gpm/validasi-bank-soal', function () {
+        return view('banksoal::gpm.validasi-bank-soal');
+    })->name('gpm.validasi-bank-soal');
+
+    Route::get('/gpm/validasi-bank-soal/review', function () {
+        return view('banksoal::gpm.validasi-bank-soal-review');
+    })->name('gpm.validasi-bank-soal.review');
+
+    // Route khusus halaman Riwayat Validasi (GPM)
+    Route::get('/gpm/riwayat-validasi', function () {
+        return view('banksoal::gpm.riwayat-validasi.index');
+    })->name('gpm.riwayat-validasi');
+
+    Route::get('/gpm/riwayat-validasi/rps', function () {
+        return view('banksoal::gpm.riwayat-validasi.rps');
+    })->name('gpm.riwayat-validasi.rps');
+
+    Route::get('/gpm/riwayat-validasi/bank-soal', function () {
+        return view('banksoal::gpm.riwayat-validasi.bank-soal');
+    })->name('gpm.riwayat-validasi.bank-soal');
+});
