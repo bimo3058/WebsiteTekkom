@@ -21,7 +21,7 @@ class DashboardController extends Controller
         $cards = [
             [
                 'icon'        => $isMahasiswa ? 'quiz' : ($isDosen ? 'description' : 'menu_book'),
-                'title'       => $isMahasiswa ? 'Ujian Komprehensif' : ($isDosen ? 'RPS' : 'Bank Soal'),
+                'title'       => $isMahasiswa ? 'Ujian Komprehensif' : ($isDosen ? 'Manajemen RPS / Bank Soal' : 'Bank Soal'),
                 'description' => $isMahasiswa
                     ? 'Ikuti ujian komprehensif online.'
                     : ($isDosen
@@ -45,7 +45,7 @@ class DashboardController extends Controller
                 'description' => $isMahasiswa
                     ? 'Kegiatan, prestasi, dan forum mahasiswa.'
                     : 'Kegiatan, alumni, dan forum mahasiswa.',
-                'route'       => 'mahasiswa.dashboard',
+                'route'       => 'manajemenmahasiswa.mahasiswa.dashboard',
                 'color'       => 'green',
             ],
             [

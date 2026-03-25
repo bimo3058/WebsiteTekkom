@@ -1,12 +1,15 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Modules\ManajemenMahasiswa\Http\Controllers\DashboardController;
 use Modules\ManajemenMahasiswa\Http\Controllers\GamificationController;
 use Modules\ManajemenMahasiswa\Http\Controllers\CvController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PengumumanController;
 
 Route::middleware(['auth'])->prefix('manajemen-mahasiswa')->name('manajemenmahasiswa.')->group(function () {
 
+    Route::get('/mahasiswa/dashboard', [DashboardController::class, 'index'])
+        ->name('mahasiswa.dashboard');
     // -------------------------------------------------------------------------
     // Pengumuman
     // -------------------------------------------------------------------------
