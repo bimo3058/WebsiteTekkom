@@ -8,6 +8,7 @@ use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
@@ -55,6 +56,10 @@ class AppServiceProvider extends ServiceProvider
                 ]);
             });
         }
+
+        Gate::define('viewPulse', function (User $user) {
+            return $user->hasRole('superadmin');
+        });
 
         // Log query lambat di local
         if (app()->environment('local')) {

@@ -6,7 +6,7 @@ use Modules\ManajemenMahasiswa\Http\Controllers\GamificationController;
 use Modules\ManajemenMahasiswa\Http\Controllers\CvController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PengumumanController;
 
-Route::middleware(['auth'])->prefix('manajemen-mahasiswa')->name('manajemenmahasiswa.')->group(function () {
+Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])->prefix('manajemen-mahasiswa')->name('manajemenmahasiswa.')->group(function () {
 
     Route::get('/mahasiswa/dashboard', [DashboardController::class, 'index'])
         ->name('mahasiswa.dashboard');
