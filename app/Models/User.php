@@ -60,6 +60,11 @@ class User extends Authenticatable
         return $this->hasOne(Lecturer::class);
     }
 
+    public function directPermissions()
+    {
+        return $this->belongsToMany(Permission::class, 'user_permissions');
+    }
+
     public function auditLogs()
     {
         return $this->hasMany(UserAuditLog::class);
@@ -143,7 +148,55 @@ class User extends Authenticatable
     {
         Cache::forget("user:{$this->id}:data");
         Cache::forget("user:{$this->id}:roles");
+        Cache::forget("user:{$this->id}:permissions");
     }
+
+    // -------------------------------------------------------------------------
+    // Permission helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Ambil semua permission user:
+     * gabungan dari role-nya + direct permission
+     */
+    public function getAllPermissions(): \Illuminate\Support\Collection
+    {
+        return cache()->remember("user_permissions_{$this->id}", 300, function () {
+            $fromRoles = $this->roles()
+                ->with('permissions')
+                ->get()
+                ->flatMap(fn($role) => $role->permissions->pluck('name'));
+
+            $direct = $this->directPermissions->pluck('name');
+
+            return $fromRoles->merge($direct)->unique();
+        });
+    }
+
+    public function can($abilities, $arguments = [])
+    {
+        // Superadmin bypass semua permission
+        if ($this->hasRole('superadmin')) return true;
+
+        return $this->getAllPermissions()->contains($abilities);
+    }
+
+    public function cannot($abilities, $arguments = [])
+    {
+        return !$this->can($abilities, $arguments);
+    }
+    // public function can(string $permission, $arguments = []): bool
+    // {
+    //     // Superadmin bypass semua permission
+    //     if ($this->hasRole('superadmin')) return true;
+
+    //     return $this->getAllPermissions()->contains($permission);
+    // }
+
+    // public function cannot(string $permission, $arguments = []): bool
+    // {
+    //     return !$this->can($permission);
+    // }
 
     /*
     |--------------------------------------------------------------------------

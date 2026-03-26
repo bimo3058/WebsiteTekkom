@@ -30,6 +30,18 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/users', [SuperAdminController::class, 'users'])
             ->name('users.index');
+        Route::get('/modules', [SuperAdminController::class, 'modules'])->name('modules');
+        Route::get('/permissions', [SuperAdminController::class, 'permissions'])
+            ->name('permissions');
+        Route::post('/modules/{slug}/settings', [SuperAdminController::class, 'updateModuleSettings'])->name('modules.settings');
+        Route::post('/modules/{slug}/purge-cache', [SuperAdminController::class, 'purgeModuleCache'])->name('modules.purge-cache');
+        Route::post('/modules/{slug}/maintenance', [SuperAdminController::class, 'toggleMaintenance'])->name('modules.maintenance');
+        Route::post('/modules/{slug}/toggle', [SuperAdminController::class, 'toggleModule'])->name('modules.toggle');
+
+        Route::post('/modules/{slug}/update-config', [SuperAdminController::class, 'updateConfig'])->name('modules.update-config');
+
+        Route::post('/users/{user}/update-permissions', [SuperAdminController::class, 'updatePermissions'])
+            ->name('users.update-permissions');
 
         // Tambah user baru
         Route::post('/users', [SuperAdminController::class, 'storeUser'])
