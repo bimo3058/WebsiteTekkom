@@ -7,21 +7,46 @@
 
         <title>{{ config('app.name', 'Laravel') }}</title>
 
-        <!-- Fonts -->
         <link rel="preconnect" href="https://fonts.bunny.net">
         <link href="https://fonts.bunny.net/css?family=figtree:400,500,600&display=swap" rel="stylesheet" />
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined" rel="stylesheet" />
 
-        <!-- Scripts -->
+        {{-- Material Symbols Outlined --}}
+        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
+
+        <style>
+            .material-symbols-outlined {
+                font-family: 'Material Symbols Outlined' !important;
+                font-weight: normal;
+                font-style: normal;
+                font-size: 24px;
+                line-height: 1;
+                display: inline-block;
+                white-space: nowrap;
+                word-wrap: normal;
+                direction: ltr;
+                -webkit-font-smoothing: antialiased;
+                vertical-align: middle;
+            }
+
+            .modal-active {
+                display: flex !important;
+                z-index: 9999 !important;
+            }
+
+            body.modal-open {
+                overflow: hidden !important;
+            }
+        </style>
+
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>
     <body class="font-sans antialiased overflow-hidden">
-        <div class="min-h-screen bg-gray-100 dark:bg-gray-900">
+        <div class="min-h-screen bg-slate-50">
             @include('layouts.navigation')
 
             @isset($header)
-                <header class="bg-white dark:bg-gray-800 shadow">
-                    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+                <header class="bg-white border-b border-slate-200">
+                    <div class="max-w-7xl mx-auto py-4 px-6">
                         {{ $header }}
                     </div>
                 </header>

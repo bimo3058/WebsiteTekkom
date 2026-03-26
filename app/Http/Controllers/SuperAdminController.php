@@ -63,32 +63,43 @@ class SuperAdminController extends Controller
 
     private function getModulesStats(): array
     {
+        // Ambil status aktif dari database
+        $dbModules = \App\Models\SystemModule::pluck('is_active', 'slug')->toArray();
+
         return [
             'bank_soal' => [
                 'name'        => 'Bank Soal',
+                'slug'        => 'bank_soal',
+                'is_active'   => $dbModules['bank_soal'] ?? false,
                 'icon'        => 'book',
                 'route'       => 'banksoal.dashboard',
                 'pertanyaan'  => DB::table('bs_pertanyaan')->count(),
                 'mata_kuliah' => DB::table('bs_mata_kuliah')->count(),
             ],
             'capstone' => [
-                'name'    => 'Capstone',
-                'icon'    => 'graduation-cap',
-                'route'   => 'capstone.dashboard',
-                'groups'  => DB::table('capstone_groups')->whereNull('deleted_at')->count(),
-                'periods' => DB::table('capstone_periods')->count(),
+                'name'      => 'Capstone',
+                'slug'      => 'capstone',
+                'is_active' => $dbModules['capstone'] ?? false,
+                'icon'      => 'graduation-cap',
+                'route'     => 'capstone.dashboard',
+                'groups'    => DB::table('capstone_groups')->whereNull('deleted_at')->count(),
+                'periods'   => DB::table('capstone_periods')->count(),
             ],
             'eoffice' => [
-                'name'  => 'E-Office',
-                'icon'  => 'briefcase',
-                'route' => 'eoffice.dashboard',
+                'name'      => 'E-Office',
+                'slug'      => 'eoffice',
+                'is_active' => $dbModules['eoffice'] ?? false,
+                'icon'      => 'briefcase',
+                'route'     => 'eoffice.dashboard',
             ],
             'manajemen_mahasiswa' => [
-                'name'     => 'Manajemen Mahasiswa',
-                'icon'     => 'users',
-                'route'    => 'mahasiswa.dashboard',
-                'students' => DB::table('students')->count(),
-                'alumni'   => DB::table('mk_alumni')->count(),
+                'name'       => 'Manajemen Mahasiswa',
+                'slug'       => 'manajemen_mahasiswa',
+                'is_active'  => $dbModules['manajemen_mahasiswa'] ?? false,
+                'icon'       => 'users',
+                'route'      => 'manajemenmahasiswa.mahasiswa.dashboard',
+                'students'   => DB::table('students')->count(),
+                'alumni'     => DB::table('mk_alumni')->count(),
             ],
         ];
     }
@@ -221,6 +232,42 @@ class SuperAdminController extends Controller
         }
     }
 
+    // ── Users — Update Permissions ─────────────────────────────────────────────
+    public function updatePermissions(Request $request, User $user)
+    {
+        $permissionIds = DB::table('permissions')
+            ->whereIn('name', $request->permissions ?? [])
+            ->pluck('id');
+
+        $user->directPermissions()->sync($permissionIds);
+        $user->clearUserCache();
+
+        return back()->with('success', 'Permission berhasil diupdate.');
+    }
+
+    // ── Modules — Update Config ───────────────────────────────────────────────
+    public function updateConfig(Request $request, $slug)
+    {
+        // Validasi input
+        $request->validate([
+            'name' => 'required|string|max:255',
+            // 'config' => 'nullable|array' // Jika nanti pakai kolom JSON
+        ]);
+
+        $module = \App\Models\SystemModule::where('slug', $slug)->firstOrFail();
+        
+        // Update data
+        $module->update([
+            'name' => $request->name,
+            // Di sini kamu bisa tambahkan logic simpan config lain
+        ]);
+
+        // Hapus cache agar perubahan langsung muncul di Dashboard
+        \Illuminate\Support\Facades\Cache::forget('sa:modules_stats');
+
+        return back()->with('success', "Konfigurasi modul {$module->name} berhasil diperbarui!");
+    }
+
     // ── Users — Update Roles ───────────────────────────────────────────────────
 
     public function updateRole(Request $request, User $user)
@@ -312,16 +359,69 @@ class SuperAdminController extends Controller
 
     // ── Modules ────────────────────────────────────────────────────────────────
 
+    // public function modules()
+    // {
+    //     $modules = [
+    //         ['id' => 'bank_soal',           'name' => 'Bank Soal',           'description' => 'Manage question bank and learning materials', 'icon' => 'book',           'status' => true, 'active_users'    => DB::table('bs_dosen_pengampu_mk')->count(), 'total_questions' => DB::table('bs_pertanyaan')->count()],
+    //         ['id' => 'capstone',            'name' => 'Capstone',            'description' => 'Manage capstone projects and thesis',          'icon' => 'graduation-cap', 'status' => true, 'active_groups'   => DB::table('capstone_groups')->whereNull('deleted_at')->count()],
+    //         ['id' => 'eoffice',             'name' => 'E-Office',            'description' => 'Manage office documents and workflow',         'icon' => 'briefcase',      'status' => true],
+    //         ['id' => 'manajemen_mahasiswa', 'name' => 'Manajemen Mahasiswa', 'description' => 'Manage student data and activities',           'icon' => 'users',          'status' => true, 'total_students'  => DB::table('students')->count(), 'total_alumni' => DB::table('mk_alumni')->count()],
+    //     ];
+
+    //     return view('superadmin.modules.index', compact('modules'));
+    // }
     public function modules()
     {
-        $modules = [
-            ['id' => 'bank_soal',           'name' => 'Bank Soal',           'description' => 'Manage question bank and learning materials', 'icon' => 'book',           'status' => true, 'active_users'    => DB::table('bs_dosen_pengampu_mk')->count(), 'total_questions' => DB::table('bs_pertanyaan')->count()],
-            ['id' => 'capstone',            'name' => 'Capstone',            'description' => 'Manage capstone projects and thesis',          'icon' => 'graduation-cap', 'status' => true, 'active_groups'   => DB::table('capstone_groups')->whereNull('deleted_at')->count()],
-            ['id' => 'eoffice',             'name' => 'E-Office',            'description' => 'Manage office documents and workflow',         'icon' => 'briefcase',      'status' => true],
-            ['id' => 'manajemen_mahasiswa', 'name' => 'Manajemen Mahasiswa', 'description' => 'Manage student data and activities',           'icon' => 'users',          'status' => true, 'total_students'  => DB::table('students')->count(), 'total_alumni' => DB::table('mk_alumni')->count()],
-        ];
-
+        // Ambil data dari database sekarang, bukan hardcode array lagi
+        $modules = \App\Models\SystemModule::all();
         return view('superadmin.modules.index', compact('modules'));
+    }
+
+    public function toggleModule(Request $request, $slug)
+    {
+        $module = \App\Models\SystemModule::where('slug', $slug)->firstOrFail();
+        
+        // Membalikkan status (true jadi false, false jadi true)
+        $module->update([
+            'is_active' => !$module->is_active
+        ]);
+
+        // Hapus cache untuk middleware
+        \Illuminate\Support\Facades\Cache::forget("module_active_{$slug}");
+        
+        // INI YANG KURANG: Hapus cache untuk tampilan Dashboard!
+        \Illuminate\Support\Facades\Cache::forget('sa:modules_stats');
+
+        return back()->with('success', "Status modul {$module->name} berhasil diubah!");
+    }
+
+    // public function toggleModule(Request $request, $slug)
+    // {
+    //     $module = \App\Models\SystemModule::where('slug', $slug)->firstOrFail();
+        
+    //     // Ubah status (kalau true jadi false, kalau false jadi true)
+    //     $module->update(['is_active' => !$module->is_active]);
+
+    //     // Hapus cache agar middleware langsung membaca status baru
+    //     Cache::forget("module_active_{$slug}");
+
+    //     return back()->with('success', "Status modul {$module->name} berhasil diubah!");
+    // }
+    
+    // ── Permissions ────────────────────────────────────────────────────────────
+    public function permissions()
+    {
+        // Tambahkan .permissions di sebelah roles
+        $users = User::with(['roles.permissions', 'directPermissions']) 
+            ->whereNull('deleted_at')
+            ->orderBy('name')
+            ->get();
+
+        $permissions = \App\Models\Permission::all()->groupBy('module');
+
+        $roles = Role::with('permissions')->get();
+
+        return view('superadmin.permissions', compact('users', 'permissions', 'roles'));
     }
 
     // ── Storage Test — Upload ──────────────────────────────────────────────────

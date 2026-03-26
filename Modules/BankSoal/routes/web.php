@@ -6,7 +6,7 @@ use Modules\BankSoal\Http\Controllers\RPS\Dosen\RpsController as DosenRpsControl
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\RpsController as GpmRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Admin\RpsController as AdminRpsController;
 
-Route::middleware(['auth'])->prefix('bank-soal')->group(function () {
+Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->group(function () {
     #Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])
         ->name('banksoal.dashboard');
@@ -87,7 +87,7 @@ Route::middleware(['auth'])->prefix('bank-soal')->group(function () {
 });
 
 // Route khusus ujian komprehensif untuk mahasiswa (Module Bank Soal)
-Route::middleware(['auth', 'role:mahasiswa'])
+Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
     ->prefix('ujian-komprehensif')
     ->name('komprehensif.mahasiswa.')
     ->group(function () {
@@ -103,10 +103,6 @@ Route::middleware(['auth', 'role:mahasiswa'])
             return view('banksoal::mahasiswa.riwayat');
         })->name('riwayat');
 });
-
-// Route::middleware(['auth', 'verified'])->group(function () {
-//     Route::resource('banksoal', BankSoalController::class)->names('banksoal');
-// });
 
 Route::middleware(['auth'])->prefix('bank-soal')->group(function () {
     // Route khusus halaman Validasi RPS (GPM)

@@ -9,27 +9,30 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $user = Auth::user();
+        $user  = Auth::user();
+        $roles = $user->roles->pluck('name'); // pakai collection biar fleksibel
 
-        // ambil semua role user
-        $roles = $user->roles->pluck('name')->toArray();
-
-        if (in_array('admin', $roles)) {
+        // Superadmin & Admin
+        if ($roles->intersect(['superadmin', 'admin'])->isNotEmpty()) {
             return view('banksoal::dashboard.admin');
         }
 
-        if (in_array('gpm', $roles)) {
+        // GPM
+        if ($roles->contains('gpm')) {
             return view('banksoal::dashboard.gpm');
         }
 
-        if (in_array('dosen', $roles)) {
+        // Dosen
+        if ($roles->contains('dosen')) {
             return view('banksoal::dashboard.dosen');
         }
 
-        if (in_array('mahasiswa', $roles)) {
+        // Mahasiswa
+        if ($roles->contains('mahasiswa')) {
             return view('banksoal::dashboard.mahasiswa');
         }
 
-        abort(403);
+        // fallback kalau role aneh / tidak terdaftar
+        abort(403, 'Role tidak memiliki akses ke dashboard Bank Soal.');
     }
 }
