@@ -282,11 +282,11 @@
 
     <div class="progress-header px-4 px-xl-5">
         <div>
-            <span class="fw-bold">Mata Kuliah:</span> Algoritma & Struktur Data (CS201) &nbsp; <span class="text-muted">|</span> &nbsp; 
-            <span class="fw-bold">Dosen:</span> Budi Santoso
+            <span class="fw-bold">Mata Kuliah:</span> {{ $soal->mk_nama }} ({{ $soal->mk_kode }}) &nbsp; <span class="text-muted">|</span> &nbsp; 
+            <span class="fw-bold">Dosen:</span> Budi Santoso {{-- TODO: Hubungkan dengan relasi Dosen nanti ya --}}
         </div>
         <div class="progress-bar-container">
-            Review Progress: Soal 5 dari 40
+            Review Progress: Soal {{ $soal->id }}
             <div class="progress-custom">
                 <div class="progress-fill"></div>
             </div>
@@ -313,15 +313,15 @@
                     </div>
                     
                     <div class="cpl-label">KODE CAPAIAN</div>
-                    <div class="cpl-value">CPL-03</div>
+                    <div class="cpl-value">{{ $soal->cpl_kode }}</div>
                     
                     <div class="cpl-label">DESKRIPSI KOMPETENSI</div>
                     <div class="cpl-desc">
-                        Mampu merancang dan menganalisis algoritma pemecahan masalah secara logis dan terstruktur.
+                        {{ $soal->cpl_deskripsi }}
                     </div>
                     
                     <div class="badge-cognitive">
-                        LEVEL KOGNITIF: C4 (MENGANALISIS)
+                        LEVEL KOGNITIF: C4 (MENGANALISIS) {{-- TODO: Ganti ini jika sudah ada di DB --}}
                     </div>
                 </div>
             </div>
@@ -330,67 +330,86 @@
             <div class="col-lg-8">
                 <div class="question-card">
                     <div class="question-header">
-                        <span class="badge-soal">SOAL NO. 5</span>
+                        <span class="badge-soal">SOAL ID. {{ $soal->id }}</span>
                         <span class="question-type">Tipe: Pilihan Ganda</span>
                     </div>
 
                     <div class="question-text">
-                        Manakah dari struktur data berikut yang menggunakan prinsip LIFO?
+                        {{ $soal->soal }}
                     </div>
 
                     <div class="options-container">
-                        <div class="option-item">
-                            <div class="option-letter">A</div>
-                            <div class="option-text">Queue</div>
-                        </div>
-                        <div class="option-item correct">
-                            <div class="option-letter">B</div>
-                            <div class="option-text">Stack</div>
-                            <i class="far fa-check-circle correct-icon"></i>
-                        </div>
-                        <div class="option-item">
-                            <div class="option-letter">C</div>
-                            <div class="option-text">Linked List</div>
-                        </div>
-                        <div class="option-item">
-                            <div class="option-letter">D</div>
-                            <div class="option-text">Tree</div>
-                        </div>
-                        <div class="option-item">
-                            <div class="option-letter">E</div>
-                            <div class="option-text">Graph</div>
-                        </div>
+                        @foreach($opsi_jawaban as $opsi)
+                            <div class="option-item {{ $opsi->is_benar ? 'correct' : '' }}">
+                                <div class="option-letter">{{ $opsi->opsi }}</div>
+                                <div class="option-text">{{ $opsi->deskripsi }}</div>
+                                @if($opsi->is_benar)
+                                    <i class="far fa-check-circle correct-icon"></i>
+                                @endif
+                            </div>
+                        @endforeach
                     </div>
 
-                    <div class="decision-section">
-                        <div class="decision-title">KEPUTUSAN GPM</div>
-                        
-                        <div class="decision-group">
-                            <div class="btn-decision active">
+            <form action="{{ route('gpm.validasi-bank-soal.store') }}" method="POST" id="form-review-gpm">                        @csrf
+                        <input type="hidden" name="pertanyaan_id" value="{{ $soal->id }}">
+
+                <div class="decision-section">
+                    <div class="decision-title">KEPUTUSAN GPM</div>
+                            
+                     <div class="decision-group">
+                             <label class="btn-decision" onclick="selectDecision(this)">
+                                <input type="radio" name="status_review" value="Sesuai" class="d-none" required>
                                 <i class="fas fa-check"></i> Sesuai
+                            </label>
+                                
+                                <label class="btn-decision" onclick="selectDecision(this)">
+                                    <input type="radio" name="status_review" value="Kurang Sesuai" class="d-none">
+                                    <i class="fas fa-exclamation-triangle"></i> Kurang Sesuai
+                                </label>
+                                
+                                <label class="btn-decision" onclick="selectDecision(this)">
+                                    <input type="radio" name="status_review" value="Revisi Total" class="d-none">
+                                    <i class="fas fa-exclamation-circle"></i> Revisi Total
+                                </label>
                             </div>
-                            <div class="btn-decision">
-                                <i class="fas fa-exclamation-triangle"></i> Kurang Sesuai
-                            </div>
-                            <div class="btn-decision">
-                                <i class="fas fa-exclamation-circle"></i> Revisi Total
+
+                            <div class="revision-note">
+                                <div class="decision-title">CATATAN REVISI</div>
+                                <textarea name="catatan" placeholder="Masukkan feedback untuk dosen..." required></textarea>
                             </div>
                         </div>
 
-                        <div class="revision-note">
-                            <div class="decision-title">CATATAN REVISI</div>
-                            <textarea placeholder="Masukkan feedback untuk dosen..."></textarea>
+                        <div class="action-footer">
+                            <a href="{{ route('gpm.validasi-bank-soal') }}" class="btn-prev text-decoration-none text-dark d-inline-flex align-items-center">
+                                <i class="fas fa-arrow-left me-2"></i> Kembali ke Daftar
+                            </a>
+                            
+                            <button type="submit" class="btn-next">
+                                Simpan & Lanjut Berikutnya <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
                         </div>
-                    </div>
+                    </form>
 
-                    <div class="action-footer">
-                        <button class="btn-prev"><i class="fas fa-arrow-left me-2"></i> Soal Sebelumnya</button>
-                        <button class="btn-next">Simpan & Lanjut Soal 6 <i class="fas fa-arrow-right ms-2"></i></button>
-                    </div>
+                    <script>
+                        function selectDecision(element) {
+                            // 1. Hapus class 'active' dari semua tombol
+                            document.querySelectorAll('.btn-decision').forEach(btn => {
+                                btn.classList.remove('active');
+                            });
+                            // 2. Tambahkan class 'active' ke tombol yang sedang diklik
+                            element.classList.add('active');
+                        }
+                    </script>
+    
+                    <script>
+                        function selectDecision(element) {
+                            // 1. Hapus class 'active' dari semua tombol
+                            document.querySelectorAll('.btn-decision').forEach(btn => {
+                                btn.classList.remove('active');
+                            });
+                            // 2. Tambahkan class 'active' ke tombol yang sedang diklik
+                            element.classList.add('active');
+                        }
+                    </script>
 
-                </div>
-            </div>
-        </div>
-
-    </div>
-</x-banksoal::layouts.gpm-master>
+                </div> </div> </div> </div> </x-banksoal::layouts.gpm-master>

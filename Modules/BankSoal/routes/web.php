@@ -1,6 +1,8 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Http\Controllers\DashboardController;
 use Modules\BankSoal\Http\Controllers\RPS\Dosen\RpsController as DosenRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\RpsController as GpmRpsController;
@@ -104,10 +106,6 @@ Route::middleware(['auth', 'role:mahasiswa'])
         })->name('riwayat');
 });
 
-// Route::middleware(['auth', 'verified'])->group(function () {
-//     Route::resource('banksoal', BankSoalController::class)->names('banksoal');
-// });
-
 Route::middleware(['auth'])->prefix('bank-soal')->group(function () {
     // Route khusus halaman Validasi RPS (GPM)
     Route::get('/gpm/validasi-rps', function () {
@@ -123,9 +121,59 @@ Route::middleware(['auth'])->prefix('bank-soal')->group(function () {
         return view('banksoal::gpm.validasi-bank-soal');
     })->name('gpm.validasi-bank-soal');
 
+    // 1. GET: Menampilkan halaman review soal
     Route::get('/gpm/validasi-bank-soal/review', function () {
-        return view('banksoal::gpm.validasi-bank-soal-review');
+        // Ambil soal pertama yang BELUM ADA di tabel bs_review
+        $soal = DB::table('bs_pertanyaan')
+            ->join('bs_cpl', 'bs_pertanyaan.cpl_id', '=', 'bs_cpl.id')
+            ->join('bs_mata_kuliah', 'bs_pertanyaan.mk_id', '=', 'bs_mata_kuliah.id')
+            ->whereNotIn('bs_pertanyaan.id', function($query) {
+                $query->select('pertanyaan_id')->from('bs_review');
+            })
+            ->select(
+                'bs_pertanyaan.*', 
+                'bs_cpl.kode as cpl_kode', 'bs_cpl.deskripsi as cpl_deskripsi',
+                'bs_mata_kuliah.nama as mk_nama', 'bs_mata_kuliah.kode as mk_kode'
+            )
+            ->orderBy('bs_pertanyaan.id', 'asc')
+            ->first();
+
+        // Kalau $soal kosong, berarti semua soal sudah beres divalidasi!
+        if (!$soal) {
+            return redirect()->route('gpm.validasi-bank-soal')->with('success', 'Mantap! Semua soal telah selesai divalidasi.');
+        }
+
+        // Ambil opsi jawaban sesuai ID soal yang lagi tampil (bukan hardcode 1 lagi)
+        $opsi_jawaban = DB::table('bs_jawaban')
+            ->where('soal_id', $soal->id)
+            ->orderBy('opsi', 'asc')
+            ->get();
+
+        return view('banksoal::gpm.validasi-bank-soal-review', compact('soal', 'opsi_jawaban'));
     })->name('gpm.validasi-bank-soal.review');
+    
+    // 2. POST: Menyimpan hasil review form
+    Route::post('/gpm/validasi-bank-soal/store', function (Request $request) {
+        // Validasi input form
+        $request->validate([
+            'pertanyaan_id' => 'required|integer',
+            'status_review' => 'required|string',
+            'catatan'       => 'required|string'
+        ]);
+
+        // Insert data ke tabel review
+        DB::table('bs_review')->insert([
+            'pertanyaan_id' => $request->pertanyaan_id,
+            'gpm_user_id'   => auth()->id() ?? 1,
+            'status_review' => $request->status_review,
+            'catatan'       => $request->catatan,
+            'created_at'    => now(),
+            'updated_at'    => now()
+        ]);
+
+        // Alihkan ulang ke rute review (yang sekarang otomatis nampilin soal ID berikutnya!)
+        return redirect()->route('gpm.validasi-bank-soal.review')->with('success', 'Hasil review berhasil disimpan!');
+    })->name('gpm.validasi-bank-soal.store');
 
     // Route khusus halaman Riwayat Validasi (GPM)
     Route::get('/gpm/riwayat-validasi', function () {
