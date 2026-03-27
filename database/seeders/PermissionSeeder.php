@@ -9,6 +9,7 @@ class PermissionSeeder extends Seeder
 {
     public function run(): void
     {
+        // 1. Definisi Data Permissions
         $permissions = [
             // Bank Soal
             ['name' => 'banksoal.view',   'display_name' => 'Lihat Bank Soal',   'module' => 'banksoal'],
@@ -31,6 +32,7 @@ class PermissionSeeder extends Seeder
             ['name' => 'eoffice.delete', 'display_name' => 'Hapus E-Office',  'module' => 'eoffice'],
         ];
 
+        // 2. Insert Permissions
         foreach ($permissions as $permission) {
             DB::table('permissions')->insertOrIgnore([
                 ...$permission,
@@ -39,9 +41,8 @@ class PermissionSeeder extends Seeder
             ]);
         }
 
-        // Assign semua permission ke superadmin dan admin
+        // 3. Assign SEMUA permission ke superadmin & admin
         $allPermissionIds = DB::table('permissions')->pluck('id');
-
         $adminRoles = DB::table('roles')
             ->whereIn('name', ['superadmin', 'admin'])
             ->pluck('id');
@@ -57,7 +58,7 @@ class PermissionSeeder extends Seeder
             }
         }
 
-        // Assign hanya view ke admin_readonly kalau ada
+        // 4. Assign hanya VIEW ke admin_readonly
         $readonlyRole = DB::table('roles')->where('name', 'admin_readonly')->first();
         if ($readonlyRole) {
             $viewPermissions = DB::table('permissions')
@@ -68,6 +69,40 @@ class PermissionSeeder extends Seeder
                 DB::table('role_permissions')->insertOrIgnore([
                     'role_id'       => $readonlyRole->id,
                     'permission_id' => $permissionId,
+                    'created_at'    => now(),
+                    'updated_at'    => now(),
+                ]);
+            }
+        }
+
+        // 5. IMPLEMENTASI BARU: Role per Modul (View + Edit)
+        $moduleRoles = [
+            ['name' => 'admin_banksoal',      'module' => 'banksoal'],
+            ['name' => 'admin_capstone',      'module' => 'capstone'],
+            ['name' => 'admin_eoffice',       'module' => 'eoffice'],
+            ['name' => 'admin_kemahasiswaan', 'module' => 'kemahasiswaan'],
+        ];
+
+        foreach ($moduleRoles as $mRole) {
+            // Gunakan updateOrInsert agar tidak duplikat jika seeder dijalankan ulang
+            DB::table('roles')->updateOrInsert(
+                ['name' => $mRole['name']],
+                ['created_at' => now(), 'updated_at' => now()]
+            );
+
+            $roleId = DB::table('roles')->where('name', $mRole['name'])->value('id');
+            $module = $mRole['module'];
+
+            // Ambil ID permission view & edit untuk modul terkait
+            $permissionIds = DB::table('permissions')
+                ->where('module', $module)
+                ->whereIn('name', ["$module.view", "$module.edit"])
+                ->pluck('id');
+
+            foreach ($permissionIds as $pId) {
+                DB::table('role_permissions')->insertOrIgnore([
+                    'role_id'       => $roleId,
+                    'permission_id' => $pId,
                     'created_at'    => now(),
                     'updated_at'    => now(),
                 ]);

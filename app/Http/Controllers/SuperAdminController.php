@@ -12,6 +12,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\Rule;
 
 class SuperAdminController extends Controller
 {
@@ -48,14 +49,21 @@ class SuperAdminController extends Controller
 
     public function index()
     {
+        $activeImport = \App\Models\ImportStatus::where('user_id', auth()->id())
+            ->whereIn('status', ['pending', 'processing'])
+            ->latest()
+            ->first();
+
         $data = [
             'total_users'       => Cache::remember('sa:total_users',       self::TTL_STATS,  fn() => User::count()),
             'total_superadmins' => Cache::remember('sa:total_superadmins', self::TTL_STATS,  fn() => User::whereHas('roles', fn($q) => $q->where('name', 'superadmin'))->count()),
             'total_lecturers'   => Cache::remember('sa:total_lecturers',   self::TTL_STATS,  fn() => User::whereHas('roles', fn($q) => $q->where('name', 'dosen'))->count()),
-            'total_students'    => Cache::remember('sa:total_students',     self::TTL_STATS,  fn() => User::whereHas('roles', fn($q) => $q->where('name', 'mahasiswa'))->count()),
+            'total_students'    => Cache::remember('sa:total_students',    self::TTL_STATS,  fn() => User::whereHas('roles', fn($q) => $q->where('name', 'mahasiswa'))->count()),
             'recent_users'      => Cache::remember('sa:recent_users',      self::TTL_RECENT, fn() => User::with('roles')->latest('created_at')->limit(10)->get()),
             'modules'           => Cache::remember('sa:modules_stats',     self::TTL_STATS,  fn() => $this->getModulesStats()),
             'recent_logs'       => AuditLog::with('user')->latest('created_at')->limit(8)->get(),
+            
+            'activeImportId'    => $activeImport?->id, 
         ];
 
         return view('superadmin.dashboard', $data);
@@ -80,7 +88,7 @@ class SuperAdminController extends Controller
                 'name'      => 'Capstone',
                 'slug'      => 'capstone',
                 'is_active' => $dbModules['capstone'] ?? false,
-                'icon'      => 'graduation-cap',
+                'icon'      => 'school',
                 'route'     => 'capstone.dashboard',
                 'groups'    => DB::table('capstone_groups')->whereNull('deleted_at')->count(),
                 'periods'   => DB::table('capstone_periods')->count(),
@@ -89,14 +97,14 @@ class SuperAdminController extends Controller
                 'name'      => 'E-Office',
                 'slug'      => 'eoffice',
                 'is_active' => $dbModules['eoffice'] ?? false,
-                'icon'      => 'briefcase',
+                'icon'      => 'work',
                 'route'     => 'eoffice.dashboard',
             ],
             'manajemen_mahasiswa' => [
                 'name'       => 'Manajemen Mahasiswa',
                 'slug'       => 'manajemen_mahasiswa',
                 'is_active'  => $dbModules['manajemen_mahasiswa'] ?? false,
-                'icon'       => 'users',
+                'icon'       => 'user',
                 'route'      => 'manajemenmahasiswa.mahasiswa.dashboard',
                 'students'   => DB::table('students')->count(),
                 'alumni'     => DB::table('mk_alumni')->count(),
@@ -120,7 +128,7 @@ class SuperAdminController extends Controller
 
         $query = User::with(['roles', 'lecturer', 'student'])
             ->whereNull('deleted_at')
-            ->select('id', 'name', 'email', 'created_at', 'last_login', 'deleted_at');
+            ->select('id', 'name', 'email', 'created_at', 'last_login', 'deleted_at', 'suspended_at', 'suspension_reason');
 
         if ($role !== 'all') {
             $query->whereExists(function ($sub) use ($role) {
@@ -235,14 +243,41 @@ class SuperAdminController extends Controller
     // ── Users — Update Permissions ─────────────────────────────────────────────
     public function updatePermissions(Request $request, User $user)
     {
-        $permissionIds = DB::table('permissions')
-            ->whereIn('name', $request->permissions ?? [])
-            ->pluck('id');
+        // Gunakan Transaction agar jika salah satu gagal, semua dibatalkan
+        DB::beginTransaction();
+        try {
+            // 1. Sinkronisasi Roles (Ambil dari checkbox name="roles[]")
+            $user->roles()->sync($request->input('roles', []));
 
-        $user->directPermissions()->sync($permissionIds);
-        $user->clearUserCache();
+            // 2. Sinkronisasi Direct Permissions (Ambil dari checkbox name="permissions[]")
+            $permissionIds = DB::table('permissions')
+                ->whereIn('name', $request->input('permissions', []))
+                ->pluck('id');
 
-        return back()->with('success', 'Permission berhasil diupdate.');
+            $user->directPermissions()->sync($permissionIds);
+
+            // 3. Catat ke Audit Log (Opsional tapi sangat disarankan)
+            \App\Services\AuditLogger::update(
+                module:  'user_management',
+                desc:    "Update hak akses (Roles & Permissions) untuk user: {$user->name}",
+                subject: $user,
+                newData: [
+                    'roles' => $user->roles->pluck('name'),
+                    'direct_permissions' => $request->permissions ?? []
+                ],
+            );
+
+            // 4. Clear Cache agar perubahan langsung berefek pada gate/policy
+            $user->clearUserCache();
+            $this->bustUserCache();
+
+            DB::commit();
+            return back()->with('success', "Hak akses untuk {$user->name} berhasil diperbarui.");
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal memperbarui akses: ' . $e->getMessage());
+        }
     }
 
     // ── Modules — Update Config ───────────────────────────────────────────────
@@ -269,7 +304,6 @@ class SuperAdminController extends Controller
     }
 
     // ── Users — Update Roles ───────────────────────────────────────────────────
-
     public function updateRole(Request $request, User $user)
     {
         $validated = $request->validate([
@@ -320,9 +354,8 @@ class SuperAdminController extends Controller
         }
     }
 
-    // ── Users — Destroy ────────────────────────────────────────────────────────
-
-    public function destroyUser(User $user)
+    // ── Users — Delete ─────────────────────────────────────────────────────────
+    public function destroyUser(Request $request, User $user)
     {
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Anda tidak dapat menghapus akun sendiri.');
@@ -330,46 +363,228 @@ class SuperAdminController extends Controller
 
         DB::beginTransaction();
         try {
+            $type = $request->input('delete_type', 'soft'); // Default: hapus biasa
             $oldData = [
                 'name'  => $user->name,
                 'email' => $user->email,
-                'roles' => $user->roles->pluck('name')->values()->toArray(),
+                'roles' => $user->roles->pluck('name')->toArray(),
             ];
 
-            $user->update(['deleted_at' => now()]);
+            if ($type === 'permanent') {
+                // Hapus Permanen dari DB
+                $user->roles()->detach(); // Putus relasi pivot
+                $user->forceDelete();
+                $msg = "User \"{$user->name}\" dihapus permanen.";
+            } else {
+                // Hapus Biasa (Soft Delete)
+                $user->delete();
+                $msg = "User \"{$user->name}\" dipindahkan ke sampah.";
+            }
 
-            // ── Ganti UserAuditLog → AuditLogger ──────────────────────────────
             AuditLogger::delete(
-                module:  'user_management',
-                desc:    "Menghapus user: {$user->name} ({$user->email})",
+                module: 'user_management',
+                desc: $msg,
                 subject: $user,
-                oldData: $oldData,
+                oldData: $oldData
             );
 
             $this->bustUserCache();
             DB::commit();
 
-            return back()->with('success', "User \"{$user->name}\" berhasil dihapus.");
+            return back()->with('success', $msg);
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal menghapus user: ' . $e->getMessage());
+            return back()->with('error', 'Gagal: ' . $e->getMessage());
         }
     }
 
+    // ── Users -- Bulk Delete ────────────────────────────────────────────────────────
+    public function bulkDestroy(Request $request)
+    {
+        $ids = $request->input('ids');
+        $type = $request->input('delete_type', 'soft');
+
+        if (empty($ids)) {
+            return back()->with('error', 'Tidak ada user yang dipilih.');
+        }
+
+        // Pastikan admin tidak menghapus dirinya sendiri dari bulk action
+        $ids = array_diff($ids, [auth()->id()]);
+
+        try {
+            DB::beginTransaction();
+            
+            $users = User::whereIn('id', $ids)->get();
+
+            foreach ($users as $user) {
+                if ($type === 'permanent') {
+                    $user->roles()->detach();
+                    $user->forceDelete();
+                } else {
+                    $user->delete();
+                }
+            }
+
+            AuditLogger::delete(
+                module: 'user_management',
+                desc: "Bulk Delete ($type): " . count($ids) . " users",
+                subject: null,
+                oldData: ['ids' => $ids, 'type' => $type],
+            );
+
+            DB::commit();
+            return back()->with('success', count($ids) . " user berhasil dihapus ($type).");
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus massal: ' . $e->getMessage());
+        }
+    }
+
+    // ── Account Control ────────────────────────────────────────────────────────
+    public function updateUser(Request $request, User $user)
+    {
+        $validated = $request->validate([
+            'name'  => ['required', 'string', 'max:255'],
+            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $oldData = ['name' => $user->name, 'email' => $user->email];
+            
+            $user->update($validated);
+            $user->clearUserCache();
+
+            AuditLogger::update(
+                module:  'user_management',
+                desc:    "Update info user: {$user->name}",
+                subject: $user,
+                oldData: $oldData,
+                newData: $validated,
+            );
+
+            $this->bustUserCache();
+            DB::commit();
+
+            return back()->with('success', "Info user \"{$user->name}\" berhasil diperbarui.");
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal update user: ' . $e->getMessage());
+        }
+    }
+
+    public function forceLogout(User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'Tidak dapat force logout akun sendiri.');
+        }
+
+        $user->forceLogout();
+
+        AuditLogger::update(
+            module:  'user_management',
+            desc:    "Force logout user: {$user->name} ({$user->email})",
+            subject: $user,
+            oldData: [],
+            newData: ['action' => 'force_logout'],
+        );
+
+        return back()->with('success', "User \"{$user->name}\" berhasil di-logout paksa.");
+    }
+
+    public function suspend(Request $request, User $user)
+    {
+        if ($user->id === auth()->id()) {
+            return back()->with('error', 'Tidak dapat suspend akun sendiri.');
+        }
+
+        if ($user->hasRole('superadmin')) {
+            return back()->with('error', 'Tidak dapat suspend akun superadmin.');
+        }
+
+        $request->validate([
+            'reason' => ['nullable', 'string', 'max:500'],
+        ]);
+
+        $user->suspend($request->reason ?? '');
+
+        AuditLogger::update(
+            module:  'user_management',
+            desc:    "Suspend user: {$user->name} ({$user->email})",
+            subject: $user,
+            oldData: ['suspended' => false],
+            newData: ['suspended' => true, 'reason' => $request->reason],
+        );
+
+        $this->bustUserCache();
+
+        return back()->with('success', "User \"{$user->name}\" berhasil disuspend.");
+    }
+
+    public function unsuspend(User $user)
+    {
+        $user->unsuspend();
+
+        AuditLogger::update(
+            module:  'user_management',
+            desc:    "Unsuspend user: {$user->name} ({$user->email})",
+            subject: $user,
+            oldData: ['suspended' => true],
+            newData: ['suspended' => false],
+        );
+
+        $this->bustUserCache();
+
+        return back()->with('success', "User \"{$user->name}\" berhasil di-unsuspend.");
+    }
+
+    // ── Users — Bulk Import ─────────────────────────────────────────────────
+    public function bulkImport(Request $request) 
+    {
+        $request->validate(['file' => 'required|file|mimes:csv,txt']);
+        $file = $request->file('file');
+
+        // Hitung total baris (dikurangi 1 untuk header)
+        $totalRows = count(file($file->getRealPath())) - 1;
+
+        // 1. Simpan status awal
+        $importStatus = \App\Models\ImportStatus::create([
+            'user_id' => auth()->id(),
+            'filename' => $file->getClientOriginalName(),
+            'total_rows' => $totalRows,
+            'status' => 'pending'
+        ]);
+
+        $storage = new \App\Services\SupabaseStorage();
+        $path = $storage->upload($file, 'csv-imports', 'data_user');
+
+        if ($path) {
+            // 2. Kirim ID status ke Job
+            \App\Jobs\ProcessBulkImport::dispatch($path, 'data_user', $importStatus->id);
+            
+            // Kembalikan ID status agar Frontend bisa mulai polling
+            return back()->with([
+                'success' => 'Import dimulai...',
+                'import_id' => $importStatus->id 
+            ]);
+        }
+    }
+
+    // ─ Users — Cancel Import ─────────────────────────────────────────────────
+    public function cancelImport($id)
+    {
+        $status = \App\Models\ImportStatus::findOrFail($id);
+        
+        // Update status di DB agar Job berhenti di baris berikutnya
+        $status->update(['status' => 'failed']); 
+
+        return response()->json(['message' => 'Proses dibatalkan']);
+    }
+
     // ── Modules ────────────────────────────────────────────────────────────────
-
-    // public function modules()
-    // {
-    //     $modules = [
-    //         ['id' => 'bank_soal',           'name' => 'Bank Soal',           'description' => 'Manage question bank and learning materials', 'icon' => 'book',           'status' => true, 'active_users'    => DB::table('bs_dosen_pengampu_mk')->count(), 'total_questions' => DB::table('bs_pertanyaan')->count()],
-    //         ['id' => 'capstone',            'name' => 'Capstone',            'description' => 'Manage capstone projects and thesis',          'icon' => 'graduation-cap', 'status' => true, 'active_groups'   => DB::table('capstone_groups')->whereNull('deleted_at')->count()],
-    //         ['id' => 'eoffice',             'name' => 'E-Office',            'description' => 'Manage office documents and workflow',         'icon' => 'briefcase',      'status' => true],
-    //         ['id' => 'manajemen_mahasiswa', 'name' => 'Manajemen Mahasiswa', 'description' => 'Manage student data and activities',           'icon' => 'users',          'status' => true, 'total_students'  => DB::table('students')->count(), 'total_alumni' => DB::table('mk_alumni')->count()],
-    //     ];
-
-    //     return view('superadmin.modules.index', compact('modules'));
-    // }
     public function modules()
     {
         // Ambil data dari database sekarang, bukan hardcode array lagi
@@ -394,19 +609,6 @@ class SuperAdminController extends Controller
 
         return back()->with('success', "Status modul {$module->name} berhasil diubah!");
     }
-
-    // public function toggleModule(Request $request, $slug)
-    // {
-    //     $module = \App\Models\SystemModule::where('slug', $slug)->firstOrFail();
-        
-    //     // Ubah status (kalau true jadi false, kalau false jadi true)
-    //     $module->update(['is_active' => !$module->is_active]);
-
-    //     // Hapus cache agar middleware langsung membaca status baru
-    //     Cache::forget("module_active_{$slug}");
-
-    //     return back()->with('success', "Status modul {$module->name} berhasil diubah!");
-    // }
     
     // ── Permissions ────────────────────────────────────────────────────────────
     public function permissions()

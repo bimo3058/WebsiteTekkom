@@ -13,7 +13,7 @@ class DashboardController extends Controller
         $roles = $user->roles->pluck('name'); // pakai collection biar fleksibel
 
         // Superadmin & Admin
-        if ($roles->intersect(['superadmin', 'admin'])->isNotEmpty()) {
+        if ($roles->intersect(['superadmin', 'admin_banksoal'])->isNotEmpty()) {
             return view('banksoal::dashboard.admin');
         }
 

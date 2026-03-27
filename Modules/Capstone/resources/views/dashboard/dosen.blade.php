@@ -1,5 +1,14 @@
 <x-banksoal::layouts.master>
-    <h1>Hello Dosen</h1>
+    <div class="flex justify-between items-center">
+        <h1>Hello Admin</h1>
+        
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="text-red-600 hover:text-red-800 font-medium">
+                {{ __('Log Out') }}
+            </button>
+        </form>
+    </div>
 
-    <p>Module: {!! config('capstone.name') !!}</p>
+    <p>Module: {!! config('eoffice.name') !!}</p>
 </x-banksoal::layouts.master>

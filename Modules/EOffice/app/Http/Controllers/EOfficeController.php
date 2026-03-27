@@ -17,7 +17,7 @@ class EOfficeController extends Controller
     {
         $user = auth()->user();
 
-        if ($user->roles()->whereIn('name', ['superadmin', 'admin'])->exists()) {
+        if ($user->roles()->whereIn('name', ['superadmin', 'admin_eoffice'])->exists()) {
             return view('eoffice::dashboard.admin');
         }
 

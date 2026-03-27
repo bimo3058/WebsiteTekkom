@@ -11,7 +11,7 @@ class DashboardController extends Controller
         $user  = auth()->user();
         $roles = $user->roles->pluck('name');
 
-        if ($roles->intersect(['superadmin', 'admin'])->isNotEmpty()) {
+        if ($roles->intersect(['superadmin', 'admin_kemahasiswaan'])->isNotEmpty()) {
             return view('manajemenmahasiswa::dashboard.admin');
         }
 
