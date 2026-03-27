@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class User extends Authenticatable
 {
@@ -20,6 +21,8 @@ class User extends Authenticatable
         'sso_data',
         'last_synced_from_sso',
         'last_login',
+        'suspended_at',
+        'suspension_reason',
     ];
 
     protected $hidden = [
@@ -35,6 +38,7 @@ class User extends Authenticatable
             'sso_data'             => 'json',
             'last_login'           => 'datetime',
             'last_synced_from_sso' => 'datetime',
+            'suspended_at'         => 'datetime',
         ];
     }
 
@@ -185,18 +189,43 @@ class User extends Authenticatable
     {
         return !$this->can($abilities, $arguments);
     }
-    // public function can(string $permission, $arguments = []): bool
-    // {
-    //     // Superadmin bypass semua permission
-    //     if ($this->hasRole('superadmin')) return true;
 
-    //     return $this->getAllPermissions()->contains($permission);
-    // }
+    // -------------------------------------------------------------------------
+    // Account Status helpers
+    // -------------------------------------------------------------------------
 
-    // public function cannot(string $permission, $arguments = []): bool
-    // {
-    //     return !$this->can($permission);
-    // }
+    public function isSuspended(): bool
+    {
+        return !is_null($this->suspended_at);
+    }
+
+    public function suspend(string $reason = ''): void
+    {
+        $this->update([
+            'suspended_at'       => now(),
+            'suspension_reason'  => $reason,
+        ]);
+        $this->forceLogout();
+    }
+
+    public function unsuspend(): void
+    {
+        $this->update([
+            'suspended_at'      => null,
+            'suspension_reason' => null,
+        ]);
+    }
+
+    public function forceLogout(): void
+    {
+        // Invalidate semua session aktif user ini
+        DB::table('sessions')
+            ->where('user_id', $this->id)
+            ->delete();
+
+        // Clear cache
+        $this->clearUserCache();
+    }
 
     /*
     |--------------------------------------------------------------------------

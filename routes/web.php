@@ -30,6 +30,14 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/users', [SuperAdminController::class, 'users'])
             ->name('users.index');
+        Route::get('/import-status/{id}', function($id) {
+            $status = \App\Models\ImportStatus::findOrFail($id);
+            return response()->json([
+                'processed' => $status->processed_rows,
+                'total' => $status->total_rows,
+                'status' => $status->status
+            ]);
+        })->name('superadmin.import.status');
         Route::get('/modules', [SuperAdminController::class, 'modules'])->name('modules');
         Route::get('/permissions', [SuperAdminController::class, 'permissions'])
             ->name('permissions');
@@ -37,13 +45,20 @@ Route::middleware('auth')->group(function () {
         Route::post('/modules/{slug}/purge-cache', [SuperAdminController::class, 'purgeModuleCache'])->name('modules.purge-cache');
         Route::post('/modules/{slug}/maintenance', [SuperAdminController::class, 'toggleMaintenance'])->name('modules.maintenance');
         Route::post('/modules/{slug}/toggle', [SuperAdminController::class, 'toggleModule'])->name('modules.toggle');
-
         Route::post('/modules/{slug}/update-config', [SuperAdminController::class, 'updateConfig'])->name('modules.update-config');
-
         Route::post('/users/{user}/update-permissions', [SuperAdminController::class, 'updatePermissions'])
             ->name('users.update-permissions');
-
+        Route::patch('/users/{user}/update',       [SuperAdminController::class, 'updateUser'])
+            ->name('users.update');
+        Route::post('/users/{user}/force-logout',  [SuperAdminController::class, 'forceLogout'])
+            ->name('users.force-logout');
+        Route::post('/users/{user}/suspend',       [SuperAdminController::class, 'suspend'])
+            ->name('users.suspend');
+        Route::post('/users/{user}/unsuspend',     [SuperAdminController::class, 'unsuspend'])
+            ->name('users.unsuspend');
         // Tambah user baru
+        Route::post('/users/bulk-import', [SuperAdminController::class, 'bulkImport'])->name('users.bulkImport');
+        Route::post('/import-status/{id}/cancel', [SuperAdminController::class, 'cancelImport'])->name('import.cancel');
         Route::post('/users', [SuperAdminController::class, 'storeUser'])
             ->name('users.store');
 
@@ -60,8 +75,10 @@ Route::middleware('auth')->group(function () {
             ->name('users.update-roles');       
 
         // Hapus user (soft-delete)
+        Route::delete('/users/bulk-destroy', [SuperAdminController::class, 'bulkDestroy'])->name('users.bulk-destroy');
         Route::delete('/users/{user}', [SuperAdminController::class, 'destroyUser'])
             ->name('users.destroy');
+        Route::delete('/users/{user}/destroy', [SuperAdminController::class, 'destroyUser'])->name('users.destroy');
 
         Route::get('/modules', [SuperAdminController::class, 'modules'])
             ->name('modules');

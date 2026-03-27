@@ -57,6 +57,17 @@ class AppServiceProvider extends ServiceProvider
             });
         }
 
+        view()->composer(['superadmin.*'], function ($view) {
+            if (Auth::check()) {
+                $activeImport = \App\Models\ImportStatus::where('user_id', Auth::id())
+                    ->whereIn('status', ['pending', 'processing'])
+                    ->latest()
+                    ->first();
+                    
+                $view->with('activeImportId', $activeImport?->id);
+            }
+        });
+
         Gate::define('viewPulse', function (User $user) {
             return $user->hasRole('superadmin');
         });

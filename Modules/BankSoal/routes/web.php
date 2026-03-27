@@ -9,6 +9,7 @@ use Modules\BankSoal\Http\Controllers\RPS\Admin\RpsController as AdminRpsControl
 Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->group(function () {
     #Dashboard
     Route::get('/dashboard', [DashboardController::class, 'index'])
+        ->middleware('role:admin_banksoal,dosen,gpm')
         ->name('banksoal.dashboard');
     
     #RPS Routes
@@ -29,7 +30,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         });
         
         // RPS - Admin
-        Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::middleware('role:admin_banksoal')->prefix('admin')->name('admin.')->group(function () {
             Route::get('/', [AdminRpsController::class, 'index'])->name('index');
         });
         
@@ -52,7 +53,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         });
         
         // Bank Soal - Admin
-        Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::middleware('role:admin_banksoal')->prefix('admin')->name('admin.')->group(function () {
             Route::get('/', function () {
                 return view('banksoal::pages.bank-soal.Admin.index');
             })->name('index');
@@ -77,7 +78,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         });
         
         // Arsip - Admin
-        Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
+        Route::middleware('role:admin_banksoal')->prefix('admin')->name('admin.')->group(function () {
             Route::get('/', function () {
                 return view('banksoal::pages.arsip.Admin.index');
             })->name('index');

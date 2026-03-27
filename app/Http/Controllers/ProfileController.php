@@ -11,9 +11,6 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
     public function edit(Request $request): View
     {
         return view('profile.edit', [
@@ -21,25 +18,39 @@ class ProfileController extends Controller
         ]);
     }
 
-    /**
-     * Update the user's profile information.
-     */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user      = $request->user();
+        $validated = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $isSuperadmin = $user->hasRole('superadmin');
+        $isAdmin      = $user->hasAnyRole(['admin_banksoal', 'admin_capstone', 'admin_eoffice', 'admin_kemahasiswaan']);
+
+        // Nama hanya boleh diubah oleh admin & superadmin
+        if ($isSuperadmin || $isAdmin) {
+            $user->name = $validated['name'];
+        }
+        // User biasa (mahasiswa, dosen): nama diabaikan meskipun ada di request
+
+        // Field umum yang bisa diubah semua role
+        if (isset($validated['personal_email'])) {
+            $user->personal_email = $validated['personal_email'] ?: null;
         }
 
-        $request->user()->save();
+        $user->save();
+        $user->clearUserCache();
+
+        // Simpan nomor WA ke tabel eo_user_profiles (jika ada)
+        if (isset($validated['whatsapp'])) {
+            $user->eoUserProfile()->updateOrCreate(
+                ['user_id' => $user->id],
+                ['no_wa'   => '+62' . ltrim($validated['whatsapp'] ?? '', '0')]
+            );
+        }
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 
-    /**
-     * Delete the user's account.
-     */
     public function destroy(Request $request): RedirectResponse
     {
         $request->validateWithBag('userDeletion', [
@@ -48,8 +59,8 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
-        Auth::logout();
-
+        Auth::guard('web')->logout();
+        $user->clearUserCache();
         $user->delete();
 
         $request->session()->invalidate();
