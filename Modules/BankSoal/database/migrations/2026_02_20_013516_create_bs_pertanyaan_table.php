@@ -21,18 +21,7 @@ return new class extends Migration
 
             $table->enum('kesulitan', ['easy','intermediate','advanced'])->nullable();
             $table->enum('status', ['disetujui','revisi','draft','diajukan'])->default('draft');
-
             $table->timestamps();
-
-            $table->foreign('cpl_id')
-                ->references('id')->on('bs_cpl')
-                ->cascadeOnUpdate()
-                ->cascadeOnDelete();
-
-            $table->foreign('mk_id')
-                ->references('id')->on('bs_mata_kuliah')
-                ->cascadeOnUpdate()
-                ->cascadeOnDelete();
         });
     }
 

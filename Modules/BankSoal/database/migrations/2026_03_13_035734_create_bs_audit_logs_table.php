@@ -21,9 +21,6 @@ return new class extends Migration
             $table->json('old_data')->nullable();
             $table->json('new_data')->nullable();
             $table->timestamp('created_at')->useCurrent();
-
-            $table->index(['subject_type', 'subject_id']);
-            $table->index('created_at');
         });
     }
 
