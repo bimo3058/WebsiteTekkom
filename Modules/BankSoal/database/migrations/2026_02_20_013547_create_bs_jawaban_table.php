@@ -19,11 +19,6 @@ return new class extends Migration
             $table->binary('gambar')->nullable();
             $table->boolean('is_benar');
             $table->timestamps();
-
-            $table->foreign('soal_id')
-                ->references('id')->on('bs_pertanyaan')
-                ->cascadeOnUpdate()
-                ->cascadeOnDelete();
         });
     }
 

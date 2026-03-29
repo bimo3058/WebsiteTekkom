@@ -6,12 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('bs_cpl', function (Blueprint $table) {
+        Schema::create('bs_cpmk', function (Blueprint $table) {
             $table->id();
             $table->string('kode');
             $table->text('deskripsi');
@@ -20,11 +17,8 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('bs_cpl');
+        Schema::dropIfExists('bs_cpmk');
     }
 };

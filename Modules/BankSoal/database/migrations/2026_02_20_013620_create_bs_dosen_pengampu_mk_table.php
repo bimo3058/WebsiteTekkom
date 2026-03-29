@@ -17,16 +17,6 @@ return new class extends Migration
             $table->unsignedBigInteger('mk_id');
             $table->boolean('is_rps');
             $table->timestamps();
-
-            $table->foreign('user_id')
-                ->references('id')->on('users')
-                ->cascadeOnUpdate()
-                ->cascadeOnDelete();
-
-            $table->foreign('mk_id')
-                ->references('id')->on('bs_mata_kuliah')
-                ->cascadeOnUpdate()
-                ->cascadeOnDelete();
         });
     }
 
