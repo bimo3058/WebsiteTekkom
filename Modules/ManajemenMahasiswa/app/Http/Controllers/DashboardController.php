@@ -9,16 +9,25 @@ class DashboardController extends Controller
     public function index()
     {
         $user  = auth()->user();
-        $roles = $user->roles->pluck('name');
+        $roles = $user->roles->pluck('name')->map(fn($r) => strtolower($r));
+
+        // ── FIX: Cek permission sebelum routing berdasarkan role ──
+        if (!$user->can('kemahasiswaan.view')) {
+            abort(403, 'Anda tidak memiliki izin akses ke modul Manajemen Mahasiswa (kemahasiswaan.view).');
+        }
 
         if ($roles->intersect(['superadmin', 'admin_kemahasiswaan'])->isNotEmpty()) {
-            return view('manajemenmahasiswa::dashboard.admin');
+            return app(KemahasiswaanController::class)->adminDashboard();
         }
 
         if ($roles->contains('dosen')) {
-            return view('manajemenmahasiswa::dashboard.dosen');
+            return app(KemahasiswaanController::class)->dosenDashboard();
         }
 
-        return view('manajemenmahasiswa::dashboard.mahasiswa');
+        if ($roles->contains('mahasiswa')) {
+            return app(KemahasiswaanController::class)->mahasiswaDashboard();
+        }
+
+        abort(403, 'Akses Ditolak.');
     }
 }

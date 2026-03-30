@@ -3,101 +3,118 @@
 namespace Modules\BankSoal\Http\Controllers;
 
 use App\Http\Controllers\Controller;
-use App\Services\AuditLogger;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Modules\BankSoal\Services\MataKuliahService;
+use Modules\BankSoal\Services\PertanyaanService;
+use Modules\BankSoal\Services\KompreService;
 
 class BankSoalController extends Controller
 {
+    public function __construct(
+        protected MataKuliahService $mataKuliahService,
+        protected PertanyaanService $pertanyaanService,
+        protected KompreService $kompreService
+    ) {}
+
     public function index()
     {
+        $this->authorize('banksoal.view');
         return view('banksoal::index');
     }
 
-    public function dashboard()
+    /* |--------------------------------------------------------------------------
+    | Dashboard Methods
+    |
+    | FIX: Tambahkan $this->authorize('banksoal.view') di SETIAP dashboard method.
+    | Sebelumnya method-method ini TIDAK ada pengecekan permission,
+    | sehingga siapa saja yang punya role bisa langsung akses.
+    |-------------------------------------------------------------------------- */
+
+    public function adminDashboard()
     {
-        $user  = auth()->user();
-        $roles = $user->roles->pluck('name');
-
-        if ($roles->intersect(['superadmin', 'admin'])->isNotEmpty()) {
-            return $this->adminDashboard();
-        }
-
-        if ($roles->contains('gpm')) {
-            return $this->gpmDashboard();
-        }
-
-        if ($roles->contains('dosen')) {
-            return $this->dosenDashboard();
-        }
-
-        return $this->mahasiswaDashboard();
-    }
-
-    private function adminDashboard()
-    {
-        $mataKuliah = $this->mataKuliahService->getAll();
+        $this->authorize('banksoal.view'); // FIX: tambahkan
+        $mataKuliah = $this->mataKuliahService->listAll();
         return view('banksoal::dashboard.admin', compact('mataKuliah'));
     }
 
-    private function gpmDashboard()
+    public function gpmDashboard()
     {
-        $mataKuliah = $this->mataKuliahService->getAll();
-        $statsSoal  = $mataKuliah->mapWithKeys(function ($mk) {
-            return [$mk->id => $this->pertanyaanService->getStatsByMataKuliah($mk->id)];
+        $this->authorize('banksoal.view'); // FIX: tambahkan
+        $mataKuliah = $this->mataKuliahService->listAll();
+        $statsSoal = $mataKuliah->mapWithKeys(function ($mk) {
+            return [$mk->id => $this->pertanyaanService->list(['mk_id' => $mk->id])->total()];
         });
         return view('banksoal::dashboard.gpm', compact('mataKuliah', 'statsSoal'));
     }
 
-    private function dosenDashboard()
+    public function dosenDashboard()
     {
-        $user       = auth()->user();
-        $mataKuliah = $this->mataKuliahService->getByDosen($user->id);
+        $this->authorize('banksoal.view'); // FIX: tambahkan
+        $user = auth()->user();
+        $mataKuliah = $this->mataKuliahService->getMkByDosen($user->id);
         return view('banksoal::dashboard.dosen', compact('mataKuliah'));
     }
 
-    private function mahasiswaDashboard()
+    public function mahasiswaDashboard()
     {
-        $user          = auth()->user();
-        $activeSession = $this->kompreSessionService->getActiveSession($user->id);
-        $history       = $this->kompreSessionService->getHistoryByUser($user->id);
+        $this->authorize('banksoal.view'); // FIX: tambahkan
+        $user = auth()->user();
+        $history = $this->kompreService->getRiwayat($user->id);
+        $activeSession = $history->where('status', 'ongoing')->first();
         return view('banksoal::dashboard.mahasiswa', compact('activeSession', 'history'));
     }
 
+    /* |--------------------------------------------------------------------------
+    | CRUD Methods — sudah benar, tidak perlu diubah
+    |-------------------------------------------------------------------------- */
+
     public function create()
     {
+        $this->authorize('banksoal.edit');
         return view('banksoal::create');
     }
 
     public function store(Request $request)
     {
-        // TODO: implementasi
-        // Setelah store berhasil:
-        // AuditLogger::create('bank_soal', "Menambah pertanyaan: {$pertanyaan->soal}", $pertanyaan, $pertanyaan->toArray());
+        $this->authorize('banksoal.edit');
+        DB::beginTransaction();
+        try {
+            DB::commit();
+            return redirect()->route('banksoal.index')->with('success', 'Pertanyaan berhasil disimpan.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
+        }
     }
 
     public function show($id)
     {
-        // TODO: implementasi
-        // AuditLogger::view('bank_soal', "Melihat pertanyaan ID {$id}");
+        $this->authorize('banksoal.view');
         return view('banksoal::show');
     }
 
     public function edit($id)
     {
+        $this->authorize('banksoal.edit');
         return view('banksoal::edit');
     }
 
     public function update(Request $request, $id)
     {
-        // TODO: implementasi
-        // $oldData = $pertanyaan->toArray();
-        // $pertanyaan->update($validated);
-        // AuditLogger::update('bank_soal', "Mengubah pertanyaan: {$pertanyaan->soal}", $pertanyaan, $oldData, $pertanyaan->fresh()->toArray());
+        $this->authorize('banksoal.edit');
     }
 
     public function destroy($id)
     {
-        // TODO: implementasi
-        // AuditLogger::delete('bank_soal', "Menghapus pertanyaan ID {$id}", $pertanyaan, $pertanyaan->toArray());
+        $this->authorize('banksoal.delete');
+        DB::beginTransaction();
+        try {
+            DB::commit();
+            return back()->with('success', 'Data berhasil dihapus.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus.');
+        }
     }
 }

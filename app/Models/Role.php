@@ -6,7 +6,17 @@ use Illuminate\Database\Eloquent\Model;
 
 class Role extends Model
 {
-    protected $fillable = ['name', 'module'];
+    // Tambahkan is_academic ke fillable
+    protected $fillable = [
+        'name', 
+        'module', 
+        'is_academic'
+    ];
+
+    // Tambahkan casting agar dibaca sebagai boolean
+    protected $casts = [
+        'is_academic' => 'boolean',
+    ];
 
     public function users()
     {

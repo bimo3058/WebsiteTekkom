@@ -13,6 +13,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Http\RedirectResponse;
 
 class SuperAdminController extends Controller
 {
@@ -241,42 +242,57 @@ class SuperAdminController extends Controller
     }
 
     // ── Users — Update Permissions ─────────────────────────────────────────────
-    public function updatePermissions(Request $request, User $user)
+    public function updatePermissions(Request $request, User $user): RedirectResponse
     {
-        // Gunakan Transaction agar jika salah satu gagal, semua dibatalkan
+        if ($user->hasRole('superadmin')) {
+            return back()->with('error', 'Tidak dapat mengubah permission superadmin.');
+        }
+
         DB::beginTransaction();
         try {
-            // 1. Sinkronisasi Roles (Ambil dari checkbox name="roles[]")
-            $user->roles()->sync($request->input('roles', []));
+            // ── 1. Update Roles ──────────────────────────────────────────────
+            $roleIds = $request->input('roles', []);
+            $user->roles()->sync($roleIds);
 
-            // 2. Sinkronisasi Direct Permissions (Ambil dari checkbox name="permissions[]")
-            $permissionIds = DB::table('permissions')
-                ->whereIn('name', $request->input('permissions', []))
-                ->pluck('id');
+            // ── 2. Full Sync Direct Permissions ─────────────────────────────
+            // Ambil semua nama permission yang valid dari DB
+            $allPermByName = \App\Models\Permission::pluck('id', 'name'); // ['banksoal.view' => 1, ...]
 
-            $user->directPermissions()->sync($permissionIds);
+            // Hanya ambil permission yang benar-benar ada di DB (sanitasi input)
+            $checkedNames = collect($request->input('permissions', []));
+            
+            $grantIds = $checkedNames
+                ->filter(fn($name) => $allPermByName->has($name))
+                ->map(fn($name) => $allPermByName[$name])
+                ->values()
+                ->toArray();
 
-            // 3. Catat ke Audit Log (Opsional tapi sangat disarankan)
+            // SYNC: hapus semua yang lama, pasang yang baru
+            // Ini otomatis handle grant + revoke sekaligus
+            $user->directPermissions()->sync($grantIds);
+
+            // ── 3. Bersihkan cache ────────────────────────────────────────────
+            $user->clearUserCache();
+            \Illuminate\Support\Facades\Cache::forget("user_permissions_{$user->id}");
+
+            // ── 4. Audit log ──────────────────────────────────────────────────
             \App\Services\AuditLogger::update(
                 module:  'user_management',
-                desc:    "Update hak akses (Roles & Permissions) untuk user: {$user->name}",
+                desc:    "Update permissions user: {$user->name} ({$user->email})",
                 subject: $user,
+                oldData: [],
                 newData: [
-                    'roles' => $user->roles->pluck('name'),
-                    'direct_permissions' => $request->permissions ?? []
+                    'roles'       => $roleIds,
+                    'permissions' => $checkedNames->values(),
                 ],
             );
 
-            // 4. Clear Cache agar perubahan langsung berefek pada gate/policy
-            $user->clearUserCache();
-            $this->bustUserCache();
-
             DB::commit();
-            return back()->with('success', "Hak akses untuk {$user->name} berhasil diperbarui.");
+            return back()->with('success', "Permission user \"{$user->name}\" berhasil diperbarui.");
 
         } catch (\Throwable $e) {
             DB::rollBack();
-            return back()->with('error', 'Gagal memperbarui akses: ' . $e->getMessage());
+            return back()->with('error', 'Gagal update permission: ' . $e->getMessage());
         }
     }
 
@@ -541,6 +557,43 @@ class SuperAdminController extends Controller
         return back()->with('success', "User \"{$user->name}\" berhasil di-unsuspend.");
     }
 
+    public function usersByCategory(Request $request, $category)
+    {
+        $categories = [
+            'Admins'    => ['superadmin', 'admin', 'admin_banksoal', 'admin_capstone', 'admin_eoffice', 'admin_kemahasiswaan'],
+            'Dosen'     => ['dosen'],
+            'Mahasiswa' => ['mahasiswa'],
+            'GPM'       => ['gpm'],
+        ];
+
+        if (!isset($categories[$category])) {
+            abort(404);
+        }
+
+        $slugs = $categories[$category];
+
+        // 1. Tangkap input dari request
+        $search = $request->input('search');
+        $perPage = $request->input('per_page', 20); // Default 20 jika tidak dipilih
+
+        // 2. Query User dengan filter search
+        $users = User::whereHas('roles', fn($q) => $q->whereIn('name', $slugs))
+            ->when($search, function($query) use ($search) {
+                $query->where(function($q) use ($search) {
+                    $q->where('name', 'LIKE', "%{$search}%")
+                    ->orWhere('email', 'LIKE', "%{$search}%");
+                });
+            })
+            ->with(['roles', 'directPermissions', 'roles.permissions'])
+            ->paginate($perPage);
+
+        // 3. Data pendukung untuk UI Permission
+        $roles       = \App\Models\Role::with('permissions')->get();
+        $permissions = \App\Models\Permission::all()->groupBy('module');
+
+        return view('superadmin.permission.category', compact('users', 'category', 'roles', 'permissions'));
+    }
+    
     // ── Users — Bulk Import ─────────────────────────────────────────────────
     public function bulkImport(Request $request) 
     {
@@ -595,17 +648,18 @@ class SuperAdminController extends Controller
     public function toggleModule(Request $request, $slug)
     {
         $module = \App\Models\SystemModule::where('slug', $slug)->firstOrFail();
-        
-        // Membalikkan status (true jadi false, false jadi true)
-        $module->update([
-            'is_active' => !$module->is_active
-        ]);
 
-        // Hapus cache untuk middleware
+        \Illuminate\Support\Facades\DB::table('system_modules')
+            ->where('slug', $slug)
+            ->update([
+                'is_active'  => \Illuminate\Support\Facades\DB::raw('NOT is_active'),
+                'updated_at' => now(),
+            ]);
+
         \Illuminate\Support\Facades\Cache::forget("module_active_{$slug}");
-        
-        // INI YANG KURANG: Hapus cache untuk tampilan Dashboard!
         \Illuminate\Support\Facades\Cache::forget('sa:modules_stats');
+
+        $module->refresh();
 
         return back()->with('success', "Status modul {$module->name} berhasil diubah!");
     }
@@ -623,7 +677,7 @@ class SuperAdminController extends Controller
 
         $roles = Role::with('permissions')->get();
 
-        return view('superadmin.permissions', compact('users', 'permissions', 'roles'));
+        return view('superadmin.permission.permissions', compact('users', 'permissions', 'roles'));
     }
 
     // ── Storage Test — Upload ──────────────────────────────────────────────────

@@ -30,6 +30,8 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/users', [SuperAdminController::class, 'users'])
             ->name('users.index');
+        Route::get('/users/category/{category}', [SuperAdminController::class, 'usersByCategory'])
+            ->name('users.category');
         Route::get('/import-status/{id}', function($id) {
             $status = \App\Models\ImportStatus::findOrFail($id);
             return response()->json([

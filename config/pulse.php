@@ -232,5 +232,9 @@ return [
                 '#^/telescope#', // Telescope dashboard...
             ],
         ],
+        
+        \App\Pulse\Recorders\RequestMonitorRecorder::class => [
+            'enabled' => env('PULSE_REQUEST_MONITOR_ENABLED', true),
+        ],
     ],
 ];

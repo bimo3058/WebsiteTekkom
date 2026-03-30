@@ -10,6 +10,9 @@ class RedirectBasedOnRole
 {
     public function handle(Request $request, Closure $next): Response
     {
+        if ($request->is('telescope', 'telescope/*', 'vendor/telescope/*')) {
+            return $next($request);
+        }
         // Jika tidak login, biarkan middleware 'auth' bawaan yang bekerja
         if (!auth()->check()) {
             return $next($request);
