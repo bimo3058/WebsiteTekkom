@@ -10,7 +10,23 @@ class DashboardController extends Controller
     public function index()
     {
         $user  = Auth::user();
-        $roles = $user->roles->pluck('name'); // pakai collection biar fleksibel
+        $roles = $user->roles->pluck('name');
+
+        // =====================================================================
+        // FIX: Cek permission SEBELUM routing berdasarkan role.
+        //
+        // SEBELUM (BUG):
+        //   Controller hanya cek role. User dengan role 'dosen' SELALU
+        //   bisa akses dashboard Bank Soal, meskipun permission
+        //   banksoal.view sudah dicabut oleh superadmin.
+        //
+        // SESUDAH (FIX):
+        //   Cek banksoal.view dulu. Jika tidak punya → 403.
+        //   Superadmin di-bypass otomatis oleh hasPermissionTo().
+        // =====================================================================
+        if (!$user->can('banksoal.view')) {
+            abort(403, 'Anda tidak memiliki izin akses ke modul Bank Soal (banksoal.view).');
+        }
 
         // Superadmin & Admin
         if ($roles->intersect(['superadmin', 'admin_banksoal'])->isNotEmpty()) {
@@ -32,7 +48,6 @@ class DashboardController extends Controller
             return view('banksoal::dashboard.mahasiswa');
         }
 
-        // fallback kalau role aneh / tidak terdaftar
-        abort(403, 'Role tidak memiliki akses ke dashboard Bank Soal.');
+        abort(403, 'Akses ditolak.');
     }
 }

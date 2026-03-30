@@ -43,7 +43,7 @@ class AuthenticatedSessionController extends Controller
         $user->cacheUserData();
         Cache::put("user:{$user->id}:roles", $userRoles->toArray(), now()->addHours(8));
 
-        // FIX TYPO DISINI: dari $n menjadi $r
+        // Ambil nama role dalam lowercase untuk pengecekan
         $roleNames = $userRoles->pluck('name')->map(fn($r) => strtolower($r));
 
         // 3. Audit Log
@@ -54,12 +54,14 @@ class AuthenticatedSessionController extends Controller
             userId:      $user->id,
         );
 
-        // 4. Redirect Logic
+        // 4. Redirect Logic 
+        
+        // Superadmin selalu prioritas utama
         if ($roleNames->contains('superadmin')) {
             return redirect()->intended(route('superadmin.dashboard'));
         }
 
-        // Mapping Admin ke Modul
+        // Mapping Admin ke Modul Spesifik
         $adminRedirects = [
             'admin_banksoal'      => 'banksoal.dashboard',
             'admin_capstone'      => 'capstone.dashboard',
@@ -73,15 +75,29 @@ class AuthenticatedSessionController extends Controller
             }
         }
 
-        // Mahasiswa, Dosen, GPM ke Dashboard Global
-        return redirect()->intended(route('dashboard'));
+        // Mahasiswa, Dosen, GPM diarahkan ke Dashboard Global
+        if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm'])->isNotEmpty()) {
+            return redirect()->intended(route('dashboard'));
+        }
+
+        /**
+         * PERUBAHAN DISINI: Protection Layer
+         * Jika user tembus sampai sini (artinya login sukses tapi TIDAK PUNYA ROLE),
+         * maka kita logout paksa agar tidak masuk ke dashboard sebagai "mahasiswa kosong".
+         */
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
+
+        return redirect()->route('login')->withErrors([
+            'email' => 'Akun Anda belum memiliki akses (Role) yang terdaftar. Silakan hubungi Administrator.'
+        ]);
     }
 
     public function destroy(Request $request): RedirectResponse
     {
         $user = auth()->user();
 
-        // Log logout SEBELUM guard logout — sesudahnya auth()->id() sudah null
         if ($user) {
             AuditLogger::log(
                 module:      'auth',

@@ -12,12 +12,13 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
+use Livewire\Livewire;
+use App\Livewire\Pulse\RequestMonitor;
 
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        // supaya Laravel bisa resolve saat bootstrap auth
         Auth::resolved(function ($auth) {
             $auth->provider('cached-eloquent', function ($app, array $config) {
                 return new class($app['hash'], $config['model']) extends EloquentUserProvider {
@@ -45,10 +46,8 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // Strict mode di development — deteksi N+1 dan lazy loading
         Model::shouldBeStrict(! app()->isProduction());
 
-        // Log slow queries di production
         if (app()->isProduction()) {
             DB::whenQueryingForLongerThan(1000, function () {
                 Log::warning('Slow query detected', [
@@ -68,14 +67,43 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
+        // =====================================================================
+        // FIX: Gate::before() — menghubungkan @can() / @cannot() di Blade
+        // dengan sistem permission custom kita (hasPermissionTo).
+        //
+        // TANPA INI:
+        //   @can('banksoal.view')   → SELALU false (Gate tidak kenal)
+        //   @can('banksoal.edit')   → SELALU false
+        //   @can('banksoal.delete') → SELALU false
+        //   Akibatnya: tampilan SELALU menampilkan "Read-Only"
+        //
+        // DENGAN INI:
+        //   @can('banksoal.view') → memanggil $user->hasPermissionTo('banksoal.view')
+        //   yang mengecek tabel user_permissions + role_permissions
+        // =====================================================================
+        Gate::before(function (User $user, string $ability) {
+            // Superadmin bypass semua
+            if ($user->hasRole('superadmin')) {
+                return true;
+            }
+
+            // Hanya intercept permission format "module.action" (berisi titik)
+            // Permission seperti 'banksoal.view', 'capstone.edit', dll
+            // Biarkan Gate lain (viewPulse, dll) tetap jalan normal
+            if (str_contains($ability, '.')) {
+                return $user->hasPermissionTo($ability) ?: null;
+            }
+
+            return null; // Biarkan Gate definition lain yang handle
+        });
+
         Gate::define('viewPulse', function (User $user) {
             return $user->hasRole('superadmin');
         });
 
-        // Log query lambat di local
         if (app()->environment('local')) {
             DB::listen(function ($query) {
-                if ($query->time > 100) { // turunkan threshold: 200ms → 100ms
+                if ($query->time > 100) {
                     Log::channel('daily')->warning('Slow query (>100ms)', [
                         'sql'      => $query->sql,
                         'bindings' => $query->bindings,
@@ -84,5 +112,6 @@ class AppServiceProvider extends ServiceProvider
                 }
             });
         }
+        Livewire::component('pulse.request-monitor', RequestMonitor::class);
     }
 }

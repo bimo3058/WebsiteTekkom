@@ -10,11 +10,12 @@ class PeriodService
 {
     /**
      * Ambil period aktif, di-cache 1 jam.
+     * Menggunakan boolean murni agar kompatibel dengan PostgreSQL.
      */
     public function getActivePeriod(): ?CapstonePeriod
     {
         return Cache::remember('capstone:period:active', now()->addHour(), fn() =>
-            CapstonePeriod::where('is_active', true)
+            CapstonePeriod::whereRaw('is_active = true')
                 ->whereNull('deleted_at')
                 ->first()
         );
@@ -32,9 +33,12 @@ class PeriodService
         );
     }
 
+    /**
+     * Membuat period baru dan memastikan hanya satu yang aktif.
+     */
     public function createPeriod(array $data): CapstonePeriod
     {
-        // Nonaktifkan semua period lain jika ini di-set aktif
+        // Gunakan boolean murni false untuk update massal (Postgres Strict)
         if (!empty($data['is_active'])) {
             CapstonePeriod::where('is_active', true)->update(['is_active' => false]);
         }
@@ -45,6 +49,9 @@ class PeriodService
         return $period;
     }
 
+    /**
+     * Update period dan reset status aktif jika diperlukan.
+     */
     public function updatePeriod(CapstonePeriod $period, array $data): CapstonePeriod
     {
         if (!empty($data['is_active'])) {
@@ -59,6 +66,9 @@ class PeriodService
         return $period->fresh();
     }
 
+    /**
+     * Set satu period menjadi aktif dan sisanya non-aktif.
+     */
     public function setActive(CapstonePeriod $period): void
     {
         CapstonePeriod::where('is_active', true)->update(['is_active' => false]);

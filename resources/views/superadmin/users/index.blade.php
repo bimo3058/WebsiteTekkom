@@ -1,7 +1,7 @@
 <x-app-layout>
 <x-sidebar :user="auth()->user()">
     <div class="min-h-screen bg-slate-50 p-8">
-        <div class="max-w-7xl mx-auto">
+        <div class="max-w-full mx-auto">
 
             {{-- Header --}}
             @include('superadmin.users._header', ['total' => $users->total()])

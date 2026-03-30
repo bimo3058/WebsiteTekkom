@@ -8,7 +8,7 @@
         
         {{-- Area Scrollable Internal --}}
         <div class="flex-grow overflow-y-auto p-4 sm:p-6 custom-scrollbar">
-            <div class="max-w-7xl mx-auto">
+            <div class="max-w-full mx-auto">
 
                 {{-- Header --}}
                 <div class="mb-4 flex items-center justify-between">

@@ -10,6 +10,10 @@ class CheckSuspended
 {
     public function handle(Request $request, Closure $next)
     {
+        if ($request->is('telescope', 'telescope/*', 'vendor/telescope/*')) {
+            return $next($request);
+        }
+        
         if (Auth::check() && Auth::user()->suspended_at) {
             $reason = Auth::user()->suspension_reason;
             Auth::logout();

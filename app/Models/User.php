@@ -23,12 +23,11 @@ class User extends Authenticatable
         'last_login',
         'suspended_at',
         'suspension_reason',
+        'personal_email',
     ];
 
     protected $hidden = [
         'password',
-        // remember_token TIDAK di-hidden supaya ikut ter-cache
-        // dan tidak trigger strict mode error saat rebuild dari cache array
     ];
 
     protected function casts(): array
@@ -51,7 +50,7 @@ class User extends Authenticatable
     public function roles()
     {
         return $this->belongsToMany(Role::class, 'user_roles')
-                    ->select('roles.id', 'roles.name', 'roles.module');
+                    ->select('roles.id', 'roles.name', 'roles.module', 'roles.is_academic');
     }
 
     public function student()
@@ -66,20 +65,86 @@ class User extends Authenticatable
 
     public function directPermissions()
     {
-        return $this->belongsToMany(Permission::class, 'user_permissions');
-    }
-
-    public function auditLogs()
-    {
-        return $this->hasMany(UserAuditLog::class);
+        return $this->belongsToMany(Permission::class, 'user_permissions', 'user_id', 'permission_id');
     }
 
     /*
     |--------------------------------------------------------------------------
-    | ROLE HELPERS
+    | PERMISSION & ROLE LOGIC
     |--------------------------------------------------------------------------
     */
 
+    /**
+     * Cek apakah user memiliki permission tertentu.
+     */
+    public function hasPermissionTo(string $permissionName): bool
+    {
+        if ($this->hasRole('superadmin')) return true;
+
+        $allPermissions = $this->getAllPermissions();
+        return $allPermissions->contains(strtolower(trim($permissionName)));
+    }
+
+    /**
+     * Override method can() bawaan Laravel agar sinkron dengan sistem kita.
+     */
+    public function can($abilities, $arguments = [])
+    {
+        if (is_string($abilities) && str_contains($abilities, '.')) {
+            return $this->hasPermissionTo($abilities);
+        }
+        return parent::can($abilities, $arguments);
+    }
+
+    /**
+     * Ambil semua permission user (Gabungan Role + Direct).
+     *
+     * ══════════════════════════════════════════════════════════════
+     * FIX KRITIS: HAPUS blok hardcoded academic permissions!
+     *
+     * SEBELUM (BUG):
+     *   if ($roles->contains('is_academic', true)) {
+     *       $academicPerms = ['banksoal.view', 'banksoal.edit', ...];
+     *       $all = $all->merge($academicPerms);
+     *   }
+     *
+     * Blok ini meng-OVERRIDE apa yang disimpan di DB.
+     * Meskipun superadmin sudah cabut banksoal.view dari user dosen,
+     * kode ini menambahkannya kembali secara paksa → user tetap bisa masuk.
+     *
+     * SESUDAH (FIX):
+     *   Permission HANYA dari 2 sumber:
+     *   1. role_permissions (permission yang melekat di role)
+     *   2. user_permissions (direct permission per user)
+     *   Tidak ada lagi override otomatis berdasarkan is_academic.
+     *
+     * CATATAN: Jika ingin role akademik AWAL mendapat default
+     * permissions, itu dilakukan saat ASSIGN ROLE di SuperAdmin panel
+     * (sudah ada autopilot di _scripts.blade.php),
+     * bukan di runtime saat cek akses.
+     * ══════════════════════════════════════════════════════════════
+     */
+    public function getAllPermissions(): \Illuminate\Support\Collection
+    {
+        return Cache::remember("user:{$this->id}:all_permissions_final", 3600, function () {
+            $roles = $this->roles()->with('permissions')->get();
+
+            // 1. Permission dari Role (role_permissions table)
+            $fromRoles = $roles->flatMap(fn($role) => $role->permissions->pluck('name'));
+
+            // 2. Direct Permission (user_permissions table)
+            $direct = $this->directPermissions()->pluck('name');
+
+            // 3. Gabungkan keduanya — TANPA hardcoded override
+            $all = $fromRoles->merge($direct);
+
+            return $all->map(fn($p) => strtolower(trim($p)))->unique()->values();
+        });
+    }
+
+    /**
+     * Helper Role dengan support Case-Insensitive
+     */
     public function hasRole(string $roleName, ?string $module = null): bool
     {
         return $this->getCachedRoles()
@@ -87,32 +152,20 @@ class User extends Authenticatable
             ->contains('name', strtolower($roleName));
     }
 
-    public function hasAnyRole(array|string $roleNames, ?string $module = null): bool
-    {
-        $roleNames = collect(is_string($roleNames) ? [$roleNames] : $roleNames)
-            ->map(fn($r) => strtolower($r));
-
-        return $this->getCachedRoles()
-            ->when($module, fn($c) => $c->where('module', $module))
-            ->whereIn('name', $roleNames)
-            ->isNotEmpty();
-    }
-
-    public function hasAllRoles(array|string $roleNames, ?string $module = null): bool
-    {
-        $roleNames = collect(is_string($roleNames) ? [$roleNames] : $roleNames)
-            ->map(fn($r) => strtolower($r));
-
-        $userRoleNames = $this->getCachedRoles()
-            ->when($module, fn($c) => $c->where('module', $module))
-            ->pluck('name');
-
-        return $roleNames->every(fn($r) => $userRoleNames->contains($r));
-    }
-
     /**
-     * Ambil roles dari Redis cache, fallback ke DB kalau miss.
+     * Cek apakah user memiliki Role Akademik (Dosen/Mhs/GPM)
      */
+    public function isAcademic(): bool
+    {
+        return $this->getCachedRoles()->contains('is_academic', true);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | CACHING HELPERS
+    |--------------------------------------------------------------------------
+    */
+
     protected function getCachedRoles(): \Illuminate\Support\Collection
     {
         if ($this->relationLoaded('roles')) {
@@ -120,10 +173,7 @@ class User extends Authenticatable
         }
 
         $cached = Cache::get("user:{$this->id}:roles");
-
-        if ($cached) {
-            return collect($cached);
-        }
+        if ($cached) return collect($cached);
 
         $roles = $this->roles()->get();
         Cache::put("user:{$this->id}:roles", $roles->toArray(), now()->addHours(8));
@@ -131,11 +181,6 @@ class User extends Authenticatable
         return $roles;
     }
 
-    /**
-     * Cache user data ke Redis setelah login.
-     * makeVisible(['remember_token']) supaya semua kolom ikut tersimpan
-     * dan tidak ada missing attribute error saat di-rebuild dari cache.
-     */
     public function cacheUserData(): void
     {
         Cache::put(
@@ -146,53 +191,25 @@ class User extends Authenticatable
     }
 
     /**
-     * Hapus semua cache user — dipanggil saat logout atau update profil.
+     * FIX: Hapus SEMUA cache key terkait permission.
+     * Key 'all_permissions_final' sebelumnya TIDAK dihapus,
+     * sehingga perubahan permission dari SuperAdmin panel
+     * tidak berlaku sampai cache expire (1 jam).
      */
     public function clearUserCache(): void
     {
         Cache::forget("user:{$this->id}:data");
         Cache::forget("user:{$this->id}:roles");
         Cache::forget("user:{$this->id}:permissions");
+        Cache::forget("user:{$this->id}:all_permissions_final");
+        Cache::forget("user_permissions_{$this->id}");
     }
 
-    // -------------------------------------------------------------------------
-    // Permission helpers
-    // -------------------------------------------------------------------------
-
-    /**
-     * Ambil semua permission user:
-     * gabungan dari role-nya + direct permission
-     */
-    public function getAllPermissions(): \Illuminate\Support\Collection
-    {
-        return cache()->remember("user_permissions_{$this->id}", 300, function () {
-            $fromRoles = $this->roles()
-                ->with('permissions')
-                ->get()
-                ->flatMap(fn($role) => $role->permissions->pluck('name'));
-
-            $direct = $this->directPermissions->pluck('name');
-
-            return $fromRoles->merge($direct)->unique();
-        });
-    }
-
-    public function can($abilities, $arguments = [])
-    {
-        // Superadmin bypass semua permission
-        if ($this->hasRole('superadmin')) return true;
-
-        return $this->getAllPermissions()->contains($abilities);
-    }
-
-    public function cannot($abilities, $arguments = [])
-    {
-        return !$this->can($abilities, $arguments);
-    }
-
-    // -------------------------------------------------------------------------
-    // Account Status helpers
-    // -------------------------------------------------------------------------
+    /*
+    |--------------------------------------------------------------------------
+    | ACCOUNT STATUS & ACTIONS
+    |--------------------------------------------------------------------------
+    */
 
     public function isSuspended(): bool
     {
@@ -218,41 +235,9 @@ class User extends Authenticatable
 
     public function forceLogout(): void
     {
-        // Invalidate semua session aktif user ini
-        DB::table('sessions')
-            ->where('user_id', $this->id)
-            ->delete();
-
-        // Clear cache
+        DB::table('sessions')->where('user_id', $this->id)->delete();
         $this->clearUserCache();
     }
-
-    /*
-    |--------------------------------------------------------------------------
-    | SCOPES
-    |--------------------------------------------------------------------------
-    */
-
-    public function scopeSuperadmins($query)
-    {
-        return $query->whereHas('roles', fn($q) => $q->where('name', 'superadmin'));
-    }
-
-    public function scopeLecturers($query)
-    {
-        return $query->whereHas('roles', fn($q) => $q->where('name', 'dosen'));
-    }
-
-    public function scopeStudents($query)
-    {
-        return $query->whereHas('roles', fn($q) => $q->where('name', 'mahasiswa'));
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | MUTATORS
-    |--------------------------------------------------------------------------
-    */
 
     public function recordLogin(): void
     {

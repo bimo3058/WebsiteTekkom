@@ -9,6 +9,10 @@ class PreventBackHistory
 {
     public function handle(Request $request, Closure $next)
     {
+        if ($request->is('telescope', 'telescope/*', 'vendor/telescope/*')) {
+            return $next($request);
+        }
+        
         $response = $next($request);
 
         return $response->header('Cache-Control', 'no-cache, no-store, max-age=0, must-revalidate')

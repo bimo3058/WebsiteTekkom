@@ -10,6 +10,7 @@ use App\Http\Middleware\RedirectBasedOnRole;
 use App\Http\Middleware\LockToModule;           
 use App\Http\Middleware\CheckModuleActive;
 use App\Http\Middleware\PreventBackHistory;
+use App\Http\Middleware\CheckPermission;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -24,9 +25,11 @@ return Application::configure(basePath: dirname(__DIR__))
             PreventBackHistory::class,    
             RedirectBasedOnRole::class,      // ← setelah redirect, baru kunci
         ]);
+        
 
         $middleware->alias([
             'role'          => CheckRole::class,
+            'permission'    => CheckPermission::class,
             'module.active' => CheckModuleActive::class,
         ]);
     })
