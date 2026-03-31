@@ -23,7 +23,7 @@
     <nav class="sidebar-nav">
         <a href="{{ route('banksoal.dashboard') }}" class="nav-item active"><span class="nav-icon"><i class="fas fa-th-large"></i></span> Home</a>
         <a href="{{ route('banksoal.rps.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-file-alt"></i></span> Manajemen RPS</a>
-        <a href="{{ route('banksoal.banksoal.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-database"></i></span> Bank Soal</a>
+        <a href="{{ route('banksoal.soal.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-database"></i></span> Bank Soal</a>
         <a href="{{ route('banksoal.arsip.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-archive"></i></span> Arsip Soal</a>
     </nav>
     </aside>

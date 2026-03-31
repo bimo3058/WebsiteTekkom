@@ -42,7 +42,7 @@
 
         <div class="nav-tabs-custom mb-4 d-flex">
             <a href="#" class="nav-link active text-decoration-none">
-                Menunggu Validasi <span class="badge-count">2</span>
+                Menunggu Validasi <span class="badge-count">{{ $rpsData->total() }}</span>
             </a>
         </div>
 
@@ -78,57 +78,54 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @forelse($rpsData as $rps)
                         <tr>
                             <td>
-                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">Kecerdasan Buatan (CS401)</div>
-                                <div class="text-muted" style="font-size: 0.8rem;">Semester Ganjil 2023/2024</div>
+                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $rps->mk_nama }} ({{ $rps->kode }})</div>
+                                <div class="text-muted" style="font-size: 0.8rem;">Semester {{ $rps->semester }} {{ $rps->tahun_ajaran }}</div>
                             </td>
                             <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-text">RM</div>
-                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">Dr. Rina M.</span>
+                                <div style="display: flex; flex-direction: column; gap: 0.5rem;">
+                                    @php
+                                        $dosensList = !empty($rps->dosens_list) ? array_map('trim', explode(',', $rps->dosens_list)) : [];
+                                    @endphp
+                                    @forelse($dosensList as $dosenItem)
+                                        @php
+                                            [$initials, $dosenName] = explode('|', $dosenItem, 2);
+                                        @endphp
+                                        <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                            <div class="avatar-text">{{ strtoupper($initials) }}</div>
+                                            <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosenName }}</span>
+                                        </div>
+                                    @empty
+                                        <span class="text-muted" style="font-size: 0.85rem;">-</span>
+                                    @endforelse
                                 </div>
                             </td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">12 Sep 2023</span></td>
+                            <td><span class="text-muted" style="font-size: 0.9rem;">{{ \Carbon\Carbon::parse($rps->tanggal_diajukan)->format('d M Y') }}</span></td>
                             <td><span class="badge-menunggu">MENUNGGU</span></td>
                             <td class="text-end">
-                                <a href="{{ route('gpm.validasi-rps.review') }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
+                                <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->rps_id) }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
                                     <i class="fas fa-comment-dots me-2" style="font-size: 0.8rem;"></i> Review Sekarang
                                 </a>
                             </td>
                         </tr>
+                        @empty
                         <tr>
-                            <td>
-                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">Interaksi Manusia & Komputer (CS302)</div>
-                                <div class="text-muted" style="font-size: 0.8rem;">Semester Ganjil 2023/2024</div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-text">AP</div>
-                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">Andi P., M.Kom</span>
-                                </div>
-                            </td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">14 Sep 2023</span></td>
-                            <td><span class="badge-menunggu">MENUNGGU</span></td>
-                            <td class="text-end">
-                                <a href="{{ route('gpm.validasi-rps.review') }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
-                                    <i class="fas fa-comment-dots me-2" style="font-size: 0.8rem;"></i> Review Sekarang
-                                </a>
+                            <td colspan="5" class="text-center py-4">
+                                <p class="text-muted mb-0">Tidak ada RPS yang menunggu validasi</p>
                             </td>
                         </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
 
         <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-2 px-2">
-            <span class="text-muted mb-3 mb-sm-0" style="font-size: 0.875rem;">Menampilkan 2 dari 2 entri</span>
+            <span class="text-muted mb-3 mb-sm-0" style="font-size: 0.875rem;">Menampilkan {{ $rpsData->count() }} dari {{ $rpsData->total() }} entri</span>
             <nav>
-                <ul class="pagination pagination-custom mb-0">
-                    <li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-disabled="true"><i class="fas fa-chevron-left fa-xs"></i></a></li>
-                    <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                    <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-chevron-right fa-xs"></i></a></li>
-                </ul>
+                {{ $rpsData->links('pagination::bootstrap-4') }}
             </nav>
         </div>
 
