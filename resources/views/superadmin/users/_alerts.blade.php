@@ -1,9 +1,21 @@
 {{-- Progress Bar (Design Minimalis & Persistent) --}}
 @php 
-    $displayId = $activeImportId ?? session('import_id'); 
+    $displayId = $activeImportId ?? session('import_id');
+    
+    // Jika session import_id ada tapi activeImportId tidak, cek ke database
+    if ($displayId && !$activeImportId) {
+        $importExists = \App\Models\ImportStatus::where('id', $displayId)
+            ->whereIn('status', ['pending', 'processing'])
+            ->exists();
+        
+        if (!$importExists) {
+            $displayId = null;
+            session()->forget('import_id');
+        }
+    }
 @endphp
 
-@if($displayId)
+@if($displayId && $activeImportId)
 <div id="importProgressContainer" data-import-id="{{ $displayId }}" 
      class="mb-6 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm animate-in fade-in slide-in-from-top-2 duration-500">
     <div class="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">

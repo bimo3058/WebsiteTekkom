@@ -46,6 +46,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+
+        if (request()->header('X-Forwarded-Proto') === 'https') {
+            \Illuminate\Support\Facades\URL::forceScheme('https');
+        }
+
         Model::shouldBeStrict(! app()->isProduction());
 
         if (app()->isProduction()) {

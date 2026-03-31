@@ -35,6 +35,17 @@
                 </div>
 
                 <div class="grid grid-cols-1 gap-3">
+                    @php
+                        // Mengurutkan koleksi: Superadmin di atas (true/1 didahulukan), 
+                        // lalu bisa diikuti urutan nama (opsional)
+                        $sortedUsers = $users->getCollection()->sortByDesc(function($user) {
+                            return $user->roles->pluck('name')->contains('superadmin');
+                        });
+
+                        // Set kembali koleksi yang sudah diurutkan ke paginator
+                        $users->setCollection($sortedUsers);
+                    @endphp
+
                     @forelse($users as $user)
                         @include('superadmin.permission._user_card', ['user' => $user])
                     @empty

@@ -564,30 +564,39 @@ class SuperAdminController extends Controller
             'Dosen'     => ['dosen'],
             'Mahasiswa' => ['mahasiswa'],
             'GPM'       => ['gpm'],
+            'Unassigned' => [], // Tambahkan key ini agar tidak 404
         ];
 
         if (!isset($categories[$category])) {
             abort(404);
         }
 
-        $slugs = $categories[$category];
-
-        // 1. Tangkap input dari request
         $search = $request->input('search');
-        $perPage = $request->input('per_page', 20); // Default 20 jika tidak dipilih
+        $perPage = $request->input('per_page', 20);
 
-        // 2. Query User dengan filter search
-        $users = User::whereHas('roles', fn($q) => $q->whereIn('name', $slugs))
-            ->when($search, function($query) use ($search) {
-                $query->where(function($q) use ($search) {
-                    $q->where('name', 'LIKE', "%{$search}%")
-                    ->orWhere('email', 'LIKE', "%{$search}%");
+        // --- LOGIKA QUERY ---
+        $query = User::query();
+
+        if ($category === 'Unassigned') {
+            // Cari user yang tidak punya role sama sekali
+            $query->doesntHave('roles');
+        } else {
+            // Cari user berdasarkan role yang didefinisikan di atas
+            $slugs = $categories[$category];
+            $query->whereHas('roles', fn($q) => $q->whereIn('name', $slugs));
+        }
+
+        // Tambahkan filter search jika ada
+        $users = $query->when($search, function($q) use ($search) {
+                $q->where(function($inner) use ($search) {
+                    $inner->where('name', 'LIKE', "%{$search}%")
+                        ->orWhere('email', 'LIKE', "%{$search}%");
                 });
             })
             ->with(['roles', 'directPermissions', 'roles.permissions'])
             ->paginate($perPage);
 
-        // 3. Data pendukung untuk UI Permission
+        // Data pendukung untuk UI Permission (agar card bisa di-edit langsung)
         $roles       = \App\Models\Role::with('permissions')->get();
         $permissions = \App\Models\Permission::all()->groupBy('module');
 
@@ -595,34 +604,152 @@ class SuperAdminController extends Controller
     }
     
     // ── Users — Bulk Import ─────────────────────────────────────────────────
-    public function bulkImport(Request $request) 
+    public function bulkImport(Request $request)
     {
-        $request->validate(['file' => 'required|file|mimes:csv,txt']);
+        $request->validate([
+            'file' => 'required|file|mimes:csv,txt|max:10240'
+        ]);
+
         $file = $request->file('file');
 
-        // Hitung total baris (dikurangi 1 untuk header)
-        $totalRows = count(file($file->getRealPath())) - 1;
+        // ==========================================
+        // ✅ 1. CEK SIDIK JARI FILE (HASHING)
+        // ==========================================
+        $fileHash = md5_file($file->getRealPath());
 
-        // 1. Simpan status awal
-        $importStatus = \App\Models\ImportStatus::create([
-            'user_id' => auth()->id(),
+        // Cek apakah file yang sama persis pernah sukses di-import sebelumnya
+        $existingImport = \App\Models\ImportStatus::where('file_hash', $fileHash)
+                            ->where('status', 'completed')
+                            ->latest()
+                            ->first();
+
+        // ==========================================
+        // ✅ 2. VALIDASI STRUKTUR CSV
+        // ==========================================
+        $handle = fopen($file->getRealPath(), 'r');
+        $header = fgetcsv($handle);
+
+        if (!$header || count($header) < 8) {
+            fclose($handle);
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Struktur CSV tidak valid (minimal 8 kolom: name, email, password, role, external_id, student_number, cohort_year, permissions)'
+            ], 422);
+        }
+
+        $totalRows = 0;
+        $validRowFound = false;
+
+        while (($row = fgetcsv($handle)) !== false) {
+            $totalRows++;
+            if (count($row) >= 7 && filter_var($row[1], FILTER_VALIDATE_EMAIL)) {
+                $validRowFound = true;
+            }
+        }
+        fclose($handle);
+
+        if (!$validRowFound) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Tidak ada data valid dalam file'
+            ], 422);
+        }
+
+        // ==========================================
+        // ✅ 3. LOGIKA DEDUPLIKASI BUCKET
+        // ==========================================
+        $storage = new \App\Services\SupabaseStorage();
+        
+        if ($existingImport) {
+            // Jika file identik ditemukan, jangan upload lagi. Pakai path lama.
+            $path = $existingImport->path; 
+            $message = 'File identik ditemukan. Menggunakan aset yang sudah ada.';
+        } else {
+            // Jika benar-benar file baru, upload ke Supabase
+            // Gunakan $fileHash sebagai nama file agar di bucket tidak duplikat
+            $path = $storage->upload($file, 'imports', 'data_user');
+            $message = 'File baru berhasil diunggah.';
+        }
+
+        if (!$path) {
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Gagal memproses file ke storage'
+            ], 500);
+        }
+
+        // ==========================================
+        // ✅ 4. SIMPAN STATUS & DISPATCH
+        // ==========================================
+        $import = \App\Models\ImportStatus::create([
+            'user_id' => auth()->id(), // Pastikan ada kolom user_id agar tahu siapa yang upload
             'filename' => $file->getClientOriginalName(),
+            'file_hash' => $fileHash, // Simpan hash untuk pengecekan berikutnya
+            'path' => $path,
             'total_rows' => $totalRows,
+            'processed_rows' => 0,
             'status' => 'pending'
         ]);
 
-        $storage = new \App\Services\SupabaseStorage();
-        $path = $storage->upload($file, 'csv-imports', 'data_user');
+        \App\Jobs\ProcessBulkImport::dispatch(
+            $path,
+            'data_user',
+            $import->id
+        );
 
-        if ($path) {
-            // 2. Kirim ID status ke Job
-            \App\Jobs\ProcessBulkImport::dispatch($path, 'data_user', $importStatus->id);
+        return response()->json([
+            'status' => 'success',
+            'message' => $message,
+            'import_id' => $import->id
+        ]);
+    }
+
+    // ── Users — Import Status ─────────────────────────────────────────────────
+    public function getImportStatus($id)
+    {
+        try {
+            $import = \App\Models\ImportStatus::find($id);
             
-            // Kembalikan ID status agar Frontend bisa mulai polling
-            return back()->with([
-                'success' => 'Import dimulai...',
-                'import_id' => $importStatus->id 
+            if (!$import) {
+                // Jika import status tidak ditemukan, hapus session
+                session()->forget('import_id');
+                return response()->json([
+                    'status' => 'not_found',
+                    'message' => 'Import record not found'
+                ], 404);
+            }
+            
+            // Jika status sudah completed atau failed dan sudah lama, hapus dari session
+            if (in_array($import->status, ['completed', 'failed'])) {
+                $createdAt = $import->created_at;
+                $hoursSince = $createdAt ? now()->diffInHours($createdAt) : 0;
+                
+                // Hapus dari session jika sudah lebih dari 1 jam
+                if ($hoursSince > 1) {
+                    session()->forget('import_id');
+                }
+            }
+            
+            return response()->json([
+                'id' => $import->id,
+                'status' => $import->status,
+                'processed' => $import->processed_rows,
+                'total' => $import->total_rows,
+                'filename' => $import->filename,
+                'error_message' => $import->error_message,
+                'percentage' => $import->percentage
             ]);
+            
+        } catch (\Exception $e) {
+            \Log::error("Error getting import status", [
+                'id' => $id,
+                'error' => $e->getMessage()
+            ]);
+            
+            return response()->json([
+                'status' => 'error',
+                'message' => 'Failed to get import status'
+            ], 500);
         }
     }
 
@@ -665,19 +792,71 @@ class SuperAdminController extends Controller
     }
     
     // ── Permissions ────────────────────────────────────────────────────────────
-    public function permissions()
+
+    public function permissions(Request $request)
     {
-        // Tambahkan .permissions di sebelah roles
-        $users = User::with(['roles.permissions', 'directPermissions']) 
-            ->whereNull('deleted_at')
-            ->orderBy('name')
-            ->get();
+        $search = $request->input('search');
+
+        $query = User::with(['roles.permissions', 'directPermissions']) 
+            ->whereNull('deleted_at');
+
+        // Tambahkan Logika Search agar filter berfungsi
+        if ($search) {
+            $query->where(function($q) use ($search) {
+                $q->where('name', 'ILIKE', "%{$search}%") // Gunakan ILIKE untuk PostgreSQL atau LIKE untuk MySQL
+                ->orWhere('email', 'ILIKE', "%{$search}%");
+            });
+        }
+
+        // Ambil data (Gunakan get() karena dashboard utama menampilkan kategori, 
+        // tapi filter pencarian akan membatasi user yang muncul di dalam kategori tersebut)
+        $users = $query->orderBy('name')->get();
 
         $permissions = \App\Models\Permission::all()->groupBy('module');
-
         $roles = Role::with('permissions')->get();
 
         return view('superadmin.permission.permissions', compact('users', 'permissions', 'roles'));
+    }
+
+    public function repairAllPermissions(Request $request)
+    {
+        $dryRun = $request->input('dry_run', false);
+        
+        if ($dryRun) {
+            // Dry run - only check, don't repair
+            $users = User::all();
+            $needsRepair = [];
+            
+            foreach ($users as $user) {
+                $verification = PermissionAssigner::verifyPermissions($user);
+                if (!$verification['has_correct_permissions']) {
+                    $needsRepair[] = [
+                        'user' => $user->email,
+                        'missing' => $verification['missing'],
+                        'excess' => $verification['excess']
+                    ];
+                }
+            }
+            
+            return response()->json([
+                'message' => 'Dry run completed',
+                'users_needing_repair' => $needsRepair,
+                'total' => count($needsRepair)
+            ]);
+        }
+        
+        // Actually repair
+        $users = User::all();
+        $repaired = 0;
+        
+        foreach ($users as $user) {
+            PermissionAssigner::repairPermissions($user);
+            $repaired++;
+        }
+        
+        return response()->json([
+            'message' => "Repaired permissions for {$repaired} users"
+        ]);
     }
 
     // ── Storage Test — Upload ──────────────────────────────────────────────────
@@ -750,6 +929,71 @@ class SuperAdminController extends Controller
         $modules = ['bank_soal', 'capstone', 'eoffice', 'manajemen_mahasiswa', 'user_management'];
         $actions = ['CREATE', 'UPDATE', 'DELETE', 'VIEW', 'LOGIN'];
 
-        return view('superadmin.audit-logs', compact('query', 'users', 'modules', 'actions'));
+        return view('superadmin.audit-logs.audit-logs', compact('query', 'users', 'modules', 'actions'));
+    }
+
+    public function bulkDeleteAuditLogs(Request $request)
+    {
+        $ids = $request->input('ids', []);
+        $timeOption = $request->input('time_option', '');
+        $deleteType = $request->input('delete_type', 'selected'); // 'selected', '6hours', '12hours', '24hours'
+        
+        try {
+            DB::beginTransaction();
+            
+            $query = AuditLog::query();
+            
+            // Filter berdasarkan jenis hapus
+            if ($deleteType === 'selected' && !empty($ids)) {
+                $query->whereIn('id', $ids);
+                $count = count($ids);
+                $description = "Menghapus {$count} log terpilih";
+            } 
+            elseif ($deleteType === '6hours') {
+                $query->where('created_at', '<', now()->subHours(6));
+                $count = $query->count();
+                $description = "Menghapus log lebih dari 6 jam yang lalu ({$count} log)";
+            }
+            elseif ($deleteType === '12hours') {
+                $query->where('created_at', '<', now()->subHours(12));
+                $count = $query->count();
+                $description = "Menghapus log lebih dari 12 jam yang lalu ({$count} log)";
+            }
+            elseif ($deleteType === '24hours') {
+                $query->where('created_at', '<', now()->subHours(24));
+                $count = $query->count();
+                $description = "Menghapus log lebih dari 24 jam yang lalu ({$count} log)";
+            }
+            else {
+                return back()->with('error', 'Tidak ada log yang dipilih untuk dihapus.');
+            }
+            
+            if ($count === 0) {
+                return back()->with('error', 'Tidak ada log yang memenuhi kriteria untuk dihapus.');
+            }
+            
+            // Hapus log
+            $deleted = $query->delete();
+            
+            // Audit log untuk aksi bulk delete
+            AuditLogger::delete(
+                module: 'user_management',
+                desc: $description,
+                subject: null,
+                oldData: [
+                    'delete_type' => $deleteType,
+                    'ids' => $ids,
+                    'count' => $deleted
+                ]
+            );
+            
+            DB::commit();
+            
+            return back()->with('success', "Berhasil menghapus {$deleted} log aktivitas.");
+            
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal menghapus log: ' . $e->getMessage());
+        }
     }
 }

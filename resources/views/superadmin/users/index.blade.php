@@ -24,6 +24,7 @@
             @include('superadmin.users._modal_edit_info')
             @include('superadmin.users._modal_suspend')
             @include('superadmin.users._modal_delete_hybrid')
+            @include('superadmin.users._modal_force_logout')
 
         </div>
     </div>
@@ -34,88 +35,160 @@
         // ============================================
         const DOSEN_ID = {{ $roles->first(fn($r) => strtolower($r->name) === 'dosen')?->id ?? 'null' }};
         const MAHASISWA_ID = {{ $roles->first(fn($r) => strtolower($r->name) === 'mahasiswa')?->id ?? 'null' }};
-        const IMPORT_ID = "{{ session('import_id') }}";
         
-        let pendingAddSubmit = null;
-        let pendingEditSubmit = null;
+        let importTimer = null;
+        
+        
+        // Polling untuk Import Progress
+        function stopPolling() {
+            if (importTimer) {
+                clearInterval(importTimer);
+                importTimer = null;
+            }
+        }
 
-        // ============================================
-        // BULK IMPORT PROGRESS POLLING & CANCEL
-        // ============================================
-        function initImportPolling() {
-            // Ambil ID dari session Laravel atau dari atribut data kontainer
-            const container = document.getElementById('importProgressContainer');
-            const importId = container ? container.getAttribute('data-import-id') : "{{ session('import_id') }}";
-            
-            if (!importId || importId === "") return;
+        function startPolling(importId) {
+            if (!importId || importId === "null" || importId === "") return;
+
+            if (importTimer) clearInterval(importTimer);
 
             const bar = document.getElementById('importProgressBar');
             const text = document.getElementById('importStatusText');
             const percentText = document.getElementById('importPercentText');
-            const btnCancel = document.getElementById('btnCancelImport');
+            const container = document.getElementById('importProgressContainer');
 
-            let timer = setInterval(async () => {
+            if (container) {
+                container.classList.remove('hidden');
+                container.setAttribute('data-import-id', importId);
+            }
+
+            importTimer = setInterval(async () => {
                 try {
                     const response = await fetch(`/superadmin/import-status/${importId}`);
+                    
+                    // ✅ Cek jika response bukan JSON (misal redirect ke login)
+                    const contentType = response.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        console.log("Response bukan JSON, menghentikan polling");
+                        stopPolling();
+                        // Hapus container progress
+                        if (container) container.remove();
+                        return;
+                    }
+                    
                     if (!response.ok) {
-                        // Jika 404 atau error, hentikan polling
-                        clearInterval(timer);
+                        if (response.status === 401 || response.status === 403) {
+                            // Session expired, redirect ke login
+                            window.location.href = '/login';
+                            return;
+                        }
+                        stopPolling();
                         return;
                     }
                     
                     const data = await response.json();
+                    
+                    // ✅ Validasi data yang diterima
+                    if (!data || typeof data !== 'object') {
+                        console.error("Invalid data received");
+                        stopPolling();
+                        if (container) container.remove();
+                        return;
+                    }
+                    
                     const percentage = data.total > 0 ? Math.round((data.processed / data.total) * 100) : 0;
 
                     if (bar) bar.style.width = percentage + '%';
                     if (percentText) percentText.textContent = percentage + '%';
-                    
+
                     if (data.status === 'processing') {
                         if (text) text.textContent = `Memproses: ${data.processed} / ${data.total} user...`;
-                    } else if (data.status === 'completed') {
-                        clearInterval(timer);
-                        if (text) text.textContent = '✅ Impor Berhasil Selesai!';
-                        if (bar) bar.classList.replace('bg-blue-600', 'bg-emerald-500');
-                        if (btnCancel) btnCancel.classList.add('hidden');
-                        
-                        // Beri waktu admin melihat 100% sebelum hilang saat refresh berikutnya
+                    } 
+                    else if (data.status === 'completed') {
+                        stopPolling();
+                        if (text) text.innerHTML = '<span class="text-emerald-600 font-bold">✅ Impor Berhasil Selesai!</span>';
+                        if (bar) {
+                            bar.style.width = '100%';
+                            bar.className = "h-full bg-emerald-500 transition-all duration-500";
+                        }
                         setTimeout(() => {
-                            if(container) container.classList.add('fade-out');
-                            window.location.reload(); 
+                            // Hapus session import_id
+                            fetch('/superadmin/clear-import-session', { method: 'POST' });
+                            window.location.reload();
                         }, 2000);
-                    } else if (data.status === 'failed') {
-                        clearInterval(timer);
-                        if (text) text.textContent = '❌ Impor Dibatalkan/Gagal.';
-                        if (bar) bar.classList.replace('bg-blue-600', 'bg-red-500');
-                        if (btnCancel) btnCancel.classList.add('hidden');
+                    } 
+                    else if (data.status === 'failed') {
+                        stopPolling();
+                        if (text) {
+                            const errorMsg = data.error_message || data.filename || 'Import gagal';
+                            text.innerHTML = `<span class="text-red-600 font-bold">❌ Gagal: ${errorMsg}</span>`;
+                        }
+                        if (bar) bar.className = "h-full bg-red-500 transition-all duration-500";
+                        setTimeout(() => {
+                            fetch('/superadmin/clear-import-session', { method: 'POST' });
+                            window.location.reload();
+                        }, 3000);
                     }
                 } catch (e) {
                     console.error("Polling error:", e);
+                    stopPolling();
+                    if (container) container.remove();
                 }
             }, 2000);
         }
 
-        async function cancelImport(id) {
-            if (!confirm('Batalkan proses impor? Data yang sudah masuk tidak akan dihapus.')) return;
-            const btn = document.getElementById('btnCancelImport');
-            if (btn) {
-                btn.disabled = true;
-                btn.innerHTML = '<span class="text-[9px] font-bold">Membatalkan...</span>';
+        // ============================================
+        // CANCEL IMPORT FUNCTION
+        // ============================================
+        async function cancelImport(importId) {
+            if (!importId) return;
+            
+            if (!confirm('Batalkan proses impor? Data yang sudah diproses akan tetap tersimpan.')) {
+                return;
             }
+            
             try {
-                await fetch(`/superadmin/import-status/${id}/cancel`, {
+                const response = await fetch(`/superadmin/import-status/${importId}/cancel`, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
                     }
                 });
-            } catch (error) {
-                alert('Gagal mengirim perintah pembatalan.');
+                
+                if (response.ok) {
+                    // Hentikan polling
+                    if (importTimer) {
+                        clearInterval(importTimer);
+                        importTimer = null;
+                    }
+                    
+                    // Update tampilan progress bar
+                    const bar = document.getElementById('importProgressBar');
+                    const text = document.getElementById('importStatusText');
+                    
+                    if (bar) bar.className = "h-full bg-red-500 transition-all duration-500";
+                    if (text) text.innerHTML = '<span class="text-red-600 font-bold">❌ Impor dibatalkan</span>';
+                    
+                    // Hapus session import_id
+                    await fetch('/superadmin/clear-import-session', { method: 'POST' });
+                    
+                    // Reload setelah 2 detik
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 2000);
+                } else {
+                    const error = await response.json();
+                    alert('Gagal membatalkan: ' + (error.message || 'Unknown error'));
+                }
+            } catch (e) {
+                console.error("Error cancelling import:", e);
+                alert('Gagal membatalkan impor. Silakan refresh halaman.');
             }
         }
-
         // ============================================
-        // MODAL CORE FUNCTIONS
+        // 2. MODAL CORE FUNCTIONS
         // ============================================
         function openModal(id) { 
             const modal = document.getElementById(id);
@@ -133,81 +206,130 @@
             }
         }
         
-        // Modal Closers
         document.addEventListener('keydown', e => { 
             if (e.key === 'Escape') {
-                ['modalAddUser', 'modalEditRoles', 'superadminWarningModal', 'superadminWarningModalEdit', 'modalEditInfo', 'modalSuspend', 'modalImportUser', 'modalDeleteHybrid'].forEach(closeModal); 
+                ['modalAddUser', 'modalEditRoles', 'superadminWarningModal', 'modalEditInfo', 'modalSuspend', 'modalImportUser', 'modalDeleteHybrid', 'modalForceLogout'].forEach(closeModal); 
             }
         });
 
-        ['modalAddUser', 'modalEditRoles', 'superadminWarningModal', 'superadminWarningModalEdit', 'modalEditInfo', 'modalSuspend', 'modalImportUser', 'modalDeleteHybrid'].forEach(id => {
-            document.getElementById(id)?.addEventListener('click', function(e) { 
-                if (e.target === this) closeModal(id); 
-            });
-        });
-
         // ============================================
-        // DELETE & HYBRID FUNCTIONS
+        // 3. INITIALIZATION & AJAX SUBMIT
         // ============================================
-        function openDeleteHybrid(data) {
-            const form = document.getElementById('formDeleteHybrid');
-            if (form) form.action = `/superadmin/users/${data.id}/destroy`;
+        document.addEventListener('DOMContentLoaded', function() {
             
-            const nameEl = document.getElementById('deleteTargetName');
-            if (nameEl) nameEl.textContent = data.name;
-            
-            openModal('modalDeleteHybrid');
-        }
+            // Cek Impor Aktif (Persistent)
+            const container = document.getElementById('importProgressContainer');
+            const activeId = container ? container.getAttribute('data-import-id') : "{{ session('import_id') }}";
+            if (activeId && activeId !== "null" && activeId !== "") startPolling(activeId);
 
-        // ============================================
-        // BULK DELETE & SELECTION LOGIC
-        // ============================================
-        const selectAll = document.getElementById('selectAll');
-        const userCheckboxes = document.querySelectorAll('.user-checkbox');
-        const bulkBar = document.getElementById('bulkActionBar');
-        const selectedCountText = document.getElementById('selectedCount');
+            // AJAX Form Import
+            const importForm = document.getElementById('formImportUser');
+                if (importForm) {
+                importForm.addEventListener('submit', async function(e) {
+                    e.preventDefault();
+                    const btn = document.getElementById('btnSubmitImport');
+                    const errorContainer = document.getElementById('importErrorContainer');
+                    const errorMessage = document.getElementById('importErrorMessage');
+                    const formData = new FormData(this);
 
-        function updateBulkBar() {
-            const checkedCount = document.querySelectorAll('.user-checkbox:checked').length;
-            selectedCountText.textContent = checkedCount;
-            
-            if (checkedCount > 0) {
-                bulkBar.classList.remove('hidden');
-                bulkBar.classList.add('flex');
-            } else {
-                bulkBar.classList.add('hidden');
-                bulkBar.classList.remove('flex');
+                    // 1. Reset tampilan error sebelum mulai
+                    if (errorContainer) errorContainer.classList.add('hidden');
+                    
+                    // 2. Beri indikasi loading pada tombol
+                    btn.disabled = true;
+                    btn.innerHTML = '<span class="animate-spin material-symbols-outlined" style="font-size:18px">sync</span> Memvalidasi...';
+
+                    try {
+                        const res = await fetch(this.action, {
+                            method: 'POST',
+                            body: formData,
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
+                            }
+                        });
+
+                        const data = await res.json();
+
+                        // ==========================================
+                        // ✅ JIKA ERROR: Jangan Refresh, Munculkan di Modal
+                        // ==========================================
+                        if (!res.ok) {
+                            throw new Error(data.message || "Gagal memproses file.");
+                        }
+
+                        // ==========================================
+                        // ✅ JIKA SUKSES: Langsung Refresh Halaman
+                        // ==========================================
+                        if (data.import_id || data.status === 'success') {
+                            // Feedback visual sekejap
+                            btn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Berhasil!';
+                            
+                            // Refresh agar Session Laravel terbaca & Progress Bar muncul otomatis
+                            window.location.reload();
+                        }
+
+                    } catch (err) {
+                        // ==========================================
+                        // Tampilkan Error tanpa menutup Modal
+                        // ==========================================
+                        if (errorMessage) errorMessage.textContent = err.message;
+                        if (errorContainer) errorContainer.classList.remove('hidden');
+                        
+                        // Kembalikan tombol ke kondisi awal agar bisa diperbaiki
+                        btn.disabled = false;
+                        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px">upload</span> Mulai Impor';
+                    }
+                });
             }
-        }
 
-        selectAll?.addEventListener('change', function() {
-            userCheckboxes.forEach(cb => {
-                cb.checked = this.checked;
+            // --- Checkbox & Selection Logic ---
+            const selectAll = document.getElementById('selectAll');
+            selectAll?.addEventListener('change', function() {
+                document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = this.checked);
+                updateBulkBar();
             });
-            updateBulkBar();
+
+            document.addEventListener('change', e => {
+                if (e.target.classList.contains('user-checkbox')) updateBulkBar();
+            });
+
+            // Add Modal Role Toggle
+            document.querySelectorAll('.add-role-cb').forEach(cb => {
+                cb.addEventListener('change', function() {
+                    const id = parseInt(this.value);
+                    if (id === DOSEN_ID) document.getElementById('addFieldDosen')?.classList.toggle('hidden', !this.checked);
+                    if (id === MAHASISWA_ID) document.getElementById('addFieldMahasiswa')?.classList.toggle('hidden', !this.checked);
+                });
+            });
+
+            // Superadmin Safety Trigger
+            document.addEventListener('change', e => {
+                const cb = e.target.closest('.add-role-cb');
+                if (cb && cb.getAttribute('data-role-name') === 'superadmin' && cb.checked) {
+                    cb.checked = false;
+                    openModal('superadminWarningModal');
+                }
+            });
         });
-
-        userCheckboxes.forEach(cb => {
-            cb.addEventListener('change', updateBulkBar);
-        });
-
-        function deselectAll() {
-            selectAll.checked = false;
-            userCheckboxes.forEach(cb => cb.checked = false);
-            updateBulkBar();
-        }
-
+    
         function openBulkDeleteHybrid() {
-            const selectedIds = Array.from(document.querySelectorAll('.user-checkbox:checked')).map(cb => cb.value);
+            // 1. Ambil semua ID dari checkbox yang dicentang
+            const selectedIds = Array.from(document.querySelectorAll('.user-checkbox:checked'))
+                                    .map(cb => cb.value);
+
+            if (selectedIds.length === 0) return;
+
             const form = document.getElementById('formDeleteHybrid');
+            if (!form) return;
+
+            // 2. Ubah action form ke route bulk-destroy
+            form.action = "{{ route('superadmin.users.bulk-destroy') }}";
             
-            // Reset form action untuk bulk
-            form.action = `{{ route('superadmin.users.bulk-destroy') }}`;
-            
-            // Hapus input hidden lama jika ada
+            // 3. Bersihkan input hidden lama (jika ada) agar tidak double
             form.querySelectorAll('.bulk-ids-input').forEach(el => el.remove());
             
-            // Tambahkan ID sebagai hidden input
+            // 4. Tambahkan ID baru sebagai hidden input
             selectedIds.forEach(id => {
                 const input = document.createElement('input');
                 input.type = 'hidden';
@@ -217,112 +339,39 @@
                 form.appendChild(input);
             });
 
-            document.getElementById('deleteTargetName').textContent = selectedIds.length + " user yang dipilih";
+            // 5. Update teks konfirmasi di modal
+            const targetName = document.getElementById('deleteTargetName');
+            if (targetName) {
+                targetName.textContent = selectedIds.length + " user yang dipilih";
+            }
+
+            // 6. Tampilkan modal
             openModal('modalDeleteHybrid');
         }
 
-        // ============================================
-        // EDIT FUNCTIONS & LOGIC
-        // ============================================
-        let _ctx = {};
-        
-        function openEditRoles(data) {
-            _ctx = data;
-            const form = document.getElementById('formEditRoles');
-            if (form) form.action = `/superadmin/users/${data.id}/roles`;
-            document.getElementById('editRolesUserName').textContent = data.name;
-            document.querySelectorAll('.edit-role-cb').forEach(cb => {
-                cb.checked = data.role_ids.includes(parseInt(cb.value));
-                onEditRoleChange(cb);
-            });
-            setupEditSuperadminWarning();
-            openModal('modalEditRoles');
-        }
-
-        function onEditRoleChange(cb) {
-            const id = parseInt(cb.value);
-            if (id === DOSEN_ID) {
-                const field = document.getElementById('editFieldDosen');
-                const input = document.getElementById('editEmpNumber');
-                if (field) field.classList.toggle('hidden', !cb.checked);
-                if (input) {
-                    input.value = (cb.checked && _ctx.has_lecturer) ? (_ctx.employee_number || '') : '';
-                    input.disabled = (cb.checked && _ctx.has_lecturer);
-                }
-            }
-            if (id === MAHASISWA_ID) {
-                const field = document.getElementById('editFieldMahasiswa');
-                const nimIn = document.getElementById('editStudentNumber');
-                const thnIn = document.getElementById('editCohortYear');
-                if (field) field.classList.toggle('hidden', !cb.checked);
-                if (nimIn && thnIn) {
-                    if (cb.checked && _ctx.has_student) {
-                        nimIn.value = _ctx.student_number || '';
-                        thnIn.value = _ctx.cohort_year || '';
-                        nimIn.disabled = thnIn.disabled = true;
-                    } else {
-                        nimIn.value = '';
-                        thnIn.value = new Date().getFullYear();
-                        nimIn.disabled = thnIn.disabled = false;
-                    }
-                }
-            }
-        }
-
-        // ============================================
-        // UTILITY: PAGINATION & FILTERS
-        // ============================================
-        function submitFilterForm(page) {
-            const form = document.querySelector('form[method="GET"]');
-            if (form) {
-                let input = form.querySelector('input[name="page"]');
-                if (!input) {
-                    input = document.createElement('input');
-                    input.type = 'hidden';
-                    input.name = 'page';
-                    form.appendChild(input);
-                }
-                input.value = page;
-                form.submit();
-            }
-        }
-
-        document.addEventListener('click', e => {
-            const link = e.target.closest('#paginationWrapper a');
-            if (!link) return;
-            e.preventDefault();
-            submitFilterForm(new URL(link.href).searchParams.get('page') || 1);
-        });
-
-        ['select[name="per_page"]', 'select[name="role"]'].forEach(sel => {
-            document.querySelector(sel)?.addEventListener('change', () => submitFilterForm(1));
-        });
-
-        // ============================================
-        // INITIALIZATION
-        // ============================================
-        document.addEventListener('DOMContentLoaded', function() {
-            initImportPolling();
+        // Tambahkan juga fungsi deselectAll agar tombol Batal di bulk bar berfungsi
+        function deselectAll() {
+            const selectAll = document.getElementById('selectAll');
+            if (selectAll) selectAll.checked = false;
             
-            // Logic Role Checkboxes (Add Modal)
-            document.querySelectorAll('.add-role-cb').forEach(cb => {
-                cb.addEventListener('change', function() {
-                    const id = parseInt(this.value);
-                    if (id === DOSEN_ID) document.getElementById('addFieldDosen')?.classList.toggle('hidden', !this.checked);
-                    if (id === MAHASISWA_ID) document.getElementById('addFieldMahasiswa')?.classList.toggle('hidden', !this.checked);
-                });
-                cb.dispatchEvent(new Event('change'));
+            document.querySelectorAll('.user-checkbox').forEach(cb => {
+                cb.checked = false;
             });
+            
+            updateBulkBar();
+        }
 
-            // Admin Module Logic
-            const trigger = document.getElementById('logicTriggerAdmin');
-            const panel = document.getElementById('adminModulePanel');
-            if (trigger && panel) {
-                trigger.addEventListener('change', function() {
-                    panel.classList.toggle('hidden', !this.checked);
-                });
-            }
-        });
+        // ============================================
+        // 4. ACCOUNT ACTIONS (EDIT, DELETE, ETC)
+        // ============================================
+        function updateBulkBar() {
+            const checkboxes = document.querySelectorAll('.user-checkbox:checked');
+            const bulkBar = document.getElementById('bulkActionBar');
+            const selectedCountText = document.getElementById('selectedCount');
+            if (selectedCountText) selectedCountText.textContent = checkboxes.length;
+            if (checkboxes.length > 0) bulkBar?.classList.replace('hidden', 'flex');
+            else bulkBar?.classList.replace('flex', 'hidden');
+        }
 
         function openEditInfo(data) {
             document.getElementById('formEditInfo').action = `/superadmin/users/${data.id}/update`;
@@ -331,87 +380,32 @@
             openModal('modalEditInfo');
         }
 
-        function openSuspendModal(data) {
-            document.getElementById('formSuspend').action = `/superadmin/users/${data.id}/suspend`;
-            document.getElementById('suspendUserName').textContent = data.name;
-            openModal('modalSuspend');
+        function openForceLogoutModal(data) {
+            document.getElementById('formForceLogout').action = `/superadmin/users/${data.id}/force-logout`;
+            document.getElementById('logoutTargetName').textContent = data.name;
+            openModal('modalForceLogout');
         }
 
-        // ============================================
-        // SUPERADMIN SAFETY LOGIC (ADD MODAL)
-        // ============================================
+        function openDeleteHybrid(data) {
+            document.getElementById('formDeleteHybrid').action = `/superadmin/users/${data.id}/destroy`;
+            document.getElementById('deleteTargetName').textContent = data.name;
+            openModal('modalDeleteHybrid');
+        }
 
-        // 1. Deteksi klik pada checkbox Superadmin
-        document.addEventListener('change', function(e) {
-            const cb = e.target.closest('.add-role-cb');
-            if (!cb) return;
-
-            const roleName = cb.getAttribute('data-role-name');
-
-            if (roleName === 'superadmin' && cb.checked) {
-                // BATALKAN centang sementara sampai dikonfirmasi di modal kedua
-                cb.checked = false;
-                
-                // Munculkan modal peringatan
-                const warningModal = document.getElementById('superadminWarningModal');
-                if (warningModal) {
-                    warningModal.classList.remove('hidden');
-                    warningModal.classList.add('flex'); // Paksa flex agar ke tengah
-                    document.body.style.overflow = 'hidden';
-                }
-            }
-        });
-
-        // 2. Logika Pengetikan "SUPERADMIN"
+        // Superadmin Double Confirmation
         document.getElementById('confirmSuperadminAddText')?.addEventListener('input', function() {
-            const confirmBtn = document.getElementById('confirmSuperadminAdd');
-            if (!confirmBtn) return;
-
-            if (this.value.toUpperCase() === 'SUPERADMIN') {
-                confirmBtn.disabled = false;
-                confirmBtn.classList.remove('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
-                confirmBtn.classList.add('bg-red-600', 'text-white', 'hover:bg-red-700');
-            } else {
-                confirmBtn.disabled = true;
-                confirmBtn.classList.remove('bg-red-600', 'text-white', 'hover:bg-red-700');
-                confirmBtn.classList.add('bg-slate-200', 'text-slate-400', 'cursor-not-allowed');
-            }
+            const btn = document.getElementById('confirmSuperadminAdd');
+            btn.disabled = this.value.toUpperCase() !== 'SUPERADMIN';
+            btn.className = btn.disabled 
+                ? "flex-1 bg-slate-200 text-slate-400 cursor-not-allowed text-[10px] font-black uppercase py-3 rounded-xl"
+                : "flex-1 bg-red-600 text-white text-[10px] font-black uppercase py-3 rounded-xl shadow-md";
         });
 
-        // 3. Eksekusi centang setelah konfirmasi sukses
         document.getElementById('confirmSuperadminAdd')?.addEventListener('click', function() {
-            // Cari checkbox superadmin di modal utama dan centang
-            const superadminCb = document.querySelector('.add-role-cb[data-role-name="superadmin"]');
-            if (superadminCb) {
-                superadminCb.checked = true;
-            }
-            closeSuperadminWarningModal();
+            const cb = document.querySelector('.add-role-cb[data-role-name="superadmin"]');
+            if (cb) cb.checked = true;
+            closeModal('superadminWarningModal');
         });
-
-        // 4. Fungsi Tutup & Reset
-        function closeSuperadminWarningModal() {
-            const modal = document.getElementById('superadminWarningModal');
-            if (modal) {
-                modal.classList.add('hidden');
-                modal.classList.remove('flex');
-                document.body.style.overflow = '';
-                
-                // Reset Input
-                const input = document.getElementById('confirmSuperadminAddText');
-                const btn = document.getElementById('confirmSuperadminAdd');
-                if (input) input.value = '';
-                if (btn) {
-                    btn.disabled = true;
-                    btn.className = "flex-1 bg-slate-200 text-slate-400 cursor-not-allowed text-[10px] font-black uppercase tracking-widest py-3 rounded-xl transition-all shadow-sm";
-                }
-            }
-        }
-    document.addEventListener('DOMContentLoaded', function() {
-        // Jalankan polling hanya jika elemen progress bar ada di DOM
-        if (document.getElementById('importProgressContainer')) {
-            initImportPolling();
-        }
-    });
     </script>
 </x-sidebar>
 </x-app-layout>

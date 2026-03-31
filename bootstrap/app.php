@@ -11,6 +11,7 @@ use App\Http\Middleware\LockToModule;
 use App\Http\Middleware\CheckModuleActive;
 use App\Http\Middleware\PreventBackHistory;
 use App\Http\Middleware\CheckPermission;
+use App\Http\Middleware\CheckSessionVersion;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -22,6 +23,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // ← Satu withMiddleware saja, tidak boleh dua!
         $middleware->web(append: [
             CheckSuspended::class,
+            CheckSessionVersion::class,
             PreventBackHistory::class,    
             RedirectBasedOnRole::class,      // ← setelah redirect, baru kunci
         ]);

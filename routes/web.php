@@ -32,17 +32,13 @@ Route::middleware('auth')->group(function () {
             ->name('users.index');
         Route::get('/users/category/{category}', [SuperAdminController::class, 'usersByCategory'])
             ->name('users.category');
-        Route::get('/import-status/{id}', function($id) {
-            $status = \App\Models\ImportStatus::findOrFail($id);
-            return response()->json([
-                'processed' => $status->processed_rows,
-                'total' => $status->total_rows,
-                'status' => $status->status
-            ]);
-        })->name('superadmin.import.status');
+        Route::get('/import-status/{id}', [SuperAdminController::class, 'getImportStatus'])
+            ->name('import.status');
         Route::get('/modules', [SuperAdminController::class, 'modules'])->name('modules');
         Route::get('/permissions', [SuperAdminController::class, 'permissions'])
             ->name('permissions');
+        Route::post('/permissions/repair-all', [SuperAdminController::class, 'repairAllPermissions'])
+            ->name('permissions.repair-all');
         Route::post('/modules/{slug}/settings', [SuperAdminController::class, 'updateModuleSettings'])->name('modules.settings');
         Route::post('/modules/{slug}/purge-cache', [SuperAdminController::class, 'purgeModuleCache'])->name('modules.purge-cache');
         Route::post('/modules/{slug}/maintenance', [SuperAdminController::class, 'toggleMaintenance'])->name('modules.maintenance');
@@ -61,6 +57,10 @@ Route::middleware('auth')->group(function () {
         // Tambah user baru
         Route::post('/users/bulk-import', [SuperAdminController::class, 'bulkImport'])->name('users.bulkImport');
         Route::post('/import-status/{id}/cancel', [SuperAdminController::class, 'cancelImport'])->name('import.cancel');
+        Route::post('/clear-import-session', function() {
+            session()->forget('import_id');
+            return response()->json(['success' => true]);
+        })->name('clear-import-session');
         Route::post('/users', [SuperAdminController::class, 'storeUser'])
             ->name('users.store');
 
@@ -85,11 +85,14 @@ Route::middleware('auth')->group(function () {
         Route::get('/modules', [SuperAdminController::class, 'modules'])
             ->name('modules');
 
-        Route::get('/audit-logs', [SuperAdminController::class, 'auditLogs'])
+        Route::get('audit-logs/audit-logs', [SuperAdminController::class, 'auditLogs'])
             ->name('audit-logs');
 
-        Route::get('/audit-logs/table', [SuperAdminController::class, 'auditLogsTable'])
+        Route::get('audit-logs/audit-logs/table', [SuperAdminController::class, 'auditLogsTable'])
             ->name('audit-logs.table');
+
+        Route::delete('/audit-logs/bulk-destroy', [SuperAdminController::class, 'bulkDeleteAuditLogs'])
+            ->name('audit-logs.bulk-destroy');
     });
 
     // Global dashboard — pakai DashboardController
