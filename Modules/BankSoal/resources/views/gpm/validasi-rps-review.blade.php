@@ -285,8 +285,22 @@
         <div class="status-banner mb-4">
             <div class="status-icon">!</div>
             <div class="status-content">
-                <h6>Status: Menunggu Validasi</h6>
-                <p>Mata Kuliah: Struktur Data (INF201) &bull; Diserahkan oleh: Dr. Budi Santoso</p>
+                <h6>Status: {{ ucfirst($rps->status) }}</h6>
+                <p>
+                    Mata Kuliah: {{ $rps->mk_nama }} ({{ $rps->kode }}) &bull; 
+                    Diserahkan oleh: 
+                    @php
+                        $dosensList = !empty($rps->dosens_list) ? array_map('trim', explode(',', $rps->dosens_list)) : [];
+                    @endphp
+                    @forelse($dosensList as $index => $dosenItem)
+                        @php
+                            [$initials, $dosenName] = explode('|', $dosenItem, 2);
+                        @endphp
+                        {{ $dosenName }}{{ $index < count($dosensList) - 1 ? ', ' : '' }}
+                    @empty
+                        -
+                    @endforelse
+                </p>
             </div>
         </div>
 
@@ -296,7 +310,7 @@
                 <div class="pdf-container">
                     <div class="pdf-header">
                         <div class="pdf-title">
-                            <i class="bi bi-file-earmark-pdf text-danger"></i> RPS_StrukturData.pdf
+                            <i class="bi bi-file-earmark-pdf text-danger"></i> {{ basename($rps->dokumen) }}
                         </div>
                         <div class="pdf-actions">
                             <button><i class="bi bi-zoom-out"></i></button>
@@ -335,51 +349,34 @@
 
                     <form action="#" method="POST">
                         @csrf
+                        <input type="hidden" name="rps_id" value="{{ $rps->rps_id }}">
                         
+                        @forelse($parameters as $index => $param)
                         <div class="question-item">
-                            <div class="question-text">1. Apakah Capaian Pembelajaran Lulusan (CPL) sudah sesuai dengan Kurikulum Program Studi?</div>
+                            <div class="question-text">{{ $index + 1 }}. {{ $param->aspek }}</div>
                             <div class="radio-group">
                                 <label class="radio-label">
-                                    <input type="radio" name="q1" value="1" checked> Sesuai
+                                    <input type="radio" name="parameter_{{ $param->id }}" value="1" {{ isset($existingReview) ? 'checked' : '' }}> Sesuai
                                 </label>
                                 <label class="radio-label">
-                                    <input type="radio" name="q1" value="0"> Tidak Sesuai
+                                    <input type="radio" name="parameter_{{ $param->id }}" value="0"> Tidak Sesuai
                                 </label>
                             </div>
                         </div>
-
-                        <div class="question-item">
-                            <div class="question-text">2. Apakah materi pembelajaran mencakup perkembangan teknologi terkini?</div>
-                            <div class="radio-group">
-                                <label class="radio-label">
-                                    <input type="radio" name="q2" value="1" checked> Sesuai
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="q2" value="0"> Tidak Sesuai
-                                </label>
-                            </div>
+                        @empty
+                        <div class="alert alert-info" role="alert">
+                            Tidak ada parameter penilaian yang tersedia
                         </div>
-
-                        <div class="question-item">
-                            <div class="question-text">3. Apakah instrumen penilaian sudah selaras dengan metode pembelajaran?</div>
-                            <div class="radio-group">
-                                <label class="radio-label">
-                                    <input type="radio" name="q3" value="1"> Sesuai
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="q3" value="0"> Tidak Sesuai
-                                </label>
-                            </div>
-                        </div>
+                        @endforelse
 
                         <div class="score-box">
                             <div class="score-label">Skor Evaluasi:</div>
-                            <div class="score-value">85/100</div>
+                            <div class="score-value">{{ isset($existingReview) ? $existingReview->nilai_akhir : '0' }}/100</div>
                         </div>
 
                         <div class="revision-note">
                             <label for="catatan">Catatan Revisi</label>
-                            <textarea id="catatan" name="catatan" placeholder="Masukkan detail perbaikan jika diperlukan..."></textarea>
+                            <textarea id="catatan" name="catatan" placeholder="Masukkan detail perbaikan jika diperlukan...">{{ isset($existingReview) ? $existingReview->catatan : '' }}</textarea>
                         </div>
 
                         <div class="action-buttons">
@@ -392,21 +389,22 @@
                 <div class="history-card">
                     <div class="history-title">HISTORY LOG</div>
                     
+                    @forelse($history as $item)
                     <div class="history-item">
-                        <div class="history-marker marker-blue"></div>
+                        <div class="history-marker {{ $loop->first ? 'marker-blue' : 'marker-yellow' }}"></div>
                         <div class="history-content">
-                            <h6>Dokumen Diunggah</h6>
-                            <p>12 Okt 2023 - 09:45</p>
+                            <h6>{{ ucfirst($item->action) }}</h6>
+                            <p>{{ \Carbon\Carbon::parse($item->created_at)->format('d M Y - H:i') }}</p>
+                            @if($item->description)
+                            <p>{{ $item->description }}</p>
+                            @endif
                         </div>
                     </div>
-                    
-                    <div class="history-item">
-                        <div class="history-marker marker-yellow"></div>
-                        <div class="history-content">
-                            <h6>Sedang Ditinjau</h6>
-                            <p>Oleh Prof. Dr. Aris S.</p>
-                        </div>
+                    @empty
+                    <div class="alert alert-sm alert-secondary" role="alert">
+                        Belum ada riwayat aktivitas
                     </div>
+                    @endforelse
                 </div>
             </div>
         </div>

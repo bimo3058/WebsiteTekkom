@@ -6,25 +6,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
-        Schema::create('bs_cpl', function (Blueprint $table) {
+        Schema::create('bs_review', function (Blueprint $table) {
             $table->id();
-            $table->string('kode');
-            $table->text('deskripsi');
+            $table->unsignedBigInteger('pertanyaan_id');
+            $table->unsignedBigInteger('gpm_user_id')->nullable();
+            $table->string('status_review');
+            $table->text('catatan')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
-        Schema::dropIfExists('bs_cpl');
+        Schema::dropIfExists('bs_review');
     }
 };

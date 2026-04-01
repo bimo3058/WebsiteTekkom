@@ -13,17 +13,12 @@ return new class extends Migration
     {
         Schema::create('bs_rps_detail', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('rps_id');
-            $table->binary('dokumen');
-            $table->enum('status_rps', ['disetujui','revisi','draft','diajukan'])->default('draft');
-            $table->text('catatan')->nullable();
-            $table->integer('nilai_akhir');
+            $table->unsignedBigInteger('mk_id');
+            $table->string('semester');
+            $table->string('tahun_ajaran');
+            $table->string('dokumen');
+            $table->string('status')->default('menunggu_review');
             $table->timestamps();
-
-            $table->foreign('rps_id')
-                ->references('id')->on('bs_rps')
-                ->cascadeOnUpdate()
-                ->cascadeOnDelete();
         });
     }
 

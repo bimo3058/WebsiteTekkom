@@ -16,7 +16,9 @@ return new class extends Migration
             $table->string('kode');
             $table->string('nama');
             $table->integer('sks');
-            $table->timestamps();
+            $table->string('semester')->nullable();
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent();
         });
     }
 
