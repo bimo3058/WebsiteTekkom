@@ -86,7 +86,7 @@
                             <td><span class="text-muted" style="font-size: 0.9rem;">12 Sep 2023</span></td>
                             <td><span class="badge-menunggu">MENUNGGU</span></td>
                             <td class="text-end">
-                                <a href="{{ route('gpm.validasi-bank-soal.review') }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
+                                <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal.review') }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
                                     Mulai Validasi <i class="fas fa-arrow-right ms-2" style="font-size: 0.8rem;"></i>
                                 </a>
                             </td>
@@ -106,7 +106,7 @@
                             <td><span class="text-muted" style="font-size: 0.9rem;">13 Sep 2023</span></td>
                             <td><span class="badge-menunggu">MENUNGGU</span></td>
                             <td class="text-end">
-                                <a href="{{ route('gpm.validasi-bank-soal.review') }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
+                                <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal.review') }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
                                     Mulai Validasi <i class="fas fa-arrow-right ms-2" style="font-size: 0.8rem;"></i>
                                 </a>
                             </td>
@@ -126,7 +126,7 @@
                             <td><span class="text-muted" style="font-size: 0.9rem;">14 Sep 2023</span></td>
                             <td><span class="badge-menunggu">MENUNGGU</span></td>
                             <td class="text-end">
-                                <a href="{{ route('gpm.validasi-bank-soal.review') }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
+                                <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal.review') }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
                                     Mulai Validasi <i class="fas fa-arrow-right ms-2" style="font-size: 0.8rem;"></i>
                                 </a>
                             </td>

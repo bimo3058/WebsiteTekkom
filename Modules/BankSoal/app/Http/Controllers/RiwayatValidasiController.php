@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\BankSoal\Http\Controllers\BankSoal\Gpm;
+namespace Modules\BankSoal\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -21,5 +21,13 @@ class RiwayatValidasiController extends Controller
     public function bankSoal()
     {
         return view('banksoal::gpm.riwayat-validasi.bank-soal');
+    }
+
+    /**
+     * Tampilkan riwayat validasi RPS
+     */
+    public function rps()
+    {
+        return view('banksoal::gpm.riwayat-validasi.rps');
     }
 }
