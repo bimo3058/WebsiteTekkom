@@ -6,25 +6,22 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::create('import_statuses', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('user_id')->constrained(); // Siapa yang upload
+            $table->foreignId('user_id')->constrained()->onDelete('cascade'); 
             $table->string('filename');
+            $table->string('path'); // WAJIB: Untuk tahu file mana yang dibaca di Bucket
+            $table->string('file_hash')->index(); // WAJIB: Untuk cek apakah file sudah pernah diupload
             $table->integer('total_rows')->default(0);
             $table->integer('processed_rows')->default(0);
             $table->string('status')->default('pending'); // pending, processing, completed, failed
+            $table->text('error_message')->nullable(); // Opsional: Untuk mencatat kalau ada baris yang gagal
             $table->timestamps();
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('import_statuses');

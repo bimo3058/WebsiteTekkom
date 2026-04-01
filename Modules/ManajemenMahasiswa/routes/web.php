@@ -2,19 +2,22 @@
 
 use Illuminate\Support\Facades\Route;
 use Modules\ManajemenMahasiswa\Http\Controllers\DashboardController;
-use Modules\ManajemenMahasiswa\Http\Controllers\GamificationController;
-use Modules\ManajemenMahasiswa\Http\Controllers\CvController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PengumumanController;
+use Modules\ManajemenMahasiswa\Http\Controllers\KemahasiswaanController;
 
-Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])->prefix('manajemen-mahasiswa')->name('manajemenmahasiswa.')->group(function () {
+Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
+    ->prefix('manajemen-mahasiswa')
+    ->name('manajemenmahasiswa.')
+    ->group(function () {
 
-    Route::get('/mahasiswa/dashboard', [DashboardController::class, 'index'])
-        ->name('mahasiswa.dashboard');
-    // -------------------------------------------------------------------------
-    // Pengumuman
-    // -------------------------------------------------------------------------
-    // Using explicit routes instead of resource to handle specific methods like publish, destroyLampiran
-    Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
+        // Dashboard Utama Modul
+        Route::get('/mahasiswa/dashboard', [DashboardController::class, 'index'])
+            ->name('mahasiswa.dashboard');
+
+        // -------------------------------------------------------------------------
+        // Pengumuman
+        // -------------------------------------------------------------------------
+        Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
             Route::get('/', [PengumumanController::class , 'index'])->name('index');
             Route::get('/create', [PengumumanController::class , 'create'])->name('create');
             Route::post('/', [PengumumanController::class , 'store'])->name('store');
@@ -26,6 +29,5 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])->prefix('manaje
             // Custom actions
             Route::patch('/{pengumuman}/publish', [PengumumanController::class , 'publish'])->name('publish');
             Route::delete('/{pengumuman}/lampiran/{lampiran}', [PengumumanController::class , 'destroyLampiran'])->name('lampiran.destroy');
-        }
-        );
+        });
     });

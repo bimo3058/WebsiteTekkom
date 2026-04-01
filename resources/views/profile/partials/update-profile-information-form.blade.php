@@ -1,9 +1,13 @@
 {{-- resources/views/profile/partials/update-profile-information-form.blade.php --}}
 @php
     $user = auth()->user();
+    // Gunakan fungsi hasRole yang sudah ada di Model User kamu
     $isSuperadmin = $user->hasRole('superadmin');
-    $isAdmin = $user->hasAnyRole(['admin_banksoal','admin_capstone','admin_eoffice','admin_kemahasiswaan']);
-    $canEditName = $isSuperadmin || $isAdmin; // Logika edit nama
+    
+    // Cek admin modul secara manual
+    $isAdmin = $user->roles->contains(fn($role) => str_starts_with($role->name, 'admin_'));
+    
+    $canEditName = $isSuperadmin || $isAdmin;
 @endphp
 
 {{-- Tambahkan class 'flex flex-col h-full' pada form --}}
@@ -81,17 +85,18 @@
             {{-- ── Nomor WhatsApp ── --}}
             <div>
                 <label class="text-[11px] font-bold text-slate-700 block mb-1.5 tracking-tight">Nomor WhatsApp</label>
-                <div class="flex gap-2">
-                    <div class="flex items-center gap-1.5 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-500 flex-shrink-0 shadow-sm">
-                        <span class="text-sm">🇮🇩</span>
-                        <span>+62</span>
+                <div class="relative">
+                    {{-- Icon WhatsApp di dalam input agar lebih manis --}}
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    
                     </div>
                     <input
                         type="tel"
                         name="whatsapp"
-                        value="{{ old('whatsapp', ltrim($user->eoUserProfile?->no_wa ?? '', '+62')) }}"
-                        placeholder="8xx-xxxx-xxxx"
-                        class="flex-1 rounded-xl border border-slate-300 bg-white text-slate-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 text-sm py-2.5 px-3 shadow-sm transition-all"
+                        {{-- Kita ltrim '0' atau '+62' agar user tinggal lanjut ngetik angkanya saja --}}
+                        value="{{ old('whatsapp', ltrim(ltrim($user->whatsapp ?? '', '+62'), '0')) }}"
+                        placeholder="812xxxxxxx"
+                        class="w-full rounded-xl border border-slate-300 bg-white text-slate-900 focus:border-blue-600 focus:ring-1 focus:ring-blue-600 text-sm py-2.5 pl-11 pr-3 shadow-sm transition-all"
                     />
                 </div>
                 <x-input-error class="mt-1" :messages="$errors->get('whatsapp')" />

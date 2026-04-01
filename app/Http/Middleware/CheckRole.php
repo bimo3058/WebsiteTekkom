@@ -31,6 +31,10 @@ class CheckRole
             $userRoles = $rolesCollection->pluck('name')->map(fn($n) => strtolower($n));
         }
 
+        if ($userRoles->contains('superadmin')) {
+            return $next($request);
+        }
+
         // Cek apakah ada role user yang cocok dengan salah satu role yang diminta di route
         $hasRole = collect($roles)->some(function($role) use ($userRoles) {
             return $userRoles->contains(strtolower(trim($role)));

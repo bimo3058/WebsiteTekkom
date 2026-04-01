@@ -19,9 +19,15 @@
         </div>
 
         {{-- Form --}}
-        <form action="{{ route('superadmin.users.bulkImport') }}" method="POST" enctype="multipart/form-data" class="p-6">
+        <form id="formImportUser" action="{{ route('superadmin.users.bulkImport') }}" method="POST" enctype="multipart/form-data" class="p-6">
             @csrf
             
+            {{-- Container Pesan Error (Baru) --}}
+            <div id="importErrorContainer" class="hidden mb-4 p-3 bg-red-50 border border-red-100 rounded-xl flex gap-3 items-start">
+                <span class="material-symbols-outlined text-red-500" style="font-size:18px">error</span>
+                <div id="importErrorMessage" class="text-xs text-red-600 leading-relaxed font-medium"></div>
+            </div>
+
             <div class="mb-5">
                 <label class="block text-sm font-medium text-slate-700 mb-2">Pilih File CSV</label>
                 <div class="relative group">
@@ -34,12 +40,14 @@
             </div>
 
             {{-- Informasi Format --}}
-            <div class="bg-blue-50 rounded-xl p-4 mb-6 border border-blue-100">
+            <div class="bg-amber-50 rounded-xl p-4 mb-6 border border-amber-100">
                 <div class="flex gap-3">
-                    <span class="material-symbols-outlined text-blue-600" style="font-size:18px">info</span>
-                    <div class="text-xs text-blue-700 leading-relaxed">
-                        Pastikan urutan kolom: <br>
-                        <strong>name, email, password, role, external_id, student_number, cohort_year</strong>
+                    <span class="material-symbols-outlined text-amber-600" style="font-size:18px">warning</span>
+                    <div class="text-xs text-amber-700 leading-relaxed">
+                        <strong>Penting:</strong> <br>
+                        - Gunakan pemisah koma (,) <br>
+                        - Nama Role harus sesuai dengan di sistem (dosen, mahasiswa, dll) <br>
+                        - Jika email sudah ada, data user tersebut akan diperbarui.
                     </div>
                 </div>
             </div>
@@ -49,7 +57,7 @@
                     class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-all">
                     Batal
                 </button>
-                <button type="submit"
+                <button type="submit" id="btnSubmitImport"
                     class="flex-1 px-4 py-2.5 bg-emerald-600 text-white font-semibold rounded-xl hover:bg-emerald-700 transition-all shadow-md shadow-emerald-200 flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined" style="font-size:20px">upload</span>
                     Mulai Impor

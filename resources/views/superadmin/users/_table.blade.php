@@ -25,22 +25,34 @@
         <table class="w-full border-collapse">
             <thead>
                 <tr class="border-b border-slate-200 bg-slate-50/50">
-                    {{-- Checkbox Header --}}
                     <th class="px-4 py-3 text-left w-10">
                         <input type="checkbox" id="selectAll" 
                             class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500 focus:ring-offset-0 transition-all cursor-pointer">
                     </th>
                     <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">User Info</th>
                     <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Roles & Access</th>
+                    <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Permissions</th>
                     <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Timestamps</th>
                     <th class="px-4 py-3 text-center text-[10px] font-bold text-slate-400 uppercase tracking-widest">Actions</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
                 @forelse($users as $user)
-                @php $isMe = $user->id === auth()->id(); @endphp
+                @php 
+                    $isMe = $user->id === auth()->id();
+                    $userRoles = $user->roles->pluck('name')->toArray();
+                    $isAcademic = in_array('dosen', $userRoles) || in_array('mahasiswa', $userRoles) || in_array('gpm', $userRoles);
+                    $isAdmin = in_array('admin_banksoal', $userRoles) || in_array('admin_capstone', $userRoles) || in_array('admin_eoffice', $userRoles) || in_array('admin_kemahasiswaan', $userRoles);
+                    
+                    // Ambil permission dan modul
+                    $userPermissions = $user->directPermissions()->pluck('name')->toArray();
+                    $modules = [];
+                    foreach ($userPermissions as $perm) {
+                        $module = explode('.', $perm)[0];
+                        if (!in_array($module, $modules)) $modules[] = $module;
+                    }
+                @endphp
                 <tr class="hover:bg-slate-50/80 transition-colors user-row {{ $isMe ? 'opacity-70' : '' }}">
-                    {{-- Row Checkbox --}}
                     <td class="px-4 py-3">
                         @if(!$isMe)
                         <input type="checkbox" name="selected_users[]" value="{{ $user->id }}" 
@@ -79,8 +91,11 @@
                                         'superadmin' => 'bg-purple-50 text-purple-600 border-purple-100',
                                         'dosen' => 'bg-green-50 text-green-600 border-green-100',
                                         'mahasiswa' => 'bg-orange-50 text-orange-600 border-orange-100',
+                                        'gpm' => 'bg-teal-50 text-teal-600 border-teal-100',
                                         'admin_banksoal' => 'bg-yellow-50 text-yellow-600 border-yellow-100',
                                         'admin_capstone' => 'bg-cyan-50 text-cyan-600 border-cyan-100',
+                                        'admin_eoffice' => 'bg-indigo-50 text-indigo-600 border-indigo-100',
+                                        'admin_kemahasiswaan' => 'bg-rose-50 text-rose-600 border-rose-100',
                                         default => 'bg-blue-50 text-blue-600 border-blue-100',
                                     };
                                 @endphp
@@ -91,6 +106,44 @@
                                 <span class="text-slate-300 text-[10px] italic underline decoration-dotted">No Role</span>
                             @endforelse
                         </div>
+                    </td>
+
+                    {{-- Permissions - SMART VERSION --}}
+                    <td class="px-4 py-3">
+                        @if($user->hasRole('superadmin'))
+                            {{-- Superadmin --}}
+                            <span class="text-purple-600 text-[10px] font-bold flex items-center gap-1">
+                                <span class="material-symbols-outlined" style="font-size: 14px">verified</span>
+                                All Access
+                            </span>
+                        @elseif($isAcademic)
+                            {{-- Dosen, Mahasiswa, GPM - tampilkan badge Full Access --}}
+                            <div class="flex items-center gap-1">
+                                <span class="text-emerald-600 text-[10px] font-bold">✓ Full Access</span>
+                                <span class="text-slate-400 text-[8px]">(view, edit, delete)</span>
+                            </div>
+                        @elseif($isAdmin)
+                            {{-- Admin per modul - tampilkan modul spesifik --}}
+                            <div class="flex flex-wrap gap-1">
+                                @foreach($modules as $module)
+                                    <span class="px-1.5 py-0.5 rounded bg-blue-50 text-blue-600 text-[9px] font-medium border border-blue-100">
+                                        {{ $module }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @elseif(!empty($modules))
+                            {{-- User lain dengan permission custom --}}
+                            <div class="flex flex-wrap gap-1">
+                                @foreach($modules as $module)
+                                    <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-600 text-[9px] font-medium">
+                                        {{ $module }}
+                                    </span>
+                                @endforeach
+                            </div>
+                        @else
+                            {{-- Tidak ada permission --}}
+                            <span class="text-slate-400 text-[9px] italic">-</span>
+                        @endif
                     </td>
 
                     {{-- Timestamps --}}
@@ -117,8 +170,10 @@
                             @if(!$isMe)
                                 <form method="POST" action="{{ route('superadmin.users.force-logout', $user) }}">
                                     @csrf
-                                    <button type="submit" onclick="return confirm('Force logout user ini?')"
-                                        class="p-1.5 text-orange-500 hover:bg-orange-50 rounded-md transition border border-transparent hover:border-orange-100" title="Force Logout">
+                                    <button type="button" 
+                                        onclick="openForceLogoutModal({ id: '{{ $user->id }}', name: '{{ $user->name }}' })"
+                                        class="p-1.5 text-orange-500 hover:bg-orange-50 rounded-md transition border border-transparent hover:border-orange-100" 
+                                        title="Force Logout">
                                         <span class="material-symbols-outlined" style="font-size:16px">logout</span>
                                     </button>
                                 </form>
@@ -149,7 +204,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="5" class="px-6 py-10 text-center text-slate-400 text-xs italic">Data user tidak ditemukan.</td>
+                    <td colspan="6" class="px-6 py-10 text-center text-slate-400 text-xs italic">Data user tidak ditemukan.</td>
                 </tr>
                 @endforelse
             </tbody>

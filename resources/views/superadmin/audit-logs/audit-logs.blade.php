@@ -1,7 +1,7 @@
 <x-app-layout>
 <x-sidebar :user="auth()->user()">
     <div class="min-h-screen bg-slate-50 p-6">
-        <div class="max-w-7xl mx-auto">
+        <div class="max-w-full mx-auto">
 
             {{-- Header --}}
             <div class="mb-6 flex items-center justify-between">
@@ -12,11 +12,38 @@
                     </p>
                 </div>
                 <div class="flex items-center gap-3">
+                    <button onclick="openBulkDeleteModal()" 
+                        class="inline-flex items-center gap-2 bg-white hover:bg-red-50 text-red-600 font-bold px-3 py-1.5 rounded-lg transition-all text-[11px] border border-red-200 shadow-sm">
+                        <span class="material-symbols-outlined" style="font-size:16px">delete_sweep</span>
+                        Hapus Massal
+                    </button>
                     <a href="{{ route('superadmin.dashboard') }}"
                        class="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-600 font-bold px-3 py-1.5 rounded-lg transition-all text-[11px] border border-slate-200 shadow-sm">
                         <span class="material-symbols-outlined" style="font-size:16px">dashboard</span>
                         Dashboard
                     </a>
+                </div>
+            </div>
+
+            {{-- Floating Bulk Action Bar --}}
+            <div id="bulkActionBar" class="hidden mb-4 p-3 bg-slate-900 rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg border border-slate-800">
+                <div class="flex items-center gap-4 ml-2">
+                    <div class="flex items-center justify-center w-6 h-6 bg-red-500 rounded-lg">
+                        <span class="material-symbols-outlined text-white" style="font-size: 14px">delete</span>
+                    </div>
+                    <span class="text-[11px] font-black text-white uppercase tracking-widest">
+                        <span id="selectedCount" class="text-red-400 text-sm mr-1">0</span> Log Terpilih
+                    </span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="openBulkDeleteModal()" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white text-[10px] font-black uppercase px-4 py-2 rounded-xl transition-all shadow-sm group">
+                        <span class="material-symbols-outlined group-hover:rotate-12 transition-transform" style="font-size: 16px">delete_forever</span>
+                        Hapus Terpilih
+                    </button>
+                    <div class="w-px h-4 bg-slate-700 mx-1"></div>
+                    <button onclick="deselectAll()" class="text-slate-400 hover:text-white text-[10px] font-bold uppercase px-3 transition-colors">
+                        Batal
+                    </button>
                 </div>
             </div>
 
@@ -106,24 +133,31 @@
                     <table class="w-full border-collapse">
                         <thead>
                             <tr class="border-b border-slate-200 bg-slate-50/50">
+                                <th class="px-4 py-3 text-left w-10">
+                                    <input type="checkbox" id="selectAllLogs" 
+                                        class="w-4 h-4 rounded border-slate-300 text-red-600 focus:ring-red-500 focus:ring-offset-0 transition-all cursor-pointer">
+                                </th>
                                 <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Waktu</th>
                                 <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">User</th>
                                 <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Modul</th>
                                 <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Action</th>
                                 <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Deskripsi</th>
                                 <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Subject</th>
-                            </tr>
+                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
                             @forelse($query as $log)
                             <tr class="hover:bg-slate-50/80 transition-colors">
+                                <td class="px-4 py-3">
+                                    <input type="checkbox" name="selected_logs[]" value="{{ $log->id }}" 
+                                        class="log-checkbox w-4 h-4 rounded border-slate-300 text-red-600 focus:ring-red-500 focus:ring-offset-0 transition-all cursor-pointer">
+                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="flex flex-col">
                                         <span class="text-slate-700 font-bold text-[11px]">{{ $log->created_at->format('d/m/Y') }}</span>
                                         <span class="text-slate-400 text-[10px] italic">{{ $log->created_at->format('H:i:s') }}</span>
                                     </div>
-                                </td>
-
+                                 </td>
                                 <td class="px-4 py-3">
                                     @if($log->user)
                                         <div class="flex flex-col">
@@ -133,8 +167,7 @@
                                     @else
                                         <span class="text-slate-300 text-[10px] italic">System / Deleted</span>
                                     @endif
-                                </td>
-
+                                 </td>
                                 <td class="px-4 py-3">
                                     @php
                                         $moduleColor = match($log->module) {
@@ -150,8 +183,7 @@
                                     <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black border uppercase {{ $moduleColor }}">
                                         {{ str_replace('_', ' ', $log->module) }}
                                     </span>
-                                </td>
-
+                                 </td>
                                 <td class="px-4 py-3">
                                     @php
                                         $actionColor = match($log->action) {
@@ -166,14 +198,12 @@
                                     <span class="text-[10px] tracking-tight {{ $actionColor }} uppercase">
                                         {{ $log->action }}
                                     </span>
-                                </td>
-
+                                 </td>
                                 <td class="px-4 py-3">
                                     <p class="text-slate-600 text-[11px] leading-relaxed max-w-xs line-clamp-2" title="{{ $log->description }}">
                                         {{ $log->description }}
                                     </p>
-                                </td>
-
+                                 </td>
                                 <td class="px-4 py-3">
                                     @if($log->subject_type)
                                         <div class="flex flex-col">
@@ -183,17 +213,17 @@
                                     @else
                                         <span class="text-slate-200 text-[10px]">—</span>
                                     @endif
-                                </td>
-                            </tr>
+                                 </td>
+                             </tr>
                             @empty
-                            <tr>
-                                <td colspan="6" class="px-6 py-10 text-center text-slate-400 text-[11px] italic">
+                             <tr>
+                                <td colspan="7" class="px-6 py-10 text-center text-slate-400 text-[11px] italic">
                                     Tidak ada catatan aktivitas yang ditemukan.
-                                </td>
-                            </tr>
+                                 </td>
+                             </tr>
                             @endforelse
                         </tbody>
-                    </table>
+                     </table>
                 </div>
             </div>
 
@@ -205,32 +235,147 @@
         </div>
     </div>
 
-    <script>
-    // Auto submit on select change
-    ['select[name="module"]', 'select[name="action"]', 'select[name="user_id"]'].forEach(selector => {
-        document.querySelector(selector)?.addEventListener('change', function () {
-            this.form.submit();
-        });
-    });
+    {{-- Modal Bulk Delete --}}
+    @include('superadmin.audit-logs._modal_bulk_delete')
 
-    // Pagination AJAX Helper (Optional - keeps same style as User Management)
-    document.addEventListener('click', function (e) {
-        const link = e.target.closest('#paginationWrapper a');
-        if (!link) return;
-        e.preventDefault();
-        const url = new URL(link.href);
-        const page = url.searchParams.get('page') ?? 1;
-        const form = document.getElementById('auditFilterForm');
+    <script>
+    // ============================================
+    // BULK DELETE LOGIC
+    // ============================================
+    let selectedLogs = new Set();
+    
+    function updateBulkBar() {
+        const checkboxes = document.querySelectorAll('.log-checkbox:checked');
+        const bulkBar = document.getElementById('bulkActionBar');
+        const selectedCountText = document.getElementById('selectedCount');
         
-        let pageInput = form.querySelector('input[name="page"]');
-        if (!pageInput) {
-            pageInput = document.createElement('input');
-            pageInput.type = 'hidden';
-            pageInput.name = 'page';
-            form.appendChild(pageInput);
+        selectedLogs.clear();
+        checkboxes.forEach(cb => selectedLogs.add(cb.value));
+        
+        if (selectedCountText) selectedCountText.textContent = selectedLogs.size;
+        
+        if (selectedLogs.size > 0) {
+            bulkBar?.classList.replace('hidden', 'flex');
+        } else {
+            bulkBar?.classList.replace('flex', 'hidden');
         }
-        pageInput.value = page;
-        form.submit();
+    }
+    
+    function deselectAll() {
+        const selectAll = document.getElementById('selectAllLogs');
+        if (selectAll) selectAll.checked = false;
+        
+        document.querySelectorAll('.log-checkbox').forEach(cb => {
+            cb.checked = false;
+        });
+        
+        updateBulkBar();
+    }
+    
+    function openBulkDeleteModal() {
+        const selectedIds = Array.from(document.querySelectorAll('.log-checkbox:checked')).map(cb => cb.value);
+        const container = document.getElementById('selectedIdsContainer');
+        
+        // Clear existing hidden inputs
+        container.innerHTML = '';
+        
+        // Add selected IDs as hidden inputs
+        selectedIds.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'ids[]';
+            input.value = id;
+            container.appendChild(input);
+        });
+        
+        // Update selected count text in modal
+        const selectedCountSpan = document.getElementById('selectedCountText');
+        if (selectedCountSpan) selectedCountSpan.textContent = selectedIds.length;
+        
+        // Disable "selected" radio button if no logs selected
+        const deleteSelectedRadio = document.getElementById('deleteSelectedRadio');
+        if (deleteSelectedRadio) {
+            deleteSelectedRadio.disabled = selectedIds.length === 0;
+            if (selectedIds.length === 0) {
+                deleteSelectedRadio.parentElement.classList.add('opacity-50');
+            } else {
+                deleteSelectedRadio.parentElement.classList.remove('opacity-50');
+            }
+        }
+        
+        openModal('modalBulkDeleteAudit');
+    }
+    
+    // ============================================
+    // MODAL CORE FUNCTIONS
+    // ============================================
+    function openModal(id) { 
+        const modal = document.getElementById(id);
+        if(modal) {
+            modal.classList.remove('hidden'); 
+            document.body.style.overflow = 'hidden'; 
+        }
+    }
+    
+    function closeModal(id) { 
+        const modal = document.getElementById(id);
+        if(modal) {
+            modal.classList.add('hidden'); 
+            document.body.style.overflow = ''; 
+        }
+    }
+    
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    document.addEventListener('DOMContentLoaded', function() {
+        // Select All functionality
+        const selectAll = document.getElementById('selectAllLogs');
+        selectAll?.addEventListener('change', function() {
+            document.querySelectorAll('.log-checkbox').forEach(cb => cb.checked = this.checked);
+            updateBulkBar();
+        });
+        
+        // Individual checkbox change
+        document.addEventListener('change', function(e) {
+            if (e.target.classList.contains('log-checkbox')) {
+                updateBulkBar();
+            }
+        });
+        
+        // Auto submit on select change
+        ['select[name="module"]', 'select[name="action"]', 'select[name="user_id"]'].forEach(selector => {
+            document.querySelector(selector)?.addEventListener('change', function () {
+                this.form.submit();
+            });
+        });
+        
+        // Pagination AJAX Helper
+        document.addEventListener('click', function (e) {
+            const link = e.target.closest('#paginationWrapper a');
+            if (!link) return;
+            e.preventDefault();
+            const url = new URL(link.href);
+            const page = url.searchParams.get('page') ?? 1;
+            const form = document.getElementById('auditFilterForm');
+            
+            let pageInput = form.querySelector('input[name="page"]');
+            if (!pageInput) {
+                pageInput = document.createElement('input');
+                pageInput.type = 'hidden';
+                pageInput.name = 'page';
+                form.appendChild(pageInput);
+            }
+            pageInput.value = page;
+            form.submit();
+        });
+        
+        // Escape key to close modal
+        document.addEventListener('keydown', function(e) { 
+            if (e.key === 'Escape') {
+                closeModal('modalBulkDeleteAudit');
+            }
+        });
     });
     </script>
 </x-sidebar>

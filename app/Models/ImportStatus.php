@@ -23,9 +23,12 @@ class ImportStatus extends Model
     protected $fillable = [
         'user_id',
         'filename',
+        'path',        
+        'file_hash',
         'total_rows',
         'processed_rows',
         'status',
+        'error_message',
     ];
 
     /**
