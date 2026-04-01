@@ -25,6 +25,15 @@
         <a href="{{ route('banksoal.rps.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-file-alt"></i></span> Manajemen RPS</a>
         <a href="{{ route('banksoal.soal.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-database"></i></span> Bank Soal</a>
         <a href="{{ route('banksoal.arsip.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-archive"></i></span> Arsip Soal</a>
+    
+        <a href="#" class="nav-item" style="margin-top: auto; color: #EF4444;" 
+        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            <span class="nav-icon"><i class="fas fa-power-off"></i></span> Logout
+        </a>
+
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden" style="display: none;">
+            @csrf
+        </form>
     </nav>
     </aside>
 

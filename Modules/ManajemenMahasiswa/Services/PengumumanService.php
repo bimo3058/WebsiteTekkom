@@ -17,6 +17,7 @@ class PengumumanService
         return Pengumuman::with('author')
             ->when(isset($filters['status']), fn($q) => $q->where('status_publish', $filters['status']))
             ->when(isset($filters['audience']), fn($q) => $q->forAudience($filters['audience']))
+            ->when(isset($filters['kategori']), fn($q) => $q->where('kategori', $filters['kategori']))
             ->when(isset($filters['search']), fn($q) => $q->where('judul', 'like', "%{$filters['search']}%"))
             ->orderByDesc('created_at')
             ->paginate($perPage);
@@ -26,12 +27,14 @@ class PengumumanService
      * Listing pengumuman publik untuk mahasiswa/alumni/dosen.
      * Di-cache karena sering dibaca oleh ribuan user.
      */
-    public function listPublished(string $audience, int $perPage = 10): LengthAwarePaginator
+    public function listPublished(string $userRoleAudience, ?string $filterKategori = null, int $perPage = 10): LengthAwarePaginator
     {
-        // Pagination tidak bisa di-cache sepenuhnya; cache hanya untuk count
         return Pengumuman::with('author')
             ->published()
-            ->forAudience($audience)
+            ->forAudience($userRoleAudience)
+            ->when($filterKategori, function ($query, $filter) {
+                return $query->where('kategori', $filter);
+            })
             ->orderByDesc('created_at')
             ->paginate($perPage);
     }

@@ -26,12 +26,27 @@ class AuthenticatedSessionController extends Controller
         $user      = auth()->user();
         $userRoles = $user->roles()->get();
 
+        // 1. Cek status suspend
+        if ($user->isSuspended()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            $message = 'Akun Anda telah ditangguhkan.';
+            if ($user->suspension_reason) {
+                $message .= ' Alasan: ' . $user->suspension_reason;
+            }
+            return back()->withErrors(['email' => $message])->onlyInput('email');
+        }
+
+        // 2. Cache Data
         $user->cacheUserData();
         Cache::put("user:{$user->id}:roles", $userRoles->toArray(), now()->addHours(8));
 
-        $roleNames = $userRoles->pluck('name');
+        // Ambil nama role dalam lowercase untuk pengecekan
+        $roleNames = $userRoles->pluck('name')->map(fn($r) => strtolower($r));
 
-        // Log login setelah auth berhasil
+        // 3. Audit Log
         AuditLogger::log(
             module:      'auth',
             action:      'LOGIN',
@@ -39,26 +54,50 @@ class AuthenticatedSessionController extends Controller
             userId:      $user->id,
         );
 
+        // 4. Redirect Logic 
+        
+        // Superadmin selalu prioritas utama
         if ($roleNames->contains('superadmin')) {
             return redirect()->intended(route('superadmin.dashboard'));
         }
 
-        if ($roleNames->contains('admin')) {
+        // Mapping Admin ke Modul Spesifik
+        $adminRedirects = [
+            'admin_banksoal'      => 'banksoal.dashboard',
+            'admin_capstone'      => 'capstone.dashboard',
+            'admin_eoffice'       => 'eoffice.dashboard',
+            'admin_kemahasiswaan' => 'manajemenmahasiswa.mahasiswa.dashboard',
+        ];
+
+        foreach ($adminRedirects as $role => $routeName) {
+            if ($roleNames->contains($role)) {
+                return redirect()->intended(route($routeName));
+            }
+        }
+
+        // Mahasiswa, Dosen, GPM diarahkan ke Dashboard Global
+        if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm'])->isNotEmpty()) {
             return redirect()->intended(route('dashboard'));
         }
 
-        if ($roleNames->contains('dosen')) {
-            return redirect()->intended(route('dashboard'));
-        }
+        /**
+         * PERUBAHAN DISINI: Protection Layer
+         * Jika user tembus sampai sini (artinya login sukses tapi TIDAK PUNYA ROLE),
+         * maka kita logout paksa agar tidak masuk ke dashboard sebagai "mahasiswa kosong".
+         */
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->route('login')->withErrors([
+            'email' => 'Akun Anda belum memiliki akses (Role) yang terdaftar. Silakan hubungi Administrator.'
+        ]);
     }
 
     public function destroy(Request $request): RedirectResponse
     {
         $user = auth()->user();
 
-        // Log logout SEBELUM guard logout — sesudahnya auth()->id() sudah null
         if ($user) {
             AuditLogger::log(
                 module:      'auth',

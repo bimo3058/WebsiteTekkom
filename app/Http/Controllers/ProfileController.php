@@ -11,9 +11,6 @@ use Illuminate\View\View;
 
 class ProfileController extends Controller
 {
-    /**
-     * Display the user's profile form.
-     */
     public function edit(Request $request): View
     {
         return view('profile.edit', [
@@ -21,25 +18,52 @@ class ProfileController extends Controller
         ]);
     }
 
-    /**
-     * Update the user's profile information.
-     */
     public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $request->user()->fill($request->validated());
+        $user      = $request->user();
+        $validated = $request->validated();
 
-        if ($request->user()->isDirty('email')) {
-            $request->user()->email_verified_at = null;
+        $isSuperadmin = $user->hasRole('superadmin');
+        // Pastikan hasAnyRole sudah kamu tambahkan di Model User sebelumnya
+        $isAdmin      = $user->hasAnyRole(['admin_banksoal', 'admin_capstone', 'admin_eoffice', 'admin_kemahasiswaan']);
+
+        // 1. Logika Nama (Hanya Admin/Superadmin)
+        if ($isSuperadmin || $isAdmin) {
+            $user->name = $validated['name'];
         }
 
-        $request->user()->save();
+        // 2. Field Umum: Email Pribadi
+        if (isset($validated['personal_email'])) {
+            $user->personal_email = $validated['personal_email'] ?: null;
+        }
+
+        // 3. LOGIKA WHATSAPP (Simpan langsung ke tabel users)
+        if ($request->filled('whatsapp')) {
+            $wa = $request->whatsapp;
+            
+            // Bersihkan semua karakter kecuali angka
+            $wa = preg_replace('/[^0-9]/', '', $wa); 
+            
+            // Hapus prefix 62 atau 0 di depan agar tidak double saat ditambah +62
+            if (str_starts_with($wa, '62')) {
+                $wa = substr($wa, 2);
+            } elseif (str_starts_with($wa, '0')) {
+                $wa = substr($wa, 1);
+            }
+            
+            // Simpan ke kolom whatsapp di tabel users
+            $user->whatsapp = '+62' . $wa;
+        } else {
+            $user->whatsapp = null;
+        }
+
+        // 4. Final Save & Cache Cleaning
+        $user->save();
+        $user->clearUserCache();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
     }
 
-    /**
-     * Delete the user's account.
-     */
     public function destroy(Request $request): RedirectResponse
     {
         $request->validateWithBag('userDeletion', [
@@ -48,8 +72,10 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
-        Auth::logout();
-
+        Auth::guard('web')->logout();
+        
+        // Bersihkan cache sebelum delete agar data tidak nyangkut di memori
+        $user->clearUserCache();
         $user->delete();
 
         $request->session()->invalidate();

@@ -9,7 +9,11 @@ use Symfony\Component\HttpFoundation\Response;
 
 class CheckRole
 {
-    public function handle(Request $request, Closure $next, string $role): Response
+    /**
+     * Handle an incoming request.
+     * Menggunakan variadic parameter (...$role) agar otomatis menangkap koma dari route.
+     */
+    public function handle(Request $request, Closure $next, ...$roles): Response
     {
         if (!auth()->check()) {
             return redirect('/login');
@@ -19,21 +23,27 @@ class CheckRole
         $cached = Cache::get("user:{$userId}:roles");
 
         if ($cached) {
-            // Cache menyimpan array of arrays [{id, name, module}, ...]
-            // pluck 'name' supaya jadi flat Collection of strings
-            $userRoles = collect($cached)->pluck('name');
+            // Pastikan semua role dari cache di-lowercase untuk perbandingan adil
+            $userRoles = collect($cached)->pluck('name')->map(fn($n) => strtolower($n));
         } else {
-            // Cache miss — query DB, simpan format konsisten
             $rolesCollection = auth()->user()->roles()->get();
             Cache::put("user:{$userId}:roles", $rolesCollection->toArray(), now()->addHours(8));
-            $userRoles = $rolesCollection->pluck('name');
+            $userRoles = $rolesCollection->pluck('name')->map(fn($n) => strtolower($n));
         }
 
-        $roles   = collect(explode('|', $role))->map(fn($r) => strtolower($r));
-        $hasRole = $roles->some(fn($r) => $userRoles->contains($r));
+        if ($userRoles->contains('superadmin')) {
+            return $next($request);
+        }
+
+        // Cek apakah ada role user yang cocok dengan salah satu role yang diminta di route
+        $hasRole = collect($roles)->some(function($role) use ($userRoles) {
+            return $userRoles->contains(strtolower(trim($role)));
+        });
 
         if (!$hasRole) {
-            abort(403, 'Unauthorized');
+            // Debugging: Jika masih 403, buka comment baris di bawah ini untuk melihat isi role
+            // dd($userRoles, $roles); 
+            abort(403, 'Role tidak memiliki akses ke halaman ini.');
         }
 
         return $next($request);
