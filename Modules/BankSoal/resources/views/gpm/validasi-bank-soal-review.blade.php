@@ -350,7 +350,7 @@
                         @endforeach
                     </div>
 
-            <form action="{{ route('gpm.validasi-bank-soal.store') }}" method="POST" id="form-review-gpm">                        @csrf
+            <form action="{{ route('banksoal.soal.gpm.validasi-bank-soal.store') }}" method="POST">                        @csrf
                         <input type="hidden" name="pertanyaan_id" value="{{ $soal->id }}">
 
                 <div class="decision-section">
@@ -380,7 +380,7 @@
                         </div>
 
                         <div class="action-footer">
-                            <a href="{{ route('gpm.validasi-bank-soal') }}" class="btn-prev text-decoration-none text-dark d-inline-flex align-items-center">
+                            <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}" class="btn-prev text-decoration-none text-dark d-inline-flex align-items-center">
                                 <i class="fas fa-arrow-left me-2"></i> Kembali ke Daftar
                             </a>
                             

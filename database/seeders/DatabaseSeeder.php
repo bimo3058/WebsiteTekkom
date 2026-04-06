@@ -12,14 +12,9 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             UserSeeder::class,
-<<<<<<< banksoal-branch
-            
-            
-            \Modules\BankSoal\database\seeders\BankSoalDatabaseSeeder::class,
-=======
+            BankSoalDatabaseSeeder::class,
             PermissionSeeder::class,
             SystemModuleSeeder::class,
->>>>>>> main
         ]);
     }
 }

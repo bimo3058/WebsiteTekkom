@@ -127,7 +127,7 @@
                     <div class="menu-desc">
                         Pantau status, tanggal diajukan, dan hasil review dokumen Rencana Pembelajaran Semester (RPS) untuk setiap program studi.
                     </div>
-                    <a href="{{ route('gpm.riwayat-validasi.rps') }}" class="btn-menu">
+                    <a href="{{ route('banksoal.rps.gpm.riwayat-validasi.rps') }}" class="btn-menu">
                         Buka Riwayat RPS <i class="fas fa-arrow-right ms-2 fs-6"></i>
                     </a>
                 </div>
@@ -142,7 +142,7 @@
                     <div class="menu-desc">
                         Pantau status, jumlah butir soal, dan hasil review untuk paket Bank Soal mata kuliah pada tiap semester aktif.
                     </div>
-                    <a href="{{ route('gpm.riwayat-validasi.bank-soal') }}" class="btn-menu">
+                    <a href="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal') }}" class="btn-menu">
                         Buka Riwayat Bank Soal <i class="fas fa-arrow-right ms-2 fs-6"></i>
                     </a>
                 </div>

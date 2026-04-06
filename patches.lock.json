@@ -1,0 +1,17 @@
+{
+    "_hash": "0c48f2fb1e6e9b3c18ccfce11ba69324287bc81b3bc426b52ef680e755453de1",
+    "patches": {
+        "laravel/telescope": [
+            {
+                "package": "laravel/telescope",
+                "description": "Fix boolean query for PostgreSQL",
+                "url": "patches/telescope-boolean-fix.patch",
+                "sha256": "b2ed4b772341831b6c7f4318c062215ce1bd4de9513259bba71d51807d3096e3",
+                "depth": 1,
+                "extra": {
+                    "provenance": "root"
+                }
+            }
+        ]
+    }
+}

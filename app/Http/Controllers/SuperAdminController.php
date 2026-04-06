@@ -44,6 +44,8 @@ class SuperAdminController extends Controller
         Cache::forget('sa:total_lecturers');
         Cache::forget('sa:total_students');
         Cache::forget('sa:recent_users');
+        Cache::forget('sa:recent_logins');
+        Cache::forget('sa:new_registrations');
     }
 
     // ── Dashboard ──────────────────────────────────────────────────────────────
@@ -58,12 +60,28 @@ class SuperAdminController extends Controller
         $data = [
             'total_users'       => Cache::remember('sa:total_users',       self::TTL_STATS,  fn() => User::count()),
             'total_superadmins' => Cache::remember('sa:total_superadmins', self::TTL_STATS,  fn() => User::whereHas('roles', fn($q) => $q->where('name', 'superadmin'))->count()),
+            'total_gpm'         => Cache::remember('sa:total_gpm',         self::TTL_STATS,  fn() => User::whereHas('roles', fn($q) => $q->where('name', 'gpm'))->count()),
+            'total_admin_modul' => Cache::remember('sa:total_admin_modul', self::TTL_STATS,  fn() => User::whereHas('roles', fn($q) => $q->where('name', 'LIKE', 'admin_%'))->count()),
             'total_lecturers'   => Cache::remember('sa:total_lecturers',   self::TTL_STATS,  fn() => User::whereHas('roles', fn($q) => $q->where('name', 'dosen'))->count()),
             'total_students'    => Cache::remember('sa:total_students',    self::TTL_STATS,  fn() => User::whereHas('roles', fn($q) => $q->where('name', 'mahasiswa'))->count()),
-            'recent_users'      => Cache::remember('sa:recent_users',      self::TTL_RECENT, fn() => User::with('roles')->latest('created_at')->limit(10)->get()),
+            
+            // 1. Variabel Baru: Khusus untuk tabel "Login Terakhir" (Diurutkan berdasarkan last_login)
+            'recent_logins'     => Cache::remember('sa:recent_logins',     self::TTL_RECENT, fn() => 
+                                    User::with('roles')->whereNotNull('last_login')->orderByDesc('last_login')->limit(5)->get()
+                                ),
+
+            // 2. Variabel Baru: Khusus untuk tabel "User Baru Terdaftar" (Diurutkan berdasarkan created_at)
+            'new_registrations' => Cache::remember('sa:new_registrations', self::TTL_RECENT, fn() => 
+                                    User::with('roles')->latest('created_at')->limit(5)->get()
+                                ),
+
+            // 3. Variabel Untuk tabel "Pengguna Terbaru" di dashboard
+            'recent_users'      => Cache::remember('sa:recent_users',      self::TTL_RECENT, fn() => 
+                                    User::with('roles')->latest('created_at')->limit(6)->get()
+                                ),
+
             'modules'           => Cache::remember('sa:modules_stats',     self::TTL_STATS,  fn() => $this->getModulesStats()),
             'recent_logs'       => AuditLog::with('user')->latest('created_at')->limit(8)->get(),
-            
             'activeImportId'    => $activeImport?->id, 
         ];
 
