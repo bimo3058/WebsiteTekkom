@@ -15,6 +15,12 @@ use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use App\Livewire\Pulse\RequestMonitor;
 
+// Tambahan untuk Pagination & Auth Events
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Facades\Event;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Logout;
+
 class AppServiceProvider extends ServiceProvider
 {
     public function register(): void
@@ -46,7 +52,30 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // =====================================================================
+        // 1. SETUP PAGINATION & AUTO-STATUS ONLINE/OFFLINE
+        // =====================================================================
+        Paginator::useTailwind();
 
+        // Saklar otomatis saat User Login
+        Event::listen(function (Login $event) {
+            $event->user->recordLogin();
+        });
+
+        // Saklar otomatis saat User Logout
+        Event::listen(function (Logout $event) {
+            if ($event->user) {
+                // Gunakan Query Builder murni untuk menghindari cast PHP Object -> true
+                \App\Models\User::where('id', $event->user->id)->update([
+                    'is_online' => \Illuminate\Support\Facades\DB::raw('false')
+                ]);
+            }
+        });
+
+
+        // =====================================================================
+        // 2. SISTEM KEAMANAN & MONITORING BAWAAN
+        // =====================================================================
         if (request()->header('X-Forwarded-Proto') === 'https') {
             \Illuminate\Support\Facades\URL::forceScheme('https');
         }
@@ -72,19 +101,11 @@ class AppServiceProvider extends ServiceProvider
             }
         });
 
+
         // =====================================================================
+        // 3. GATE & PERMISSION SYSTEM
         // FIX: Gate::before() — menghubungkan @can() / @cannot() di Blade
         // dengan sistem permission custom kita (hasPermissionTo).
-        //
-        // TANPA INI:
-        //   @can('banksoal.view')   → SELALU false (Gate tidak kenal)
-        //   @can('banksoal.edit')   → SELALU false
-        //   @can('banksoal.delete') → SELALU false
-        //   Akibatnya: tampilan SELALU menampilkan "Read-Only"
-        //
-        // DENGAN INI:
-        //   @can('banksoal.view') → memanggil $user->hasPermissionTo('banksoal.view')
-        //   yang mengecek tabel user_permissions + role_permissions
         // =====================================================================
         Gate::before(function (User $user, string $ability) {
             // Superadmin bypass semua
@@ -93,8 +114,6 @@ class AppServiceProvider extends ServiceProvider
             }
 
             // Hanya intercept permission format "module.action" (berisi titik)
-            // Permission seperti 'banksoal.view', 'capstone.edit', dll
-            // Biarkan Gate lain (viewPulse, dll) tetap jalan normal
             if (str_contains($ability, '.')) {
                 return $user->hasPermissionTo($ability) ?: null;
             }
@@ -117,6 +136,7 @@ class AppServiceProvider extends ServiceProvider
                 }
             });
         }
+        
         Livewire::component('pulse.request-monitor', RequestMonitor::class);
     }
 }

@@ -30,8 +30,8 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/users', [SuperAdminController::class, 'users'])
             ->name('users.index');
-        Route::get('/users/category/{category}', [SuperAdminController::class, 'usersByCategory'])
-            ->name('users.category');
+        Route::get('/permissions/category/{category}', [SuperAdminController::class, 'usersByCategory'])
+            ->name('permissions.category');
         Route::get('/import-status/{id}', [SuperAdminController::class, 'getImportStatus'])
             ->name('import.status');
         Route::get('/modules', [SuperAdminController::class, 'modules'])->name('modules');
@@ -96,11 +96,19 @@ Route::middleware('auth')->group(function () {
     });
 
     // Global dashboard — pakai DashboardController
-    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::delete('/profile/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/users/online', [\App\Http\Controllers\SuperAdminController::class, 'onlineUsers'])->name('superadmin.users.online');
+    Route::get('/users/suspended', [\App\Http\Controllers\SuperAdminController::class, 'suspendedUsers'])->name('superadmin.users.suspended');
+
+    Route::post('/audit-logs/bulk-delete', [App\Http\Controllers\SuperAdminController::class, 'bulkDeleteAuditLogs'])
+    ->name('superadmin.audit-logs.bulk-delete');
 
     Route::post('/logout', function () {
         $user = auth()->user();

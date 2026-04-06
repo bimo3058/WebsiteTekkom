@@ -18,7 +18,7 @@
             <a href="{{ route('banksoal.rps.dosen.index') }}" class="nav-item">
                 <span class="nav-icon"><i class="fas fa-file-alt"></i></span> Manajemen RPS
             </a>
-            <a href="{{ route('banksoal.banksoal.dosen.index') }}" class="nav-item active">
+            <a href="{{ route('banksoal.soal.dosen.index') }}" class="nav-item active">
                 <span class="nav-icon"><i class="fas fa-database"></i></span> Bank Soal
             </a>
             <a href="{{ route('banksoal.arsip.dosen.index') }}" class="nav-item">
@@ -74,11 +74,11 @@
         {{-- Header Actions — hanya muncul jika punya edit permission --}}
         @can('banksoal.edit')
             <div class="header-actions" style="display:flex; align-items:center; gap:10px;">
-                <a href="{{ route('banksoal.banksoal.dosen.index') }}" class="btn-outline">
+                <a href="{{ route('banksoal.soal.dosen.index') }}" class="btn-outline">
                     <i class="fas fa-paper-plane"></i> Ajukan Soal
                 </a>
                 <div class="btn-split">
-                    <a href="{{ route('banksoal.banksoal.dosen.index') }}" class="btn-primary">
+                    <a href="{{ route('banksoal.soal.dosen.index') }}" class="btn-primary">
                         <i class="fas fa-plus"></i> Buat Soal
                     </a>
                     <button class="btn-divider"><i class="fas fa-chevron-down"></i></button>

@@ -1,249 +1,468 @@
 <x-app-layout>
 <x-sidebar :user="auth()->user()">
-    <div class="min-h-screen bg-slate-50 p-6">
+    <div class="min-h-screen bg-[#F8F9FA] p-8">
         <div class="max-w-full mx-auto">
 
             {{-- Header --}}
-            <div class="mb-6 flex items-center justify-between">
+            <div class="mb-8 flex items-end justify-between">
                 <div>
-                    <h1 class="text-xl font-bold text-slate-800 tracking-tight">Audit Log System</h1>
-                    <p class="text-slate-500 text-[11px] mt-0.5 font-medium">
-                        Total <span class="text-blue-600">{{ $query->total() }}</span> aktivitas tercatat dalam sistem
+                    <h1 class="text-2xl font-semibold text-[#1A1C1E] tracking-tight">Audit Log System</h1>
+                    <p class="text-[#6C757D] text-[12px] mt-1 font-semibold">
+                        Total <span class="text-[#5E53F4] font-medium">{{ number_format($logs->total()) }}</span> aktivitas tercatat dalam sistem
                     </p>
                 </div>
                 <div class="flex items-center gap-3">
                     <button onclick="openBulkDeleteModal()" 
-                        class="inline-flex items-center gap-2 bg-white hover:bg-red-50 text-red-600 font-bold px-3 py-1.5 rounded-lg transition-all text-[11px] border border-red-200 shadow-sm">
-                        <span class="material-symbols-outlined" style="font-size:16px">delete_sweep</span>
+                        class="inline-flex items-center gap-2 bg-white hover:bg-rose-50 text-rose-600 font-medium px-5 py-2.5 rounded-xl transition-all text-[11px] border border-rose-100 shadow-sm uppercase tracking-widest active:scale-95">
+                        <span class="material-symbols-outlined" style="font-size:18px">delete_sweep</span>
                         Hapus Massal
                     </button>
-                    <a href="{{ route('superadmin.dashboard') }}"
-                       class="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-600 font-bold px-3 py-1.5 rounded-lg transition-all text-[11px] border border-slate-200 shadow-sm">
-                        <span class="material-symbols-outlined" style="font-size:16px">dashboard</span>
-                        Dashboard
-                    </a>
                 </div>
             </div>
 
             {{-- Floating Bulk Action Bar --}}
-            <div id="bulkActionBar" class="hidden mb-4 p-3 bg-slate-900 rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300 shadow-lg border border-slate-800">
+            <div id="bulkActionBar" class="hidden mb-6 p-4 bg-[#1A1C1E] rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300 shadow-xl border border-slate-800">
                 <div class="flex items-center gap-4 ml-2">
-                    <div class="flex items-center justify-center w-6 h-6 bg-red-500 rounded-lg">
-                        <span class="material-symbols-outlined text-white" style="font-size: 14px">delete</span>
+                    <div class="flex items-center justify-center w-8 h-8 bg-[#5E53F4] rounded-lg shadow-lg shadow-[#5E53F4]/20">
+                        <span class="material-symbols-outlined text-white" style="font-size: 18px">check_circle</span>
                     </div>
-                    <span class="text-[11px] font-black text-white uppercase tracking-widest">
-                        <span id="selectedCount" class="text-red-400 text-sm mr-1">0</span> Log Terpilih
+                    <span class="text-[13px] font-medium text-white tracking-wide">
+                        <span id="selectedCount" class="text-[#D1BFFF] text-base mr-1">0</span> Logs Selected
                     </span>
                 </div>
-                <div class="flex items-center gap-2">
-                    <button onclick="openBulkDeleteModal()" class="flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white text-[10px] font-black uppercase px-4 py-2 rounded-xl transition-all shadow-sm group">
-                        <span class="material-symbols-outlined group-hover:rotate-12 transition-transform" style="font-size: 16px">delete_forever</span>
+                <div class="flex items-center gap-3">
+                    <button onclick="openBulkDeleteModal()" class="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-medium uppercase tracking-widest px-5 py-2.5 rounded-xl transition-all shadow-sm active:scale-95 group">
+                        <span class="material-symbols-outlined group-hover:rotate-12 transition-transform" style="font-size: 18px">delete_sweep</span>
                         Hapus Terpilih
                     </button>
-                    <div class="w-px h-4 bg-slate-700 mx-1"></div>
-                    <button onclick="deselectAll()" class="text-slate-400 hover:text-white text-[10px] font-bold uppercase px-3 transition-colors">
+                    <div class="w-px h-5 bg-slate-700 mx-1"></div>
+                    <button onclick="deselectAll()" class="text-slate-400 hover:text-white text-[11px] font-medium uppercase tracking-widest px-4 transition-colors">
                         Batal
                     </button>
                 </div>
             </div>
 
             {{-- Filter --}}
-            <div class="bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm">
+            <div class="bg-white border border-[#DEE2E6] rounded-2xl p-5 mb-6 shadow-sm">
                 <form method="GET" action="{{ route('superadmin.audit-logs') }}" id="auditFilterForm">
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-4">
-                        {{-- Row 1 --}}
-                        <div class="md:col-span-3">
-                            <label class="block text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1.5">Modul</label>
-                            <select name="module" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-slate-800 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-xs appearance-none">
-                                <option value="">Semua Modul</option>
-                                @foreach($modules as $mod)
-                                <option value="{{ $mod }}" {{ request('module') === $mod ? 'selected' : '' }}>
-                                    {{ match($mod) {
-                                        'auth' => 'Auth',
-                                        'bank_soal' => 'Bank Soal',
-                                        'capstone' => 'Capstone',
-                                        'eoffice' => 'E-Office',
-                                        'manajemen_mahasiswa' => 'Manajemen Mahasiswa',
-                                        'user_management' => 'User Management',
-                                        default => ucfirst($mod),
-                                    } }}
-                                </option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label class="block text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1.5">Action</label>
-                            <select name="action" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-slate-800 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-xs appearance-none">
-                                <option value="">Semua Action</option>
-                                @foreach($actions as $act)
-                                <option value="{{ $act }}" {{ request('action') === $act ? 'selected' : '' }}>{{ $act }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="md:col-span-3">
-                            <label class="block text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1.5">User</label>
-                            <select name="user_id" class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-slate-800 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-xs appearance-none">
-                                <option value="">Semua User</option>
-                                @foreach($users as $u)
-                                <option value="{{ $u->id }}" {{ request('user_id') == $u->id ? 'selected' : '' }}>{{ $u->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label class="block text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1.5">Dari Tanggal</label>
-                            <input type="date" name="date_from" value="{{ request('date_from') }}"
-                                class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-slate-800 focus:border-blue-400 outline-none transition-all text-xs">
-                        </div>
-
-                        <div class="md:col-span-2">
-                            <label class="block text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1.5">Sampai Tanggal</label>
-                            <input type="date" name="date_to" value="{{ request('date_to') }}"
-                                class="w-full bg-white border border-slate-200 rounded-lg px-3 py-1.5 text-slate-800 focus:border-blue-400 outline-none transition-all text-xs">
-                        </div>
-
-                        {{-- Row 2 --}}
-                        <div class="md:col-span-9">
-                            <label class="block text-slate-400 text-[9px] font-black uppercase tracking-widest mb-1.5">Pencarian Deskripsi</label>
+                    <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
+                        
+                        {{-- Module Filter (Alpine.js) --}}
+                        <div class="md:col-span-3" x-data="{ 
+                            open: false, 
+                            selected: '{{ request('module', '') }}',
+                            modules: { '': 'Semua Modul', @foreach($modules as $mod) '{{ $mod }}': '{{ strtoupper(str_replace('_', ' ', $mod)) }}', @endforeach }
+                        }">
+                            <label class="block text-[#6C757D] text-[10px] font-medium uppercase tracking-tight mb-2 ml-1">Modul System</label>
                             <div class="relative">
-                                <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" style="font-size:16px">search</span>
-                                <input type="text" name="search" value="{{ request('search') }}"
-                                    placeholder="Cari kata kunci aktivitas..."
-                                    class="w-full bg-white border border-slate-200 rounded-lg pl-9 pr-3 py-1.5 text-slate-800 placeholder-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-100 outline-none transition-all text-xs">
+                                <input type="hidden" name="module" :value="selected">
+                                <button type="button" @click="open = !open" @click.away="open = false"
+                                    class="w-full flex items-center justify-between bg-[#F8F9FA] border border-[#DEE2E6] rounded-xl px-4 py-2.5 text-xs text-[#1A1C1E] focus:border-[#5E53F4] transition-all outline-none font-medium">
+                                    <span x-text="modules[selected]"></span>
+                                    <span class="material-symbols-outlined text-[#ADB5BD] transition-transform" :class="open ? 'rotate-180' : ''" style="font-size:18px">expand_more</span>
+                                </button>
+                                <div x-show="open" x-transition class="absolute left-0 top-full mt-2 w-full bg-white border border-[#DEE2E6] rounded-xl shadow-2xl z-[50] overflow-hidden py-1">
+                                    <template x-for="(label, value) in modules" :key="value">
+                                        <button type="button" @click="selected = value; open = false; $nextTick(() => $el.closest('form').submit())" 
+                                            class="w-full text-left px-4 py-2 text-xs transition-colors hover:bg-slate-50"
+                                            :class="selected === value ? 'text-[#5E53F4] font-medium bg-[#5E53F4]/5' : 'text-[#495057]'">
+                                            <span x-text="label"></span>
+                                        </button>
+                                    </template>
+                                </div>
                             </div>
                         </div>
 
-                        <div class="md:col-span-3 flex items-end gap-2">
-                            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white font-bold py-1.5 px-3 rounded-lg transition-all text-[11px] shadow-sm">
+                        {{-- Action Filter (Alpine.js) --}}
+                        <div class="md:col-span-2" x-data="{ 
+                            open: false, 
+                            selected: '{{ request('action', '') }}',
+                            actions: { '': 'Semua Action', @foreach($actions as $act) '{{ $act }}': '{{ strtoupper($act) }}', @endforeach }
+                        }">
+                            <label class="block text-[#6C757D] text-[10px] font-medium uppercase tracking-tight mb-2 ml-1">Tipe Aksi</label>
+                            <div class="relative">
+                                <input type="hidden" name="action" :value="selected">
+                                <button type="button" @click="open = !open" @click.away="open = false"
+                                    class="w-full flex items-center justify-between bg-[#F8F9FA] border border-[#DEE2E6] rounded-xl px-4 py-2.5 text-xs text-[#1A1C1E] focus:border-[#5E53F4] transition-all outline-none font-medium">
+                                    <span x-text="actions[selected]"></span>
+                                    <span class="material-symbols-outlined text-[#ADB5BD] transition-transform" :class="open ? 'rotate-180' : ''" style="font-size:18px">expand_more</span>
+                                </button>
+                                <div x-show="open" x-transition class="absolute left-0 top-full mt-2 w-full bg-white border border-[#DEE2E6] rounded-xl shadow-2xl z-[50] overflow-hidden py-1">
+                                    <template x-for="(label, value) in actions" :key="value">
+                                        <button type="button" @click="selected = value; open = false; $nextTick(() => $el.closest('form').submit())" 
+                                            class="w-full text-left px-4 py-2 text-xs transition-colors hover:bg-slate-50"
+                                            :class="selected === value ? 'text-[#5E53F4] font-medium bg-[#5E53F4]/5' : 'text-[#495057]'">
+                                            <span x-text="label"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- User Filter (Alpine.js) --}}
+                        <div class="md:col-span-3" x-data="{ 
+                            open: false, 
+                            selected: '{{ request('user_id', '') }}',
+                            users: { '': 'Semua User', @foreach($users as $u) '{{ $u->id }}': '{{ $u->name }}', @endforeach }
+                        }">
+                            <label class="block text-[#6C757D] text-[10px] font-medium uppercase tracking-tight mb-2 ml-1">Pelaku (User)</label>
+                            <div class="relative">
+                                <input type="hidden" name="user_id" :value="selected">
+                                <button type="button" @click="open = !open" @click.away="open = false"
+                                    class="w-full flex items-center justify-between bg-[#F8F9FA] border border-[#DEE2E6] rounded-xl px-4 py-2.5 text-xs text-[#1A1C1E] focus:border-[#5E53F4] transition-all outline-none font-medium">
+                                    <span x-text="users[selected]" class="truncate mr-2"></span>
+                                    <span class="material-symbols-outlined text-[#ADB5BD] transition-transform" :class="open ? 'rotate-180' : ''" style="font-size:18px">expand_more</span>
+                                </button>
+                                <div x-show="open" x-transition class="absolute left-0 top-full mt-2 w-full bg-white border border-[#DEE2E6] rounded-xl shadow-2xl z-[50] overflow-hidden py-1 max-h-60 overflow-y-auto scrollbar-thin">
+                                    <template x-for="(label, value) in users" :key="value">
+                                        <button type="button" @click="selected = value; open = false; $nextTick(() => $el.closest('form').submit())" 
+                                            class="w-full text-left px-4 py-2 text-xs transition-colors hover:bg-slate-50"
+                                            :class="selected === value ? 'text-[#5E53F4] font-medium bg-[#5E53F4]/5' : 'text-[#495057]'">
+                                            <span x-text="label"></span>
+                                        </button>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Date From --}}
+                        <div class="md:col-span-2">
+                            <label class="block text-[#6C757D] text-[10px] font-medium uppercase tracking-tight mb-2 ml-1">Dari Tanggal</label>
+                            <input type="date" name="date_from" value="{{ request('date_from') }}"
+                                class="w-full bg-[#F8F9FA] border border-[#DEE2E6] rounded-xl px-4 py-2.5 text-[#1A1C1E] focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4] outline-none transition-all text-xs font-medium">
+                        </div>
+
+                        {{-- Date To --}}
+                        <div class="md:col-span-2">
+                            <label class="block text-[#6C757D] text-[10px] font-medium uppercase tracking-tight mb-2 ml-1">Sampai Tanggal</label>
+                            <input type="date" name="date_to" value="{{ request('date_to') }}"
+                                class="w-full bg-[#F8F9FA] border border-[#DEE2E6] rounded-xl px-4 py-2.5 text-[#1A1C1E] focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4] outline-none transition-all text-xs font-medium">
+                        </div>
+
+                        {{-- Search --}}
+                        <div class="md:col-span-9">
+                            <label class="block text-[#6C757D] text-[10px] font-medium uppercase tracking-tight mb-2 ml-1">Pencarian Deskripsi</label>
+                            <div class="relative group">
+                                <span class="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-[#ADB5BD] group-focus-within:text-[#5E53F4] transition-colors" style="font-size:18px">search</span>
+                                <input type="text" name="search" value="{{ request('search') }}"
+                                    placeholder="Cari kata kunci aktivitas..."
+                                    class="w-full bg-[#F8F9FA] border border-[#DEE2E6] rounded-xl pl-11 pr-4 py-2.5 text-[#1A1C1E] placeholder-[#ADB5BD] focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4] outline-none transition-all text-xs">
+                            </div>
+                        </div>
+
+                        {{-- Action Buttons --}}
+                        <div class="md:col-span-3 flex items-end gap-2 pb-0.5">
+                            <button type="submit" class="flex-1 bg-[#5E53F4] hover:bg-[#4e44e0] active:scale-[0.98] text-white font-medium py-2.5 px-4 rounded-xl transition-all text-xs shadow-sm shadow-[#5E53F4]/20 uppercase tracking-widest">
                                 Filter
                             </button>
-                            <a href="{{ route('superadmin.audit-logs') }}" class="p-1.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-lg transition-all">
-                                <span class="material-symbols-outlined" style="font-size:18px">refresh</span>
+                            <a href="{{ route('superadmin.audit-logs') }}" 
+                                class="p-2.5 bg-[#F8F9FA] border border-[#DEE2E6] hover:bg-[#E9ECEF] text-[#6C757D] rounded-xl transition-all flex items-center justify-center">
+                                <span class="material-symbols-outlined" style="font-size:20px">refresh</span>
                             </a>
                         </div>
                     </div>
                 </form>
             </div>
 
+            @php
+                // Mengambil data real-time untuk dashboard log
+                $allOnline = \App\Models\User::with('roles')->where('is_online', \Illuminate\Support\Facades\DB::raw('true'))->get();
+                $allSuspended = \App\Models\User::with('roles')->whereNotNull('suspended_at')->get();
+
+                // Limit 3 data agar tetap compact seperti di Manajemen User
+                $onlineUsers = $allOnline->take(3);
+                $suspendedUsers = $allSuspended->take(3);
+                
+                $hasOnline = $allOnline->isNotEmpty();
+                $hasSuspended = $allSuspended->isNotEmpty();
+            @endphp
+
+            <div class="grid grid-cols-1 @if($hasOnline && $hasSuspended) md:grid-cols-2 @endif gap-5 mb-6">
+                
+                {{-- 1. Card Online Users --}}
+                @if($hasOnline)
+                <div class="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-4 shadow-sm h-full">
+                    <div class="flex items-center justify-between mb-4 px-1">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                            <h2 class="text-[11px] font-bold text-emerald-800 uppercase tracking-widest">
+                                Online ({{ $allOnline->count() }})
+                            </h2>
+                        </div>
+                        {{-- Redirect ke halaman online blade --}}
+                        <a href="{{ route('superadmin.users.online') }}" class="text-[9px] font-bold text-emerald-600 hover:underline uppercase tracking-widest">View All &rarr;</a>
+                    </div>
+
+                    <div class="space-y-2">
+                        @foreach($onlineUsers as $onlineUser)
+                            @php 
+                                $isSuperadmin = $onlineUser->hasRole('superadmin');
+                                $initials = strtoupper(substr($onlineUser->name, 0, 1));
+                            @endphp
+                            <div class="bg-white border border-emerald-100/50 rounded-xl p-2 flex items-center justify-between gap-3 hover:border-emerald-200 transition-colors">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="relative shrink-0">
+                                        <x-ui.avatar size="xs" :src="$onlineUser->avatar_url" :fallback="new \Illuminate\Support\HtmlString($isSuperadmin ? '<span class=\'material-symbols-outlined !text-[14px]\'>admin_panel_settings</span>' : $initials)" class="!w-8 !h-8 {{ $isSuperadmin ? '!bg-[#F1E9FF] !text-[#5E53F4]' : '!bg-[#F8F9FA] !text-[#6C757D]' }}" />
+                                        <span class="absolute bottom-0 right-0 size-2 bg-emerald-500 border border-white rounded-full"></span>
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-[11px] font-medium text-slate-800 truncate tracking-tight">{{ $onlineUser->name }}</p>
+                                        <p class="text-[9px] text-slate-500 uppercase tracking-tighter">{{ $onlineUser->roles->first()->name ?? 'User' }}</p>
+                                    </div>
+                                </div>
+                                {{-- Aksi Cepat: Force Logout --}}
+                                <button type="button" onclick="openForceLogoutModal({ id: '{{ $onlineUser->id }}', name: '{{ $onlineUser->name }}' })" class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
+                                    <span class="material-symbols-outlined" style="font-size:14px">logout</span>
+                                </button>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+                {{-- 2. Card Suspended Users --}}
+                @if($hasSuspended)
+                <div class="bg-rose-50/50 border border-rose-100 rounded-2xl p-4 shadow-sm h-full">
+                    <div class="flex items-center justify-between mb-4 px-1">
+                        <div class="flex items-center gap-2">
+                            <div class="w-2 h-2 rounded-full bg-rose-500"></div>
+                            <h2 class="text-[11px] font-medium text-rose-800 uppercase tracking-widest">
+                                Suspended ({{ $allSuspended->count() }})
+                            </h2>
+                        </div>
+                        {{-- Redirect ke halaman suspended blade --}}
+                        <a href="{{ route('superadmin.users.suspended') }}" class="text-[9px] font-medium text-rose-600 hover:underline uppercase tracking-widest">View All &rarr;</a>
+                    </div>
+
+                    <div class="space-y-2">
+                        @foreach($suspendedUsers as $suspendedUser)
+                            @php 
+                                $isSuperadmin = $suspendedUser->hasRole('superadmin');
+                                $initials = strtoupper(substr($suspendedUser->name, 0, 1));
+                            @endphp
+                            <div class="bg-white border border-rose-100/50 rounded-xl p-2 flex items-center justify-between gap-3 hover:border-rose-200 transition-colors">
+                                <div class="flex items-center gap-2.5 min-w-0">
+                                    <div class="relative shrink-0 opacity-60 grayscale">
+                                        <x-ui.avatar size="xs" :src="$suspendedUser->avatar_url" :fallback="new \Illuminate\Support\HtmlString($isSuperadmin ? '<span class=\'material-symbols-outlined !text-[14px]\'>admin_panel_settings</span>' : $initials)" class="!w-8 !h-8 {{ $isSuperadmin ? '!bg-[#F1E9FF] !text-[#5E53F4]' : '!bg-[#F8F9FA] !text-[#6C757D]' }}" />
+                                    </div>
+                                    <div class="min-w-0">
+                                        <p class="text-[11px] font-medium text-slate-800 truncate tracking-tight line-through decoration-rose-200">{{ $suspendedUser->name }}</p>
+                                        <p class="text-[9px] text-rose-500 font-medium tracking-tighter truncate">{{ Str::limit($suspendedUser->suspension_reason ?? 'No reason', 20) }}</p>
+                                    </div>
+                                </div>
+                                {{-- Aksi Cepat: Unsuspend --}}
+                                <form method="POST" action="{{ route('superadmin.users.unsuspend', $suspendedUser) }}" class="m-0">
+                                    @csrf
+                                    <button type="submit" class="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors">
+                                        <span class="material-symbols-outlined" style="font-size:14px">lock_open</span>
+                                    </button>
+                                </form>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+
+            </div>
+
             {{-- Table --}}
-            <div class="bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+            <div class="bg-white border border-[#DEE2E6] rounded-2xl overflow-hidden shadow-sm">
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse">
                         <thead>
-                            <tr class="border-b border-slate-200 bg-slate-50/50">
-                                <th class="px-4 py-3 text-left w-10">
+                            <tr class="border-b border-[#DEE2E6] bg-[#F8F9FA]">
+                                <th class="px-5 py-4 text-left w-12">
                                     <input type="checkbox" id="selectAllLogs" 
-                                        class="w-4 h-4 rounded border-slate-300 text-red-600 focus:ring-red-500 focus:ring-offset-0 transition-all cursor-pointer">
+                                        class="size-4 rounded border-[#DEE2E6] text-[#5E53F4] focus:ring-[#5E53F4]/20 transition-all cursor-pointer">
                                 </th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Waktu</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">User</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Modul</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Action</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Deskripsi</th>
-                                <th class="px-4 py-3 text-left text-[10px] font-bold text-slate-400 uppercase tracking-widest">Subject</th>
-                             </tr>
+                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Timestamp</th>
+                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">User</th>
+                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Module</th>
+                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Action</th>
+                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Description</th>
+                                <th class="px-5 py-4 text-center text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">User Status</th>
+                            </tr>
                         </thead>
-                        <tbody class="divide-y divide-slate-100">
-                            @forelse($query as $log)
-                            <tr class="hover:bg-slate-50/80 transition-colors">
-                                <td class="px-4 py-3">
+                        <tbody class="divide-y divide-[#F8F9FA]">
+                            @forelse($logs as $log)
+                            <tr class="hover:bg-[#F8F9FA]/50 transition-colors group">
+                                <td class="px-5 py-4">
                                     <input type="checkbox" name="selected_logs[]" value="{{ $log->id }}" 
-                                        class="log-checkbox w-4 h-4 rounded border-slate-300 text-red-600 focus:ring-red-500 focus:ring-offset-0 transition-all cursor-pointer">
-                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
+                                        class="log-checkbox size-4 rounded border-[#DEE2E6] text-[#5E53F4] focus:ring-[#5E53F4]/20 transition-all cursor-pointer">
+                                </td>
+                                
+                                {{-- Timestamp --}}
+                                <td class="px-5 py-4">
                                     <div class="flex flex-col">
-                                        <span class="text-slate-700 font-bold text-[11px]">{{ $log->created_at->format('d/m/Y') }}</span>
-                                        <span class="text-slate-400 text-[10px] italic">{{ $log->created_at->format('H:i:s') }}</span>
+                                        <span class="text-[#1A1C1E] font-medium text-[11px]">{{ $log->created_at->format('d M Y') }}</span>
+                                        <span class="text-[#6C757D] font-medium text-[10px]">{{ $log->created_at->format('H:i:s') }}</span>
                                     </div>
-                                 </td>
-                                <td class="px-4 py-3">
-                                    @if($log->user)
-                                        <div class="flex flex-col">
-                                            <span class="text-slate-800 font-bold text-[11px]">{{ $log->user->name }}</span>
-                                            <span class="text-slate-400 text-[10px]">{{ $log->user->email }}</span>
-                                        </div>
-                                    @else
-                                        <span class="text-slate-300 text-[10px] italic">System / Deleted</span>
-                                    @endif
-                                 </td>
-                                <td class="px-4 py-3">
+                                </td>
+
+                                {{-- Initiator (User) --}}
+                                <td class="px-5 py-4">
+                                    <div class="flex items-center gap-3">
+                                        @if($log->user)
+                                            @php
+                                                $user = $log->user;
+                                                $isSuperadmin = $user->hasRole('superadmin');
+                                                
+                                                $avatarWrapperStyle = $isSuperadmin 
+                                                    ? 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]' 
+                                                    : 'bg-[#F8F9FA] text-[#6C757D] border-[#DEE2E6]';
+                                            @endphp
+
+                                            <div class="size-9 rounded-full flex items-center justify-center border {{ $avatarWrapperStyle }} flex-shrink-0 overflow-hidden">
+                                                @include('components.ui.avatar', [
+                                                    'src' => $user->avatar_url, 
+                                                    'fallback' => $isSuperadmin 
+                                                        ? '<span class="material-symbols-outlined !text-[18px] fill-1">admin_panel_settings</span>' 
+                                                        : '<span class="text-[11px] font-medium uppercase">'.substr($user->name, 0, 1).'</span>',
+                                                    'size' => 'sm',
+                                                    'class' => '' 
+                                                ])
+                                            </div>
+
+                                            <div class="min-w-0 flex-1">
+                                                <p class="text-[#1A1C1E] text-[11px] font-medium truncate tracking-tight">{{ $user->name }}</p>
+                                                <p class="text-[#6C757D] text-[10px] truncate">{{ $user->email }}</p>
+                                            </div>
+                                        @else
+                                            <div class="size-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center flex-shrink-0">
+                                                <span class="material-symbols-outlined text-slate-400 text-[18px]">settings_suggest</span>
+                                            </div>
+                                            <div class="min-w-0 flex-1">
+                                                <p class="text-[#1A1C1E] text-[11px] font-medium truncate tracking-tight">System</p>
+                                                <p class="text-[#6C757D] text-[10px] truncate">system@app</p>
+                                            </div>
+                                        @endif
+                                    </div>
+                                </td>
+
+                                {{-- Module --}}
+                                <td class="px-5 py-4">
                                     @php
-                                        $moduleColor = match($log->module) {
-                                            'auth'                 => 'bg-green-50 text-green-600 border-green-100',
-                                            'bank_soal'            => 'bg-yellow-50 text-yellow-600 border-yellow-100',
-                                            'capstone'             => 'bg-cyan-50 text-cyan-600 border-cyan-100',
-                                            'eoffice'              => 'bg-purple-50 text-purple-600 border-purple-100',
-                                            'manajemen_mahasiswa'  => 'bg-orange-50 text-orange-600 border-orange-100',
-                                            'user_management'      => 'bg-blue-50 text-blue-600 border-blue-100',
-                                            default                => 'bg-slate-50 text-slate-500 border-slate-200',
+                                        $moduleStyle = match($log->module ?? '') {
+                                            'auth'                 => 'bg-emerald-50 text-emerald-700',
+                                            'bank_soal'            => 'bg-amber-50 text-amber-700',
+                                            'capstone'             => 'bg-sky-50 text-sky-700',
+                                            'eoffice'              => 'bg-purple-50 text-purple-700',
+                                            'user_management'      => 'bg-indigo-50 text-indigo-700',
+                                            default                => 'bg-slate-100 text-slate-600',
                                         };
                                     @endphp
-                                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black border uppercase {{ $moduleColor }}">
-                                        {{ str_replace('_', ' ', $log->module) }}
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-widest {{ $moduleStyle }}">
+                                        {{ strtoupper(str_replace('_', ' ', $log->module ?? 'N/A')) }}
                                     </span>
-                                 </td>
-                                <td class="px-4 py-3">
+                                </td>
+
+                                {{-- Action --}}
+                                <td class="px-5 py-4">
                                     @php
-                                        $actionColor = match($log->action) {
-                                            'CREATE' => 'text-green-600 font-bold',
-                                            'UPDATE' => 'text-yellow-600 font-bold',
-                                            'DELETE' => 'text-red-600 font-bold',
-                                            'VIEW'   => 'text-blue-600 font-bold',
-                                            'LOGIN'  => 'text-purple-600 font-bold',
-                                            default  => 'text-slate-500 font-bold',
+                                        $actionColor = match(strtolower($log->action ?? '')) {
+                                            'create' => 'bg-emerald-50 text-emerald-700',
+                                            'update' => 'bg-amber-50 text-amber-700',
+                                            'delete' => 'bg-rose-50 text-rose-700',
+                                            'login'  => 'bg-purple-50 text-purple-700',
+                                            'logout' => 'bg-slate-100 text-slate-600',
+                                            'view'   => 'bg-sky-50 text-sky-700',
+                                            default  => 'bg-slate-100 text-slate-600'
                                         };
                                     @endphp
-                                    <span class="text-[10px] tracking-tight {{ $actionColor }} uppercase">
-                                        {{ $log->action }}
+                                    <span class="px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-widest {{ $actionColor }}">
+                                        {{ strtoupper($log->action ?? 'N/A') }}
                                     </span>
-                                 </td>
-                                <td class="px-4 py-3">
-                                    <p class="text-slate-600 text-[11px] leading-relaxed max-w-xs line-clamp-2" title="{{ $log->description }}">
-                                        {{ $log->description }}
+                                </td>
+
+                                {{-- Description --}}
+                                <td class="px-5 py-4">
+                                    <p class="text-[#1A1C1E] font-medium text-[12px] max-w-xs line-clamp-2 leading-relaxed" title="{{ $log->description ?? '-' }}">
+                                        {{ $log->description ?? '-' }}
                                     </p>
-                                 </td>
-                                <td class="px-4 py-3">
-                                    @if($log->subject_type)
-                                        <div class="flex flex-col">
-                                            <span class="text-slate-500 text-[10px] font-medium">{{ class_basename($log->subject_type) }}</span>
-                                            <span class="text-slate-300 text-[9px]">ID: #{{ $log->subject_id }}</span>
-                                        </div>
+                                </td>
+    
+                                {{-- User Status --}}
+                                <td class="px-5 py-4 text-center">
+                                    @if($log->user)
+                                        @php
+                                            $isOnline = $log->user->is_online;
+                                            $statusStyle = $isOnline 
+                                                ? 'bg-emerald-50 text-emerald-700' 
+                                                : 'bg-slate-100 text-slate-600';
+                                            $statusText = $isOnline ? 'ONLINE' : 'OFFLINE';
+                                        @endphp
+                                        <span class="px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-widest {{ $statusStyle }}">
+                                            {{ $statusText }}
+                                        </span>
                                     @else
-                                        <span class="text-slate-200 text-[10px]">—</span>
+                                        <span class="px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-widest bg-slate-50 text-slate-400">
+                                            SYSTEM
+                                        </span>
                                     @endif
-                                 </td>
-                             </tr>
+                                </td>
+                            </tr>
                             @empty
-                             <tr>
-                                <td colspan="7" class="px-6 py-10 text-center text-slate-400 text-[11px] italic">
-                                    Tidak ada catatan aktivitas yang ditemukan.
-                                 </td>
-                             </tr>
+                            <tr>
+                                <td colspan="7" class="px-6 py-16 text-center">
+                                    <div class="flex flex-col items-center gap-3">
+                                        <span class="material-symbols-outlined text-[#DEE2E6]" style="font-size: 56px">history</span>
+                                        <p class="text-[#ADB5BD] text-xs font-medium uppercase tracking-widest">Tidak ada audit logs</p>
+                                    </div>
+                                </td>
+                            </tr>
                             @endforelse
                         </tbody>
-                     </table>
+                    </table>
                 </div>
             </div>
 
             {{-- Pagination --}}
-            <div class="mt-6" id="paginationWrapper">
-                {{ $query->links() }}
+            <div id="paginationWrapper" class="mt-8 w-full border-t border-[#DEE2E6] pt-5">
+                {{ $logs->links() }}
             </div>
 
         </div>
+
+        {{-- Modals from User Management (Reused here for Active User Actions) --}}
+        @include('superadmin.users._modal_force_logout')
+        @include('superadmin.users._modal_suspend')
+
+        {{-- Modal Bulk Delete --}}
+        <div id="modalBulkDeleteAudit" class="hidden fixed inset-0 bg-[#1A1C1E]/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+            <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full animate-in fade-in zoom-in-95 duration-300">
+                <div class="px-6 py-5 border-b border-[#DEE2E6] flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center border border-rose-100">
+                        <span class="material-symbols-outlined text-rose-600" style="font-size:20px">warning</span>
+                    </div>
+                    <h3 class="text-lg font-medium text-[#1A1C1E]">Hapus Audit Logs?</h3>
+                </div>
+
+                <div class="px-6 py-5">
+                    <p class="text-[#1A1C1E] text-sm font-medium mb-1">Anda akan menghapus <span id="selectedCountText" class="font-medium text-rose-600">0</span> log.</p>
+                    <p class="text-[#6C757D] text-xs leading-relaxed">Tindakan ini tidak dapat dibatalkan. Pastikan Anda yakin sebelum melanjutkan penghapusan permanen.</p>
+                </div>
+
+                <div class="px-6 py-4 bg-[#F8F9FA] rounded-b-2xl flex gap-3 border-t border-[#DEE2E6]">
+                    <button onclick="closeModal('modalBulkDeleteAudit')" 
+                        class="flex-1 bg-white hover:bg-slate-50 border border-[#DEE2E6] text-[#6C757D] font-medium py-2.5 px-4 rounded-xl transition-all text-[11px] uppercase tracking-widest shadow-sm">
+                        Batal
+                    </button>
+                    <form id="formBulkDeleteAudit" method="POST" action="{{ route('superadmin.audit-logs.bulk-delete') }}" class="flex-1">
+                        @csrf
+                        <div id="selectedIdsContainer"></div>
+                        <button type="submit" 
+                            class="w-full bg-rose-500 hover:bg-rose-600 text-white font-medium py-2.5 px-4 rounded-xl transition-all text-[11px] uppercase tracking-widest shadow-sm shadow-rose-500/20 active:scale-95">
+                            Hapus
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
 
-    {{-- Modal Bulk Delete --}}
-    @include('superadmin.audit-logs._modal_bulk_delete')
-
     <script>
-    // ============================================
-    // BULK DELETE LOGIC
-    // ============================================
-    let selectedLogs = new Set();
-    
+    const selectedLogs = new Set();
+
     function updateBulkBar() {
         const checkboxes = document.querySelectorAll('.log-checkbox:checked');
         const bulkBar = document.getElementById('bulkActionBar');
@@ -276,10 +495,7 @@
         const selectedIds = Array.from(document.querySelectorAll('.log-checkbox:checked')).map(cb => cb.value);
         const container = document.getElementById('selectedIdsContainer');
         
-        // Clear existing hidden inputs
         container.innerHTML = '';
-        
-        // Add selected IDs as hidden inputs
         selectedIds.forEach(id => {
             const input = document.createElement('input');
             input.type = 'hidden';
@@ -288,26 +504,14 @@
             container.appendChild(input);
         });
         
-        // Update selected count text in modal
         const selectedCountSpan = document.getElementById('selectedCountText');
         if (selectedCountSpan) selectedCountSpan.textContent = selectedIds.length;
         
-        // Disable "selected" radio button if no logs selected
-        const deleteSelectedRadio = document.getElementById('deleteSelectedRadio');
-        if (deleteSelectedRadio) {
-            deleteSelectedRadio.disabled = selectedIds.length === 0;
-            if (selectedIds.length === 0) {
-                deleteSelectedRadio.parentElement.classList.add('opacity-50');
-            } else {
-                deleteSelectedRadio.parentElement.classList.remove('opacity-50');
-            }
-        }
-        
         openModal('modalBulkDeleteAudit');
     }
-    
+
     // ============================================
-    // MODAL CORE FUNCTIONS
+    // MODAL CONTROL & ACTIVE USERS ACTION 
     // ============================================
     function openModal(id) { 
         const modal = document.getElementById(id);
@@ -324,33 +528,40 @@
             document.body.style.overflow = ''; 
         }
     }
+
+    function openForceLogoutModal(data) {
+        document.getElementById('formForceLogout').action = `/superadmin/users/${data.id}/force-logout`;
+        document.getElementById('logoutTargetName').textContent = data.name;
+        openModal('modalForceLogout');
+    }
+
+    function openSuspendModal(data) {
+        const form = document.getElementById('formSuspend') || document.querySelector('form[action*="suspend"]');
+        if(form) form.action = `/superadmin/users/${data.id}/suspend`;
+        const nameEl = document.getElementById('suspendTargetName');
+        if(nameEl) nameEl.textContent = data.name;
+        openModal('modalSuspend');
+    }
     
     // ============================================
     // INITIALIZATION
     // ============================================
     document.addEventListener('DOMContentLoaded', function() {
-        // Select All functionality
-        const selectAll = document.getElementById('selectAllLogs');
-        selectAll?.addEventListener('change', function() {
+        document.getElementById('selectAllLogs')?.addEventListener('change', function() {
             document.querySelectorAll('.log-checkbox').forEach(cb => cb.checked = this.checked);
             updateBulkBar();
         });
         
-        // Individual checkbox change
         document.addEventListener('change', function(e) {
-            if (e.target.classList.contains('log-checkbox')) {
-                updateBulkBar();
-            }
+            if (e.target.classList.contains('log-checkbox')) updateBulkBar();
         });
         
-        // Auto submit on select change
         ['select[name="module"]', 'select[name="action"]', 'select[name="user_id"]'].forEach(selector => {
             document.querySelector(selector)?.addEventListener('change', function () {
                 this.form.submit();
             });
         });
         
-        // Pagination AJAX Helper
         document.addEventListener('click', function (e) {
             const link = e.target.closest('#paginationWrapper a');
             if (!link) return;
@@ -370,10 +581,9 @@
             form.submit();
         });
         
-        // Escape key to close modal
         document.addEventListener('keydown', function(e) { 
             if (e.key === 'Escape') {
-                closeModal('modalBulkDeleteAudit');
+                ['modalBulkDeleteAudit', 'modalForceLogout', 'modalSuspend'].forEach(closeModal);
             }
         });
     });

@@ -29,3 +29,16 @@
         </div>
     </div>
 </div>
+<script>
+    if (typeof window.openForceLogoutModal !== 'function') {
+        window.openForceLogoutModal = function(data) {
+            const form = document.getElementById('formForceLogout');
+            if(form) form.action = `/superadmin/users/${data.id}/force-logout`;
+            
+            const nameEl = document.getElementById('logoutTargetName');
+            if(nameEl) nameEl.textContent = data.name;
+            
+            if(typeof window.openModal === 'function') window.openModal('modalForceLogout');
+        };
+    }
+</script>

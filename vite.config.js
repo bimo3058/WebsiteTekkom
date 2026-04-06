@@ -8,10 +8,4 @@ export default defineConfig({
             refresh: true,
         }),
     ],
-    server: {
-        host: "0.0.0.0", // Membuka akses agar IP lain (HP) bisa konek
-        hmr: {
-            host: "192.168.1.102", // GANTI dengan IP laptop kamu yang ada di ipconfig
-        },
-    },
 });

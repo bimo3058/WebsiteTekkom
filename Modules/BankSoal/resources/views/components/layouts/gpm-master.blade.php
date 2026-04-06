@@ -37,7 +37,8 @@
         </div>
         
         <nav class="nav flex-column mb-auto">
-            <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.dashboard') ? 'active' : '' }}" href="{{ route('banksoal.dashboard') }}">
+            <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.dashboard') ? 'active' : '' }}" 
+            href="{{ route('banksoal.dashboard') }}">
                 <i class="fas fa-home icon-width me-2"></i> Home
             </a>
             <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.rps.gpm.validasi-rps*') ? 'active' : '' }}" href="{{ route('banksoal.rps.gpm.validasi-rps') ?? '#' }}">

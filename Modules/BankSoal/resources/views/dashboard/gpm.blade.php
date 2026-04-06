@@ -137,7 +137,11 @@
                                 </td>
                                 <td><span class="text-muted" style="font-size: 0.9rem;">5 Hari lagi</span></td>
                                 <td class="text-end">
+<<<<<<< Updated upstream
                                     <a href="{{ route('banksoal.rps.gpm.validasi-rps') }}" class="btn text-white rounded-3 px-3 py-2 fw-semibold text-decoration-none" style="background-color: #2563eb; font-size: 0.8rem;">Review Sekarang</a>
+=======
+                                    <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', ['rpsId' => 1]) }}" class="btn text-white rounded-3 px-3 py-2 fw-semibold text-decoration-none" style="background-color: #2563eb; font-size: 0.8rem;">Review Sekarang</a>
+>>>>>>> Stashed changes
                                 </td>
                             </tr>
                         </tbody>
