@@ -97,31 +97,42 @@
         class="w-full flex items-center justify-between px-3 py-3 hover:bg-slate-50/80 transition-all text-left">
 
         <div class="flex items-center gap-3 flex-1 min-w-0">
-            {{-- Avatar Section - Resized to 8x8 --}}
+            {{-- Avatar Section - Dikembalikan ke style asli dengan pembungkus div --}}
             @php
-                $avatarStyle = match(true) {
-                    $isSuperadmin => 'bg-purple-600 text-white border-purple-700 shadow-sm',
-                    $hasNoRole => 'bg-rose-100 text-rose-600 border-rose-200',
-                    default => 'bg-slate-100 text-slate-500 border-slate-200',
+                // Logika warna background, text, dan border asli dari desainmu
+                $avatarWrapperStyle = match(true) {
+                    $isSuperadmin => 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF] shadow-sm',
+                    $hasNoRole    => 'bg-[#FEF2F2] text-[#EF4444] border-[#FEE2E2]',
+                    default       => 'bg-[#F8F9FA] text-[#6C757D] border-[#DEE2E6]',
                 };
             @endphp
 
-            <div class="w-8 h-8 rounded-md flex items-center justify-center border {{ $avatarStyle }} flex-shrink-0">
-                @if($isSuperadmin)
-                    <span class="material-symbols-outlined" style="font-size: 16px; font-variation-settings: 'FILL' 1;">
-                        admin_panel_settings
-                    </span>
-                @elseif($hasNoRole)
-                    <span class="material-symbols-outlined" style="font-size: 16px;">priority_high</span>
-                @else
-                    <span class="text-[10px] font-black uppercase">{{ substr($user->name, 0, 1) }}</span>
-                @endif
+            {{-- Div Pembungkus Asli (Mengembalikan Bulatan dan Border) --}}
+            <div class="w-10 h-10 rounded-full flex items-center justify-center border {{ $avatarWrapperStyle }} flex-shrink-0 overflow-hidden">
+                
+                @include('components.ui.avatar', [
+                    // Ambil URL foto dari user
+                    'src' => $user->avatar_url, 
+                    
+                    // Logika Fallback Asli: Jika Superadmin tampilkan icon shield, jika tidak tampilkan inisial
+                    'fallback' => $isSuperadmin 
+                        ? '<span class="material-symbols-outlined !text-[16px] fill-1">admin_panel_settings</span>' 
+                        : ($hasNoRole 
+                            ? '<span class="material-symbols-outlined !text-[16px]">priority_high</span>'
+                            : '<span class="text-[10px] font-semibold uppercase">'.substr($user->name, 0, 1).'</span>'),
+                        
+                    // Gunakan size 'sm' di komponen (size-9) agar pas di dalam pembungkus w-8
+                    'size' => 'sm', 
+                    
+                    // Kosongkan class komponen agar tidak bentrok dengan pembungkus
+                    'class' => '' 
+                ])
             </div>
 
             <div class="flex-1 min-w-0">
                 {{-- Name & Email Line --}}
                 <div class="flex items-center gap-1.5 mb-1">
-                    <span class="font-bold text-xs tracking-tight {{ $hasNoRole ? 'text-rose-700' : ($isSuperadmin ? 'text-purple-900' : 'text-slate-800') }}">
+                    <span class="font-semibold text-xs tracking-tight {{ $hasNoRole ? 'text-rose-700' : ($isSuperadmin ? 'text-purple-900' : 'text-slate-800') }}">
                         {{ $user->name }}
                     </span>
                     @if($isSuperadmin)
@@ -130,59 +141,63 @@
                     <span class="text-slate-400 text-[10px] font-medium truncate">| {{ $user->email }}</span>
                 </div>
 
-                {{-- Badges Row --}}
-                <div class="flex items-center gap-1.5 flex-wrap">
-                    {{-- Role Badges - Smaller Padding --}}
-                    <div class="flex gap-1">
+                {{-- Badges Row - Berdasarkan LuminHR Design System --}}
+                <div class="flex items-center gap-2 flex-wrap mt-2">
+                    {{-- Role Badges --}}
+                    <div class="flex gap-1.5">
                         @forelse($user->roles as $role)
                             @php
-                                $roleColors = match(strtolower($role->name)) {
-                                    'superadmin' => 'bg-purple-600 text-white border-purple-700',
-                                    'dosen' => 'bg-emerald-50 text-emerald-700 border-emerald-200',
-                                    'mahasiswa' => 'bg-amber-50 text-amber-700 border-amber-200',
-                                    'admin_banksoal' => 'bg-yellow-50 text-yellow-800 border-yellow-200',
-                                    'admin_capstone' => 'bg-cyan-50 text-cyan-800 border-cyan-200',
-                                    'admin_eoffice' => 'bg-indigo-50 text-indigo-800 border-indigo-200',
-                                    default => 'bg-slate-50 text-slate-600 border-slate-200',
+                                $roleName = strtolower($role->name);
+                                // Mapping warna berdasarkan Design System LuminHR
+                                $roleStyle = match(true) {
+                                    $roleName === 'superadmin'       => 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]', // Primary Purple 50/100
+                                    $roleName === 'dosen'            => 'bg-[#E7F9F3] text-[#00C08D] border-[#B2EBD9]', // Success/Emerald
+                                    $roleName === 'mahasiswa'        => 'bg-[#FFF9E6] text-[#FFB800] border-[#FFEBB3]', // Warning/Amber
+                                    $roleName === 'admin_eoffice'    => 'bg-[#EBF1FF] text-[#3377FF] border-[#B3CCFF]', // Additional/Sky
+                                    str_starts_with($roleName, 'admin') => 'bg-[#F0F5FF] text-[#5E53F4] border-[#D1DFFF]', // Primary Variant
+                                    default                          => 'bg-[#F8F9FA] text-[#6C757D] border-[#DEE2E6]', // Greyscale
                                 };
                             @endphp
-                            <span class="px-1.5 py-0.5 rounded text-[8px] font-black border uppercase tracking-tighter {{ $roleColors }}">
-                                {{ $role->name }}
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase tracking-wide {{ $roleStyle }}">
+                                {{ str_replace('_', ' ', $role->name) }}
                             </span>
                         @empty
-                            <span class="px-1.5 py-0.5 rounded text-[8px] font-bold border uppercase bg-rose-50 text-rose-500 border-rose-100 italic">
+                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold border border-[#FEE2E2] bg-[#FEF2F2] text-[#EF4444] italic uppercase">
                                 No Role
                             </span>
                         @endforelse
                     </div>
 
-                    {{-- Permission Badge - Compact Split Style --}}
+                    {{-- Permission Badge - LuminHR Split Style --}}
                     <div class="flex items-center">
                         @if($isSuperadmin)
-                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-purple-50 text-purple-700 text-[9px] font-black border border-purple-100 uppercase tracking-tighter">
+                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#5E53F4] text-white text-[10px] font-semibold uppercase tracking-wider shadow-sm">
+                                <span class="material-symbols-outlined text-[12px] fill-1">verified</span>
                                 Root Access
                             </span>
                         @elseif($hasFullAccess)
-                            <span class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-700 text-[9px] font-black border border-emerald-100 uppercase tracking-tighter">
+                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#00C08D] text-white text-[10px] font-semibold uppercase tracking-wider">
                                 Full Access
                             </span>
                         @elseif($permissionCount > 0)
-                            <div class="inline-flex items-center border border-blue-200 rounded overflow-hidden shadow-sm">
-                                <div class="px-1.5 py-0.5 bg-blue-600 text-white text-[9px] font-black uppercase tracking-tighter">
+                            <div class="inline-flex items-center border border-[#DEE2E6] rounded-full overflow-hidden bg-white shadow-sm">
+                                <div class="px-2 py-0.5 bg-[#F8F9FA] text-[#495057] text-[9px] font-semibold uppercase border-r border-[#DEE2E6]">
                                     @if(!empty($adminModules))
                                         {{ implode(', ', $adminModules) }}
                                     @elseif($moduleCount <= 2)
                                         {{ implode(', ', $modules) }}
                                     @else
-                                        {{ $moduleCount }} MOD
+                                        {{ $moduleCount }} Modules
                                     @endif
                                 </div>
-                                <div class="px-1.5 py-0.5 bg-white text-blue-700 text-[9px] font-black tracking-tighter">
-                                    {{ $permissionCount }}P
+                                <div class="px-2 py-0.5 text-[#5E53F4] text-[9px] font-semibold uppercase bg-white">
+                                    {{ $permissionCount }} Perms
                                 </div>
                             </div>
                         @else
-                            <span class="text-slate-300 text-[9px] font-bold uppercase tracking-tighter">No Perms</span>
+                            <span class="px-2.5 py-0.5 rounded-full border border-[#DEE2E6] text-[#ADB5BD] text-[9px] font-semibold uppercase tracking-tight bg-[#F8F9FA]">
+                                Unassigned
+                            </span>
                         @endif
                     </div>
                 </div>
@@ -197,20 +212,22 @@
     </button>
 
     {{-- Body - Detail Permissions --}}
-    <div id="card-body-{{ $user->id }}" class="hidden border-t border-slate-100 bg-slate-50/30 p-5">
+    <div id="card-body-{{ $user->id }}" class="hidden border-t border-[#DEE2E6] bg-[#F8F9FA]/50 p-6">
         @if($isSuperadmin)
-            <div class="flex items-center justify-center gap-2 py-4 text-purple-600 text-[10px] font-black uppercase tracking-widest bg-white rounded-lg border border-dashed border-purple-200 shadow-sm">
-                <span class="material-symbols-outlined" style="font-size:16px">verified_user</span> 
+            <div class="flex items-center justify-center gap-3 py-6 text-[#5E53F4] text-[11px] font-semibold uppercase tracking-widest bg-white rounded-2xl border border-dashed border-[#D1BFFF] shadow-sm">
+                <span class="material-symbols-outlined" style="font-size:20px; font-variation-settings: 'FILL' 1">verified_user</span> 
                 Full System Privilege Granted
             </div>
         @else
             <form method="POST" action="{{ route('superadmin.users.update-permissions', $user->id) }}" id="perm-form-{{ $user->id }}">
                 @csrf
-                <div class="mb-6">
-                    <p class="text-[10px] font-black text-slate-400 uppercase mb-3 tracking-widest flex items-center gap-2">
-                        <span class="material-symbols-outlined" style="font-size:14px">group_add</span> Assign Roles
-                    </p>
-                    <div class="flex flex-wrap gap-2">
+                {{-- Section: Assign Roles --}}
+                <div class="mb-8">
+                    <div class="flex items-center gap-2 mb-4">
+                        <span class="material-symbols-outlined text-[#6C757D]" style="font-size:18px">group_add</span>
+                        <p class="text-[10px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Assign Roles</p>
+                    </div>
+                    <div class="flex flex-wrap gap-2.5">
                         @foreach($roles as $role)
                             @php $isActive = $user->roles->contains($role->id); @endphp
                             <label class="relative cursor-pointer group/role">
@@ -219,19 +236,20 @@
                                     class="peer sr-only role-checkbox"
                                     data-role-name="{{ strtolower($role->name) }}"
                                     data-is-academic="{{ $role->is_academic ? '1' : '0' }}">
-                                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-500 transition-all duration-200 
-                                            peer-checked:border-blue-600 peer-checked:bg-blue-50 peer-checked:text-blue-700 peer-checked:shadow-[0_0_0_1px_rgba(37,99,235,1)]
-                                            hover:border-slate-300 shadow-sm">
-                                    <div class="w-1.5 h-1.5 rounded-full {{ $isActive ? 'bg-blue-600' : 'bg-slate-300' }} transition-colors peer-checked:bg-blue-600"></div>
-                                    <span class="text-[10px] font-black uppercase tracking-tight">{{ $role->name }}</span>
-                                    <span class="material-symbols-outlined hidden peer-checked:block text-blue-600" style="font-size:14px; font-variation-settings: 'FILL' 1">check_circle</span>
+                                <div class="flex items-center gap-2.5 px-4 py-2 rounded-full border border-[#DEE2E6] bg-white text-[#6C757D] transition-all duration-200 
+                                            peer-checked:border-[#5E53F4] peer-checked:bg-[#F1E9FF] peer-checked:text-[#5E53F4] peer-checked:shadow-[0_0_0_1px_#5E53F4]
+                                            hover:border-[#ADB5BD] shadow-sm">
+                                    <div class="size-2 rounded-full {{ $isActive ? 'bg-[#5E53F4]' : 'bg-[#DEE2E6]' }} transition-colors peer-checked:bg-[#5E53F4]"></div>
+                                    <span class="text-[11px] font-semibold uppercase tracking-tight">{{ str_replace('_', ' ', $role->name) }}</span>
+                                    <span class="material-symbols-outlined hidden peer-checked:block text-[#5E53F4]" style="font-size:16px; font-variation-settings: 'FILL' 1">check_circle</span>
                                 </div>
                             </label>
                         @endforeach
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                {{-- Section: Module Permissions Grid --}}
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     @foreach($permissions as $module => $perms)
                         @php
                             $moduleSlug = strtolower($module);
@@ -240,46 +258,45 @@
                             foreach ($roleToModuleMap as $r => $m) { if(in_array($moduleSlug, $m)) $potentialRoles[] = $r; }
                             $potentialRoles = array_merge($potentialRoles, ['superadmin', 'dosen', 'mahasiswa', 'gpm']);
                         @endphp
-                        <div class="module-box bg-white p-3 rounded-lg border transition-all duration-200 {{ $isAllowed ? 'border-slate-200 shadow-sm' : 'border-slate-100 opacity-40 grayscale pointer-events-none' }}"
-                             data-module-slug="{{ $moduleSlug }}"
-                             data-all-allowed-roles='@json($potentialRoles)'>
+                        <div class="module-box bg-white p-4 rounded-2xl border transition-all duration-300 {{ $isAllowed ? 'border-[#DEE2E6] shadow-sm' : 'border-[#F8F9FA] opacity-40 grayscale pointer-events-none' }}"
+                            data-module-slug="{{ $moduleSlug }}"
+                            data-all-allowed-roles='@json($potentialRoles)'>
                             
-                            <div class="flex items-center justify-between mb-2.5 pb-2 border-b border-slate-100">
-                                <span class="text-[10px] font-black text-slate-700 uppercase flex items-center gap-1.5">
+                            <div class="flex items-center justify-between mb-4 pb-3 border-b border-[#F8F9FA]">
+                                <span class="text-[11px] font-semibold text-[#1A1C1E] uppercase tracking-wider flex items-center gap-2">
                                     {{ $module }} 
-                                    @if(!$isAllowed) <span class="material-symbols-outlined text-slate-300" style="font-size:12px">lock</span> @endif
+                                    @if(!$isAllowed) <span class="material-symbols-outlined text-[#ADB5BD]" style="font-size:14px">lock</span> @endif
                                 </span>
-                                <label class="flex items-center gap-1 cursor-pointer group {{ !$isAllowed ? 'hidden' : '' }} select-all-container">
-                                    <input type="checkbox" class="module-select-all w-3 h-3 rounded border-slate-300 text-blue-600 focus:ring-0" data-module-target="{{ $user->id }}-{{ $moduleSlug }}">
-                                    <span class="text-[9px] font-black text-slate-400 uppercase group-hover:text-blue-600">All</span>
+                                <label class="flex items-center gap-1.5 cursor-pointer group {{ !$isAllowed ? 'hidden' : '' }}">
+                                    <input type="checkbox" class="module-select-all size-3.5 rounded border-[#DEE2E6] text-[#5E53F4] focus:ring-0 transition-colors" data-module-target="{{ $user->id }}-{{ $moduleSlug }}">
+                                    <span class="text-[10px] font-semibold text-[#ADB5BD] uppercase group-hover:text-[#5E53F4]">All</span>
                                 </label>
                             </div>
 
-                            <div class="space-y-1.5">
+                            <div class="space-y-2">
                                 @foreach($perms as $permission)
                                     @php
                                         $action = explode('.', $permission->name)[1] ?? $permission->name;
                                         $allowedActions = ['view', 'edit', 'delete'];
-                                        
-                                        if (!in_array($action, $allowedActions)) {
-                                            continue;
-                                        }
+                                        if (!in_array($action, $allowedActions)) continue;
                                         
                                         $isView = ($action === 'view');
                                         $fromRole = $rolePerms->contains($permission->name);
                                         $isChecked = $shouldCheck($permission->name, $action, $module);
                                     @endphp
-                                    <label class="flex items-center justify-between group cursor-pointer">
-                                        <div class="flex items-center gap-2">
+                                    <label class="flex items-center justify-between group cursor-pointer py-0.5">
+                                        <div class="flex items-center gap-2.5">
                                             <input type="checkbox" name="permissions[]" value="{{ $permission->name }}" {{ $isChecked ? 'checked' : '' }}
-                                                class="perm-checkbox w-3.5 h-3.5 rounded border-slate-300 text-blue-600 focus:ring-0 {{ $isView ? 'master-view-cb' : 'child-perm-cb' }}"
+                                                class="perm-checkbox size-4 rounded border-[#DEE2E6] text-[#5E53F4] focus:ring-0 {{ $isView ? 'master-view-cb' : 'child-perm-cb' }}"
                                                 data-module-key="{{ $user->id }}-{{ $moduleSlug }}"
                                                 data-is-view="{{ $isView ? '1' : '0' }}" data-perm="{{ $permission->name }}">
-                                            <span class="text-[10px] font-bold capitalize {{ $fromRole ? 'text-blue-600' : 'text-slate-500' }}">
+                                            <span class="text-[12px] font-semibold capitalize {{ $isChecked ? 'text-[#1A1C1E]' : 'text-[#6C757D]' }} group-hover:text-[#5E53F4] transition-colors">
                                                 {{ str_replace('_', ' ', $action) }}
                                             </span>
                                         </div>
-                                        @if($fromRole) <div class="w-1 h-1 rounded-full bg-blue-400"></div> @endif
+                                        @if($fromRole) 
+                                            <div class="size-1.5 rounded-full bg-[#D1BFFF]" title="Inherited from role"></div> 
+                                        @endif
                                     </label>
                                 @endforeach
                             </div>
@@ -287,9 +304,10 @@
                     @endforeach
                 </div>
 
-                <div class="mt-5 pt-4 border-t border-slate-100 flex items-center justify-end">
-                    <button type="submit" class="bg-slate-900 hover:bg-black text-white text-[10px] font-black uppercase tracking-widest px-6 py-2 rounded-lg transition-all shadow-sm flex items-center gap-2">
-                        <span class="material-symbols-outlined" style="font-size:16px">save</span> Save Permissions
+                {{-- Footer: Action Button --}}
+                <div class="mt-8 pt-5 border-t border-[#DEE2E6] flex items-center justify-end">
+                    <button type="submit" class="bg-[#1A1C1E] hover:bg-[#5E53F4] text-white text-[11px] font-semibold uppercase tracking-[0.15em] px-8 py-3 rounded-xl transition-all shadow-lg hover:shadow-[#5E53F4]/20 flex items-center gap-2.5 active:scale-95">
+                        <span class="material-symbols-outlined" style="font-size:18px">save</span> Save Changes
                     </button>
                 </div>
             </form>

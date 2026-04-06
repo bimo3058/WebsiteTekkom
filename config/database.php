@@ -97,8 +97,7 @@ return [
             'search_path' => 'public',
             'sslmode'     => 'require', // dari 'prefer' → 'require' untuk Supabase
             'options'     => [
-                PDO::ATTR_TIMEOUT              => 10,
-                PDO::ATTR_PERSISTENT           => true, // persistent connection, kurangi overhead handshake
+                PDO::ATTR_TIMEOUT              => 10, 
                 PDO::ATTR_EMULATE_PREPARES     => true,
             ],
             'prepare' => false,

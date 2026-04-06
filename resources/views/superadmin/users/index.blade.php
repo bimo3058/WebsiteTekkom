@@ -106,7 +106,7 @@
                     } 
                     else if (data.status === 'completed') {
                         stopPolling();
-                        if (text) text.innerHTML = '<span class="text-emerald-600 font-bold">✅ Impor Berhasil Selesai!</span>';
+                        if (text) text.innerHTML = '<span class="text-emerald-600 font-bold">Impor Berhasil Selesai!</span>';
                         if (bar) {
                             bar.style.width = '100%';
                             bar.className = "h-full bg-emerald-500 transition-all duration-500";
@@ -169,7 +169,7 @@
                     const text = document.getElementById('importStatusText');
                     
                     if (bar) bar.className = "h-full bg-red-500 transition-all duration-500";
-                    if (text) text.innerHTML = '<span class="text-red-600 font-bold">❌ Impor dibatalkan</span>';
+                    if (text) text.innerHTML = '<span class="text-red-600 font-bold">Impor dibatalkan</span>';
                     
                     // Hapus session import_id
                     await fetch('/superadmin/clear-import-session', { method: 'POST' });
@@ -283,6 +283,52 @@
                 });
             }
 
+            const deleteForm = document.getElementById('formDeleteHybrid');
+            if (deleteForm) {
+                deleteForm.addEventListener('submit', async function(e) {
+                    // Kita deteksi apakah ini Bulk Delete dengan mengecek input ids[]
+                    const isBulk = this.querySelectorAll('.bulk-ids-input').length > 0;
+                    
+                    if (isBulk) {
+                        e.preventDefault(); 
+                        
+                        const btn = this.querySelector('button[type="submit"]');
+                        const originalContent = btn.innerHTML;
+                        
+                        btn.disabled = true;
+                        btn.innerHTML = '<span class="animate-spin material-symbols-outlined" style="font-size:14px">sync</span> Memproses...';
+
+                        try {
+                            const response = await fetch(this.action, {
+                                method: 'POST',
+                                body: new FormData(this),
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json'
+                                }
+                            });
+
+                            if (response.ok) {
+                                // Jika berhasil, reload agar tabel sinkron
+                                window.location.reload();
+                            } else {
+                                const data = await response.json();
+                                alert('Gagal menghapus: ' + (data.message || 'Terjadi kesalahan'));
+                                btn.disabled = false;
+                                btn.innerHTML = originalContent;
+                            }
+                        } catch (error) {
+                            console.error('Error:', error);
+                            alert('Terjadi kesalahan jaringan.');
+                            btn.disabled = false;
+                            btn.innerHTML = originalContent;
+                        }
+                    }
+                    // Jika bukan bulk (penghapusan satu user), biarkan submit normal (HTML default)
+                    // karena Controller biasanya me-return redirect() yang otomatis me-refresh page.
+                });
+            }
+
             // --- Checkbox & Selection Logic ---
             const selectAll = document.getElementById('selectAll');
             selectAll?.addEventListener('change', function() {
@@ -314,38 +360,38 @@
         });
     
         function openBulkDeleteHybrid() {
-            // 1. Ambil semua ID dari checkbox yang dicentang
             const selectedIds = Array.from(document.querySelectorAll('.user-checkbox:checked'))
                                     .map(cb => cb.value);
 
             if (selectedIds.length === 0) return;
 
             const form = document.getElementById('formDeleteHybrid');
-            if (!form) return;
+            
+            // Pastikan method spoofing Laravel tetap DELETE
+            let methodInput = form.querySelector('input[name="_method"]');
+            if (!methodInput) {
+                methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.value = 'DELETE';
+                form.appendChild(methodInput);
+            }
 
-            // 2. Ubah action form ke route bulk-destroy
             form.action = "{{ route('superadmin.users.bulk-destroy') }}";
             
-            // 3. Bersihkan input hidden lama (jika ada) agar tidak double
+            // Hapus input ID lama
             form.querySelectorAll('.bulk-ids-input').forEach(el => el.remove());
             
-            // 4. Tambahkan ID baru sebagai hidden input
             selectedIds.forEach(id => {
                 const input = document.createElement('input');
                 input.type = 'hidden';
-                input.name = 'ids[]';
+                input.name = 'ids[]'; // Pastikan sesuai dengan $request->ids di Controller
                 input.value = id;
                 input.classList.add('bulk-ids-input');
                 form.appendChild(input);
             });
 
-            // 5. Update teks konfirmasi di modal
-            const targetName = document.getElementById('deleteTargetName');
-            if (targetName) {
-                targetName.textContent = selectedIds.length + " user yang dipilih";
-            }
-
-            // 6. Tampilkan modal
+            document.getElementById('deleteTargetName').textContent = selectedIds.length + " user yang dipilih";
             openModal('modalDeleteHybrid');
         }
 

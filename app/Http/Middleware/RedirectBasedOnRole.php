@@ -8,60 +8,64 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RedirectBasedOnRole
 {
+    /**
+     * Path yang di-skip oleh middleware ini (semua role boleh akses).
+     * Telescope & Pulse di-exclude agar tidak di-redirect loop.
+     */
+    private array $excludedPaths = [
+        'telescope', 'telescope/*', 'vendor/telescope/*',
+        'pulse*',
+        'profile*',
+        'logout',
+    ];
+
     public function handle(Request $request, Closure $next): Response
     {
-        if ($request->is('telescope', 'telescope/*', 'vendor/telescope/*')) {
-            return $next($request);
-        }
         // Jika tidak login, biarkan middleware 'auth' bawaan yang bekerja
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return $next($request);
         }
 
         $user = auth()->user();
 
-        // 1. Jika akun disuspend, biarkan middleware CheckSuspended yang menangani
-        if ($user->suspended_at) {
+        // Jika akun suspended, biarkan middleware CheckSuspended yang menangani
+        if ($user->isSuspended()) {
             return $next($request);
         }
 
-        // 2. Global Whitelist: Path yang boleh diakses semua role yang sudah login
-        // Menggunakan wildcard (*) agar sub-path (seperti pulse/api atau profile/edit) tetap lolos
-        $excludedPaths = ['profile*', 'logout', 'pulse*'];
-    
-        foreach ($excludedPaths as $path) {
+        // Global whitelist — semua role yang sudah login boleh akses path ini
+        foreach ($this->excludedPaths as $path) {
             if ($request->is($path)) {
                 return $next($request);
             }
         }
 
-        $roleNames = $user->roles->pluck('name')->map(fn($r) => strtolower($r));
+        // Ambil roles via getCachedRoles() — tidak ada query baru kalau cache sudah ada
+        $roleNames = $user->getCachedRoles()->pluck('name')->map(fn($r) => strtolower($r));
 
-        // 3. Logika untuk ADMIN MODUL (Lock ke Modul masing-masing)
+        // 1. Superadmin — lock ke area /superadmin
+        if ($roleNames->contains('superadmin') && $request->is('dashboard')) {
+            return redirect()->route('superadmin.dashboard');
+        }
+
+        // 2. Admin modul — lock ke prefix modul masing-masing
         $adminModuleRoles = [
-            'admin_banksoal'      => ['route' => 'banksoal.dashboard', 'prefix' => 'bank-soal*'],
-            'admin_capstone'      => ['route' => 'capstone.dashboard', 'prefix' => 'capstone*'],
-            'admin_eoffice'       => ['route' => 'eoffice.dashboard', 'prefix' => 'eoffice*'],
-            'admin_kemahasiswaan' => ['route' => 'manajemenmahasiswa.mahasiswa.dashboard', 'prefix' => 'manajemen-mahasiswa*'],
+            'admin_banksoal'      => ['route' => 'banksoal.dashboard',                        'prefix' => 'bank-soal*'],
+            'admin_capstone'      => ['route' => 'capstone.dashboard',                        'prefix' => 'capstone*'],
+            'admin_eoffice'       => ['route' => 'eoffice.dashboard',                         'prefix' => 'eoffice*'],
+            'admin_kemahasiswaan' => ['route' => 'manajemenmahasiswa.mahasiswa.dashboard',    'prefix' => 'manajemen-mahasiswa*'],
         ];
 
         foreach ($adminModuleRoles as $role => $config) {
             if ($roleNames->contains($role)) {
-                // Jika sedang mencoba akses di LUAR prefix modulnya, paksa balik ke dashboard modul
-                if (!$request->is($config['prefix'])) {
+                if (! $request->is($config['prefix'])) {
                     return redirect()->route($config['route']);
                 }
                 return $next($request);
             }
         }
 
-        // 4. Logika untuk SUPERADMIN (Lock ke area /superadmin)
-        if ($user->hasRole('superadmin') && request()->is('dashboard')) {   
-            return redirect()->route('superadmin.dashboard');
-        }
-
-        // 5. Logika untuk USER UMUM (Mahasiswa, Dosen, GPM)
-        // Jika mereka mencoba akses root '/', arahkan ke dashboard global
+        // 3. User umum (mahasiswa, dosen, gpm) — redirect root ke dashboard global
         if ($request->is('/')) {
             return redirect()->route('dashboard');
         }

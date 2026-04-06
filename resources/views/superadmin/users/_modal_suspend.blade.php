@@ -45,3 +45,16 @@
         </form>
     </div>
 </div>
+<script>
+    if (typeof window.openSuspendModal !== 'function') {
+        window.openSuspendModal = function(data) {
+            const form = document.getElementById('formSuspend');
+            if(form) form.action = `/superadmin/users/${data.id}/suspend`;
+            
+            const nameEl = document.getElementById('suspendUserName');
+            if(nameEl) nameEl.textContent = data.name;
+            
+            if(typeof window.openModal === 'function') window.openModal('modalSuspend');
+        };
+    }
+</script>

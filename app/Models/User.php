@@ -24,9 +24,11 @@ class User extends Authenticatable
         'sso_data',
         'last_synced_from_sso',
         'last_login',
+        'is_online',
         'suspended_at',
         'suspension_reason',
         'personal_email',
+        'avatar_url',
     ];
 
     protected $hidden = [
@@ -41,12 +43,24 @@ class User extends Authenticatable
             'last_login'           => 'datetime',
             'last_synced_from_sso' => 'datetime',
             'suspended_at'         => 'datetime',
+            'is_online'            => 'boolean',
         ];
     }
 
     /*
     |--------------------------------------------------------------------------
-    | BOOT METHOD - AUTO SYNC PERMISSIONS
+    | BOOT METHOD
+    |--------------------------------------------------------------------------
+    | FIX: Hapus event 'updated' dan 'saved' yang menyebabkan syncPermissionsFromRoles()
+    | dipanggil 2-3x setiap kali user disimpan (termasuk saat recordLogin,
+    | suspend, updateQuietly, dll yang tidak mengubah roles sama sekali).
+    |
+    | Sync permissions saat roles berubah sudah ditangani secara eksplisit di:
+    | - SuperAdminController::updateRole()
+    | - SuperAdminController::updatePermissions()
+    |
+    | Hanya 'created' yang tetap ada karena user baru memang perlu di-assign
+    | permissions awal berdasarkan role-nya.
     |--------------------------------------------------------------------------
     */
 
@@ -54,40 +68,34 @@ class User extends Authenticatable
     {
         parent::boot();
 
-        // AFTER USER CREATED
         static::created(function ($user) {
-            Log::info("User created event triggered", [
-                'user_id' => $user->id,
-                'email' => $user->email
-            ]);
-            
-            // Sync permissions based on roles
             $user->syncPermissionsFromRoles();
         });
+    }
 
-        // AFTER USER UPDATED
-        static::updated(function ($user) {
-            Log::info("User updated event triggered", [
-                'user_id' => $user->id,
-                'email' => $user->email
-            ]);
-            
-            // Sync permissions based on roles
-            $user->syncPermissionsFromRoles();
-        });
+    /*
+    |--------------------------------------------------------------------------
+    | ACCESSOR
+    |--------------------------------------------------------------------------
+    */
 
-        // AFTER ROLES ARE ATTACHED
-        static::saved(function ($user) {
-            // Check if roles relationship was modified
-            if ($user->isDirty() || $user->roles()->getQuery()->exists()) {
-                Log::info("User saved with potential role changes", [
-                    'user_id' => $user->id,
-                    'email' => $user->email
-                ]);
-                
-                $user->syncPermissionsFromRoles();
-            }
-        });
+    protected function avatarUrl(): \Illuminate\Database\Eloquent\Casts\Attribute
+    {
+        return \Illuminate\Database\Eloquent\Casts\Attribute::make(
+            get: function ($value) {
+                if (!$value) return null;
+
+                return cache()->remember(
+                    "user_avatar_{$this->id}_" . md5($value),
+                    now()->addDay(),
+                    function () use ($value) {
+                        return str_starts_with($value, 'http')
+                            ? $value
+                            : asset('storage/' . $value);
+                    }
+                );
+            },
+        );
     }
 
     /*
@@ -100,11 +108,6 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Role::class, 'user_roles', 'user_id', 'role_id')
             ->withTimestamps();
-    }
-
-    public function hasAnyRole(array $roles): bool
-    {
-        return $this->roles->pluck('name')->intersect($roles)->isNotEmpty();
     }
 
     public function student()
@@ -125,79 +128,85 @@ class User extends Authenticatable
 
     /*
     |--------------------------------------------------------------------------
-    | PERMISSION & ROLE LOGIC
+    | ROLE HELPERS
+    |--------------------------------------------------------------------------
+    */
+
+    public function hasRole(string $roleName, ?string $module = null): bool
+    {
+        return $this->getCachedRoles()
+            ->when($module, fn($c) => $c->where('module', $module))
+            ->contains('name', strtolower($roleName));
+    }
+
+    /**
+     * FIX: Gunakan getCachedRoles() agar konsisten dengan hasRole(),
+     * bukan $this->roles yang bisa memicu query baru kalau relasi belum di-load.
+     */
+    public function hasAnyRole(array $roles): bool
+    {
+        return $this->getCachedRoles()->pluck('name')->intersect($roles)->isNotEmpty();
+    }
+
+    public function isAcademic(): bool
+    {
+        return $this->getCachedRoles()->contains('is_academic', true);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | PERMISSION LOGIC
     |--------------------------------------------------------------------------
     */
 
     /**
-     * SYNC PERMISSIONS FROM ROLES - THIS IS THE MAIN METHOD
+     * Sync permissions berdasarkan roles yang dimiliki user.
+     * Dipanggil manual dari controller setelah roles diubah,
+     * atau otomatis via boot::created untuk user baru.
      */
     public function syncPermissionsFromRoles(): void
     {
-        // $roles = $this->roles()->pluck('name')->toArray();
         $roles = $this->getCachedRoles()->pluck('name')->toArray();
-        
-        Log::info("Syncing permissions from roles", [
-            'user_id' => $this->id,
-            // 'email' => $this->email,
-            'roles' => $roles
-        ]);
-        
-        // if (empty($roles)) {
-        //     Log::warning("No roles found for user, clearing permissions", [
-        //         'user_id' => $this->id
-        //     ]);
-        //     $this->directPermissions()->detach();
-        //     $this->clearUserCache();
-        //     return;
-        // }
+
         if (empty($roles)) {
             $this->directPermissions()->detach();
             $this->clearUserCache();
             return;
         }
-        
+
         PermissionAssigner::assignByRoles($this, $roles);
     }
 
     /**
-     * Sync permissions manually (wrapper)
+     * FIX: Hapus N+1 query — resolve semua permission names dalam satu query,
+     * bukan satu query per nama di dalam loop.
      */
-    public function syncPermissions($permissions)
+    public function syncPermissions($permissions): array
     {
-        $permissionIds = [];
-        
-        foreach ($permissions as $permission) {
-            if (is_numeric($permission)) {
-                $permissionIds[] = $permission;
-            } else {
-                $perm = Permission::where('name', $permission)->first();
-                if ($perm) {
-                    $permissionIds[] = $perm->id;
-                } else {
-                    Log::warning("Permission not found for sync", [
-                        'permission' => $permission,
-                        'user_id' => $this->id
-                    ]);
-                }
-            }
+        $input   = collect($permissions);
+        $numeric = $input->filter(fn($p) => is_numeric($p))->map(fn($p) => (int) $p);
+        $names   = $input->reject(fn($p) => is_numeric($p));
+
+        $resolved   = Permission::whereIn('name', $names)->pluck('id', 'name');
+        $notFound   = $names->diff($resolved->keys());
+
+        if ($notFound->isNotEmpty()) {
+            Log::warning("Permissions not found during sync", [
+                'user_id'   => $this->id,
+                'not_found' => $notFound->values(),
+            ]);
         }
-        
-        $permissionIds = array_unique($permissionIds);
-        
-        Log::info("Syncing specific permissions", [
-            'user_id' => $this->id,
-            'permission_ids' => $permissionIds
-        ]);
-        
+
+        $permissionIds = $numeric->merge($resolved->values())->unique()->values()->toArray();
+
         $result = $this->directPermissions()->sync($permissionIds);
         $this->clearUserCache();
-        
+
         return $result;
     }
 
     /**
-     * Repair permissions if they don't match roles
+     * Alias untuk syncPermissionsFromRoles — dipakai oleh PermissionAssigner.
      */
     public function repairPermissions(): void
     {
@@ -208,10 +217,13 @@ class User extends Authenticatable
     {
         if ($this->hasRole('superadmin')) return true;
 
-        $allPermissions = $this->getAllPermissions();
-        return $allPermissions->contains(strtolower(trim($permissionName)));
+        return $this->getAllPermissions()->contains(strtolower(trim($permissionName)));
     }
 
+    /**
+     * Override can() agar permission dengan format 'module.action'
+     * (misal: 'banksoal.view') dicek via hasPermissionTo(), bukan Laravel Gate.
+     */
     public function can($abilities, $arguments = [])
     {
         if (is_string($abilities) && str_contains($abilities, '.')) {
@@ -223,80 +235,16 @@ class User extends Authenticatable
     public function getAllPermissions(): \Illuminate\Support\Collection
     {
         return Cache::remember("user:{$this->id}:all_permissions_final", 3600, function () {
-            $roles = $this->roles()->with('permissions')->get();
-
-            $fromRoles = $roles->flatMap(fn($role) => $role->permissions->pluck('name'));
+            $roles  = $this->roles()->with('permissions')->get();
             $direct = $this->directPermissions()->pluck('name');
-            $all = $fromRoles->merge($direct);
 
-            return $all->map(fn($p) => strtolower(trim($p)))->unique()->values();
+            return $roles
+                ->flatMap(fn($role) => $role->permissions->pluck('name'))
+                ->merge($direct)
+                ->map(fn($p) => strtolower(trim($p)))
+                ->unique()
+                ->values();
         });
-    }
-
-    public function assignPermissionsFromRoles(): void
-    {
-        $roleNames = $this->roles()->pluck('name')->toArray();
-        
-        if (empty($roleNames)) {
-            \Log::warning("No roles found for user", ['user_id' => $this->id]);
-            return;
-        }
-        
-        $permissionIds = [];
-        
-        $roleModuleMap = [
-            'admin_banksoal' => ['banksoal'],
-            'admin_capstone' => ['capstone'],
-            'admin_eoffice' => ['eoffice'],
-            'admin_kemahasiswaan' => ['kemahasiswaan'],
-            'dosen' => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
-            'mahasiswa' => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
-            'gpm' => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
-            'superadmin' => ['all'],
-        ];
-        
-        $actions = ['view', 'edit', 'delete'];
-        
-        foreach ($roleNames as $roleName) {
-            $modules = $roleModuleMap[$roleName] ?? [];
-            
-            if (in_array('all', $modules)) {
-                $permissionIds = Permission::all()->pluck('id')->toArray();
-                break;
-            }
-            
-            foreach ($modules as $module) {
-                foreach ($actions as $action) {
-                    $permissionName = "{$module}.{$action}";
-                    $permission = Permission::where('name', $permissionName)->first();
-                    if ($permission) {
-                        $permissionIds[] = $permission->id;
-                    }
-                }
-            }
-        }
-        
-        $permissionIds = array_unique($permissionIds);
-        $this->directPermissions()->sync($permissionIds);
-        
-        \Log::info("Permissions assigned from roles", [
-            'user_id' => $this->id,
-            'email' => $this->email,
-            'roles' => $roleNames,
-            'permission_count' => count($permissionIds)
-        ]);
-    }
-
-    public function hasRole(string $roleName, ?string $module = null): bool
-    {
-        return $this->getCachedRoles()
-            ->when($module, fn($c) => $c->where('module', $module))
-            ->contains('name', strtolower($roleName));
-    }
-
-    public function isAcademic(): bool
-    {
-        return $this->getCachedRoles()->contains('is_academic', true);
     }
 
     /*
@@ -305,7 +253,12 @@ class User extends Authenticatable
     |--------------------------------------------------------------------------
     */
 
-    protected function getCachedRoles(): \Illuminate\Support\Collection
+    /**
+     * Ambil roles dari cache, relasi yang sudah di-load, atau query baru.
+     * FIX: Cache menyimpan hanya field yang diperlukan (bukan full toArray())
+     * agar contains('is_academic', true) dan where('module', ...) bekerja konsisten.
+     */
+    public function getCachedRoles(): \Illuminate\Support\Collection
     {
         if ($this->relationLoaded('roles')) {
             return $this->roles;
@@ -315,7 +268,17 @@ class User extends Authenticatable
         if ($cached) return collect($cached);
 
         $roles = $this->roles()->get();
-        Cache::put("user:{$this->id}:roles", $roles->toArray(), now()->addHours(8));
+
+        Cache::put(
+            "user:{$this->id}:roles",
+            $roles->map(fn($r) => [
+                'id'          => $r->id,
+                'name'        => $r->name,
+                'module'      => $r->module,
+                'is_academic' => (bool) $r->is_academic,
+            ])->toArray(),
+            now()->addHours(8)
+        );
 
         return $roles;
     }
@@ -352,8 +315,8 @@ class User extends Authenticatable
     public function suspend(string $reason = ''): void
     {
         $this->update([
-            'suspended_at'       => now(),
-            'suspension_reason'  => $reason,
+            'suspended_at'      => now(),
+            'suspension_reason' => $reason,
         ]);
         $this->forceLogout();
     }
@@ -368,14 +331,21 @@ class User extends Authenticatable
 
     public function forceLogout(): void
     {
+        static::where('id', $this->id)->update([
+            'is_online' => DB::raw('false'),
+        ]);
         $this->increment('session_version');
         $this->clearUserCache();
     }
 
+    /**
+     * FIX: Gabungkan dua query terpisah menjadi satu round-trip ke database.
+     */
     public function recordLogin(): void
     {
-        dispatch(function () {
-            $this->updateQuietly(['last_login' => now()]);
-        })->afterResponse();
+        static::where('id', $this->id)->update([
+            'last_login' => now(),
+            'is_online'  => DB::raw('true'),
+        ]);
     }
 }

@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\ProfileUpdateRequest;
+use App\Services\SupabaseStorage;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
 
@@ -23,45 +25,95 @@ class ProfileController extends Controller
         $user      = $request->user();
         $validated = $request->validated();
 
-        $isSuperadmin = $user->hasRole('superadmin');
-        // Pastikan hasAnyRole sudah kamu tambahkan di Model User sebelumnya
-        $isAdmin      = $user->hasAnyRole(['admin_banksoal', 'admin_capstone', 'admin_eoffice', 'admin_kemahasiswaan']);
+        $canEditName = $user->hasRole('superadmin')
+            || $user->hasAnyRole(['admin_banksoal', 'admin_capstone', 'admin_eoffice', 'admin_kemahasiswaan']);
 
-        // 1. Logika Nama (Hanya Admin/Superadmin)
-        if ($isSuperadmin || $isAdmin) {
-            $user->name = $validated['name'];
-        }
-
-        // 2. Field Umum: Email Pribadi
-        if (isset($validated['personal_email'])) {
-            $user->personal_email = $validated['personal_email'] ?: null;
-        }
-
-        // 3. LOGIKA WHATSAPP (Simpan langsung ke tabel users)
+        // Proses nomor WhatsApp
+        $whatsapp = null;
         if ($request->filled('whatsapp')) {
-            $wa = $request->whatsapp;
-            
-            // Bersihkan semua karakter kecuali angka
-            $wa = preg_replace('/[^0-9]/', '', $wa); 
-            
-            // Hapus prefix 62 atau 0 di depan agar tidak double saat ditambah +62
-            if (str_starts_with($wa, '62')) {
-                $wa = substr($wa, 2);
-            } elseif (str_starts_with($wa, '0')) {
-                $wa = substr($wa, 1);
+            $phoneCode = $request->input('phone_code', '+62');
+
+            if (! str_starts_with($phoneCode, '+')) {
+                $phoneCode = '+62';
             }
-            
-            // Simpan ke kolom whatsapp di tabel users
-            $user->whatsapp = '+62' . $wa;
-        } else {
-            $user->whatsapp = null;
+
+            $number = ltrim(preg_replace('/[^0-9]/', '', $request->input('whatsapp')), '0');
+
+            $whatsapp = $number ? $phoneCode . $number : null;
         }
 
-        // 4. Final Save & Cache Cleaning
-        $user->save();
+        // updateQuietly agar tidak trigger observers yang tidak relevan
+        // (perubahan nama/email/whatsapp tidak ada hubungannya dengan roles/permissions)
+        $user->updateQuietly([
+            'name'           => $canEditName ? $validated['name'] : $user->name,
+            'personal_email' => $validated['personal_email'] ?? null,
+            'whatsapp'       => $whatsapp,
+        ]);
+
         $user->clearUserCache();
 
         return Redirect::route('profile.edit')->with('status', 'profile-updated');
+    }
+
+    public function updateAvatar(Request $request, SupabaseStorage $supabase)
+    {
+        $request->validate(['avatar' => 'required|image|max:2048']);
+
+        $user      = auth()->user();
+        $oldAvatar = $user->getOriginal('avatar_url');
+
+        $path = $supabase->upload($request->file('avatar'), 'avatars', 'user_avatar');
+
+        if (! $path) {
+            return response()->json(['status' => 'error', 'message' => 'Gagal upload'], 422);
+        }
+
+        $url = $supabase->publicUrl($path, 'user_avatar');
+
+        $user->update(['avatar_url' => $url]);
+
+        // Hapus cache avatar lama agar accessor ambil URL baru
+        if ($oldAvatar) {
+            cache()->forget("user_avatar_{$user->id}_" . md5($oldAvatar));
+        }
+
+        $user->clearUserCache();
+
+        session()->flash('success', 'Foto profil berhasil diperbarui.');
+
+        return response()->json([
+            'status' => 'success',
+            'url'    => $url . '?width=100&height=100&resize=contain',
+        ]);
+    }
+
+    public function destroyAvatar(Request $request, SupabaseStorage $supabase)
+    {
+        $user = $request->user();
+
+        if (! $user->avatar_url) {
+            return response()->json(['status' => 'error', 'message' => 'Tidak ada foto untuk dihapus'], 404);
+        }
+
+        $path = str_replace($supabase->publicUrl('', 'user_avatar'), '', $user->avatar_url);
+
+        $deleted = $supabase->delete($path, 'user_avatar');
+
+        if (! $deleted) {
+            Log::warning('Gagal menghapus avatar dari Supabase Storage', [
+                'user_id' => $user->id,
+                'path'    => $path,
+            ]);
+            // Tetap lanjutkan — null-kan dari DB meski file di bucket gagal dihapus
+            // agar user tidak terjebak dengan avatar yang tidak bisa dihapus
+        }
+
+        $user->update(['avatar_url' => null]);
+        $user->clearUserCache();
+
+        session()->flash('success', 'Foto profil berhasil dihapus.');
+
+        return response()->json(['status' => 'success']);
     }
 
     public function destroy(Request $request): RedirectResponse
@@ -72,11 +124,12 @@ class ProfileController extends Controller
 
         $user = $request->user();
 
-        Auth::guard('web')->logout();
-        
-        // Bersihkan cache sebelum delete agar data tidak nyangkut di memori
+        // FIX: bersihkan cache dan hapus user SEBELUM logout
+        // agar $user masih valid saat clearUserCache() dan delete() dipanggil
         $user->clearUserCache();
         $user->delete();
+
+        Auth::guard('web')->logout();
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

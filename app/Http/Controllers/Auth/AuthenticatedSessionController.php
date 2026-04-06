@@ -23,10 +23,9 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
 
-        $user      = auth()->user();
-        $userRoles = $user->roles()->get();
+        $user = auth()->user();
 
-        // 1. Cek status suspend
+        // 1. Cek suspend DULU sebelum query apapun — hindari query roles yang sia-sia
         if ($user->isSuspended()) {
             Auth::guard('web')->logout();
             $request->session()->invalidate();
@@ -39,14 +38,29 @@ class AuthenticatedSessionController extends Controller
             return back()->withErrors(['email' => $message])->onlyInput('email');
         }
 
-        // 2. Cache Data
+        // 2. Query roles sekali, pakai untuk cache + redirect logic
+        $userRoles  = $user->roles()->get();
+        $roleNames  = $userRoles->pluck('name')->map(fn($r) => strtolower($r));
+
+        // 3. Cache — format konsisten dengan getCachedRoles() di User.php
         $user->cacheUserData();
-        Cache::put("user:{$user->id}:roles", $userRoles->toArray(), now()->addHours(8));
+        Cache::put(
+            "user:{$user->id}:roles",
+            $userRoles->map(fn($r) => [
+                'id'          => $r->id,
+                'name'        => $r->name,
+                'module'      => $r->module,
+                'is_academic' => (bool) $r->is_academic,
+            ])->toArray(),
+            now()->addHours(8)
+        );
 
-        // Ambil nama role dalam lowercase untuk pengecekan
-        $roleNames = $userRoles->pluck('name')->map(fn($r) => strtolower($r));
+        // 4. Simpan session_version agar middleware CheckSessionVersion bisa bekerja
+        $request->session()->put('session_version', $user->session_version);
 
-        // 3. Audit Log
+        $user->recordLogin();
+
+        // 5. Audit Log
         AuditLogger::log(
             module:      'auth',
             action:      'LOGIN',
@@ -54,14 +68,14 @@ class AuthenticatedSessionController extends Controller
             userId:      $user->id,
         );
 
-        // 4. Redirect Logic 
-        
+        // 6. Redirect Logic
+
         // Superadmin selalu prioritas utama
         if ($roleNames->contains('superadmin')) {
             return redirect()->intended(route('superadmin.dashboard'));
         }
 
-        // Mapping Admin ke Modul Spesifik
+        // Admin modul — masing-masing dikunci ke dashboard modulnya
         $adminRedirects = [
             'admin_banksoal'      => 'banksoal.dashboard',
             'admin_capstone'      => 'capstone.dashboard',
@@ -75,16 +89,12 @@ class AuthenticatedSessionController extends Controller
             }
         }
 
-        // Mahasiswa, Dosen, GPM diarahkan ke Dashboard Global
+        // Mahasiswa, Dosen, GPM ke dashboard global
         if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm'])->isNotEmpty()) {
             return redirect()->intended(route('dashboard'));
         }
 
-        /**
-         * PERUBAHAN DISINI: Protection Layer
-         * Jika user tembus sampai sini (artinya login sukses tapi TIDAK PUNYA ROLE),
-         * maka kita logout paksa agar tidak masuk ke dashboard sebagai "mahasiswa kosong".
-         */
+        // Protection layer: login sukses tapi tidak punya role yang dikenali
         Auth::guard('web')->logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
@@ -105,13 +115,11 @@ class AuthenticatedSessionController extends Controller
                 description: "Logout dari sistem",
                 userId:      $user->id,
             );
+
+            $user->clearUserCache();
         }
 
         Auth::guard('web')->logout();
-
-        if ($user) {
-            $user->clearUserCache();
-        }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();
