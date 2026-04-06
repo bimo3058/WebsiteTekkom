@@ -11,17 +11,10 @@ class CheckSessionVersion
     public function handle(Request $request, Closure $next)
     {
         if (Auth::check()) {
-            $user = Auth::user();
-            
-            // Ambil versi session yang tersimpan di browser saat ini
-            $currentSessionVersion = session('session_version');
+            $user                  = Auth::user();
+            $currentSessionVersion = (int) session('session_version', 0);
 
-            // Jika session browser belum punya versi, kasih versi yang ada di DB sekarang
-            if ($currentSessionVersion === null) {
-                session(['session_version' => $user->session_version]);
-            } 
-            // JIKA BERBEDA: Artinya Admin baru saja menaikkan versi di DB (Force Logout)
-            else if ($currentSessionVersion != $user->session_version) {
+            if ($currentSessionVersion !== (int) $user->session_version) {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
