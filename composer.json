@@ -90,15 +90,10 @@
             "include": [
                 "Modules/*/composer.json"
             ]
-        },
-        "patches": {
-            "laravel/telescope": {
-                "Fix boolean query for PostgreSQL": "patches/telescope-boolean-fix.patch"
-            }
         }
     },
     "config": {
-        "optimize-autoloader": true,
+        "optimize-autoloader": false,
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {

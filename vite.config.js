@@ -11,7 +11,8 @@ export default defineConfig({
     server: {
         host: "0.0.0.0", // Membuka akses agar IP lain (HP) bisa konek
         hmr: {
-            host: "192.168.1.102", // GANTI dengan IP laptop kamu yang ada di ipconfig
+            host: process.env.VITE_HMR_HOST || "localhost",
+            protocol: "ws",
         },
     },
 });

@@ -51,7 +51,6 @@
         
         .badge-status { font-weight: 600; padding: 0.35rem 0.8rem; font-size: 0.7rem; border-radius: 0.375rem; letter-spacing: 0.5px;}
         .status-disetujui { background-color: #dcfce7; color: #059669; border: 1px solid #a7f3d0; }
-        .status-revisi { background-color: #fee2e2; color: #e11d48; border: 1px solid #fecaca; }
         
         .btn-action { color: #2563eb; font-weight: 600; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; flex-direction: column; }
         .btn-action i { font-size: 1.1rem; margin-bottom: 0.2rem; }
@@ -74,7 +73,7 @@
 
         <div class="nav-tabs-custom d-flex">
             <a href="#" class="nav-link active text-decoration-none">
-                Selesai Direview <span class="badge-count" style="background-color: #e0e7ff;">24</span>
+                Selesai Direview <span class="badge-count" style="background-color: #e0e7ff;">{{ $riwayat_soal->count() }}</span>
             </a>
         </div>
 
@@ -96,73 +95,59 @@
                             <th width="25%">MATA KULIAH</th>
                             <th width="20%">DOSEN PENGAMPU</th>
                             <th width="15%">JUMLAH SOAL</th>
-                            <th width="15%">TANGGAL REVIEW</th>
-                            <th width="15%">STATUS AKHIR</th>
+                            <th width="15%">TANGGAL REVIEW TERAKHIR</th>
+                            <th width="15%">STATUS</th>
                             <th width="10%" class="text-center">AKSI</th>
                         </tr>
                     </thead>
                     <tbody>
+                        @forelse($riwayat_soal as $riwayat)
                         <tr>
                             <td>
-                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">Algoritma & Struktur Data</div>
-                                <div class="text-muted" style="font-size: 0.8rem;">CS201</div>
+                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $riwayat->mk_nama }}</div>
+                                <div class="text-muted" style="font-size: 0.8rem;">{{ $riwayat->mk_kode }}</div>
                             </td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">Budi Santoso</span></td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">40 Butir</span></td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">15 Sep 2023</span></td>
-                            <td><span class="badge-status status-disetujui">DISETUJUI</span></td>
+                            <td><span class="text-muted" style="font-size: 0.9rem;">Dosen Pengampu</span></td>
+                            <td><span class="text-muted" style="font-size: 0.9rem;">{{ $riwayat->jumlah_soal }} Butir Direview</span></td>
+                            <td>
+                                <span class="text-muted" style="font-size: 0.9rem;">
+                                    {{ $riwayat->tanggal_review ? \Carbon\Carbon::parse($riwayat->tanggal_review)->format('d M Y') : '-' }}
+                                </span>
+                            </td>
+                            <td><span class="badge-status status-disetujui">SELESAI</span></td>
                             <td class="text-center">
                                 <a href="#" class="btn-action">
                                     <i class="far fa-eye"></i> <span>Lihat Detail</span>
                                 </a>
                             </td>
                         </tr>
+                        @empty
                         <tr>
-                            <td>
-                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">Pemrograman Web</div>
-                                <div class="text-muted" style="font-size: 0.8rem;">CS305</div>
-                            </td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">Siti Aminah</span></td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">50 Butir</span></td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">16 Sep 2023</span></td>
-                            <td><span class="badge-status status-revisi">REVISI</span></td>
-                            <td class="text-center">
-                                <a href="#" class="btn-action">
-                                    <i class="far fa-eye"></i> <span>Lihat Detail</span>
-                                </a>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center justify-content-center">
+                                    <i class="fas fa-history text-muted mb-3" style="font-size: 3rem; opacity: 0.3;"></i>
+                                    <h5 class="fw-bold text-muted">Belum Ada Riwayat</h5>
+                                    <p class="text-secondary mb-0" style="font-size: 0.9rem;">Belum ada paket soal mata kuliah yang selesai divalidasi oleh GPM.</p>
+                                </div>
                             </td>
                         </tr>
-                        <tr>
-                            <td>
-                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">Keamanan Siber</div>
-                                <div class="text-muted" style="font-size: 0.8rem;">CS410</div>
-                            </td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">Dr. Rina M.</span></td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">30 Butir</span></td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">18 Sep 2023</span></td>
-                            <td><span class="badge-status status-disetujui">DISETUJUI</span></td>
-                            <td class="text-center">
-                                <a href="#" class="btn-action">
-                                    <i class="far fa-eye"></i> <span>Lihat Detail</span>
-                                </a>
-                            </td>
-                        </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
             
+            @if($riwayat_soal->count() > 0)
             <div class="border-top px-4 py-3 d-flex justify-content-between align-items-center">
-                <span class="text-muted" style="font-size: 0.85rem;">Menampilkan 3 dari 24 item</span>
+                <span class="text-muted" style="font-size: 0.85rem;">Menampilkan {{ $riwayat_soal->count() }} item</span>
                 <nav>
                     <ul class="pagination pagination-custom mb-0">
                         <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-chevron-left" style="font-size: 0.7rem;"></i></a></li>
                         <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">3</a></li>
                         <li class="page-item"><a class="page-link" href="#"><i class="fas fa-chevron-right" style="font-size: 0.7rem;"></i></a></li>
                     </ul>
                 </nav>
             </div>
+            @endif
         </div>
 
     </div>
