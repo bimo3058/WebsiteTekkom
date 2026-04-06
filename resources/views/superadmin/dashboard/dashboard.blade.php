@@ -156,11 +156,87 @@
                 <x-ui.separator class="flex-1" />
             </div>
 
-            {{-- 2 kolom sejajar --}}
-            <div class="flex flex-col lg:flex-row gap-5 mb-7 items-stretch">
+            {{-- 3 kolom sejajar --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mb-7 items-stretch">
 
-                {{-- ① User Baru Terdaftar --}}
-                <x-ui.card class="flex-1 min-w-0 shadow-sm border-border/60 overflow-hidden flex flex-col">
+                {{-- ① User Online Saat Ini --}}
+                <x-ui.card class="shadow-sm border-border/60 overflow-hidden flex flex-col">
+                    {{-- Header disamakan: bg-muted/30, text-muted-foreground, dan link menggunakan gaya primary --}}
+                    <x-ui.card-header class="!flex !flex-row !items-center !justify-between !px-5 !pt-4 !pb-3 border-b border-border bg-muted/30">
+                        <div class="flex items-center gap-2">
+                            {{-- Menggunakan Ikon Statis (sensors) untuk menggantikan animasi ping --}}
+                            <span class="material-symbols-outlined text-emerald-500 text-[18px]">sensors</span>
+                            <x-ui.card-title class="!text-[11px] !font-bold uppercase tracking-widest text-muted-foreground !m-0">
+                                Monitoring Online
+                            </x-ui.card-title>
+                        </div>
+                        <a href="{{ route('superadmin.users.online') }}" class="text-[10px] font-semibold text-primary hover:text-primary-400 flex items-center gap-0.5 transition-colors">
+                            Detail
+                            <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
+                        </a>
+                    </x-ui.card-header>
+
+                    <div class="flex-1">
+                        <x-ui.table>
+                            <x-ui.table-body>
+                                @php
+                                    // Tetap menggunakan DB::raw('true') untuk PostgreSQL/Supabase
+                                    $online_users = \App\Models\User::where('is_online', \Illuminate\Support\Facades\DB::raw('true'))
+                                        ->with('roles')
+                                        ->latest('last_login')
+                                        ->take(6)
+                                        ->get();
+                                @endphp
+                                @forelse($online_users as $user)
+                                <x-ui.table-row class="hover:bg-muted/20 transition-colors border-b last:border-0 border-border/40">
+                                    <x-ui.table-cell class="!py-3 !px-5">
+                                        <div class="flex items-center gap-3">
+                                            <div class="relative shrink-0">
+                                                <div class="size-8 rounded-full flex items-center justify-center border border-emerald-100 bg-emerald-50 text-emerald-600 overflow-hidden">
+                                                    @if($user->avatar_url)
+                                                        <img src="{{ $user->avatar_url }}" alt="avatar" class="w-full h-full object-cover">
+                                                    @else
+                                                        <span class="text-[10px] font-semibold uppercase">{{ substr($user->name, 0, 1) }}</span>
+                                                    @endif
+                                                </div>
+                                                <span class="absolute bottom-0 right-0 block h-2 w-2 rounded-full bg-emerald-500 border border-white"></span>
+                                            </div>
+                                            <div class="min-w-0 flex-1">
+                                                <p class="text-[12px] font-semibold text-grey-800 truncate leading-tight">{{ $user->name }}</p>
+                                                {{-- Penyesuaian Badge Role --}}
+                                                <div class="mt-1">
+                                                    @php
+                                                        $roleName = strtolower($user->roles->first()->name ?? '');
+                                                        $roleStyle = match(true) {
+                                                            $roleName === 'superadmin' => 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]',
+                                                            $roleName === 'dosen'      => 'bg-[#E7F9F3] text-[#00C08D] border-[#B2EBD9]',
+                                                            $roleName === 'mahasiswa'  => 'bg-[#FFF9E6] text-[#FFB800] border-[#FFEBB3]',
+                                                            default                    => 'bg-[#F0F5FF] text-[#5E53F4] border-[#D1DFFF]',
+                                                        };
+                                                    @endphp
+                                                    <span class="px-1.5 py-0.5 rounded-full text-[8px] font-bold border uppercase tracking-wider {{ $roleStyle }}">
+                                                        {{ $user->roles->first()->name ?? 'User' }}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                            <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
+                                                {{ $user->last_login ? $user->last_login->diffForHumans(null, true) : 'Active' }}
+                                            </span>
+                                        </div>
+                                    </x-ui.table-cell>
+                                </x-ui.table-row>
+                                @empty
+                                <x-ui.table-row>
+                                    <x-ui.table-cell class="text-center py-10 text-[11px] text-muted-foreground italic">Tidak ada user online.</x-ui.table-cell>
+                                </x-ui.table-row>
+                                @endforelse
+                            </x-ui.table-body>
+                        </x-ui.table>
+                    </div>
+                </x-ui.card>
+
+                {{-- ② User Baru Terdaftar --}}
+                <x-ui.card class="shadow-sm border-border/60 overflow-hidden flex flex-col">
                     <x-ui.card-header class="!flex !flex-row !items-center !px-5 !pt-4 !pb-3 border-b border-border bg-muted/30">
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-success-500 text-[18px]">person_add</span>
@@ -176,28 +252,28 @@
                                 <x-ui.table-row class="hover:bg-muted/20 transition-colors border-b last:border-0 border-border/40">
                                     <x-ui.table-cell class="!py-3 !px-5">
                                         <div class="flex items-center gap-3">
-                                            <div class="size-8 rounded-full flex items-center justify-center border border-[#DEE2E6] bg-[#F8F9FA] text-[#6C757D] flex-shrink-0">
-                                                <span class="text-[10px] font-semibold uppercase">{{ substr($user->name, 0, 1) }}</span>
+                                            <div class="size-8 rounded-full flex items-center justify-center border border-[#DEE2E6] bg-[#F8F9FA] text-[#6C757D] flex-shrink-0 overflow-hidden">
+                                                @if($user->avatar_url)
+                                                    <img src="{{ $user->avatar_url }}" alt="avatar" class="w-full h-full object-cover">
+                                                @else
+                                                    <span class="text-[10px] font-semibold uppercase">{{ substr($user->name, 0, 1) }}</span>
+                                                @endif
                                             </div>
                                             <div class="min-w-0 flex-1">
                                                 <p class="text-[12px] font-semibold text-grey-800 truncate leading-tight">{{ $user->name }}</p>
                                                 <p class="text-[10px] text-muted-foreground mt-0.5 font-medium">Joined {{ $user->created_at->format('d M Y') }}</p>
                                             </div>
+                                            {{-- Penyesuaian Badge Role agar Sinkron dengan User Management --}}
                                             @php
                                                 $roleName = strtolower($user->roles->first()->name ?? '');
-                                                $roleColors = match($roleName) {
-                                                    'superadmin'         => 'bg-purple-50 text-purple-600 border-purple-100',
-                                                    'dosen'              => 'bg-green-50 text-green-600 border-green-100',
-                                                    'mahasiswa'          => 'bg-orange-50 text-orange-600 border-orange-100',
-                                                    'gpm'                => 'bg-teal-50 text-teal-600 border-teal-100',
-                                                    'admin_banksoal'     => 'bg-yellow-50 text-yellow-600 border-yellow-100',
-                                                    'admin_capstone'     => 'bg-cyan-50 text-cyan-600 border-cyan-100',
-                                                    'admin_eoffice'      => 'bg-indigo-50 text-indigo-600 border-indigo-100',
-                                                    'admin_kemahasiswaan'=> 'bg-rose-50 text-rose-600 border-rose-100',
-                                                    default              => 'bg-blue-50 text-blue-600 border-blue-100',
+                                                $roleStyle = match(true) {
+                                                    $roleName === 'superadmin' => 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]',
+                                                    $roleName === 'dosen'      => 'bg-[#E7F9F3] text-[#00C08D] border-[#B2EBD9]',
+                                                    $roleName === 'mahasiswa'  => 'bg-[#FFF9E6] text-[#FFB800] border-[#FFEBB3]',
+                                                    default                    => 'bg-[#F0F5FF] text-[#5E53F4] border-[#D1DFFF]',
                                                 };
                                             @endphp
-                                            <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-black border uppercase shrink-0 {{ $roleColors }}">
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider {{ $roleStyle }}">
                                                 {{ $user->roles->first()->name ?? 'USER' }}
                                             </span>
                                         </div>
@@ -213,8 +289,8 @@
                     </div>
                 </x-ui.card>
 
-                {{-- ② Log Aktivitas Terbaru --}}
-                <x-ui.card class="flex-1 min-w-0 shadow-sm border-border/60 overflow-hidden flex flex-col">
+                {{-- ③ Log Aktivitas Terbaru --}}
+                <x-ui.card class="shadow-sm border-border/60 overflow-hidden flex flex-col">
                     <x-ui.card-header class="!flex !flex-row !items-center !justify-between !px-5 !pt-4 !pb-3 border-b border-border bg-muted/30">
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-purple-500 text-[18px]">history</span>
@@ -227,16 +303,8 @@
                             <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
                         </a>
                     </x-ui.card-header>
-                    <div class="flex-1 overflow-x-auto">
+                    <div class="flex-1 overflow-x-auto scrollbar-none">
                         <x-ui.table>
-                            <x-ui.table-header>
-                                <x-ui.table-row class="bg-muted/20 border-b border-border/40 hover:bg-muted/20">
-                                    <x-ui.table-head class="!px-4 !py-2 text-[9px] font-bold uppercase tracking-widest text-muted-foreground w-[76px]">Waktu</x-ui.table-head>
-                                    <x-ui.table-head class="!px-4 !py-2 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">User</x-ui.table-head>
-                                    <x-ui.table-head class="!px-4 !py-2 text-[9px] font-bold uppercase tracking-widest text-muted-foreground w-[68px]">Aksi</x-ui.table-head>
-                                    <x-ui.table-head class="!px-4 !py-2 text-[9px] font-bold uppercase tracking-widest text-muted-foreground">Deskripsi</x-ui.table-head>
-                                </x-ui.table-row>
-                            </x-ui.table-header>
                             <x-ui.table-body>
                                 @forelse($recent_logs->take(6) as $log)
                                 @php
@@ -246,49 +314,64 @@
                                         'DELETE'  => 'destructive',
                                         'LOGIN'   => 'purple',
                                         'LOGOUT'  => 'secondary',
-                                        'VIEW'    => 'sky',
                                         default   => 'secondary',
                                     };
                                 @endphp
                                 <x-ui.table-row class="hover:bg-muted/20 transition-colors border-b last:border-0 border-border/40">
-                                    <x-ui.table-cell class="!px-4 !py-3 align-middle">
-                                        <span class="text-[10px] font-medium text-grey-700 block leading-tight">{{ $log->created_at->format('d/m/Y') }}</span>
-                                        <span class="text-[9px] text-muted-foreground block leading-tight">{{ $log->created_at->format('H:i') }}</span>
-                                    </x-ui.table-cell>
-                                    <x-ui.table-cell class="!px-4 !py-3 align-middle">
-                                        <span class="text-[11px] font-semibold text-grey-800 block leading-tight truncate max-w-[110px]">{{ $log->user->name ?? 'System' }}</span>
-                                        @if($log->user)
-                                        <span class="text-[9px] text-muted-foreground block leading-tight truncate max-w-[110px]">{{ Str::limit($log->user->email, 20) }}</span>
-                                        @endif
-                                    </x-ui.table-cell>
-                                    <x-ui.table-cell class="!px-4 !py-3 align-middle">
-                                        <x-ui.badge :variant="$actionVariant" class="!text-[8px] !px-1.5 !py-0 font-black leading-none">
-                                            {{ $log->action }}
-                                        </x-ui.badge>
-                                    </x-ui.table-cell>
-                                    <x-ui.table-cell class="!px-4 !py-3 align-middle">
-                                        <span class="text-[10px] text-grey-600 leading-snug line-clamp-2 block" title="{{ $log->description }}">
-                                            {{ Str::limit($log->description, 48) }}
-                                        </span>
-                                        @if($log->module)
-                                        <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[9px] font-semibold bg-slate-100 text-slate-500 border border-slate-200 mt-0.5 leading-none">
-                                            {{ str_replace('_', ' ', $log->module) }}
-                                        </span>
-                                        @endif
+                                    <x-ui.table-cell class="!py-3 !px-5">
+                                        <div class="flex items-center gap-3">
+                                            
+                                            {{-- Avatar Container Mulai (dengan Logika Dinamis) --}}
+                                            @if($log->user)
+                                                {{-- Identifikasi Superadmin dan Tentukan Style Avatar --}}
+                                                @php
+                                                    // Asumsi: hasRole('superadmin') tersedia (misal dari Spatie Permission)
+                                                    $isSuperadmin = $log->user->hasRole('superadmin'); 
+                                                    
+                                                    // Tentukan kelas background, border, dan text untuk div avatar
+                                                    $avatarClasses = $isSuperadmin 
+                                                        ? '!bg-[#F1E9FF] border-[#D1BFFF] text-[#5E53F4]' 
+                                                        : 'border-[#DEE2E6] bg-[#F8F9FA] text-[#6C757D]';
+                                                @endphp
+
+                                                {{-- Avatar Container (dengan class dinamis) --}}
+                                                <div class="size-8 rounded-full flex items-center justify-center border flex-shrink-0 overflow-hidden {{ $avatarClasses }}">
+                                                    @if($log->user->avatar_url)
+                                                        <img src="{{ $log->user->avatar_url }}" alt="avatar" class="w-full h-full object-cover">
+                                                    @else
+                                                        <span class="text-[10px] font-semibold uppercase">{{ substr($log->user->name, 0, 1) }}</span>
+                                                    @endif
+                                                </div>
+                                            @else
+                                                {{-- Gaya untuk System --}}
+                                                <div class="size-8 rounded-full flex items-center justify-center border border-[#DEE2E6] bg-[#F8F9FA] text-[#6C757D] flex-shrink-0 overflow-hidden">
+                                                    <span class="material-symbols-outlined text-[16px]">settings_suggest</span>
+                                                </div>
+                                            @endif
+                                            {{-- Avatar Container Selesai --}}
+
+                                            <div class="min-w-0 flex-1">
+                                                <p class="text-[12px] font-semibold text-grey-800 truncate leading-tight">{{ $log->user->name ?? 'System' }}</p>
+                                                <p class="text-[10px] text-muted-foreground mt-0.5 truncate">{{ $log->description }}</p>
+                                            </div>
+                                            <div class="text-right shrink-0">
+                                                <x-ui.badge :variant="$actionVariant" class="!text-[8px] !px-1.5 !py-0 font-black leading-none block mb-1">
+                                                    {{ $log->action }}
+                                                </x-ui.badge>
+                                                <span class="text-[9px] text-muted-foreground font-medium">{{ $log->created_at->diffForHumans(null, true) }}</span>
+                                            </div>
+                                        </div>
                                     </x-ui.table-cell>
                                 </x-ui.table-row>
                                 @empty
                                 <x-ui.table-row>
-                                    <x-ui.table-cell colspan="4" class="text-center py-10 text-[11px] text-muted-foreground italic">
-                                        Tidak ada log aktivitas terbaru.
-                                    </x-ui.table-cell>
+                                    <x-ui.table-cell class="text-center py-10 text-[11px] text-muted-foreground italic">Tidak ada log aktivitas.</x-ui.table-cell>
                                 </x-ui.table-row>
                                 @endforelse
                             </x-ui.table-body>
                         </x-ui.table>
                     </div>
                 </x-ui.card>
-
             </div>
 
             {{-- ── Cloud Storage Test ──────────────────────────── --}}

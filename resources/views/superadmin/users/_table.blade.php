@@ -34,45 +34,52 @@
 <div class="grid grid-cols-1 @if($hasOnline && $hasSuspended) md:grid-cols-2 @endif gap-5 mb-6">
     {{-- 1. Card Online Users --}}
     @if($hasOnline)
-    <div class="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-4 shadow-sm h-full">
-        {{-- Header Tetap Sama --}}
+    <div class="bg-emerald-50/30 border border-emerald-100 rounded-2xl p-4 shadow-sm h-full">
         <div class="flex items-center justify-between mb-4 px-1">
             <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
                 <h2 class="text-[11px] font-bold text-emerald-800 uppercase tracking-widest">
                     Online ({{ $allOnline->count() }})
                 </h2>
             </div>
-            <a href="{{ route('superadmin.users.online') }}" class="text-[9px] font-bold text-emerald-600 hover:underline uppercase tracking-widest">View All &rarr;</a>
+            <a href="{{ route('superadmin.users.online') }}" class="text-[9px] font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-widest bg-white px-2 py-1 rounded-lg border border-emerald-100 shadow-sm transition-all">View All &rarr;</a>
         </div>
 
-        {{-- List Dibuat Vertikal & Compact (Hapus overflow-x-auto) --}}
         <div class="space-y-2">
             @foreach($onlineUsers as $onlineUser)
                 @php 
                     $isSuperadmin = $onlineUser->hasRole('superadmin');
                     $initials = strtoupper(substr($onlineUser->name, 0, 1));
+                    $avatarColors = $isSuperadmin ? '!bg-[#F1E9FF] !text-[#5E53F4] border-[#D1BFFF]' : '!bg-[#F8F9FA] !text-[#6C757D] border-[#DEE2E6]';
                 @endphp
-                <div class="bg-white border border-emerald-100/50 rounded-xl p-2 flex items-center justify-between gap-3 hover:border-emerald-200 transition-colors">
-                    <div class="flex items-center gap-2.5 min-w-0">
+                <div class="bg-white border border-emerald-100/50 rounded-xl p-2.5 flex items-center justify-between gap-3 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5 transition-all group">
+                    <div class="flex items-center gap-3 min-w-0">
                         <div class="relative shrink-0">
-                            {{-- Avatar diperkecil (size xs/sm) --}}
-                            <x-ui.avatar size="xs" :src="$onlineUser->avatar_url" :fallback="new \Illuminate\Support\HtmlString($isSuperadmin ? '<span class=\'material-symbols-outlined !text-[14px]\'>admin_panel_settings</span>' : $initials)" class="!w-8 !h-8 {{ $isSuperadmin ? '!bg-[#F1E9FF] !text-[#5E53F4]' : '!bg-[#F8F9FA] !text-[#6C757D]' }}" />
-                            <span class="absolute bottom-0 right-0 size-2 bg-emerald-500 border border-white rounded-full"></span>
+                            <x-ui.avatar 
+                                size="sm" 
+                                :src="$onlineUser->avatar_url" 
+                                :fallback="new \Illuminate\Support\HtmlString($isSuperadmin ? '<span class=\'material-symbols-outlined !text-[16px]\'>admin_panel_settings</span>' : $initials)" 
+                                class="border-2 border-white shadow-sm {{ $avatarColors }}" 
+                            />
+                            <span class="absolute bottom-0 right-0 size-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
                         </div>
                         <div class="min-w-0">
-                            <p class="text-[11px] font-bold text-slate-800 truncate tracking-tight">{{ $onlineUser->name }}</p>
-                            <p class="text-[9px] text-slate-500 uppercase tracking-tighter">{{ $onlineUser->roles->first()->name ?? 'User' }}</p>
+                            <p class="text-[12px] font-bold text-slate-800 truncate tracking-tight group-hover:text-emerald-700 transition-colors">{{ $onlineUser->name }}</p>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[9px] font-bold text-emerald-600 uppercase tracking-tighter bg-emerald-50 px-1 rounded">Active Now</span>
+                                <span class="text-[10px] text-slate-400 font-medium">•</span>
+                                <span class="text-[9px] text-slate-500 uppercase font-semibold tracking-tighter">{{ $onlineUser->roles->first()->name ?? 'User' }}</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="flex items-center gap-1.5">
+                    <div class="flex items-center gap-1">
                         @if(!$isSuperadmin)
-                            <button type="button" onclick="openSuspendModal({ id: '{{ $onlineUser->id }}', name: '{{ $onlineUser->name }}' })" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors" title="Suspend">
-                                <span class="material-symbols-outlined" style="font-size:14px">block</span>
+                            <button type="button" onclick="openSuspendModal({ id: '{{ $onlineUser->id }}', name: '{{ $onlineUser->name }}' })" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
+                                <span class="material-symbols-outlined" style="font-size:16px">block</span>
                             </button>
                         @endif
-                        <button type="button" onclick="openForceLogoutModal({ id: '{{ $onlineUser->id }}', name: '{{ $onlineUser->name }}' })" class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors" title="Force Logout">
-                            <span class="material-symbols-outlined" style="font-size:14px">logout</span>
+                        <button type="button" onclick="openForceLogoutModal({ id: '{{ $onlineUser->id }}', name: '{{ $onlineUser->name }}' })" class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
+                            <span class="material-symbols-outlined" style="font-size:16px">logout</span>
                         </button>
                     </div>
                 </div>
@@ -83,15 +90,15 @@
 
     {{-- 2. Card Suspended Users --}}
     @if($hasSuspended)
-    <div class="bg-rose-50/50 border border-rose-100 rounded-2xl p-4 shadow-sm h-full">
+    <div class="bg-rose-50/30 border border-rose-100 rounded-2xl p-4 shadow-sm h-full">
         <div class="flex items-center justify-between mb-4 px-1">
             <div class="flex items-center gap-2">
-                <div class="w-2 h-2 rounded-full bg-rose-500"></div>
+                <div class="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
                 <h2 class="text-[11px] font-bold text-rose-800 uppercase tracking-widest">
                     Suspended ({{ $allSuspended->count() }})
                 </h2>
             </div>
-            <a href="{{ route('superadmin.users.suspended') }}" class="text-[9px] font-bold text-rose-600 hover:underline uppercase tracking-widest">View All &rarr;</a>
+            <a href="{{ route('superadmin.users.suspended') }}" class="text-[9px] font-bold text-rose-600 hover:text-rose-700 uppercase tracking-widest bg-white px-2 py-1 rounded-lg border border-rose-100 shadow-sm transition-all">View All &rarr;</a>
         </div>
 
         <div class="space-y-2">
@@ -99,21 +106,34 @@
                 @php 
                     $isSuperadmin = $suspendedUser->hasRole('superadmin');
                     $initials = strtoupper(substr($suspendedUser->name, 0, 1));
+                    $avatarColors = $isSuperadmin ? '!bg-[#F1E9FF] !text-[#5E53F4] border-[#D1BFFF]' : '!bg-rose-50 !text-rose-400 border-rose-100';
                 @endphp
-                <div class="bg-white border border-rose-100/50 rounded-xl p-2 flex items-center justify-between gap-3 hover:border-rose-200 transition-colors">
-                    <div class="flex items-center gap-2.5 min-w-0">
-                        <div class="relative shrink-0 opacity-60 grayscale">
-                            <x-ui.avatar size="xs" :src="$suspendedUser->avatar_url" :fallback="new \Illuminate\Support\HtmlString($isSuperadmin ? '<span class=\'material-symbols-outlined !text-[14px]\'>admin_panel_settings</span>' : $initials)" class="!w-8 !h-8 {{ $isSuperadmin ? '!bg-[#F1E9FF] !text-[#5E53F4]' : '!bg-[#F8F9FA] !text-[#6C757D]' }}" />
+                <div class="bg-white border border-rose-100/50 rounded-xl p-2.5 flex items-center justify-between gap-3 hover:border-rose-300 hover:shadow-md hover:shadow-rose-500/5 transition-all group">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="relative shrink-0 opacity-60 grayscale-[0.5]">
+                            <x-ui.avatar 
+                                size="sm" 
+                                :src="$suspendedUser->avatar_url" 
+                                :fallback="new \Illuminate\Support\HtmlString($isSuperadmin ? '<span class=\'material-symbols-outlined !text-[16px]\'>admin_panel_settings</span>' : $initials)" 
+                                class="border-2 border-white shadow-sm {{ $avatarColors }}" 
+                            />
                         </div>
                         <div class="min-w-0">
-                            <p class="text-[11px] font-bold text-slate-800 truncate tracking-tight line-through decoration-rose-200">{{ $suspendedUser->name }}</p>
-                            <p class="text-[9px] text-rose-500 font-medium tracking-tighter truncate">{{ Str::limit($suspendedUser->suspension_reason ?? 'No reason', 20) }}</p>
+                            <p class="text-[12px] font-bold text-slate-800 truncate tracking-tight line-through decoration-rose-300 opacity-70 group-hover:text-rose-700 transition-colors">
+                                {{ $suspendedUser->name }}
+                            </p>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[9px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded uppercase tracking-tighter border border-rose-100">Blocked</span>
+                                <span class="text-[9px] text-rose-400 font-medium truncate italic max-w-[100px]">
+                                    {{ $suspendedUser->suspension_reason ?? 'Policy Violation' }}
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <form method="POST" action="{{ route('superadmin.users.unsuspend', $suspendedUser) }}" class="m-0">
                         @csrf
-                        <button type="submit" class="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg">
-                            <span class="material-symbols-outlined" style="font-size:14px">lock_open</span>
+                        <button type="submit" class="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors shadow-sm bg-white border border-emerald-100 active:scale-95" title="Unsuspend">
+                            <span class="material-symbols-outlined" style="font-size:16px">lock_open</span>
                         </button>
                     </form>
                 </div>
@@ -121,7 +141,6 @@
         </div>
     </div>
     @endif
-
 </div>
 
 {{-- MAIN TABLE --}}
@@ -162,7 +181,7 @@
                         default => '!bg-[#F8F9FA] !text-[#6C757D] border-[#DEE2E6]',
                     };
                 @endphp
-                <tr class="hover:bg-[#F8F9FA]/50 transition-colors group {{ $isMe ? 'bg-slate-50/30' : '' }}">
+                <tr class="hover:bg-[#F8F9FA]/50 transition-colors group {{ $isMe ? 'bg-slate-50/30' : '' }} {{ $user->isSuspended() ? 'bg-rose-50/20' : '' }}">
                     <td class="px-5 py-4">
                         @if(!$isMe)
                         <input type="checkbox" name="selected_users[]" value="{{ $user->id }}" 
@@ -178,13 +197,16 @@
                     <td class="px-5 py-4">
                         <div class="flex items-center gap-4">
                             {{-- Avatar Container --}}
-                            <div class="relative shrink-0">
-                                <x-ui.avatar 
-                                    size="sm" 
-                                    :src="$user->avatar_url" 
-                                    :fallback="new \Illuminate\Support\HtmlString($isSuperadmin ? '<span class=\'material-symbols-outlined !text-[18px]\'>admin_panel_settings</span>' : $initials)" 
-                                    class="border-2 border-white shadow-sm {{ $avatarColors }} shrink-0" 
-                                />
+                            <div class="relative shrink-0 {{ $user->isSuspended() ? 'opacity-70 grayscale-[0.5]' : '' }}">
+                                <div class="size-9 rounded-full flex items-center justify-center border-2 border-white shadow-sm overflow-hidden {{ $avatarColors }}">
+                                    @if($user->avatar_url)
+                                        <img src="{{ $user->avatar_url }}" alt="avatar" class="w-full h-full object-cover">
+                                    @elseif($isSuperadmin)
+                                        <span class="material-symbols-outlined !text-[18px]">admin_panel_settings</span>
+                                    @else
+                                        <span class="text-[11px] font-semibold uppercase">{{ $initials }}</span>
+                                    @endif
+                                </div>
                                 @if($user->is_online)
                                     <span class="absolute bottom-0 right-0 size-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
                                 @endif
@@ -193,11 +215,19 @@
                             {{-- Info Text --}}
                             <div class="min-w-0 flex-1">
                                 <div class="flex items-center gap-1.5 mb-0.5">
-                                    <p class="text-[13px] font-semibold text-[#1A1C1E] truncate tracking-tight">
+                                    <p class="text-[13px] font-semibold {{ $user->isSuspended() ? 'text-rose-600 line-through decoration-rose-300' : 'text-[#1A1C1E]' }} truncate tracking-tight">
                                         {{ $user->name }}
                                     </p>
                                     @if($isMe)
                                         <span class="text-[10px] text-[#5E53F4] font-semibold bg-[#F1E9FF] px-1.5 rounded-md">YOU</span>
+                                    @endif
+                                    
+                                    {{-- Badge Penanda Suspended --}}
+                                    @if($user->isSuspended())
+                                        <span class="flex items-center gap-0.5 text-[9px] text-rose-600 font-bold bg-rose-50 border border-rose-100 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
+                                            <span class="material-symbols-outlined !text-[12px]">block</span>
+                                            Suspended
+                                        </span>
                                     @endif
                                 </div>
                                 <p class="text-[#6C757D] text-[11px] font-medium truncate leading-normal">

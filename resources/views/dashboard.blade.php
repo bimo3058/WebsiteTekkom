@@ -20,12 +20,18 @@
         <div class="relative">
             <button @click="open = !open"
                     class="flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg hover:bg-slate-100 transition-colors group">
+                
                 {{-- Avatar circle --}}
-                <div class="w-7 h-7 rounded-full bg-primary-50 flex items-center justify-center flex-shrink-0">
-                    <span class="text-primary-600 font-bold text-[11px]">
-                        {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
-                    </span>
+                <div class="w-7 h-7 rounded-full bg-primary-50 flex items-center justify-center flex-shrink-0 overflow-hidden border border-primary-100">
+                    @if(auth()->user()->avatar_url)
+                        <img src="{{ auth()->user()->avatar_url }}" alt="avatar" class="w-full h-full object-cover">
+                    @else
+                        <span class="text-primary-600 font-bold text-[11px] uppercase">
+                            {{ substr(auth()->user()->name, 0, 2) }}
+                        </span>
+                    @endif
                 </div>
+
                 <div class="text-left hidden sm:block">
                     <p class="text-[12px] font-semibold text-slate-800 leading-tight">{{ auth()->user()->name }}</p>
                     <p class="text-[10px] text-slate-400 leading-tight">
