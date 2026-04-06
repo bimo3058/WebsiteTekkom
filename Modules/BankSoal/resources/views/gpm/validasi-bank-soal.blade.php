@@ -71,19 +71,26 @@
                         </tr>
                     </thead>
                     <tbody>
+                        @forelse($paket_soal as $paket)
                         <tr>
                             <td>
-                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">Algoritma & Struktur Data</div>
-                                <div class="text-muted" style="font-size: 0.8rem;">CS201</div>
+                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $paket->mk_nama }}</div>
+                                <div class="text-muted" style="font-size: 0.8rem;">{{ $paket->mk_kode }}</div>
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    <div class="avatar-text" style="background-color: #eff6ff; color: #1e3a8a;">BS</div>
-                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">Budi Santoso</span>
+                                    {{-- Mengambil 2 huruf awal dari nama mata kuliah sebagai avatar dummy sementara --}}
+                                    <div class="avatar-text" style="background-color: #eff6ff; color: #1e3a8a;">
+                                        {{ strtoupper(substr($paket->mk_nama, 0, 2)) }}
+                                    </div>
+                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">
+                                        {{-- TODO: Hubungkan relasi nama dosen dari database --}}
+                                        Dosen Pengampu
+                                    </span>
                                 </div>
                             </td>
-                            <td><span class="fw-semibold text-dark" style="font-size: 0.9rem;">40 Butir</span></td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">12 Sep 2023</span></td>
+                            <td><span class="fw-semibold text-dark" style="font-size: 0.9rem;">{{ $paket->jumlah_soal }} Butir</span></td>
+                            <td><span class="text-muted" style="font-size: 0.9rem;">-</span></td>
                             <td><span class="badge-menunggu">MENUNGGU</span></td>
                             <td class="text-end">
                                 <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal.review') }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
@@ -91,53 +98,24 @@
                                 </a>
                             </td>
                         </tr>
+                        @empty
                         <tr>
-                            <td>
-                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">Pemrograman Web</div>
-                                <div class="text-muted" style="font-size: 0.8rem;">CS305</div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-text" style="background-color: #e0e7ff; color: #1e40af;">SA</div>
-                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">Siti Aminah</span>
+                            <td colspan="6" class="text-center py-5">
+                                <div class="d-flex flex-column align-items-center justify-content-center">
+                                    <i class="fas fa-check-circle text-success mb-3" style="font-size: 3rem; opacity: 0.5;"></i>
+                                    <h5 class="fw-bold text-muted">Antrean Kosong</h5>
+                                    <p class="text-secondary mb-0" style="font-size: 0.9rem;">Saat ini tidak ada bank soal yang menunggu untuk divalidasi oleh GPM.</p>
                                 </div>
                             </td>
-                            <td><span class="fw-semibold text-dark" style="font-size: 0.9rem;">50 Butir</span></td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">13 Sep 2023</span></td>
-                            <td><span class="badge-menunggu">MENUNGGU</span></td>
-                            <td class="text-end">
-                                <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal.review') }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
-                                    Mulai Validasi <i class="fas fa-arrow-right ms-2" style="font-size: 0.8rem;"></i>
-                                </a>
-                            </td>
                         </tr>
-                        <tr>
-                            <td>
-                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">Jaringan Komputer</div>
-                                <div class="text-muted" style="font-size: 0.8rem;">CS402</div>
-                            </td>
-                            <td>
-                                <div class="d-flex align-items-center">
-                                    <div class="avatar-text" style="background-color: #e0f2fe; color: #3730a3;">AF</div>
-                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">Ahmad Fauzi</span>
-                                </div>
-                            </td>
-                            <td><span class="fw-semibold text-dark" style="font-size: 0.9rem;">35 Butir</span></td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">14 Sep 2023</span></td>
-                            <td><span class="badge-menunggu">MENUNGGU</span></td>
-                            <td class="text-end">
-                                <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal.review') }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
-                                    Mulai Validasi <i class="fas fa-arrow-right ms-2" style="font-size: 0.8rem;"></i>
-                                </a>
-                            </td>
-                        </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
             
-            <!-- Pagination -->
+            @if($paket_soal->count() > 0)
             <div class="border-top px-4 py-3 d-flex justify-content-between align-items-center">
-                <span class="text-muted" style="font-size: 0.85rem;">Showing 1 to 3 of 12 courses</span>
+                <span class="text-muted" style="font-size: 0.85rem;">Menampilkan {{ $paket_soal->count() }} mata kuliah</span>
                 <nav>
                     <ul class="pagination pagination-custom mb-0">
                         <li class="page-item disabled">
@@ -147,6 +125,7 @@
                     </ul>
                 </nav>
             </div>
+            @endif
         </div>
 
     </div>

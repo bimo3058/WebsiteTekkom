@@ -8,9 +8,11 @@ use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Services\MataKuliahService;
 use Modules\BankSoal\Services\PertanyaanService;
 use Modules\BankSoal\Services\KompreService;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 
 class BankSoalController extends Controller
 {
+    use AuthorizesRequests;
     public function __construct(
         protected MataKuliahService $mataKuliahService,
         protected PertanyaanService $pertanyaanService,
@@ -20,7 +22,7 @@ class BankSoalController extends Controller
     public function index()
     {
         $this->authorize('banksoal.view');
-        return view('banksoal::index');
+        return view('banksoal::pages.bank-soal.Dosen.index');
     }
 
     /* |--------------------------------------------------------------------------

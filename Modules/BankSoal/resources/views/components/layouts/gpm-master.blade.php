@@ -41,13 +41,19 @@
             href="{{ route('banksoal.dashboard') }}">
                 <i class="fas fa-home icon-width me-2"></i> Home
             </a>
-            <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.rps.gpm.validasi-rps*') ? 'active' : '' }}" href="{{ route('banksoal.rps.gpm.validasi-rps') ?? '#' }}">
+
+            <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.rps.gpm.validasi-rps*') ? 'active' : '' }}" 
+            href="{{ route('banksoal.rps.gpm.validasi-rps') }}">
                 <i class="fas fa-check-circle icon-width me-2"></i> Validasi RPS
             </a>
-            <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.soal.gpm.validasi-bank-soal*') ? 'active' : '' }}" href="{{ route('banksoal.soal.gpm.validasi-bank-soal') ?? '#' }}">
+
+            <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.soal.gpm.validasi-bank-soal*') ? 'active' : '' }}" 
+            href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}">
                 <i class="fas fa-question-circle icon-width me-2"></i> Validasi Bank Soal
             </a>
-            <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.riwayat-validasi*') ? 'active' : '' }}" href="{{ route('banksoal.riwayat-validasi') ?? '#' }}">
+
+            <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.rps.gpm.riwayat-validasi*') ? 'active' : '' }}" 
+            href="{{ route('banksoal.rps.gpm.riwayat-validasi') }}">
                 <i class="fas fa-history icon-width me-2"></i> Riwayat Validasi
             </a>
         </nav>

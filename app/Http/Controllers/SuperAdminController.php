@@ -68,6 +68,8 @@ class SuperAdminController extends Controller
             'total_superadmins' => Cache::remember('sa:total_superadmins', self::TTL_STATS,  fn() => User::whereHas('roles', fn($q) => $q->where('name', 'superadmin'))->count()),
             'total_gpm'         => Cache::remember('sa:total_gpm',         self::TTL_STATS,  fn() => User::whereHas('roles', fn($q) => $q->where('name', 'gpm'))->count()),
             'total_admin_modul' => Cache::remember('sa:total_admin_modul', self::TTL_STATS,  fn() => User::whereHas('roles', fn($q) => $q->where('name', 'LIKE', 'admin_%'))->count()),
+            'total_gpm'         => Cache::remember('sa:total_gpm',         self::TTL_STATS,  fn() => User::whereHas('roles', fn($q) => $q->where('name', 'gpm'))->count()),
+            'total_admin_modul' => Cache::remember('sa:total_admin_modul', self::TTL_STATS,  fn() => User::whereHas('roles', fn($q) => $q->where('name', 'LIKE', 'admin_%'))->count()),
             'total_lecturers'   => Cache::remember('sa:total_lecturers',   self::TTL_STATS,  fn() => User::whereHas('roles', fn($q) => $q->where('name', 'dosen'))->count()),
             'total_students'    => Cache::remember('sa:total_students',    self::TTL_STATS,  fn() => User::whereHas('roles', fn($q) => $q->where('name', 'mahasiswa'))->count()),
             

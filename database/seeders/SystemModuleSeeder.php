@@ -18,28 +18,24 @@ class SystemModuleSeeder extends Seeder
                 'slug'        => 'bank_soal',
                 'icon'        => 'book',
                 'description' => 'Manage question bank and learning materials',
-                'is_active'   => true,
             ],
             [
                 'name'        => 'Capstone',
                 'slug'        => 'capstone',
                 'icon'        => 'graduation-cap',
                 'description' => 'Manage capstone projects and thesis',
-                'is_active'   => true,
             ],
             [
                 'name'        => 'E-Office',
                 'slug'        => 'eoffice',
                 'icon'        => 'briefcase',
                 'description' => 'Manage office documents and workflow',
-                'is_active'   => true,
             ],
             [
                 'name'        => 'Manajemen Mahasiswa',
                 'slug'        => 'manajemen_mahasiswa',
                 'icon'        => 'users',
                 'description' => 'Manage student data and activities',
-                'is_active'   => true,
             ],
         ];
 
@@ -50,5 +46,6 @@ class SystemModuleSeeder extends Seeder
                 $module
             );
         }
+        
     }
 }
