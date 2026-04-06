@@ -204,7 +204,7 @@ class SuperAdminController extends Controller
                 : 10;
 
         // 2. Ambil daftar role untuk dropdown
-        $roles = \Illuminate\Support\Facades\Cache::remember('sa:roles_list', 3600, fn() => \Spatie\Permission\Models\Role::orderBy('name')->get());
+        $roles = \Illuminate\Support\Facades\Cache::remember('sa:roles_list', 3600, fn() => Role::orderBy('name')->get());
 
         $query = \App\Models\User::with(['roles', 'directPermissions'])
             ->whereNull('deleted_at')
@@ -243,7 +243,7 @@ class SuperAdminController extends Controller
                 ? (int) $request->input('per_page', 10)
                 : 10;
 
-        $roles = \Illuminate\Support\Facades\Cache::remember('sa:roles_list', 3600, fn() => \Spatie\Permission\Models\Role::orderBy('name')->get());
+        $roles = \Illuminate\Support\Facades\Cache::remember('sa:roles_list', 3600, fn() => Role::orderBy('name')->get());
 
         $query = \App\Models\User::with(['roles', 'directPermissions'])
             ->whereNull('deleted_at')

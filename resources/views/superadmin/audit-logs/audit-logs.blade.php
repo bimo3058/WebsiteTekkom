@@ -155,10 +155,6 @@
                             <button type="submit" class="flex-1 bg-[#5E53F4] hover:bg-[#4e44e0] active:scale-[0.98] text-white font-medium py-2.5 px-4 rounded-xl transition-all text-xs shadow-sm shadow-[#5E53F4]/20 uppercase tracking-widest">
                                 Filter
                             </button>
-                            <a href="{{ route('superadmin.audit-logs') }}" 
-                                class="p-2.5 bg-[#F8F9FA] border border-[#DEE2E6] hover:bg-[#E9ECEF] text-[#6C757D] rounded-xl transition-all flex items-center justify-center">
-                                <span class="material-symbols-outlined" style="font-size:20px">refresh</span>
-                            </a>
                         </div>
                     </div>
                 </form>
@@ -178,19 +174,17 @@
             @endphp
 
             <div class="grid grid-cols-1 @if($hasOnline && $hasSuspended) md:grid-cols-2 @endif gap-5 mb-6">
-                
                 {{-- 1. Card Online Users --}}
                 @if($hasOnline)
-                <div class="bg-emerald-50/50 border border-emerald-100 rounded-2xl p-4 shadow-sm h-full">
+                <div class="bg-emerald-50/30 border border-emerald-100 rounded-2xl p-4 shadow-sm h-full">
                     <div class="flex items-center justify-between mb-4 px-1">
                         <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full bg-emerald-500"></div>
+                            <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
                             <h2 class="text-[11px] font-bold text-emerald-800 uppercase tracking-widest">
                                 Online ({{ $allOnline->count() }})
                             </h2>
                         </div>
-                        {{-- Redirect ke halaman online blade --}}
-                        <a href="{{ route('superadmin.users.online') }}" class="text-[9px] font-bold text-emerald-600 hover:underline uppercase tracking-widest">View All &rarr;</a>
+                        <a href="{{ route('superadmin.users.online') }}" class="text-[9px] font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-widest bg-white px-2 py-1 rounded-lg border border-emerald-100 shadow-sm transition-all">View All &rarr;</a>
                     </div>
 
                     <div class="space-y-2">
@@ -198,22 +192,38 @@
                             @php 
                                 $isSuperadmin = $onlineUser->hasRole('superadmin');
                                 $initials = strtoupper(substr($onlineUser->name, 0, 1));
+                                $avatarColors = $isSuperadmin ? '!bg-[#F1E9FF] !text-[#5E53F4] border-[#D1BFFF]' : '!bg-[#F8F9FA] !text-[#6C757D] border-[#DEE2E6]';
                             @endphp
-                            <div class="bg-white border border-emerald-100/50 rounded-xl p-2 flex items-center justify-between gap-3 hover:border-emerald-200 transition-colors">
-                                <div class="flex items-center gap-2.5 min-w-0">
+                            <div class="bg-white border border-emerald-100/50 rounded-xl p-2.5 flex items-center justify-between gap-3 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5 transition-all group">
+                                <div class="flex items-center gap-3 min-w-0">
                                     <div class="relative shrink-0">
-                                        <x-ui.avatar size="xs" :src="$onlineUser->avatar_url" :fallback="new \Illuminate\Support\HtmlString($isSuperadmin ? '<span class=\'material-symbols-outlined !text-[14px]\'>admin_panel_settings</span>' : $initials)" class="!w-8 !h-8 {{ $isSuperadmin ? '!bg-[#F1E9FF] !text-[#5E53F4]' : '!bg-[#F8F9FA] !text-[#6C757D]' }}" />
-                                        <span class="absolute bottom-0 right-0 size-2 bg-emerald-500 border border-white rounded-full"></span>
+                                        <x-ui.avatar 
+                                            size="sm" 
+                                            :src="$onlineUser->avatar_url" 
+                                            :fallback="new \Illuminate\Support\HtmlString($isSuperadmin ? '<span class=\'material-symbols-outlined !text-[16px]\'>admin_panel_settings</span>' : $initials)" 
+                                            class="border-2 border-white shadow-sm {{ $avatarColors }}" 
+                                        />
+                                        <span class="absolute bottom-0 right-0 size-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
                                     </div>
                                     <div class="min-w-0">
-                                        <p class="text-[11px] font-medium text-slate-800 truncate tracking-tight">{{ $onlineUser->name }}</p>
-                                        <p class="text-[9px] text-slate-500 uppercase tracking-tighter">{{ $onlineUser->roles->first()->name ?? 'User' }}</p>
+                                        <p class="text-[12px] font-bold text-slate-800 truncate tracking-tight group-hover:text-emerald-700 transition-colors">{{ $onlineUser->name }}</p>
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-[9px] font-bold text-emerald-600 uppercase tracking-tighter bg-emerald-50 px-1 rounded">Active Now</span>
+                                            <span class="text-[10px] text-slate-400 font-medium">•</span>
+                                            <span class="text-[9px] text-slate-500 uppercase font-semibold tracking-tighter">{{ $onlineUser->roles->first()->name ?? 'User' }}</span>
+                                        </div>
                                     </div>
                                 </div>
-                                {{-- Aksi Cepat: Force Logout --}}
-                                <button type="button" onclick="openForceLogoutModal({ id: '{{ $onlineUser->id }}', name: '{{ $onlineUser->name }}' })" class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
-                                    <span class="material-symbols-outlined" style="font-size:14px">logout</span>
-                                </button>
+                                <div class="flex items-center gap-1">
+                                    @if(!$isSuperadmin)
+                                        <button type="button" onclick="openSuspendModal({ id: '{{ $onlineUser->id }}', name: '{{ $onlineUser->name }}' })" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
+                                            <span class="material-symbols-outlined" style="font-size:16px">block</span>
+                                        </button>
+                                    @endif
+                                    <button type="button" onclick="openForceLogoutModal({ id: '{{ $onlineUser->id }}', name: '{{ $onlineUser->name }}' })" class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
+                                        <span class="material-symbols-outlined" style="font-size:16px">logout</span>
+                                    </button>
+                                </div>
                             </div>
                         @endforeach
                     </div>
@@ -222,16 +232,15 @@
 
                 {{-- 2. Card Suspended Users --}}
                 @if($hasSuspended)
-                <div class="bg-rose-50/50 border border-rose-100 rounded-2xl p-4 shadow-sm h-full">
+                <div class="bg-rose-50/30 border border-rose-100 rounded-2xl p-4 shadow-sm h-full">
                     <div class="flex items-center justify-between mb-4 px-1">
                         <div class="flex items-center gap-2">
-                            <div class="w-2 h-2 rounded-full bg-rose-500"></div>
-                            <h2 class="text-[11px] font-medium text-rose-800 uppercase tracking-widest">
+                            <div class="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+                            <h2 class="text-[11px] font-bold text-rose-800 uppercase tracking-widest">
                                 Suspended ({{ $allSuspended->count() }})
                             </h2>
                         </div>
-                        {{-- Redirect ke halaman suspended blade --}}
-                        <a href="{{ route('superadmin.users.suspended') }}" class="text-[9px] font-medium text-rose-600 hover:underline uppercase tracking-widest">View All &rarr;</a>
+                        <a href="{{ route('superadmin.users.suspended') }}" class="text-[9px] font-bold text-rose-600 hover:text-rose-700 uppercase tracking-widest bg-white px-2 py-1 rounded-lg border border-rose-100 shadow-sm transition-all">View All &rarr;</a>
                     </div>
 
                     <div class="space-y-2">
@@ -239,22 +248,34 @@
                             @php 
                                 $isSuperadmin = $suspendedUser->hasRole('superadmin');
                                 $initials = strtoupper(substr($suspendedUser->name, 0, 1));
+                                $avatarColors = $isSuperadmin ? '!bg-[#F1E9FF] !text-[#5E53F4] border-[#D1BFFF]' : '!bg-rose-50 !text-rose-400 border-rose-100';
                             @endphp
-                            <div class="bg-white border border-rose-100/50 rounded-xl p-2 flex items-center justify-between gap-3 hover:border-rose-200 transition-colors">
-                                <div class="flex items-center gap-2.5 min-w-0">
-                                    <div class="relative shrink-0 opacity-60 grayscale">
-                                        <x-ui.avatar size="xs" :src="$suspendedUser->avatar_url" :fallback="new \Illuminate\Support\HtmlString($isSuperadmin ? '<span class=\'material-symbols-outlined !text-[14px]\'>admin_panel_settings</span>' : $initials)" class="!w-8 !h-8 {{ $isSuperadmin ? '!bg-[#F1E9FF] !text-[#5E53F4]' : '!bg-[#F8F9FA] !text-[#6C757D]' }}" />
+                            <div class="bg-white border border-rose-100/50 rounded-xl p-2.5 flex items-center justify-between gap-3 hover:border-rose-300 hover:shadow-md hover:shadow-rose-500/5 transition-all group">
+                                <div class="flex items-center gap-3 min-w-0">
+                                    <div class="relative shrink-0 opacity-60 grayscale-[0.5]">
+                                        <x-ui.avatar 
+                                            size="sm" 
+                                            :src="$suspendedUser->avatar_url" 
+                                            :fallback="new \Illuminate\Support\HtmlString($isSuperadmin ? '<span class=\'material-symbols-outlined !text-[16px]\'>admin_panel_settings</span>' : $initials)" 
+                                            class="border-2 border-white shadow-sm {{ $avatarColors }}" 
+                                        />
                                     </div>
                                     <div class="min-w-0">
-                                        <p class="text-[11px] font-medium text-slate-800 truncate tracking-tight line-through decoration-rose-200">{{ $suspendedUser->name }}</p>
-                                        <p class="text-[9px] text-rose-500 font-medium tracking-tighter truncate">{{ Str::limit($suspendedUser->suspension_reason ?? 'No reason', 20) }}</p>
+                                        <p class="text-[12px] font-bold text-slate-800 truncate tracking-tight line-through decoration-rose-300 opacity-70 group-hover:text-rose-700 transition-colors">
+                                            {{ $suspendedUser->name }}
+                                        </p>
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-[9px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded uppercase tracking-tighter border border-rose-100">Blocked</span>
+                                            <span class="text-[9px] text-rose-400 font-medium truncate italic max-w-[100px]">
+                                                {{ $suspendedUser->suspension_reason ?? 'Policy Violation' }}
+                                            </span>
+                                        </div>
                                     </div>
                                 </div>
-                                {{-- Aksi Cepat: Unsuspend --}}
                                 <form method="POST" action="{{ route('superadmin.users.unsuspend', $suspendedUser) }}" class="m-0">
                                     @csrf
-                                    <button type="submit" class="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors">
-                                        <span class="material-symbols-outlined" style="font-size:14px">lock_open</span>
+                                    <button type="submit" class="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors shadow-sm bg-white border border-emerald-100 active:scale-95" title="Unsuspend">
+                                        <span class="material-symbols-outlined" style="font-size:16px">lock_open</span>
                                     </button>
                                 </form>
                             </div>
@@ -262,10 +283,9 @@
                     </div>
                 </div>
                 @endif
-
             </div>
 
-            {{-- Table --}}
+            {{-- Table Audit Logs --}}
             <div class="bg-white border border-[#DEE2E6] rounded-2xl overflow-hidden shadow-sm">
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse">
@@ -276,11 +296,11 @@
                                         class="size-4 rounded border-[#DEE2E6] text-[#5E53F4] focus:ring-[#5E53F4]/20 transition-all cursor-pointer">
                                 </th>
                                 <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Timestamp</th>
-                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">User</th>
-                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Module</th>
-                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Action</th>
-                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Description</th>
-                                <th class="px-5 py-4 text-center text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">User Status</th>
+                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">User Identity</th>
+                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">System Module</th>
+                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Action Type</th>
+                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Activity Description</th>
+                                <th class="px-5 py-4 text-center text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Status</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-[#F8F9FA]">
@@ -294,110 +314,113 @@
                                 {{-- Timestamp --}}
                                 <td class="px-5 py-4">
                                     <div class="flex flex-col">
-                                        <span class="text-[#1A1C1E] font-medium text-[11px]">{{ $log->created_at->format('d M Y') }}</span>
-                                        <span class="text-[#6C757D] font-medium text-[10px]">{{ $log->created_at->format('H:i:s') }}</span>
+                                        <span class="text-[#1A1C1E] font-semibold text-[11px] tracking-tight">{{ $log->created_at->format('d M Y') }}</span>
+                                        <span class="text-[#6C757D] text-[10px] font-medium">{{ $log->created_at->format('H:i:s') }}</span>
                                     </div>
                                 </td>
 
-                                {{-- Initiator (User) --}}
+                                {{-- Initiator (User Identity) --}}
                                 <td class="px-5 py-4">
-                                    <div class="flex items-center gap-3">
+                                    <div class="flex items-center gap-4">
                                         @if($log->user)
                                             @php
                                                 $user = $log->user;
                                                 $isSuperadmin = $user->hasRole('superadmin');
+                                                $initials = strtoupper(substr($user->name, 0, 1));
                                                 
-                                                $avatarWrapperStyle = $isSuperadmin 
-                                                    ? 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]' 
-                                                    : 'bg-[#F8F9FA] text-[#6C757D] border-[#DEE2E6]';
+                                                $avatarColors = $isSuperadmin 
+                                                    ? '!bg-[#F1E9FF] !text-[#5E53F4] border-[#D1BFFF]' 
+                                                    : '!bg-[#F8F9FA] !text-[#6C757D] border-[#DEE2E6]';
                                             @endphp
 
-                                            <div class="size-9 rounded-full flex items-center justify-center border {{ $avatarWrapperStyle }} flex-shrink-0 overflow-hidden">
-                                                @include('components.ui.avatar', [
-                                                    'src' => $user->avatar_url, 
-                                                    'fallback' => $isSuperadmin 
-                                                        ? '<span class="material-symbols-outlined !text-[18px] fill-1">admin_panel_settings</span>' 
-                                                        : '<span class="text-[11px] font-medium uppercase">'.substr($user->name, 0, 1).'</span>',
-                                                    'size' => 'sm',
-                                                    'class' => '' 
-                                                ])
+                                            <div class="relative shrink-0">
+                                                <div class="size-9 rounded-full flex items-center justify-center border-2 border-white shadow-sm overflow-hidden {{ $avatarColors }}">
+                                                    @if($user->avatar_url)
+                                                        <img src="{{ $user->avatar_url }}" alt="avatar" class="w-full h-full object-cover">
+                                                    @elseif($isSuperadmin)
+                                                        <span class="material-symbols-outlined !text-[18px]">admin_panel_settings</span>
+                                                    @else
+                                                        <span class="text-[11px] font-semibold uppercase">{{ $initials }}</span>
+                                                    @endif
+                                                </div>
+                                                @if($user->is_online)
+                                                    <span class="absolute bottom-0 right-0 size-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+                                                @endif
                                             </div>
 
                                             <div class="min-w-0 flex-1">
-                                                <p class="text-[#1A1C1E] text-[11px] font-medium truncate tracking-tight">{{ $user->name }}</p>
-                                                <p class="text-[#6C757D] text-[10px] truncate">{{ $user->email }}</p>
+                                                <p class="text-[12px] font-bold text-[#1A1C1E] truncate tracking-tight">{{ $user->name }}</p>
+                                                <p class="text-[#6C757D] text-[10px] font-medium truncate">{{ $user->email }}</p>
                                             </div>
                                         @else
-                                            <div class="size-9 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center flex-shrink-0">
+                                            <div class="size-9 rounded-full bg-slate-50 border-2 border-white shadow-sm flex items-center justify-center flex-shrink-0">
                                                 <span class="material-symbols-outlined text-slate-400 text-[18px]">settings_suggest</span>
                                             </div>
                                             <div class="min-w-0 flex-1">
-                                                <p class="text-[#1A1C1E] text-[11px] font-medium truncate tracking-tight">System</p>
-                                                <p class="text-[#6C757D] text-[10px] truncate">system@app</p>
+                                                <p class="text-[#1A1C1E] text-[12px] font-bold tracking-tight">System</p>
+                                                <p class="text-[#6C757D] text-[10px] font-medium italic">Automated Task</p>
                                             </div>
                                         @endif
                                     </div>
                                 </td>
 
-                                {{-- Module --}}
+                                {{-- Module Badge --}}
                                 <td class="px-5 py-4">
                                     @php
                                         $moduleStyle = match($log->module ?? '') {
-                                            'auth'                 => 'bg-emerald-50 text-emerald-700',
-                                            'bank_soal'            => 'bg-amber-50 text-amber-700',
-                                            'capstone'             => 'bg-sky-50 text-sky-700',
-                                            'eoffice'              => 'bg-purple-50 text-purple-700',
-                                            'user_management'      => 'bg-indigo-50 text-indigo-700',
-                                            default                => 'bg-slate-100 text-slate-600',
+                                            'auth'                 => 'bg-emerald-50 text-emerald-700 border-emerald-100',
+                                            'bank_soal'            => 'bg-amber-50 text-amber-700 border-amber-100',
+                                            'capstone'             => 'bg-sky-50 text-sky-700 border-sky-100',
+                                            'eoffice'              => 'bg-purple-50 text-purple-700 border-purple-100',
+                                            'user_management'      => 'bg-indigo-50 text-indigo-700 border-indigo-100',
+                                            default                => 'bg-slate-50 text-slate-600 border-slate-100',
                                         };
                                     @endphp
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-widest {{ $moduleStyle }}">
-                                        {{ strtoupper(str_replace('_', ' ', $log->module ?? 'N/A')) }}
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border {{ $moduleStyle }}">
+                                        {{ str_replace('_', ' ', $log->module ?? 'N/A') }}
                                     </span>
                                 </td>
 
-                                {{-- Action --}}
+                                {{-- Action Badge --}}
                                 <td class="px-5 py-4">
                                     @php
                                         $actionColor = match(strtolower($log->action ?? '')) {
-                                            'create' => 'bg-emerald-50 text-emerald-700',
-                                            'update' => 'bg-amber-50 text-amber-700',
-                                            'delete' => 'bg-rose-50 text-rose-700',
-                                            'login'  => 'bg-purple-50 text-purple-700',
-                                            'logout' => 'bg-slate-100 text-slate-600',
-                                            'view'   => 'bg-sky-50 text-sky-700',
-                                            default  => 'bg-slate-100 text-slate-600'
+                                            'create' => 'bg-[#E7F9F3] text-[#00C08D] border-[#B2EBD9]',
+                                            'update' => 'bg-[#FFF9E6] text-[#FFB800] border-[#FFEBB3]',
+                                            'delete' => 'bg-rose-50 text-rose-600 border-rose-100',
+                                            'login'  => 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]',
+                                            'logout' => 'bg-slate-100 text-slate-600 border-slate-200',
+                                            default  => 'bg-slate-50 text-slate-500 border-slate-100'
                                         };
                                     @endphp
-                                    <span class="px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-widest {{ $actionColor }}">
-                                        {{ strtoupper($log->action ?? 'N/A') }}
+                                    <span class="px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border {{ $actionColor }}">
+                                        {{ $log->action ?? 'N/A' }}
                                     </span>
                                 </td>
 
                                 {{-- Description --}}
                                 <td class="px-5 py-4">
-                                    <p class="text-[#1A1C1E] font-medium text-[12px] max-w-xs line-clamp-2 leading-relaxed" title="{{ $log->description ?? '-' }}">
+                                    <p class="text-[#495057] font-medium text-[12px] max-w-xs line-clamp-2 leading-relaxed tracking-tight" title="{{ $log->description ?? '-' }}">
                                         {{ $log->description ?? '-' }}
                                     </p>
                                 </td>
-    
+
                                 {{-- User Status --}}
                                 <td class="px-5 py-4 text-center">
                                     @if($log->user)
-                                        @php
-                                            $isOnline = $log->user->is_online;
-                                            $statusStyle = $isOnline 
-                                                ? 'bg-emerald-50 text-emerald-700' 
-                                                : 'bg-slate-100 text-slate-600';
-                                            $statusText = $isOnline ? 'ONLINE' : 'OFFLINE';
-                                        @endphp
-                                        <span class="px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-widest {{ $statusStyle }}">
-                                            {{ $statusText }}
-                                        </span>
+                                        <div class="flex items-center justify-center">
+                                            @if($log->user->is_online)
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 text-[9px] font-bold border border-emerald-100 uppercase tracking-tighter">
+                                                    <span class="size-1 bg-emerald-500 rounded-full animate-pulse"></span> ONLINE
+                                                </span>
+                                            @else
+                                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-slate-50 text-slate-500 text-[9px] font-bold border border-slate-100 uppercase tracking-tighter">
+                                                    OFFLINE
+                                                </span>
+                                            @endif
+                                        </div>
                                     @else
-                                        <span class="px-3 py-1 rounded-full text-[10px] font-medium uppercase tracking-widest bg-slate-50 text-slate-400">
-                                            SYSTEM
-                                        </span>
+                                        <span class="text-[9px] font-bold text-slate-400 uppercase tracking-widest">SYSTEM</span>
                                     @endif
                                 </td>
                             </tr>
@@ -406,7 +429,7 @@
                                 <td colspan="7" class="px-6 py-16 text-center">
                                     <div class="flex flex-col items-center gap-3">
                                         <span class="material-symbols-outlined text-[#DEE2E6]" style="font-size: 56px">history</span>
-                                        <p class="text-[#ADB5BD] text-xs font-medium uppercase tracking-widest">Tidak ada audit logs</p>
+                                        <p class="text-[#ADB5BD] text-[11px] font-bold uppercase tracking-[0.2em]">Tidak ada aktivitas tercatat</p>
                                     </div>
                                 </td>
                             </tr>
@@ -428,7 +451,7 @@
         @include('superadmin.users._modal_suspend')
 
         {{-- Modal Bulk Delete --}}
-        <div id="modalBulkDeleteAudit" class="hidden fixed inset-0 bg-[#1A1C1E]/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+        <div id="modalBulkDeleteAudit" class="hidden fixed inset-0 bg-[#1A1C1E]/50 flex items-center justify-center z-50 p-4">
             <div class="bg-white rounded-2xl shadow-2xl max-w-sm w-full animate-in fade-in zoom-in-95 duration-300">
                 <div class="px-6 py-5 border-b border-[#DEE2E6] flex items-center gap-3">
                     <div class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center border border-rose-100">

@@ -85,10 +85,6 @@
                 <button type="submit" class="flex-1 bg-[#5E53F4] hover:bg-[#4e44e0] active:scale-[0.98] text-white font-semibold py-2.5 px-4 rounded-xl transition-all text-xs shadow-sm shadow-[#5E53F4]/20 uppercase tracking-widest">
                     Filter
                 </button>
-                <a href="{{ route('superadmin.users.index') }}" 
-                    class="p-2.5 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-xl transition-all flex items-center justify-center">
-                    <span class="material-symbols-outlined" style="font-size:20px">refresh</span>
-                </a>
             </div>
         </div>
     </form>
