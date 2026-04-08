@@ -35,12 +35,24 @@ class RpsController extends Controller
     {
         $user = Auth::user()->load('lecturer');
 
-        // Fetch mata kuliah dari database
-        $mataKuliahs = MataKuliah::all();
+        // Fetch mata kuliah — exclude MK yang sudah punya RPS aktif
+        // (status: diajukan, revisi, atau disetujui) untuk cegah duplikasi
+        $mkIdsWithActiveRps = RpsDetail::whereIn('status', [
+                RpsStatus::DIAJUKAN->value,
+                RpsStatus::REVISI->value,
+                RpsStatus::DISETUJUI->value,
+            ])
+            ->pluck('mk_id')
+            ->unique();
 
-        // Fetch riwayat RPS dengan eager loading MataKuliah
-        // Eager loading untuk avoid N+1 query problem di view
+        $mataKuliahs = MataKuliah::whereNotIn('id', $mkIdsWithActiveRps)->get();
+
+        // Fetch riwayat RPS — hanya tampilkan RPS dimana dosen ini terdaftar
+        // (baik sebagai pembuat maupun dosen pengampu tambahan via pivot bs_rps_dosen)
         $riwayat = RpsDetail::with('mataKuliah')
+            ->whereHas('dosens', function ($query) use ($user) {
+                $query->where('users.id', $user->id);
+            })
             ->orderBy('created_at', 'desc')
             ->get();
 
