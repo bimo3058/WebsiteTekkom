@@ -1,66 +1,8 @@
-<x-banksoal::layouts.master>
+<x-banksoal::layouts.dosen-master>
 
-<!-- SIDEBAR -->
-<aside class="sidebar">
-    <div class="sidebar-brand">
-        <div class="brand-icon"><i class="fas fa-university"></i></div>
-        <div class="brand-text">
-            <strong>Departemen Teknik Komputer</strong>
-            <span>Universitas Wakamsi</span>
-        </div>
-    </div>
-    <nav class="sidebar-nav">
-        <a href="{{ route('banksoal.dashboard') }}" class="nav-item">
-            <span class="nav-icon"><i class="fas fa-th-large"></i></span> Home
-        </a>
-
-        @can('banksoal.view')
-            <a href="{{ route('banksoal.rps.dosen.index') }}" class="nav-item">
-                <span class="nav-icon"><i class="fas fa-file-alt"></i></span> Manajemen RPS
-            </a>
-            <a href="{{ route('banksoal.soal.dosen.index') }}" class="nav-item active">
-                <span class="nav-icon"><i class="fas fa-database"></i></span> Bank Soal
-            </a>
-            <a href="{{ route('banksoal.arsip.dosen.index') }}" class="nav-item">
-                <span class="nav-icon"><i class="fas fa-archive"></i></span> Arsip Soal
-            </a>
-        @endcan
-    </nav>
-</aside>
-
-<!-- TOPBAR -->
-<header class="topbar">
-    {{-- Access Badge — menampilkan level akses user saat ini --}}
-    <div class="access-badge" style="margin-right: auto; margin-left: 20px;">
-        @if(auth()->user()->can('banksoal.delete') && auth()->user()->can('banksoal.edit') && auth()->user()->can('banksoal.view'))
-            <span style="font-size: 10px; background: #e6fffa; color: #234e52; padding: 4px 10px; border-radius: 20px; border: 1px solid #b2f5ea; font-weight: bold;">
-                <i class="fas fa-shield-alt"></i> FULL ACCESS
-            </span>
-        @elseif(auth()->user()->can('banksoal.edit') && auth()->user()->can('banksoal.view'))
-            <span style="font-size: 10px; background: #ebf5ff; color: #1e40af; padding: 4px 10px; border-radius: 20px; border: 1px solid #bfdbfe; font-weight: bold;">
-                <i class="fas fa-pen"></i> VIEW & EDIT
-            </span>
-        @elseif(auth()->user()->can('banksoal.view'))
-            <span style="font-size: 10px; background: #fff4e5; color: #b76e00; padding: 4px 10px; border-radius: 20px; border: 1px solid #ffe1b6; font-weight: bold;">
-                <i class="fas fa-eye"></i> VIEW ONLY
-            </span>
-        @else
-            <span style="font-size: 10px; background: #fef2f2; color: #991b1b; padding: 4px 10px; border-radius: 20px; border: 1px solid #fecaca; font-weight: bold;">
-                <i class="fas fa-lock"></i> NO ACCESS
-            </span>
-        @endif
-    </div>
-
-    <button class="topbar-btn"><i class="fas fa-cog"></i></button>
-    <button class="topbar-btn notif-btn"><i class="fas fa-bell"></i><span class="notif-dot"></span></button>
-    <div class="user-chip">
-        <div class="user-avatar-chip">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
-        <div class="user-info">
-            <strong>{{ auth()->user()->name }}</strong>
-            <span>{{ auth()->user()->email }}</span>
-        </div>
-    </div>
-</header>
+@include('banksoal::partials.dosen.layout-styles')
+@include('banksoal::partials.dosen.sidebar', ['active' => 'bank-soal'])
+@include('banksoal::partials.dosen.topbar')
 
 <!-- MAIN -->
 <main class="main">
@@ -125,27 +67,7 @@
                                 </span>
                             </td>
                             <td>
-                                <div class="row-actions">
-                                    @can('banksoal.view')
-                                        <button class="action-btn" title="Lihat Detail"><i class="fas fa-eye"></i></button>
-                                    @endcan
-
-                                    @can('banksoal.edit')
-                                        <button class="action-btn" title="Edit Soal"><i class="fas fa-pen"></i></button>
-                                    @else
-                                        <span class="action-btn" style="opacity: 0.3; cursor: not-allowed;" title="Tidak ada izin edit">
-                                            <i class="fas fa-pen"></i>
-                                        </span>
-                                    @endcan
-
-                                    @can('banksoal.delete')
-                                        <button class="action-btn del" title="Hapus Soal"><i class="fas fa-trash"></i></button>
-                                    @else
-                                        <span class="action-btn" style="opacity: 0.3; cursor: not-allowed;" title="Tidak ada izin hapus">
-                                            <i class="fas fa-trash"></i>
-                                        </span>
-                                    @endcan
-                                </div>
+                                @include('banksoal::partials.dosen._soal-actions')
                             </td>
                         </tr>
                     @empty
@@ -166,27 +88,7 @@
                                     </span>
                                 </td>
                                 <td>
-                                    <div class="row-actions">
-                                        @can('banksoal.view')
-                                            <button class="action-btn" title="Lihat Detail"><i class="fas fa-eye"></i></button>
-                                        @endcan
-
-                                        @can('banksoal.edit')
-                                            <button class="action-btn" title="Edit Soal"><i class="fas fa-pen"></i></button>
-                                        @else
-                                            <span class="action-btn" style="opacity: 0.3; cursor: not-allowed;" title="Tidak ada izin edit">
-                                                <i class="fas fa-pen"></i>
-                                            </span>
-                                        @endcan
-
-                                        @can('banksoal.delete')
-                                            <button class="action-btn del" title="Hapus Soal"><i class="fas fa-trash"></i></button>
-                                        @else
-                                            <span class="action-btn" style="opacity: 0.3; cursor: not-allowed;" title="Tidak ada izin hapus">
-                                                <i class="fas fa-trash"></i>
-                                            </span>
-                                        @endcan
-                                    </div>
+                                    @include('banksoal::partials.dosen._soal-actions')
                                 </td>
                             </tr>
                         @endforeach
@@ -308,20 +210,9 @@
 
 </main>
 
-<script>
-document.getElementById('searchSoal')?.addEventListener('input', function () {
-    const q = this.value.toLowerCase();
-    document.querySelectorAll('#tableSoal tbody tr').forEach(row => {
-        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
-    });
-});
+{{-- ═══ Search Handler Component ═══ --}}
+<script src="{{ asset('modules/banksoal/js/Banksoal/shared/SearchHandler.js') }}"></script>
 
-document.getElementById('searchPackages')?.addEventListener('input', function () {
-    const q = this.value.toLowerCase();
-    document.querySelectorAll('#tablePackages tbody tr').forEach(row => {
-        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
-    });
-});
-</script>
+@include('banksoal::partials.dosen.layout-scripts')
 
-</x-banksoal::layouts.master>
+</x-banksoal::layouts.dosen-master>
