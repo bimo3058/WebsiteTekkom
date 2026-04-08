@@ -70,6 +70,8 @@ Route::middleware('auth')->group(function () {
         Route::delete('/storage/delete', [SuperAdminController::class, 'testDelete'])
             ->name('storage.delete');
 
+        Route::post('/bust-stats-cache', [SuperAdminController::class, 'bustStatsCache'])
+            ->name('bust-stats-cache');
         // Update role user (ganti dari POST ke PATCH, nama route tetap bisa dipakai keduanya)
         Route::post('/users/{user}/update-role', [SuperAdminController::class, 'updateRole'])
             ->name('users.update-role');

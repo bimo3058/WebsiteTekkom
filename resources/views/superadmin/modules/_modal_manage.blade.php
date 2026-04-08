@@ -1,19 +1,19 @@
 <div id="modal-{{ $module->slug }}" class="fixed inset-0 hidden items-center justify-center p-4 z-50">
-    <div class="fixed inset-0 bg-slate-900/60 onclick="closeModal('modal-{{ $module->slug }}')"></div>
+    <div class="fixed inset-0 bg-slate-900/60" onclick="closeModal('modal-{{ $module->slug }}')"></div>
 
     <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden">
         {{-- Header --}}
-        <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div class="px-5 py-3 border-b border-slate-100 flex items-center justify-between bg-purple-50/30">
             <div class="flex items-center gap-3">
-                <div class="bg-blue-50 p-2 rounded-lg border border-blue-100">
-                    <span class="material-symbols-outlined text-blue-600" style="font-size:18px">engineering</span>
+                <div class="bg-purple-50 p-2 rounded-lg border border-purple-100">
+                    <span class="material-symbols-outlined text-purple-600" style="font-size:18px">engineering</span>
                 </div>
                 <div>
                     <h3 class="text-sm font-bold text-slate-800">Module Settings</h3>
                     <p class="text-[10px] text-slate-400 font-medium uppercase tracking-tight">{{ $module->name }}</p>
                 </div>
             </div>
-            <button onclick="closeModal('modal-{{ $module->slug }}')" class="text-slate-400 hover:text-slate-700 transition-colors">
+            <button onclick="closeModal('modal-{{ $module->slug }}')" class="text-slate-400 hover:text-purple-600 transition-colors">
                 <span class="material-symbols-outlined" style="font-size:20px">close</span>
             </button>
         </div>
@@ -26,7 +26,7 @@
                     <div class="space-y-1">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nama Modul</label>
                         <input type="text" name="name" value="{{ $module->name }}"
-                               class="w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-800 text-xs px-3 py-2 focus:border-blue-400 outline-none transition-all font-bold">
+                               class="w-full bg-slate-50 border border-slate-200 rounded-lg text-slate-800 text-xs px-3 py-2 focus:border-purple-400 focus:ring-1 focus:ring-purple-400 outline-none transition-all font-bold">
                     </div>
                     <div class="space-y-1">
                         <label class="text-[10px] font-black text-slate-400 uppercase tracking-widest">System Slug</label>
@@ -37,7 +37,7 @@
 
                 {{-- Resource Gates --}}
                 <div class="space-y-3">
-                    <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest flex items-center gap-1.5">
+                    <p class="text-[10px] font-black text-purple-600 uppercase tracking-widest flex items-center gap-1.5">
                         <span class="material-symbols-outlined" style="font-size:14px">cloud_upload</span>
                         Resource Limits
                     </p>
@@ -45,12 +45,12 @@
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-slate-500 uppercase">Max Upload (MB)</label>
                             <input type="number" name="settings[max_upload]" value="{{ $module->settings['max_upload'] ?? 10 }}"
-                                   class="w-full bg-slate-50 border border-slate-200 rounded-lg text-xs px-3 py-2 focus:border-blue-400 outline-none transition-all">
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-lg text-xs px-3 py-2 focus:border-purple-400 focus:ring-1 focus:ring-purple-400 outline-none transition-all">
                         </div>
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-slate-500 uppercase">Quota (GB)</label>
                             <input type="number" name="settings[quota]" value="{{ $module->settings['quota'] ?? 5 }}"
-                                   class="w-full bg-slate-50 border border-slate-200 rounded-lg text-xs px-3 py-2 focus:border-blue-400 outline-none transition-all">
+                                   class="w-full bg-slate-50 border border-slate-200 rounded-lg text-xs px-3 py-2 focus:border-purple-400 focus:ring-1 focus:ring-purple-400 outline-none transition-all">
                         </div>
                     </div>
                 </div>
@@ -59,9 +59,9 @@
                 <div class="space-y-3">
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Advanced Config</p>
                     <div class="grid grid-cols-1 gap-2">
-                        <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-blue-200 transition-all">
+                        <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-purple-200 transition-all">
                             <input type="checkbox" name="settings[debug_mode]" {{ ($module->settings['debug_mode'] ?? false) ? 'checked' : '' }}
-                                   class="w-3.5 h-3.5 rounded border-slate-300 text-blue-600">
+                                   class="w-3.5 h-3.5 rounded border-slate-300 text-purple-600 focus:ring-purple-400">
                             <div>
                                 <span class="text-[11px] font-bold text-slate-700 block leading-none">Debug Mode</span>
                                 <span class="text-[9px] text-slate-400">Log technical exceptions & slow queries.</span>
@@ -72,16 +72,16 @@
             </div>
 
             {{-- Footer --}}
-            <div class="px-5 py-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-between">
+            <div class="px-5 py-3 border-t border-slate-100 bg-purple-50/20 flex items-center justify-between">
                 <div class="flex gap-2">
-                    <button type="button" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors" title="Purge Cache">
+                    <button type="button" class="p-1.5 text-slate-400 hover:text-purple-600 transition-colors" title="Purge Cache">
                         <span class="material-symbols-outlined" style="font-size:18px">broom</span>
                     </button>
-                    <button type="button" class="p-1.5 text-slate-400 hover:text-blue-600 transition-colors" title="Optimize Database">
+                    <button type="button" class="p-1.5 text-slate-400 hover:text-purple-600 transition-colors" title="Optimize Database">
                         <span class="material-symbols-outlined" style="font-size:18px">database</span>
                     </button>
                 </div>
-                <button type="submit" class="bg-slate-800 hover:bg-black text-white text-[11px] font-black px-4 py-1.5 rounded-lg transition-all uppercase tracking-widest shadow-sm">
+                <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-black px-4 py-1.5 rounded-lg transition-all uppercase tracking-widest shadow-sm">
                     Save Config
                 </button>
             </div>

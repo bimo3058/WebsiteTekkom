@@ -71,4 +71,7 @@
         </div>
 
     </div>
+    <script>
+        localStorage.removeItem('um_per_page');
+    </script>
 </x-guest-layout>

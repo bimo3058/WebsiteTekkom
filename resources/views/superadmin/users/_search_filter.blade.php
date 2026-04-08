@@ -53,9 +53,13 @@
             {{-- Custom Dropdown Limit (Alpine.js) --}}
             <div class="md:col-span-2" x-data="{ 
                 open: false, 
-                selected: '{{ request('per_page', 10) }}',
+                selected: '{{ request('per_page') }}' || localStorage.getItem('um_per_page') || '10',
                 options: [10, 25, 50, 100],
-                get currentLabel() { return this.selected + ' Baris'; }
+                get currentLabel() { return this.selected + ' Baris'; },
+                setSelected(val) {
+                    this.selected = String(val);
+                    localStorage.setItem('um_per_page', String(val));
+                }
             }">
                 <label class="block text-slate-700 text-[10px] font-semibold uppercase tracking-tight mb-1.5 ml-1">Limit</label>
                 <div class="relative">
@@ -70,7 +74,7 @@
                     <div x-show="open" @click.outside="open = false" x-transition
                         class="absolute left-0 top-full mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-2xl z-[50] overflow-hidden py-1">
                         <template x-for="opt in options" :key="opt">
-                            <button type="button" @click="selected = opt; open = false" 
+                            <button type="button" @click="setSelected(opt); open = false" 
                                 class="w-full text-left px-4 py-2 text-xs transition-colors hover:bg-slate-50"
                                 :class="selected == opt ? 'text-[#5E53F4] font-semibold bg-[#5E53F4]/5' : 'text-slate-600'">
                                 <span x-text="opt + ' Baris'"></span>
