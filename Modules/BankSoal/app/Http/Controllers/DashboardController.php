@@ -14,7 +14,7 @@ class DashboardController extends Controller
         // ambil semua role user
         $roles = $user->roles->pluck('name')->toArray();
 
-        if (in_array('admin', $roles)) {
+        if (in_array('superadmin', $roles) || in_array('admin', $roles)) {
             return view('banksoal::dashboard.admin');
         }
 

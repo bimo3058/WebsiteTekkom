@@ -26,8 +26,8 @@ class RoleMiddleware
         $user->loadMissing('roles');
 
         // Support multiple roles: middleware('role:admin,superadmin')
-        // User cukup punya salah satu
-        if (! $user->hasAnyRole($roles)) {
+        // User cukup punya salah satu, atau jika user adalah superadmin bebas akses
+        if (! $user->hasRole('superadmin') && ! $user->hasAnyRole($roles)) {
             abort(403, 'Unauthorized. Required role: ' . implode(' or ', $roles));
         }
 

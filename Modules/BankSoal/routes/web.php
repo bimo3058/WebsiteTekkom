@@ -84,6 +84,31 @@ Route::middleware(['auth'])->prefix('bank-soal')->group(function () {
         });
  
     });
+
+    # Periode Ujian Routes
+    Route::prefix('admin/periode')->name('banksoal.periode.')->group(function () {
+        Route::middleware('role:superadmin|admin')->group(function () {
+            Route::get('/setup', [\Modules\BankSoal\Http\Controllers\PeriodeController::class, 'index'])->name('setup');
+            Route::post('/setup', [\Modules\BankSoal\Http\Controllers\PeriodeController::class, 'store'])->name('store');
+            Route::put('/setup/{id}', [\Modules\BankSoal\Http\Controllers\PeriodeController::class, 'update'])->name('update');
+            Route::delete('/setup/{id}', [\Modules\BankSoal\Http\Controllers\PeriodeController::class, 'destroy'])->name('destroy');
+
+            Route::get('/jadwal', [\Modules\BankSoal\Http\Controllers\JadwalController::class, 'index'])->name('jadwal');
+            Route::post('/jadwal', [\Modules\BankSoal\Http\Controllers\JadwalController::class, 'store'])->name('jadwal.store');
+            Route::delete('/jadwal/{id}', [\Modules\BankSoal\Http\Controllers\JadwalController::class, 'destroy'])->name('jadwal.destroy');
+        });
+    });
+
+    # Manajemen Peserta Routes
+    Route::prefix('admin/pendaftar')->name('banksoal.pendaftaran.')->group(function () {
+        Route::middleware('role:superadmin|admin')->group(function () {
+            Route::get('/', [\Modules\BankSoal\Http\Controllers\PendaftarAdminController::class, 'index'])->name('index');
+            Route::post('/', [\Modules\BankSoal\Http\Controllers\PendaftarAdminController::class, 'store'])->name('store');
+            Route::patch('/{id}/status', [\Modules\BankSoal\Http\Controllers\PendaftarAdminController::class, 'updateStatus'])->name('updateStatus');
+            Route::delete('/{id}', [\Modules\BankSoal\Http\Controllers\PendaftarAdminController::class, 'destroy'])->name('destroy');
+        });
+    });
+
 });
 
 // Route khusus ujian komprehensif untuk mahasiswa (Module Bank Soal)
@@ -91,13 +116,12 @@ Route::middleware(['auth', 'role:mahasiswa'])
     ->prefix('ujian-komprehensif')
     ->name('komprehensif.mahasiswa.')
     ->group(function () {
-        Route::get('/dashboard', function () {
-            return view('banksoal::mahasiswa.beranda'); 
-        })->name('dashboard');
+        Route::get('/dashboard', [\Modules\BankSoal\Http\Controllers\MahasiswaController::class, 'dashboard'])->name('dashboard');
         
-        Route::get('/pengajuan-pendaftaran', function () {
-            return view('banksoal::mahasiswa.pendaftaran');
-        })->name('pendaftaran');
+        Route::get('/pengajuan-pendaftaran', [\Modules\BankSoal\Http\Controllers\MahasiswaController::class, 'pendaftaran'])->name('pendaftaran');
+        
+        Route::get('/pengajuan-pendaftaran/form', [\Modules\BankSoal\Http\Controllers\MahasiswaController::class, 'createPendaftaran'])->name('pendaftaran.form');
+        Route::post('/pengajuan-pendaftaran/form', [\Modules\BankSoal\Http\Controllers\MahasiswaController::class, 'storePendaftaran'])->name('pendaftaran.store');
         
         Route::get('/riwayat-ujian', function () {
             return view('banksoal::mahasiswa.riwayat');

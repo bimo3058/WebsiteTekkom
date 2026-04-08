@@ -68,15 +68,15 @@ class SuperAdminController extends Controller
                 'name'        => 'Bank Soal',
                 'icon'        => 'book',
                 'route'       => 'banksoal.dashboard',
-                'pertanyaan'  => DB::table('bs_pertanyaan')->count(),
-                'mata_kuliah' => DB::table('bs_mata_kuliah')->count(),
+                'pertanyaan'  => \Illuminate\Support\Facades\Schema::hasTable('bs_pertanyaan') ? DB::table('bs_pertanyaan')->count() : 0,
+                'mata_kuliah' => \Illuminate\Support\Facades\Schema::hasTable('bs_mata_kuliah') ? DB::table('bs_mata_kuliah')->count() : 0,
             ],
             'capstone' => [
                 'name'    => 'Capstone',
                 'icon'    => 'graduation-cap',
                 'route'   => 'capstone.dashboard',
-                'groups'  => DB::table('capstone_groups')->whereNull('deleted_at')->count(),
-                'periods' => DB::table('capstone_periods')->count(),
+                'groups'  => \Illuminate\Support\Facades\Schema::hasTable('capstone_groups') ? DB::table('capstone_groups')->whereNull('deleted_at')->count() : 0,
+                'periods' => \Illuminate\Support\Facades\Schema::hasTable('capstone_periods') ? DB::table('capstone_periods')->count() : 0,
             ],
             'eoffice' => [
                 'name'  => 'E-Office',
@@ -87,8 +87,8 @@ class SuperAdminController extends Controller
                 'name'     => 'Manajemen Mahasiswa',
                 'icon'     => 'users',
                 'route'    => 'mahasiswa.dashboard',
-                'students' => DB::table('students')->count(),
-                'alumni'   => DB::table('mk_alumni')->count(),
+                'students' => \Illuminate\Support\Facades\Schema::hasTable('students') ? DB::table('students')->count() : 0,
+                'alumni'   => \Illuminate\Support\Facades\Schema::hasTable('mk_alumni') ? DB::table('mk_alumni')->count() : 0,
             ],
         ];
     }
@@ -315,10 +315,10 @@ class SuperAdminController extends Controller
     public function modules()
     {
         $modules = [
-            ['id' => 'bank_soal',           'name' => 'Bank Soal',           'description' => 'Manage question bank and learning materials', 'icon' => 'book',           'status' => true, 'active_users'    => DB::table('bs_dosen_pengampu_mk')->count(), 'total_questions' => DB::table('bs_pertanyaan')->count()],
-            ['id' => 'capstone',            'name' => 'Capstone',            'description' => 'Manage capstone projects and thesis',          'icon' => 'graduation-cap', 'status' => true, 'active_groups'   => DB::table('capstone_groups')->whereNull('deleted_at')->count()],
+            ['id' => 'bank_soal',           'name' => 'Bank Soal',           'description' => 'Manage question bank and learning materials', 'icon' => 'book',           'status' => true, 'active_users'    => \Illuminate\Support\Facades\Schema::hasTable('bs_dosen_pengampu_mk') ? DB::table('bs_dosen_pengampu_mk')->count() : 0, 'total_questions' => \Illuminate\Support\Facades\Schema::hasTable('bs_pertanyaan') ? DB::table('bs_pertanyaan')->count() : 0],
+            ['id' => 'capstone',            'name' => 'Capstone',            'description' => 'Manage capstone projects and thesis',          'icon' => 'graduation-cap', 'status' => true, 'active_groups'   => \Illuminate\Support\Facades\Schema::hasTable('capstone_groups') ? DB::table('capstone_groups')->whereNull('deleted_at')->count() : 0],
             ['id' => 'eoffice',             'name' => 'E-Office',            'description' => 'Manage office documents and workflow',         'icon' => 'briefcase',      'status' => true],
-            ['id' => 'manajemen_mahasiswa', 'name' => 'Manajemen Mahasiswa', 'description' => 'Manage student data and activities',           'icon' => 'users',          'status' => true, 'total_students'  => DB::table('students')->count(), 'total_alumni' => DB::table('mk_alumni')->count()],
+            ['id' => 'manajemen_mahasiswa', 'name' => 'Manajemen Mahasiswa', 'description' => 'Manage student data and activities',           'icon' => 'users',          'status' => true, 'total_students'  => \Illuminate\Support\Facades\Schema::hasTable('students') ? DB::table('students')->count() : 0, 'total_alumni' => \Illuminate\Support\Facades\Schema::hasTable('mk_alumni') ? DB::table('mk_alumni')->count() : 0],
         ];
 
         return view('superadmin.modules.index', compact('modules'));

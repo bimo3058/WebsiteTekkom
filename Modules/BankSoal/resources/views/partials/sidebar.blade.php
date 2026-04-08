@@ -57,12 +57,12 @@
             <div class="flex items-center gap-3 px-2">
                 <!-- Avatar placeholder similar to image -->
                 <div class="w-10 h-10 rounded-full bg-emerald-700 flex items-center justify-center overflow-hidden flex-shrink-0">
-                    <img src="https://ui-avatars.com/api/?name=Budi+Santoso&background=047857&color=fff" alt="Avatar" class="w-full h-full object-cover">
+                    <img src="https://ui-avatars.com/api/?name={{ urlencode(auth()->user()->name ?? 'Mahasiswa') }}&background=047857&color=fff" alt="Avatar" class="w-full h-full object-cover">
                 </div>
                 <!-- Profile details -->
                 <div class="flex flex-col min-w-0">
-                    <span class="text-sm font-semibold text-slate-800 truncate">Budi Santoso</span>
-                    <span class="text-[10px] text-slate-500 font-medium">21060119120001</span>
+                    <span class="text-sm font-semibold text-slate-800 truncate">{{ auth()->user()->name ?? 'Mahasiswa' }}</span>
+                    <span class="text-[10px] text-slate-500 font-medium">{{ optional(auth()->user()->student)->student_number ?? auth()->user()->external_id ?? '-' }}</span>
                 </div>
             </div>
 
