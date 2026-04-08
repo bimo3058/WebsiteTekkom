@@ -1,6 +1,4 @@
-{{-- resources/views/superadmin/dashboard.blade.php --}}
-{{-- Menggunakan x-ui.* shadcn Blade components + Tailwind design tokens --}}
-
+{{-- resources/views/superadmin/dashboard/dashboard.blade.php --}}
 <x-app-layout>
 <x-sidebar :user="auth()->user()">
 
@@ -16,12 +14,28 @@
 
             {{-- Header --}}
             <div class="flex items-start justify-between mb-7 gap-4 flex-wrap">
-                <div>
-                    <h1 class="text-2xl font-bold text-foreground tracking-tight mt-1 mb-0.5">Superadmin Dashboard</h1>
-                    <p class="text-sm text-muted-foreground">
-                        Selamat datang kembali, <strong class="text-primary font-semibold">{{ auth()->user()->name }}</strong>
-                    </p>
+                <div class="flex items-center gap-4">
+                    <div>
+                        <h1 class="text-2xl font-bold text-foreground tracking-tight mt-1 mb-0.5">Superadmin Dashboard</h1>
+                        <p class="text-sm text-muted-foreground">
+                            Selamat datang kembali, <strong class="text-primary font-semibold">{{ auth()->user()->name }}</strong>
+                        </p>
+                    </div>
+
+                    {{-- Import Progress Compact — di sebelah judul --}}
+                    <div id="importProgressContainer"
+                        data-import-id="{{ $activeImportId ?? session('import_id') ?? '' }}"
+                        class="hidden items-center gap-2 bg-white border border-[#DEE2E6] rounded-xl px-3 py-2 shadow-sm">
+                        <span class="material-symbols-outlined text-[#5E53F4] text-[16px] animate-spin shrink-0">sync</span>
+                        <span id="importPercentText" class="text-[12px] font-bold text-[#5E53F4] tabular-nums">0%</span>
+                        <button type="button" id="btnCancelImportHeader"
+                            class="shrink-0 p-0.5 text-[#ADB5BD] hover:text-rose-500 transition-colors rounded"
+                            title="Batalkan impor">
+                            <span class="material-symbols-outlined text-[14px]">close</span>
+                        </button>
+                    </div>
                 </div>
+
                 <div class="flex gap-2.5 items-center flex-wrap">
                     <x-ui.button variant="outline" size="sm" as="a" href="{{ route('superadmin.audit-logs') }}">
                         <span class="material-symbols-outlined text-[16px]">history</span>
@@ -104,6 +118,48 @@
                 </x-ui.card>
             </div>
 
+            {{-- ── Section: Import User ─────────────────── --}}
+            <div class="flex items-center gap-3 mb-4">
+                <div class="w-1 h-5 rounded bg-primary shrink-0"></div>
+                <span class="text-base font-bold text-grey-800 tracking-tight whitespace-nowrap">Import User</span>
+                <x-ui.separator class="flex-1" />
+            </div>
+
+            <div class="bg-white border border-[#DEE2E6] rounded-2xl p-6 shadow-sm mb-8">
+                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                    <div class="flex items-center gap-4">
+                        <div class="size-12 rounded-xl bg-primary-50 text-primary flex items-center justify-center shrink-0">
+                            <span class="material-symbols-outlined text-[24px]">upload_file</span>
+                        </div>
+                        <div>
+                            <p class="text-[13px] font-semibold text-[#1A1C1E] tracking-tight">Import via CSV</p>
+                            <p class="text-[12px] text-muted-foreground mt-0.5">Upload file CSV untuk menambahkan banyak user sekaligus ke sistem.</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2.5 shrink-0">
+                        <x-ui.button variant="outline" size="sm" as="a" href="{{ route('superadmin.users.index') }}">
+                            <span class="material-symbols-outlined text-[16px]">manage_accounts</span>
+                            Kelola Users
+                        </x-ui.button>
+                        <x-ui.button size="sm" onclick="openModal('modalImportUser')">
+                            <span class="material-symbols-outlined text-[16px]">upload</span>
+                            Import Sekarang
+                        </x-ui.button>
+                    </div>
+                </div>
+
+                {{-- Progress body — selalu render, JS show/hide --}}
+                <div id="importProgressBody" class="{{ ($activeImportId ?? session('import_id')) ? '' : 'hidden' }} mt-5 pt-5 border-t border-[#DEE2E6]">
+                    <div class="flex items-center justify-between mb-2">
+                        <p id="importStatusTextBody" class="text-[12px] font-semibold text-[#1A1C1E]">Memproses impor...</p>
+                        <span id="importPercentTextBody" class="text-[11px] font-bold text-primary">0%</span>
+                    </div>
+                    <div class="h-2 bg-[#F8F9FA] rounded-full overflow-hidden border border-[#DEE2E6]">
+                        <div id="importProgressBarBody" class="h-full bg-primary transition-all duration-500 rounded-full" style="width: 0%"></div>
+                    </div>
+                </div>
+            </div>
+
             {{-- ── Section: System Modules ─────────────────────── --}}
             <div class="flex items-center gap-3 mb-4">
                 <div class="w-1 h-5 rounded bg-primary shrink-0"></div>
@@ -156,71 +212,57 @@
                 <x-ui.separator class="flex-1" />
             </div>
 
-            {{-- 3 kolom sejajar --}}
             <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mb-7 items-stretch">
 
-                {{-- ① User Online Saat Ini --}}
+                {{-- ① User Online --}}
                 <x-ui.card class="shadow-sm border-border/60 overflow-hidden flex flex-col">
-                    {{-- Header disamakan: bg-muted/30, text-muted-foreground, dan link menggunakan gaya primary --}}
                     <x-ui.card-header class="!flex !flex-row !items-center !justify-between !px-5 !pt-4 !pb-3 border-b border-border bg-muted/30">
                         <div class="flex items-center gap-2">
-                            {{-- Menggunakan Ikon Statis (sensors) untuk menggantikan animasi ping --}}
                             <span class="material-symbols-outlined text-emerald-500 text-[18px]">sensors</span>
-                            <x-ui.card-title class="!text-[11px] !font-bold uppercase tracking-widest text-muted-foreground !m-0">
-                                Monitoring Online
-                            </x-ui.card-title>
+                            <x-ui.card-title class="!text-[11px] !font-bold uppercase tracking-widest text-muted-foreground !m-0">Monitoring Online</x-ui.card-title>
                         </div>
                         <a href="{{ route('superadmin.users.online') }}" class="text-[10px] font-semibold text-primary hover:text-primary-400 flex items-center gap-0.5 transition-colors">
-                            Detail
-                            <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
+                            Detail <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
                         </a>
                     </x-ui.card-header>
-
                     <div class="flex-1">
                         <x-ui.table>
                             <x-ui.table-body>
                                 @php
-                                    // Tetap menggunakan DB::raw('true') untuk PostgreSQL/Supabase
                                     $online_users = \App\Models\User::where('is_online', \Illuminate\Support\Facades\DB::raw('true'))
-                                        ->with('roles')
-                                        ->latest('last_login')
-                                        ->take(6)
-                                        ->get();
+                                        ->with('roles')->latest('last_login')->take(6)->get();
                                 @endphp
-                                @forelse($online_users as $user)
+                                @forelse($online_users as $onlineUser)
                                 <x-ui.table-row class="hover:bg-muted/20 transition-colors border-b last:border-0 border-border/40">
                                     <x-ui.table-cell class="!py-3 !px-5">
                                         <div class="flex items-center gap-3">
                                             <div class="relative shrink-0">
                                                 <div class="size-8 rounded-full flex items-center justify-center border border-emerald-100 bg-emerald-50 text-emerald-600 overflow-hidden">
-                                                    @if($user->avatar_url)
-                                                        <img src="{{ $user->avatar_url }}" alt="avatar" class="w-full h-full object-cover">
+                                                    @if($onlineUser->avatar_url)
+                                                        <img src="{{ $onlineUser->avatar_url }}" alt="avatar" class="w-full h-full object-cover">
                                                     @else
-                                                        <span class="text-[10px] font-semibold uppercase">{{ substr($user->name, 0, 1) }}</span>
+                                                        <span class="text-[10px] font-semibold uppercase">{{ substr($onlineUser->name, 0, 1) }}</span>
                                                     @endif
                                                 </div>
                                                 <span class="absolute bottom-0 right-0 block h-2 w-2 rounded-full bg-emerald-500 border border-white"></span>
                                             </div>
                                             <div class="min-w-0 flex-1">
-                                                <p class="text-[12px] font-semibold text-grey-800 truncate leading-tight">{{ $user->name }}</p>
-                                                {{-- Penyesuaian Badge Role --}}
-                                                <div class="mt-1">
-                                                    @php
-                                                        $roleName = strtolower($user->roles->first()->name ?? '');
-                                                        $roleStyle = match(true) {
-                                                            $roleName === 'superadmin' => 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]',
-                                                            $roleName === 'dosen'      => 'bg-[#E7F9F3] text-[#00C08D] border-[#B2EBD9]',
-                                                            $roleName === 'mahasiswa'  => 'bg-[#FFF9E6] text-[#FFB800] border-[#FFEBB3]',
-                                                            default                    => 'bg-[#F0F5FF] text-[#5E53F4] border-[#D1DFFF]',
-                                                        };
-                                                    @endphp
-                                                    <span class="px-1.5 py-0.5 rounded-full text-[8px] font-bold border uppercase tracking-wider {{ $roleStyle }}">
-                                                        {{ $user->roles->first()->name ?? 'User' }}
-                                                    </span>
-                                                </div>
+                                                <p class="text-[12px] font-semibold text-grey-800 truncate leading-tight">{{ $onlineUser->name }}</p>
+                                                @php
+                                                    $rn = strtolower($onlineUser->roles->first()->name ?? '');
+                                                    $rs = match(true) {
+                                                        $rn === 'superadmin' => 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]',
+                                                        $rn === 'dosen'      => 'bg-[#E7F9F3] text-[#00C08D] border-[#B2EBD9]',
+                                                        $rn === 'mahasiswa'  => 'bg-[#FFF9E6] text-[#FFB800] border-[#FFEBB3]',
+                                                        default              => 'bg-[#F0F5FF] text-[#5E53F4] border-[#D1DFFF]',
+                                                    };
+                                                @endphp
+                                                <span class="mt-1 inline-block px-1.5 py-0.5 rounded-full text-[8px] font-bold border uppercase tracking-wider {{ $rs }}">
+                                                    {{ $onlineUser->roles->first()->name ?? 'User' }}
+                                                </span>
                                             </div>
-                                            <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100">
-                                                {{ $user->last_login ? $user->last_login->diffForHumans(null, true) : 'Active' }}
+                                            <span class="text-[10px] text-emerald-600 font-bold bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-100 shrink-0">
+                                                {{ $onlineUser->last_login ? $onlineUser->last_login->diffForHumans(null, true) : 'Active' }}
                                             </span>
                                         </div>
                                     </x-ui.table-cell>
@@ -235,46 +277,43 @@
                     </div>
                 </x-ui.card>
 
-                {{-- ② User Baru Terdaftar --}}
+                {{-- ② User Baru --}}
                 <x-ui.card class="shadow-sm border-border/60 overflow-hidden flex flex-col">
                     <x-ui.card-header class="!flex !flex-row !items-center !px-5 !pt-4 !pb-3 border-b border-border bg-muted/30">
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-success-500 text-[18px]">person_add</span>
-                            <x-ui.card-title class="!text-[11px] !font-bold uppercase tracking-widest text-muted-foreground !m-0">
-                                User Baru Terdaftar
-                            </x-ui.card-title>
+                            <x-ui.card-title class="!text-[11px] !font-bold uppercase tracking-widest text-muted-foreground !m-0">User Baru Terdaftar</x-ui.card-title>
                         </div>
                     </x-ui.card-header>
                     <div class="flex-1">
                         <x-ui.table>
                             <x-ui.table-body>
-                                @forelse($new_registrations as $user)
+                                @forelse($new_registrations as $newUser)
                                 <x-ui.table-row class="hover:bg-muted/20 transition-colors border-b last:border-0 border-border/40">
                                     <x-ui.table-cell class="!py-3 !px-5">
                                         <div class="flex items-center gap-3">
                                             <div class="size-8 rounded-full flex items-center justify-center border border-[#DEE2E6] bg-[#F8F9FA] text-[#6C757D] flex-shrink-0 overflow-hidden">
-                                                @if($user->avatar_url)
-                                                    <img src="{{ $user->avatar_url }}" alt="avatar" class="w-full h-full object-cover">
+                                                @if($newUser->avatar_url)
+                                                    <img src="{{ $newUser->avatar_url }}" alt="avatar" class="w-full h-full object-cover">
                                                 @else
-                                                    <span class="text-[10px] font-semibold uppercase">{{ substr($user->name, 0, 1) }}</span>
+                                                    <span class="text-[10px] font-semibold uppercase">{{ substr($newUser->name, 0, 1) }}</span>
                                                 @endif
                                             </div>
                                             <div class="min-w-0 flex-1">
-                                                <p class="text-[12px] font-semibold text-grey-800 truncate leading-tight">{{ $user->name }}</p>
-                                                <p class="text-[10px] text-muted-foreground mt-0.5 font-medium">Joined {{ $user->created_at->format('d M Y') }}</p>
+                                                <p class="text-[12px] font-semibold text-grey-800 truncate leading-tight">{{ $newUser->name }}</p>
+                                                <p class="text-[10px] text-muted-foreground mt-0.5 font-medium">Joined {{ $newUser->created_at->format('d M Y') }}</p>
                                             </div>
-                                            {{-- Penyesuaian Badge Role agar Sinkron dengan User Management --}}
                                             @php
-                                                $roleName = strtolower($user->roles->first()->name ?? '');
-                                                $roleStyle = match(true) {
-                                                    $roleName === 'superadmin' => 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]',
-                                                    $roleName === 'dosen'      => 'bg-[#E7F9F3] text-[#00C08D] border-[#B2EBD9]',
-                                                    $roleName === 'mahasiswa'  => 'bg-[#FFF9E6] text-[#FFB800] border-[#FFEBB3]',
-                                                    default                    => 'bg-[#F0F5FF] text-[#5E53F4] border-[#D1DFFF]',
+                                                $rn = strtolower($newUser->roles->first()->name ?? '');
+                                                $rs = match(true) {
+                                                    $rn === 'superadmin' => 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]',
+                                                    $rn === 'dosen'      => 'bg-[#E7F9F3] text-[#00C08D] border-[#B2EBD9]',
+                                                    $rn === 'mahasiswa'  => 'bg-[#FFF9E6] text-[#FFB800] border-[#FFEBB3]',
+                                                    default              => 'bg-[#F0F5FF] text-[#5E53F4] border-[#D1DFFF]',
                                                 };
                                             @endphp
-                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider {{ $roleStyle }}">
-                                                {{ $user->roles->first()->name ?? 'USER' }}
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider {{ $rs }} shrink-0">
+                                                {{ $newUser->roles->first()->name ?? 'USER' }}
                                             </span>
                                         </div>
                                     </x-ui.table-cell>
@@ -289,18 +328,15 @@
                     </div>
                 </x-ui.card>
 
-                {{-- ③ Log Aktivitas Terbaru --}}
+                {{-- ③ Log Aktivitas --}}
                 <x-ui.card class="shadow-sm border-border/60 overflow-hidden flex flex-col">
                     <x-ui.card-header class="!flex !flex-row !items-center !justify-between !px-5 !pt-4 !pb-3 border-b border-border bg-muted/30">
                         <div class="flex items-center gap-2">
                             <span class="material-symbols-outlined text-purple-500 text-[18px]">history</span>
-                            <x-ui.card-title class="!text-[11px] !font-bold uppercase tracking-widest text-muted-foreground !m-0">
-                                Log Aktivitas Terbaru
-                            </x-ui.card-title>
+                            <x-ui.card-title class="!text-[11px] !font-bold uppercase tracking-widest text-muted-foreground !m-0">Log Aktivitas Terbaru</x-ui.card-title>
                         </div>
                         <a href="{{ route('superadmin.audit-logs') }}" class="text-[10px] font-semibold text-primary hover:text-primary-400 flex items-center gap-0.5 transition-colors">
-                            Lihat semua
-                            <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
+                            Lihat semua <span class="material-symbols-outlined text-[13px]">arrow_forward</span>
                         </a>
                     </x-ui.card-header>
                     <div class="flex-1 overflow-x-auto scrollbar-none">
@@ -309,33 +345,20 @@
                                 @forelse($recent_logs->take(6) as $log)
                                 @php
                                     $actionVariant = match(strtoupper($log->action)) {
-                                        'CREATE'  => 'success',
-                                        'UPDATE'  => 'sky',
-                                        'DELETE'  => 'destructive',
-                                        'LOGIN'   => 'purple',
-                                        'LOGOUT'  => 'secondary',
-                                        default   => 'secondary',
+                                        'CREATE' => 'success', 'UPDATE' => 'sky',
+                                        'DELETE' => 'destructive', 'LOGIN' => 'purple',
+                                        default  => 'secondary',
                                     };
                                 @endphp
                                 <x-ui.table-row class="hover:bg-muted/20 transition-colors border-b last:border-0 border-border/40">
                                     <x-ui.table-cell class="!py-3 !px-5">
                                         <div class="flex items-center gap-3">
-                                            
-                                            {{-- Avatar Container Mulai (dengan Logika Dinamis) --}}
                                             @if($log->user)
-                                                {{-- Identifikasi Superadmin dan Tentukan Style Avatar --}}
                                                 @php
-                                                    // Asumsi: hasRole('superadmin') tersedia (misal dari Spatie Permission)
-                                                    $isSuperadmin = $log->user->hasRole('superadmin'); 
-                                                    
-                                                    // Tentukan kelas background, border, dan text untuk div avatar
-                                                    $avatarClasses = $isSuperadmin 
-                                                        ? '!bg-[#F1E9FF] border-[#D1BFFF] text-[#5E53F4]' 
-                                                        : 'border-[#DEE2E6] bg-[#F8F9FA] text-[#6C757D]';
+                                                    $logSa = $log->user->hasRole('superadmin');
+                                                    $logAv = $logSa ? '!bg-[#F1E9FF] border-[#D1BFFF] text-[#5E53F4]' : 'border-[#DEE2E6] bg-[#F8F9FA] text-[#6C757D]';
                                                 @endphp
-
-                                                {{-- Avatar Container (dengan class dinamis) --}}
-                                                <div class="size-8 rounded-full flex items-center justify-center border flex-shrink-0 overflow-hidden {{ $avatarClasses }}">
+                                                <div class="size-8 rounded-full flex items-center justify-center border flex-shrink-0 overflow-hidden {{ $logAv }}">
                                                     @if($log->user->avatar_url)
                                                         <img src="{{ $log->user->avatar_url }}" alt="avatar" class="w-full h-full object-cover">
                                                     @else
@@ -343,13 +366,10 @@
                                                     @endif
                                                 </div>
                                             @else
-                                                {{-- Gaya untuk System --}}
-                                                <div class="size-8 rounded-full flex items-center justify-center border border-[#DEE2E6] bg-[#F8F9FA] text-[#6C757D] flex-shrink-0 overflow-hidden">
+                                                <div class="size-8 rounded-full flex items-center justify-center border border-[#DEE2E6] bg-[#F8F9FA] text-[#6C757D] flex-shrink-0">
                                                     <span class="material-symbols-outlined text-[16px]">settings_suggest</span>
                                                 </div>
                                             @endif
-                                            {{-- Avatar Container Selesai --}}
-
                                             <div class="min-w-0 flex-1">
                                                 <p class="text-[12px] font-semibold text-grey-800 truncate leading-tight">{{ $log->user->name ?? 'System' }}</p>
                                                 <p class="text-[10px] text-muted-foreground mt-0.5 truncate">{{ $log->description }}</p>
@@ -373,104 +393,222 @@
                     </div>
                 </x-ui.card>
             </div>
-
-            {{-- ── Cloud Storage Test ──────────────────────────── --}}
-            <div class="rounded-lg bg-gradient-to-br from-primary-400 to-primary-500 p-8 sm:p-9 text-white relative overflow-hidden shadow-[0_8px_24px_-4px_rgba(94,83,244,.25)]">
-                <div class="absolute -top-1/2 -right-[8%] w-80 h-80 rounded-full bg-white/5"></div>
-                <div class="absolute -bottom-[40%] right-[20%] w-52 h-52 rounded-full bg-white/[.03]"></div>
-
-                <div class="relative z-10 grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
-                    <div>
-                        <h2 class="text-[22px] font-bold tracking-tight mb-2">Cloud Storage Test</h2>
-                        <p class="text-[13px] text-white/80 leading-relaxed mb-5">
-                            Pilih berkas untuk melihat pratinjau detail sebelum diunggah ke Supabase Storage.
-                        </p>
-
-                        <form action="{{ route('superadmin.storage.upload') }}" method="POST" enctype="multipart/form-data" id="storage-form">
-                            @csrf
-                            <input type="file" name="file" id="file-input" class="hidden" accept=".jpg,.jpeg,.png,.pdf,.docx">
-
-                            <div class="flex flex-col gap-2.5">
-                                <button type="button" onclick="document.getElementById('file-input').click()"
-                                        class="inline-flex items-center gap-2 bg-white/[.12] hover:bg-white/20 text-white text-xs font-semibold px-5 py-2.5 rounded-md border border-white/20 transition-colors w-fit">
-                                    <span class="material-symbols-outlined text-[16px]">attachment</span>
-                                    Pilih Berkas
-                                </button>
-
-                                <div id="file-preview" class="hidden bg-white/10 backdrop-blur-sm border border-white/15 rounded-lg px-4 py-3 mt-1">
-                                    <div class="flex items-center gap-2.5">
-                                        <span class="material-symbols-outlined text-white/60 text-[20px]">description</span>
-                                        <div class="flex-1 min-w-0">
-                                            <p id="preview-name" class="text-xs font-semibold truncate"></p>
-                                            <p id="preview-size" class="text-[10px] text-white/70"></p>
-                                        </div>
-                                        <button type="button" onclick="cancelUpload()" class="text-white/60 hover:text-white p-0 bg-transparent border-none cursor-pointer">
-                                            <span class="material-symbols-outlined text-[16px]">close</span>
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <button type="submit" id="submit-upload"
-                                        class="hidden inline-flex items-center gap-2 bg-white text-primary-500 text-xs font-bold px-5 py-2.5 rounded-md hover:bg-grey-25 transition-colors shadow-md w-fit">
-                                    <span class="material-symbols-outlined text-[16px]">cloud_upload</span>
-                                    Unggah Sekarang
-                                </button>
-                            </div>
-                        </form>
-                    </div>
-
-                    @if(session('upload_success'))
-                    <div class="bg-white/10 backdrop-blur-sm border border-white/15 rounded-lg p-5">
-                        <div class="flex items-center gap-2 mb-3">
-                            <span class="material-symbols-outlined text-success-200 text-[20px]">check_circle</span>
-                            <span class="text-[11px] font-bold uppercase tracking-wider">Upload Berhasil</span>
-                        </div>
-                        <p class="text-[11px] text-white/70 truncate mb-1"><span class="text-white/50">Path:</span> {{ session('upload_path') }}</p>
-                        <p class="text-[11px] text-white/70 mb-3.5"><span class="text-white/50">Size:</span> {{ number_format(session('upload_size') / 1024, 1) }} KB</p>
-                        <div class="flex gap-2">
-                            <a href="{{ session('upload_url') }}" target="_blank"
-                               class="flex-1 text-center bg-white/[.12] hover:bg-white/[.22] text-white text-[10px] font-bold py-2 rounded-md border border-white/15 transition-colors">
-                                BUKA FILE
-                            </a>
-                            <form action="{{ route('superadmin.storage.delete') }}" method="POST" class="flex-1 m-0">
-                                @csrf @method('DELETE')
-                                <input type="hidden" name="path" value="{{ session('upload_path') }}">
-                                <button type="submit"
-                                        class="w-full bg-destructive-200/10 hover:bg-destructive-200/25 text-[#ffc4b8] text-[10px] font-bold py-2 rounded-md border border-destructive-200/20 transition-colors">
-                                    HAPUS
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                    @endif
-                </div>
-            </div>
-
         </div>
     </div>
+
+    {{-- Modal Import di-extend dari user management --}}
+    @include('superadmin.users._modal_import')
 
 </x-sidebar>
 
 <script>
-const fileInput   = document.getElementById('file-input');
-const previewArea = document.getElementById('file-preview');
-const previewName = document.getElementById('preview-name');
-const previewSize = document.getElementById('preview-size');
-const submitBtn   = document.getElementById('submit-upload');
-
-fileInput?.addEventListener('change', function () {
-    const file = this.files[0];
-    if (!file) return;
-    previewName.textContent = file.name;
-    previewSize.textContent = (file.size / 1024).toFixed(1) + ' KB';
-    previewArea.classList.remove('hidden');
-    submitBtn.classList.remove('hidden');
-});
-
-function cancelUpload() {
-    fileInput.value = '';
-    previewArea.classList.add('hidden');
-    submitBtn.classList.add('hidden');
+// ── Modal ──────────────────────────────────────────────────────
+function openModal(id) {
+    const el = document.getElementById(id);
+    if (el) { el.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
 }
+function closeModal(id) {
+    const el = document.getElementById(id);
+    if (el) { el.classList.add('hidden'); document.body.style.overflow = ''; }
+}
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal('modalImportUser'); });
+
+// ── Progress helpers ───────────────────────────────────────────
+let importTimer = null;
+
+function showProgressUI(importId) {
+    const container = document.getElementById('importProgressContainer');
+    if (container) {
+        container.setAttribute('data-import-id', importId);
+        container.classList.remove('hidden');
+        container.classList.add('flex');
+    }
+    // Tombol cancel buka modal dulu
+    const btnCancel = document.getElementById('btnCancelImportHeader');
+    if (btnCancel) btnCancel.onclick = () => {
+        if (typeof confirmCancelProgressModal === 'function') {
+            confirmCancelProgressModal(importId);
+        } else {
+            cancelImport(importId); // fallback
+        }
+    };
+    document.getElementById('importProgressBody')?.classList.remove('hidden');
+}
+
+function setProgress(pct) {
+    const barH = document.getElementById('importProgressBar');
+    const barB = document.getElementById('importProgressBarBody');
+    const pctH = document.getElementById('importPercentText');
+    const pctB = document.getElementById('importPercentTextBody');
+    if (barH) barH.style.width = pct + '%';
+    if (barB) barB.style.width = pct + '%';
+    if (pctH) pctH.textContent = pct + '%';
+    if (pctB) pctB.textContent = pct + '%';
+}
+
+function setStatus(html) {
+    const h = document.getElementById('importStatusText');
+    const b = document.getElementById('importStatusTextBody');
+    if (h) h.innerHTML = html;
+    if (b) b.innerHTML = html;
+}
+
+function setBarColor(color) {
+    const cls = `h-full bg-${color}-500 transition-all duration-500 rounded-full`;
+    const barH = document.getElementById('importProgressBar');
+    const barB = document.getElementById('importProgressBarBody');
+    if (barH) barH.className = cls;
+    if (barB) barB.className = cls;
+}
+
+// ── Polling ────────────────────────────────────────────────────
+function stopPolling() {
+    if (importTimer) { clearInterval(importTimer); importTimer = null; }
+}
+
+function startPolling(importId) {
+    if (!importId || importId === 'null' || importId === '') return;
+    if (importTimer) clearInterval(importTimer);
+
+    showProgressUI(importId);
+
+    importTimer = setInterval(async () => {
+        try {
+            const res = await fetch(`/superadmin/import-status/${importId}`);
+            const ct  = res.headers.get('content-type');
+            if (!ct?.includes('application/json')) { stopPolling(); return; }
+            if (res.status === 401 || res.status === 403) { window.location.href = '/login'; return; }
+            if (!res.ok) { stopPolling(); return; }
+
+            const data = await res.json();
+            if (!data || typeof data !== 'object') { stopPolling(); return; }
+
+            const pct = data.total > 0 ? Math.round((data.processed / data.total) * 100) : 0;
+            setProgress(pct);
+
+            if (data.status === 'processing') {
+                setStatus(`Memproses: ${data.processed} / ${data.total} user...`);
+            } else if (data.status === 'completed') {
+                stopPolling();
+                setProgress(100);
+                setBarColor('emerald');
+                setStatus('<span class="text-emerald-600 font-bold">Impor Berhasil Selesai!</span>');
+                setTimeout(async () => {
+                    // Bust cache via server dulu sebelum reload
+                    await fetch('/superadmin/clear-import-session', { method: 'POST' });
+                    await fetch('/superadmin/bust-stats-cache', {
+                        method: 'POST',
+                        headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '' }
+                    });
+                    window.location.reload();
+                }, 1500);
+            } else if (data.status === 'failed') {
+                stopPolling();
+                setBarColor('red');
+                setStatus(`<span class="text-red-600 font-bold">❌ Gagal: ${data.error_message || 'Import gagal'}</span>`);
+                setTimeout(() => {
+                    fetch('/superadmin/clear-import-session', { method: 'POST' });
+                    window.location.reload();
+                }, 3000);
+            }
+        } catch (e) {
+            console.error('Polling error:', e);
+            stopPolling();
+        }
+    }, 2000);
+}
+
+async function cancelImport(importId) {
+    if (!importId) return;
+    try {
+        const res = await fetch(`/superadmin/import-status/${importId}/cancel`, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json'
+            }
+        });
+        if (res.ok) {
+            stopPolling();
+            setBarColor('red');
+            setStatus('<span class="text-red-600 font-bold">Impor dibatalkan</span>');
+            setTimeout(async () => {
+                await fetch('/superadmin/clear-import-session', { method: 'POST' });
+                // Tunggu 3 detik setelah cancel sebelum bust cache + reload
+                // agar Job sempat berhenti dan tidak ada insert tambahan
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                await fetch('/superadmin/bust-stats-cache', {
+                    method: 'POST',
+                    headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                });
+                window.location.reload();
+            }, 1500);
+        }
+    } catch (e) { console.error('Cancel error:', e); }
+}
+
+// ── Init ───────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
+
+    // Jika ada import aktif dari session saat halaman load
+    const container = document.getElementById('importProgressContainer');
+    const sessionId = container?.getAttribute('data-import-id') || '';
+    if (sessionId && sessionId !== '') startPolling(sessionId);
+
+    // AJAX submit form import
+    const importForm = document.getElementById('formImportUser');
+    if (!importForm) return;
+
+    importForm.addEventListener('submit', async function (e) {
+        e.preventDefault();
+        const btn            = document.getElementById('btnSubmitImport');
+        const errorContainer = document.getElementById('importErrorContainer');
+        const errorMessage   = document.getElementById('importErrorMessage');
+        const dupeContainer  = document.getElementById('importDuplicateContainer');
+    
+        // Reset semua error
+        if (errorContainer) errorContainer.classList.add('hidden');
+        if (dupeContainer)  dupeContainer.classList.add('hidden');
+    
+        btn.disabled  = true;
+        btn.innerHTML = '<span class="animate-spin material-symbols-outlined" style="font-size:18px">sync</span> Memvalidasi...';
+    
+        try {
+            const res  = await fetch(this.action, {
+                method: 'POST',
+                body: new FormData(this),
+                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+            });
+            const data = await res.json();
+    
+            // ── Duplikat ditemukan ──────────────────────────────────
+            if (data.status === 'duplicate') {
+                handleImportDuplicateResponse(data);
+                return;
+            }
+    
+            // ── Error validasi biasa ────────────────────────────────
+            if (!res.ok) throw new Error(data.message || 'Gagal memproses file.');
+    
+            // ── Sukses ─────────────────────────────────────────────
+            if (data.import_id) {
+                btn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Berhasil!';
+                closeModal('modalImportUser');
+                startPolling(data.import_id);       // dashboard.blade.php
+                // window.location.reload();        // index.blade.php — pakai ini
+            } else if (data.status === 'success') {
+                btn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Berhasil!';
+                window.location.reload();
+            }
+    
+        } catch (err) {
+            if (errorMessage)   errorMessage.textContent = err.message;
+            if (errorContainer) errorContainer.classList.remove('hidden');
+            btn.disabled  = false;
+            btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px">upload</span> Mulai Impor';
+        }
+    });
+});
 </script>
 </x-app-layout>

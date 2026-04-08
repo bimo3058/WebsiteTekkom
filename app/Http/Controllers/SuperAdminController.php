@@ -36,6 +36,12 @@ class SuperAdminController extends Controller
         return 'sa:users:' . implode(':', $parts);
     }
 
+    public function bustStatsCache()
+    {
+        $this->bustUserCache();
+        return response()->json(['ok' => true]);
+    }
+    
     private function bustUserCache(): void
     {
         try {
@@ -144,9 +150,14 @@ class SuperAdminController extends Controller
         $search  = (string) $request->input('search', '');
         $role    = (string) $request->input('role', 'all');
         $page    = (int)    $request->input('page', 1);
-        $perPage = in_array((int) $request->input('per_page', 10), [10, 25, 50, 100])
-                ? (int) $request->input('per_page', 10)
-                : 10;
+
+        $perPageInput = $request->input('per_page', $request->session()->get('um_per_page', 10));
+        $perPage = in_array((int) $perPageInput, [10, 25, 50, 100]) ? (int) $perPageInput : 10;
+
+        // Simpan ke session kalau ada di request
+        if ($request->has('per_page')) {
+            $request->session()->put('um_per_page', $perPage);
+        }
 
         $roles    = Cache::remember('sa:roles_list', self::TTL_ROLES, fn() => Role::orderBy('name')->get());
         $cacheKey = $this->userListCacheKey($search, $role, $page, $perPage);
@@ -764,9 +775,9 @@ class SuperAdminController extends Controller
         // ==========================================
         $fileHash = md5_file($file->getRealPath());
 
-        // Cek apakah file yang sama persis pernah sukses di-import sebelumnya
         $existingImport = \App\Models\ImportStatus::where('file_hash', $fileHash)
                             ->where('status', 'completed')
+                            ->whereNotNull('path')
                             ->latest()
                             ->first();
 
@@ -779,63 +790,140 @@ class SuperAdminController extends Controller
         if (!$header || count($header) < 8) {
             fclose($handle);
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Struktur CSV tidak valid (minimal 8 kolom: name, email, password, role, external_id, student_number, cohort_year, permissions)'
             ], 422);
         }
 
-        $totalRows = 0;
+        // Normalize header
+        $header = array_map('trim', array_map('strtolower', $header));
+
+        $emailCol      = array_search('email', $header);
+        $nameCol       = array_search('name', $header);
+        $externalIdCol = array_search('external_id', $header);
+
+        if ($emailCol === false) {
+            fclose($handle);
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Kolom "email" tidak ditemukan di CSV.'
+            ], 422);
+        }
+
+        // ==========================================
+        // ✅ 3. BACA SEMUA EMAIL DARI CSV
+        // ==========================================
+        $csvRows       = [];
+        $csvEmails     = [];
+        $csvExternalIds = [];
+        $totalRows     = 0;
         $validRowFound = false;
 
         while (($row = fgetcsv($handle)) !== false) {
             $totalRows++;
-            if (count($row) >= 7 && filter_var($row[1], FILTER_VALIDATE_EMAIL)) {
-                $validRowFound = true;
+            $email = isset($row[$emailCol]) ? trim($row[$emailCol]) : null;
+
+            if ($email && filter_var($email, FILTER_VALIDATE_EMAIL)) {
+                $validRowFound    = true;
+                $csvEmails[]      = strtolower($email);
+                $csvRows[]        = [
+                    'name'        => isset($row[$nameCol]) ? trim($row[$nameCol]) : $email,
+                    'email'       => $email,
+                    'external_id' => ($externalIdCol !== false && isset($row[$externalIdCol]))
+                                        ? trim($row[$externalIdCol]) : null,
+                ];
+                if ($externalIdCol !== false && isset($row[$externalIdCol]) && trim($row[$externalIdCol]) !== '') {
+                    $csvExternalIds[] = trim($row[$externalIdCol]);
+                }
             }
         }
         fclose($handle);
 
         if (!$validRowFound) {
             return response()->json([
-                'status' => 'error',
-                'message' => 'Tidak ada data valid dalam file'
+                'status'  => 'error',
+                'message' => 'Tidak ada data valid dalam file.'
             ], 422);
         }
 
         // ==========================================
-        // ✅ 3. LOGIKA DEDUPLIKASI BUCKET
+        // ✅ 4. CEK DUPLIKASI EMAIL DI DATABASE
+        // ==========================================
+        $duplicateUsers = \App\Models\User::whereIn(
+                DB::raw('LOWER(email)'), $csvEmails
+            )
+            ->select('id', 'name', 'email', 'avatar_url', 'created_at')
+            ->with('roles:id,name')
+            ->get();
+
+        // Cek juga external_id jika ada
+        $duplicateExternalIds = collect();
+        if (!empty($csvExternalIds)) {
+            $duplicateExternalIds = \App\Models\User::whereIn('external_id', $csvExternalIds)
+                ->select('id', 'name', 'email', 'avatar_url', 'created_at')
+                ->with('roles:id,name')
+                ->get();
+        }
+
+        // Merge dan deduplicate by id
+        $allDuplicates = $duplicateUsers
+            ->merge($duplicateExternalIds)
+            ->unique('id')
+            ->values();
+
+        if ($allDuplicates->isNotEmpty()) {
+            return response()->json([
+                'status'     => 'duplicate',
+                'message'    => $allDuplicates->count() . ' data dalam file sudah terdaftar di sistem.',
+                'duplicates' => $allDuplicates->map(fn($u) => [
+                    'id'         => $u->id,
+                    'name'       => $u->name,
+                    'email'      => $u->email,
+                    'avatar_url' => $u->avatar_url,
+                    'roles'      => $u->roles->pluck('name')->toArray(),
+                    'created_at' => $u->created_at->format('d M Y'),
+                ]),
+            ], 422);
+        }
+
+        // ==========================================
+        // ✅ 5. LOGIKA DEDUPLIKASI BUCKET
         // ==========================================
         $storage = new \App\Services\SupabaseStorage();
-        
+
         if ($existingImport) {
-            // Jika file identik ditemukan, jangan upload lagi. Pakai path lama.
-            $path = $existingImport->path; 
-            $message = 'File identik ditemukan. Menggunakan aset yang sudah ada.';
+            $testUrl = $storage->signedUrl($existingImport->path, 60, 'data_user');
+            if ($testUrl) {
+                $path    = $existingImport->path;
+                $message = 'File identik ditemukan. Menggunakan aset yang sudah ada.';
+            } else {
+                // Path lama tidak valid, upload ulang ke csv_imports
+                $path    = $storage->upload($file, 'csv_imports', 'data_user');
+                $message = 'File baru berhasil diunggah.';
+            }
         } else {
-            // Jika benar-benar file baru, upload ke Supabase
-            // Gunakan $fileHash sebagai nama file agar di bucket tidak duplikat
-            $path = $storage->upload($file, 'imports', 'data_user');
+            $path    = $storage->upload($file, 'csv_imports', 'data_user');
             $message = 'File baru berhasil diunggah.';
         }
 
         if (!$path) {
             return response()->json([
-                'status' => 'error',
+                'status'  => 'error',
                 'message' => 'Gagal memproses file ke storage'
             ], 500);
         }
 
         // ==========================================
-        // ✅ 4. SIMPAN STATUS & DISPATCH
+        // ✅ 6. SIMPAN STATUS & DISPATCH
         // ==========================================
         $import = \App\Models\ImportStatus::create([
-            'user_id' => auth()->id(), // Pastikan ada kolom user_id agar tahu siapa yang upload
-            'filename' => $file->getClientOriginalName(),
-            'file_hash' => $fileHash, // Simpan hash untuk pengecekan berikutnya
-            'path' => $path,
-            'total_rows' => $totalRows,
+            'user_id'        => auth()->id(),
+            'filename'       => $file->getClientOriginalName(),
+            'file_hash'      => $fileHash,
+            'path'           => $path,
+            'total_rows'     => $totalRows,
             'processed_rows' => 0,
-            'status' => 'pending'
+            'status'         => 'pending'
         ]);
 
         \App\Jobs\ProcessBulkImport::dispatch(
@@ -845,8 +933,8 @@ class SuperAdminController extends Controller
         );
 
         return response()->json([
-            'status' => 'success',
-            'message' => $message,
+            'status'    => 'success',
+            'message'   => $message,
             'import_id' => $import->id
         ]);
     }
