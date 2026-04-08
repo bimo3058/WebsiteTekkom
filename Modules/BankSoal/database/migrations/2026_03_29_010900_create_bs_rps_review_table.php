@@ -11,11 +11,13 @@ return new class extends Migration
         Schema::create('bs_rps_review', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('rps_id');
-            $table->binary('dokumen');
-            $table->string('status_rps')->default('draft');
+            $table->unsignedBigInteger('gpm_user_id')->nullable();
+            $table->enum('status_review', ['draft', 'diajukan', 'revisi', 'disetujui'])->default('diajukan');
             $table->text('catatan')->nullable();
-            $table->integer('nilai_akhir');
+            $table->integer('nilai_akhir')->default(0);
             $table->timestamps();
+            
+            $table->foreign('rps_id')->references('id')->on('bs_rps_detail')->onDelete('cascade');
         });
     }
 

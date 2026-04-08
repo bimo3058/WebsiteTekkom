@@ -1,4 +1,4 @@
-<x-banksoal::layouts.master>
+<x-banksoal::layouts.dosen-master>
 <!-- SIDEBAR -->
 <aside class="sidebar">
     <div class="sidebar-brand">
@@ -1015,4 +1015,4 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 
-</x-banksoal::layouts.master>
+</x-banksoal::layouts.dosen-master>
