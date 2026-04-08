@@ -9,6 +9,7 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use Modules\BankSoal\Models\Shared\MataKuliah;
 use Modules\BankSoal\Models\Shared\Cpl;
@@ -32,7 +33,7 @@ class RpsController extends Controller
     // Halaman utama RPS untuk Dosen
     public function index(): \Illuminate\View\View
     {
-        $user = Auth::user();
+        $user = Auth::user()->load('lecturer');
 
         // Fetch mata kuliah dari database
         $mataKuliahs = MataKuliah::all();
@@ -205,22 +206,41 @@ class RpsController extends Controller
     public function getDosenByMk(): JsonResponse
     {
         try {
-            $dosenList = User::whereHas('roles', function ($query) {
-                // Filter hanya user dengan role 'dosen'
-                $query->where('name', 'dosen');
+            $query = User::whereHas('roles', function ($q) {
+                $q->whereRaw('LOWER(name) = ?', ['dosen']);
             })
                 ->where('id', '!=', Auth::id())  // Exclude user yang sedang login
-                ->get()
-                ->map(function ($user) {
-                    return [
-                        'id' => $user->id,
-                        'name' => $user->name,
-                    ];
-                });
+                ->with('roles');
 
-            return response()->json($dosenList);
+            // DEBUG: Log SQL query dan hasil
+            \Log::info('getDosenByMk Query', [
+                'sql' => $query->toSql(),
+                'bindings' => $query->getBindings(),
+            ]);
+
+            $dosenList = $query->get();
+
+            // DEBUG: Log hasil dan roles dari setiap user
+            $dosenList->each(function ($user) {
+                \Log::info('User Found', [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                    'email' => $user->email,
+                    'roles' => $user->roles->pluck('name')->toArray(),
+                ]);
+            });
+
+            return response()->json($dosenList->map(function ($user) {
+                return [
+                    'id' => $user->id,
+                    'name' => $user->name,
+                ];
+            }));
         } catch (\Exception $e) {
-            \Log::error('getDosenByMk Error', ['error' => $e->getMessage()]);
+            \Log::error('getDosenByMk Error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
             return response()->json(['error' => 'Error fetching dosen'], 500);
         }
     }

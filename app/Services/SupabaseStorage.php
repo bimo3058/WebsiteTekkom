@@ -20,11 +20,11 @@ class SupabaseStorage
     }
 
     /**
-     * Upload file ke Supabase Storage.
-     * Mengembalikan path relatif file jika berhasil, null jika gagal.
+     * Tambahkan parameter $bucket opsional di akhir.
      */
-    public function upload(UploadedFile $file, string $folder = 'uploads'): ?string
+    public function upload(UploadedFile $file, string $folder = 'uploads', ?string $bucket = null): ?string
     {
+        $targetBucket = $bucket ?? $this->bucket; // Gunakan parameter jika ada, jika tidak pakai default
         $extension = $file->getClientOriginalExtension();
         $path      = $folder . '/' . Str::uuid() . '.' . $extension;
         $mimeType  = $file->getMimeType();
@@ -36,28 +36,30 @@ class SupabaseStorage
         ])->withBody(
             file_get_contents($file->getRealPath()),
             $mimeType
-        )->post($this->storageUrl($path));
+        )->post($this->url . '/storage/v1/object/' . $targetBucket . '/' . $path);
 
         if ($response->successful()) {
             return $path;
         }
 
         report(new \RuntimeException(
-            'Supabase upload failed: ' . $response->body()
+            "Supabase upload failed to bucket [{$targetBucket}]: " . $response->body()
         ));
 
         return null;
     }
 
     /**
-     * Hapus file dari Supabase Storage berdasarkan path relatif.
+     * Hapus file dengan dukungan pilihan bucket.
      */
-    public function delete(string $path): bool
+    public function delete(string $path, ?string $bucket = null): bool
     {
+        $targetBucket = $bucket ?? $this->bucket;
+
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->key,
             'Content-Type'  => 'application/json',
-        ])->delete($this->url . '/storage/v1/object/' . $this->bucket, [
+        ])->delete($this->url . '/storage/v1/object/' . $targetBucket, [
             'prefixes' => [$path],
         ]);
 
@@ -65,22 +67,25 @@ class SupabaseStorage
     }
 
     /**
-     * Ambil public URL file (untuk public bucket).
+     * Ambil public URL dengan dukungan pilihan bucket.
      */
-    public function publicUrl(string $path): string
+    public function publicUrl(string $path, ?string $bucket = null): string
     {
-        return $this->url . '/storage/v1/object/public/' . $this->bucket . '/' . $path;
+        $targetBucket = $bucket ?? $this->bucket;
+        return $this->url . '/storage/v1/object/public/' . $targetBucket . '/' . $path;
     }
 
     /**
-     * Ambil signed URL file (untuk private bucket), default expire 1 jam.
+     * Ambil signed URL dengan dukungan pilihan bucket.
      */
-    public function signedUrl(string $path, int $expiresIn = 3600): ?string
+    public function signedUrl(string $path, int $expiresIn = 3600, ?string $bucket = null): ?string
     {
+        $targetBucket = $bucket ?? $this->bucket;
+
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->key,
             'Content-Type'  => 'application/json',
-        ])->post($this->url . '/storage/v1/object/sign/' . $this->bucket . '/' . $path, [
+        ])->post($this->url . '/storage/v1/object/sign/' . $targetBucket . '/' . $path, [
             'expiresIn' => $expiresIn,
         ]);
 
@@ -91,6 +96,7 @@ class SupabaseStorage
         return null;
     }
 
+    // Helper internal tidak perlu diubah, biarkan mereferensi ke $this->bucket default
     private function storageUrl(string $path): string
     {
         return $this->url . '/storage/v1/object/' . $this->bucket . '/' . $path;

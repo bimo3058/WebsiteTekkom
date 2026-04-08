@@ -1,0 +1,5 @@
+{{-- resources/views/components/ui/table-row.blade.php --}}
+@props([])
+<tr {{ $attributes->merge(['class' => 'border-b border-border transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted']) }}>
+    {{ $slot }}
+</tr>

@@ -1,3 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/*
+ * ═══════════════════════════════════════════════════════════════
+ *  SHADCN/UI CSS VARIABLES — mapped ke Design System LuminHR
+ *  Semua value dalam format HSL (tanpa hsl() wrapper)
+ * ═══════════════════════════════════════════════════════════════
+ */
+@layer base {
+    :root {
+        /* ── Surface ───────────────────────────────────────── */
+        --background:           240 11% 98%;    /* #FAFAFB  grey-0   */
+        --foreground:           240 30% 13%;    /* #16162B  grey-900 */
+
+        /* ── Card ──────────────────────────────────────────── */
+        --card:                 0 0% 100%;      /* #FFFFFF           */
+        --card-foreground:      240 30% 13%;    /* #16162B  grey-900 */
+
+        /* ── Popover ───────────────────────────────────────── */
+        --popover:              0 0% 100%;
+        --popover-foreground:   240 30% 13%;
+
+        /* ── Primary (Purple dari design system) ───────────── */
+        --primary:              245 90% 64%;    /* #5E53F4  p-500    */
+        --primary-foreground:   0 0% 100%;      /* white             */
+
+        /* ── Secondary ─────────────────────────────────────── */
+        --secondary:            240 14% 95%;    /* #EEEEF3  grey-50  */
+        --secondary-foreground: 240 14% 33%;    /* #3D3D55  grey-700 */
+
+        /* ── Muted ─────────────────────────────────────────── */
+        --muted:                240 14% 95%;    /* #EEEEF3  grey-50  */
+        --muted-foreground:     240 8% 58%;     /* #8B8B9E  grey-400 */
+
+        /* ── Accent ────────────────────────────────────────── */
+        --accent:               240 14% 95%;    /* #EEEEF3           */
+        --accent-foreground:    240 14% 33%;    /* #3D3D55           */
+
+        /* ── Destructive ───────────────────────────────────── */
+        --destructive:          14 100% 55%;    /* #FF6B4A  err-200  */
+        --destructive-foreground: 0 0% 100%;
+
+        /* ── Border / Input / Ring ──────────────────────────── */
+        --border:               240 12% 90%;    /* #DFDFE6  grey-100 */
+        --input:                240 12% 90%;    /* #DFDFE6  grey-100 */
+        --ring:                 245 90% 64%;    /* #5E53F4  p-500    */
+
+        /* ── Border Radius ─────────────────────────────────── */
+        --radius:               0.75rem;        /* 12px              */
+    }
+
+    /* ── Dark Mode (optional, uncomment jika perlu) ──────── */
+    /*
+    .dark {
+        --background:           240 30% 8%;
+        --foreground:           240 11% 96%;
+        --card:                 240 30% 11%;
+        --card-foreground:      240 11% 96%;
+        --popover:              240 30% 11%;
+        --popover-foreground:   240 11% 96%;
+        --primary:              245 90% 64%;
+        --primary-foreground:   0 0% 100%;
+        --secondary:            240 14% 16%;
+        --secondary-foreground: 240 11% 90%;
+        --muted:                240 14% 16%;
+        --muted-foreground:     240 8% 60%;
+        --accent:               240 14% 16%;
+        --accent-foreground:    240 11% 90%;
+        --destructive:          14 100% 55%;
+        --destructive-foreground: 0 0% 100%;
+        --border:               240 14% 20%;
+        --input:                240 14% 20%;
+        --ring:                 245 90% 64%;
+    }
+    */
+}
+
+/*
+ * ═══════════════════════════════════════════════════════════════
+ *  BASE RESETS (shadcn-style)
+ * ═══════════════════════════════════════════════════════════════
+ */
+@layer base {
+    * {
+        @apply border-border;
+    }
+
+    body {
+        @apply bg-background text-foreground;
+        font-family: 'Inter Tight', system-ui, sans-serif;
+        font-feature-settings: "rlig" 1, "calt" 1;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+    }
+}
+
+/*
+ * ═══════════════════════════════════════════════════════════════
+ *  UTILITY CLASSES
+ * ═══════════════════════════════════════════════════════════════
+ */
+@layer utilities {
+    /* Focus ring (konsisten di semua komponen) */
+    .focus-ring {
+        @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
+    }
+}

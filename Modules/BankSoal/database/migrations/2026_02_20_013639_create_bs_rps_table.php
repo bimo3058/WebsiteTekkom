@@ -11,23 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bs_rps', function (Blueprint $table) {
+        Schema::create('bs_rps_assign', function (Blueprint $table) {
             $table->id();
             $table->unsignedBigInteger('mk_id');
             $table->unsignedBigInteger('dosen_id')->nullable();
-            $table->timestamp('tenggat');
+            $table->timestamp('tenggat')->nullable();
             $table->string('semester_berlaku');
             $table->timestamps();
-
-            $table->foreign('mk_id')
-                ->references('id')->on('bs_mata_kuliah')
-                ->restrictOnDelete()
-                ->cascadeOnUpdate();
-
-            $table->foreign('dosen_id')
-                ->references('id')->on('users')
-                ->nullOnDelete()
-                ->cascadeOnUpdate();
         });
     }
 
@@ -36,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bs_rps');
+        Schema::dropIfExists('bs_rps_assign');
     }
 };

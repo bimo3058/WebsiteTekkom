@@ -9,25 +9,32 @@ use Symfony\Component\HttpFoundation\Response;
 class RoleMiddleware
 {
     /**
+     * Middleware tunggal untuk cek role. Menggantikan CheckRole.
+     *
      * Usage di routes:
-     * Route::middleware('role:admin')->group(...);
-     * Route::middleware('role:admin,dosen')->group(...); // salah satu
-     * Route::middleware('role:admin,module:capstone')->group(...); // role + module spesifik
+     *   Route::middleware('role:superadmin')->group(...);
+     *   Route::middleware('role:admin_banksoal,admin_capstone')->group(...); // salah satu
+     *
+     * Superadmin selalu lolos tanpa perlu didaftarkan eksplisit.
+     * Unauthenticated user di-redirect ke login (bukan abort 401)
+     * agar UX lebih baik untuk web app.
      */
     public function handle(Request $request, Closure $next, string ...$roles): Response
     {
-        $user = auth()->user();
-
-        if (! $user) {
-            abort(401);
+        if (! auth()->check()) {
+            return redirect()->route('login');
         }
 
-        // Load roles kalau belum
-        $user->loadMissing('roles');
+        $user = auth()->user();
 
-        // Support multiple roles: middleware('role:admin,superadmin')
-        // User cukup punya salah satu, atau jika user adalah superadmin bebas akses
-        if (! $user->hasRole('superadmin') && ! $user->hasAnyRole($roles)) {
+        // Superadmin bypass semua role check
+        if ($user->hasRole('superadmin')) {
+            return $next($request);
+        }
+
+        // hasAnyRole() sudah pakai getCachedRoles() — tidak ada query baru
+        // kalau cache sudah ada (diset saat login di AuthenticatedSessionController)
+        if (! $user->hasAnyRole($roles)) {
             abort(403, 'Unauthorized. Required role: ' . implode(' or ', $roles));
         }
 

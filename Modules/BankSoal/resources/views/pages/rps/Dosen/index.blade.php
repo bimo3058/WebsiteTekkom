@@ -1,4 +1,4 @@
-<x-banksoal::layouts.master>
+<x-banksoal::layouts.dosen-master>
 <!-- SIDEBAR -->
 <aside class="sidebar">
     <div class="sidebar-brand">
@@ -11,20 +11,25 @@
     <nav class="sidebar-nav">
         <a href="{{ route('banksoal.dashboard') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-th-large"></i></span> Home</a>
         <a href="{{ route('banksoal.rps.dosen.index') }}" class="nav-item active"><span class="nav-icon"><i class="fas fa-file-alt"></i></span> Manajemen RPS</a>
-        <a href="{{ route('banksoal.banksoal.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-database"></i></span> Bank Soal</a>
+        <a href="{{ route('banksoal.soal.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-database"></i></span> Bank Soal</a>
         <a href="{{ route('banksoal.arsip.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-archive"></i></span> Arsip Soal</a>
     </nav>
 </aside>
 
 <!-- TOPBAR -->
 <header class="topbar">
-    <button class="topbar-btn"><i class="fas fa-cog"></i></button>
+    <form method="POST" action="{{ route('logout') }}" style="display: inline;">
+        @csrf
+        <button type="submit" class="topbar-btn" title="Logout" style="background: none; border: none; padding: 0; cursor: pointer; color: inherit; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-cog"></i>
+        </button>
+    </form>
     <button class="topbar-btn notif-btn"><i class="fas fa-bell"></i><span class="notif-dot"></span></button>
     <div class="user-chip">
-        <div class="user-avatar-chip">A</div>
+        <div class="user-avatar-chip">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
         <div class="user-info">
-            <strong>Prof. Dr. Siti Rahayu</strong>
-            <span>198503122010121001</span>
+            <strong>{{ auth()->user()->name }}</strong>
+            <span>{{ auth()->user()->lecturer?->employee_number }}</span>
         </div>
     </div>
 </header>
@@ -167,7 +172,7 @@
 
         <div class="form-actions">
             <button type="button" class="btn-cancel" onclick="history.back()">Batal</button>
-            <button type="button" class="btn-primary" id="submitBtn">
+            <button type="submit" class="btn-primary" id="submitBtn">
                 <i class="fas fa-floppy-disk"></i> Simpan RPS
             </button>
         </div>
@@ -441,7 +446,9 @@ _truncateToWidth(text, maxPx) {
         this.list.innerHTML = html;
 
         this.list.querySelectorAll('.ms-option').forEach(el => {
-            el.addEventListener('click', () => {
+            el.addEventListener('click', (e) => {
+                e.stopPropagation(); // Prevent event bubbling yang bisa trigger document click listener
+                
                 if (el.dataset.action === 'select-all') {
                     const currentState = _state();
                     this.items.forEach(i => i.selected = !currentState.allSel);
@@ -455,7 +462,8 @@ _truncateToWidth(text, maxPx) {
                 this._syncHidden();
                 this._emitChange();
                 this._syncTriggerBadge();
-                // Keep dropdown open if configured
+                
+                // Keep dropdown open if configured - IMPORTANT: jangan close jika keepOpen aktif
                 if (!this.keepOpen) {
                     this._close();
                 }
@@ -856,10 +864,8 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // ── Submit Handler ───────────────────────────────────────
-    document.getElementById('submitBtn').addEventListener('click', function (e) {
-        e.preventDefault();
-
-        const form = document.querySelector('form');
+    const form = document.querySelector('form');
+    form?.addEventListener('submit', function (e) {
         const mkId = document.getElementById('mkSelect').value;
         const cplIds = cplMs.getSelected();
         const cpmkIds = cpmkMs.getSelected();
@@ -873,12 +879,12 @@ document.addEventListener('DOMContentLoaded', function() {
         if (!fileInput || !fileInput.files || fileInput.files.length === 0) errors.push('File RPS harus diunggah');
 
         if (errors.length > 0) {
+            e.preventDefault();
             alert('Validasi Error:\n\n' + errors.map((e, i) => `${i + 1}. ${e}`).join('\n'));
             return false;
         }
 
-        // Submit form
-        form.submit();
+        // Form validation passed — allow form to submit naturally
     });
 });
 </script>
@@ -1009,4 +1015,4 @@ document.addEventListener('DOMContentLoaded', function() {
 }
 </style>
 
-</x-banksoal::layouts.master>
+</x-banksoal::layouts.dosen-master>
