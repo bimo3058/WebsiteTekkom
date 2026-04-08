@@ -1094,61 +1094,6 @@ tbody tr:hover td {
 }
 
 /* ════════════════════════════════════════════════════════
-   #FormControl - Base style untuk SEMUA kontrol form
-   (native select, input, textarea, ms-trigger)
-   Tinggi seragam 42px, padding horizontal 12px, border sama
-   ════════════════════════════════════════════════════════ */
-.form-control {
-    display: block;
-    width: 100%;
-    height: 42px;
-    padding: 0 12px;
-    border: 1.5px solid var(--gray-200);
-    border-radius: 9px;
-    font-size: 14px;
-    font-family: inherit;
-    color: var(--gray-900);
-    background: #fff;
-    box-sizing: border-box;
-    outline: none;
-    transition:
-        border-color 0.15s,
-        box-shadow 0.15s;
-}
-.form-control:hover {
-    border-color: var(--gray-400);
-}
-.form-control:focus {
-    border-color: var(--blue);
-    box-shadow: 0 0 0 3px rgba(27, 79, 216, 0.08);
-}
-.form-control::placeholder {
-    color: var(--gray-400);
-}
-
-/* Native select — custom arrow, hapus default appearance */
-select.form-control {
-    appearance: none;
-    -webkit-appearance: none;
-    padding-right: 36px;
-    cursor: pointer;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394A3B8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-color: #fff;
-    /* line-height trick agar teks center di semua browser */
-    line-height: 42px;
-}
-
-textarea.form-control {
-    height: auto;
-    min-height: 96px;
-    padding: 10px 12px;
-    resize: vertical;
-    line-height: 1.5;
-}
-
-/* ════════════════════════════════════════════════════════
    #MultiSelectDropdown - Custom multi-select component
    ════════════════════════════════════════════════════════ */
 .ms-wrapper {
@@ -1511,6 +1456,21 @@ body {
 
 .sidebar-toggle {
     display: none;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--gray-700);
+    padding: 6px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    margin-right: auto;
+}
+
+.sidebar-toggle:hover {
+    background: var(--gray-100);
 }
 
 @media (max-width: 768px) {
@@ -2146,6 +2106,13 @@ body {
         align-items: flex-start;
         gap: 10px;
     }
+
+    /* Mobile: Reduce select[size] height for better UX */
+    select.form-control[size] {
+        font-size: 13px;
+        padding: 5px 10px !important;
+        line-height: 1.6;
+    }
 }
 
 @media (max-width: 480px) {
@@ -2184,11 +2151,478 @@ body {
         gap: 6px;
     }
 
-    .page-header-left h1 {
-        font-size: 20px;
-    }
-
     .section-title {
         font-size: 15px;
     }
+}
+
+/* ──── MOBILE OVERLAY SIDEBAR (Only < 768px) ──── */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed !important;
+        left: -280px !important;
+        width: 280px !important;
+        top: 0;
+        height: 100vh;
+        background: white;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+        transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 999;
+        overflow-y: auto;
+        border-right: 1px solid var(--gray-200);
+    }
+
+    .sidebar.active {
+        left: 0 !important;
+    }
+
+    /* Sidebar overlay background */
+    .sidebar::before {
+        content: "";
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: -1;
+    }
+
+    .sidebar.active::before {
+        display: block;
+    }
+}
+
+/* ──── PROFILE DROPDOWN (All sizes) ──── */
+.user-dropdown-wrapper {
+    position: relative;
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 280px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: none;
+    flex-direction: column;
+    z-index: 999;
+    overflow: hidden;
+}
+
+.profile-dropdown.active {
+    display: flex;
+}
+
+.dropdown-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #f8fafc;
+}
+
+.dropdown-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.dropdown-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.dropdown-name {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.dropdown-role {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: #e2e8f0;
+}
+
+.dropdown-logout {
+    background: none;
+    border: none;
+    color: #ef4444;
+    padding: 12px 16px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s ease;
+}
+
+.dropdown-logout:hover {
+    background: #fef2f2;
+}
+
+.dropdown-logout i {
+    font-size: 14px;
+}
+
+/* ──── MOBILE ADJUSTMENTS ──── */
+body.sidebar-open {
+    overflow: hidden;
+}
+
+/* Backdrop untuk close sidebar saat klik di luar (mobile only) */
+body.sidebar-open::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+    cursor: pointer;
+}
+
+/* ──── SNACKBAR NOTIFICATION STYLES ──── */
+.snackbar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 300px;
+    max-width: 500px;
+    padding: 14px 16px;
+    padding-right: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 9999;
+    animation: slideUpIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUpIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes slideOutDown {
+    from {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+}
+
+.snackbar-success {
+    background-color: #10b981;
+    color: #ffffff;
+    border-left: 4px solid #059669;
+}
+
+.snackbar-error {
+    background-color: #ef4444;
+    color: #ffffff;
+    border-left: 4px solid #dc2626;
+}
+
+.snackbar-warning {
+    background-color: #f59e0b;
+    color: #ffffff;
+    border-left: 4px solid #d97706;
+}
+
+.snackbar-info {
+    background-color: #3b82f6;
+    color: #ffffff;
+    border-left: 4px solid #1e40af;
+}
+
+.snackbar i {
+    flex-shrink: 0;
+    font-size: 18px;
+}
+
+.snackbar span {
+    flex: 1;
+}
+
+.snackbar ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.snackbar-close {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.8;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+}
+
+.snackbar-close:hover {
+    opacity: 1;
+}
+
+@media (max-width: 600px) {
+    .snackbar {
+        bottom: 16px;
+        left: 16px;
+        right: 16px;
+        transform: none;
+        max-width: none;
+    }
+
+    @keyframes slideUpIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideOutDown {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+    }
+}
+/* ── Tom Select Custom Theme ── */
+.ts-wrapper {
+    width: 100%;
+}
+
+.ts-control {
+    border: 1.5px solid var(--gray-200) !important;
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+    font-family: "Plus Jakarta Sans", sans-serif !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    min-height: 44px;
+    cursor: pointer;
+}
+
+.ts-control:focus-within {
+    border-color: var(--blue) !important;
+    box-shadow: 0 0 0 3px rgba(27, 79, 216, 0.1) !important;
+}
+
+.ts-dropdown {
+    border: 1.5px solid var(--gray-200) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+    font-family: "Plus Jakarta Sans", sans-serif !important;
+    font-size: 14px !important;
+    overflow: hidden;
+    margin-top: 4px !important;
+}
+
+/* Batasi tinggi dropdown — tampil 5 opsi, sisanya scroll */
+.ts-dropdown .ts-dropdown-content {
+    max-height: 220px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gray-200) transparent;
+}
+
+.ts-dropdown .option {
+    padding: 10px 14px !important;
+    color: var(--gray-700);
+    border-bottom: 1px solid var(--gray-100);
+    transition: background 0.15s;
+}
+
+.ts-dropdown .option:last-child {
+    border-bottom: none;
+}
+
+.ts-dropdown .option:hover,
+.ts-dropdown .option.active {
+    background: var(--blue-light) !important;
+    color: var(--blue) !important;
+}
+
+.ts-dropdown .option.selected {
+    background: var(--blue) !important;
+    color: #fff !important;
+}
+
+/* Search box di dalam dropdown */
+.ts-dropdown input {
+    border: none !important;
+    border-bottom: 1px solid var(--gray-200) !important;
+    border-radius: 0 !important;
+    padding: 10px 14px !important;
+    font-size: 13px !important;
+    font-family: "Plus Jakarta Sans", sans-serif !important;
+}
+
+/* Hide native select - TomSelect handles this with .ts-hidden-accessible */
+/* We just ensure the wrapper doesn't have problematic stacking */
+.select-wrap {
+    position: relative;
+}
+
+.ts-wrapper {
+    position: relative;
+    z-index: 1;
+}
+
+/* Styling untuk TomSelect item (selected value) */
+.ts-control .item {
+    background: transparent !important;
+    color: var(--gray-700) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    font-size: 14px !important;
+}
+
+.ts-control .ts-item {
+    background: transparent !important;
+    color: var(--gray-700) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+/* Styling untuk TomSelect control ketika ada item */
+.ts-control.has-items {
+    padding: 8px 14px !important;
+}
+
+/* Clear button styling */
+.ts-control .item .remove {
+    margin-left: 8px !important;
+    font-size: 16px !important;
+    color: var(--gray-400) !important;
+    cursor: pointer !important;
+    transition: color 0.2s !important;
+}
+
+.ts-control .item .remove:hover {
+    color: var(--gray-600) !important;
+}
+
+/* No results message styling */
+.ts-no-results {
+    padding: 12px 14px !important;
+    text-align: center !important;
+    color: var(--gray-500) !important;
+    font-size: 14px !important;
+}
+
+/* Option create styling */
+.ts-option-create {
+    padding: 10px 14px !important;
+    color: var(--blue) !important;
+    border-bottom: 1px solid var(--gray-100) !important;
+    font-size: 14px !important;
+    font-style: italic !important;
+}
+
+/* Clear button styling */
+.ts-control .item .remove {
+    margin-left: 8px !important;
+    font-size: 16px !important;
+    color: var(--gray-400) !important;
+    cursor: pointer !important;
+    transition: color 0.2s !important;
+}
+
+.ts-control .item .remove:hover {
+    color: var(--gray-600) !important;
+}
+
+/* No results message styling */
+.ts-no-results {
+    padding: 12px 14px !important;
+    text-align: center !important;
+    color: var(--gray-500) !important;
+    font-size: 14px !important;
+}
+
+/* Option create styling */
+.ts-option-create {
+    padding: 10px 14px !important;
+    color: var(--blue) !important;
+    border-bottom: 1px solid var(--gray-100) !important;
+    font-size: 14px !important;
+    font-style: italic !important;
+}
+
+.ts-dropdown input:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIX: Native select yang sudah diambil alih Tom Select
+   Tom Select menyembunyikan native select via .ts-hidden-accessible,
+   tapi .form-control { height: 42px } masih membuat elemen itu
+   memakan ruang vertikal di layout. Override ini memaksa height=0.
+   ══════════════════════════════════════════════════════════════ */
+.ts-wrapper + select.form-control,
+select.form-control.ts-hidden-accessible {
+    display: block !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
 }

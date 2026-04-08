@@ -18,7 +18,10 @@
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
         
+        {{-- TomSelect CSS must load BEFORE bsDosen.css so custom overrides win --}}
+        <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
         <link rel="stylesheet" href="{{ asset('modules/banksoal/css/bsDosen.css') }}">
+        <script src="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/js/tom-select.complete.min.js"></script>
 
         {{-- Vite CSS --}}
         {{-- {{ module_vite('build-banksoal', 'resources/assets/sass/app.scss') }} --}}

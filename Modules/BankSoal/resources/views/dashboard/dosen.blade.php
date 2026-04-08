@@ -1,51 +1,7 @@
 <x-banksoal::layouts.dosen-master>
-<!DOCTYPE html>
-    <html lang="id">
-    <head>
-        <meta charset="UTF-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <title>Dashboard Manajemen Bank Soal & RPS</title>
-    </head>
-    <body>
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-    <div class="sidebar-brand">
-        <div class="brand-icon"><i class="fas fa-university"></i></div>
-        <div class="brand-text">
-        <strong>Departemen Teknik Komputer</strong>
-        <span>Universitas Wakamsi</span>
-        </div>
-    </div>
-    <nav class="sidebar-nav">
-        <a href="{{ route('banksoal.dashboard') }}" class="nav-item active"><span class="nav-icon"><i class="fas fa-th-large"></i></span> Home</a>
-        <a href="{{ route('banksoal.rps.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-file-alt"></i></span> Manajemen RPS</a>
-        <a href="{{ route('banksoal.soal.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-database"></i></span> Bank Soal</a>
-        <a href="{{ route('banksoal.arsip.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-archive"></i></span> Arsip Soal</a>
-    
-        <a href="#" class="nav-item" style="margin-top: auto; color: #EF4444;" 
-        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
-            <span class="nav-icon"><i class="fas fa-power-off"></i></span> Logout
-        </a>
 
-        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden" style="display: none;">
-            @csrf
-        </form>
-    </nav>
-    </aside>
-
-    <!-- TOPBAR -->
-    <header class="topbar">
-    <button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('active')"><i class="fas fa-bars"></i></button>
-    <button class="topbar-btn"><i class="fas fa-cog"></i></button>
-    <button class="topbar-btn notif-btn"><i class="fas fa-bell"></i><span class="notif-dot"></span></button>
-    <div class="user-chip">
-        <div class="user-avatar-chip">A</div>
-        <div class="user-info">
-        <strong>Prof. Dr. Siti Rahayu</strong>
-        <span>198503122010121001</span>
-        </div>
-    </div>
-    </header>
+@include('banksoal::partials.dosen.sidebar', ['active' => 'home'])
+@include('banksoal::partials.dosen.topbar')
 
     <!-- MAIN -->
     <main class="main">
@@ -109,10 +65,10 @@
             <i class="fas fa-shield-alt card-icon"></i>
         </div>
         <div style="text-align:center">
-            <div class="prof-avatar-placeholder">A</div>
-            <div class="prof-name">Prof. Dr. Aris S.</div>
-            <div class="prof-nip">NIP: 198503122010121001</div>
-            <div class="prof-dept">Computer Engineering</div>
+            <div class="prof-avatar-placeholder">{{ strtoupper(substr(auth()->user()->name, 0, 1)) }}</div>
+            <div class="prof-name">{{ auth()->user()->name }}</div>
+            <div class="prof-nip">{{ auth()->user()->lecturer?->employee_number ?? auth()->user()->email }}</div>
+            <div class="prof-dept">{{ auth()->user()->lecturer?->department ?? 'Teknik Komputer' }}</div>
             <button class="update-btn">Update Data</button>
         </div>
         </div>
@@ -149,99 +105,9 @@
     </div>
     </main>
 
-    <script>
-    // Donut chart
-    (function(){
-    const svg = document.getElementById('donutChart');
-    const cx=80,cy=80,r=60,stroke=22;
-    const circ = 2*Math.PI*r;
-    const segments=[
-        {value:75,color:'#22C55E'},
-        {value:28,color:'#F59E0B'},
-        {value:15,color:'#3B82F6'},
-        {value:10,color:'#EF4444'},
-    ];
-    const total=128;
-    let offset=0;
-    segments.forEach(seg=>{
-        const pct=seg.value/total;
-        const dash=pct*circ;
-        const gap=circ-dash;
-        const rot=-90+(offset/total*360);
-        const el=document.createElementNS('http://www.w3.org/2000/svg','circle');
-        el.setAttribute('cx',cx);el.setAttribute('cy',cy);el.setAttribute('r',r);
-        el.setAttribute('fill','none');el.setAttribute('stroke',seg.color);
-        el.setAttribute('stroke-width',stroke);
-        el.setAttribute('stroke-dasharray',`${dash.toFixed(2)} ${gap.toFixed(2)}`);
-        el.setAttribute('stroke-dashoffset','0');
-        el.setAttribute('transform',`rotate(${rot} ${cx} ${cy})`);
-        svg.appendChild(el);
-        offset+=seg.value;
-    });
-    const inner=document.createElementNS('http://www.w3.org/2000/svg','circle');
-    inner.setAttribute('cx',cx);inner.setAttribute('cy',cy);inner.setAttribute('r',r-stroke/2-4);
-    inner.setAttribute('fill','white');svg.appendChild(inner);
-    })();
+    {{-- ═══ Dashboard Charts Component ═══ --}}
+    <script src="{{ asset('modules/banksoal/js/Banksoal/components/DosenDashboard.js') }}"></script>
 
-    // CPL bar chart
-    (function(){
-    const data={
-        'CPL 01':45,'CPL 02':30,'CPL 03':60,'CPL 04':20,'CPL 05':38
-    };
-    const max=Math.max(...Object.values(data));
-    const wrap=document.getElementById('cplChart');
-    Object.entries(data).forEach(([label,val])=>{
-        const h=Math.max(8,(val/max)*90);
-        wrap.innerHTML+=`<div class="bar-group">
-        <span class="bar-val">${val}</span>
-        <div class="bar" style="height:${h}px"></div>
-        <span class="bar-label">${label}</span>
-        </div>`;
-    });
-    })();
+    @include('banksoal::partials.dosen.layout-scripts')
 
-    // MK bar chart
-    (function(){
-    const data=[
-        {mk:'CS-201',count:54,color:'#22C55E'},
-        {mk:'CS-304',count:32,color:'#22C55E'},
-        {mk:'CS-401',count:0, color:'#CBD5E1'},
-    ];
-    const max=Math.max(...data.map(d=>d.count))||1;
-    const wrap=document.getElementById('mkChart');
-    data.forEach(d=>{
-        const h=Math.max(4,(d.count/max)*80);
-        const valColor=d.count>0?'#22C55E':'var(--gray-400)';
-        wrap.innerHTML+=`<div style="display:flex;flex-direction:column;align-items:center;gap:6px">
-        <span style="font-size:20px;font-weight:800;color:${valColor}">${d.count||''}</span>
-        <div style="width:48px;border-radius:8px 8px 0 0;background:${d.color};height:${h}px"></div>
-        <span style="font-size:12px;color:var(--gray-400);font-weight:500">${d.mk}</span>
-        </div>`;
-    });
-    })();
-    </script>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
-            const sidebar = document.querySelector('.sidebar');
-            const navItems = document.querySelectorAll('.nav-item');
-            
-            navItems.forEach(item => {
-                item.addEventListener('click', function() {
-                    if (window.innerWidth <= 768) {
-                        sidebar.classList.remove('active');
-                    }
-                });
-            });
-
-            document.addEventListener('click', function(event) {
-                const sidebarToggle = document.querySelector('.sidebar-toggle');
-                if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
-                    sidebar.classList.remove('active');
-                }
-            });
-        });
-    </script>
-    </body>
-    </html>
 </x-banksoal::layouts.dosen-master>
