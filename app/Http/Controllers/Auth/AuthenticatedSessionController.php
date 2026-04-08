@@ -23,15 +23,44 @@ class AuthenticatedSessionController extends Controller
         $request->authenticate();
         $request->session()->regenerate();
 
-        $user      = auth()->user();
-        $userRoles = $user->roles()->get();
+        $user = auth()->user();
 
+        // 1. Cek suspend DULU sebelum query apapun — hindari query roles yang sia-sia
+        if ($user->isSuspended()) {
+            Auth::guard('web')->logout();
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+
+            $message = 'Akun Anda telah ditangguhkan.';
+            if ($user->suspension_reason) {
+                $message .= ' Alasan: ' . $user->suspension_reason;
+            }
+            return back()->withErrors(['email' => $message])->onlyInput('email');
+        }
+
+        // 2. Query roles sekali, pakai untuk cache + redirect logic
+        $userRoles  = $user->roles()->get();
+        $roleNames  = $userRoles->pluck('name')->map(fn($r) => strtolower($r));
+
+        // 3. Cache — format konsisten dengan getCachedRoles() di User.php
         $user->cacheUserData();
-        Cache::put("user:{$user->id}:roles", $userRoles->toArray(), now()->addHours(8));
+        Cache::put(
+            "user:{$user->id}:roles",
+            $userRoles->map(fn($r) => [
+                'id'          => $r->id,
+                'name'        => $r->name,
+                'module'      => $r->module,
+                'is_academic' => (bool) $r->is_academic,
+            ])->toArray(),
+            now()->addHours(8)
+        );
 
-        $roleNames = $userRoles->pluck('name');
+        // 4. Simpan session_version agar middleware CheckSessionVersion bisa bekerja
+        $request->session()->put('session_version', $user->session_version);
 
-        // Log login setelah auth berhasil
+        $user->recordLogin();
+
+        // 5. Audit Log
         AuditLogger::log(
             module:      'auth',
             action:      'LOGIN',
@@ -39,26 +68,46 @@ class AuthenticatedSessionController extends Controller
             userId:      $user->id,
         );
 
+        // 6. Redirect Logic
+
+        // Superadmin selalu prioritas utama
         if ($roleNames->contains('superadmin')) {
             return redirect()->intended(route('superadmin.dashboard'));
         }
 
-        if ($roleNames->contains('admin')) {
+        // Admin modul — masing-masing dikunci ke dashboard modulnya
+        $adminRedirects = [
+            'admin_banksoal'      => 'banksoal.dashboard',
+            'admin_capstone'      => 'capstone.dashboard',
+            'admin_eoffice'       => 'eoffice.dashboard',
+            'admin_kemahasiswaan' => 'manajemenmahasiswa.mahasiswa.dashboard',
+        ];
+
+        foreach ($adminRedirects as $role => $routeName) {
+            if ($roleNames->contains($role)) {
+                return redirect()->intended(route($routeName));
+            }
+        }
+
+        // Mahasiswa, Dosen, GPM ke dashboard global
+        if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm'])->isNotEmpty()) {
             return redirect()->intended(route('dashboard'));
         }
 
-        if ($roleNames->contains('dosen')) {
-            return redirect()->intended(route('dashboard'));
-        }
+        // Protection layer: login sukses tapi tidak punya role yang dikenali
+        Auth::guard('web')->logout();
+        $request->session()->invalidate();
+        $request->session()->regenerateToken();
 
-        return redirect()->intended(route('dashboard'));
+        return redirect()->route('login')->withErrors([
+            'email' => 'Akun Anda belum memiliki akses (Role) yang terdaftar. Silakan hubungi Administrator.'
+        ]);
     }
 
     public function destroy(Request $request): RedirectResponse
     {
         $user = auth()->user();
 
-        // Log logout SEBELUM guard logout — sesudahnya auth()->id() sudah null
         if ($user) {
             AuditLogger::log(
                 module:      'auth',
@@ -66,13 +115,11 @@ class AuthenticatedSessionController extends Controller
                 description: "Logout dari sistem",
                 userId:      $user->id,
             );
+
+            $user->clearUserCache();
         }
 
         Auth::guard('web')->logout();
-
-        if ($user) {
-            $user->clearUserCache();
-        }
 
         $request->session()->invalidate();
         $request->session()->regenerateToken();

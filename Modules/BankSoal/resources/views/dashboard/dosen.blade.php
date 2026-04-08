@@ -1,14 +1,10 @@
-<x-banksoal::layouts.master>
+<x-banksoal::layouts.dosen-master>
 <!DOCTYPE html>
     <html lang="id">
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Dashboard Manajemen Bank Soal & RPS</title>
-        <link rel="preconnect" href="https://fonts.googleapis.com">
-        <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <link rel="stylesheet" href="{{ asset('modules/banksoal/css/dashboard.css') }}">
     </head>
     <body>
     <!-- SIDEBAR -->
@@ -23,13 +19,23 @@
     <nav class="sidebar-nav">
         <a href="{{ route('banksoal.dashboard') }}" class="nav-item active"><span class="nav-icon"><i class="fas fa-th-large"></i></span> Home</a>
         <a href="{{ route('banksoal.rps.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-file-alt"></i></span> Manajemen RPS</a>
-        <a href="{{ route('banksoal.banksoal.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-database"></i></span> Bank Soal</a>
+        <a href="{{ route('banksoal.soal.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-database"></i></span> Bank Soal</a>
         <a href="{{ route('banksoal.arsip.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-archive"></i></span> Arsip Soal</a>
+    
+        <a href="#" class="nav-item" style="margin-top: auto; color: #EF4444;" 
+        onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+            <span class="nav-icon"><i class="fas fa-power-off"></i></span> Logout
+        </a>
+
+        <form id="logout-form" action="{{ route('logout') }}" method="POST" class="hidden" style="display: none;">
+            @csrf
+        </form>
     </nav>
     </aside>
 
     <!-- TOPBAR -->
     <header class="topbar">
+    <button class="sidebar-toggle" onclick="document.querySelector('.sidebar').classList.toggle('active')"><i class="fas fa-bars"></i></button>
     <button class="topbar-btn"><i class="fas fa-cog"></i></button>
     <button class="topbar-btn notif-btn"><i class="fas fa-bell"></i><span class="notif-dot"></span></button>
     <div class="user-chip">
@@ -64,7 +70,7 @@
             <i class="fas fa-chart-pie card-icon"></i>
         </div>
         <div class="donut-wrap">
-            <svg width="160" height="160" viewBox="0 0 160 160" id="donutChart"></svg>
+            <svg width="160" height="160" viewBox="0 0 160 160" id="donutChart" style="width:160px;height:160px;max-width:100%"></svg>
             <div class="donut-label">
             <strong>128</strong>
             <span>TOTAL</span>
@@ -214,6 +220,28 @@
     });
     })();
     </script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebar = document.querySelector('.sidebar');
+            const navItems = document.querySelectorAll('.nav-item');
+            
+            navItems.forEach(item => {
+                item.addEventListener('click', function() {
+                    if (window.innerWidth <= 768) {
+                        sidebar.classList.remove('active');
+                    }
+                });
+            });
+
+            document.addEventListener('click', function(event) {
+                const sidebarToggle = document.querySelector('.sidebar-toggle');
+                if (!sidebar.contains(event.target) && !sidebarToggle.contains(event.target)) {
+                    sidebar.classList.remove('active');
+                }
+            });
+        });
+    </script>
     </body>
     </html>
-</x-banksoal::layouts.master>
+</x-banksoal::layouts.dosen-master>
