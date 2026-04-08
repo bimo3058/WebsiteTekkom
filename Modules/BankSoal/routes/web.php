@@ -1,88 +1,111 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Http\Controllers\DashboardController;
 use Modules\BankSoal\Http\Controllers\RPS\Dosen\RpsController as DosenRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\RpsController as GpmRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Admin\RpsController as AdminRpsController;
+use Modules\BankSoal\Http\Controllers\BankSoalController;
+use Modules\BankSoal\Http\Controllers\ValidasiBankSoalController;
+use Modules\BankSoal\Http\Controllers\RiwayatValidasiController;
 
-Route::middleware(['auth'])->prefix('bank-soal')->group(function () {
-    #Dashboard
-    Route::get('/dashboard', [DashboardController::class, 'index'])
-        ->name('banksoal.dashboard');
-    
-    #RPS Routes
-    Route::prefix('rps')->name('banksoal.rps.')->group(function () {
-        // RPS - Dosen
-        Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
-            Route::get('/', [DosenRpsController::class, 'index'])->name('index');
-            Route::post('/submit', [DosenRpsController::class, 'store'])->name('store');
-            Route::get('/cpl/{mkId?}', [DosenRpsController::class, 'getCplByMk'])->name('cpl');
-            Route::get('/cpmk', [DosenRpsController::class, 'getCpmkByCpl'])->name('cpmk');
-            Route::get('/dosen', [DosenRpsController::class, 'getDosenByMk'])->name('dosen');
-            Route::get('/preview/{rpsId}', [DosenRpsController::class, 'previewDokumen'])->name('preview');
-        });
+Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->group(function () {
+
+    // -------------------------------------------------------------------------
+    // PERMISSION: VIEW (Dashboard & List)
+    // -------------------------------------------------------------------------
+    Route::middleware(['permission:banksoal.view'])->group(function () {
         
-        // RPS - GPM
-        Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
-            Route::get('/', [GpmRpsController::class, 'index'])->name('index');
+        # Dashboard Utama
+        Route::get('/dashboard', [DashboardController::class, 'index'])
+            ->middleware('role:admin_banksoal,dosen,gpm')
+            ->name('banksoal.dashboard');
+
+        # RPS Routes - View Mode
+        Route::prefix('rps')->name('banksoal.rps.')->group(function () {
+            // RPS - Dosen
+            Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
+                Route::get('/', [DosenRpsController::class, 'index'])->name('index');
+                Route::get('/preview/{rpsId}', [DosenRpsController::class, 'previewDokumen'])->name('preview');
+                Route::get('/cpl/{mkId?}', [DosenRpsController::class, 'getCplByMk'])->name('cpl');
+                Route::get('/cpmk', [DosenRpsController::class, 'getCpmkByCpl'])->name('cpmk');
+                Route::get('/dosen', [DosenRpsController::class, 'getDosenByMk'])->name('dosen');
+            });
+            // RPS - GPM
+            Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
+                Route::get('/', [RiwayatValidasiController::class, 'index'])->name('index');
+                Route::get('/validasi-rps', [GpmRpsController::class, 'validasiRps'])->name('validasi-rps');
+                Route::get('/validasi-rps/review/{rpsId}', [GpmRpsController::class, 'validasiRpsReview'])->name('validasi-rps.review');
+                Route::get('/validasi-rps/preview/{rpsId}', [GpmRpsController::class, 'previewDokumen'])->name('validasi-rps.preview');
+                Route::get('/riwayat-validasi/rps', [RiwayatValidasiController::class, 'rps'])->name('riwayat-validasi.rps');
+            });
+            // RPS - Admin
+            Route::middleware('role:admin_banksoal')->prefix('admin')->name('admin.')->group(function () {
+                Route::get('/', [AdminRpsController::class, 'index'])->name('index');
+            });
         });
-        
-        // RPS - Admin
-        Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-            Route::get('/', [AdminRpsController::class, 'index'])->name('index');
+
+        # Bank Soal Pages - View Mode
+        Route::prefix('soal')->name('banksoal.soal.')->group(function () {
+            // Banksoal - Dosen
+            Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
+                Route::get('/', [BankSoalController::class, 'index'])->name('index');
+            });
+            
+           // Banksoal - GPM
+            Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
+                Route::get('/riwayat-validasi', [RiwayatValidasiController::class, 'index'])->name('riwayat-validasi');
+                Route::get('/validasi-bank-soal', [ValidasiBankSoalController::class, 'index'])->name('validasi-bank-soal');
+                Route::get('/validasi-bank-soal/review', [ValidasiBankSoalController::class, 'review'])->name('validasi-bank-soal.review');
+                Route::get('/riwayat-validasi/bank-soal', [RiwayatValidasiController::class, 'bankSoal'])->name('riwayat-validasi.bank-soal');
+            });
+
+            // Banksoal - Admin
+            Route::get('/admin', fn() => view('banksoal::pages.bank-soal.Admin.index'))->name('admin.index')->middleware('role:admin_banksoal');
         });
-        
-    });
-    
-    #Bank Soal Routes
-    Route::prefix('bank-soal')->name('banksoal.banksoal.')->group(function () {
-        // Bank Soal - Dosen
-        Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
-            Route::get('/', function () {
-                return view('banksoal::pages.bank-soal.Dosen.index');
-            })->name('index');
+
+        # Arsip Routes - View Mode
+        Route::prefix('arsip')->name('banksoal.arsip.')->group(function () {
+            Route::get('/dosen', fn() => view('banksoal::pages.arsip.Dosen.index'))->name('dosen.index')->middleware('role:dosen');
+            Route::get('/gpm', fn() => view('banksoal::pages.arsip.Gpm.index'))->name('gpm.index')->middleware('role:gpm');
+            Route::get('/admin', fn() => view('banksoal::pages.arsip.Admin.index'))->name('admin.index')->middleware('role:admin_banksoal');
         });
-        
-        // Bank Soal - GPM
-        Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
-            Route::get('/', function () {
-                return view('banksoal::pages.bank-soal.Gpm.index');
-            })->name('index');
-        });
-        
-        // Bank Soal - Admin
-        Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-            Route::get('/', function () {
-                return view('banksoal::pages.bank-soal.Admin.index');
-            })->name('index');
-        });
-        
     });
 
-    #Arsip Routes
-    Route::prefix('arsip')->name('banksoal.arsip.')->group(function () {
-        // Arsip - Dosen
-        Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
-            Route::get('/', function () {
-                return view('banksoal::pages.arsip.Dosen.index');
-            })->name('index');
-        });
+    // -------------------------------------------------------------------------
+    // PERMISSION: EDIT (Store, Update, Submit)
+    // -------------------------------------------------------------------------
+    Route::middleware(['permission:banksoal.edit'])->group(function () {
         
-        // Arsip - GPM
-        Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
-            Route::get('/', function () {
-                return view('banksoal::pages.arsip.Gpm.index');
-            })->name('index');
+        // 1. Blok RPS
+        Route::prefix('rps')->name('banksoal.rps.')->group(function () {
+            // RPS - Dosen
+            Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
+                Route::post('/submit', [DosenRpsController::class, 'store'])->name('store');
+            });
+            // RPS - GPM
+            Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
+                Route::post('/validasi-rps/store', [GpmRpsController::class, 'storeValidasi'])->name('validasi-rps.store');
+            });
         });
-        
-        // Arsip - Admin
-        Route::middleware('role:admin')->prefix('admin')->name('admin.')->group(function () {
-            Route::get('/', function () {
-                return view('banksoal::pages.arsip.Admin.index');
-            })->name('index');
+
+        // 2. Blok Bank Soal
+        Route::prefix('soal')->name('banksoal.soal.')->group(function () {
+            // Bank Soal - GPM
+            Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
+                Route::post('/validasi-bank-soal/store', [ValidasiBankSoalController::class, 'store'])->name('validasi-bank-soal.store');            
+            
+            });
         });
- 
+
+    // -------------------------------------------------------------------------
+    // PERMISSION: DELETE
+    // -------------------------------------------------------------------------
+    Route::middleware(['permission:banksoal.delete'])->group(function () {
+        Route::delete('/destroy/{id}', [BankSoalController::class, 'destroy'])->name('banksoal.destroy');
+    });
     });
 
     # Periode Ujian Routes
@@ -111,8 +134,10 @@ Route::middleware(['auth'])->prefix('bank-soal')->group(function () {
 
 });
 
-// Route khusus ujian komprehensif untuk mahasiswa (Module Bank Soal)
-Route::middleware(['auth', 'role:mahasiswa'])
+// -------------------------------------------------------------------------
+// MAHASISWA SECTION (Komprehensif)
+// -------------------------------------------------------------------------
+Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
     ->prefix('ujian-komprehensif')
     ->name('komprehensif.mahasiswa.')
     ->group(function () {
@@ -126,9 +151,4 @@ Route::middleware(['auth', 'role:mahasiswa'])
         Route::get('/riwayat-ujian', function () {
             return view('banksoal::mahasiswa.riwayat');
         })->name('riwayat');
-});
-
-// Route::middleware(['auth', 'verified'])->group(function () {
-//     Route::resource('banksoal', BankSoalController::class)->names('banksoal');
-// });
-
+    });

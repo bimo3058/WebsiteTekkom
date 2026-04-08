@@ -1,7 +1,15 @@
 <x-banksoal::layouts.admin>
     <!-- Header Title -->
-    <div class="mb-6 lg:mb-8">
+    <div class="mb-6 lg:mb-8 flex justify-between items-center">
         <h1 class="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tight">Dashboard Bank Soal</h1>
+        
+        <!-- PM's Logout Form -->
+        <form method="POST" action="{{ route('logout') }}">
+            @csrf
+            <button type="submit" class="text-red-600 hover:text-red-800 font-medium">
+                {{ __('Log Out') }}
+            </button>
+        </form>
     </div>
 
     <!-- Empty Content Area ("Kosongan") -->
