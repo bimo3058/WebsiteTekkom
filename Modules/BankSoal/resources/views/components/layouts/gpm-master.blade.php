@@ -52,8 +52,8 @@
                 <i class="fas fa-question-circle icon-width me-2"></i> Validasi Bank Soal
             </a>
 
-            <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.rps.gpm.riwayat-validasi*') ? 'active' : '' }}" 
-            href="{{ route('banksoal.rps.gpm.riwayat-validasi') }}">
+            <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.rps.gpm.index*') ? 'active' : '' }}" 
+            href="{{ route('banksoal.rps.gpm.index') }}">
                 <i class="fas fa-history icon-width me-2"></i> Riwayat Validasi
             </a>
         </nav>

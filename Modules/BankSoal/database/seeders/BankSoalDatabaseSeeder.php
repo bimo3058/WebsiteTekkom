@@ -17,6 +17,7 @@ class BankSoalDatabaseSeeder extends Seeder
             BsCpmkSeeder::class,
             BsMataKuliahCplSeeder::class,
             BsCplCpmkSeeder::class,
+            BsRpsParamSeeder::class,
         ]);
     }
 }

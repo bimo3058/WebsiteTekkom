@@ -1,4 +1,4 @@
-<x-banksoal::layouts.master>
+<x-banksoal::layouts.dosen-master>
 
 <!-- SIDEBAR -->
 <aside class="sidebar">
@@ -324,4 +324,4 @@ document.getElementById('searchPackages')?.addEventListener('input', function ()
 });
 </script>
 
-</x-banksoal::layouts.master>
+</x-banksoal::layouts.dosen-master>

@@ -17,7 +17,8 @@
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-        <link rel="stylesheet" href="{{ asset('modules/banksoal/css/dashboard.css') }}">
+        
+        <link rel="stylesheet" href="{{ asset('modules/banksoal/css/bsDosen.css') }}">
 
         {{-- Vite CSS --}}
         {{-- {{ module_vite('build-banksoal', 'resources/assets/sass/app.scss') }} --}}
@@ -30,5 +31,6 @@
 
         {{-- Vite JS --}}
         {{-- {{ module_vite('build-banksoal', 'resources/assets/js/app.js') }} --}}
+        <script src="{{ asset('modules/banksoal/js/app.js') }}"></script>
     </body>
 </html>

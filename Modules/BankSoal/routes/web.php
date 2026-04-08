@@ -35,9 +35,10 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             });
             // RPS - GPM
             Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
-                Route::get('/riwayat-validasi', [RiwayatValidasiController::class, 'index'])->name('riwayat-validasi');
+                Route::get('/', [RiwayatValidasiController::class, 'index'])->name('index');
                 Route::get('/validasi-rps', [GpmRpsController::class, 'validasiRps'])->name('validasi-rps');
                 Route::get('/validasi-rps/review/{rpsId}', [GpmRpsController::class, 'validasiRpsReview'])->name('validasi-rps.review');
+                Route::get('/validasi-rps/preview/{rpsId}', [GpmRpsController::class, 'previewDokumen'])->name('validasi-rps.preview');
                 Route::get('/riwayat-validasi/rps', [RiwayatValidasiController::class, 'rps'])->name('riwayat-validasi.rps');
             });
             // RPS - Admin
@@ -83,6 +84,10 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             // RPS - Dosen
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::post('/submit', [DosenRpsController::class, 'store'])->name('store');
+            });
+            // RPS - GPM
+            Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
+                Route::post('/validasi-rps/store', [GpmRpsController::class, 'storeValidasi'])->name('validasi-rps.store');
             });
         });
 
