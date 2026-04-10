@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\BankSoal\Http\Controllers;
+namespace Modules\BankSoal\Http\Controllers\BS;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;

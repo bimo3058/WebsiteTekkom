@@ -3,13 +3,13 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Modules\BankSoal\Http\Controllers\DashboardController;
+use Modules\BankSoal\Http\Controllers\BS\DashboardController;
 use Modules\BankSoal\Http\Controllers\RPS\Dosen\RpsController as DosenRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\RpsController as GpmRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Admin\RpsController as AdminRpsController;
 use Modules\BankSoal\Http\Controllers\BankSoalController;
-use Modules\BankSoal\Http\Controllers\ValidasiBankSoalController;
-use Modules\BankSoal\Http\Controllers\RiwayatValidasiController;
+use Modules\BankSoal\Http\Controllers\BS\GPM\ValidasiBankSoalController;
+use Modules\BankSoal\Http\Controllers\BS\GPM\RiwayatValidasiController;
 
 Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->group(function () {
 

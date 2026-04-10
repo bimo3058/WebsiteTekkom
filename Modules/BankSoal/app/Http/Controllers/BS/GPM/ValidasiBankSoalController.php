@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\BankSoal\Http\Controllers;
+namespace Modules\BankSoal\Http\Controllers\BS\GPM;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
