@@ -373,7 +373,7 @@
                                     <td><span class="text-muted" style="font-size: 0.9rem;">{{ isset($rps->tanggal_disetujui) ? \Carbon\Carbon::parse($rps->tanggal_disetujui)->format('d M Y') : '-' }}</span></td>
                                     <td><span class="badge-disetujui">DISETUJUI</span></td>
                                     <td class="text-end">
-                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.view', $rps->rps_id) }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
+                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.preview', $rps->rps_id) }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
                                             <i class="fas fa-eye me-2" style="font-size: 0.8rem;"></i> Lihat Detail
                                         </a>
                                     </td>

@@ -4,6 +4,7 @@ namespace Modules\BankSoal\Http\Controllers\BS;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB; 
 
 class DashboardController extends Controller
 {
@@ -35,8 +36,31 @@ class DashboardController extends Controller
 
         // GPM
         if ($roles->contains('gpm')) {
-            return view('banksoal::dashboard.gpm');
+            // 1. Ambil Antrean Bank Soal (Mata kuliah yang belum direview)
+            $prioritasBankSoal = DB::table('bs_mata_kuliah')
+                ->join('bs_pertanyaan', 'bs_mata_kuliah.id', '=', 'bs_pertanyaan.mk_id')
+                ->leftJoin('bs_review', 'bs_pertanyaan.id', '=', 'bs_review.pertanyaan_id')
+                ->whereNull('bs_review.id')
+                ->select(
+                    'bs_mata_kuliah.id as mk_id',
+                    'bs_mata_kuliah.kode as mk_kode',
+                    'bs_mata_kuliah.nama as mk_nama',
+                    DB::raw("'Bank Soal' as tipe_dokumen") // Penanda untuk di UI
+                )
+                ->groupBy('bs_mata_kuliah.id', 'bs_mata_kuliah.kode', 'bs_mata_kuliah.nama')
+                ->take(5) // Ambil 5 teratas saja untuk dashboard
+                ->get();
+
+            // TODO: Nanti kita tambahkan query untuk prioritas RPS di sini
+            $prioritasRps = collect([]); // Sementara kosong dulu
+
+            // Gabungkan kedua data menjadi satu daftar Tugas Prioritas
+            $tugasPrioritas = $prioritasBankSoal->merge($prioritasRps);
+
+            // Kirim variabel ke view GPM
+            return view('banksoal::dashboard.gpm', compact('tugasPrioritas'));
         }
+        
 
         // Dosen
         if ($roles->contains('dosen')) {

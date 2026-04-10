@@ -22,7 +22,7 @@
             });
         </script>
         
-        <h4 class="fw-bold text-dark mb-4 mt-2">Selamat datang kembali, Prof. Aris!</h4>
+        <h4 class="fw-bold text-dark mb-4 mt-2">Selamat datang kembali, {{ auth()->user()->name }}!</h4>
 
         <div class="card mb-4 border-0 rounded-3" style="background-color: #fffaf0; border: 1px solid #ffeeba !important;">
             <div class="card-body d-flex flex-column flex-md-row justify-content-between align-items-md-center py-3 px-4">
@@ -67,7 +67,7 @@
                         </div>
                         <div>
                             <p class="text-muted fw-semibold mb-1" style="font-size: 0.85rem;">Bank Soal Menunggu</p>
-                            <h2 class="fw-bold text-dark mb-0">12</h2>
+                            <h2 class="fw-bold text-dark mb-0">{{ $tugasPrioritas->where('tipe_dokumen', 'Bank Soal')->count() }}</h2>
                         </div>
                     </div>
                 </div>
@@ -107,39 +107,39 @@
                             </tr>
                         </thead>
                         <tbody>
+                            @forelse($tugasPrioritas as $tugas)
                             <tr>
-                                <td><span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 fw-semibold" style="font-size: 0.75rem;">RPS</span></td>
                                 <td>
-                                    <div class="fw-bold text-dark" style="font-size: 0.95rem;">Struktur Data</div>
-                                    <div class="text-muted" style="font-size: 0.8rem;">INF201 • Informatika</div>
+                                    @if($tugas->tipe_dokumen == 'Bank Soal')
+                                        <span class="badge bg-purple-subtle text-purple rounded-pill px-3 py-2 fw-semibold" style="font-size: 0.75rem;">Bank Soal</span>
+                                    @else
+                                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 fw-semibold" style="font-size: 0.75rem;">RPS</span>
+                                    @endif
                                 </td>
-                                <td><span class="text-muted" style="font-size: 0.9rem;">Besok, 12:00 WIB</span></td>
+                                <td>
+                                    <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $tugas->mk_nama }}</div>
+                                    <div class="text-muted" style="font-size: 0.8rem;">{{ $tugas->mk_kode }} • Teknik Komputer</div>
+                                </td>
+                                <td><span class="text-muted" style="font-size: 0.9rem;">Menunggu Review</span></td>
                                 <td class="text-end">
-                                    <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', ['rpsId' => 1]) }}" class="btn text-white rounded-3 px-3 py-2 fw-semibold text-decoration-none" style="background-color: #2563eb; font-size: 0.8rem;">Review Sekarang</a>
+                                    @if($tugas->tipe_dokumen == 'Bank Soal')
+                                        <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}" class="btn text-white rounded-3 px-3 py-2 fw-semibold text-decoration-none" style="background-color: #2563eb; font-size: 0.8rem;">Review Sekarang</a>
+                                    @else
+                                        <a href="#" class="btn text-white rounded-3 px-3 py-2 fw-semibold text-decoration-none" style="background-color: #2563eb; font-size: 0.8rem;">Review Sekarang</a>
+                                    @endif
                                 </td>
                             </tr>
+                            @empty
                             <tr>
-                                <td><span class="badge bg-purple-subtle text-purple rounded-pill px-3 py-2 fw-semibold" style="font-size: 0.75rem;">Bank Soal</span></td>
-                                <td>
-                                    <div class="fw-bold text-dark" style="font-size: 0.95rem;">Algoritma Pemrograman</div>
-                                    <div class="text-muted" style="font-size: 0.8rem;">INF102 • Informatika</div>
-                                </td>
-                                <td><span class="text-muted" style="font-size: 0.9rem;">3 Hari lagi</span></td>
-                                <td class="text-end">
-                                    <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}" class="btn text-white rounded-3 px-3 py-2 fw-semibold text-decoration-none" style="background-color: #2563eb; font-size: 0.8rem;">Review Sekarang</a>
+                                <td colspan="4" class="text-center py-5">
+                                    <div class="text-muted">
+                                        <i class="fas fa-check-circle mb-3" style="font-size: 2.5rem; opacity: 0.5;"></i>
+                                        <h6 class="fw-bold">Semua Tugas Selesai!</h6>
+                                        <p style="font-size: 0.9rem;">Tidak ada tugas prioritas yang perlu segera direview.</p>
+                                    </div>
                                 </td>
                             </tr>
-                            <tr>
-                                <td><span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 fw-semibold" style="font-size: 0.75rem;">RPS</span></td>
-                                <td>
-                                    <div class="fw-bold text-dark" style="font-size: 0.95rem;">Basis Data Lanjut</div>
-                                    <div class="text-muted" style="font-size: 0.8rem;">INF305 • Sistem Informasi</div>
-                                </td>
-                                <td><span class="text-muted" style="font-size: 0.9rem;">5 Hari lagi</span></td>
-                                <td class="text-end">
-                                    <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', ['rpsId' => 1]) }}" class="btn text-white rounded-3 px-3 py-2 fw-semibold text-decoration-none" style="background-color: #2563eb; font-size: 0.8rem;">Review Sekarang</a>
-                                </td>
-                            </tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
