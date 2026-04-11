@@ -8,9 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
+use App\Services\SupabaseStorage;
 use Modules\BankSoal\Models\Shared\MataKuliah;
 use Modules\BankSoal\Models\Shared\Cpl;
 use Modules\BankSoal\Models\Shared\Cpmk;
@@ -98,29 +98,56 @@ class RpsController extends Controller
             'cpl_ids.*'      => ['exists:bs_cpl,id'],
             'cpmk_ids'       => ['required', 'array'],
             'cpmk_ids.*'     => ['exists:bs_cpmk,id'],
-            'dokumen'        => ['required', 'file', 'mimes:pdf,docx,doc', 'max:5120'], 
+            'dokumen'        => ['required', 'file', 'mimes:pdf', 'max:1024'], 
         ], [
-            'dokumen.max' => 'Ukuran file maksimal 5MB',
-            'dokumen.mimes' => 'File harus berformat PDF atau DOCX',
+            'dokumen.max' => 'Ukuran file maksimal 1MB',
+            'dokumen.mimes' => 'Hanya menerima File berformat PDF',
             'dokumen.required' => 'File RPS harus diunggah',
         ]);
+
+        // Cek duplikasi RPS untuk mata kuliah + semester + tahun ajaran + dosen yang sama
+        $existingRps = RpsDetail::where('mk_id', $validated['mata_kuliah_id'])
+            ->where('semester', $validated['semester'])
+            ->where('tahun_ajaran', $validated['tahun_ajaran'])
+            ->whereHas('dosens', function ($query) {
+                $query->where('users.id', Auth::id());
+            })
+            ->whereIn('status', [RpsStatus::DIAJUKAN->value, RpsStatus::REVISI->value, RpsStatus::DISETUJUI->value])
+            ->exists();
+
+        if ($existingRps) {
+            return back()->withInput()->with('error', 'RPS untuk mata kuliah, semester, dan tahun ajaran ini sudah pernah diunggah. Tidak boleh upload RPS ganda untuk kurikulum yang sama.');
+        }
 
         DB::beginTransaction();
 
         try {
-            // Upload File
+            // Upload File ke Supabase
             $file = $request->file('dokumen');
-            $filename = 'RPS_' . time() . '_' . Auth::id() . '.' . $file->getClientOriginalExtension();
             
-            // Simpan file ke Storage disk 'bank-soal'
-            $pathDokumen = $file->storeAs('rps', $filename, 'bank-soal');
+            // Ambil informasi yang diperlukan untuk naming
+            $mataKuliah = MataKuliah::findOrFail($validated['mata_kuliah_id']);
+            $kodeMk = $mataKuliah->kode;  
+            $tahun = now()->year;          
+            $semester = $validated['semester'];
+            $employeeNumber = Auth::user()->load('lecturer')->lecturer->employee_number;
+            
+            // Format nama file: kodeMK_tahun_semester_employeeNumber
+            $fileName = "{$kodeMk}_{$tahun}_{$semester}_{$employeeNumber}";
+            
+            $supabaseStorage = new SupabaseStorage();
+            $pathDokumen = $supabaseStorage->upload($file, 'rps', 'rps', $fileName);
+
+            if (!$pathDokumen) {
+                throw new \Exception('Gagal mengupload file ke Supabase. Silakan periksa koneksi internet atau coba lagi');
+            }
 
             // Simpan data ke Tabel RPS
             $rps = RpsDetail::create([
                 'mk_id'        => $validated['mata_kuliah_id'],
                 'semester'     => $validated['semester'],
                 'tahun_ajaran' => $validated['tahun_ajaran'],
-                'dokumen'  => $pathDokumen,
+                'dokumen'      => $pathDokumen,
                 'status'       => RpsStatus::DIAJUKAN, 
             ]);
 
@@ -142,11 +169,6 @@ class RpsController extends Controller
         } catch (\Exception $e) {            
             // Rollback jika error
             DB::rollBack();
-            
-            // Cleanup: Delete uploaded file jika ada error
-            if (isset($pathDokumen)) {
-                Storage::disk('bank-soal')->delete($pathDokumen);
-            }
             
             // Log error untuk debugging
             \Log::error('RPS Store Error', [
@@ -263,22 +285,16 @@ class RpsController extends Controller
             // Fetch RPS record atau throw 404
             $rps = RpsDetail::findOrFail($rpsId);
             
-            // Check dokumen exist di storage
-            if (!$rps->dokumen || !Storage::disk('bank-soal')->exists($rps->dokumen)) {
+            if (!$rps->dokumen) {
                 abort(404, 'Dokumen tidak ditemukan');
             }
 
-            // Get file content dan mime type
-            $file = Storage::disk('bank-soal')->get($rps->dokumen);
-            $mimeType = Storage::disk('bank-soal')->mimeType($rps->dokumen);
+            // Generate Supabase public URL dari path yang disimpan
+            $supabaseStorage = new SupabaseStorage();
+            $publicUrl = $supabaseStorage->getPublicUrl($rps->dokumen, 'rps');
             
-            // Return response dengan inline disposition (preview, tidak download)
-            return response($file, 200)
-                ->header('Content-Type', $mimeType)
-                ->header('Content-Disposition', 'inline; filename="' . basename($rps->dokumen) . '"')
-                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-                ->header('Pragma', 'no-cache')
-                ->header('Expires', '0');
+            // Redirect ke Supabase untuk preview
+            return redirect($publicUrl);
                 
         } catch (\Exception $e) {
             \Log::error('previewDokumen Error', ['rps_id' => $rpsId, 'error' => $e->getMessage()]);

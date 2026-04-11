@@ -190,8 +190,11 @@ class DosenDashboardComponent {
 // Auto-render on DOM ready
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
-        DosenDashboard.renderCharts();
+        DosenDashboardComponent.renderCharts();
     });
 } else {
-    DosenDashboard.renderCharts();
+    DosenDashboardComponent.renderCharts();
 }
+
+// Export as DosenDashboard for global access
+const DosenDashboard = DosenDashboardComponent;

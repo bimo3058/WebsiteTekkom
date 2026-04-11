@@ -131,10 +131,10 @@
             <div class="form-group full">
                 <label class="form-label">Dokumen RPS <span style="color: red;">*</span></label>
                 <label class="upload-zone" id="uploadZone">
-                    <input type="file" name="dokumen" accept=".pdf,.docx" id="fileInput" required>
+                    <input type="file" name="dokumen" accept=".pdf" id="fileInput" required>
                     <i class="fas fa-cloud-upload-alt" id="uploadIcon"></i>
                     <strong id="uploadText">Klik untuk unggah atau seret file ke sini</strong>
-                    <span id="uploadSub">PDF, DOCX (Maks. 5MB)</span>
+                    <span id="uploadSub">PDF (Maks. 1MB)</span>
                 </label>
             </div>
         </div>

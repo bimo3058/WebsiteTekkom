@@ -129,3 +129,13 @@ if (document.readyState === "loading") {
 
 // Export as FileHandler for global access
 const FileHandler = FileUploadHandlerComponent;
+
+// Global wrapper function for inline onclick handlers
+window.previewDokumen = function (rpsId, mkNama, dokumenPath) {
+    FileHandler.previewDokumen(rpsId, mkNama, dokumenPath);
+};
+
+// Global wrapper function for closing modal from inline events
+window.closeDokumenModal = function () {
+    FileHandler.closeDokumenModal();
+};
