@@ -7,7 +7,7 @@ use Modules\BankSoal\Http\Controllers\BS\DashboardController;
 use Modules\BankSoal\Http\Controllers\RPS\Dosen\RpsController as DosenRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\RpsController as GpmRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Admin\RpsController as AdminRpsController;
-use Modules\BankSoal\Http\Controllers\BankSoalController;
+use Modules\BankSoal\Http\Controllers\BS\BankSoalController;
 use Modules\BankSoal\Http\Controllers\BS\GPM\ValidasiBankSoalController;
 use Modules\BankSoal\Http\Controllers\BS\GPM\RiwayatValidasiController;
 

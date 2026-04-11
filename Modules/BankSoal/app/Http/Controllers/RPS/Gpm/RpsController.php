@@ -4,22 +4,13 @@ namespace Modules\BankSoal\Http\Controllers\RPS\Gpm;
 
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use App\Services\SupabaseStorage;
 use Modules\BankSoal\Models\RpsDetail;
-use Modules\BankSoal\Models\Shared\Rps;
 use Modules\BankSoal\Services\RpsService;
 
-/**
- * [GPM - RPS] Controller untuk review dan verifikasi RPS tingkat GPM
- * 
- * Role: GPM (Gadd Pendidikan dan Mahasiswa)
- * Fitur: RPS (Rencana Pembelajaran Semester)
- * 
- * GPM dapat melihat, mereview, dan memverifikasi RPS yang telah dikerjakan oleh dosen.
- */
 class RpsController extends Controller
 {
     public function index(RpsService $rpsService): \Illuminate\View\View
@@ -99,32 +90,22 @@ class RpsController extends Controller
         return view('banksoal::gpm.validasi-rps-review', compact('rps', 'parameters', 'existingReview', 'history'));
     }
 
-    /**
-     * Preview dokumen RPS (PDF/DOCX)
-     * Digunakan untuk menampilkan dokumen di dalam iframe
-     */
     public function previewDokumen(int $rpsId)
     {
         try {
             // Fetch RPS record atau throw 404
             $rps = RpsDetail::findOrFail($rpsId);
             
-            // Check dokumen exist di storage
-            if (!$rps->dokumen || !Storage::disk('bank-soal')->exists($rps->dokumen)) {
+            if (!$rps->dokumen) {
                 abort(404, 'Dokumen tidak ditemukan');
             }
 
-            // Get file content dan mime type
-            $file = Storage::disk('bank-soal')->get($rps->dokumen);
-            $mimeType = Storage::disk('bank-soal')->mimeType($rps->dokumen);
+            // Generate Supabase public URL dari path yang disimpan
+            $supabaseStorage = new SupabaseStorage();
+            $publicUrl = $supabaseStorage->getPublicUrl($rps->dokumen, 'rps');
             
-            // Return response dengan inline disposition (preview, tidak download)
-            return response($file, 200)
-                ->header('Content-Type', $mimeType)
-                ->header('Content-Disposition', 'inline; filename="' . basename($rps->dokumen) . '"')
-                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-                ->header('Pragma', 'no-cache')
-                ->header('Expires', '0');
+            // Redirect ke Supabase untuk preview
+            return redirect($publicUrl);
                 
         } catch (\Exception $e) {
             Log::error('previewDokumen Error', ['rps_id' => $rpsId, 'error' => $e->getMessage()]);
@@ -202,13 +183,19 @@ class RpsController extends Controller
             );
 
             // Log audit trail
+            $descriptionLog = $action === 'setuju' 
+                ? 'RPS telah disetujui oleh GPM. Nilai: ' . $nilaiAkhir . '/100'
+                : 'RPS dikembalikan untuk revisi.';
+            
+            if (!empty(trim($catatan))) {
+                $descriptionLog .= ' Catatan: ' . $catatan;
+            }
+            
             DB::table('bs_audit_logs')->insert([
                 'subject_type' => 'rps',
                 'subject_id' => $rpsId,
                 'action' => $action === 'setuju' ? 'disetujui' : 'revisi',
-                'description' => $action === 'setuju' 
-                    ? 'RPS telah disetujui oleh GPM. Nilai: ' . $nilaiAkhir . '/100'
-                    : 'RPS dikembalikan untuk revisi. Catatan: ' . $catatan,
+                'description' => $descriptionLog,
                 'user_id' => Auth::id(),
                 'created_at' => now(),
             ]);

@@ -21,32 +21,78 @@ class SupabaseStorage
 
     /**
      * Tambahkan parameter $bucket opsional di akhir.
+     * Upload dengan custom filename format atau UUID
+     * @param string|null $fileName Custom filename (tanpa extension). Jika null, gunakan UUID
      */
-    public function upload(UploadedFile $file, string $folder = 'uploads', ?string $bucket = null): ?string
+    public function upload(UploadedFile $file, string $folder = 'uploads', ?string $bucket = null, ?string $fileName = null): ?string
     {
         $targetBucket = $bucket ?? $this->bucket; // Gunakan parameter jika ada, jika tidak pakai default
         $extension = $file->getClientOriginalExtension();
-        $path      = $folder . '/' . Str::uuid() . '.' . $extension;
+        // Jika $fileName diberikan, gunakan itu; jika tidak, gunakan UUID
+        $filename = $fileName ? $fileName . '.' . $extension : Str::uuid() . '.' . $extension;
+        $path      = $folder . '/' . $filename;
         $mimeType  = $file->getMimeType();
+        
+        \Log::info('Supabase Upload Started', [
+            'url' => $this->url,
+            'bucket' => $targetBucket,
+            'path' => $path,
+            'mime_type' => $mimeType,
+            'file_size' => $file->getSize(),
+        ]);
 
-        $response = Http::withHeaders([
-            'Authorization' => 'Bearer ' . $this->key,
-            'Content-Type'  => $mimeType,
-            'x-upsert'      => 'false',
-        ])->withBody(
-            file_get_contents($file->getRealPath()),
-            $mimeType
-        )->post($this->url . '/storage/v1/object/' . $targetBucket . '/' . $path);
+        try {
+            $response = Http::timeout(30)
+                ->withHeaders([
+                    'Authorization' => 'Bearer ' . $this->key,
+                    'Content-Type'  => $mimeType,
+                    'x-upsert'      => 'false',
+                ])
+                ->withBody(
+                    file_get_contents($file->getRealPath()),
+                    $mimeType
+                )
+                ->post($this->url . '/storage/v1/object/' . $targetBucket . '/' . $path);
 
-        if ($response->successful()) {
-            return $path;
+            \Log::info('Supabase Response', [
+                'status' => $response->status(),
+                'body' => $response->body(),
+            ]);
+
+            if ($response->successful()) {
+                \Log::info('Supabase upload successful', ['path' => $path]);
+                return $path;
+            }
+
+            \Log::error('Supabase upload failed', [
+                'status' => $response->status(),
+                'bucket' => $targetBucket,
+                'path' => $path,
+                'response' => $response->body(),
+                'json' => $response->json(),
+            ]);
+
+            return null;
+
+        } catch (\Exception $e) {
+            \Log::error('Supabase upload exception', [
+                'bucket' => $targetBucket,
+                'path' => $path,
+                'error' => $e->getMessage(),
+            ]);
+
+            return null;
         }
+    }
 
-        report(new \RuntimeException(
-            "Supabase upload failed to bucket [{$targetBucket}]: " . $response->body()
-        ));
-
-        return null;
+    /**
+     * Generate public URL dari path
+     * Format: {SUPABASE_URL}/storage/v1/object/public/{bucket}/{path}
+     */
+    public function getPublicUrl(string $path, ?string $bucket = null): string
+    {
+        $targetBucket = $bucket ?? $this->bucket;
+        return $this->url . '/storage/v1/object/public/' . $targetBucket . '/' . $path;
     }
 
     /**
