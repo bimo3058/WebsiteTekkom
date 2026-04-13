@@ -45,54 +45,59 @@
 
 {{-- STATUS BANNER --}}
 @if($activePeriode)
-    <div class="status-bar" style="border-left: 4px solid {{ $isUploadOpen ? '#10b981' : '#f59e0b' }}; background: {{ $isUploadOpen ? '#f0fdf4' : '#fffbeb' }}; padding: 1.25rem 1.5rem; display: flex; align-items: flex-start; border-radius: 0.5rem; justify-content: space-between; margin-bottom: 2rem;">
-        <div class="status-left" style="display: flex; gap: 1rem; align-items: flex-start;">
+    <div class="mb-8 p-5 bg-{{ $isUploadOpen ? 'success-50' : 'warning-50' }} border-l-4 border-{{ $isUploadOpen ? 'success-300' : 'warning-300' }} rounded-lg flex items-start justify-between gap-4">
+        <div class="flex gap-4 items-start">
             @if($isUploadOpen)
-                <i class="fas fa-calendar-check" style="color: #10b981; font-size: 1.5rem; margin-top: 0.2rem;"></i>
+                <i class="fas fa-calendar-check text-success-300 text-2xl mt-1"></i>
             @else
-                <i class="fas fa-calendar-times" style="color: #f59e0b; font-size: 1.5rem; margin-top: 0.2rem;"></i>
+                <i class="fas fa-calendar-times text-warning-300 text-2xl mt-1"></i>
             @endif
             <div>
-                <div class="status-label" style="font-weight: 700; color: #1e293b; margin-bottom: 0.25rem; font-size: 1.05rem;">
+                <h3 class="font-bold text-slate-800 mb-1 text-lg">
                     {{ $activePeriode->judul }}
-                </div>
-                <div class="status-desc" style="color: #475569; font-size: 0.9rem;">
+                </h3>
+                <p class="text-grey-400 text-sm">
                     Batas akhir pengunggahan RPS untuk Semester {{ $activePeriode->semester }} {{ $activePeriode->tahun_ajaran }} adalah <strong>{{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->translatedFormat('d F Y') }}</strong>.
                     @if(!$isUploadOpen)
-                        <span style="color: #b91c1c; font-weight: 600; display: block; margin-top: 0.25rem;"> Sesi unggah saat ini sedang ditutup.</span>
+                        <span class="text-error-600 font-semibold block mt-1">Sesi unggah saat ini sedang ditutup.</span>
                     @endif
-                </div>
+                </p>
             </div>
         </div>
-        <a href="#" class="panduan-btn" style="background: white; border: 1px solid #e2e8f0; color: #475569; border-radius: 0.375rem; padding: 0.5rem 1rem; font-weight: 500; text-decoration: none; display: inline-flex; align-items: center; gap: 0.5rem; align-self: center;">
+        <a href="#" class="px-4 py-2 text-sm font-medium text-grey-600 bg-white border border-grey-100 rounded-md hover:bg-grey-25 transition-colors flex items-center gap-2 whitespace-nowrap">
             <i class="fas fa-circle-question"></i> Panduan Pengisian
         </a>
     </div>
 
     {{-- H-7 REMINDER NOTIFICATION --}}
     @if($tenggatH7 && count($unsubmittedMkCodes) > 0)
-    <div class="alert alert-danger" style="background-color: #fef2f2; border: 1px solid #fecaca; color: #991b1b; padding: 1rem 1.25rem; border-radius: 0.5rem; margin-bottom: 2rem; display: flex; align-items: center; gap: 1rem;">
-        <i class="fas fa-exclamation-triangle fa-lg"></i>
+    <div class="mb-8 p-4 bg-error-50 border border-error-200 text-error-800 rounded-lg flex items-start gap-4">
+        <i class="fas fa-exclamation-triangle text-lg"></i>
         <div>
             Waktu tersisa <strong>{{ $daysLeft }} hari lagi!</strong> Anda belum mengunggah RPS untuk mata kuliah: 
-            <span style="font-weight: 600;">{{ implode(', ', $unsubmittedMkCodes) }}</span>. 
+            <span class="font-semibold">{{ implode(', ', $unsubmittedMkCodes) }}</span>. 
             Mohon segera lengkapi sebelum batas waktu berakhir.
         </div>
     </div>
     @endif
 @else
-    <div class="status-bar" style="border-left: 4px solid #ef4444; background: #fef2f2; padding: 1.25rem 1.5rem; display: flex; align-items: flex-start; border-radius: 0.5rem; justify-content: space-between; margin-bottom: 2rem;">
-        <div class="status-left" style="display: flex; gap: 1rem; align-items: flex-start;">
-            <i class="fas fa-calendar-times" style="color: #ef4444; font-size: 1.5rem; margin-top: 0.2rem;"></i>
+    <div class="mb-8" style="background-color: #FFFFFF; border: 1px solid #F3E8C0; border-left: 4px solid #C6930A; border-radius: 12px; display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 16px 20px; box-shadow: 0 1px 4px rgba(0,0,0,0.06);">
+        <div style="display: flex; align-items: center; gap: 16px; flex: 1;">
+            <div class="flex-shrink-0" style="width: 40px; height: 40px; background-color: #FEF3C7; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
+                <i class="fas fa-calendar-xmark" style="color: #C6930A; font-size: 18px;"></i>
+            </div>
             <div>
-                <div class="status-label" style="font-weight: 700; color: #991b1b; margin-bottom: 0.25rem; font-size: 1.05rem;">
-                    Jadwal Belum Aktif
-                </div>
-                <div class="status-desc" style="color: #7f1d1d; font-size: 0.9rem;">
-                    Saat ini tidak ada periode pengunggahan RPS yang sedang berjalan.
-                </div>
+                <h3 style="font-weight: 700; color: #1F2937; margin: 0 0 4px 0; font-size: 15px;">
+                    Belum Ada Jadwal Pengajuan
+                </h3>
+                <p style="color: #6E6E83; font-size: 13px; margin: 0;">
+                    Tidak ada sesi pengajuan RPS yang ditambahkan saat ini
+                </p>
             </div>
         </div>
+        <span class="flex-shrink-0" style="display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; font-size: 12px; font-weight: 600; border-radius: 9999px; color: #92400E; background-color: #FEF3C7; border: 1px solid #F3E8C0; white-space: nowrap;">
+            <i class="fas fa-exclamation-circle"></i> Belum Aktif
+        </span>
     </div>
 @endif
 
@@ -106,7 +111,7 @@
         <div class="form-grid-2">
             {{-- Mata Kuliah --}}
             <div class="select-wrap">
-                <label class="form-label">Mata Kuliah <span style="color: red;">*</span></label>
+                <label class="form-label">Mata Kuliah <span class="text-error-600">*</span></label>
                 <select name="mata_kuliah_id" id="mkSelect" required {{ !$isUploadOpen ? 'disabled' : '' }}>
                     <option value="" disabled selected>Pilih Mata Kuliah</option>
                     @foreach ($mataKuliahs as $mk)
@@ -146,7 +151,7 @@
 
             {{-- CPL — Multi-select --}}
             <div class="select-wrap full">
-                <label class="form-label">Capaian Pembelajaran Lulusan (CPL) <span style="color: red;">*</span></label>
+                <label class="form-label">Capaian Pembelajaran Lulusan (CPL) <span class="text-error-600">*</span></label>
                 <div id="cplMs" class="ms-wrapper"
                      data-name="cpl_ids[]"
                      data-placeholder="{{ !$isUploadOpen ? 'Ditutup' : 'Pilih mata kuliah terlebih dahulu' }}"
@@ -156,7 +161,7 @@
 
             {{-- CPMK — Multi-select --}}
             <div class="select-wrap full">
-                <label class="form-label">Capaian Pembelajaran Mata Kuliah (CPMK) <span style="color: red;">*</span></label>
+                <label class="form-label">Capaian Pembelajaran Mata Kuliah (CPMK) <span class="text-error-600">*</span></label>
                 <div id="cpmkMs" class="ms-wrapper"
                      data-name="cpmk_ids[]"
                      data-placeholder="{{ !$isUploadOpen ? 'Ditutup' : 'Pilih CPL terlebih dahulu' }}"
@@ -166,11 +171,11 @@
 
             {{-- Upload --}}
             <div class="form-group full">
-                <label class="form-label">Dokumen RPS <span style="color: red;">*</span></label>
-                <label class="upload-zone" id="uploadZone" style="{{ !$isUploadOpen ? 'background-color: #f8fafc; border-color: #cbd5e1; cursor: not-allowed; opacity: 0.7;' : '' }}">
+                <label class="form-label">Dokumen RPS <span class="text-error-600">*</span></label>
+                <label class="upload-zone" id="uploadZone" style="{{ !$isUploadOpen ? 'background-color: #f5f5fa; border-color: #dfdfe6; cursor: not-allowed; opacity: 0.7;' : '' }}">
                     <input type="file" name="dokumen" accept=".pdf" id="fileInput" required {{ !$isUploadOpen ? 'disabled' : '' }}>
-                    <i class="fas fa-cloud-upload-alt" id="uploadIcon" style="{{ !$isUploadOpen ? 'color: #94a3b8;' : '' }}"></i>
-                    <strong id="uploadText" style="{{ !$isUploadOpen ? 'color: #64748b;' : '' }}">
+                    <i class="fas fa-cloud-upload-alt" id="uploadIcon" style="{{ !$isUploadOpen ? 'color: #ababba;' : '' }}"></i>
+                    <strong id="uploadText" style="{{ !$isUploadOpen ? 'color: #6e6e83;' : '' }}">
                         {{ !$isUploadOpen ? 'Upload ditutup' : 'Klik untuk unggah atau seret file ke sini' }}
                     </strong>
                     <span id="uploadSub">PDF (Maks. 1MB)</span>

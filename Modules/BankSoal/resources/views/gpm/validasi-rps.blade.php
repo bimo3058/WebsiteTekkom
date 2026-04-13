@@ -145,22 +145,46 @@
                             </div>
                         </div>
                     </div>
-                    <div>
+                    <div class="d-flex align-items-center gap-2" style="flex-wrap: wrap; justify-content: flex-end;">
+                        <div>
+                            @if($isPeriodeRunning)
+                                <span class="badge bg-success py-2 px-3 rounded-pill" style="background-color: #10b981 !important; color: white !important; font-weight: 500; font-size: 0.85rem;">
+                                    <i class="fas fa-circle me-1" style="font-size: 0.5rem; vertical-align: middle;"></i> Sesi Dibuka
+                                </span>
+                            @else
+                                <span class="badge bg-secondary py-2 px-3 rounded-pill" style="background-color: #64748b !important; color: white !important; font-weight: 500; font-size: 0.85rem;">
+                                    <i class="fas fa-times-circle me-1" style="font-size: 0.8rem; vertical-align: middle;"></i> Sesi Berakhir
+                                </span>
+                            @endif
+                        </div>
                         @if($isPeriodeRunning)
-                            <span class="badge bg-success py-2 px-3 rounded-pill" style="background-color: #10b981 !important; color: white !important; font-weight: 500; font-size: 0.85rem;">
-                                <i class="fas fa-circle me-1" style="font-size: 0.5rem; vertical-align: middle;"></i> Sesi Dibuka
-                            </span>
-                        @else
-                            <span class="badge bg-secondary py-2 px-3 rounded-pill" style="background-color: #64748b !important; color: white !important; font-weight: 500; font-size: 0.85rem;">
-                                <i class="fas fa-times-circle me-1" style="font-size: 0.8rem; vertical-align: middle;"></i> Sesi Berakhir
-                            </span>
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-3 px-3 py-2" data-bs-toggle="modal" data-bs-target="#modalCloseSession" style="font-weight: 500; font-size: 0.85rem;">
+                                <i class="fas fa-power-off me-1" style="font-size: 0.75rem;"></i> Matikan Sesi
+                            </button>
                         @endif
                     </div>
                 </div>
             </div>
         @else
-            <div class="alert alert-secondary border-0 mb-4 rounded-4" style="background-color: #f8fafc; color: #475569;" role="alert">
-                <i class="fas fa-info-circle me-2"></i> Belum ada jadwal/sesi pengajuan RPS yang ditambahkan.
+            <div class="card border-0 mb-4 rounded-4" style="box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); background: #f8fafc; border-left: 4px solid #f59e0b !important;">
+                <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center flex-column flex-md-row gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: #fef3c7; color: #d97706;">
+                            <i class="fas fa-calendar-times fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1 fw-bold text-dark" style="font-size: 1rem;">Belum Ada Jadwal Pengajuan</h6>
+                            <div class="text-muted" style="font-size: 0.85rem;">
+                                Tidak ada sesi pengajuan RPS yang ditambahkan saat ini
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="badge py-2 px-3 rounded-pill" style="background-color: #fef3c7 !important; color: #d97706 !important; font-weight: 500; font-size: 0.85rem;">
+                            <i class="fas fa-exclamation-circle me-1" style="font-size: 0.75rem; vertical-align: middle;"></i> Belum Aktif
+                        </span>
+                    </div>
+                </div>
             </div>
         @endif
 
@@ -517,5 +541,26 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Matikan Sesi -->
+    <div class="modal fade" id="modalCloseSession" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content rounded-4 border-0">
+                <form action="{{ route('banksoal.rps.gpm.periode-rps.close-session') }}" method="POST">
+                    @csrf
+                    <div class="modal-body text-center p-4">
+                        <div class="text-warning mb-3">
+                            <i class="fas fa-exclamation-circle fa-3x"></i>
+                        </div>
+                        <h5 class="mb-2 fw-bold text-dark">Matikan Sesi Pengajuan?</h5>
+                        <p class="text-muted mb-4" style="font-size: 0.9rem;">Sesi pengajuan <strong>{{ $activePeriode->judul ?? 'RPS' }}</strong> akan ditutup. Dosen tidak akan bisa lagi mengajukan RPS sampai periode baru diaktifkan.</p>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button type="button" class="btn btn-light w-50" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-danger w-50">Matikan Sesi</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
 
 </x-banksoal::layouts.gpm-master>
