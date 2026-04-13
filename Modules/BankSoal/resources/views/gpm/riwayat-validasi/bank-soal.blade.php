@@ -72,16 +72,27 @@
         </script>
 
         <div class="nav-tabs-custom d-flex">
-            <a href="#" class="nav-link active text-decoration-none">
-                Selesai Direview <span class="badge-count" style="background-color: #e0e7ff;">{{ $riwayat_soal->count() }}</span>
+            <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}" class="nav-link text-decoration-none text-muted">
+                Menunggu Validasi <span class="badge-count">{{ $counts->menunggu ?? 0 }}</span>
+            </a>
+            <a href="#" class="nav-link active text-decoration-none ms-3">
+                Selesai Direview <span class="badge-count">{{ $counts->selesai ?? $riwayat_soal->count() }}</span>
             </a>
         </div>
 
-        <div class="toolbar-container">
-            <div class="search-box">
-                <i class="fas fa-search text-muted"></i>
-                <input type="text" class="form-control" placeholder="Cari mata kuliah...">
-            </div>
+        <div class="toolbar-container d-flex justify-content-between align-items-center">
+            <form action="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal') }}" method="GET" class="search-box m-0 p-0" style="padding: 0 !important; overflow: hidden;">
+                <div class="d-flex align-items-center w-100" style="padding: 0.5rem 1rem;">
+                    <i class="fas fa-search text-muted"></i>
+                    <input type="text" name="search" autocomplete="off" list="datalistRiwayat" value="{{ request('search') }}" class="form-control border-0 shadow-none bg-transparent" placeholder="Cari mata kuliah... ketik abjad" onchange="this.form.submit()">
+                    <datalist id="datalistRiwayat">
+                        @foreach($all_riwayat_soal as $item)
+                            <option value="{{ $item->mk_nama }}"></option>
+                            <option value="{{ $item->mk_kode }}"></option>
+                        @endforeach
+                    </datalist>
+                </div>
+            </form>
             <button class="btn btn-filter">
                 <i class="fas fa-filter"></i> Filters
             </button>
@@ -116,8 +127,9 @@
                             </td>
                             <td><span class="badge-status status-disetujui">SELESAI</span></td>
                             <td class="text-center">
-                                <a href="#" class="btn-action">
-                                    <i class="far fa-eye"></i> <span>Lihat Detail</span>
+                                <a href="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal.detail', $riwayat->mk_id) }}" class="btn btn-link text-decoration-none p-0 d-flex flex-column align-items-center">
+                                    <i class="fas fa-eye fs-5"></i>
+                                    <span style="font-size: 0.75rem; font-weight: 600;">Lihat Detail</span>
                                 </a>
                             </td>
                         </tr>
