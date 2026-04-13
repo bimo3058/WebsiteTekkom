@@ -57,11 +57,15 @@ class ProfileController extends Controller
 
     public function updateAvatar(Request $request, SupabaseStorage $supabase)
     {
-        $request->validate(['avatar' => 'required|image|max:2048']);
+        $request->validate([
+            'avatar'          => 'required|image|max:2048',
+            'avatar_original' => 'nullable|image|max:2048',
+        ]);
 
         $user      = auth()->user();
         $oldAvatar = $user->getOriginal('avatar_url');
 
+        // 1. Upload webp (hasil crop) ke folder avatars — untuk tampilan UI
         $path = $supabase->upload($request->file('avatar'), 'avatars', 'user_avatar');
 
         if (! $path) {
@@ -70,15 +74,29 @@ class ProfileController extends Controller
 
         $url = $supabase->publicUrl($path, 'user_avatar');
 
-        $user->update(['avatar_url' => $url]);
+        // 2. Upload format asli ke avatars_format — untuk CV/print
+        $urlOriginal = null;
+        if ($request->hasFile('avatar_original')) {
+            $pathOriginal = $supabase->upload(
+                $request->file('avatar_original'),
+                'avatars_format',
+                'user_avatar'
+            );
+            $urlOriginal = $pathOriginal
+                ? $supabase->publicUrl($pathOriginal, 'user_avatar')
+                : null;
+        }
 
-        // Hapus cache avatar lama agar accessor ambil URL baru
+        $user->update([
+            'avatar_url'        => $url,
+            'avatar_url_format' => $urlOriginal,
+        ]);
+
         if ($oldAvatar) {
             cache()->forget("user_avatar_{$user->id}_" . md5($oldAvatar));
         }
 
         $user->clearUserCache();
-
         session()->flash('success', 'Foto profil berhasil diperbarui.');
 
         return response()->json([
@@ -95,8 +113,8 @@ class ProfileController extends Controller
             return response()->json(['status' => 'error', 'message' => 'Tidak ada foto untuk dihapus'], 404);
         }
 
+        // Hapus webp dari avatars
         $path = str_replace($supabase->publicUrl('', 'user_avatar'), '', $user->avatar_url);
-
         $deleted = $supabase->delete($path, 'user_avatar');
 
         if (! $deleted) {
@@ -104,11 +122,19 @@ class ProfileController extends Controller
                 'user_id' => $user->id,
                 'path'    => $path,
             ]);
-            // Tetap lanjutkan — null-kan dari DB meski file di bucket gagal dihapus
-            // agar user tidak terjebak dengan avatar yang tidak bisa dihapus
         }
 
-        $user->update(['avatar_url' => null]);
+        // Hapus format asli dari avatars_format juga
+        if ($user->avatar_url_format) {
+            $pathOriginal = str_replace($supabase->publicUrl('', 'user_avatar'), '', $user->avatar_url_format);
+            $supabase->delete($pathOriginal, 'user_avatar');
+        }
+
+        $user->update([
+            'avatar_url'        => null,
+            'avatar_url_format' => null,
+        ]);
+
         $user->clearUserCache();
 
         session()->flash('success', 'Foto profil berhasil dihapus.');

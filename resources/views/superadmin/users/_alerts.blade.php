@@ -15,9 +15,9 @@
     }
 @endphp
 
-@if($displayId && $activeImportId)
-<div id="importProgressContainer" data-import-id="{{ $displayId }}" 
-     class="mb-6 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm animate-in fade-in slide-in-from-top-2 duration-500">
+<div id="importProgressContainer" 
+     data-import-id="{{ $displayId ?? '' }}"
+     class="{{ $displayId ? '' : 'hidden' }} mb-6 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
     <div class="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
         <div class="flex items-center gap-3">
             <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center border border-blue-100 shadow-sm">
@@ -35,7 +35,7 @@
             </div>
             
             {{-- Tombol Cancel --}}
-            <button type="button" id="btnCancelImport" onclick="cancelImport('{{ $displayId }}')" 
+            <button type="button" id="btnCancelImport" onclick="confirmCancelProgressModal('{{ $displayId }}')"
                 class="flex items-center gap-1.5 px-2 py-1 bg-white hover:bg-red-50 text-red-500 border border-slate-200 hover:border-red-100 rounded-lg transition-all group shadow-sm">
                 <span class="material-symbols-outlined group-hover:rotate-90 transition-transform" style="font-size: 14px">close</span>
                 <span class="text-[9px] font-semibold uppercase tracking-wider">Batal</span>
@@ -49,7 +49,6 @@
         </div>
     </div>
 </div>
-@endif
 
 {{-- Alert Gagal/Error (Compact Design) --}}
 @if($errors->any())
@@ -82,3 +81,23 @@
     </button>
 </div>
 @endif
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const btnCancel = document.getElementById('btnCancelImport');
+    if (btnCancel) {
+        btnCancel.addEventListener('click', function () {
+            const container = document.getElementById('importProgressContainer');
+            const importId  = container?.getAttribute('data-import-id') || '';
+            if (!importId) return;
+
+            if (typeof confirmCancelProgressModal === 'function') {
+                confirmCancelProgressModal(importId);
+            } else if (typeof cancelImport === 'function') {
+                if (confirm('Hentikan proses import? Data yang sudah diproses akan tetap tersimpan.')) {
+                    cancelImport(importId);
+                }
+            }
+        });
+    }
+});
+</script>
