@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use App\Services\SupabaseStorage;
 use Modules\BankSoal\Models\RpsDetail;
+use Modules\BankSoal\Models\PeriodeRps;
 use Modules\BankSoal\Services\RpsService;
 
 class RpsController extends Controller
@@ -19,10 +20,22 @@ class RpsController extends Controller
         $rpsRevisi = $rpsService->getRevisi(10);
         $rpsDisetujui = $rpsService->getDisetujui(10);
         
+        $activePeriode = PeriodeRps::where('is_active', 'true')->first();
+        $isPeriodeRunning = false;
+        
+        if ($activePeriode) {
+            $now   = now('Asia/Jakarta');
+            $start = $activePeriode->tanggal_mulai->timezone('Asia/Jakarta')->startOfDay();
+            $end   = $activePeriode->tanggal_selesai->timezone('Asia/Jakarta')->endOfDay();
+            $isPeriodeRunning = $now->between($start, $end);
+        }
+
         return view('banksoal::gpm.validasi-rps', [
             'rpsDiajukan' => $rpsDiajukan,
             'rpsRevisi' => $rpsRevisi,
             'rpsDisetujui' => $rpsDisetujui,
+            'activePeriode' => $activePeriode,
+            'isPeriodeRunning' => $isPeriodeRunning,
         ]);
     }
 
@@ -35,10 +48,22 @@ class RpsController extends Controller
         $rpsRevisi = $rpsService->getRevisi(10);
         $rpsDisetujui = $rpsService->getDisetujui(10);
 
+        $activePeriode = PeriodeRps::where('is_active', 'true')->first();
+        $isPeriodeRunning = false;
+        
+        if ($activePeriode) {
+            $now   = now('Asia/Jakarta');
+            $start = $activePeriode->tanggal_mulai->timezone('Asia/Jakarta')->startOfDay();
+            $end   = $activePeriode->tanggal_selesai->timezone('Asia/Jakarta')->endOfDay();
+            $isPeriodeRunning = $now->between($start, $end);
+        }
+
         return view('banksoal::gpm.validasi-rps', [
             'rpsDiajukan' => $rpsDiajukan,
             'rpsRevisi' => $rpsRevisi,
             'rpsDisetujui' => $rpsDisetujui,
+            'activePeriode' => $activePeriode,
+            'isPeriodeRunning' => $isPeriodeRunning,
         ]);
     }
 
@@ -144,6 +169,7 @@ class RpsController extends Controller
 
             // Hitung nilai_akhir berdasarkan penilaian user (di backend)
             $nilaiAkhir = 0;
+            $hasilReviewData = [];
 
             foreach ($parameters as $param) {
                 $paramKey = 'parameter_' . $param->id;
@@ -158,6 +184,15 @@ class RpsController extends Controller
                 if ($nilaiParam == 1) {
                     $nilaiAkhir += $param->bobot;
                 }
+
+                // Simpan data untuk bs_hasil_review_rps
+                $hasilReviewData[] = [
+                    'rps_detail_id' => $rpsId,
+                    'parameter_id' => $param->id,
+                    'skor' => (string) $nilaiParam,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
             }
 
             // Tentukan status baru berdasarkan action
@@ -165,6 +200,10 @@ class RpsController extends Controller
 
             // Update status RPS
             $rps->update(['status' => $statusBaru]);
+
+            // Delete hasil review lama dan insert yang baru untuk update case
+            DB::table('bs_hasil_review_rps')->where('rps_detail_id', $rpsId)->delete();
+            DB::table('bs_hasil_review_rps')->insert($hasilReviewData);
 
             // Map action to enum status_review value
             $statusReview = ($action === 'setuju') ? 'disetujui' : 'revisi';

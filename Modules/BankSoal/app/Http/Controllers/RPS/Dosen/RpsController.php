@@ -15,19 +15,9 @@ use Modules\BankSoal\Models\Shared\MataKuliah;
 use Modules\BankSoal\Models\Shared\Cpl;
 use Modules\BankSoal\Models\Shared\Cpmk;
 use Modules\BankSoal\Models\RpsDetail;
+use Modules\BankSoal\Models\PeriodeRps;
 use Modules\BankSoal\Enums\RpsStatus;
 
-/**
- * RpsController - RPS (Rencana Pembelajaran Semester) Management
- * Role Access: Dosen
- * Workflow:
- * 1. index() -> Tampilkan halaman form + history
- * 2. store() -> Simpan dokumen RPS baru 
- * 3. getCplByMk() -> Fetch available CPL untuk form
- * 4. getCpmkByCpl() -> Fetch available CPMK berdasarkan CPL yang dipilih
- * 5. getDosenByMk() -> Fetch list dosen untuk multi-select
- * 6. previewDokumen() -> Stream dokumen PDF untuk preview di modal
- */
 class RpsController extends Controller
 {
     // Halaman utama RPS untuk Dosen
@@ -72,6 +62,39 @@ class RpsController extends Controller
             ? $currentYear . '/' . ($currentYear + 1)
             : ($currentYear - 1) . '/' . $currentYear;
 
+        // Fetch Active Periode
+        $activePeriode = PeriodeRps::where('is_active', 'true')->first();
+        
+        $isUploadOpen = false;
+        $tenggatH7 = false;
+        $unsubmittedMkCodes = [];
+        $daysLeft = 0;
+        
+        if ($activePeriode) {
+            $now   = now('Asia/Jakarta');
+            $start = $activePeriode->tanggal_mulai->timezone('Asia/Jakarta')->startOfDay();
+            $end   = $activePeriode->tanggal_selesai->timezone('Asia/Jakarta')->endOfDay();
+
+            // Cek apakah sekarang dalam rentang periode aktif
+            if ($now->between($start, $end)) {
+                $isUploadOpen = true;
+                
+                // Cek H-7 Reminder
+                $daysLeft = (int) $now->diffInDays($activePeriode->tanggal_selesai, false); // false agar bisa negatif jika terlewat (tapi already blocked by between)
+                
+                if ($daysLeft <= 7 && $daysLeft >= 0) {
+                    $tenggatH7 = true;
+                    // Ambil daftar kode MK yang diampu user ini tapi RPS-nya belum disubmit/aktif
+                    $unsubmittedMkCodes = DB::table('bs_mata_kuliah')
+                        ->join('bs_dosen_pengampu_mk', 'bs_mata_kuliah.id', '=', 'bs_dosen_pengampu_mk.mk_id')
+                        ->where('bs_dosen_pengampu_mk.user_id', $user->id)
+                        ->whereNotIn('bs_mata_kuliah.id', $mkIdsWithActiveRps)
+                        ->pluck('bs_mata_kuliah.kode')
+                        ->toArray();
+                }
+            }
+        }
+
         $rpsUploaded = $riwayat->isNotEmpty();
 
         return view('banksoal::pages.rps.dosen.index', compact(
@@ -81,6 +104,11 @@ class RpsController extends Controller
             'semester',
             'academicYear',
             'rpsUploaded',
+            'activePeriode',
+            'isUploadOpen',
+            'tenggatH7',
+            'unsubmittedMkCodes',
+            'daysLeft'
         ));
     }
 
@@ -104,6 +132,20 @@ class RpsController extends Controller
             'dokumen.mimes' => 'Hanya menerima File berformat PDF',
             'dokumen.required' => 'File RPS harus diunggah',
         ]);
+
+        // Cek apakah Periode RPS Aktif dan Valid
+        $activePeriode = PeriodeRps::where('is_active', 'true')->first();
+        if (!$activePeriode) {
+            return back()->withInput()->with('error', 'Sesi unggah RPS sedang ditutup atau belum ada jadwal yang aktif.');
+        }
+
+        $now   = now('Asia/Jakarta');
+        $start = $activePeriode->tanggal_mulai->timezone('Asia/Jakarta')->startOfDay();
+        $end   = $activePeriode->tanggal_selesai->timezone('Asia/Jakarta')->endOfDay();
+
+        if (!$now->between($start, $end)) {
+            return back()->withInput()->with('error', 'Di luar jadwal unggah RPS. Tenggat waktu sudah terlewati atau jadwal belum dimulai.');
+        }
 
         // Cek duplikasi RPS untuk mata kuliah + semester + tahun ajaran + dosen yang sama
         $existingRps = RpsDetail::where('mk_id', $validated['mata_kuliah_id'])
@@ -159,6 +201,12 @@ class RpsController extends Controller
             $rps->cpls()->sync($validated['cpl_ids']);
             $rps->cpmks()->sync($validated['cpmk_ids']);
             $rps->dosens()->sync($dosenIds);
+
+            // Update is_rps menjadi 'TRUE' di bs_dosen_pengampu_mk untuk semua dosen
+            DB::table('bs_dosen_pengampu_mk')
+                ->whereIn('user_id', $dosenIds)
+                ->where('mk_id', $validated['mata_kuliah_id'])
+                ->update(['is_rps' => 'TRUE']);
 
             // Commit perubahan ke DB
             DB::commit();

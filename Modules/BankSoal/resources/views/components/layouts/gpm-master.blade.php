@@ -17,7 +17,7 @@
         .sidebar { width: 260px; height: 100vh; position: fixed; top: 0; left: 0; background-color: #ffffff; border-right: 1px solid #f1f1f1; z-index: 1000; }
         .main-content { margin-left: 260px; min-height: 100vh; }
         .topbar { height: 80px; background-color: #ffffff; border-bottom: 1px solid #f1f1f1; display: flex; align-items: center; justify-content: space-between; padding: 0 2.5rem; }
-        .nav-link-custom { color: #6c757d; font-weight: 500; padding: 0.8rem 1.5rem; border-radius: 0.5rem; margin: 0.2rem 1rem; transition: all 0.2s; font-size: 0.95rem; }
+        .nav-link-custom { color: #6c757d; font-weight: 500; padding: 0.8rem 1rem; border-radius: 0.5rem; margin: 0.2rem 0.8rem; transition: all 0.2s; font-size: 0.95rem; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .nav-link-custom:hover { background-color: #f8f9fa; color: #2563eb; }
         .nav-link-custom.active { background-color: #2563eb; color: white; }
         .icon-width { width: 25px; text-align: center; }
@@ -44,12 +44,12 @@
 
             <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.rps.gpm.validasi-rps*') ? 'active' : '' }}" 
             href="{{ route('banksoal.rps.gpm.validasi-rps') }}">
-                <i class="fas fa-check-circle icon-width me-2"></i> Validasi RPS
+                <i class="fas fa-check-circle icon-width me-2"></i> Manajemen RPS
             </a>
 
             <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.soal.gpm.validasi-bank-soal*') ? 'active' : '' }}" 
             href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}">
-                <i class="fas fa-question-circle icon-width me-2"></i> Validasi Bank Soal
+                <i class="fas fa-book icon-width me-2"></i> Manajemen Bank Soal
             </a>
 
             <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.rps.gpm.index*') ? 'active' : '' }}" 
