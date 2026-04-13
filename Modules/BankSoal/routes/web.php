@@ -54,6 +54,11 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             // Banksoal - Dosen
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::get('/', [BankSoalController::class, 'index'])->name('index');
+                Route::get('/create', [BankSoalController::class, 'create'])->name('create');
+                Route::post('/store', [BankSoalController::class, 'store'])->name('store');
+                Route::get('/{id}', [BankSoalController::class, 'show'])->name('show');
+                Route::get('/{id}/edit', [BankSoalController::class, 'edit'])->name('edit');
+                Route::put('/{id}', [BankSoalController::class, 'update'])->name('update');
             });
             
            // Banksoal - GPM
@@ -62,6 +67,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::get('/validasi-bank-soal', [ValidasiBankSoalController::class, 'index'])->name('validasi-bank-soal');
                 Route::get('/validasi-bank-soal/review', [ValidasiBankSoalController::class, 'review'])->name('validasi-bank-soal.review');
                 Route::get('/riwayat-validasi/bank-soal', [RiwayatValidasiController::class, 'bankSoal'])->name('riwayat-validasi.bank-soal');
+                Route::get('/riwayat-validasi/bank-soal/{id}/detail', [RiwayatValidasiController::class, 'detailBankSoal'])->name('riwayat-validasi.bank-soal.detail');
             });
 
             // Banksoal - Admin
@@ -100,7 +106,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             // Bank Soal - GPM
             Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
                 Route::post('/validasi-bank-soal/store', [ValidasiBankSoalController::class, 'store'])->name('validasi-bank-soal.store');            
-            
+                Route::put('/validasi-bank-soal/update/{id}', [ValidasiBankSoalController::class, 'update'])->name('validasi-bank-soal.update');
             });
         });
 

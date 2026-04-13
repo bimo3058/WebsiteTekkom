@@ -60,10 +60,17 @@
 
         <div class="mt-auto px-4 border-top pt-4">
             <div class="d-flex align-items-center">
-                <img src="https://ui-avatars.com/api/?name=Prof+Aris&background=f1f5f9&color=334155" class="rounded-circle me-3" width="40" height="40" alt="Profile">
+                <div class="rounded-circle me-3 d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; background-color: #f1f5f9; color: #334155; font-weight: bold; font-size: 0.9rem;">
+                    {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                </div>
                 <div>
-                    <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.9rem;">Prof. Aris S.</h6>
-                    <small class="text-muted" style="font-size: 0.75rem;">Administrator</small>
+                    <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">
+                        {{ auth()->user()->name }}
+                    </h6>
+                    <small class="text-muted" style="font-size: 0.75rem;">
+                        {{-- Menampilkan role GPM atau nama role user dari database --}}
+                        {{ auth()->user()->roles->first()->name ?? 'Dosen GPM' }}
+                    </small>
                 </div>
             </div>
         </div>
@@ -77,14 +84,16 @@
             </div>
             <div class="dropdown">
                 <button class="btn text-white rounded-3 px-4 py-2 fw-semibold" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #2563eb; font-size: 0.9rem;">
-                    {{ Auth::check() ? Auth::user()->name : 'Prof. Dr. Aris S. (GPM)' }} 
+                    {{ auth()->user()->name }} 
                     <i class="fas fa-chevron-down ms-2" style="font-size: 0.75rem;"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" style="border-radius: 0.5rem; min-width: 200px;">
                     <li>
                         <div class="px-3 py-2">
-                            <span class="d-block fw-bold text-dark" style="font-size: 0.9rem;">{{ Auth::check() ? Auth::user()->name : 'Prof. Dr. Aris S.' }}</span>
-                            <span class="d-block text-muted" style="font-size: 0.8rem;">Administrator / GPM</span>
+                            <span class="d-block fw-bold text-dark" style="font-size: 0.9rem;">{{ auth()->user()->name }}</span>
+                            <span class="d-block text-muted" style="font-size: 0.8rem;">
+                                {{ auth()->user()->roles->first()->name ?? 'Dosen GPM' }}
+                            </span>
                         </div>
                     </li>
                     <li><hr class="dropdown-divider"></li>

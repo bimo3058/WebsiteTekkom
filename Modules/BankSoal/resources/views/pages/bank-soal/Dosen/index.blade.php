@@ -20,7 +20,7 @@
                     <i class="fas fa-paper-plane"></i> Ajukan Soal
                 </a>
                 <div class="btn-split">
-                    <a href="{{ route('banksoal.soal.dosen.index') }}" class="btn-primary">
+                    <a href="{{ route('banksoal.soal.dosen.create') }}" class="btn-primary">
                         <i class="fas fa-plus"></i> Buat Soal
                     </a>
                     <button class="btn-divider"><i class="fas fa-chevron-down"></i></button>
@@ -33,15 +33,44 @@
         @endcan
     </div>
 
+    @if(session('success'))
+        <div style="padding: 15px; margin-bottom: 20px; background-color: #dcfce3; color: #166534; border-radius: 8px;">
+            <i class="fas fa-check-circle"></i> {{ session('success') }}
+        </div>
+    @endif
+
     {{-- ── TABEL SOAL ─────────────────────────────── --}}
     <div class="section-card">
-        <div class="toolbar">
+        <form action="{{ route('banksoal.soal.dosen.index') }}" method="GET" class="toolbar" style="justify-content: flex-start; flex-wrap: wrap;">
             <div class="search-wrap">
                 <i class="fas fa-search"></i>
-                <input type="text" class="search-input" placeholder="Search questions, course, or topics..." id="searchSoal">
+                <input type="text" name="searchSoal" class="search-input" value="{{ request('searchSoal') }}" placeholder="Search questions, course, or topics...">
             </div>
-            <button class="filter-btn"><i class="fas fa-sliders-h"></i> Filter</button>
-        </div>
+            
+            <select name="mk_id" class="filter-btn" style="appearance: auto; cursor: pointer; outline: none; background: #fff;">
+                <option value="">Semua Mata Kuliah...</option>
+                @foreach($mataKuliahDosen as $mk)
+                    <option value="{{ $mk->id }}" {{ request('mk_id') == $mk->id ? 'selected' : '' }}>{{ $mk->nama }}</option>
+                @endforeach
+            </select>
+
+            <select name="kesulitan" class="filter-btn" style="appearance: auto; cursor: pointer; outline: none; background: #fff;">
+                <option value="">Semua Kesulitan...</option>
+                <option value="easy" {{ request('kesulitan') == 'easy' ? 'selected' : '' }}>Mudah</option>
+                <option value="intermediate" {{ request('kesulitan') == 'intermediate' ? 'selected' : '' }}>Sedang</option>
+                <option value="advanced" {{ request('kesulitan') == 'advanced' ? 'selected' : '' }}>Sulit</option>
+            </select>
+
+            <button type="submit" class="filter-btn" style="background: var(--blue-50, #eff6ff); color: var(--blue, #2563eb); border-color: var(--blue-200, #bfdbfe);">
+                <i class="fas fa-filter"></i> Filter
+            </button>
+            
+            @if(request()->hasAny(['searchSoal', 'mk_id', 'kesulitan']))
+                <a href="{{ route('banksoal.soal.dosen.index') }}" class="filter-btn" style="color: #ef4444; border-color: #fca5a5; text-decoration: none; background: #fef2f2;">
+                    <i class="fas fa-times"></i> Reset
+                </a>
+            @endif
+        </form>
 
         <div class="table-wrap">
             <table id="tableSoal">
@@ -57,58 +86,42 @@
                 <tbody>
                     @forelse($soals ?? [] as $soal)
                         <tr>
-                            <td class="id-cell">{{ $soal->kode }}</td>
+                            <td class="id-cell">{{ $soal->kode_soal }}</td>
                             <td>{{ $soal->mataKuliah->nama ?? '-' }}</td>
-                            <td>{{ $soal->topik }}</td>
+                            <td>{{ strip_tags(\Illuminate\Support\Str::limit($soal->soal, 50)) }}</td>
                             <td>
-                                @php $diff = strtolower($soal->tingkat_kesulitan ?? ''); @endphp
-                                <span class="badge badge-{{ $diff === 'hard' ? 'hard' : ($diff === 'easy' ? 'easy' : 'medium') }}">
-                                    {{ ucfirst($soal->tingkat_kesulitan) }}
+                                @php $diff = strtolower($soal->kesulitan ?? ''); @endphp
+                                <span class="badge badge-{{ $diff === 'advanced' ? 'hard' : ($diff === 'easy' ? 'easy' : 'medium') }}">
+                                    {{ ucfirst($soal->kesulitan) }}
                                 </span>
                             </td>
                             <td>
-                                @include('banksoal::partials.dosen._soal-actions')
+                                @include('banksoal::partials.dosen._soal-actions', ['soal' => $soal])
                             </td>
                         </tr>
                     @empty
-                        {{-- Demo rows --}}
-                        @foreach([
-                            ['Q-101','Algorithms','Dynamic Programming','Hard'],
-                            ['Q-102','Data Structures','Binary Trees','Medium'],
-                            ['Q-103','Databases','SQL Joins','Easy'],
-                            ['Q-104','Networks','TCP/IP','Medium'],
-                        ] as $row)
-                            <tr>
-                                <td class="id-cell">{{ $row[0] }}</td>
-                                <td>{{ $row[1] }}</td>
-                                <td>{{ $row[2] }}</td>
-                                <td>
-                                    <span class="badge badge-{{ strtolower($row[3]) === 'hard' ? 'hard' : (strtolower($row[3]) === 'easy' ? 'easy' : 'medium') }}">
-                                        {{ $row[3] }}
-                                    </span>
-                                </td>
-                                <td>
-                                    @include('banksoal::partials.dosen._soal-actions')
-                                </td>
-                            </tr>
-                        @endforeach
+                        <tr>
+                            <td colspan="5" style="text-align: center; padding: 30px; color: #64748b;">
+                                <i class="fas fa-folder-open" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+                                Belum ada soal di dalam bank soal.
+                            </td>
+                        </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        <div class="table-footer">
-            <span class="table-info">
-                Showing 1 to {{ $soals?->count() ?? 4 }} of {{ $soals?->total() ?? 24 }} questions
-            </span>
-            <div class="pagination">
-                <a href="#" class="page-btn disabled"><i class="fas fa-chevron-left" style="font-size:11px"></i> Previous</a>
-                <a href="#" class="page-btn active">1</a>
-                <a href="#" class="page-btn">2</a>
-                <a href="#" class="page-btn">3</a>
-                <span class="page-btn" style="border:none;cursor:default">...</span>
-                <a href="#" class="page-btn">Next <i class="fas fa-chevron-right" style="font-size:11px"></i></a>
-            </div>
+        <div class="table-footer" style="padding: 10px 0;">
+            @if(isset($soals) && $soals->count() > 0)
+                <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                    <span class="table-info">
+                        Showing {{ $soals->firstItem() }} to {{ $soals->lastItem() }} of {{ $soals->total() }} questions
+                    </span>
+                    <div style="flex-grow: 1; display:flex; justify-content: flex-end;">
+                        {{ $soals->appends(request()->query())->links() }}
+                    </div>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -148,8 +161,8 @@
                             <tr>
                                 <td class="id-cell">{{ $pkg->kode }}</td>
                                 <td>{{ $pkg->nama }}</td>
-                                <td>{{ $pkg->cpls }}</td>
-                                <td>{{ $pkg->cpmks }}</td>
+                                <td>{{ $pkg->str_cpls }}</td>
+                                <td>{{ $pkg->str_cpmks }}</td>
                                 <td><strong>{{ $pkg->jumlah_soal }}</strong></td>
                                 <td>
                                     <div class="row-actions">
@@ -159,42 +172,28 @@
                                 </td>
                             </tr>
                         @empty
-                            @foreach([
-                                ['CS-201','Algorithms','CPL-01, CPL-02','CPMK-01, CPMK-03',50],
-                                ['CS-202','Data Structures','CPL-02, CPL-04','CPMK-02, CPMK-05',45],
-                                ['CS-301','Databases','CPL-03','CPMK-01, CPMK-02',60],
-                                ['CS-305','Networks','CPL-01, CPL-05','CPMK-04',40],
-                            ] as $row)
-                                <tr>
-                                    <td class="id-cell">{{ $row[0] }}</td>
-                                    <td>{{ $row[1] }}</td>
-                                    <td>{{ $row[2] }}</td>
-                                    <td>{{ $row[3] }}</td>
-                                    <td><strong>{{ $row[4] }}</strong></td>
-                                    <td>
-                                        <div class="row-actions">
-                                            <button class="action-btn" title="Lihat"><i class="fas fa-eye"></i></button>
-                                            <button class="action-btn" title="Tarik"><i class="fas fa-download"></i></button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @endforeach
+                            <tr>
+                                <td colspan="6" style="text-align: center; padding: 30px; color: #64748b;">
+                                    <i class="fas fa-box-open" style="font-size: 24px; margin-bottom: 10px; display: block;"></i>
+                                    Belum ada paket soal yang tersedia untuk ditarik.
+                                </td>
+                            </tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
 
-            <div class="table-footer">
-                <span class="table-info">
-                    Showing 1 to {{ $packages?->count() ?? 4 }} of {{ $packages?->total() ?? 12 }} packages
-                </span>
-                <div class="pagination">
-                    <a href="#" class="page-btn disabled">Previous</a>
-                    <a href="#" class="page-btn active">1</a>
-                    <a href="#" class="page-btn">2</a>
-                    <a href="#" class="page-btn">3</a>
-                    <a href="#" class="page-btn">Next</a>
-                </div>
+            <div class="table-footer" style="padding: 10px 0;">
+                @if(isset($packages) && $packages->count() > 0)
+                    <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                        <span class="table-info">
+                            Showing {{ $packages->firstItem() }} to {{ $packages->lastItem() }} of {{ $packages->total() }} packages
+                        </span>
+                        <div style="flex-grow: 1; display:flex; justify-content: flex-end;">
+                            {{ $packages->appends(request()->query())->links() }}
+                        </div>
+                    </div>
+                @endif
             </div>
         </div>
     @else
