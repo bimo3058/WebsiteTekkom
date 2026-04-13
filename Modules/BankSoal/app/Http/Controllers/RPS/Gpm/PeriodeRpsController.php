@@ -28,6 +28,7 @@ class PeriodeRpsController extends Controller
 
         DB::beginTransaction();
         try {
+            // Jika checkbox is_active dicentang, matikan periode aktif lainnya
             if (!empty($validated['is_active'])) {
                 PeriodeRps::where('is_active', 'true')->update(['is_active' => 'false']);
             }
@@ -64,6 +65,7 @@ class PeriodeRpsController extends Controller
 
         DB::beginTransaction();
         try {
+            // Jika checkbox is_active dicentang, matikan periode aktif lainnya
             if (!empty($validated['is_active'])) {
                 PeriodeRps::where('id', '!=', $periode->id)
                     ->where('is_active', 'true')
@@ -95,6 +97,19 @@ class PeriodeRpsController extends Controller
             return redirect()->route('banksoal.rps.gpm.validasi-rps')->with('success', 'Berhasil menghapus periode unggah RPS.');
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan sistem saat menghapus data.');
+        }
+    }
+
+    public function closeSession(Request $request)
+    {
+        DB::beginTransaction();
+        try {
+            PeriodeRps::where('is_active', 'true')->update(['is_active' => 'false']);
+            DB::commit();
+            return redirect()->route('banksoal.rps.gpm.validasi-rps')->with('success', 'Berhasil menutup sesi pengajuan RPS.');
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan sistem saat menutup sesi.');
         }
     }
 }
