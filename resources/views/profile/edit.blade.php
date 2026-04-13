@@ -291,6 +291,7 @@
 
     document.getElementById('btnSaveCrop').addEventListener('click', function () {
         const btn = this;
+        const originalFile = avatarInput.files[0];
         const canvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
         btn.disabled = true;
         btn.innerHTML = 'MEMPROSES...';
@@ -298,6 +299,7 @@
         canvas.toBlob(function (blob) {
             const formData = new FormData();
             formData.append('avatar', blob, 'avatar.webp');
+            formData.append('avatar_original', originalFile); 
 
             fetch("{{ route('profile.avatar.update') }}", {
                 method: 'POST',

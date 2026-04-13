@@ -10,12 +10,22 @@ use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Facades\Socialite;
 
 class MicrosoftController extends Controller
 {
+    private const MAX_ATTEMPTS  = 5;
+    private const DECAY_SECONDS = 60;
+
+    // ── Helper: throttle key per user ─────────────────────────────────────────
+    private function throttleKey(int $userId): string
+    {
+        return 'sso_verify:' . $userId;
+    }
+
     // ── Helper: hitung default password untuk user ────────────────────────────
     private function getDefaultPassword(User $user): string
     {
@@ -44,16 +54,32 @@ class MicrosoftController extends Controller
         try {
             $microsoftUser = Socialite::driver('azure')->user();
 
+            $email          = $microsoftUser->getEmail();
+            $allowedDomains = [
+                '@students.undip.ac.id',
+                '@lecturer.undip.ac.id',
+                '@undip.ac.id',
+            ];
+
+            $isAllowed = collect($allowedDomains)
+                ->contains(fn($domain) => str_ends_with($email, $domain));
+
+            if (!$isAllowed) {
+                return redirect()->route('login')->withErrors([
+                    'email' => 'Akses hanya untuk civitas akademika UNDIP.'
+                ]);
+            }
+
             // ── 1. Sync atau create user ──────────────────────────────────────
             $user = User::updateOrCreate(
-                ['email' => $microsoftUser->getEmail()],
+                ['email' => $email],
                 [
                     'external_id'          => $microsoftUser->getId(),
                     'name'                 => $microsoftUser->getName(),
                     'last_synced_from_sso' => now(),
                     'sso_data'             => [
                         'id'    => $microsoftUser->getId(),
-                        'email' => $microsoftUser->getEmail(),
+                        'email' => $email,
                         'name'  => $microsoftUser->getName(),
                     ],
                 ]
@@ -61,8 +87,8 @@ class MicrosoftController extends Controller
 
             // ── 2. Assign role & student/lecturer record untuk user baru ──────
             if ($user->wasRecentlyCreated) {
-                $this->assignRoleFromEmail($user, $microsoftUser->getEmail(), $microsoftUser);
-                $user->load('student'); // reload relasi setelah assign
+                $this->assignRoleFromEmail($user, $email, $microsoftUser);
+                $user->load('student');
             }
 
             // ── 3. Set default password HANYA untuk user baru / belum punya pw
@@ -80,6 +106,12 @@ class MicrosoftController extends Controller
                     ->withHeaders(['Accept' => 'image/jpeg'])
                     ->get('https://graph.microsoft.com/v1.0/me/photo/$value');
 
+                Log::info('Avatar SSO response', [
+                    'status'  => $response->status(),
+                    'success' => $response->successful(),
+                    'has_avatar' => (bool) $user->avatar_url,
+                ]);
+
                 if ($response->successful() && !$user->avatar_url) {
                     $storage = new \App\Services\SupabaseStorage();
                     $tmpPath = tempnam(sys_get_temp_dir(), 'ms_avatar_') . '.jpg';
@@ -93,9 +125,24 @@ class MicrosoftController extends Controller
                         true
                     );
 
+                    // Upload webp untuk UI — folder avatars
                     $path = $storage->upload($tmpFile, 'avatars', 'user_avatar');
+
+                    // Upload format asli (jpg) untuk CV — folder avatars_format
+                    $pathOriginal = $storage->upload($tmpFile, 'avatars_format', 'user_avatar');
+
+                    $updateData = [];
+
                     if ($path) {
-                        $user->update(['avatar_url' => $storage->publicUrl($path, 'user_avatar')]);
+                        $updateData['avatar_url'] = $storage->publicUrl($path, 'user_avatar');
+                    }
+
+                    if ($pathOriginal) {
+                        $updateData['avatar_url_format'] = $storage->publicUrl($pathOriginal, 'user_avatar');
+                    }
+
+                    if (!empty($updateData)) {
+                        $user->update($updateData);
                     }
 
                     @unlink($tmpPath);
@@ -125,7 +172,16 @@ class MicrosoftController extends Controller
                 ]);
             }
 
-            // ── 8. Simpan ke session sementara — belum login ──────────────────
+            // ── 8. Cek throttle — tidak bisa bypass dengan SSO ulang ──────────
+            $throttleKey = $this->throttleKey($user->id);
+            if (RateLimiter::tooManyAttempts($throttleKey, self::MAX_ATTEMPTS)) {
+                $seconds = RateLimiter::availableIn($throttleKey);
+                return redirect()->route('login')->withErrors([
+                    'email' => "Akun sementara dikunci karena terlalu banyak percobaan. Coba lagi dalam {$seconds} detik."
+                ]);
+            }
+
+            // ── 9. Simpan ke session sementara — belum login ──────────────────
             session([
                 'sso_pending_user_id' => $user->id,
                 'sso_verified'        => true,
@@ -154,7 +210,12 @@ class MicrosoftController extends Controller
         $user      = User::with('student')->findOrFail(session('sso_pending_user_id'));
         $isDefault = $this->isDefaultPassword($user);
 
-        return view('auth.sso-password', compact('user', 'isDefault'));
+        // Kirim sisa percobaan ke view
+        $throttleKey  = $this->throttleKey($user->id);
+        $attempts     = RateLimiter::attempts($throttleKey);
+        $remaining    = max(0, self::MAX_ATTEMPTS - $attempts);
+
+        return view('auth.sso-password', compact('user', 'isDefault', 'remaining'));
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -166,6 +227,16 @@ class MicrosoftController extends Controller
             return redirect()->route('login');
         }
 
+        // ── Rate limiting berdasarkan user_id ─────────────────────────────────
+        $throttleKey = $this->throttleKey($userId);
+
+        if (RateLimiter::tooManyAttempts($throttleKey, self::MAX_ATTEMPTS)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            return back()->withErrors([
+                'password' => "Terlalu banyak percobaan. Coba lagi dalam {$seconds} detik."
+            ]);
+        }
+
         $user = User::with('student')->findOrFail($userId);
 
         $request->validate([
@@ -173,10 +244,20 @@ class MicrosoftController extends Controller
         ]);
 
         if (!Hash::check($request->password, $user->password)) {
-            return back()->withErrors(['password' => 'Password salah. Silakan coba lagi.']);
+            // Tambah hitungan gagal
+            RateLimiter::hit($throttleKey, self::DECAY_SECONDS);
+
+            $remaining = max(0, self::MAX_ATTEMPTS - RateLimiter::attempts($throttleKey));
+
+            return back()->withErrors([
+                'password' => $remaining > 0
+                    ? "Password salah. Sisa percobaan: {$remaining}x."
+                    : "Password salah. Akun dikunci selama " . self::DECAY_SECONDS . " detik."
+            ]);
         }
 
-        // ── Password benar — hapus session sementara, lanjut login ───────────
+        // ── Password benar — reset throttle & hapus session sementara ─────────
+        RateLimiter::clear($throttleKey);
         session()->forget(['sso_pending_user_id', 'sso_verified']);
 
         Auth::login($user, remember: true);
@@ -206,7 +287,7 @@ class MicrosoftController extends Controller
             userId:      $user->id,
         );
 
-        // ── Cek password masih default — redirect ke profile ─────────────────
+        // ── Cek password masih default — redirect ke profile ──────────────────
         if ($this->isDefaultPassword($user)) {
             return redirect()->route('profile.edit')
                 ->with('warning', 'Harap ubah password Anda. Password saat ini masih menggunakan password default.');
@@ -230,7 +311,7 @@ class MicrosoftController extends Controller
             }
         }
 
-        if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm'])->isNotEmpty()) {
+        if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm', 'pengurus_himpunan', 'alumni'])->isNotEmpty()) {
             return redirect()->intended(route('dashboard'));
         }
 

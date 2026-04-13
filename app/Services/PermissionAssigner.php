@@ -11,14 +11,16 @@ use Illuminate\Support\Facades\Log;
 class PermissionAssigner
 {
     private const ROLE_MODULE_MAPPING = [
-        'admin_banksoal' => ['banksoal'],
-        'admin_capstone' => ['capstone'],
-        'admin_eoffice' => ['eoffice'],
-        'admin_kemahasiswaan' => ['kemahasiswaan'],
-        'dosen' => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
-        'mahasiswa' => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
-        'gpm' => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
-        'superadmin' => ['all'],
+        'admin_banksoal'        => ['banksoal'],
+        'admin_capstone'        => ['capstone'],
+        'admin_eoffice'         => ['eoffice'],
+        'admin_kemahasiswaan'   => ['kemahasiswaan'],
+        'dosen'                 => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
+        'mahasiswa'           => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
+        'gpm'                 => ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'],
+        'pengurus_himpunan'   => ['kemahasiswaan'],
+        'alumni'              => ['kemahasiswaan'],
+        'superadmin'          => ['all'],
     ];
 
     private const ACTIONS = ['view', 'edit', 'delete'];

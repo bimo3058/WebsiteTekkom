@@ -1,9 +1,20 @@
 <x-manajemenmahasiswa::layouts.master>
     <div class="flex justify-between items-center">
-        <h1>Hello Mahasiswa</h1>
+        <h1>Hello Alumni</h1>
         <div class="flex items-center gap-3">
 
-            {{-- Switch mode — hanya muncul kalau punya role lain --}}
+            {{-- Switch mode — tampil semua role yang dimiliki kecuali mode aktif saat ini --}}
+            @if(auth()->user()->hasRole('mahasiswa'))
+                <form method="POST" action="{{ route('manajemenmahasiswa.switch.mode') }}">
+                    @csrf
+                    <input type="hidden" name="mode" value="mahasiswa">
+                    <button type="submit"
+                        class="text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-200 hover:border-blue-400 px-3 py-1.5 rounded-lg transition-all">
+                        Lihat sebagai Mahasiswa
+                    </button>
+                </form>
+            @endif
+
             @if(auth()->user()->hasRole('pengurus_himpunan'))
                 <form method="POST" action="{{ route('manajemenmahasiswa.switch.mode') }}">
                     @csrf
@@ -11,17 +22,6 @@
                     <button type="submit"
                         class="text-sm font-medium text-purple-600 hover:text-purple-800 border border-purple-200 hover:border-purple-400 px-3 py-1.5 rounded-lg transition-all">
                         Lihat sebagai Pengurus
-                    </button>
-                </form>
-            @endif
-
-            @if(auth()->user()->hasRole('alumni'))
-                <form method="POST" action="{{ route('manajemenmahasiswa.switch.mode') }}">
-                    @csrf
-                    <input type="hidden" name="mode" value="alumni">
-                    <button type="submit"
-                        class="text-sm font-medium text-green-600 hover:text-green-800 border border-green-200 hover:border-green-400 px-3 py-1.5 rounded-lg transition-all">
-                        Lihat sebagai Alumni
                     </button>
                 </form>
             @endif
