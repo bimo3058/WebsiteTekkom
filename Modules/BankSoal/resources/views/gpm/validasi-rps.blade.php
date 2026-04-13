@@ -40,6 +40,15 @@
                 if(topbarTitle) topbarTitle.textContent = "Validasi RPS";
                 if(topbarSubtitle) topbarSubtitle.textContent = "Pantau riwayat dokumen RPS yang telah direview";
 
+                // Flash messages auto close
+                setTimeout(() => {
+                    const alerts = document.querySelectorAll('.alert-dismissible');
+                    alerts.forEach(alert => {
+                        const bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    });
+                }, 5000);
+
                 // Debounce function
                 function debounce(func, delay) {
                     let timeoutId;
@@ -109,24 +118,76 @@
             });
         </script>
 
-        <div class="nav-tabs-custom mb-4">
-            <ul class="nav nav-tabs border-0" id="rpsTab" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active text-decoration-none" id="menunggu-tab" data-bs-toggle="tab" data-bs-target="#menunggu" type="button" role="tab">
-                        Menunggu Validasi <span class="badge-count">{{ $rpsDiajukan->total() }}</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link text-decoration-none" id="revisi-tab" data-bs-toggle="tab" data-bs-target="#revisi" type="button" role="tab">
-                        Menunggu Revisi <span class="badge-count">{{ $rpsRevisi->total() }}</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link text-decoration-none" id="disetujui-tab" data-bs-toggle="tab" data-bs-target="#disetujui" type="button" role="tab">
-                        Disetujui <span class="badge-count">{{ $rpsDisetujui->total() }}</span>
-                    </button>
-                </li>
-            </ul>
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
+                <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if($activePeriode)
+            <div class="card border-0 mb-4 rounded-4" style="box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); background: #f8fafc; border-left: 4px solid {{ $isPeriodeRunning ? '#10b981' : '#94a3b8' }} !important;">
+                <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center flex-column flex-md-row gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: {{ $isPeriodeRunning ? '#d1fae5' : '#e2e8f0' }}; color: {{ $isPeriodeRunning ? '#059669' : '#64748b' }};">
+                            <i class="fas fa-calendar-check fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1 fw-bold text-dark" style="font-size: 1rem;">{{ $activePeriode->judul }}</h6>
+                            <div class="text-muted" style="font-size: 0.85rem;">
+                                Tenggat: {{ \Carbon\Carbon::parse($activePeriode->tanggal_mulai)->translatedFormat('d M Y') }} s.d. {{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->translatedFormat('d M Y') }}
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        @if($isPeriodeRunning)
+                            <span class="badge bg-success py-2 px-3 rounded-pill" style="background-color: #10b981 !important; color: white !important; font-weight: 500; font-size: 0.85rem;">
+                                <i class="fas fa-circle me-1" style="font-size: 0.5rem; vertical-align: middle;"></i> Sesi Dibuka
+                            </span>
+                        @else
+                            <span class="badge bg-secondary py-2 px-3 rounded-pill" style="background-color: #64748b !important; color: white !important; font-weight: 500; font-size: 0.85rem;">
+                                <i class="fas fa-times-circle me-1" style="font-size: 0.8rem; vertical-align: middle;"></i> Sesi Berakhir
+                            </span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="alert alert-secondary border-0 mb-4 rounded-4" style="background-color: #f8fafc; color: #475569;" role="alert">
+                <i class="fas fa-info-circle me-2"></i> Belum ada jadwal/sesi pengajuan RPS yang ditambahkan.
+            </div>
+        @endif
+
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom" style="border-color: #e2e8f0 !important;">
+            <div class="nav-tabs-custom mb-0" style="border-bottom: none;">
+                <ul class="nav nav-tabs border-0" id="rpsTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active text-decoration-none" id="menunggu-tab" data-bs-toggle="tab" data-bs-target="#menunggu" type="button" role="tab">
+                            Menunggu Validasi <span class="badge-count">{{ $rpsDiajukan->total() }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-decoration-none" id="revisi-tab" data-bs-toggle="tab" data-bs-target="#revisi" type="button" role="tab">
+                            Menunggu Revisi <span class="badge-count">{{ $rpsRevisi->total() }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-decoration-none" id="disetujui-tab" data-bs-toggle="tab" data-bs-target="#disetujui" type="button" role="tab">
+                            Disetujui <span class="badge-count">{{ $rpsDisetujui->total() }}</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            
+            <button type="button" class="btn btn-primary rounded-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalTambah">
+                <i class="fas fa-calendar-plus me-2"></i> Buat Periode
+            </button>
         </div>
 
         <div class="tab-content" id="rpsTabContent">
@@ -405,4 +466,56 @@
         </div>
 
     </div>
+
+    <!-- Modal Tambah Periode -->
+    <div class="modal fade" id="modalTambah" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0">
+                <form action="{{ route('banksoal.rps.gpm.periode-rps.store') }}" method="POST">
+                    @csrf
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold">Buat Jadwal RPS Baru</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-medium text-dark">Judul Periode <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="judul" required placeholder="Contoh: Pengajuan RPS Genap 2025/2026">
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium text-dark">Semester <span class="text-danger">*</span></label>
+                                <select class="form-select" name="semester" required>
+                                    <option value="Ganjil">Ganjil</option>
+                                    <option value="Genap">Genap</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium text-dark">Tahun Ajaran <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="tahun_ajaran" required placeholder="Contoh: 2025/2026">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium text-dark">Tanggal Mulai <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="tanggal_mulai" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium text-dark">Tanggal Selesai (Tenggat) <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="tanggal_selesai" required>
+                        </div>
+                        <div class="form-check form-switch mt-4">
+                            <input class="form-check-input" type="checkbox" name="is_active" id="isActiveAdd" value="1" checked>
+                            <label class="form-check-label ms-2" for="isActiveAdd">Otomatis aktifkan jadwal ini</label>
+                            <div class="form-text mt-1 text-muted" style="font-size: 0.8rem;">GPM hanya bisa membuka 1 sesi pengajuan dalam satu waktu. Mencentang ini akan membatalkan sesi lain yang masih aktif.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary px-4">Buat & Terapkan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 </x-banksoal::layouts.gpm-master>

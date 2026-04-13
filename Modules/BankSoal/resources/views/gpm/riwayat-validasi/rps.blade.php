@@ -38,7 +38,7 @@
 
         <div class="nav-tabs-custom d-flex">
             <a href="#" class="nav-link active text-decoration-none">
-                Selesai Direview <span class="badge-count" style="background-color: #e0e7ff;">15</span>
+                Selesai Direview <span class="badge-count" style="background-color: #e0e7ff;">{{ $riwayat_rps->total() }}</span>
             </a>
         </div>
 
@@ -49,70 +49,67 @@
                         <tr>
                             <th width="30%">MATA KULIAH</th>
                             <th width="25%">DOSEN PENGAMPU</th>
-                            <th width="20%">TANGGAL REVIEW</th>
+                            <th width="20%">TANGGAL DISETUJUI</th>
                             <th width="15%">STATUS AKHIR</th>
                             <th width="10%" class="text-end">AKSI</th>
                         </tr>
                     </thead>
                     <tbody>
+                        @forelse($riwayat_rps as $rps)
                         <tr>
                             <td>
-                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">Struktur Data</div>
-                                <div class="text-muted" style="font-size: 0.8rem;">INF201</div>
+                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $rps->mk_nama }}</div>
+                                <div class="text-muted" style="font-size: 0.8rem;">{{ $rps->kode }} &bull; {{ $rps->semester }}</div>
                             </td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">Budi Santoso</span></td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">30 Agustus 2023</span></td>
+                            <td>
+                                @php
+                                    $dosens = collect(explode(', ', $rps->dosens_list ?? ''))
+                                        ->filter()
+                                        ->map(fn($d) => explode('|', $d)[1] ?? $d);
+                                @endphp
+                                @if($dosens->isNotEmpty())
+                                    <span class="text-muted" style="font-size: 0.9rem;">{{ $dosens->join(', ') }}</span>
+                                @else
+                                    <span class="text-muted fst-italic" style="font-size: 0.85rem;">–</span>
+                                @endif
+                            </td>
+                            <td>
+                                <span class="text-muted" style="font-size: 0.9rem;">
+                                    {{ $rps->tanggal_disetujui ? \Carbon\Carbon::parse($rps->tanggal_disetujui)->translatedFormat('d F Y') : '–' }}
+                                </span>
+                            </td>
                             <td><span class="badge-status status-disetujui">DISETUJUI</span></td>
                             <td class="text-end">
-                                <a href="#" class="btn-action">
+                                <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->rps_id) }}" class="btn-action">
                                     <i class="far fa-eye me-2"></i> Lihat Detail
                                 </a>
                             </td>
                         </tr>
+                        @empty
                         <tr>
-                            <td>
-                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">Algoritma</div>
-                                <div class="text-muted" style="font-size: 0.8rem;">INF202</div>
-                            </td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">Siti Aminah</span></td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">28 Agustus 2023</span></td>
-                            <td><span class="badge-status status-revisi">REVISI</span></td>
-                            <td class="text-end">
-                                <a href="#" class="btn-action">
-                                    <i class="far fa-eye me-2"></i> Lihat Detail
-                                </a>
+                            <td colspan="5" class="text-center py-5">
+                                <div class="text-muted">
+                                    <i class="fas fa-folder-open mb-3" style="font-size: 2.5rem; opacity: 0.4;"></i>
+                                    <h6 class="fw-bold">Belum ada riwayat</h6>
+                                    <p style="font-size: 0.9rem;">Belum ada RPS yang berstatus disetujui.</p>
+                                </div>
                             </td>
                         </tr>
-                        <tr>
-                            <td>
-                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">Basis Data</div>
-                                <div class="text-muted" style="font-size: 0.8rem;">INF203</div>
-                            </td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">Ahmad Fauzi</span></td>
-                            <td><span class="text-muted" style="font-size: 0.9rem;">25 Agustus 2023</span></td>
-                            <td><span class="badge-status status-disetujui">DISETUJUI</span></td>
-                            <td class="text-end">
-                                <a href="#" class="btn-action">
-                                    <i class="far fa-eye me-2"></i> Lihat Detail
-                                </a>
-                            </td>
-                        </tr>
+                        @endforelse
                     </tbody>
                 </table>
             </div>
             
+            @if($riwayat_rps->hasPages())
             <div class="border-top px-4 py-3 d-flex justify-content-between align-items-center">
-                <span class="text-muted" style="font-size: 0.85rem;">Menampilkan 1-3 dari 15 hasil</span>
+                <span class="text-muted" style="font-size: 0.85rem;">
+                    Menampilkan {{ $riwayat_rps->firstItem() }}–{{ $riwayat_rps->lastItem() }} dari {{ $riwayat_rps->total() }} hasil
+                </span>
                 <nav>
-                    <ul class="pagination pagination-custom mb-0">
-                        <li class="page-item disabled"><a class="page-link" href="#"><i class="fas fa-chevron-left" style="font-size: 0.7rem;"></i></a></li>
-                        <li class="page-item active"><a class="page-link" href="#">1</a></li>
-                        <li class="page-item"><a class="page-link" href="#">2</a></li>
-                        <li class="page-item"><a class="page-link" href="#">3</a></li>
-                        <li class="page-item"><a class="page-link" href="#"><i class="fas fa-chevron-right" style="font-size: 0.7rem;"></i></a></li>
-                    </ul>
+                    {{ $riwayat_rps->links('pagination::bootstrap-5') }}
                 </nav>
             </div>
+            @endif
         </div>
 
     </div>

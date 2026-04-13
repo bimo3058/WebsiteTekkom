@@ -51,7 +51,7 @@
                         </div>
                         <div>
                             <p class="text-muted fw-semibold mb-1" style="font-size: 0.85rem;">RPS Menunggu Validasi</p>
-                            <h2 class="fw-bold text-dark mb-0">5</h2>
+                            <h2 class="fw-bold text-dark mb-0">{{ $statRpsMenunggu }}</h2>
                         </div>
                     </div>
                 </div>
@@ -67,7 +67,7 @@
                         </div>
                         <div>
                             <p class="text-muted fw-semibold mb-1" style="font-size: 0.85rem;">Bank Soal Menunggu</p>
-                            <h2 class="fw-bold text-dark mb-0">{{ $tugasPrioritas->where('tipe_dokumen', 'Bank Soal')->count() }}</h2>
+                            <h2 class="fw-bold text-dark mb-0">{{ $statBankSoalMenunggu }}</h2>
                         </div>
                     </div>
                 </div>
@@ -83,7 +83,7 @@
                         </div>
                         <div>
                             <p class="text-muted fw-semibold mb-1" style="font-size: 0.85rem;">Selesai Direview Bulan Ini</p>
-                            <h2 class="fw-bold text-success mb-0">34</h2>
+                            <h2 class="fw-bold text-success mb-0">{{ $tugasSelesai }}</h2>
                         </div>
                     </div>
                 </div>
@@ -107,25 +107,27 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($tugasPrioritas as $tugas)
+                        @forelse($tugasPrioritas as $tugas)
                             <tr>
                                 <td>
                                     @if($tugas->tipe_dokumen == 'Bank Soal')
                                         <span class="badge bg-purple-subtle text-purple rounded-pill px-3 py-2 fw-semibold" style="font-size: 0.75rem;">Bank Soal</span>
+                                    @elseif(($tugas->sub_status ?? '') == 'revisi')
+                                        <span class="badge rounded-pill px-3 py-2 fw-semibold" style="font-size: 0.75rem; background-color: #fff3cd; color: #856404;">RPS – Revisi</span>
                                     @else
-                                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 fw-semibold" style="font-size: 0.75rem;">RPS</span>
+                                        <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-2 fw-semibold" style="font-size: 0.75rem;">RPS – Diajukan</span>
                                     @endif
                                 </td>
                                 <td>
                                     <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $tugas->mk_nama }}</div>
-                                    <div class="text-muted" style="font-size: 0.8rem;">{{ $tugas->mk_kode }} • Teknik Komputer</div>
+                                    <div class="text-muted" style="font-size: 0.8rem;">{{ $tugas->mk_kode }}</div>
                                 </td>
                                 <td><span class="text-muted" style="font-size: 0.9rem;">Menunggu Review</span></td>
                                 <td class="text-end">
                                     @if($tugas->tipe_dokumen == 'Bank Soal')
                                         <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}" class="btn text-white rounded-3 px-3 py-2 fw-semibold text-decoration-none" style="background-color: #2563eb; font-size: 0.8rem;">Review Sekarang</a>
                                     @else
-                                        <a href="#" class="btn text-white rounded-3 px-3 py-2 fw-semibold text-decoration-none" style="background-color: #2563eb; font-size: 0.8rem;">Review Sekarang</a>
+                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $tugas->rps_id) }}" class="btn text-white rounded-3 px-3 py-2 fw-semibold text-decoration-none" style="background-color: #2563eb; font-size: 0.8rem;">Review Sekarang</a>
                                     @endif
                                 </td>
                             </tr>

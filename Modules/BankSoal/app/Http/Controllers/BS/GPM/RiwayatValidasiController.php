@@ -5,6 +5,7 @@ namespace Modules\BankSoal\Http\Controllers\BS\GPM;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Modules\BankSoal\Services\RpsService;
 
 class RiwayatValidasiController extends Controller
 {
@@ -40,9 +41,12 @@ class RiwayatValidasiController extends Controller
 
     /**
      * Tampilkan riwayat validasi RPS
+     * Menampilkan semua RPS dengan status 'disetujui'
      */
-    public function rps()
+    public function rps(RpsService $rpsService)
     {
-        return view('banksoal::gpm.riwayat-validasi.rps');
+        $riwayat_rps = $rpsService->getDisetujui(15);
+
+        return view('banksoal::gpm.riwayat-validasi.rps', compact('riwayat_rps'));
     }
 }
