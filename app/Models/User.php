@@ -29,6 +29,7 @@ class User extends Authenticatable
         'suspension_reason',
         'personal_email',
         'avatar_url',
+        'avatar_url_format',
     ];
 
     protected $hidden = [
