@@ -32,6 +32,12 @@
                 </div>
 
                 <div class="w-full md:w-7/12 p-8 md:p-12">
+                    @if (session('status'))
+                        <div class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border-l-4 border-yellow-500 rounded text-yellow-700 dark:text-yellow-300 text-sm">
+                            {{ session('status') }}
+                        </div>
+                    @endif
+                    
                     @if ($errors->any())
                         <div class="mb-6 p-4 bg-red-50 dark:bg-red-900/20 border-l-4 border-red-500 rounded text-red-700 dark:text-red-400 text-sm">
                             {{ $errors->first() }}
@@ -71,4 +77,8 @@
         </div>
 
     </div>
+    <script>
+        localStorage.removeItem('um_per_page');
+        localStorage.removeItem('cat_per_page');
+    </script>
 </x-guest-layout>

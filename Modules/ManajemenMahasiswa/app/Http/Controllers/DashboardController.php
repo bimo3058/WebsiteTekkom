@@ -3,31 +3,77 @@
 namespace Modules\ManajemenMahasiswa\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
-    public function index()
+    // Urutan prioritas role spesifik modul kemahasiswaan
+    // Makin atas = makin prioritas
+    private const ROLE_PRIORITY = [
+        'superadmin',
+        'admin_kemahasiswaan',
+        'gpm',
+        'dosen',
+        'pengurus_himpunan', // ← spesifik modul, prioritas di atas mahasiswa
+        'alumni',
+        'mahasiswa',
+    ];
+
+    public function index(Request $request)
     {
         $user  = auth()->user();
-        $roles = $user->roles->pluck('name')->map(fn($r) => strtolower($r));
+        $roles = $user->getCachedRoles()->pluck('name')->map(fn($r) => strtolower($r));
 
-        // ── FIX: Cek permission sebelum routing berdasarkan role ──
         if (!$user->can('kemahasiswaan.view')) {
-            abort(403, 'Anda tidak memiliki izin akses ke modul Manajemen Mahasiswa (kemahasiswaan.view).');
+            abort(403, 'Anda tidak memiliki izin akses ke modul Manajemen Mahasiswa.');
         }
 
-        if ($roles->intersect(['superadmin', 'admin_kemahasiswaan'])->isNotEmpty()) {
-            return app(KemahasiswaanController::class)->adminDashboard();
+        // Cek apakah user minta switch ke mode mahasiswa
+        $activeMode = session('mk_active_mode_' . $user->id);
+
+        // Kalau user punya role pengurus/alumni DAN mahasiswa,
+        // dan belum ada mode aktif → default ke role prioritas tertinggi
+        if (!$activeMode) {
+            foreach (self::ROLE_PRIORITY as $priority) {
+                if ($roles->contains($priority)) {
+                    $activeMode = $priority;
+                    session(['mk_active_mode_' . $user->id => $activeMode]);
+                    break;
+                }
+            }
         }
 
-        if ($roles->contains('dosen')) {
-            return app(KemahasiswaanController::class)->dosenDashboard();
+        return $this->renderDashboard($activeMode);
+    }
+
+    public function switchMode(Request $request)
+    {
+        $user      = auth()->user();
+        $roles     = $user->getCachedRoles()->pluck('name')->map(fn($r) => strtolower($r));
+        $targetMode = $request->input('mode');
+
+        // Validasi — user hanya bisa switch ke role yang dia punya
+        if (!$roles->contains($targetMode)) {
+            abort(403, 'Anda tidak memiliki role tersebut.');
         }
 
-        if ($roles->contains('mahasiswa')) {
-            return app(KemahasiswaanController::class)->mahasiswaDashboard();
-        }
+        session(['mk_active_mode_' . $user->id => $targetMode]);
 
-        abort(403, 'Akses Ditolak.');
+        return redirect()->route('manajemenmahasiswa.mahasiswa.dashboard')
+            ->with('success', 'Mode berhasil diubah.');
+    }
+
+    private function renderDashboard(string $mode)
+    {
+        $kemahasiswaan = app(KemahasiswaanController::class);
+
+        return match($mode) {
+            'superadmin', 'admin_kemahasiswaan' => $kemahasiswaan->adminDashboard(),
+            'dosen', 'gpm'                      => $kemahasiswaan->dosenDashboard(),
+            'pengurus_himpunan'                 => $kemahasiswaan->pengurusDashboard(),
+            'alumni'                            => $kemahasiswaan->alumniDashboard(),
+            'mahasiswa'                         => $kemahasiswaan->mahasiswaDashboard(),
+            default                             => abort(403, 'Akses Ditolak.'),
+        };
     }
 }

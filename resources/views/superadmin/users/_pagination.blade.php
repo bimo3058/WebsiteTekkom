@@ -1,3 +1,3 @@
 <div class="mt-8" id="paginationWrapper">
-    {{ $users->links() }}
+    {{ $users->appends(request()->query())->links() }}
 </div>

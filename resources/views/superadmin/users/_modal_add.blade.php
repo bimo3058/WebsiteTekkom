@@ -3,17 +3,17 @@
     <div class="fixed inset-0" onclick="closeModal('modalAddUser')"></div>
     
     <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+        <div class="px-6 py-4 border-b border-[#E8E6FD] flex items-center justify-between bg-[#F1E9FF]">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-blue-50 flex items-center justify-center border border-blue-100">
-                    <span class="material-symbols-outlined text-blue-600" style="font-size:20px">person_add</span>
+                <div class="w-9 h-9 rounded-xl bg-[#5E53F4] flex items-center justify-center">
+                    <span class="material-symbols-outlined text-white" style="font-size:20px">person_add</span>
                 </div>
                 <div>
-                    <h3 class="text-sm font-bold text-slate-800 uppercase tracking-tight">Tambah User Baru</h3>
-                    <p class="text-[10px] text-slate-400 font-medium">Daftarkan akun pengguna baru ke sistem</p>
+                    <h3 class="text-sm font-bold text-[#1A1C1E] uppercase tracking-tight">Tambah User Baru</h3>
+                    <p class="text-[10px] text-[#5E53F4] font-medium">Daftarkan akun pengguna baru ke sistem</p>
                 </div>
             </div>
-            <button onclick="closeModal('modalAddUser')" class="text-slate-300 hover:text-slate-600 transition-colors p-1">
+            <button onclick="closeModal('modalAddUser')" class="text-[#5E53F4] hover:text-[#4e44e0] hover:bg-[#E8E6FD] transition-colors p-1.5 rounded-lg">
                 <span class="material-symbols-outlined" style="font-size:20px">close</span>
             </button>
         </div>
@@ -85,7 +85,7 @@
                     Batal
                 </button>
                 <button type="submit" 
-                    class="bg-slate-800 hover:bg-black text-white text-[11px] font-bold uppercase tracking-widest px-6 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-2">
+                    class="bg-[#5E53F4] hover:bg-[#4e44e0] text-white text-[11px] font-bold uppercase tracking-widest px-6 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-2">
                     <span class="material-symbols-outlined" style="font-size:16px">person_add</span>
                     Simpan User
                 </button>
@@ -118,7 +118,7 @@
             </div>
 
             <div class="flex gap-3">
-                <button onclick="closeSuperadminWarningModal()" 
+                <button onclick="closeModal('superadminWarningModal')"
                     class="flex-1 text-[10px] font-bold text-slate-400 hover:text-slate-600 uppercase tracking-widest py-3 transition-colors">
                     Batalkan
                 </button>

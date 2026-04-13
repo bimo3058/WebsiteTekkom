@@ -16,7 +16,8 @@ class DashboardController extends Controller
         }
 
         $isMahasiswa = $user->hasRole('mahasiswa');
-        $isDosen     = $user->hasRole('dosen') && !$user->hasRole('gpm');
+        $isDosen     = $user->hasRole('dosen');
+        // $isDosen     = $user->hasRole('dosen') && !$user->hasRole('gpm');
 
         $cards = [
             [
@@ -41,7 +42,7 @@ class DashboardController extends Controller
             ],
             [
                 'icon'        => 'groups',
-                'title'       => $isMahasiswa ? 'Kemahasiswaan' : 'Manajemen Mahasiswa',
+                'title'       => $isMahasiswa ? 'Forum Mahasiswa' : 'Manajemen Mahasiswa',
                 'description' => $isMahasiswa
                     ? 'Kegiatan, prestasi, dan forum mahasiswa.'
                     : 'Kegiatan, alumni, dan forum mahasiswa.',

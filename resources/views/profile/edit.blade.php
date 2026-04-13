@@ -23,6 +23,27 @@
                     </div>
                 </div>
 
+                {{-- ── WARNING DEFAULT PASSWORD ── --}}
+                @php
+                    $namaDepan       = explode(' ', auth()->user()->name)[0];
+                    $nim             = auth()->user()->student?->student_number ?? '';
+                    $defaultPassword = $namaDepan . $nim;
+                    $isDefaultPw     = auth()->user()->password && 
+                                    \Illuminate\Support\Facades\Hash::check($defaultPassword, auth()->user()->password);
+                @endphp
+
+                @if ($isDefaultPw)
+                    <div class="mb-4 flex items-start gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-2xl">
+                        <span class="material-symbols-outlined text-yellow-500 text-[20px] shrink-0 mt-0.5">warning</span>
+                        <div>
+                            <p class="text-sm font-semibold text-yellow-700">Harap ubah password Anda</p>
+                            <p class="text-xs text-yellow-600 mt-0.5">
+                                Password Anda masih menggunakan password default. Segera ubah melalui kolom <strong>Keamanan</strong> di sebelah kanan untuk melindungi akun Anda.
+                            </p>
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Grid 3 kolom — items-stretch agar rata bawah --}}
                 <div class="grid grid-cols-1 lg:grid-cols-[270px_1fr_290px] gap-4 items-stretch pb-6">
 
@@ -270,6 +291,7 @@
 
     document.getElementById('btnSaveCrop').addEventListener('click', function () {
         const btn = this;
+        const originalFile = avatarInput.files[0];
         const canvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
         btn.disabled = true;
         btn.innerHTML = 'MEMPROSES...';
@@ -277,6 +299,7 @@
         canvas.toBlob(function (blob) {
             const formData = new FormData();
             formData.append('avatar', blob, 'avatar.webp');
+            formData.append('avatar_original', originalFile); 
 
             fetch("{{ route('profile.avatar.update') }}", {
                 method: 'POST',
