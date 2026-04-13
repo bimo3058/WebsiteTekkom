@@ -8,6 +8,19 @@ use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
 
+Route::get('/error/{code}', function ($code) {
+    if (!session('from_exception')) {
+        return redirect('/');
+    }
+
+    return view("errors.{$code}");
+})->name('error.page')->where('code', '400|401|403|404|419|429|500|503');
+
+Route::middleware('web')->group(function () {
+    Route::get('/sso/password',  [MicrosoftController::class, 'showPasswordForm'])->name('sso.password');
+    Route::post('/sso/password', [MicrosoftController::class, 'verifyPassword'])->name('sso.verify');
+});
+
 Route::middleware('guest')->group(function () {
 
     Route::get('/login', function () {
@@ -41,7 +54,6 @@ Route::middleware('auth')->group(function () {
             ->name('permissions.repair-all');
         Route::post('/modules/{slug}/settings', [SuperAdminController::class, 'updateModuleSettings'])->name('modules.settings');
         Route::post('/modules/{slug}/purge-cache', [SuperAdminController::class, 'purgeModuleCache'])->name('modules.purge-cache');
-        Route::post('/modules/{slug}/maintenance', [SuperAdminController::class, 'toggleMaintenance'])->name('modules.maintenance');
         Route::post('/modules/{slug}/toggle', [SuperAdminController::class, 'toggleModule'])->name('modules.toggle');
         Route::post('/modules/{slug}/update-config', [SuperAdminController::class, 'updateConfig'])->name('modules.update-config');
         Route::post('/users/{user}/update-permissions', [SuperAdminController::class, 'updatePermissions'])
@@ -71,7 +83,7 @@ Route::middleware('auth')->group(function () {
             ->name('storage.delete');
 
         Route::post('/bust-stats-cache', [SuperAdminController::class, 'bustStatsCache'])
-            ->name('bust-stats-cache');
+            ->name('bust-stats-cache'); 
         // Update role user (ganti dari POST ke PATCH, nama route tetap bisa dipakai keduanya)
         Route::post('/users/{user}/update-role', [SuperAdminController::class, 'updateRole'])
             ->name('users.update-role');
@@ -98,7 +110,7 @@ Route::middleware('auth')->group(function () {
     });
 
     // Global dashboard — pakai DashboardController
-    Route::get('/dashboard/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');

@@ -501,8 +501,7 @@ body {
     color: var(--gray-500);
 }
 
-/* #StatisticsCards - Row berisi 4 cards statistik dengan icon */
-.tats-row {
+.stats-row {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     gap: 16px;
@@ -1095,61 +1094,6 @@ tbody tr:hover td {
 }
 
 /* ════════════════════════════════════════════════════════
-   #FormControl - Base style untuk SEMUA kontrol form
-   (native select, input, textarea, ms-trigger)
-   Tinggi seragam 42px, padding horizontal 12px, border sama
-   ════════════════════════════════════════════════════════ */
-.form-control {
-    display: block;
-    width: 100%;
-    height: 42px;
-    padding: 0 12px;
-    border: 1.5px solid var(--gray-200);
-    border-radius: 9px;
-    font-size: 14px;
-    font-family: inherit;
-    color: var(--gray-900);
-    background: #fff;
-    box-sizing: border-box;
-    outline: none;
-    transition:
-        border-color 0.15s,
-        box-shadow 0.15s;
-}
-.form-control:hover {
-    border-color: var(--gray-400);
-}
-.form-control:focus {
-    border-color: var(--blue);
-    box-shadow: 0 0 0 3px rgba(27, 79, 216, 0.08);
-}
-.form-control::placeholder {
-    color: var(--gray-400);
-}
-
-/* Native select — custom arrow, hapus default appearance */
-select.form-control {
-    appearance: none;
-    -webkit-appearance: none;
-    padding-right: 36px;
-    cursor: pointer;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%2394A3B8' d='M6 8L1 3h10z'/%3E%3C/svg%3E");
-    background-repeat: no-repeat;
-    background-position: right 12px center;
-    background-color: #fff;
-    /* line-height trick agar teks center di semua browser */
-    line-height: 42px;
-}
-
-textarea.form-control {
-    height: auto;
-    min-height: 96px;
-    padding: 10px 12px;
-    resize: vertical;
-    line-height: 1.5;
-}
-
-/* ════════════════════════════════════════════════════════
    #MultiSelectDropdown - Custom multi-select component
    ════════════════════════════════════════════════════════ */
 .ms-wrapper {
@@ -1498,4 +1442,1187 @@ textarea.form-control {
     font-weight: 700;
     margin-bottom: 20px;
     color: var(--gray-900);
+}
+
+* {
+    box-sizing: border-box;
+}
+
+html,
+body {
+    margin: 0;
+    padding: 0;
+}
+
+.sidebar-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--gray-700);
+    padding: 6px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    margin-right: auto;
+}
+
+.sidebar-toggle:hover {
+    background: var(--gray-100);
+}
+
+@media (max-width: 768px) {
+    body {
+        padding-bottom: 60px;
+    }
+
+    .sidebar {
+        position: fixed;
+        left: 0;
+        top: 60px;
+        width: 100%;
+        max-width: 280px;
+        height: auto;
+        max-height: calc(100vh - 60px);
+        overflow-y: auto;
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+        z-index: 999;
+        border-radius: 0 8px 8px 0;
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+    }
+
+    .sidebar-brand {
+        padding: 1rem;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .sidebar-brand .brand-text {
+        font-size: 0.9rem;
+    }
+
+    .sidebar-brand strong {
+        font-size: 0.95rem;
+    }
+
+    .sidebar-nav {
+        flex-direction: column;
+        gap: 0.5rem;
+        padding: 0.5rem;
+    }
+
+    .sidebar-nav .nav-item {
+        font-size: 0.9rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .topbar {
+        padding: 0.75rem 1rem;
+        gap: 0.75rem;
+        height: 60px;
+    }
+
+    .sidebar-toggle {
+        display: flex;
+        align-items: center;
+        background: none;
+        border: none;
+        font-size: 1.5rem;
+        cursor: pointer;
+        color: #333;
+        padding: 0.5rem;
+        width: 40px;
+        height: 40px;
+    }
+
+    .user-chip {
+        gap: 0.5rem;
+    }
+
+    .user-avatar-chip {
+        width: 32px;
+        height: 32px;
+        font-size: 0.9rem;
+    }
+
+    .user-info {
+        display: none;
+    }
+
+    .main {
+        padding: 1rem 0.75rem;
+    }
+
+    .alert-banner {
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0.75rem;
+        font-size: 0.9rem;
+    }
+
+    .alert-banner strong {
+        font-size: 0.95rem;
+    }
+
+    .alert-banner p {
+        margin: 0.25rem 0 0 0;
+        font-size: 0.85rem;
+    }
+
+    .alert-btn {
+        font-size: 0.85rem;
+        padding: 0.6rem 1rem;
+        align-self: stretch;
+    }
+
+    .grid-3 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .grid-2 {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 1rem;
+    }
+
+    .card {
+        padding: 1rem;
+        border-radius: 8px;
+    }
+
+    .card-header {
+        font-size: 0.9rem;
+        gap: 0.75rem;
+        margin-bottom: 0.75rem;
+    }
+
+    .card-icon {
+        font-size: 1rem;
+    }
+
+    .card-title {
+        font-size: 0.95rem;
+    }
+
+    .donut-wrap {
+        gap: 1rem;
+        padding: 1rem 0;
+    }
+
+    .donut-wrap svg {
+        width: 120px;
+        height: 120px;
+    }
+
+    .donut-label strong {
+        font-size: 1.2rem;
+    }
+
+    .donut-label span {
+        font-size: 0.75rem;
+    }
+
+    .legend {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+
+    .legend-item {
+        font-size: 0.8rem;
+        flex: 0 1 45%;
+    }
+
+    .rps-badge {
+        font-size: 0.8rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .academic-year {
+        font-size: 0.85rem;
+        margin-top: 0.5rem;
+    }
+
+    .year-text {
+        font-size: 1rem;
+        margin: 0.25rem 0;
+    }
+
+    .courses-label {
+        font-size: 0.8rem;
+        margin-top: 0.5rem;
+    }
+
+    .course-tags {
+        gap: 0.5rem;
+        flex-wrap: wrap;
+        margin-top: 0.5rem;
+    }
+
+    .course-tag {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+    }
+
+    .prof-avatar-placeholder {
+        width: 60px;
+        height: 60px;
+        font-size: 1.5rem;
+        margin: 0.5rem auto;
+    }
+
+    .prof-name {
+        font-size: 0.95rem;
+        margin: 0.5rem 0 0.25rem 0;
+    }
+
+    .prof-nip {
+        font-size: 0.75rem;
+    }
+
+    .prof-dept {
+        font-size: 0.8rem;
+        margin: 0.5rem 0;
+    }
+
+    .update-btn {
+        font-size: 0.85rem;
+        padding: 0.5rem 1rem;
+        margin-top: 0.75rem;
+    }
+
+    .bar-chart {
+        gap: 0.75rem;
+        padding: 1rem 0;
+    }
+
+    .bar-group {
+        gap: 0.5rem;
+    }
+
+    .bar-val {
+        font-size: 0.9rem;
+    }
+
+    .bar-label {
+        font-size: 0.75rem;
+    }
+
+    #mkChart {
+        gap: 0.75rem !important;
+        height: auto !important;
+        flex-wrap: wrap;
+    }
+
+    #mkChart > div {
+        flex: 1;
+        min-width: 70px;
+    }
+
+    #mkChart span:nth-child(1) {
+        font-size: 1.2rem !important;
+    }
+
+    #mkChart span:nth-child(3) {
+        font-size: 0.75rem !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .topbar {
+        padding: 0.5rem 0.75rem;
+        height: 50px;
+    }
+
+    .sidebar-toggle {
+        width: 36px;
+        height: 36px;
+        font-size: 1.2rem;
+    }
+
+    .topbar-btn {
+        padding: 0.4rem;
+        font-size: 1.1rem;
+    }
+
+    .main {
+        padding: 0.75rem 0.5rem;
+    }
+
+    .alert-banner {
+        padding: 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .alert-icon-wrap {
+        font-size: 1rem;
+        width: 28px;
+        height: 28px;
+    }
+
+    .alert-banner strong {
+        font-size: 0.9rem;
+    }
+
+    .alert-banner p {
+        font-size: 0.8rem;
+    }
+
+    .card {
+        padding: 0.75rem;
+    }
+
+    .card-header {
+        font-size: 0.85rem;
+    }
+
+    .card-title {
+        font-size: 0.9rem;
+    }
+
+    .donut-wrap {
+        gap: 0.75rem;
+        padding: 0.75rem 0;
+    }
+
+    .donut-wrap svg {
+        width: 100px;
+        height: 100px;
+    }
+
+    .donut-label strong {
+        font-size: 1rem;
+    }
+
+    .legend-item {
+        font-size: 0.75rem;
+    }
+
+    .bar-chart {
+        gap: 0.5rem;
+        padding: 0.75rem 0;
+    }
+
+    #mkChart > div {
+        min-width: 60px;
+    }
+
+    .prof-avatar-placeholder {
+        width: 50px;
+        height: 50px;
+        font-size: 1.2rem;
+    }
+}
+
+@media (max-width: 360px) {
+    .sidebar-brand .brand-text {
+        font-size: 0.8rem;
+    }
+
+    .sidebar-brand strong {
+        font-size: 0.85rem;
+    }
+
+    .card-title {
+        font-size: 0.85rem;
+    }
+
+    .alert-banner strong {
+        font-size: 0.85rem;
+    }
+}
+
+.stats-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.page-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.page-header-left h1 {
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--gray-900);
+    margin: 0 0 4px;
+}
+
+.page-header-left p {
+    font-size: 14px;
+    color: var(--gray-500);
+    margin: 0;
+}
+
+.sidebar-toggle {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    font-size: 1.4rem;
+    cursor: pointer;
+    color: var(--gray-700);
+    padding: 6px;
+    border-radius: 8px;
+    transition: background 0.2s;
+    margin-right: auto;
+}
+
+.sidebar-toggle:hover {
+    background: var(--gray-100);
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 98;
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
+@media (max-width: 1024px) {
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .grid-3 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .form-grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        flex-direction: column;
+        padding-bottom: 0;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        height: 100vh;
+        width: 260px;
+        transform: translateX(-100%);
+        transition: transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 999;
+        box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+    }
+
+    .sidebar.active {
+        transform: translateX(0);
+    }
+
+    .topbar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 56px;
+        padding: 0 16px;
+        gap: 10px;
+        z-index: 90;
+    }
+
+    .sidebar-toggle {
+        display: flex;
+    }
+
+    .user-info span {
+        display: none;
+    }
+
+    .main {
+        margin-left: 0;
+        margin-top: 56px;
+        padding: 16px 14px 24px;
+    }
+
+    .alert-banner {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 14px 16px;
+    }
+
+    .alert-btn {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+        margin-left: 0;
+    }
+
+    .grid-3,
+    .grid-2 {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .stats-row {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+    }
+
+    .stat-card {
+        padding: 14px;
+        gap: 10px;
+        border-radius: 12px;
+    }
+
+    .stat-value {
+        font-size: 20px;
+    }
+
+    .stat-icon-wrap {
+        width: 38px;
+        height: 38px;
+        font-size: 16px;
+    }
+
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .page-header-left h1 {
+        font-size: 22px;
+    }
+
+    .btn-outline {
+        width: 100%;
+        justify-content: center;
+    }
+
+    .section-card {
+        padding: 16px 14px;
+        border-radius: 12px;
+    }
+
+    .toolbar {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    .search-wrap {
+        max-width: 100%;
+    }
+
+    .filter-group {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+
+    .filter-select {
+        width: 100%;
+        font-size: 12px;
+        padding: 8px 24px 8px 10px;
+    }
+
+    .table-wrap {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 8px;
+    }
+
+    table {
+        min-width: 560px;
+    }
+
+    .table-footer {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    .pagination {
+        flex-wrap: wrap;
+    }
+
+    .form-grid-2 {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .form-card {
+        padding: 18px 14px;
+    }
+
+    .form-actions {
+        flex-direction: column-reverse;
+    }
+
+    .form-actions .btn-primary,
+    .form-actions .btn-cancel {
+        width: 100%;
+        text-align: center;
+        justify-content: center;
+    }
+
+    .status-bar {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+        padding: 14px 16px;
+    }
+
+    .donut-wrap svg {
+        width: 130px;
+        height: 130px;
+    }
+
+    #mkChart {
+        gap: 20px !important;
+        height: auto !important;
+        justify-content: flex-start;
+        flex-wrap: wrap;
+    }
+
+    .section-header-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 10px;
+    }
+
+    /* Mobile: Reduce select[size] height for better UX */
+    select.form-control[size] {
+        font-size: 13px;
+        padding: 5px 10px !important;
+        line-height: 1.6;
+    }
+}
+
+@media (max-width: 480px) {
+    .main {
+        padding: 12px 10px 20px;
+    }
+
+    .stats-row {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .stat-card {
+        flex-direction: row;
+        padding: 12px;
+    }
+
+    .filter-group {
+        grid-template-columns: 1fr;
+    }
+
+    .topbar-btn:not(.notif-btn) {
+        display: none;
+    }
+
+    .donut-wrap svg {
+        width: 110px;
+        height: 110px;
+    }
+
+    .donut-label strong {
+        font-size: 22px;
+    }
+
+    .legend {
+        grid-template-columns: 1fr 1fr;
+        gap: 6px;
+    }
+
+    .section-title {
+        font-size: 15px;
+    }
+}
+
+/* ──── MOBILE OVERLAY SIDEBAR (Only < 768px) ──── */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed !important;
+        left: -280px !important;
+        width: 280px !important;
+        top: 0;
+        height: 100vh;
+        background: white;
+        box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+        transition: left 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+        z-index: 999;
+        overflow-y: auto;
+        border-right: 1px solid var(--gray-200);
+    }
+
+    .sidebar.active {
+        left: 0 !important;
+    }
+
+    /* Sidebar overlay background */
+    .sidebar::before {
+        content: "";
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.4);
+        z-index: -1;
+    }
+
+    .sidebar.active::before {
+        display: block;
+    }
+}
+
+/* ──── PROFILE DROPDOWN (All sizes) ──── */
+.user-dropdown-wrapper {
+    position: relative;
+}
+
+.profile-dropdown {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    width: 280px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: none;
+    flex-direction: column;
+    z-index: 999;
+    overflow: hidden;
+}
+
+.profile-dropdown.active {
+    display: flex;
+}
+
+.dropdown-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px;
+    background: #f8fafc;
+}
+
+.dropdown-avatar {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background: #2563eb;
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 18px;
+}
+
+.dropdown-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    flex: 1;
+}
+
+.dropdown-name {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 14px;
+}
+
+.dropdown-role {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.dropdown-divider {
+    height: 1px;
+    background: #e2e8f0;
+}
+
+.dropdown-logout {
+    background: none;
+    border: none;
+    color: #ef4444;
+    padding: 12px 16px;
+    text-align: left;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s ease;
+}
+
+.dropdown-logout:hover {
+    background: #fef2f2;
+}
+
+.dropdown-logout i {
+    font-size: 14px;
+}
+
+/* ──── MOBILE ADJUSTMENTS ──── */
+body.sidebar-open {
+    overflow: hidden;
+}
+
+/* Backdrop untuk close sidebar saat klik di luar (mobile only) */
+body.sidebar-open::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+    cursor: pointer;
+}
+
+/* ──── SNACKBAR NOTIFICATION STYLES ──── */
+.snackbar {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    min-width: 300px;
+    max-width: 500px;
+    padding: 14px 16px;
+    padding-right: 40px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    font-weight: 500;
+    z-index: 9999;
+    animation: slideUpIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes slideUpIn {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes slideOutDown {
+    from {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+    to {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+}
+
+.snackbar-success {
+    background-color: #10b981;
+    color: #ffffff;
+    border-left: 4px solid #059669;
+}
+
+.snackbar-error {
+    background-color: #ef4444;
+    color: #ffffff;
+    border-left: 4px solid #dc2626;
+}
+
+.snackbar-warning {
+    background-color: #f59e0b;
+    color: #ffffff;
+    border-left: 4px solid #d97706;
+}
+
+.snackbar-info {
+    background-color: #3b82f6;
+    color: #ffffff;
+    border-left: 4px solid #1e40af;
+}
+
+.snackbar i {
+    flex-shrink: 0;
+    font-size: 18px;
+}
+
+.snackbar span {
+    flex: 1;
+}
+
+.snackbar ul {
+    margin: 0;
+    padding-left: 20px;
+}
+
+.snackbar-close {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.8;
+    padding: 4px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: opacity 0.2s;
+}
+
+.snackbar-close:hover {
+    opacity: 1;
+}
+
+@media (max-width: 600px) {
+    .snackbar {
+        bottom: 16px;
+        left: 16px;
+        right: 16px;
+        transform: none;
+        max-width: none;
+    }
+
+    @keyframes slideUpIn {
+        from {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    @keyframes slideOutDown {
+        from {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateY(20px);
+        }
+    }
+}
+/* ── Tom Select Custom Theme ── */
+.ts-wrapper {
+    width: 100%;
+}
+
+.ts-control {
+    border: 1.5px solid var(--gray-200) !important;
+    border-radius: 10px !important;
+    padding: 10px 14px !important;
+    font-size: 14px !important;
+    font-family: "Plus Jakarta Sans", sans-serif !important;
+    background: #fff !important;
+    box-shadow: none !important;
+    min-height: 44px;
+    cursor: pointer;
+}
+
+.ts-control:focus-within {
+    border-color: var(--blue) !important;
+    box-shadow: 0 0 0 3px rgba(27, 79, 216, 0.1) !important;
+}
+
+.ts-dropdown {
+    border: 1.5px solid var(--gray-200) !important;
+    border-radius: 10px !important;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1) !important;
+    font-family: "Plus Jakarta Sans", sans-serif !important;
+    font-size: 14px !important;
+    overflow: hidden;
+    margin-top: 4px !important;
+}
+
+/* Batasi tinggi dropdown — tampil 5 opsi, sisanya scroll */
+.ts-dropdown .ts-dropdown-content {
+    max-height: 220px;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--gray-200) transparent;
+}
+
+.ts-dropdown .option {
+    padding: 10px 14px !important;
+    color: var(--gray-700);
+    border-bottom: 1px solid var(--gray-100);
+    transition: background 0.15s;
+}
+
+.ts-dropdown .option:last-child {
+    border-bottom: none;
+}
+
+.ts-dropdown .option:hover,
+.ts-dropdown .option.active {
+    background: var(--blue-light) !important;
+    color: var(--blue) !important;
+}
+
+.ts-dropdown .option.selected {
+    background: var(--blue) !important;
+    color: #fff !important;
+}
+
+/* Search box di dalam dropdown */
+.ts-dropdown input {
+    border: none !important;
+    border-bottom: 1px solid var(--gray-200) !important;
+    border-radius: 0 !important;
+    padding: 10px 14px !important;
+    font-size: 13px !important;
+    font-family: "Plus Jakarta Sans", sans-serif !important;
+}
+
+/* Hide native select - TomSelect handles this with .ts-hidden-accessible */
+/* We just ensure the wrapper doesn't have problematic stacking */
+.select-wrap {
+    position: relative;
+}
+
+.ts-wrapper {
+    position: relative;
+    z-index: 1;
+}
+
+/* Styling untuk TomSelect item (selected value) */
+.ts-control .item {
+    background: transparent !important;
+    color: var(--gray-700) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    font-size: 14px !important;
+}
+
+.ts-control .ts-item {
+    background: transparent !important;
+    color: var(--gray-700) !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+}
+
+/* Styling untuk TomSelect control ketika ada item */
+.ts-control.has-items {
+    padding: 8px 14px !important;
+}
+
+/* Clear button styling */
+.ts-control .item .remove {
+    margin-left: 8px !important;
+    font-size: 16px !important;
+    color: var(--gray-400) !important;
+    cursor: pointer !important;
+    transition: color 0.2s !important;
+}
+
+.ts-control .item .remove:hover {
+    color: var(--gray-600) !important;
+}
+
+/* No results message styling */
+.ts-no-results {
+    padding: 12px 14px !important;
+    text-align: center !important;
+    color: var(--gray-500) !important;
+    font-size: 14px !important;
+}
+
+/* Option create styling */
+.ts-option-create {
+    padding: 10px 14px !important;
+    color: var(--blue) !important;
+    border-bottom: 1px solid var(--gray-100) !important;
+    font-size: 14px !important;
+    font-style: italic !important;
+}
+
+/* Clear button styling */
+.ts-control .item .remove {
+    margin-left: 8px !important;
+    font-size: 16px !important;
+    color: var(--gray-400) !important;
+    cursor: pointer !important;
+    transition: color 0.2s !important;
+}
+
+.ts-control .item .remove:hover {
+    color: var(--gray-600) !important;
+}
+
+/* No results message styling */
+.ts-no-results {
+    padding: 12px 14px !important;
+    text-align: center !important;
+    color: var(--gray-500) !important;
+    font-size: 14px !important;
+}
+
+/* Option create styling */
+.ts-option-create {
+    padding: 10px 14px !important;
+    color: var(--blue) !important;
+    border-bottom: 1px solid var(--gray-100) !important;
+    font-size: 14px !important;
+    font-style: italic !important;
+}
+
+.ts-dropdown input:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIX: Native select yang sudah diambil alih Tom Select
+   Tom Select menyembunyikan native select via .ts-hidden-accessible,
+   tapi .form-control { height: 42px } masih membuat elemen itu
+   memakan ruang vertikal di layout. Override ini memaksa height=0.
+   ══════════════════════════════════════════════════════════════ */
+.ts-wrapper + select.form-control,
+select.form-control.ts-hidden-accessible {
+    display: block !important;
+    height: 0 !important;
+    min-height: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    border: none !important;
+    overflow: hidden !important;
+    position: absolute !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
 }

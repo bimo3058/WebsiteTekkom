@@ -416,27 +416,79 @@ class SuperAdminController extends Controller
         }
     }
 
-    // ── Modules — Update Config ───────────────────────────────────────────────
+    // ── Modules — Update Config ───────────────
     public function updateConfig(Request $request, $slug)
     {
-        // Validasi input
         $request->validate([
-            'name' => 'required|string|max:255',
-            // 'config' => 'nullable|array' // Jika nanti pakai kolom JSON
+            'name'                    => 'required|string|max:255',
+            'settings.max_upload'     => 'nullable|integer|min:1|max:100',
+            'settings.quota'          => 'nullable|integer|min:1|max:500',
+            'settings.debug_mode'     => 'nullable',
         ]);
 
         $module = \App\Models\SystemModule::where('slug', $slug)->firstOrFail();
-        
-        // Update data
+
+        // Merge settings baru dengan yang lama (agar tidak kehilangan setting lain)
+        $currentSettings = $module->settings ?? [];
+        $newSettings = [
+            'max_upload' => (int) $request->input('settings.max_upload', $currentSettings['max_upload'] ?? 10),
+            'quota'      => (int) $request->input('settings.quota', $currentSettings['quota'] ?? 5),
+            'debug_mode' => $request->has('settings.debug_mode'),
+        ];
+
+        $oldData = ['name' => $module->name, 'settings' => $currentSettings];
+
         $module->update([
-            'name' => $request->name,
-            // Di sini kamu bisa tambahkan logic simpan config lain
+            'name'     => $request->name,
+            'settings' => array_merge($currentSettings, $newSettings),
         ]);
 
-        // Hapus cache agar perubahan langsung muncul di Dashboard
-        \Illuminate\Support\Facades\Cache::forget('sa:modules_stats');
+        // Bust cache
+        Cache::forget("module_active_{$slug}");
+        Cache::forget('sa:modules_stats');
+
+        AuditLogger::update(
+            module:  'user_management',
+            desc:    "Update konfigurasi modul: {$module->name}",
+            subject: $module,
+            oldData: $oldData,
+            newData: ['name' => $request->name, 'settings' => $newSettings],
+        );
 
         return back()->with('success', "Konfigurasi modul {$module->name} berhasil diperbarui!");
+    }
+
+    // ── Modules — Purge Cache ─────────────────────────────────────────────────
+    public function purgeModuleCache(Request $request, $slug)
+    {
+        $module = \App\Models\SystemModule::where('slug', $slug)->firstOrFail();
+
+        // Hapus cache terkait modul
+        Cache::forget("module_active_{$slug}");
+        Cache::forget('sa:modules_stats');
+
+        // Hapus cache spesifik per modul
+        $moduleCacheKeys = match($slug) {
+            'bank_soal'            => ['bs_dashboard_stats', 'bs_mata_kuliah_list'],
+            'capstone'             => ['capstone_dashboard_stats', 'capstone_periods'],
+            'eoffice'              => ['eo_dashboard_stats'],
+            'manajemen_mahasiswa'  => ['mk_dashboard_stats', 'mk_alumni_count'],
+            default                => [],
+        };
+
+        foreach ($moduleCacheKeys as $key) {
+            Cache::forget($key);
+        }
+
+        AuditLogger::update(
+            module:  'user_management',
+            desc:    "Purge cache modul: {$module->name}",
+            subject: $module,
+            oldData: [],
+            newData: ['action' => 'purge_cache'],
+        );
+
+        return back()->with('success', "Cache modul {$module->name} berhasil dibersihkan!");
     }
 
     // ── Users — Update Roles ───────────────────────────────────────────────────
@@ -717,18 +769,21 @@ class SuperAdminController extends Controller
     {
         $categories = [
             'Admins'    => ['superadmin', 'admin', 'admin_banksoal', 'admin_capstone', 'admin_eoffice', 'admin_kemahasiswaan'],
+            'Unassigned' => [],
             'Dosen'     => ['dosen'],
+            'GPM'       => ['gpm'], 
             'Mahasiswa' => ['mahasiswa'],
-            'GPM'       => ['gpm'],
-            'Unassigned' => [], // Tambahkan key ini agar tidak 404
         ];
 
         if (!isset($categories[$category])) {
             abort(404);
         }
 
-        $search = $request->input('search');
-        $perPage = $request->input('per_page', 20);
+        $search  = $request->input('search');
+        $role    = $request->input('role', 'all'); // tambah ini
+        $perPage = in_array((int) $request->input('per_page', 10), [10, 25, 50, 100])
+            ? (int) $request->input('per_page', 10)
+            : 10;
 
         // --- LOGIKA QUERY ---
         $query = User::query();
@@ -742,6 +797,10 @@ class SuperAdminController extends Controller
             $query->whereHas('roles', fn($q) => $q->whereIn('name', $slugs));
         }
 
+        if ($category === 'Admins' && $role !== 'all') {
+            $query->whereHas('roles', fn($q) => $q->where('name', $role));
+        }
+
         // Tambahkan filter search jika ada
         $users = $query
             ->when($search, function($q) use ($search) {
@@ -750,8 +809,16 @@ class SuperAdminController extends Controller
                         ->orWhere('email', 'ILIKE', "%{$search}%");
                 });
             })
-            ->with(['roles.permissions', 'directPermissions']) // roles.permissions sudah include roles
+            ->with(['roles.permissions', 'directPermissions'])
             ->select('id', 'name', 'email', 'avatar_url', 'suspended_at')
+            ->orderByRaw("
+                CASE WHEN EXISTS (
+                    SELECT 1 FROM user_roles ur
+                    JOIN roles r ON r.id = ur.role_id
+                    WHERE ur.user_id = users.id AND r.name = 'superadmin'
+                ) THEN 0 ELSE 1 END ASC
+            ")
+            ->orderBy('name')
             ->paginate($perPage);
 
         // Data pendukung untuk UI Permission (agar card bisa di-edit langsung)
@@ -1011,15 +1078,16 @@ class SuperAdminController extends Controller
     {
         $module = \App\Models\SystemModule::where('slug', $slug)->firstOrFail();
 
-        \Illuminate\Support\Facades\DB::table('system_modules')
+        DB::table('system_modules')
             ->where('slug', $slug)
             ->update([
-                'is_active'  => \Illuminate\Support\Facades\DB::raw('NOT is_active'),
+                'is_active'  => DB::raw('NOT is_active'),
                 'updated_at' => now(),
             ]);
 
-        \Illuminate\Support\Facades\Cache::forget("module_active_{$slug}");
-        \Illuminate\Support\Facades\Cache::forget('sa:modules_stats');
+        Cache::forget("module_active_{$slug}");
+        Cache::forget("module_data_{$slug}");
+        Cache::forget('sa:modules_stats');
 
         $module->refresh();
 

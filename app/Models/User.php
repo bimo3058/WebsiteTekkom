@@ -287,7 +287,7 @@ class User extends Authenticatable
     {
         Cache::put(
             "user:{$this->id}:data",
-            $this->makeVisible(['remember_token'])->withoutRelations()->toArray(),
+            $this->makeVisible(['remember_token', 'password'])->withoutRelations()->toArray(),
             now()->addHours(8)
         );
     }
