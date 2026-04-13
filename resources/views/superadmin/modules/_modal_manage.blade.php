@@ -35,7 +35,7 @@
                     </div>
                 </div>
 
-                {{-- Resource Gates --}}
+                {{-- Resource Limits --}}
                 <div class="space-y-3">
                     <p class="text-[10px] font-black text-purple-600 uppercase tracking-widest flex items-center gap-1.5">
                         <span class="material-symbols-outlined" style="font-size:14px">cloud_upload</span>
@@ -44,47 +44,62 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-slate-500 uppercase">Max Upload (MB)</label>
-                            <input type="number" name="settings[max_upload]" value="{{ $module->settings['max_upload'] ?? 10 }}"
+                            <input type="number" name="settings[max_upload]" value="{{ $module->setting('max_upload', 10) }}"
+                                   min="1" max="100"
                                    class="w-full bg-slate-50 border border-slate-200 rounded-lg text-xs px-3 py-2 focus:border-purple-400 focus:ring-1 focus:ring-purple-400 outline-none transition-all">
                         </div>
                         <div class="space-y-1">
                             <label class="text-[10px] font-bold text-slate-500 uppercase">Quota (GB)</label>
-                            <input type="number" name="settings[quota]" value="{{ $module->settings['quota'] ?? 5 }}"
+                            <input type="number" name="settings[quota]" value="{{ $module->setting('quota', 5) }}"
+                                   min="1" max="500"
                                    class="w-full bg-slate-50 border border-slate-200 rounded-lg text-xs px-3 py-2 focus:border-purple-400 focus:ring-1 focus:ring-purple-400 outline-none transition-all">
                         </div>
                     </div>
                 </div>
 
-                {{-- Flags --}}
+                {{-- Advanced Config --}}
                 <div class="space-y-3">
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Advanced Config</p>
-                    <div class="grid grid-cols-1 gap-2">
-                        <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-purple-200 transition-all">
-                            <input type="checkbox" name="settings[debug_mode]" {{ ($module->settings['debug_mode'] ?? false) ? 'checked' : '' }}
-                                   class="w-3.5 h-3.5 rounded border-slate-300 text-purple-600 focus:ring-purple-400">
-                            <div>
-                                <span class="text-[11px] font-bold text-slate-700 block leading-none">Debug Mode</span>
-                                <span class="text-[9px] text-slate-400">Log technical exceptions & slow queries.</span>
-                            </div>
-                        </label>
+                    <label class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg cursor-pointer hover:border-purple-200 transition-all">
+                        <input type="checkbox" name="settings[debug_mode]" value="1"
+                               {{ $module->setting('debug_mode', false) ? 'checked' : '' }}
+                               class="w-3.5 h-3.5 rounded border-slate-300 text-purple-600 focus:ring-purple-400">
+                        <div>
+                            <span class="text-[11px] font-bold text-slate-700 block leading-none">Debug Mode</span>
+                            <span class="text-[9px] text-slate-400">Log exceptions & slow queries untuk modul ini.</span>
+                        </div>
+                    </label>
+
+                    <div class="flex items-center gap-3 p-2.5 bg-slate-50 border border-slate-200 rounded-lg">
+                        <span class="material-symbols-outlined {{ $module->is_active ? 'text-green-500' : 'text-yellow-500' }}" style="font-size:16px">
+                            {{ $module->is_active ? 'check_circle' : 'warning' }}
+                        </span>
+                        <div class="flex-1">
+                            <span class="text-[11px] font-bold text-slate-700 block leading-none">Status Modul</span>
+                            <span class="text-[9px] text-slate-400">Gunakan toggle di card untuk mengubah status.</span>
+                        </div>
+                        <span class="text-[9px] font-bold px-2 py-0.5 rounded-full {{ $module->is_active ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700' }}">
+                            {{ $module->is_active ? 'Active' : 'Maintenance' }}
+                        </span>
                     </div>
                 </div>
             </div>
 
             {{-- Footer --}}
             <div class="px-5 py-3 border-t border-slate-100 bg-purple-50/20 flex items-center justify-between">
-                <div class="flex gap-2">
-                    <button type="button" class="p-1.5 text-slate-400 hover:text-purple-600 transition-colors" title="Purge Cache">
-                        <span class="material-symbols-outlined" style="font-size:18px">broom</span>
-                    </button>
-                    <button type="button" class="p-1.5 text-slate-400 hover:text-purple-600 transition-colors" title="Optimize Database">
-                        <span class="material-symbols-outlined" style="font-size:18px">database</span>
-                    </button>
-                </div>
-                <button type="submit" class="bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-black px-4 py-1.5 rounded-lg transition-all uppercase tracking-widest shadow-sm">
+                <button type="button"
+                        onclick="if(confirm('Bersihkan cache modul {{ $module->name }}?')) document.getElementById('purge-{{ $module->slug }}').submit();"
+                        class="p-1.5 text-slate-400 hover:text-purple-600 transition-colors rounded-lg hover:bg-purple-50"
+                        title="Purge Cache">
+                    <span class="material-symbols-outlined" style="font-size:18px">mop</span>
+                </button>
+                <button type="submit"
+                        class="bg-purple-600 hover:bg-purple-700 text-white text-[11px] font-black px-4 py-1.5 rounded-lg transition-all uppercase tracking-widest shadow-sm">
                     Save Config
                 </button>
             </div>
         </form>
+
+        <form id="purge-{{ $module->slug }}" action="{{ route('superadmin.modules.purge-cache', $module->slug) }}" method="POST" class="hidden">@csrf</form>
     </div>
 </div>

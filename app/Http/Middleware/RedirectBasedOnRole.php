@@ -17,6 +17,8 @@ class RedirectBasedOnRole
         'pulse*',
         'profile*',
         'logout',
+        'sso/password',
+        'sso/verify',
     ];
 
     public function handle(Request $request, Closure $next): Response

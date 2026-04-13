@@ -29,7 +29,7 @@ class DashboardController extends Controller
         }
 
         // Superadmin & Admin
-        if ($roles->intersect(['superadmin', 'admin_banksoal'])->isNotEmpty()) {
+        if ($roles->intersect(['superadmin', 'admin', 'admin_banksoal'])->isNotEmpty()) {
             return view('banksoal::dashboard.admin');
         }
 

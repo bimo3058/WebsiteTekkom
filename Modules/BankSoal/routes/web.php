@@ -35,9 +35,10 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             });
             // RPS - GPM
             Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
-                Route::get('/riwayat-validasi', [RiwayatValidasiController::class, 'index'])->name('riwayat-validasi');
+                Route::get('/', [RiwayatValidasiController::class, 'index'])->name('index');
                 Route::get('/validasi-rps', [GpmRpsController::class, 'validasiRps'])->name('validasi-rps');
                 Route::get('/validasi-rps/review/{rpsId}', [GpmRpsController::class, 'validasiRpsReview'])->name('validasi-rps.review');
+                Route::get('/validasi-rps/preview/{rpsId}', [GpmRpsController::class, 'previewDokumen'])->name('validasi-rps.preview');
                 Route::get('/riwayat-validasi/rps', [RiwayatValidasiController::class, 'rps'])->name('riwayat-validasi.rps');
             });
             // RPS - Admin
@@ -84,6 +85,10 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::post('/submit', [DosenRpsController::class, 'store'])->name('store');
             });
+            // RPS - GPM
+            Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
+                Route::post('/validasi-rps/store', [GpmRpsController::class, 'storeValidasi'])->name('validasi-rps.store');
+            });
         });
 
         // 2. Blok Bank Soal
@@ -102,6 +107,31 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         Route::delete('/destroy/{id}', [BankSoalController::class, 'destroy'])->name('banksoal.destroy');
     });
     });
+
+    # Periode Ujian Routes
+    Route::prefix('admin/periode')->name('banksoal.periode.')->group(function () {
+        Route::middleware('role:superadmin|admin')->group(function () {
+            Route::get('/setup', [\Modules\BankSoal\Http\Controllers\PeriodeController::class, 'index'])->name('setup');
+            Route::post('/setup', [\Modules\BankSoal\Http\Controllers\PeriodeController::class, 'store'])->name('store');
+            Route::put('/setup/{id}', [\Modules\BankSoal\Http\Controllers\PeriodeController::class, 'update'])->name('update');
+            Route::delete('/setup/{id}', [\Modules\BankSoal\Http\Controllers\PeriodeController::class, 'destroy'])->name('destroy');
+
+            Route::get('/jadwal', [\Modules\BankSoal\Http\Controllers\JadwalController::class, 'index'])->name('jadwal');
+            Route::post('/jadwal', [\Modules\BankSoal\Http\Controllers\JadwalController::class, 'store'])->name('jadwal.store');
+            Route::delete('/jadwal/{id}', [\Modules\BankSoal\Http\Controllers\JadwalController::class, 'destroy'])->name('jadwal.destroy');
+        });
+    });
+
+    # Manajemen Peserta Routes
+    Route::prefix('admin/pendaftar')->name('banksoal.pendaftaran.')->group(function () {
+        Route::middleware('role:superadmin|admin')->group(function () {
+            Route::get('/', [\Modules\BankSoal\Http\Controllers\PendaftarAdminController::class, 'index'])->name('index');
+            Route::post('/', [\Modules\BankSoal\Http\Controllers\PendaftarAdminController::class, 'store'])->name('store');
+            Route::patch('/{id}/status', [\Modules\BankSoal\Http\Controllers\PendaftarAdminController::class, 'updateStatus'])->name('updateStatus');
+            Route::delete('/{id}', [\Modules\BankSoal\Http\Controllers\PendaftarAdminController::class, 'destroy'])->name('destroy');
+        });
+    });
+
 });
 
 // -------------------------------------------------------------------------
@@ -111,7 +141,14 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
     ->prefix('ujian-komprehensif')
     ->name('komprehensif.mahasiswa.')
     ->group(function () {
-        Route::get('/dashboard', fn() => view('banksoal::mahasiswa.beranda'))->name('dashboard');
-        Route::get('/pengajuan-pendaftaran', fn() => view('banksoal::mahasiswa.pendaftaran'))->name('pendaftaran');
-        Route::get('/riwayat-ujian', fn() => view('banksoal::mahasiswa.riwayat'))->name('riwayat');
+        Route::get('/dashboard', [\Modules\BankSoal\Http\Controllers\MahasiswaController::class, 'dashboard'])->name('dashboard');
+        
+        Route::get('/pengajuan-pendaftaran', [\Modules\BankSoal\Http\Controllers\MahasiswaController::class, 'pendaftaran'])->name('pendaftaran');
+        
+        Route::get('/pengajuan-pendaftaran/form', [\Modules\BankSoal\Http\Controllers\MahasiswaController::class, 'createPendaftaran'])->name('pendaftaran.form');
+        Route::post('/pengajuan-pendaftaran/form', [\Modules\BankSoal\Http\Controllers\MahasiswaController::class, 'storePendaftaran'])->name('pendaftaran.store');
+        
+        Route::get('/riwayat-ujian', function () {
+            return view('banksoal::mahasiswa.riwayat');
+        })->name('riwayat');
     });

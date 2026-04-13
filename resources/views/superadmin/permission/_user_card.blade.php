@@ -230,18 +230,20 @@
                     <div class="flex flex-wrap gap-2.5">
                         @foreach($roles as $role)
                             @php $isActive = $user->roles->contains($role->id); @endphp
-                            <label class="relative cursor-pointer group/role">
-                                <input type="checkbox" name="roles[]" value="{{ $role->id }}" 
+                            <label class="relative cursor-pointer">
+                                <input type="checkbox"
+                                    name="roles[]"
+                                    value="{{ $role->id }}"
                                     {{ $isActive ? 'checked' : '' }}
                                     class="peer sr-only role-checkbox"
                                     data-role-name="{{ strtolower($role->name) }}"
                                     data-is-academic="{{ $role->is_academic ? '1' : '0' }}">
-                                <div class="flex items-center gap-2.5 px-4 py-2 rounded-full border border-[#DEE2E6] bg-white text-[#6C757D] transition-all duration-200 
+                                <div class="flex items-center gap-2.5 px-4 py-2 rounded-full border border-[#DEE2E6] bg-white text-[#6C757D] transition-all duration-200
                                             peer-checked:border-[#5E53F4] peer-checked:bg-[#F1E9FF] peer-checked:text-[#5E53F4] peer-checked:shadow-[0_0_0_1px_#5E53F4]
                                             hover:border-[#ADB5BD] shadow-sm">
-                                    <div class="size-2 rounded-full {{ $isActive ? 'bg-[#5E53F4]' : 'bg-[#DEE2E6]' }} transition-colors peer-checked:bg-[#5E53F4]"></div>
+                                    {{-- Dot: warna berdasarkan checked state via JS karena peer tidak bisa ke child --}}
+                                    <div class="dot-indicator size-2 rounded-full transition-colors {{ $isActive ? 'bg-[#5E53F4]' : 'bg-[#DEE2E6]' }}"></div>
                                     <span class="text-[11px] font-semibold uppercase tracking-tight">{{ str_replace('_', ' ', $role->name) }}</span>
-                                    <span class="material-symbols-outlined hidden peer-checked:block text-[#5E53F4]" style="font-size:16px; font-variation-settings: 'FILL' 1">check_circle</span>
                                 </div>
                             </label>
                         @endforeach

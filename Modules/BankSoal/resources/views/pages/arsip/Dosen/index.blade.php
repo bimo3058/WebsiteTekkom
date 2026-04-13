@@ -1,33 +1,8 @@
-<x-banksoal::layouts.master>
-<!-- SIDEBAR -->
-    <aside class="sidebar">
-    <div class="sidebar-brand">
-        <div class="brand-icon"><i class="fas fa-university"></i></div>
-        <div class="brand-text">
-        <strong>Departemen Teknik Komputer</strong>
-        <span>Universitas Wakamsi</span>
-        </div>
-    </div>
-    <nav class="sidebar-nav">
-        <a href="{{ route('banksoal.dashboard') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-th-large"></i></span> Home</a>
-        <a href="{{ route('banksoal.rps.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-file-alt"></i></span> Manajemen RPS</a>
-        <a href="{{ route('banksoal.soal.dosen.index') }}" class="nav-item"><span class="nav-icon"><i class="fas fa-database"></i></span> Bank Soal</a>
-        <a href="{{ route('banksoal.arsip.dosen.index') }}" class="nav-item active"><span class="nav-icon"><i class="fas fa-archive"></i></span> Arsip Soal</a>
-    </nav>
-    </aside>
+<x-banksoal::layouts.dosen-master>
 
-    <!-- TOPBAR -->
-    <header class="topbar">
-    <button class="topbar-btn"><i class="fas fa-cog"></i></button>
-    <button class="topbar-btn notif-btn"><i class="fas fa-bell"></i><span class="notif-dot"></span></button>
-    <div class="user-chip">
-        <div class="user-avatar-chip">A</div>
-        <div class="user-info">
-        <strong>Prof. Dr. Siti Rahayu</strong>
-        <span>198503122010121001</span>
-        </div>
-    </div>
-    </header>
+@include('banksoal::partials.dosen.layout-styles')
+@include('banksoal::partials.dosen.sidebar', ['active' => 'arsip'])
+@include('banksoal::partials.dosen.topbar')
 
     <!-- MAIN -->
     <main class="main">
@@ -141,54 +116,42 @@
                 </tr>
                 @empty
                 {{-- Demo rows grouped by tahun --}}
-                <tr><td colspan="7" style="padding:0;border:none">
-                    <div class="year-divider">2023/2024 - Ganjil</div>
-                </td></tr>
                 @foreach([
-                    ['A-101','CS-201','Algorithms','Dynamic Programming','Ganjil 2023/2024','Hard','Diarsipkan'],
-                    ['A-102','CS-201','Algorithms','Graph Traversal','Ganjil 2023/2024','Medium','Diarsipkan'],
-                    ['A-103','CS-301','Databases','Normalization','Ganjil 2023/2024','Easy','Diarsipkan'],
-                ] as $row)
-                <tr>
-                    <td class="id-cell">{{ $row[0] }}</td>
-                    <td><span class="course-pill">{{ $row[1] }}</span> {{ $row[2] }}</td>
-                    <td>{{ $row[3] }}</td>
-                    <td>{{ $row[4] }}</td>
-                    <td><span class="badge badge-{{ strtolower($row[5]) === 'hard' ? 'hard' : (strtolower($row[5]) === 'easy' ? 'easy' : 'medium') }}">{{ $row[5] }}</span></td>
-                    <td><span class="badge badge-archived">Diarsipkan</span></td>
-                    <td>
-                        <div class="row-actions">
-                            <button class="action-btn" title="Lihat"><i class="fas fa-eye"></i></button>
-                            <button class="action-btn" title="Pulihkan"><i class="fas fa-rotate-left"></i></button>
-                            <button class="action-btn del" title="Hapus"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>
-                @endforeach
-
-                <tr><td colspan="7" style="padding:0;border:none">
-                    <div class="year-divider">2022/2023 - Genap</div>
-                </td></tr>
-                @foreach([
-                    ['A-089','CS-202','Data Structures','Linked Lists','Genap 2022/2023','Medium','Diarsipkan'],
-                    ['A-090','CS-305','Networks','OSI Model','Genap 2022/2023','Easy','Diarsipkan'],
-                    ['A-091','CS-202','Data Structures','Hash Tables','Genap 2022/2023','Hard','Diarsipkan'],
-                ] as $row)
-                <tr>
-                    <td class="id-cell">{{ $row[0] }}</td>
-                    <td><span class="course-pill">{{ $row[1] }}</span> {{ $row[2] }}</td>
-                    <td>{{ $row[3] }}</td>
-                    <td>{{ $row[4] }}</td>
-                    <td><span class="badge badge-{{ strtolower($row[5]) === 'hard' ? 'hard' : (strtolower($row[5]) === 'easy' ? 'easy' : 'medium') }}">{{ $row[5] }}</span></td>
-                    <td><span class="badge badge-archived">Diarsipkan</span></td>
-                    <td>
-                        <div class="row-actions">
-                            <button class="action-btn" title="Lihat"><i class="fas fa-eye"></i></button>
-                            <button class="action-btn" title="Pulihkan"><i class="fas fa-rotate-left"></i></button>
-                            <button class="action-btn del" title="Hapus"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </td>
-                </tr>
+                    ['divider' => '2023/2024 - Ganjil', 'rows' => [
+                        ['A-101','CS-201','Algorithms','Dynamic Programming','Ganjil 2023/2024','Hard'],
+                        ['A-102','CS-201','Algorithms','Graph Traversal','Ganjil 2023/2024','Medium'],
+                        ['A-103','CS-301','Databases','Normalization','Ganjil 2023/2024','Easy'],
+                    ]],
+                    ['divider' => '2022/2023 - Genap', 'rows' => [
+                        ['A-089','CS-202','Data Structures','Linked Lists','Genap 2022/2023','Medium'],
+                        ['A-090','CS-305','Networks','OSI Model','Genap 2022/2023','Easy'],
+                        ['A-091','CS-202','Data Structures','Hash Tables','Genap 2022/2023','Hard'],
+                    ]],
+                ] as $group)
+                    <tr><td colspan="7" style="padding:0;border:none">
+                        <div class="year-divider">{{ $group['divider'] }}</div>
+                    </td></tr>
+                    @foreach($group['rows'] as $row)
+                    <tr>
+                        <td class="id-cell">{{ $row[0] }}</td>
+                        <td><span class="course-pill">{{ $row[1] }}</span> {{ $row[2] }}</td>
+                        <td>{{ $row[3] }}</td>
+                        <td>{{ $row[4] }}</td>
+                        <td>
+                            <span class="badge badge-{{ strtolower($row[5]) === 'hard' ? 'hard' : (strtolower($row[5]) === 'easy' ? 'easy' : 'medium') }}">
+                                {{ $row[5] }}
+                            </span>
+                        </td>
+                        <td><span class="badge badge-archived">Diarsipkan</span></td>
+                        <td>
+                            <div class="row-actions">
+                                <button class="action-btn" title="Lihat"><i class="fas fa-eye"></i></button>
+                                <button class="action-btn" title="Pulihkan"><i class="fas fa-rotate-left"></i></button>
+                                <button class="action-btn del" title="Hapus"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>
+                    @endforeach
                 @endforeach
                 @endforelse
             </tbody>
@@ -210,14 +173,9 @@
 </div>
     </main>
 
-<script>
-document.getElementById('searchArsip').addEventListener('input', function () {
-    const q = this.value.toLowerCase();
-    document.querySelectorAll('#tableArsip tbody tr').forEach(row => {
-        if (row.querySelector('td[colspan]')) return;
-        row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
-    });
-});
-</script>
+{{-- ═══ Search Handler Component ═══ --}}
+<script src="{{ asset('modules/banksoal/js/Banksoal/shared/SearchHandler.js') }}"></script>
 
-</x-banksoal::layouts.master>
+@include('banksoal::partials.dosen.layout-scripts')
+
+</x-banksoal::layouts.dosen-master>
