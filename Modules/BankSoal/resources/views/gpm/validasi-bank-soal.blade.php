@@ -27,6 +27,8 @@
         
         .pagination-custom .page-link { color: #475569; border: 1px solid #e2e8f0; margin: 0 0.25rem; border-radius: 0.375rem; font-size: 0.875rem;}
         .pagination-custom .page-item.active .page-link { background-color: #2563eb; border-color: #2563eb; color: white; }
+
+        .badge-count { background-color: #dbeafe; color: #1e40af; border-radius: 9999px; padding: 0.15rem 0.6rem; font-size: 0.75rem; margin-left: 0.5rem; font-weight: 700; }
     </style>
 
     <div class="container-fluid py-4 px-4 px-xl-5">
@@ -42,10 +44,16 @@
 
         <div class="card border-0 shadow-sm rounded-4 mb-4">
             <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <div class="search-container d-flex align-items-center px-3 py-2 flex-grow-1" style="max-width: 400px;">
+                <form action="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}" method="GET" class="search-container d-flex align-items-center px-3 py-2 flex-grow-1" style="max-width: 400px; margin: 0;">
                     <i class="fas fa-search text-muted"></i>
-                    <input type="text" class="form-control search-input ms-2 py-0" placeholder="Cari mata kuliah atau dosen...">
-                </div>
+                    <input type="text" name="search" autocomplete="off" list="datalistAntrean" class="form-control search-input ms-2 py-0" placeholder="Cari mata kuliah... ketik abjad" value="{{ request('search') }}" onchange="this.form.submit()">
+                    <datalist id="datalistAntrean">
+                        @foreach($all_paket_soal as $item)
+                            <option value="{{ $item->mk_nama }}"></option>
+                            <option value="{{ $item->mk_kode }}"></option>
+                        @endforeach
+                    </datalist>
+                </form>
                 
                 <div class="d-flex gap-2">
                     <label class="d-none d-md-flex align-items-center text-muted me-2" style="font-size: 0.85rem; font-weight: 500;">SEMESTER</label>
@@ -55,6 +63,22 @@
                     </select>
                 </div>
             </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 mb-4">
+            <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+                <div class="d-flex align-items-center border-bottom mb-4" style="gap: 2.5rem; border-color: #e2e8f0 !important;">
+            <a href="#" class="text-decoration-none pb-3 position-relative d-flex align-items-center" style="color: #2563eb; font-weight: 600; font-size: 0.95rem;">
+                Menunggu Validasi 
+                <span class="badge-count">{{ $counts->menunggu ?? 0 }}</span>
+                <div class="position-absolute bottom-0 start-0 w-100" style="height: 2px; background-color: #2563eb; border-radius: 2px;"></div>
+            </a>
+
+            <a href="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal') }}" class="text-decoration-none pb-3 text-muted fw-semibold hover-primary d-flex align-items-center" style="font-size: 0.95rem; transition: color 0.2s;">
+                Selesai Direview
+                <span class="badge-count">{{ $counts->selesai ?? 0 }}</span>
+            </a>
+            
         </div>
 
         <div class="table-container mb-4">

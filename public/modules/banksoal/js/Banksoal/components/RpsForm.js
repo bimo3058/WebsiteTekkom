@@ -1,29 +1,6 @@
-/**
- * ════════════════════════════════════════════════════════════════════
- * RpsForm.js - RPS Form Component
- * ════════════════════════════════════════════════════════════════════
- * Handles cascading dropdowns and form validation for RPS submission.
- *
- * Features:
- * - Cascading: Mata Kuliah → Dosen + CPL → CPMK
- * - File drag & drop upload
- * - Form validation before submit
- * - Error handling with Snackbar notifications
- *
- * Usage:
- *   RpsForm.init({
- *       mkSelectId: 'mkSelect',           // Mata Kuliah select
- *       dosenMsId: 'dosenMs',             // Dosen multi-select
- *       cplMsId: 'cplMs',                 // CPL multi-select
- *       cpmkMsId: 'cpmkMs',               // CPMK multi-select
- *       fileInputId: 'fileInput',         // File input
- *       uploadZoneId: 'uploadZone',       // Drag & drop zone
- *       formSelector: 'form'              // Form element
- *   });
- */
-
 class RpsFormComponent {
     constructor(config) {
+        // Konfigurasi default untuk elemen form RPS.
         this.config = {
             mkSelectId: "mkSelect",
             dosenMsId: "dosenMs",
@@ -40,16 +17,13 @@ class RpsFormComponent {
         this.uploadZone = document.getElementById(this.config.uploadZoneId);
         this.form = document.querySelector(this.config.formSelector);
 
-        // MultiSelect instances (will be set by init)
+        // Instance MultiSelect akan diisi saat init dipanggil.
         this.dosenMs = null;
         this.cplMs = null;
         this.cpmkMs = null;
     }
 
-    /**
-     * Initialize form component with MultiSelect instances
-     * @param {Object} multiSelectInstances - {dosenMs, cplMs, cpmkMs}
-     */
+    // Menyambungkan instance MultiSelect dan menyiapkan semua perilaku form.
     init(multiSelectInstances) {
         this.dosenMs = multiSelectInstances.dosenMs;
         this.cplMs = multiSelectInstances.cplMs;
@@ -60,17 +34,12 @@ class RpsFormComponent {
         this._setupFormValidation();
     }
 
-    /**
-     * Setup cascading dropdowns
-     * @private
-     */
+    // Mengatur alur perubahan berantai: mata kuliah, CPL, dan CPMK.
     _setupCascading() {
-        // ── CASCADE: Mata Kuliah → Dosen + CPL ──
-        this.mkSelect.addEventListener("change", () =>
-            this._onMataKuliahChange(),
-        );
+        this.mkSelect.addEventListener("change", () => {
+            this._onMataKuliahChange();
+        });
 
-        // ── CASCADE: CPL → CPMK ──
         document
             .getElementById(this.config.cplMsId)
             ?.addEventListener("ms:change", (e) => {
@@ -78,10 +47,7 @@ class RpsFormComponent {
             });
     }
 
-    /**
-     * Handle Mata Kuliah selection change
-     * @private
-     */
+    // Menangani perubahan mata kuliah dan memuat data dosen serta CPL terkait.
     _onMataKuliahChange() {
         const mkId = this.mkSelect.value;
 
@@ -96,17 +62,14 @@ class RpsFormComponent {
         this.cplMs.setLoading("Memuat CPL…");
         this.cpmkMs.setDisabled("Pilih CPL terlebih dahulu");
 
-        // Fetch Dosen
+        // Ambil data dosen sesuai mata kuliah yang dipilih.
         this._fetchDosen();
 
-        // Fetch CPL
+        // Ambil data CPL sesuai mata kuliah yang dipilih.
         this._fetchCpl(mkId);
     }
 
-    /**
-     * Fetch dosen list from API
-     * @private
-     */
+    // Mengambil daftar dosen untuk pilihan dosen pengampu.
     _fetchDosen() {
         const url =
             document.querySelector("[data-route-dosen]")?.dataset.routeDosen ||
@@ -134,10 +97,7 @@ class RpsFormComponent {
             });
     }
 
-    /**
-     * Fetch CPL list from API
-     * @private
-     */
+    // Mengambil daftar CPL berdasarkan mata kuliah.
     _fetchCpl(mkId) {
         const baseUrl =
             document.querySelector("[data-route-cpl]")?.dataset.routeCpl ||
@@ -168,10 +128,7 @@ class RpsFormComponent {
             });
     }
 
-    /**
-     * Handle CPL selection change (fetch CPMK)
-     * @private
-     */
+    // Mengambil daftar CPMK berdasarkan CPL yang dipilih.
     _onCplChange(cplIds) {
         if (!cplIds.length) {
             this.cpmkMs.setDisabled("Pilih CPL terlebih dahulu");
@@ -210,10 +167,7 @@ class RpsFormComponent {
             });
     }
 
-    /**
-     * Setup file upload drag & drop
-     * @private
-     */
+    // Menyiapkan area unggah file agar mendukung drag and drop.
     _setupFileUpload() {
         if (!this.uploadZone || !this.fileInput) return;
 
@@ -239,40 +193,31 @@ class RpsFormComponent {
         this.fileInput.addEventListener("change", () => this._updateFileName());
     }
 
-    /**
-     * Update file name display
-     * @private
-     */
+    // Menampilkan nama file yang dipilih di area unggah.
     _updateFileName() {
         if (this.fileInput.files?.length) {
             const uploadText = document.getElementById("uploadText");
-            if (uploadText)
+            if (uploadText) {
                 uploadText.textContent = this.fileInput.files[0].name;
+            }
         }
     }
 
-    /**
-     * Setup form validation
-     * @private
-     */
+    // Menjalankan validasi sebelum form dikirim.
     _setupFormValidation() {
         this.form?.addEventListener("submit", (e) => {
             const errors = this._validateForm();
             if (errors.length) {
                 e.preventDefault();
                 const errorMsg = errors
-                    .map((e, i) => `${i + 1}. ${e}`)
+                    .map((error, index) => `${index + 1}. ${error}`)
                     .join("\n");
                 Snackbar?.show?.(`Validasi Error:\n${errorMsg}`, "error");
             }
         });
     }
 
-    /**
-     * Validate form fields
-     * @private
-     * @returns {Array<string>} Array of error messages
-     */
+    // Memeriksa kelengkapan isian form RPS.
     _validateForm() {
         const errors = [];
 
@@ -293,5 +238,5 @@ class RpsFormComponent {
     }
 }
 
-// Export singleton
+// Instance tunggal agar bisa dipakai langsung dari komponen lain.
 const RpsForm = new RpsFormComponent();

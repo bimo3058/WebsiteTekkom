@@ -1,20 +1,6 @@
-/**
- * ════════════════════════════════════════════════════════════════════
- * FileUploadHandler.js - File Preview and Upload Handler
- * ════════════════════════════════════════════════════════════════════
- * Handles document preview in modal (supports Office files via Office API).
- *
- * Usage:
- *   FileHandler.previewDokumen(rpsId, mkNama, dokumenPath);
- *   FileHandler.closeDokumenModal();
- */
-
 class FileUploadHandlerComponent {
-    /**
-     * Initialize file handler (setup modal event listeners)
-     */
     static init() {
-        // Close modal on backdrop click
+        // Tutup modal saat area luar diklik.
         document.addEventListener("click", (e) => {
             const modal = document.getElementById("dokumenModal");
             if (e.target === modal) {
@@ -22,7 +8,7 @@ class FileUploadHandlerComponent {
             }
         });
 
-        // Close modal on Escape key
+        // Tutup modal saat tombol Escape ditekan.
         document.addEventListener("keydown", (e) => {
             if (e.key === "Escape") {
                 this.closeDokumenModal();
@@ -30,12 +16,7 @@ class FileUploadHandlerComponent {
         });
     }
 
-    /**
-     * Preview document in modal
-     * @param {number|string} rpsId - RPS ID
-     * @param {string} mkNama - Mata Kuliah name
-     * @param {string} dokumenPath - Document path/filename
-     */
+    // Menampilkan pratinjau dokumen RPS.
     static previewDokumen(rpsId, mkNama, dokumenPath) {
         const modal = document.getElementById("dokumenModal");
         const iframe = document.getElementById("dokumenFrame");
@@ -47,7 +28,7 @@ class FileUploadHandlerComponent {
             return;
         }
 
-        // Build preview URL (for PDF and other formats)
+        // Menyusun URL pratinjau untuk PDF dan format lain.
         const baseUrl =
             document.querySelector("[data-preview-route]")?.dataset
                 .previewRoute || `/bank-soal/rps/dosen/preview/${rpsId}`;
@@ -55,21 +36,21 @@ class FileUploadHandlerComponent {
             ? baseUrl
             : baseUrl.replace(":rpsId", rpsId);
 
-        // Get file extension
+        // Mengambil ekstensi file.
         const fileExt = dokumenPath.split(".").pop().toLowerCase();
 
-        // Get full URL for Office viewer
+        // Menyusun URL publik untuk Office viewer.
         const appUrl =
             document.querySelector("[data-app-url]")?.dataset.appUrl ||
             window.location.origin;
         const publicFileUrl = appUrl + "/storage/bank-soal/" + dokumenPath;
 
-        // Set modal title
+        // Mengisi judul modal.
         title.textContent = `Preview: ${mkNama}`;
 
-        // Check if Office format (DOCX, XLSX, PPTX)
+        // Jika file Office, gunakan viewer Microsoft.
         if (["docx", "xlsx", "pptx"].includes(fileExt)) {
-            // Use Microsoft Office viewer
+            // Gunakan Microsoft Office viewer.
             const encodedUrl = encodeURIComponent(publicFileUrl);
             iframe.style.display = "none";
             embed.style.display = "block";
@@ -81,21 +62,19 @@ class FileUploadHandlerComponent {
                 </iframe>
             `;
         } else {
-            // Use native iframe for PDF, images, etc.
+            // Gunakan iframe bawaan untuk PDF, gambar, dan format lain.
             iframe.style.display = "block";
             embed.style.display = "none";
             embed.innerHTML = "";
             iframe.src = previewUrl;
         }
 
-        // Show modal
+        // Tampilkan modal.
         modal.style.display = "flex";
         document.body.style.overflow = "hidden";
     }
 
-    /**
-     * Close document preview modal
-     */
+    // Menutup modal pratinjau dokumen.
     static closeDokumenModal() {
         const modal = document.getElementById("dokumenModal");
         const iframe = document.getElementById("dokumenFrame");
@@ -106,7 +85,7 @@ class FileUploadHandlerComponent {
         modal.style.display = "none";
         document.body.style.overflow = "auto";
 
-        // Clear iframe and embed content
+        // Mengosongkan isi iframe dan embed.
         if (iframe) {
             iframe.src = "";
             iframe.style.display = "none";
@@ -118,7 +97,7 @@ class FileUploadHandlerComponent {
     }
 }
 
-// Auto-init on DOM ready
+// Inisialisasi otomatis saat DOM siap.
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
         FileUploadHandlerComponent.init();
@@ -127,5 +106,15 @@ if (document.readyState === "loading") {
     FileUploadHandlerComponent.init();
 }
 
-// Export as FileHandler for global access
+// Instance global agar bisa diakses dari komponen lain.
 const FileHandler = FileUploadHandlerComponent;
+
+// Fungsi global untuk pemanggilan inline pada template.
+window.previewDokumen = function (rpsId, mkNama, dokumenPath) {
+    FileHandler.previewDokumen(rpsId, mkNama, dokumenPath);
+};
+
+// Fungsi global untuk menutup modal dari event inline.
+window.closeDokumenModal = function () {
+    FileHandler.closeDokumenModal();
+};

@@ -11,14 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('bs_rps_detail', function (Blueprint $table) {
+        Schema::create('bs_periode_rps', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('mk_id');
+            $table->string('judul');
             $table->string('semester');
             $table->string('tahun_ajaran');
-            $table->text('dokumen');
-            $table->enum('status', ['draft', 'diajukan', 'revisi', 'disetujui'])->default('diajukan');
+            $table->dateTime('tanggal_mulai');
+            $table->dateTime('tanggal_selesai');
+            $table->boolean('is_active')->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -27,6 +29,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bs_rps_detail');
+        Schema::dropIfExists('bs_periode_rps');
     }
 };
