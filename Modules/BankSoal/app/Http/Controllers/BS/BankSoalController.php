@@ -46,7 +46,7 @@ class BankSoalController extends Controller
             ->select('bs_pertanyaan.*')
             ->orderBy('bs_mata_kuliah.nama')
             ->orderByDesc('bs_pertanyaan.created_at')
-            ->paginate(10, ['*'], 'soal_page');
+            ->paginate(5, ['*'], 'soal_page');
         
         // Map untuk menyesuaikan dengan field dummy di view.
         $soals->through(function($soal) {
@@ -56,22 +56,140 @@ class BankSoalController extends Controller
         });
 
         // 3. Ambil Ekstraksi (Packages)
-        $packages = \Modules\BankSoal\Models\MataKuliah::with('cpl')
+        $packages = \Modules\BankSoal\Models\MataKuliah::with(['cpl', 'pertanyaan.cpl', 'pertanyaan.cpmk'])
             ->whereIn('id', $mkIds)
+            ->has('pertanyaan')
             ->when($request->searchPackages, function($q, $search) {
                 return $q->where('nama', 'like', "%{$search}%")->orWhere('kode', 'like', "%{$search}%");
             })
             ->withCount('pertanyaan as jumlah_soal')
-            ->paginate(10, ['*'], 'pkg_page');
+            ->paginate(5, ['*'], 'pkg_page');
         
         $packages->through(function($pkg) {
-            $pkg->str_cpls = $pkg->cpl->pluck('kode')->implode(', ') ?: '-';
-            // Misal: asumsikan CPMK belum ada di model MK, kita beri string kosong atau dummy
-            $pkg->str_cpmks = '-';
+            $mkCpls = $pkg->cpl->pluck('kode')->filter();
+            $soalCpls = $pkg->pertanyaan->pluck('cpl.kode')->filter();
+            $allCpls = $mkCpls->merge($soalCpls)->unique()->sort()->values();
+            
+            $pkg->str_cpls = $allCpls->isNotEmpty() ? $allCpls->implode(', ') : '-';
+            
+            $soalCpmks = $pkg->pertanyaan->pluck('cpmk.kode')->filter();
+            $allCpmks = $soalCpmks->unique()->sort()->values();
+            
+            $pkg->str_cpmks = $allCpmks->isNotEmpty() ? $allCpmks->implode(', ') : '-';
             return $pkg;
         });
 
+        // 4. Pastikan mataKuliahDosen meload CPL dan CPMK yang berkaitan dengan MK maupun Soalnya
+        $mataKuliahDosen->load(['cpl', 'pertanyaan.cpl', 'pertanyaan.cpmk']);
+        
+        $mataKuliahDosen->transform(function ($mk) {
+            $mkCpls = collect($mk->cpl);
+            $soalCpls = $mk->pertanyaan->pluck('cpl')->filter();
+            $mk->all_cpls = $mkCpls->merge($soalCpls)->unique('id')->sortBy('kode')->values();
+            
+            $soalCpmks = $mk->pertanyaan->pluck('cpmk')->filter();
+            $mk->all_cpmks = $soalCpmks->unique('id')->sortBy('kode')->values();
+            
+            return $mk;
+        });
+        
+        // Pass ke view (untuk digunakan pada Tarik Soal modal)
         return view('banksoal::pages.bank-soal.Dosen.index', compact('soals', 'packages', 'mataKuliahDosen'));
+    }
+
+    public function ekstrak(Request $request)
+    {
+        $request->validate([
+            'mk_id' => 'required',
+            'jenis_soal' => 'nullable|array',
+            'cpl_id' => 'nullable',
+            'cpmk_id' => 'nullable',
+            'bobot_total' => 'nullable|numeric'
+        ]);
+
+        $query = \Modules\BankSoal\Models\Pertanyaan::with(['mataKuliah', 'cpl', 'jawaban'])
+            ->where('mk_id', $request->mk_id);
+
+        // TODO: Filter jenis soal dinonaktifkan sementara karena kolom 'tipe_soal' 
+        // belum tersedia di skema tabel bs_pertanyaan saat ini.
+        // if ($request->filled('jenis_soal')) {
+        //     $query->whereIn('tipe_soal', $request->jenis_soal);
+        // }
+
+        if ($request->filled('cpl_id')) {
+            $query->where('cpl_id', $request->cpl_id);
+        }
+
+        $soals = $query->inRandomOrder()->get();
+
+        if($soals->isEmpty()){
+            if ($request->ajax() || $request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Tidak ada soal yang sesuai dengan kriteria ekstraksi.']);
+            }
+            return back()->with('error', 'Tidak ada soal yang sesuai dengan kriteria ekstraksi.');
+        }
+
+        $mataKuliah = \Modules\BankSoal\Models\MataKuliah::find($request->mk_id);
+
+        if ($request->ajax() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'mataKuliah' => $mataKuliah,
+                'soals' => $soals->map(function ($soal) {
+                    // Sertakan cpmk_id jika ada relasi CPMK
+                    return [
+                        'id' => $soal->id,
+                        'soal' => strip_tags(\Illuminate\Support\Str::limit($soal->soal, 200)),
+                        'cpl' => $soal->cpl ? $soal->cpl->kode : null,
+                        'cpmk' => $soal->cpmk ? $soal->cpmk->kode : null,
+                    ];
+                }),
+                'request' => $request->all()
+            ]);
+        }
+
+        return view('banksoal::pages.bank-soal.Dosen.ekstrak-result', compact('soals', 'mataKuliah', 'request'));
+    }
+
+    public function cetakUjian(Request $request)
+    {
+        $request->validate([
+            'soal_ids' => 'required|array',
+            'mk_id' => 'required',
+            'agenda' => 'nullable',
+            'tahun_ajaran' => 'nullable',
+            'semester' => 'nullable'
+        ]);
+
+        $soals = \Modules\BankSoal\Models\Pertanyaan::with(['cpl', 'cpmk', 'jawaban'])
+            ->whereIn('id', $request->soal_ids)
+            // Memastikan urutan tetap sesuai yang dikirim request
+            ->orderByRaw('ARRAY_POSITION(ARRAY[' . implode(',', $request->soal_ids) . ']::integer[], id)')
+            ->get();
+
+        $mataKuliah = \Modules\BankSoal\Models\MataKuliah::find($request->mk_id);
+
+        return view('banksoal::pages.bank-soal.Dosen.print-ujian', compact('soals', 'mataKuliah', 'request'));
+    }
+
+    public function getAvailableSoals($mk_id)
+    {
+        $soals = \Modules\BankSoal\Models\Pertanyaan::with(['cpl', 'cpmk'])
+            ->where('mk_id', $mk_id)
+            ->orderByDesc('created_at')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'soals' => $soals->map(function ($soal) {
+                return [
+                    'id' => $soal->id,
+                    'soal' => strip_tags(\Illuminate\Support\Str::limit($soal->soal, 150)),
+                    'cpl' => $soal->cpl ? $soal->cpl->kode : null,
+                    'cpmk' => $soal->cpmk ? $soal->cpmk->kode : null,
+                ];
+            })
+        ]);
     }
 
     /* |--------------------------------------------------------------------------

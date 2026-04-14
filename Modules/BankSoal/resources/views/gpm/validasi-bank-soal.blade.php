@@ -46,7 +46,7 @@
             <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <form action="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}" method="GET" class="search-container d-flex align-items-center px-3 py-2 flex-grow-1" style="max-width: 400px; margin: 0;">
                     <i class="fas fa-search text-muted"></i>
-                    <input type="text" name="search" autocomplete="off" list="datalistAntrean" class="form-control search-input ms-2 py-0" placeholder="Cari mata kuliah... ketik abjad" value="{{ request('search') }}" onchange="this.form.submit()">
+                    <input type="text" name="search" autocomplete="off" list="datalistAntrean" class="form-control search-input ms-2 py-0" placeholder="Cari mata kuliah..." value="{{ request('search') }}" onchange="this.form.submit()">
                     <datalist id="datalistAntrean">
                         @foreach($all_paket_soal as $item)
                             <option value="{{ $item->mk_nama }}"></option>

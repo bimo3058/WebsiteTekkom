@@ -84,7 +84,7 @@
             <form action="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal') }}" method="GET" class="search-box m-0 p-0" style="padding: 0 !important; overflow: hidden;">
                 <div class="d-flex align-items-center w-100" style="padding: 0.5rem 1rem;">
                     <i class="fas fa-search text-muted"></i>
-                    <input type="text" name="search" autocomplete="off" list="datalistRiwayat" value="{{ request('search') }}" class="form-control border-0 shadow-none bg-transparent" placeholder="Cari mata kuliah... ketik abjad" onchange="this.form.submit()">
+                    <input type="text" name="search" autocomplete="off" list="datalistRiwayat" value="{{ request('search') }}" class="form-control border-0 shadow-none bg-transparent" placeholder="Cari mata kuliah..." onchange="this.form.submit()">
                     <datalist id="datalistRiwayat">
                         @foreach($all_riwayat_soal as $item)
                             <option value="{{ $item->mk_nama }}"></option>
