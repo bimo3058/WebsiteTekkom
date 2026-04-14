@@ -6,9 +6,9 @@
             {{-- Header --}}
             <div class="mb-6 flex items-center justify-between">
                 <div>
-                    <h1 class="text-xl font-bold text-slate-800 tracking-tight">System Modules</h1>
+                    <h1 class="text-xl font-semibold text-slate-800 tracking-tight">System Modules</h1>
                     <p class="text-slate-500 text-[11px] mt-0.5 font-medium">
-                        Total <span class="text-blue-600">{{ $modules->count() }}</span> modul terintegrasi dalam ekosistem
+                        Total <span class="text-purple-600">{{ $modules->count() }}</span> modul terintegrasi dalam ekosistem
                     </p>
                 </div>
                 <a href="{{ route('superadmin.dashboard') }}"

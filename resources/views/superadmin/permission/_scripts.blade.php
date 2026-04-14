@@ -15,9 +15,15 @@
         const body = document.getElementById('card-body-' + userId);
         const chevron = document.querySelector('.card-chevron-' + userId);
         if (!body) return;
+
         const isHidden = body.classList.contains('hidden');
         body.classList.toggle('hidden');
         if (chevron) chevron.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+
+        if (isHidden) {
+            const card = body.closest('.user-card');
+            if (card) window.executeAutopilot(card);
+        }
     };
 
     window.closeSuperadminWarning = function() {
@@ -60,6 +66,13 @@
         const target = e.target;
 
         if (target.classList.contains('role-checkbox')) {
+
+            const dot = target.closest('label')?.querySelector('.dot-indicator');
+            if (dot) {
+                dot.classList.toggle('bg-[#5E53F4]', target.checked);
+                dot.classList.toggle('bg-[#DEE2E6]', !target.checked);
+            }
+
             if (target.dataset.roleName === 'superadmin' && target.checked) {
                 target.checked = false; 
                 pendingRoleCheckbox = target;

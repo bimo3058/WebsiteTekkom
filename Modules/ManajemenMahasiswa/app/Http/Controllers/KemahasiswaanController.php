@@ -31,4 +31,16 @@ class KemahasiswaanController extends Controller
         $this->authorize('kemahasiswaan.view'); // FIX
         return view('manajemenmahasiswa::dashboard.mahasiswa');
     }
+
+    public function pengurusDashboard()
+    {
+        $this->authorize('kemahasiswaan.view');
+        return view('manajemenmahasiswa::dashboard.pengurus');
+    }
+
+    public function alumniDashboard()
+    {
+        $this->authorize('kemahasiswaan.view');
+        return view('manajemenmahasiswa::dashboard.alumni');
+    }
 }
