@@ -1,15 +1,15 @@
 <x-banksoal::layouts.dosen-admin>
-    <x-banksoal::dosen.page-header title="Edit Soal" subtitle="Perbarui detail pertanyaan dan opsi jawaban.">
+    <x-banksoal::ui.page-header title="Edit Soal" subtitle="Perbarui detail pertanyaan dan opsi jawaban.">
         <x-slot:actions>
             <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"><i class="fas fa-arrow-left"></i> Kembali</a>
         </x-slot:actions>
-    </x-banksoal::dosen.page-header>
+    </x-banksoal::ui.page-header>
 
     @if(session('error'))
         <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"><i class="fas fa-exclamation-circle mr-1"></i> {{ session('error') }}</div>
     @endif
 
-    <x-banksoal::dosen.panel title="Form Edit Soal" subtitle="Pastikan jawaban benar tetap ditandai sebelum menyimpan." padding="p-0">
+    <x-banksoal::ui.panel title="Form Edit Soal" subtitle="Pastikan jawaban benar tetap ditandai sebelum menyimpan." padding="p-0">
         <form action="{{ route('banksoal.soal.dosen.update', $soal->id) }}" method="POST">
             @csrf
             @method('PUT')
@@ -30,7 +30,7 @@
             </div>
             <div class="flex items-center justify-end border-t border-slate-200 bg-slate-50 px-6 py-4"><button type="submit" class="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700"><i class="fas fa-save mr-1"></i> Simpan Perubahan</button></div>
         </form>
-    </x-banksoal::dosen.panel>
+    </x-banksoal::ui.panel>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {

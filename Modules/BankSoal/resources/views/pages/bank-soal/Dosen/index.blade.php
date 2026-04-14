@@ -1,6 +1,6 @@
 <x-banksoal::layouts.dosen-admin>
 
-<x-banksoal::dosen.page-header title="Manajemen Bank Soal" subtitle="Kelola dan organisir repositori pertanyaan Anda">
+<x-banksoal::ui.page-header title="Manajemen Bank Soal" subtitle="Kelola dan organisir repositori pertanyaan Anda">
     <x-slot:actions>
         @can('banksoal.edit')
             <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl px-4 py-2.5 font-medium text-slate-700 transition-colors">
@@ -15,7 +15,7 @@
             </div>
         @endcan
     </x-slot:actions>
-</x-banksoal::dosen.page-header>
+</x-banksoal::ui.page-header>
 
 @if(session('success'))
     <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl flex items-center gap-3">

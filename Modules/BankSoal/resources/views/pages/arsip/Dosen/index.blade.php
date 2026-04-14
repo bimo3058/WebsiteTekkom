@@ -1,21 +1,21 @@
 <x-banksoal::layouts.dosen-admin>
 
-<x-banksoal::dosen.page-header title="Arsip Soal" subtitle="Kelola dan tinjau riwayat soal yang telah diarsipkan per semester.">
+<x-banksoal::ui.page-header title="Arsip Soal" subtitle="Kelola dan tinjau riwayat soal yang telah diarsipkan per semester.">
     <x-slot:actions>
         <a href="#" class="inline-flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl px-4 py-2.5 font-medium text-slate-700 transition-colors">
             <i class="fas fa-download w-4"></i> Export Arsip
         </a>
     </x-slot:actions>
-</x-banksoal::dosen.page-header>
+</x-banksoal::ui.page-header>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <x-banksoal::dosen.dashboard.stat-card label="Total Soal Diarsipkan" :value="$stats['total'] ?? 248" icon="fa-archive" tone="blue" />
-    <x-banksoal::dosen.dashboard.stat-card label="Mata Kuliah" :value="$stats['mata_kuliah'] ?? 12" icon="fa-book-open" tone="green" />
-    <x-banksoal::dosen.dashboard.stat-card label="Semester Tercatat" :value="$stats['semester'] ?? 6" icon="fa-calendar-alt" tone="amber" />
-    <x-banksoal::dosen.dashboard.stat-card label="Tahun Ajaran" :value="$stats['tahun'] ?? 3" icon="fa-clock-rotate-left" tone="slate" />
+    <x-banksoal::ui.stat-card label="Total Soal Diarsipkan" :value="$stats['total'] ?? 248" icon="fa-archive" tone="blue" />
+    <x-banksoal::ui.stat-card label="Mata Kuliah" :value="$stats['mata_kuliah'] ?? 12" icon="fa-book-open" tone="green" />
+    <x-banksoal::ui.stat-card label="Semester Tercatat" :value="$stats['semester'] ?? 6" icon="fa-calendar-alt" tone="amber" />
+    <x-banksoal::ui.stat-card label="Tahun Ajaran" :value="$stats['tahun'] ?? 3" icon="fa-clock-rotate-left" tone="slate" />
 </div>
 
-<x-banksoal::dosen.panel title="Daftar Arsip Soal" padding="p-0">
+<x-banksoal::ui.panel title="Daftar Arsip Soal" padding="p-0">
     <div class="p-6 border-b border-slate-200 flex flex-col sm:flex-row gap-3">
         <div class="relative flex-1 max-w-md">
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
@@ -80,7 +80,7 @@
     <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
         <span class="text-sm text-slate-600">Showing 1–6 of {{ $arsips?->total() ?? 248 }} entries</span>
     </div>
-</x-banksoal::dosen.panel>
+</x-banksoal::ui.panel>
 
 <script src="{{ asset('modules/banksoal/js/Banksoal/shared/SearchHandler.js') }}"></script>
 

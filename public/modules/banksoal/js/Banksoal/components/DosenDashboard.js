@@ -1,23 +1,22 @@
 class DosenDashboardComponent {
-    /**
-     * Render all dashboard charts (called on page load)
-     */
+    // Merender seluruh grafik dashboard dosen.
     static renderCharts() {
         this.renderDonutChart();
         this.renderCplBarChart();
         this.renderMkBarChart();
     }
 
+    // Merender donut chart untuk ringkasan status soal.
     static renderDonutChart(elementId = "donutChart", data = null) {
         const svg = document.getElementById(elementId);
         if (!svg) return;
 
-        // Default data if not provided
+        // DataDummy.
         const chartData = data || [
-            { value: 75, color: "#22C55E" }, // Approved
-            { value: 28, color: "#F59E0B" }, // Review
-            { value: 15, color: "#3B82F6" }, // Pending
-            { value: 10, color: "#EF4444" }, // Rejected
+            { value: 75, color: "#22C55E" }, // Disetujui
+            { value: 28, color: "#F59E0B" }, // Perlu review
+            { value: 15, color: "#3B82F6" }, // Menunggu
+            { value: 10, color: "#EF4444" }, // Ditolak
         ];
 
         const cx = 40,
@@ -55,7 +54,7 @@ class DosenDashboardComponent {
             offset += seg.value;
         });
 
-        // Inner white circle
+        // Lingkaran putih di tengah diagram.
         const inner = document.createElementNS(
             "http://www.w3.org/2000/svg",
             "circle",
@@ -67,11 +66,12 @@ class DosenDashboardComponent {
         svg.appendChild(inner);
     }
 
+    // Merender grafik batang untuk distribusi CPL.
     static renderCplBarChart(elementId = "cplChart", data = null) {
         const wrap = document.getElementById(elementId);
         if (!wrap) return;
 
-        // Default data if not provided
+        // DataDummy.
         const chartData = data || {
             "CPL 01": 45,
             "CPL 02": 30,
@@ -98,11 +98,12 @@ class DosenDashboardComponent {
         wrap.innerHTML = html;
     }
 
+    // Merender grafik batang untuk jumlah soal per mata kuliah.
     static renderMkBarChart(elementId = "mkChart", data = null) {
         const wrap = document.getElementById(elementId);
         if (!wrap) return;
 
-        // Default data if not provided
+        // DataDummy.
         const chartData = data || [
             { mk: "CS-201", count: 54, color: "#22C55E" },
             { mk: "CS-304", count: 32, color: "#22C55E" },
@@ -110,7 +111,7 @@ class DosenDashboardComponent {
         ];
 
         const max = Math.max(...chartData.map((d) => d.count)) || 1;
-        const BAR_H = 90; // max bar height in px
+        const BAR_H = 90; // Tinggi maksimum batang dalam piksel.
         wrap.style.cssText =
             "display:flex;align-items:flex-end;gap:10px;width:100%;padding-top:8px";
         let html = "";
@@ -128,23 +129,26 @@ class DosenDashboardComponent {
         wrap.innerHTML = html;
     }
 
+    // Memperbarui diagram donat dengan data baru.
     static updateDonutChart(elementId, newData) {
         const svg = document.getElementById(elementId);
         if (!svg) return;
-        svg.innerHTML = ""; // Clear existing
+        svg.innerHTML = ""; // Hapus isi lama.
         this.renderDonutChart(elementId, newData);
     }
 
+    // Memperbarui grafik CPL dengan data baru.
     static updateCplBarChart(elementId, newData) {
         this.renderCplBarChart(elementId, newData);
     }
 
+    // Memperbarui grafik mata kuliah dengan data baru.
     static updateMkBarChart(elementId, newData) {
         this.renderMkBarChart(elementId, newData);
     }
 }
 
-// Auto-render on DOM ready
+// Merender grafik otomatis saat DOM siap.
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
         DosenDashboardComponent.renderCharts();
@@ -153,5 +157,5 @@ if (document.readyState === "loading") {
     DosenDashboardComponent.renderCharts();
 }
 
-// Export as DosenDashboard for global access
+// Instance global agar bisa dipakai dari script lain.
 const DosenDashboard = DosenDashboardComponent;

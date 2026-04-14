@@ -1,27 +1,6 @@
-/**
- * ════════════════════════════════════════════════════════════════════
- * MultiSelect.js - Custom Multi-Select Component
- * ════════════════════════════════════════════════════════════════════
- * Lightweight custom multi-select dropdown with search, select-all,
- * checkbox, and truncated label display.
- *
- * Usage:
- *   const ms = new MultiSelect(document.getElementById('myMs'), {
- *       maxWidth: 400,
- *       hasTooltip: true,
- *       keepOpen: false
- *   });
- *   ms.setItems([{id: 1, label: 'Item 1'}, ...]);
- *   ms.getSelected(); // [1, 2, ...]
- *
- * Events:
- *   wrapper.addEventListener('ms:change', (e) => {
- *       console.log('Selected IDs:', e.detail);
- *   });
- */
-
 class MultiSelect {
     constructor(wrapper, options = {}) {
+        // Menyimpan elemen pembungkus dan opsi dasar komponen.
         this.wrapper = wrapper;
         this.name = wrapper.dataset.name;
         this.placeholder = wrapper.dataset.placeholder || "Pilih…";
@@ -37,10 +16,7 @@ class MultiSelect {
         this._bindEvents();
     }
 
-    /**
-     * Build HTML structure for multi-select
-     * @private
-     */
+    // Membangun struktur HTML awal untuk komponen multi-select.
     _build() {
         this.wrapper.innerHTML = `
             <div class="ms-trigger${this.disabled ? " disabled" : ""}">
@@ -56,10 +32,7 @@ class MultiSelect {
         this.list = this.wrapper.querySelector(".ms-option-list");
     }
 
-    /**
-     * Bind click events to trigger and document
-     * @private
-     */
+    // Mengikat event klik pada trigger dan area luar komponen.
     _bindEvents() {
         this.trigger.addEventListener("click", (e) => {
             if (this.disabled) return;
@@ -71,18 +44,11 @@ class MultiSelect {
         });
     }
 
-    /**
-     * Toggle dropdown open/close
-     * @private
-     */
+    // Membuka atau menutup dropdown.
     _toggle() {
         this.open ? this._close() : this._openDropdown();
     }
 
-    /**
-     * Open dropdown with search input
-     * @private
-     */
     _openDropdown() {
         this.open = true;
         this.trigger.classList.add("open");
@@ -111,10 +77,6 @@ class MultiSelect {
         this._renderList();
     }
 
-    /**
-     * Force close dropdown (for loading/disabled states)
-     * @private
-     */
     _forceClose() {
         this.open = false;
         this.trigger.classList.remove("open");
@@ -124,20 +86,12 @@ class MultiSelect {
         this.searchVal = "";
     }
 
-    /**
-     * Close dropdown and re-render trigger
-     * @private
-     */
     _close() {
         if (!this.open) return;
         this._forceClose();
         this._renderTrigger();
     }
 
-    /**
-     * Measure text width using canvas
-     * @private
-     */
     _measureText(text) {
         if (!this._canvas) {
             this._canvas = document.createElement("canvas");
@@ -148,10 +102,6 @@ class MultiSelect {
         return this._ctx.measureText(text).width;
     }
 
-    /**
-     * Truncate text to fit within max width
-     * @private
-     */
     _truncateToWidth(text, maxPx) {
         if (this._measureText(text) <= maxPx) return text;
         let truncated = "";
@@ -163,10 +113,6 @@ class MultiSelect {
         return truncated + "…";
     }
 
-    /**
-     * Render trigger button (collapsed state)
-     * @private
-     */
     _renderTrigger() {
         if (!this.trigger.querySelector(".ms-chevron")) {
             const ch = document.createElement("i");
@@ -229,10 +175,6 @@ class MultiSelect {
         }
     }
 
-    /**
-     * Render dropdown list with search results
-     * @private
-     */
     _renderList() {
         const query = this.searchVal.toLowerCase();
         const filtered = this.items.filter(
@@ -300,10 +242,6 @@ class MultiSelect {
         });
     }
 
-    /**
-     * Sync badge count when item is selected/deselected
-     * @private
-     */
     _syncTriggerBadge() {
         const selNow = this.items.filter((i) => i.selected);
         const chevron = this.trigger.querySelector(".ms-chevron");
@@ -334,10 +272,6 @@ class MultiSelect {
         }
     }
 
-    /**
-     * Sync hidden inputs for form submission
-     * @private
-     */
     _syncHidden() {
         this.wrapper
             .querySelectorAll('input[type="hidden"]')
@@ -353,10 +287,6 @@ class MultiSelect {
             });
     }
 
-    /**
-     * Emit custom change event
-     * @private
-     */
     _emitChange() {
         this.wrapper.dispatchEvent(
             new CustomEvent("ms:change", {
@@ -366,15 +296,6 @@ class MultiSelect {
         );
     }
 
-    /* ────────────────────────────────────────
-       PUBLIC API
-       ──────────────────────────────────────── */
-
-    /**
-     * Set items and display state
-     * @param {Array} items - Array of {id, label} objects
-     * @param {string} readyPlaceholder - Placeholder text
-     */
     setItems(items, readyPlaceholder) {
         this.items = items.map((i) => ({ ...i, selected: false }));
         this.placeholder = readyPlaceholder || this.placeholder;
@@ -384,10 +305,6 @@ class MultiSelect {
         this._renderTrigger();
     }
 
-    /**
-     * Show loading state
-     * @param {string} msg - Loading message
-     */
     setLoading(msg = "Memuat…") {
         this.items = [];
         this.placeholder = msg;
@@ -397,10 +314,6 @@ class MultiSelect {
         this._renderTrigger();
     }
 
-    /**
-     * Show disabled state
-     * @param {string} placeholder - Disabled message
-     */
     setDisabled(placeholder) {
         this.items = [];
         this.placeholder = placeholder;
@@ -410,10 +323,6 @@ class MultiSelect {
         this._renderTrigger();
     }
 
-    /**
-     * Get array of selected item IDs
-     * @returns {Array<number>}
-     */
     getSelected() {
         return this.items.filter((i) => i.selected).map((i) => i.id);
     }
