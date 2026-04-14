@@ -128,7 +128,7 @@ class PertanyaanService
     private function syncJawaban(int $pertanyaanId, array $jawaban): void
     {
         // Validasi: minimal satu jawaban benar
-        $adaBenar = collect($jawaban)->contains(fn($j) => (bool) ($j['is_benar'] ?? false));
+        $adaBenar = collect($jawaban)->contains(fn($j) => filter_var($j['is_benar'] ?? false, FILTER_VALIDATE_BOOLEAN));
 
         if (!$adaBenar) {
             throw new \RuntimeException('Minimal satu pilihan jawaban harus ditandai benar.');
@@ -138,6 +138,8 @@ class PertanyaanService
 
         $rows = array_map(fn($j) => array_merge($j, [
             'soal_id'    => $pertanyaanId,
+            // Postgres membutuhkan literal boolean string 'true' / 'false' untuk raw insert
+            'is_benar'   => filter_var($j['is_benar'], FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false',
             'created_at' => now(),
             'updated_at' => now(),
         ]), $jawaban);

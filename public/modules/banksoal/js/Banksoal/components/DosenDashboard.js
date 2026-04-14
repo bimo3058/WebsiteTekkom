@@ -1,49 +1,28 @@
-/**
- * ════════════════════════════════════════════════════════════════════
- * DosenDashboard.js - Dashboard Charts Component
- * ════════════════════════════════════════════════════════════════════
- * Renders dashboard charts (donut, CPL bar, MK bar) on page load.
- *
- * Usage:
- *   DosenDashboard.renderCharts();
- *
- * Or with custom data:
- *   DosenDashboard.renderDonutChart('donutChart', donutData);
- *   DosenDashboard.renderCplBarChart('cplChart', cplData);
- *   DosenDashboard.renderMkBarChart('mkChart', mkData);
- */
-
 class DosenDashboardComponent {
-    /**
-     * Render all dashboard charts (called on page load)
-     */
+    // Merender seluruh grafik dashboard dosen.
     static renderCharts() {
         this.renderDonutChart();
         this.renderCplBarChart();
         this.renderMkBarChart();
     }
 
-    /**
-     * Render donut chart
-     * @param {string} elementId - SVG element ID
-     * @param {Array} data - Chart data (optional, uses default if not provided)
-     */
+    // Merender donut chart untuk ringkasan status soal.
     static renderDonutChart(elementId = "donutChart", data = null) {
         const svg = document.getElementById(elementId);
         if (!svg) return;
 
-        // Default data if not provided
+        // DataDummy.
         const chartData = data || [
-            { value: 75, color: "#22C55E" }, // Approved
-            { value: 28, color: "#F59E0B" }, // Review
-            { value: 15, color: "#3B82F6" }, // Pending
-            { value: 10, color: "#EF4444" }, // Rejected
+            { value: 75, color: "#22C55E" }, // Disetujui
+            { value: 28, color: "#F59E0B" }, // Perlu review
+            { value: 15, color: "#3B82F6" }, // Menunggu
+            { value: 10, color: "#EF4444" }, // Ditolak
         ];
 
-        const cx = 80,
-            cy = 80,
-            r = 60,
-            stroke = 22;
+        const cx = 40,
+            cy = 40,
+            r = 30,
+            stroke = 12;
         const circ = 2 * Math.PI * r;
         const total = chartData.reduce((sum, seg) => sum + seg.value, 0);
 
@@ -75,28 +54,24 @@ class DosenDashboardComponent {
             offset += seg.value;
         });
 
-        // Inner white circle
+        // Lingkaran putih di tengah diagram.
         const inner = document.createElementNS(
             "http://www.w3.org/2000/svg",
             "circle",
         );
         inner.setAttribute("cx", cx);
         inner.setAttribute("cy", cy);
-        inner.setAttribute("r", r - stroke / 2 - 4);
+        inner.setAttribute("r", r - stroke / 2);
         inner.setAttribute("fill", "white");
         svg.appendChild(inner);
     }
 
-    /**
-     * Render CPL distribution bar chart
-     * @param {string} elementId - Container element ID
-     * @param {Object} data - Chart data (optional)
-     */
+    // Merender grafik batang untuk distribusi CPL.
     static renderCplBarChart(elementId = "cplChart", data = null) {
         const wrap = document.getElementById(elementId);
         if (!wrap) return;
 
-        // Default data if not provided
+        // DataDummy.
         const chartData = data || {
             "CPL 01": 45,
             "CPL 02": 30,
@@ -106,32 +81,29 @@ class DosenDashboardComponent {
         };
 
         const max = Math.max(...Object.values(chartData));
+        const BAR_H = 90;
+        wrap.style.cssText =
+            "display:flex;align-items:flex-end;gap:6px;width:100%;padding-top:8px";
         let html = "";
 
         Object.entries(chartData).forEach(([label, val]) => {
-            const h = Math.max(8, (val / max) * 90);
-            html += `
-                <div class="bar-group">
-                    <span class="bar-val">${val}</span>
-                    <div class="bar" style="height:${h}px"></div>
-                    <span class="bar-label">${label}</span>
-                </div>
-            `;
+            const h = Math.max(8, Math.round((val / max) * BAR_H));
+            html += `<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:3px">
+                    <span style="font-size:10px;font-weight:600;color:#475569">${val}</span>
+                    <div style="width:100%;height:${h}px;background:#3b82f6;border-radius:4px 4px 0 0"></div>
+                    <span style="font-size:9px;color:#94a3b8;white-space:nowrap">${label}</span>
+                </div>`;
         });
 
         wrap.innerHTML = html;
     }
 
-    /**
-     * Render MK (Mata Kuliah) count bar chart
-     * @param {string} elementId - Container element ID
-     * @param {Array} data - Chart data (optional)
-     */
+    // Merender grafik batang untuk jumlah soal per mata kuliah.
     static renderMkBarChart(elementId = "mkChart", data = null) {
         const wrap = document.getElementById(elementId);
         if (!wrap) return;
 
-        // Default data if not provided
+        // DataDummy.
         const chartData = data || [
             { mk: "CS-201", count: 54, color: "#22C55E" },
             { mk: "CS-304", count: 32, color: "#22C55E" },
@@ -139,59 +111,51 @@ class DosenDashboardComponent {
         ];
 
         const max = Math.max(...chartData.map((d) => d.count)) || 1;
+        const BAR_H = 90; // Tinggi maksimum batang dalam piksel.
+        wrap.style.cssText =
+            "display:flex;align-items:flex-end;gap:10px;width:100%;padding-top:8px";
         let html = "";
 
         chartData.forEach((d) => {
-            const h = Math.max(4, (d.count / max) * 80);
-            const valColor = d.count > 0 ? "#22C55E" : "var(--gray-400)";
-            html += `
-                <div style="display:flex;flex-direction:column;align-items:center;gap:6px">
-                    <span style="font-size:20px;font-weight:800;color:${valColor}">${d.count || ""}</span>
-                    <div style="width:48px;border-radius:8px 8px 0 0;background:${d.color};height:${h}px"></div>
-                    <span style="font-size:12px;color:var(--gray-400);font-weight:500">${d.mk}</span>
-                </div>
-            `;
+            const h = Math.max(8, Math.round((d.count / max) * BAR_H));
+            const valColor = d.count > 0 ? "#22C55E" : "#9CA3AF";
+            html += `<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:3px">
+                    <span style="font-size:10px;font-weight:600;color:${valColor}">${d.count || ""}</span>
+                    <div style="width:100%;height:${h}px;background:${d.color};border-radius:4px 4px 0 0"></div>
+                    <span style="font-size:10px;color:#94a3b8;white-space:nowrap">${d.mk}</span>
+                </div>`;
         });
 
         wrap.innerHTML = html;
     }
 
-    /**
-     * Update donut chart data dynamically
-     * @param {string} elementId - SVG element ID
-     * @param {Array} newData - New chart data
-     */
+    // Memperbarui diagram donat dengan data baru.
     static updateDonutChart(elementId, newData) {
         const svg = document.getElementById(elementId);
         if (!svg) return;
-        svg.innerHTML = ""; // Clear existing
+        svg.innerHTML = ""; // Hapus isi lama.
         this.renderDonutChart(elementId, newData);
     }
 
-    /**
-     * Update CPL bar chart data dynamically
-     * @param {string} elementId - Container element ID
-     * @param {Object} newData - New chart data
-     */
+    // Memperbarui grafik CPL dengan data baru.
     static updateCplBarChart(elementId, newData) {
         this.renderCplBarChart(elementId, newData);
     }
 
-    /**
-     * Update MK bar chart data dynamically
-     * @param {string} elementId - Container element ID
-     * @param {Array} newData - New chart data
-     */
+    // Memperbarui grafik mata kuliah dengan data baru.
     static updateMkBarChart(elementId, newData) {
         this.renderMkBarChart(elementId, newData);
     }
 }
 
-// Auto-render on DOM ready
+// Merender grafik otomatis saat DOM siap.
 if (document.readyState === "loading") {
     document.addEventListener("DOMContentLoaded", () => {
-        DosenDashboard.renderCharts();
+        DosenDashboardComponent.renderCharts();
     });
 } else {
-    DosenDashboard.renderCharts();
+    DosenDashboardComponent.renderCharts();
 }
+
+// Instance global agar bisa dipakai dari script lain.
+const DosenDashboard = DosenDashboardComponent;
