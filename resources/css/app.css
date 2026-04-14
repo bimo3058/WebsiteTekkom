@@ -102,11 +102,6 @@
 
 /*
  * ═══════════════════════════════════════════════════════════════
- *  UTILITY CLASSES
- * ═══════════════════════════════════════════════════════════════
- */
-/*
- * ═══════════════════════════════════════════════════════════════
  *  COMPONENT DEFINITIONS FOR DOSEN VIEWS
  * ═══════════════════════════════════════════════════════════════
  */
@@ -184,8 +179,12 @@
         @apply mb-6 relative;
     }
 
+    .form-group-compact {
+        @apply relative mb-2;
+    }
+
     .form-label {
-        @apply block text-sm font-semibold text-slate-800 mb-2;
+        @apply block text-sm font-semibold text-slate-800 mb-2.5;
     }
 
     .form-label-required::after {
@@ -573,6 +572,23 @@
 
     .upload-error {
         @apply mt-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700;
+    }
+
+    /* ── Dashboard Bar Chart Styles ────────────────────────── */
+    .bar-group {
+        @apply flex flex-col items-center gap-2;
+    }
+
+    .bar-val {
+        @apply text-lg font-bold text-slate-900;
+    }
+
+    .bar {
+        @apply w-14 bg-gradient-to-b from-blue-500 to-blue-600 rounded-t-lg transition-all hover:from-blue-600 hover:to-blue-700 cursor-pointer;
+    }
+
+    .bar-label {
+        @apply text-xs text-slate-500 font-medium;
     }
 }
 

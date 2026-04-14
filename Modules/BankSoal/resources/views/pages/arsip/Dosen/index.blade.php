@@ -1,181 +1,87 @@
-<x-banksoal::layouts.dosen-master>
+<x-banksoal::layouts.dosen-admin>
 
-@include('banksoal::partials.dosen.layout-styles')
-@include('banksoal::partials.dosen.sidebar', ['active' => 'arsip'])
-@include('banksoal::partials.dosen.topbar')
+<x-banksoal::dosen.page-header title="Arsip Soal" subtitle="Kelola dan tinjau riwayat soal yang telah diarsipkan per semester.">
+    <x-slot:actions>
+        <a href="#" class="inline-flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl px-4 py-2.5 font-medium text-slate-700 transition-colors">
+            <i class="fas fa-download w-4"></i> Export Arsip
+        </a>
+    </x-slot:actions>
+</x-banksoal::dosen.page-header>
 
-    <!-- MAIN -->
-    <main class="main">
-
-<div class="page-header">
-    <div class="page-header-left">
-        <h1>Arsip Soal</h1>
-        <p>Kelola dan tinjau riwayat soal yang telah diarsipkan per semester.</p>
-    </div>
-    <a href="#" class="btn-outline"><i class="fas fa-download"></i> Export Arsip</a>
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <x-banksoal::dosen.dashboard.stat-card label="Total Soal Diarsipkan" :value="$stats['total'] ?? 248" icon="fa-archive" tone="blue" />
+    <x-banksoal::dosen.dashboard.stat-card label="Mata Kuliah" :value="$stats['mata_kuliah'] ?? 12" icon="fa-book-open" tone="green" />
+    <x-banksoal::dosen.dashboard.stat-card label="Semester Tercatat" :value="$stats['semester'] ?? 6" icon="fa-calendar-alt" tone="amber" />
+    <x-banksoal::dosen.dashboard.stat-card label="Tahun Ajaran" :value="$stats['tahun'] ?? 3" icon="fa-clock-rotate-left" tone="slate" />
 </div>
 
-{{-- STATS ROW --}}
-<div class="stats-row">
-    <div class="stat-card">
-        <div class="stat-icon-wrap blue"><i class="fas fa-archive"></i></div>
-        <div>
-            <div class="stat-value">{{ $stats['total'] ?? 248 }}</div>
-            <div class="stat-label">Total Soal Diarsipkan</div>
+<x-banksoal::dosen.panel title="Daftar Arsip Soal" padding="p-0">
+    <div class="p-6 border-b border-slate-200 flex flex-col sm:flex-row gap-3">
+        <div class="relative flex-1 max-w-md">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            </div>
+            <input type="text" id="searchArsip" placeholder="Cari soal, mata kuliah, atau topik..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
         </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon-wrap green"><i class="fas fa-book-open"></i></div>
-        <div>
-            <div class="stat-value">{{ $stats['mata_kuliah'] ?? 12 }}</div>
-            <div class="stat-label">Mata Kuliah</div>
-        </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon-wrap orange"><i class="fas fa-calendar-alt"></i></div>
-        <div>
-            <div class="stat-value">{{ $stats['semester'] ?? 6 }}</div>
-            <div class="stat-label">Semester Tercatat</div>
-        </div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon-wrap purple"><i class="fas fa-clock-rotate-left"></i></div>
-        <div>
-            <div class="stat-value">{{ $stats['tahun'] ?? 3 }}</div>
-            <div class="stat-label">Tahun Ajaran</div>
-        </div>
-    </div>
-</div>
-
-{{-- ARSIP TABLE --}}
-<div class="section-card">
-    <div class="section-header-row">
-        <div class="section-title">Daftar Arsip Soal</div>
+        <select class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+            <option value="">Semua Tahun</option>
+            @foreach($tahunAjarans ?? ['2023/2024','2022/2023','2021/2022'] as $ta)
+                <option value="{{ $ta }}">{{ $ta }}</option>
+            @endforeach
+        </select>
+        <select class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+            <option value="">Semua Semester</option>
+            <option value="Ganjil">Ganjil</option>
+            <option value="Genap">Genap</option>
+        </select>
+        <select class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+            <option value="">Semua Tingkat</option>
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+        </select>
     </div>
 
-    <div class="toolbar">
-        <div class="search-wrap">
-            <i class="fas fa-search"></i>
-            <input type="text" class="search-input" placeholder="Cari soal, mata kuliah, atau topik..." id="searchArsip">
-        </div>
-        <div class="filter-group">
-            <select class="filter-select">
-                <option value="">Semua Tahun</option>
-                @foreach($tahunAjarans ?? ['2023/2024','2022/2023','2021/2022'] as $ta)
-                    <option value="{{ $ta }}">{{ $ta }}</option>
-                @endforeach
-            </select>
-            <select class="filter-select">
-                <option value="">Semua Semester</option>
-                <option value="Ganjil">Ganjil</option>
-                <option value="Genap">Genap</option>
-            </select>
-            <select class="filter-select">
-                <option value="">Semua Tingkat</option>
-                <option value="Easy">Easy</option>
-                <option value="Medium">Medium</option>
-                <option value="Hard">Hard</option>
-            </select>
-        </div>
-    </div>
-
-    <div class="table-wrap">
-        <table id="tableArsip">
-            <thead>
+    <div class="overflow-x-auto">
+        <table class="w-full">
+            <thead class="bg-slate-50 border-b border-slate-200">
                 <tr>
-                    <th>ID Soal</th>
-                    <th>Mata Kuliah</th>
-                    <th>Topik</th>
-                    <th>Semester</th>
-                    <th>Tingkat</th>
-                    <th>Status</th>
-                    <th>Aksi</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">ID Soal</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mata Kuliah</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Topik</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Semester</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tingkat</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
                 </tr>
             </thead>
-            <tbody>
-                @forelse($arsips ?? [] as $arsip)
-                <tr>
-                    <td class="id-cell">{{ $arsip->kode }}</td>
-                    <td><span class="course-pill">{{ $arsip->mataKuliah->kode }}</span> {{ $arsip->mataKuliah->nama }}</td>
-                    <td>{{ $arsip->topik }}</td>
-                    <td>{{ $arsip->semester }} {{ $arsip->tahun_ajaran }}</td>
-                    <td>
-                        @php $d = strtolower($arsip->tingkat_kesulitan ?? ''); @endphp
-                        <span class="badge badge-{{ $d === 'hard' ? 'hard' : ($d === 'easy' ? 'easy' : 'medium') }}">
-                            {{ ucfirst($arsip->tingkat_kesulitan) }}
-                        </span>
+            <tbody class="divide-y divide-slate-100">
+                @forelse(($arsips ?? collect()) as $arsip)
+                <tr class="hover:bg-slate-50/50 transition-colors">
+                    <td class="px-6 py-4 font-medium text-slate-900">{{ $arsip->kode }}</td>
+                    <td class="px-6 py-4"><span class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-semibold bg-blue-100 text-blue-700 mr-2">{{ $arsip->mataKuliah->kode }}</span><span class="text-slate-600">{{ $arsip->mataKuliah->nama }}</span></td>
+                    <td class="px-6 py-4 text-slate-600">{{ $arsip->topik }}</td>
+                    <td class="px-6 py-4 text-slate-600">{{ $arsip->semester }} {{ $arsip->tahun_ajaran }}</td>
+                    <td class="px-6 py-4">@php $d = strtolower($arsip->tingkat_kesulitan ?? ''); @endphp
+                        @if($d === 'easy')<span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">{{ ucfirst($arsip->tingkat_kesulitan) }}</span>
+                        @elseif($d === 'hard')<span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">{{ ucfirst($arsip->tingkat_kesulitan) }}</span>
+                        @else<span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">{{ ucfirst($arsip->tingkat_kesulitan) }}</span>@endif
                     </td>
-                    <td><span class="badge badge-archived">Diarsipkan</span></td>
-                    <td>
-                        <div class="row-actions">
-                            <button class="action-btn" title="Lihat"><i class="fas fa-eye"></i></button>
-                            <button class="action-btn" title="Pulihkan"><i class="fas fa-rotate-left"></i></button>
-                            <button class="action-btn del" title="Hapus Permanen"><i class="fas fa-trash"></i></button>
-                        </div>
-                    </td>
+                    <td class="px-6 py-4"><span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">Diarsipkan</span></td>
+                    <td class="px-6 py-4"><div class="flex items-center gap-2"><button class="inline-flex items-center justify-center w-8 h-8 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" title="Lihat"><i class="fas fa-eye text-sm"></i></button><button class="inline-flex items-center justify-center w-8 h-8 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors" title="Pulihkan"><i class="fas fa-rotate-left text-sm"></i></button><button class="inline-flex items-center justify-center w-8 h-8 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus"><i class="fas fa-trash text-sm"></i></button></div></td>
                 </tr>
                 @empty
-                {{-- Demo rows grouped by tahun --}}
-                @foreach([
-                    ['divider' => '2023/2024 - Ganjil', 'rows' => [
-                        ['A-101','CS-201','Algorithms','Dynamic Programming','Ganjil 2023/2024','Hard'],
-                        ['A-102','CS-201','Algorithms','Graph Traversal','Ganjil 2023/2024','Medium'],
-                        ['A-103','CS-301','Databases','Normalization','Ganjil 2023/2024','Easy'],
-                    ]],
-                    ['divider' => '2022/2023 - Genap', 'rows' => [
-                        ['A-089','CS-202','Data Structures','Linked Lists','Genap 2022/2023','Medium'],
-                        ['A-090','CS-305','Networks','OSI Model','Genap 2022/2023','Easy'],
-                        ['A-091','CS-202','Data Structures','Hash Tables','Genap 2022/2023','Hard'],
-                    ]],
-                ] as $group)
-                    <tr><td colspan="7" style="padding:0;border:none">
-                        <div class="year-divider">{{ $group['divider'] }}</div>
-                    </td></tr>
-                    @foreach($group['rows'] as $row)
-                    <tr>
-                        <td class="id-cell">{{ $row[0] }}</td>
-                        <td><span class="course-pill">{{ $row[1] }}</span> {{ $row[2] }}</td>
-                        <td>{{ $row[3] }}</td>
-                        <td>{{ $row[4] }}</td>
-                        <td>
-                            <span class="badge badge-{{ strtolower($row[5]) === 'hard' ? 'hard' : (strtolower($row[5]) === 'easy' ? 'easy' : 'medium') }}">
-                                {{ $row[5] }}
-                            </span>
-                        </td>
-                        <td><span class="badge badge-archived">Diarsipkan</span></td>
-                        <td>
-                            <div class="row-actions">
-                                <button class="action-btn" title="Lihat"><i class="fas fa-eye"></i></button>
-                                <button class="action-btn" title="Pulihkan"><i class="fas fa-rotate-left"></i></button>
-                                <button class="action-btn del" title="Hapus"><i class="fas fa-trash"></i></button>
-                            </div>
-                        </td>
-                    </tr>
-                    @endforeach
-                @endforeach
+                <tr><td colspan="7" class="px-6 py-12 text-center text-slate-600"><div class="flex flex-col items-center justify-center"><i class="fas fa-inbox text-4xl text-slate-300 mb-3"></i><p class="font-medium">Belum ada data arsip.</p></div></td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
-    <div class="table-footer">
-        <span class="table-info">Showing 1–6 of {{ $arsips?->total() ?? 248 }} entries</span>
-        <div class="pagination">
-            <a href="#" class="page-btn disabled"><i class="fas fa-chevron-left" style="font-size:10px"></i></a>
-            <a href="#" class="page-btn active">1</a>
-            <a href="#" class="page-btn">2</a>
-            <a href="#" class="page-btn">3</a>
-            <span class="page-btn" style="border:none;cursor:default">...</span>
-            <a href="#" class="page-btn">42</a>
-            <a href="#" class="page-btn"><i class="fas fa-chevron-right" style="font-size:10px"></i></a>
-        </div>
+    <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
+        <span class="text-sm text-slate-600">Showing 1–6 of {{ $arsips?->total() ?? 248 }} entries</span>
     </div>
-</div>
-    </main>
+</x-banksoal::dosen.panel>
 
-{{-- ═══ Search Handler Component ═══ --}}
 <script src="{{ asset('modules/banksoal/js/Banksoal/shared/SearchHandler.js') }}"></script>
 
-@include('banksoal::partials.dosen.layout-scripts')
-
-</x-banksoal::layouts.dosen-master>
+</x-banksoal::layouts.dosen-admin>

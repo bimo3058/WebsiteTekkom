@@ -67,7 +67,8 @@ class RpsController extends Controller
         
         $isUploadOpen = false;
         $tenggatH7 = false;
-        $unsubmittedMkCodes = [];
+        $isHourFormat = false; // Track apakah daysLeft dalam format jam atau hari
+        $unsubmittedMk = [];
         $daysLeft = 0;
         
         if ($activePeriode) {
@@ -79,17 +80,37 @@ class RpsController extends Controller
             if ($now->between($start, $end)) {
                 $isUploadOpen = true;
                 
-                // Cek H-7 Reminder
-                $daysLeft = (int) $now->diffInDays($activePeriode->tanggal_selesai, false); // false agar bisa negatif jika terlewat (tapi already blocked by between)
+                // Cek H-7 Reminder - hitung sisa waktu
+                $deadlineDate = $activePeriode->tanggal_selesai->startOfDay();
+                $todayDate = $now->startOfDay();
                 
-                if ($daysLeft <= 7 && $daysLeft >= 0) {
-                    $tenggatH7 = true;
+                // Jika deadline adalah hari yang sama dengan hari ini
+                if ($deadlineDate->isSameDay($todayDate)) {
+                    // Hitung sisa jam
+                    $hoursLeft = (int) $now->diffInHours($activePeriode->tanggal_selesai->endOfDay(), false);
+                    if ($hoursLeft > 0) {
+                        $tenggatH7 = true;
+                        $daysLeft = $hoursLeft; // Simpan sebagai jam
+                        $isHourFormat = true; // Mark sebagai format jam
+                    }
+                } else {
+                    // Hitung sisa hari
+                    $daysLeft = (int) $todayDate->diffInDays($deadlineDate);
+                    if ($daysLeft > 0) {
+                        if ($daysLeft <= 7) {
+                            $tenggatH7 = true;
+                        }
+                    }
+                    $isHourFormat = false; // Mark sebagai format hari
+                }
+                
+                if ($tenggatH7) {
                     // Ambil daftar kode MK yang diampu user ini tapi RPS-nya belum disubmit/aktif
-                    $unsubmittedMkCodes = DB::table('bs_mata_kuliah')
+                    $unsubmittedMk = DB::table('bs_mata_kuliah')
                         ->join('bs_dosen_pengampu_mk', 'bs_mata_kuliah.id', '=', 'bs_dosen_pengampu_mk.mk_id')
                         ->where('bs_dosen_pengampu_mk.user_id', $user->id)
                         ->whereNotIn('bs_mata_kuliah.id', $mkIdsWithActiveRps)
-                        ->pluck('bs_mata_kuliah.kode')
+                        ->pluck('bs_mata_kuliah.nama')
                         ->toArray();
                 }
             }
@@ -107,7 +128,8 @@ class RpsController extends Controller
             'activePeriode',
             'isUploadOpen',
             'tenggatH7',
-            'unsubmittedMkCodes',
+            'isHourFormat',
+            'unsubmittedMk',
             'daysLeft'
         ));
     }
