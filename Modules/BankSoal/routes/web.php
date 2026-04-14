@@ -53,6 +53,9 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         Route::prefix('soal')->name('banksoal.soal.')->group(function () {
             // Banksoal - Dosen
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
+                Route::post('/tarik-soal', [BankSoalController::class, 'ekstrak'])->name('ekstrak');
+                Route::post('/cetak-ujian', [BankSoalController::class, 'cetakUjian'])->name('cetak-ujian');
+                Route::get('/get-by-mk/{mk_id}', [BankSoalController::class, 'getAvailableSoals'])->name('get-available-soals');
                 Route::get('/', [BankSoalController::class, 'index'])->name('index');
                 Route::get('/create', [BankSoalController::class, 'create'])->name('create');
                 Route::post('/store', [BankSoalController::class, 'store'])->name('store');
