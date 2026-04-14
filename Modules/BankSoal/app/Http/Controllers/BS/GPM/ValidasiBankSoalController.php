@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\BankSoal\Http\Controllers;
+namespace Modules\BankSoal\Http\Controllers\BS\GPM;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -15,10 +15,13 @@ class ValidasiBankSoalController extends Controller
         $this->validasiService = $validasiService;
     }
 
-    public function index()
+    public function index(Request $request)
     {
-        $paket_soal = $this->validasiService->getDaftarAntreanMataKuliah();
-        return view('banksoal::gpm.validasi-bank-soal', compact('paket_soal'));
+        $search = $request->input('search');
+        $all_paket_soal = $this->validasiService->getDaftarAntreanMataKuliah();
+        $paket_soal = $search ? $this->validasiService->getDaftarAntreanMataKuliah($search) : $all_paket_soal;
+        $counts = $this->validasiService->getCounts();
+        return view('banksoal::gpm.validasi-bank-soal', compact('paket_soal', 'counts', 'all_paket_soal'));
     }
 
     public function review()
@@ -44,5 +47,17 @@ class ValidasiBankSoalController extends Controller
         $this->validasiService->simpanReview($validated);
 
         return redirect()->route('banksoal.soal.gpm.validasi-bank-soal.review')->with('success', 'Hasil review berhasil disimpan!');
+    }
+
+    public function update(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'status_review' => 'required|string',
+            'catatan'       => 'required|string'
+        ]);
+
+        $this->validasiService->updateReview($id, $validated);
+
+        return back()->with('success', 'Hasil review berhasil diupdate!');
     }
 }
