@@ -27,7 +27,7 @@
     <div class="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
 
         <!-- Sidebar Component -->
-        <x-banksoal::sidebar-dosen />
+        <x-banksoal::ui.sidebar-dosen />
 
         <!-- Main Content Wrapper -->
         <div class="flex-1 flex flex-col overflow-y-auto w-full relative">

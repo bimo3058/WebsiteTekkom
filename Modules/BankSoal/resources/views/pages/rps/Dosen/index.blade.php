@@ -1,9 +1,9 @@
 <x-banksoal::layouts.dosen-admin>
-    <x-banksoal::alerts />
+    <x-banksoal::notification.alerts />
 
-    <x-banksoal::dosen.page-header title="Manajemen RPS" subtitle="Lengkapi data rencana pembelajaran semester dan unggah dokumen pendukung." />
+    <x-banksoal::ui.page-header title="Manajemen RPS" subtitle="Lengkapi data rencana pembelajaran semester dan unggah dokumen pendukung." />
 
-    <x-banksoal::rps.status-banner
+    <x-banksoal::ui.status-banner
         :activePeriode="$activePeriode ?? null"
         :isUploadOpen="$isUploadOpen ?? false"
         :tenggatH7="$tenggatH7 ?? false"
@@ -12,7 +12,7 @@
         :isHourFormat="$isHourFormat ?? false"
     />
 
-    <x-banksoal::rps.form
+    <x-banksoal::ui.rps-form
         :mataKuliahs="$mataKuliahs"
         :tahunAjarans="$tahunAjarans"
         :isUploadOpen="$isUploadOpen ?? false"
@@ -20,9 +20,9 @@
         :academicYear="$academicYear ?? date('Y') . '/' . (date('Y') + 1)"
     />
 
-    <x-banksoal::rps.history-table :riwayat="$riwayat" />
+    <x-banksoal::ui.rps-history-table :riwayat="$riwayat" />
 
-    <x-banksoal::rps.document-modal />
+    <x-banksoal::ui.rps-document-modal />
 
-    <x-banksoal::rps.scripts />
+    <x-banksoal::ui.rps-scripts />
 </x-banksoal::layouts.dosen-admin>
