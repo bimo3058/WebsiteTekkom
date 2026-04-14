@@ -76,8 +76,8 @@
             <thead class="bg-slate-50 border-b border-slate-200">
                 <tr>
                     <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">ID</th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Kursus</th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Topik</th>
+                    <th class="px-2 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mata Kuliah</th>
+                    <th class="px-2 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Topik</th>
                     <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tingkat Kesulitan</th>
                     <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tindakan</th>
                 </tr>
@@ -86,8 +86,8 @@
                 @forelse(($soals ?? collect()) as $soal)
                     <tr class="hover:bg-slate-50/50 transition-colors">
                         <td class="px-6 py-4 font-medium text-slate-900">{{ $soal->kode_soal }}</td>
-                        <td class="px-6 py-4 text-slate-600">{{ $soal->mataKuliah->nama ?? '-' }}</td>
-                        <td class="px-6 py-4 text-slate-600">{{ strip_tags(\Illuminate\Support\Str::limit($soal->soal, 50)) }}</td>
+                        <td class="px-2 py-4 text-slate-600">{{ $soal->mataKuliah->nama ?? '-' }}</td>
+                        <td class="px-2 py-4 text-slate-600">{{ strip_tags(\Illuminate\Support\Str::limit($soal->soal, 50)) }}</td>
                         <td class="px-6 py-4">
                             @php $diff = strtolower($soal->kesulitan ?? ''); @endphp
                             @if($diff === 'easy')

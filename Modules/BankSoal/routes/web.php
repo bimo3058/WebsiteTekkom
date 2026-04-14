@@ -7,6 +7,7 @@ use Modules\BankSoal\Http\Controllers\BS\DashboardController;
 use Modules\BankSoal\Http\Controllers\RPS\Dosen\RpsController as DosenRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\RpsController as GpmRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Admin\RpsController as AdminRpsController;
+use Modules\BankSoal\Http\Controllers\RPS\Gpm\TemplateRpsController;
 use Modules\BankSoal\Http\Controllers\BS\BankSoalController;
 use Modules\BankSoal\Http\Controllers\BS\GPM\ValidasiBankSoalController;
 use Modules\BankSoal\Http\Controllers\BS\GPM\RiwayatValidasiController;
@@ -42,6 +43,12 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::get('/validasi-rps/preview/{rpsId}', [GpmRpsController::class, 'previewDokumen'])->name('validasi-rps.preview');
                 Route::get('/riwayat-validasi/rps', [RiwayatValidasiController::class, 'rps'])->name('riwayat-validasi.rps');
                 Route::get('/periode-rps', [PeriodeRpsController::class, 'index'])->name('periode-rps.index');
+                
+                // Delete routes for GPM
+                Route::middleware('permission:banksoal.delete')->group(function () {
+                    Route::delete('/periode-rps/{id}', [PeriodeRpsController::class, 'destroy'])->name('periode-rps.destroy');
+                    Route::delete('/template-inactive', [TemplateRpsController::class, 'deleteInactive'])->name('template.delete-inactive');
+                });
             });
             // RPS - Admin
             Route::middleware('role:admin_banksoal')->prefix('admin')->name('admin.')->group(function () {
@@ -102,6 +109,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::post('/periode-rps', [PeriodeRpsController::class, 'store'])->name('periode-rps.store');
                 Route::put('/periode-rps/{id}', [PeriodeRpsController::class, 'update'])->name('periode-rps.update');
                 Route::post('/periode-rps/close-session', [PeriodeRpsController::class, 'closeSession'])->name('periode-rps.close-session');
+                Route::post('/template', [TemplateRpsController::class, 'store'])->name('template.store');
             });
         });
 
@@ -119,12 +127,16 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
     // -------------------------------------------------------------------------
     Route::middleware(['permission:banksoal.delete'])->group(function () {
         Route::delete('/destroy/{id}', [BankSoalController::class, 'destroy'])->name('banksoal.destroy');
-        
-        // RPS GPM
-        Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
-                Route::delete('/periode-rps/{id}', [PeriodeRpsController::class, 'destroy'])->name('periode-rps.destroy');                Route::post('/periode-rps', [PeriodeRpsController::class, 'store'])->name('periode-rps.store');
-            });        
     });
+
+    // -------------------------------------------------------------------------
+    // PUBLIC ROUTES (No permission check)
+    // -------------------------------------------------------------------------
+    // Download template RPS (untuk Dosen dan umum)
+    Route::get('/rps/template/download', [TemplateRpsController::class, 'download'])
+        ->middleware('role:dosen')
+        ->name('rps.template.download');
+    
     
 
     # Periode Ujian Routes
