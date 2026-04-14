@@ -16,9 +16,18 @@
                         
                         {{-- Dropdown Per Page (Alpine.js - Style Seragam) --}}
                         <div class="relative w-32" x-data="{ 
-                            open: false, 
-                            selected: '{{ request('per_page', '10') }}', 
-                            options: ['10', '25', '50', '100'] 
+                            open: false,
+                            selected: '{{ request('per_page') ?: '' }}',
+                            options: ['10', '25', '50', '100'],
+                            init() {
+                                if (!this.selected) {
+                                    this.selected = localStorage.getItem('cat_per_page') || '10';
+                                }
+                            },
+                            setSelected(val) {
+                                this.selected = String(val);
+                                localStorage.setItem('cat_per_page', String(val));
+                            }
                         }">
                             <input type="hidden" name="per_page" :value="selected">
                             <button type="button" @click="open = !open" @click.away="open = false" 
@@ -28,7 +37,7 @@
                             </button>
                             <div x-show="open" x-transition.opacity.duration.200ms style="display: none;" class="absolute top-full left-0 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-xl z-[50] overflow-hidden py-1">
                                 <template x-for="opt in options" :key="opt">
-                                    <button type="button" @click="selected = opt; $el.closest('form').submit()" 
+                                    <button type="button" @click="setSelected(opt); open = false"
                                         class="w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-50"
                                         :class="selected == opt ? 'text-[#5E53F4] font-semibold bg-[#5E53F4]/5' : 'text-slate-600'">
                                         <span x-text="opt + ' Baris'"></span>
@@ -36,6 +45,43 @@
                                 </template>
                             </div>
                         </div>
+                        
+                        {{-- Dropdown Filter Role — hanya untuk Admins --}}
+                        @if($category === 'Admins')
+                        <div class="relative w-40" x-data="{
+                            open: false,
+                            selected: '{{ request('role', 'all') }}',
+                            roles: [
+                                { name: 'all', label: 'Semua Role' },
+                                { name: 'superadmin', label: 'Superadmin' },
+                                { name: 'admin', label: 'Admin' },
+                                { name: 'admin_banksoal', label: 'Admin Bank Soal' },
+                                { name: 'admin_capstone', label: 'Admin Capstone' },
+                                { name: 'admin_eoffice', label: 'Admin E-Office' },
+                                { name: 'admin_kemahasiswaan', label: 'Admin Kemahasiswaan' },
+                            ],
+                            get currentLabel() {
+                                return this.roles.find(r => r.name === this.selected)?.label || 'Semua Role';
+                            }
+                        }">
+                            <input type="hidden" name="role" :value="selected">
+                            <button type="button" @click="open = !open" @click.away="open = false"
+                                class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700 focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4] outline-none transition-all text-xs flex items-center justify-between shadow-sm">
+                                <span x-text="currentLabel" class="font-medium truncate"></span>
+                                <span class="material-symbols-outlined text-slate-400 ml-1" :class="{'rotate-180': open}" style="font-size:16px; transition: transform 0.2s;">expand_more</span>
+                            </button>
+                            <div x-show="open" x-transition.opacity.duration.200ms style="display:none;"
+                                class="absolute top-full left-0 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-xl z-[50] overflow-hidden py-1 max-h-52 overflow-y-auto">
+                                <template x-for="r in roles" :key="r.name">
+                                    <button type="button" @click="selected = r.name; open = false"
+                                        class="w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-50"
+                                        :class="selected === r.name ? 'text-[#5E53F4] font-semibold bg-[#5E53F4]/5' : 'text-slate-600'">
+                                        <span x-text="r.label"></span>
+                                    </button>
+                                </template>
+                            </div>
+                        </div>
+                        @endif
 
                         {{-- Search Input (Style Seragam) --}}
                         <div class="relative">
@@ -57,12 +103,6 @@
 
                 {{-- List User (Tetap Menggunakan Card Bawaan) --}}
                 <div class="grid grid-cols-1 gap-3">
-                    @php
-                        $sortedUsers = $users->getCollection()->sortByDesc(function($user) {
-                            return $user->roles->pluck('name')->contains('superadmin');
-                        });
-                        $users->setCollection($sortedUsers);
-                    @endphp
 
                     @forelse($users as $user)
                         @include('superadmin.permission._user_card', ['user' => $user])

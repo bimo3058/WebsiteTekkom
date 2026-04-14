@@ -49,90 +49,70 @@
 
         function startPolling(importId) {
             if (!importId || importId === "null" || importId === "") return;
-
             if (importTimer) clearInterval(importTimer);
 
-            const bar = document.getElementById('importProgressBar');
-            const text = document.getElementById('importStatusText');
-            const percentText = document.getElementById('importPercentText');
+            // Tampilkan container
             const container = document.getElementById('importProgressContainer');
-
             if (container) {
-                container.classList.remove('hidden');
                 container.setAttribute('data-import-id', importId);
+                container.classList.remove('hidden');
             }
+
+            const bar         = document.getElementById('importProgressBar');
+            const text        = document.getElementById('importStatusText');
+            const percentText = document.getElementById('importPercentText');
 
             importTimer = setInterval(async () => {
                 try {
                     const response = await fetch(`/superadmin/import-status/${importId}`);
-                    
-                    // ✅ Cek jika response bukan JSON (misal redirect ke login)
                     const contentType = response.headers.get("content-type");
                     if (!contentType || !contentType.includes("application/json")) {
-                        console.log("Response bukan JSON, menghentikan polling");
                         stopPolling();
-                        // Hapus container progress
-                        if (container) container.remove();
+                        if (container) container.classList.add('hidden');
                         return;
                     }
-                    
                     if (!response.ok) {
                         if (response.status === 401 || response.status === 403) {
-                            // Session expired, redirect ke login
                             window.location.href = '/login';
                             return;
                         }
                         stopPolling();
                         return;
                     }
-                    
-                    const data = await response.json();
-                    
-                    // ✅ Validasi data yang diterima
-                    if (!data || typeof data !== 'object') {
-                        console.error("Invalid data received");
-                        stopPolling();
-                        if (container) container.remove();
-                        return;
-                    }
-                    
-                    const percentage = data.total > 0 ? Math.round((data.processed / data.total) * 100) : 0;
 
+                    const data = await response.json();
+                    if (!data || typeof data !== 'object') { stopPolling(); return; }
+
+                    const percentage = data.total > 0 ? Math.round((data.processed / data.total) * 100) : 0;
                     if (bar) bar.style.width = percentage + '%';
                     if (percentText) percentText.textContent = percentage + '%';
 
                     if (data.status === 'processing') {
                         if (text) text.textContent = `Memproses: ${data.processed} / ${data.total} user...`;
-                    } 
-                    else if (data.status === 'completed') {
+                    } else if (data.status === 'completed') {
                         stopPolling();
                         if (text) text.innerHTML = '<span class="text-emerald-600 font-bold">Impor Berhasil Selesai!</span>';
-                        if (bar) {
-                            bar.style.width = '100%';
-                            bar.className = "h-full bg-emerald-500 transition-all duration-500";
-                        }
-                        setTimeout(() => {
-                            // Hapus session import_id
-                            fetch('/superadmin/clear-import-session', { method: 'POST' });
+                        if (bar) { bar.style.width = '100%'; bar.className = "h-full bg-emerald-500 transition-all duration-500"; }
+                        setTimeout(async () => {
+                            await fetch('/superadmin/clear-import-session', { method: 'POST' });
+                            await fetch('/superadmin/bust-stats-cache', {
+                                method: 'POST',
+                                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                            });
                             window.location.reload();
-                        }, 2000);
-                    } 
-                    else if (data.status === 'failed') {
+                        }, 1500);
+                    } else if (data.status === 'failed') {
                         stopPolling();
-                        if (text) {
-                            const errorMsg = data.error_message || data.filename || 'Import gagal';
-                            text.innerHTML = `<span class="text-red-600 font-bold">❌ Gagal: ${errorMsg}</span>`;
-                        }
+                        if (text) text.innerHTML = `<span class="text-red-600 font-bold">❌ Gagal: ${data.error_message || 'Import gagal'}</span>`;
                         if (bar) bar.className = "h-full bg-red-500 transition-all duration-500";
-                        setTimeout(() => {
-                            fetch('/superadmin/clear-import-session', { method: 'POST' });
+                        setTimeout(async () => {
+                            await fetch('/superadmin/clear-import-session', { method: 'POST' });
                             window.location.reload();
                         }, 3000);
                     }
                 } catch (e) {
                     console.error("Polling error:", e);
                     stopPolling();
-                    if (container) container.remove();
                 }
             }, 2000);
         }
@@ -142,11 +122,6 @@
         // ============================================
         async function cancelImport(importId) {
             if (!importId) return;
-            
-            if (!confirm('Batalkan proses impor? Data yang sudah diproses akan tetap tersimpan.')) {
-                return;
-            }
-            
             try {
                 const response = await fetch(`/superadmin/import-status/${importId}/cancel`, {
                     method: 'POST',
@@ -158,26 +133,20 @@
                 });
                 
                 if (response.ok) {
-                    // Hentikan polling
-                    if (importTimer) {
-                        clearInterval(importTimer);
-                        importTimer = null;
-                    }
-                    
-                    // Update tampilan progress bar
-                    const bar = document.getElementById('importProgressBar');
+                    stopPolling();
+                    const bar  = document.getElementById('importProgressBar');
                     const text = document.getElementById('importStatusText');
-                    
-                    if (bar) bar.className = "h-full bg-red-500 transition-all duration-500";
+                    if (bar)  bar.className = "h-full bg-red-500 transition-all duration-500";
                     if (text) text.innerHTML = '<span class="text-red-600 font-bold">Impor dibatalkan</span>';
                     
-                    // Hapus session import_id
-                    await fetch('/superadmin/clear-import-session', { method: 'POST' });
-                    
-                    // Reload setelah 2 detik
-                    setTimeout(() => {
+                    setTimeout(async () => {
+                        await fetch('/superadmin/clear-import-session', { method: 'POST' });
+                        await fetch('/superadmin/bust-stats-cache', {
+                            method: 'POST',
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' }
+                        });
                         window.location.reload();
-                    }, 2000);
+                    }, 1500);
                 } else {
                     const error = await response.json();
                     alert('Gagal membatalkan: ' + (error.message || 'Unknown error'));
@@ -224,61 +193,64 @@
 
             // AJAX Form Import
             const importForm = document.getElementById('formImportUser');
-                if (importForm) {
-                importForm.addEventListener('submit', async function(e) {
-                    e.preventDefault();
-                    const btn = document.getElementById('btnSubmitImport');
-                    const errorContainer = document.getElementById('importErrorContainer');
-                    const errorMessage = document.getElementById('importErrorMessage');
-                    const formData = new FormData(this);
+            if (importForm) {
+                let isSubmitting = false;
 
-                    // 1. Reset tampilan error sebelum mulai
+                importForm.addEventListener('submit', async function (e) {
+                    e.preventDefault();
+                    if (isSubmitting) return; // cegah double submit
+                    isSubmitting = true;
+
+                    const btn            = document.getElementById('btnSubmitImport');
+                    const errorContainer = document.getElementById('importErrorContainer');
+                    const errorMessage   = document.getElementById('importErrorMessage');
+                    const dupeContainer  = document.getElementById('importDuplicateContainer');
+
                     if (errorContainer) errorContainer.classList.add('hidden');
-                    
-                    // 2. Beri indikasi loading pada tombol
-                    btn.disabled = true;
+                    if (dupeContainer)  dupeContainer.classList.add('hidden');
+
+                    btn.disabled  = true;
                     btn.innerHTML = '<span class="animate-spin material-symbols-outlined" style="font-size:18px">sync</span> Memvalidasi...';
 
                     try {
-                        const res = await fetch(this.action, {
+                        const res  = await fetch(this.action, {
                             method: 'POST',
-                            body: formData,
-                            headers: {
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                                'Accept': 'application/json'
-                            }
+                            body: new FormData(this),
+                            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
                         });
-
                         const data = await res.json();
 
-                        // ==========================================
-                        // ✅ JIKA ERROR: Jangan Refresh, Munculkan di Modal
-                        // ==========================================
-                        if (!res.ok) {
-                            throw new Error(data.message || "Gagal memproses file.");
+                        if (data.status === 'duplicate') {
+                            handleImportDuplicateResponse(data);
+                            isSubmitting = false; // reset agar bisa submit ulang setelah perbaiki file
+                            return;
                         }
 
-                        // ==========================================
-                        // ✅ JIKA SUKSES: Langsung Refresh Halaman
-                        // ==========================================
-                        if (data.import_id || data.status === 'success') {
-                            // Feedback visual sekejap
+                        if (!res.ok) throw new Error(data.message || 'Gagal memproses file.');
+
+                        if (data.import_id) {
                             btn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Berhasil!';
-                            
-                            // Refresh agar Session Laravel terbaca & Progress Bar muncul otomatis
+                            closeModal('modalImportUser');
+
+                            const container = document.getElementById('importProgressContainer');
+                            if (container) {
+                                container.setAttribute('data-import-id', data.import_id);
+                                container.classList.remove('hidden');
+                            }
+                            startPolling(data.import_id);
+                            // isSubmitting tidak di-reset — modal sudah tutup, tidak perlu submit lagi
+
+                        } else if (data.status === 'success') {
+                            btn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Berhasil!';
                             window.location.reload();
                         }
 
                     } catch (err) {
-                        // ==========================================
-                        // Tampilkan Error tanpa menutup Modal
-                        // ==========================================
-                        if (errorMessage) errorMessage.textContent = err.message;
+                        if (errorMessage)   errorMessage.textContent = err.message;
                         if (errorContainer) errorContainer.classList.remove('hidden');
-                        
-                        // Kembalikan tombol ke kondisi awal agar bisa diperbaiki
-                        btn.disabled = false;
+                        btn.disabled  = false;
                         btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px">upload</span> Mulai Impor';
+                        isSubmitting = false; // reset agar bisa coba lagi setelah error
                     }
                 });
             }
