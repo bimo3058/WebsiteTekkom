@@ -26,13 +26,52 @@
                 <span class="mt-1 inline-flex rounded-full bg-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-700">{{ strtoupper($soal->status) }}</span>
             </div>
         </div>
+        
+        @if(isset($review) && !empty($review->catatan))
+        <div class="mb-6">
+            @if(in_array(strtolower($soal->status), ['revisi', 'ditolak']))
+            <div class="rounded-xl border border-red-200 bg-red-50 p-4">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-exclamation-triangle mt-1 text-red-500"></i>
+                    <div>
+                        <h4 class="text-sm font-bold text-red-800">Catatan Revisi dari GPM</h4>
+                        <p class="mt-1 text-sm text-red-700 leading-relaxed">{{ $review->catatan }}</p>
+                    </div>
+                </div>
+            </div>
+            @else
+            <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-history mt-1 text-amber-500"></i>
+                    <div>
+                        <h4 class="text-sm font-bold text-amber-800">Riwayat Catatan GPM Sebelumnya</h4>
+                        <p class="mt-1 text-sm text-amber-700 leading-relaxed">{{ $review->catatan }}</p>
+                    </div>
+                </div>
+            </div>
+            @endif
+        </div>
+        @endif
 
         <div class="mb-6">
             <p class="mb-2 text-sm font-semibold text-slate-700">Pertanyaan</p>
-            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm leading-relaxed text-slate-700">
-                {!! nl2br(e($soal->soal)) !!}
+            <div class="rounded-xl border border-slate-200 bg-white p-4 text-sm leading-relaxed text-slate-900 prose quill-content max-w-none">
+                {!! $soal->soal !!}
             </div>
         </div>
+
+        @push('styles')
+        <style>
+            .quill-content p { margin-bottom: 1em; }
+            .quill-content ul { list-style-type: disc; margin-left: 1.5em; margin-bottom: 1em; }
+            .quill-content ol { list-style-type: decimal; margin-left: 1.5em; margin-bottom: 1em; }
+            .quill-content blockquote { border-left: 4px solid #cbd5e1; padding-left: 1em; color: #64748b; font-style: italic; }
+            .quill-content pre { background-color: #1e293b; color: #f8fafc; padding: 1em; border-radius: 0.5rem; overflow-x: auto; }
+            .quill-content img { max-width: 100%; border-radius: 0.5rem; margin-top: 1em; margin-bottom: 1em; }
+            .quill-content table { width: 100%; border-collapse: collapse; margin-bottom: 1em; }
+            .quill-content th, .quill-content td { border: 1px solid #cbd5e1; padding: 0.5rem; }
+        </style>
+        @endpush
 
         <div>
             <p class="mb-2 text-sm font-semibold text-slate-700">Pilihan Jawaban</p>

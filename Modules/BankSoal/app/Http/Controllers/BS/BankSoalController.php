@@ -187,6 +187,7 @@ class BankSoalController extends Controller
                     'soal' => strip_tags(\Illuminate\Support\Str::limit($soal->soal, 150)),
                     'cpl' => $soal->cpl ? $soal->cpl->kode : null,
                     'cpmk' => $soal->cpmk ? $soal->cpmk->kode : null,
+                    'tipe_soal' => $soal->tipe_soal,
                 ];
             })
         ]);
@@ -252,15 +253,21 @@ class BankSoalController extends Controller
     {
         $this->authorize('banksoal.edit');
         
-        $request->validate([
+        $rules = [
             'mk_id' => 'required|exists:bs_mata_kuliah,id',
             'cpl_id' => 'required|exists:bs_cpl,id',
             'soal' => 'required|string',
             'kesulitan' => 'required|in:easy,intermediate,advanced',
-            'jawaban' => 'required|array|min:2',
-            'jawaban.*.teks' => 'required|string',
-            'jawaban_benar' => 'required',
-        ]);
+            'tipe_soal' => 'nullable|string|in:pilihan_ganda,essay',
+        ];
+
+        if ($request->input('tipe_soal') !== 'essay') {
+            $rules['jawaban'] = 'required|array|min:2';
+            $rules['jawaban.*.teks'] = 'required|string';
+            $rules['jawaban_benar'] = 'required';
+        }
+
+        $request->validate($rules);
 
         DB::beginTransaction();
         try {
@@ -277,18 +284,21 @@ class BankSoalController extends Controller
                 'soal' => $request->soal,
                 'kesulitan' => $request->kesulitan,
                 'bobot' => $bobot,
+                'tipe_soal' => $request->tipe_soal ?? 'pilihan_ganda',
                 // gambar? bisa ditambah kalau ada
             ];
 
             // Mapping form jawaban ke expected params: [{ opsi, deskripsi, is_benar }, ...]
             $jawabanData = [];
-            $abjad = range('A', 'Z');
-            foreach ($request->jawaban as $idx => $jawab) {
-                $jawabanData[] = [
-                    'opsi' => $abjad[$idx] ?? 'A',
-                    'deskripsi' => $jawab['teks'],
-                    'is_benar' => ((string)$request->jawaban_benar === (string)$idx) ? true : false,
-                ];
+            if ($dataSoal['tipe_soal'] !== 'essay' && $request->has('jawaban')) {
+                $abjad = range('A', 'Z');
+                foreach ($request->jawaban as $idx => $jawab) {
+                    $jawabanData[] = [
+                        'opsi' => $abjad[$idx] ?? 'A',
+                        'deskripsi' => $jawab['teks'],
+                        'is_benar' => ((string)$request->jawaban_benar === (string)$idx) ? true : false,
+                    ];
+                }
             }
 
             $this->pertanyaanService->create($dataSoal, $jawabanData);
@@ -305,7 +315,8 @@ class BankSoalController extends Controller
     {
         $this->authorize('banksoal.view');
         $soal = $this->pertanyaanService->findById($id);
-        return view('banksoal::pages.bank-soal.Dosen.show', compact('soal'));
+        $review = \Illuminate\Support\Facades\DB::table('bs_review')->where('pertanyaan_id', $id)->orderBy('id', 'desc')->first();
+        return view('banksoal::pages.bank-soal.Dosen.show', compact('soal', 'review'));
     }
 
     public function edit($id)
@@ -315,23 +326,30 @@ class BankSoalController extends Controller
         $user = auth()->user();
         $mataKuliahDosen = $this->mataKuliahService->getMkByDosen($user->id);
         $soal = $this->pertanyaanService->findById($id);
+        $review = \Illuminate\Support\Facades\DB::table('bs_review')->where('pertanyaan_id', $id)->orderBy('id', 'desc')->first();
 
-        return view('banksoal::pages.bank-soal.Dosen.edit', compact('soal', 'mataKuliahDosen'));
+        return view('banksoal::pages.bank-soal.Dosen.edit', compact('soal', 'mataKuliahDosen', 'review'));
     }
 
     public function update(Request $request, $id)
     {
         $this->authorize('banksoal.edit');
 
-        $request->validate([
+        $rules = [
             'mk_id' => 'required|exists:bs_mata_kuliah,id',
             'cpl_id' => 'required|exists:bs_cpl,id',
             'soal' => 'required|string',
             'kesulitan' => 'required|in:easy,intermediate,advanced',
-            'jawaban' => 'required|array|min:2',
-            'jawaban.*.teks' => 'required|string',
-            'jawaban_benar' => 'required',
-        ]);
+            'tipe_soal' => 'nullable|string|in:pilihan_ganda,essay',
+        ];
+
+        if ($request->input('tipe_soal') !== 'essay') {
+            $rules['jawaban'] = 'required|array|min:2';
+            $rules['jawaban.*.teks'] = 'required|string';
+            $rules['jawaban_benar'] = 'required';
+        }
+
+        $request->validate($rules);
 
         DB::beginTransaction();
         try {
@@ -341,6 +359,8 @@ class BankSoalController extends Controller
                 'advanced' => 3,
                 default => 1,
             };
+            
+            $existingPertanyaan = $this->pertanyaanService->findById($id);
 
             $dataSoal = [
                 'mk_id' => $request->mk_id,
@@ -348,16 +368,24 @@ class BankSoalController extends Controller
                 'soal' => $request->soal,
                 'kesulitan' => $request->kesulitan,
                 'bobot' => $bobot,
+                'tipe_soal' => $request->tipe_soal ?? 'pilihan_ganda',
             ];
+            
+            // Jika soal sebelumnya sudah diveview (revisi/ditolak), ajukan ulang otomatis
+            if (in_array(strtolower($existingPertanyaan->status), ['revisi', 'ditolak'])) {
+                $dataSoal['status'] = \Modules\BankSoal\Models\Pertanyaan::STATUS_DIAJUKAN;
+            }
 
             $jawabanData = [];
-            $abjad = range('A', 'Z');
-            foreach ($request->jawaban as $idx => $jawab) {
-                $jawabanData[] = [
-                    'opsi' => $abjad[$idx] ?? 'A',
-                    'deskripsi' => $jawab['teks'],
-                    'is_benar' => ((string)$request->jawaban_benar === (string)$idx) ? true : false,
-                ];
+            if ($dataSoal['tipe_soal'] !== 'essay' && $request->has('jawaban')) {
+                $abjad = range('A', 'Z');
+                foreach ($request->jawaban as $idx => $jawab) {
+                    $jawabanData[] = [
+                        'opsi' => $abjad[$idx] ?? 'A',
+                        'deskripsi' => $jawab['teks'],
+                        'is_benar' => ((string)$request->jawaban_benar === (string)$idx) ? true : false,
+                    ];
+                }
             }
 
             $this->pertanyaanService->update($id, $dataSoal, $jawabanData);
@@ -381,6 +409,67 @@ class BankSoalController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
             return back()->with('error', 'Gagal menghapus soal: ' . $e->getMessage());
+        }
+    }
+
+    public function exportCsv(Request $request)
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \Modules\BankSoal\Exports\BankSoalExport(), 'template_import_soal_moodle.xls', \Maatwebsite\Excel\Excel::XLS);
+    }
+
+    public function importCsv(Request $request)
+    {
+        $this->authorize('banksoal.edit');
+
+        $request->validate([
+            'mk_id' => 'required',
+            'cpl_id' => 'required',
+            'csv_file' => 'required|mimes:csv,txt,xls,xlsx|max:5120'
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $import = new \Modules\BankSoal\Imports\BankSoalImport(
+                $request->mk_id,
+                $request->cpl_id,
+                $this->pertanyaanService
+            );
+            
+            \Maatwebsite\Excel\Facades\Excel::import($import, $request->file('csv_file'));
+
+            DB::commit();
+            return back()->with('success', "Berhasil import {$import->successCount} soal (berikut opsinya) dari file Spreadsheet.");
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal import Excel/CSV: ' . $e->getMessage());
+        }
+    }
+
+    public function ajukanSemuaDraf(Request $request)
+    {
+        $this->authorize('banksoal.edit'); // assume Dosen capability
+
+        $user = auth()->user();
+        $mkDosen = $this->mataKuliahService->getMkByDosen($user->id);
+        $mkIds = $mkDosen->pluck('id')->toArray();
+
+        DB::beginTransaction();
+        try {
+            $updated = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)
+                ->where('status', \Modules\BankSoal\Models\Pertanyaan::STATUS_DRAFT)
+                ->update(['status' => \Modules\BankSoal\Models\Pertanyaan::STATUS_DIAJUKAN]);
+
+            DB::commit();
+
+            if ($updated > 0) {
+                return back()->with('success', "Berhasil mengajukan {$updated} butir soal ke GPM untuk divalidasi.");
+            } else {
+                return back()->with('info', "Belum ada soal berstatus Draf untuk diajukan.");
+            }
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal mengajukan soal: ' . $e->getMessage());
         }
     }
 }

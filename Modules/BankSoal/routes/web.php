@@ -63,6 +63,9 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::post('/tarik-soal', [BankSoalController::class, 'ekstrak'])->name('ekstrak');
                 Route::post('/cetak-ujian', [BankSoalController::class, 'cetakUjian'])->name('cetak-ujian');
                 Route::get('/get-by-mk/{mk_id}', [BankSoalController::class, 'getAvailableSoals'])->name('get-available-soals');
+                Route::get('/export-csv', [BankSoalController::class, 'exportCsv'])->name('export-csv');
+                Route::post('/import-csv', [BankSoalController::class, 'importCsv'])->name('import-csv');
+                Route::post('/ajukan-semua', [BankSoalController::class, 'ajukanSemuaDraf'])->name('ajukan-semua');
                 Route::get('/', [BankSoalController::class, 'index'])->name('index');
                 Route::get('/create', [BankSoalController::class, 'create'])->name('create');
                 Route::post('/store', [BankSoalController::class, 'store'])->name('store');

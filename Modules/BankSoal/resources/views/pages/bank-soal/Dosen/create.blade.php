@@ -6,7 +6,23 @@
     </x-banksoal::ui.page-header>
 
     @if(session('error'))
-        <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"><i class="fas fa-exclamation-circle mr-1"></i> {{ session('error') }}</div>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Waduh, Gagal...',
+                    text: '{{ session('error') }}',
+                    confirmButtonColor: '#ef4444',
+                    background: '#ffffff',
+                    customClass: {
+                        title: 'text-slate-800 text-xl font-bold',
+                        htmlContainer: 'text-slate-600 text-sm',
+                        confirmButton: 'rounded-xl px-5 py-2.5 font-semibold transition-colors'
+                    }
+                });
+            });
+        </script>
     @endif
 
     <x-banksoal::ui.panel title="Form Soal" subtitle="Gunakan format pilihan ganda dan tandai satu jawaban benar." padding="p-0">
@@ -44,16 +60,28 @@
 
             <div class="px-6 pb-6">
                 <label class="mb-2 block text-sm font-semibold text-slate-700">Tipe Pertanyaan</label>
-                <div class="flex items-center gap-5 text-sm font-medium text-slate-700"><label class="inline-flex items-center gap-2"><input type="radio" name="tipe" value="pg" checked class="text-blue-600 focus:ring-blue-500"> Pilihan Ganda</label><label class="inline-flex items-center gap-2 text-slate-400"><input type="radio" name="tipe" value="essay" disabled> Essay</label></div>
+                <div class="flex items-center gap-5 text-sm font-medium text-slate-700">
+                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="tipe_soal" value="pilihan_ganda" id="radioPg" {{ old('tipe_soal', 'pilihan_ganda') == 'pilihan_ganda' ? 'checked' : '' }} class="text-blue-600 focus:ring-blue-500 w-4 h-4" onchange="toggleTipeSoal(this.value)"> 
+                        Pilihan Ganda
+                    </label>
+                    <label class="inline-flex items-center gap-2 cursor-pointer">
+                        <input type="radio" name="tipe_soal" value="essay" id="radioEssay" {{ old('tipe_soal') == 'essay' ? 'checked' : '' }} class="text-blue-600 focus:ring-blue-500 w-4 h-4" onchange="toggleTipeSoal(this.value)"> 
+                        Essay
+                    </label>
+                </div>
             </div>
 
             <div class="px-6 pb-6">
                 <label for="soal" class="mb-2 block text-sm font-semibold text-slate-700">Pertanyaan</label>
-                <textarea name="soal" id="soal" rows="5" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required>{{ old('soal') }}</textarea>
+                <!-- Hidden input untuk disubmit ke form -->
+                <input type="hidden" name="soal" id="soalInput" value="{{ old('soal') }}">
+                <div id="editor" class="bg-white">{!! old('soal') !!}</div>
+                <p class="mt-2 text-xs text-slate-500">Anda dapat menambahkan format teks rata-kiri/kanan, list, tabel, dan gambar menggunakan menu di atas.</p>
             </div>
 
-            <div class="border-t border-slate-200 px-6 py-5">
-                <div class="mb-3 flex items-center justify-between"><label class="text-sm font-semibold text-slate-700">Opsi Jawaban & Kunci</label><button type="button" id="addOptionBtn" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50">+ Tambah Opsi</button></div>
+            <div id="opsiContainerWrapper" class="border-t border-slate-200 px-6 py-5 {{ old('tipe_soal', 'pilihan_ganda') == 'essay' ? 'hidden' : '' }}">
+                <div class="mb-3 flex items-center justify-between"><label class="text-sm font-semibold text-slate-700">Opsi Jawaban & Kunci</label><button type="button" id="addOptionBtn" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">+ Tambah Opsi</button></div>
                 <div id="optionsContainer" class="space-y-3">
                     @for($i = 0; $i < max(count(old('jawaban', []) ?: [0, 1, 2]), 3); $i++)
                         <label class="option-item flex items-start gap-3 rounded-xl border border-slate-200 p-4 {{ old('jawaban_benar') == (string)$i ? 'border-green-400 bg-green-50' : '' }}">
@@ -72,8 +100,75 @@
         </form>
     </x-banksoal::ui.panel>
 
+    @push('styles')
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <style>
+        .ql-toolbar.ql-snow {
+            border-top-left-radius: 0.75rem;
+            border-top-right-radius: 0.75rem;
+            border-color: #e2e8f0;
+            background-color: #f8fafc;
+            padding: 0.75rem;
+        }
+        .ql-container.ql-snow {
+            border-bottom-left-radius: 0.75rem;
+            border-bottom-right-radius: 0.75rem;
+            border-color: #e2e8f0;
+            min-height: 150px;
+            font-family: inherit;
+            font-size: 0.875rem;
+        }
+        .ql-editor {
+            min-height: 150px;
+        }
+        .ql-editor.ql-blank::before {
+            color: #94a3b8;
+            font-style: normal;
+        }
+    </style>
+    @endpush
+
+    @push('scripts')
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    @endpush
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            var quill = new Quill('#editor', {
+                theme: 'snow',
+                placeholder: 'Tuliskan deskripsi pertanyaan di sini...',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline', 'strike'],        // toggled buttons
+                        ['blockquote', 'code-block'],
+                        [{ 'header': 1 }, { 'header': 2 }],               // custom button values
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'script': 'sub'}, { 'script': 'super' }],      // superscript/subscript
+                        [{ 'indent': '-1'}, { 'indent': '+1' }],          // outdent/indent
+                        [{ 'size': ['small', false, 'large', 'huge'] }],  // custom dropdown
+                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                        [{ 'color': [] }, { 'background': [] }],          // dropdown with defaults from theme
+                        [{ 'align': [] }],
+                        ['clean'],                                         // remove formatting button
+                        ['link', 'image', 'video']                         // link and image, video
+                    ]
+                }
+            });
+
+            // Sinkronkan Quill HTML ke hidden input sebelum submit form
+            var form = document.getElementById('formSoal');
+            form.onsubmit = function() {
+                // Populate hidden input on submit
+                var soalInput = document.getElementById('soalInput');
+                // Mengambil HTML dari editor, jika kosong/hanya whitespace dikembalikan string kosong supaya validasi server menangkap
+                var htmlContent = quill.root.innerHTML;
+                if (quill.getText().trim().length === 0 && !htmlContent.includes('<img')) {
+                    soalInput.value = '';
+                } else {
+                    soalInput.value = htmlContent;
+                }
+            };
+
             const mkSelect = document.getElementById('mk_id');
             const cplSelect = document.getElementById('cpl_id');
             const oldCplId = "{{ old('cpl_id') }}";
@@ -130,6 +225,31 @@
             container.addEventListener('change', updateStyles);
             container.addEventListener('click', function(e) { if (e.target.closest('.remove-btn')) { e.preventDefault(); e.target.closest('.option-item').remove(); updateStyles(); } });
             updateStyles();
+            
+            // Set initial state based on old value
+            const initialTipeSoal = document.querySelector('input[name="tipe_soal"]:checked')?.value || 'pilihan_ganda';
+            toggleTipeSoal(initialTipeSoal);
         });
+
+        function toggleTipeSoal(tipe) {
+            const wrapper = document.getElementById('opsiContainerWrapper');
+            const requiredInputs = wrapper.querySelectorAll('input[required]');
+            
+            if (tipe === 'essay') {
+                wrapper.classList.add('hidden');
+                // Remove required attribute from multiple choice inputs when essay is selected
+                requiredInputs.forEach(input => {
+                    input.dataset.wasRequired = 'true';
+                    input.required = false;
+                });
+            } else {
+                wrapper.classList.remove('hidden');
+                // Restore required attribute
+                const wasRequiredInputs = wrapper.querySelectorAll('input[data-was-required="true"]');
+                wasRequiredInputs.forEach(input => {
+                    input.required = true;
+                });
+            }
+        }
     </script>
 </x-banksoal::layouts.dosen-admin>
