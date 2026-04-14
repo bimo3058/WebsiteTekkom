@@ -77,7 +77,7 @@
                         </p>
                     </div>
                 @endif
-                
+
                 <form method="POST" action="{{ route('sso.verify') }}" class="space-y-5">
                     @csrf
 
@@ -129,7 +129,7 @@
 
                     <button 
                         type="submit"
-                        class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold rounded-xl transition-all shadow-lg shadow-blue-500/25 text-sm uppercase tracking-widest"
+                        class="w-full py-3.5 bg-blue-600 hover:bg-blue-700 active:scale-[0.98] text-white font-bold rounded-xl transition-all text-sm uppercase tracking-widest"
                     >
                         Masuk ke Dashboard
                     </button>
