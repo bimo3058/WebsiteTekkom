@@ -96,12 +96,13 @@
                     <label class="block text-sm font-semibold text-slate-700 mb-2">Dosen Pembimbing 1</label>
                     <div class="relative">
                         <select
-                            name="dosen_pembimbing_1"
+                            name="dosen_pembimbing_1_id"
                             class="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow cursor-pointer"
                         >
-                            <option value="" disabled selected>Pilih Dosen Pembimbing 1</option>
-                            <option value="1">Prof. Yos Johan Utama</option>
-                            <option value="2">Dr. Iwan Setiawan</option>
+                            <option value="">— Pilih Dosen Pembimbing 1 —</option>
+                            @foreach($dosenList as $dosen)
+                                <option value="{{ $dosen->id }}">{{ $dosen->name }}</option>
+                            @endforeach
                         </select>
                         <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
                             <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -116,12 +117,13 @@
                     <label class="block text-sm font-semibold text-slate-700 mb-2">Dosen Pembimbing 2</label>
                     <div class="relative">
                         <select
-                            name="dosen_pembimbing_2"
+                            name="dosen_pembimbing_2_id"
                             class="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow cursor-pointer"
                         >
-                            <option value="" disabled selected>Pilih Dosen Pembimbing 2</option>
-                            <option value="3">Dr. Adian Fatchur Rochim</option>
-                            <option value="4">Ir. Kurniawan Teguh Martono</option>
+                            <option value="">— Pilih Dosen Pembimbing 2 —</option>
+                            @foreach($dosenList as $dosen)
+                                <option value="{{ $dosen->id }}">{{ $dosen->name }}</option>
+                            @endforeach
                         </select>
                         <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
                             <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">

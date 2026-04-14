@@ -1,11 +1,13 @@
 <?php
 
-namespace Modules\BankSoal\Http\Controllers;
+namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Modules\BankSoal\Models\PendaftarUjian;
 use Modules\BankSoal\Models\PeriodeUjian;
+use App\Models\User;
+use App\Models\Role;
 
 class PendaftarAdminController extends Controller
 {
@@ -43,14 +45,20 @@ class PendaftarAdminController extends Controller
             }
 
             $totalCount = $query->count();
-            $pendaftars = $query->latest()->paginate(15)->appends($request->query());
+            $pendaftars = $query->with(['mahasiswa', 'dosenPembimbing1', 'dosenPembimbing2'])->latest()->paginate(15)->appends($request->query());
         }
+
+        // Ambil semua dosen untuk dropdown
+        $dosenList = User::whereHas('roles', fn($q) => $q->where('name', 'dosen'))
+            ->orderBy('name')
+            ->get(['id', 'name']);
 
         return view('banksoal::pendaftaran.index', compact(
             'periodes',
             'pendaftars',
             'selectedPeriode',
             'totalCount',
+            'dosenList',
         ));
     }
 
@@ -79,16 +87,16 @@ class PendaftarAdminController extends Controller
         }
 
         PendaftarUjian::create([
-            'periode_ujian_id'    => $request->periode_ujian_id,
-            'mahasiswa_id'        => auth()->id(), // placeholder; admin yg input
-            'nim'                 => $request->nim,
-            'nama_lengkap'        => $request->nama_lengkap,
-            'semester_aktif'      => $request->semester_aktif,
-            'target_wisuda'       => $request->target_wisuda,
-            'dosen_pembimbing_1_id' => null,
-            'dosen_pembimbing_2_id' => null,
-            'status_pendaftaran'  => 'approved', // tambah manual langsung approved
-            'catatan_admin'       => $request->catatan_admin,
+            'periode_ujian_id'      => $request->periode_ujian_id,
+            'mahasiswa_id'          => auth()->id(),
+            'nim'                   => $request->nim,
+            'nama_lengkap'          => $request->nama_lengkap,
+            'semester_aktif'        => $request->semester_aktif,
+            'target_wisuda'         => $request->target_wisuda,
+            'dosen_pembimbing_1_id' => $request->dosen_pembimbing_1_id ?: null,
+            'dosen_pembimbing_2_id' => $request->dosen_pembimbing_2_id ?: null,
+            'status_pendaftaran'    => 'approved',
+            'catatan_admin'         => $request->catatan_admin,
         ]);
 
         return back()->with('success', 'Peserta berhasil ditambahkan secara manual.');

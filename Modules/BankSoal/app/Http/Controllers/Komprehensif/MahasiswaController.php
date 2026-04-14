@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\BankSoal\Http\Controllers;
+namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -55,10 +55,9 @@ class MahasiswaController extends Controller
             return redirect()->route('komprehensif.mahasiswa.pendaftaran')->with('error', 'Anda sudah terdaftar pada periode ini.');
         }
 
-        // Optional: Jika ingin mengambil dosen bisa dilakukan di sini.
-        // Berdasarkan request: "untuk dropdown dosen gunakan yang dummy dulu", kita tidak perlu query.
+        $dosens = \App\Models\User::whereHas('roles', fn($q) => $q->where('name', 'dosen'))->orderBy('name')->get(['id', 'name']);
         
-        return view('banksoal::mahasiswa.pendaftaran-form', compact('activePeriode'));
+        return view('banksoal::mahasiswa.pendaftaran-form', compact('activePeriode', 'dosens'));
     }
 
     public function storePendaftaran(Request $request)
@@ -74,7 +73,10 @@ class MahasiswaController extends Controller
             'nama' => 'required|string',
             'semester' => 'required|integer|min:7',
             'target_wisuda' => 'required|string',
-            // Kita abaikan dummy dropdown input di Request ini agar app tidak melempar constraint error
+            'dosen_pembimbing_1_id' => 'required|exists:users,id',
+            'dosen_pembimbing_2_id' => 'nullable|exists:users,id|different:dosen_pembimbing_1_id',
+        ], [
+            'dosen_pembimbing_2_id.different' => 'Dosen Pembimbing 2 tidak boleh sama dengan Dosen Pembimbing 1'
         ]);
 
         PendaftarUjian::create([
@@ -84,9 +86,8 @@ class MahasiswaController extends Controller
             'nama_lengkap' => $request->nama,
             'semester_aktif' => $request->semester,
             'target_wisuda' => $request->target_wisuda,
-            // Isi foreign id pembimbing ke null dulu supaya bisa insert meskipun menggunakan dummy input
-            'dosen_pembimbing_1_id' => null, 
-            'dosen_pembimbing_2_id' => null,
+            'dosen_pembimbing_1_id' => $request->dosen_pembimbing_1_id, 
+            'dosen_pembimbing_2_id' => $request->dosen_pembimbing_2_id,
             'status_pendaftaran' => 'pending',
         ]);
 
