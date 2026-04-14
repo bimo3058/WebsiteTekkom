@@ -3,13 +3,14 @@
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Modules\BankSoal\Http\Controllers\DashboardController;
+use Modules\BankSoal\Http\Controllers\BS\DashboardController;
 use Modules\BankSoal\Http\Controllers\RPS\Dosen\RpsController as DosenRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\RpsController as GpmRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Admin\RpsController as AdminRpsController;
-use Modules\BankSoal\Http\Controllers\BankSoalController;
-use Modules\BankSoal\Http\Controllers\ValidasiBankSoalController;
-use Modules\BankSoal\Http\Controllers\RiwayatValidasiController;
+use Modules\BankSoal\Http\Controllers\BS\BankSoalController;
+use Modules\BankSoal\Http\Controllers\BS\GPM\ValidasiBankSoalController;
+use Modules\BankSoal\Http\Controllers\BS\GPM\RiwayatValidasiController;
+use Modules\BankSoal\Http\Controllers\RPS\Gpm\PeriodeRpsController;
 
 Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->group(function () {
 
@@ -40,6 +41,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::get('/validasi-rps/review/{rpsId}', [GpmRpsController::class, 'validasiRpsReview'])->name('validasi-rps.review');
                 Route::get('/validasi-rps/preview/{rpsId}', [GpmRpsController::class, 'previewDokumen'])->name('validasi-rps.preview');
                 Route::get('/riwayat-validasi/rps', [RiwayatValidasiController::class, 'rps'])->name('riwayat-validasi.rps');
+                Route::get('/periode-rps', [PeriodeRpsController::class, 'index'])->name('periode-rps.index');
             });
             // RPS - Admin
             Route::middleware('role:admin_banksoal')->prefix('admin')->name('admin.')->group(function () {
@@ -52,6 +54,11 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             // Banksoal - Dosen
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::get('/', [BankSoalController::class, 'index'])->name('index');
+                Route::get('/create', [BankSoalController::class, 'create'])->name('create');
+                Route::post('/store', [BankSoalController::class, 'store'])->name('store');
+                Route::get('/{id}', [BankSoalController::class, 'show'])->name('show');
+                Route::get('/{id}/edit', [BankSoalController::class, 'edit'])->name('edit');
+                Route::put('/{id}', [BankSoalController::class, 'update'])->name('update');
             });
             
            // Banksoal - GPM
@@ -60,6 +67,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::get('/validasi-bank-soal', [ValidasiBankSoalController::class, 'index'])->name('validasi-bank-soal');
                 Route::get('/validasi-bank-soal/review', [ValidasiBankSoalController::class, 'review'])->name('validasi-bank-soal.review');
                 Route::get('/riwayat-validasi/bank-soal', [RiwayatValidasiController::class, 'bankSoal'])->name('riwayat-validasi.bank-soal');
+                Route::get('/riwayat-validasi/bank-soal/{id}/detail', [RiwayatValidasiController::class, 'detailBankSoal'])->name('riwayat-validasi.bank-soal.detail');
             });
 
             // Banksoal - Admin
@@ -87,7 +95,10 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             });
             // RPS - GPM
             Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
-                Route::post('/validasi-rps/store', [GpmRpsController::class, 'storeValidasi'])->name('validasi-rps.store');
+                Route::post('/validasi-rps/store', [GpmRpsController::class, 'storeValidasi'])->name('validasi-rps.store');                
+                Route::post('/periode-rps', [PeriodeRpsController::class, 'store'])->name('periode-rps.store');
+                Route::put('/periode-rps/{id}', [PeriodeRpsController::class, 'update'])->name('periode-rps.update');
+                Route::post('/periode-rps/close-session', [PeriodeRpsController::class, 'closeSession'])->name('periode-rps.close-session');
             });
         });
 
@@ -96,17 +107,22 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             // Bank Soal - GPM
             Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
                 Route::post('/validasi-bank-soal/store', [ValidasiBankSoalController::class, 'store'])->name('validasi-bank-soal.store');            
-            
+                Route::put('/validasi-bank-soal/update/{id}', [ValidasiBankSoalController::class, 'update'])->name('validasi-bank-soal.update');
             });
         });
-
+    });
     // -------------------------------------------------------------------------
     // PERMISSION: DELETE
     // -------------------------------------------------------------------------
     Route::middleware(['permission:banksoal.delete'])->group(function () {
         Route::delete('/destroy/{id}', [BankSoalController::class, 'destroy'])->name('banksoal.destroy');
+        
+        // RPS GPM
+        Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
+                Route::delete('/periode-rps/{id}', [PeriodeRpsController::class, 'destroy'])->name('periode-rps.destroy');                Route::post('/periode-rps', [PeriodeRpsController::class, 'store'])->name('periode-rps.store');
+            });        
     });
-    });
+    
 
     # Periode Ujian Routes
     Route::prefix('admin/periode')->name('banksoal.periode.')->group(function () {

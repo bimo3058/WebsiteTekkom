@@ -8,26 +8,16 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
+use App\Services\SupabaseStorage;
 use Modules\BankSoal\Models\Shared\MataKuliah;
 use Modules\BankSoal\Models\Shared\Cpl;
 use Modules\BankSoal\Models\Shared\Cpmk;
 use Modules\BankSoal\Models\RpsDetail;
+use Modules\BankSoal\Models\PeriodeRps;
 use Modules\BankSoal\Enums\RpsStatus;
 
-/**
- * RpsController - RPS (Rencana Pembelajaran Semester) Management
- * Role Access: Dosen
- * Workflow:
- * 1. index() -> Tampilkan halaman form + history
- * 2. store() -> Simpan dokumen RPS baru 
- * 3. getCplByMk() -> Fetch available CPL untuk form
- * 4. getCpmkByCpl() -> Fetch available CPMK berdasarkan CPL yang dipilih
- * 5. getDosenByMk() -> Fetch list dosen untuk multi-select
- * 6. previewDokumen() -> Stream dokumen PDF untuk preview di modal
- */
 class RpsController extends Controller
 {
     // Halaman utama RPS untuk Dosen
@@ -72,6 +62,60 @@ class RpsController extends Controller
             ? $currentYear . '/' . ($currentYear + 1)
             : ($currentYear - 1) . '/' . $currentYear;
 
+        // Fetch Active Periode
+        $activePeriode = PeriodeRps::where('is_active', 'true')->first();
+        
+        $isUploadOpen = false;
+        $tenggatH7 = false;
+        $isHourFormat = false; // Track apakah daysLeft dalam format jam atau hari
+        $unsubmittedMk = [];
+        $daysLeft = 0;
+        
+        if ($activePeriode) {
+            $now   = now('Asia/Jakarta');
+            $start = $activePeriode->tanggal_mulai->timezone('Asia/Jakarta')->startOfDay();
+            $end   = $activePeriode->tanggal_selesai->timezone('Asia/Jakarta')->endOfDay();
+
+            // Cek apakah sekarang dalam rentang periode aktif
+            if ($now->between($start, $end)) {
+                $isUploadOpen = true;
+                
+                // Cek H-7 Reminder - hitung sisa waktu
+                $deadlineDate = $activePeriode->tanggal_selesai->startOfDay();
+                $todayDate = $now->startOfDay();
+                
+                // Jika deadline adalah hari yang sama dengan hari ini
+                if ($deadlineDate->isSameDay($todayDate)) {
+                    // Hitung sisa jam
+                    $hoursLeft = (int) $now->diffInHours($activePeriode->tanggal_selesai->endOfDay(), false);
+                    if ($hoursLeft > 0) {
+                        $tenggatH7 = true;
+                        $daysLeft = $hoursLeft; // Simpan sebagai jam
+                        $isHourFormat = true; // Mark sebagai format jam
+                    }
+                } else {
+                    // Hitung sisa hari
+                    $daysLeft = (int) $todayDate->diffInDays($deadlineDate);
+                    if ($daysLeft > 0) {
+                        if ($daysLeft <= 7) {
+                            $tenggatH7 = true;
+                        }
+                    }
+                    $isHourFormat = false; // Mark sebagai format hari
+                }
+                
+                if ($tenggatH7) {
+                    // Ambil daftar kode MK yang diampu user ini tapi RPS-nya belum disubmit/aktif
+                    $unsubmittedMk = DB::table('bs_mata_kuliah')
+                        ->join('bs_dosen_pengampu_mk', 'bs_mata_kuliah.id', '=', 'bs_dosen_pengampu_mk.mk_id')
+                        ->where('bs_dosen_pengampu_mk.user_id', $user->id)
+                        ->whereNotIn('bs_mata_kuliah.id', $mkIdsWithActiveRps)
+                        ->pluck('bs_mata_kuliah.nama')
+                        ->toArray();
+                }
+            }
+        }
+
         $rpsUploaded = $riwayat->isNotEmpty();
 
         return view('banksoal::pages.rps.dosen.index', compact(
@@ -81,6 +125,12 @@ class RpsController extends Controller
             'semester',
             'academicYear',
             'rpsUploaded',
+            'activePeriode',
+            'isUploadOpen',
+            'tenggatH7',
+            'isHourFormat',
+            'unsubmittedMk',
+            'daysLeft'
         ));
     }
 
@@ -98,29 +148,70 @@ class RpsController extends Controller
             'cpl_ids.*'      => ['exists:bs_cpl,id'],
             'cpmk_ids'       => ['required', 'array'],
             'cpmk_ids.*'     => ['exists:bs_cpmk,id'],
-            'dokumen'        => ['required', 'file', 'mimes:pdf,docx,doc', 'max:5120'], 
+            'dokumen'        => ['required', 'file', 'mimes:pdf', 'max:1024'], 
         ], [
-            'dokumen.max' => 'Ukuran file maksimal 5MB',
-            'dokumen.mimes' => 'File harus berformat PDF atau DOCX',
+            'dokumen.max' => 'Ukuran file maksimal 1MB',
+            'dokumen.mimes' => 'Hanya menerima File berformat PDF',
             'dokumen.required' => 'File RPS harus diunggah',
         ]);
+
+        // Cek apakah Periode RPS Aktif dan Valid
+        $activePeriode = PeriodeRps::where('is_active', 'true')->first();
+        if (!$activePeriode) {
+            return back()->withInput()->with('error', 'Sesi unggah RPS sedang ditutup atau belum ada jadwal yang aktif.');
+        }
+
+        $now   = now('Asia/Jakarta');
+        $start = $activePeriode->tanggal_mulai->timezone('Asia/Jakarta')->startOfDay();
+        $end   = $activePeriode->tanggal_selesai->timezone('Asia/Jakarta')->endOfDay();
+
+        if (!$now->between($start, $end)) {
+            return back()->withInput()->with('error', 'Di luar jadwal unggah RPS. Tenggat waktu sudah terlewati atau jadwal belum dimulai.');
+        }
+
+        // Cek duplikasi RPS untuk mata kuliah + semester + tahun ajaran + dosen yang sama
+        $existingRps = RpsDetail::where('mk_id', $validated['mata_kuliah_id'])
+            ->where('semester', $validated['semester'])
+            ->where('tahun_ajaran', $validated['tahun_ajaran'])
+            ->whereHas('dosens', function ($query) {
+                $query->where('users.id', Auth::id());
+            })
+            ->whereIn('status', [RpsStatus::DIAJUKAN->value, RpsStatus::REVISI->value, RpsStatus::DISETUJUI->value])
+            ->exists();
+
+        if ($existingRps) {
+            return back()->withInput()->with('error', 'RPS untuk mata kuliah, semester, dan tahun ajaran ini sudah pernah diunggah. Tidak boleh upload RPS ganda untuk kurikulum yang sama.');
+        }
 
         DB::beginTransaction();
 
         try {
-            // Upload File
+            // Upload File ke Supabase
             $file = $request->file('dokumen');
-            $filename = 'RPS_' . time() . '_' . Auth::id() . '.' . $file->getClientOriginalExtension();
             
-            // Simpan file ke Storage disk 'bank-soal'
-            $pathDokumen = $file->storeAs('rps', $filename, 'bank-soal');
+            // Ambil informasi yang diperlukan untuk naming
+            $mataKuliah = MataKuliah::findOrFail($validated['mata_kuliah_id']);
+            $kodeMk = $mataKuliah->kode;  
+            $tahun = now()->year;          
+            $semester = $validated['semester'];
+            $employeeNumber = Auth::user()->load('lecturer')->lecturer->employee_number;
+            
+            // Format nama file: kodeMK_tahun_semester_employeeNumber
+            $fileName = "{$kodeMk}_{$tahun}_{$semester}_{$employeeNumber}";
+            
+            $supabaseStorage = new SupabaseStorage();
+            $pathDokumen = $supabaseStorage->upload($file, 'rps', 'rps', $fileName);
+
+            if (!$pathDokumen) {
+                throw new \Exception('Gagal mengupload file ke Supabase. Silakan periksa koneksi internet atau coba lagi');
+            }
 
             // Simpan data ke Tabel RPS
             $rps = RpsDetail::create([
                 'mk_id'        => $validated['mata_kuliah_id'],
                 'semester'     => $validated['semester'],
                 'tahun_ajaran' => $validated['tahun_ajaran'],
-                'dokumen'  => $pathDokumen,
+                'dokumen'      => $pathDokumen,
                 'status'       => RpsStatus::DIAJUKAN, 
             ]);
 
@@ -133,6 +224,12 @@ class RpsController extends Controller
             $rps->cpmks()->sync($validated['cpmk_ids']);
             $rps->dosens()->sync($dosenIds);
 
+            // Update is_rps menjadi 'TRUE' di bs_dosen_pengampu_mk untuk semua dosen
+            DB::table('bs_dosen_pengampu_mk')
+                ->whereIn('user_id', $dosenIds)
+                ->where('mk_id', $validated['mata_kuliah_id'])
+                ->update(['is_rps' => 'TRUE']);
+
             // Commit perubahan ke DB
             DB::commit();
 
@@ -142,11 +239,6 @@ class RpsController extends Controller
         } catch (\Exception $e) {            
             // Rollback jika error
             DB::rollBack();
-            
-            // Cleanup: Delete uploaded file jika ada error
-            if (isset($pathDokumen)) {
-                Storage::disk('bank-soal')->delete($pathDokumen);
-            }
             
             // Log error untuk debugging
             \Log::error('RPS Store Error', [
@@ -263,22 +355,16 @@ class RpsController extends Controller
             // Fetch RPS record atau throw 404
             $rps = RpsDetail::findOrFail($rpsId);
             
-            // Check dokumen exist di storage
-            if (!$rps->dokumen || !Storage::disk('bank-soal')->exists($rps->dokumen)) {
+            if (!$rps->dokumen) {
                 abort(404, 'Dokumen tidak ditemukan');
             }
 
-            // Get file content dan mime type
-            $file = Storage::disk('bank-soal')->get($rps->dokumen);
-            $mimeType = Storage::disk('bank-soal')->mimeType($rps->dokumen);
+            // Generate Supabase public URL dari path yang disimpan
+            $supabaseStorage = new SupabaseStorage();
+            $publicUrl = $supabaseStorage->getPublicUrl($rps->dokumen, 'rps');
             
-            // Return response dengan inline disposition (preview, tidak download)
-            return response($file, 200)
-                ->header('Content-Type', $mimeType)
-                ->header('Content-Disposition', 'inline; filename="' . basename($rps->dokumen) . '"')
-                ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-                ->header('Pragma', 'no-cache')
-                ->header('Expires', '0');
+            // Redirect ke Supabase untuk preview
+            return redirect($publicUrl);
                 
         } catch (\Exception $e) {
             \Log::error('previewDokumen Error', ['rps_id' => $rpsId, 'error' => $e->getMessage()]);
