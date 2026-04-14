@@ -209,9 +209,14 @@
                 </ul>
             </div>
             
-            <button type="button" class="btn btn-primary rounded-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalTambah">
-                <i class="fas fa-calendar-plus me-2"></i> Buat Periode
-            </button>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary rounded-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalUploadTemplate">
+                    <i class="fas fa-file-upload me-2"></i> Upload Template
+                </button>
+                <button type="button" class="btn btn-primary rounded-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalTambah">
+                    <i class="fas fa-calendar-plus me-2"></i> Buat Periode
+                </button>
+            </div>
         </div>
 
         <div class="tab-content" id="rpsTabContent">
@@ -490,6 +495,220 @@
         </div>
 
     </div>
+
+    <!-- Modal Upload Template -->
+    <div class="modal fade" id="modalUploadTemplate" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0">
+                <form id="formUploadTemplate" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold">Upload Template RPS</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-medium text-dark">File Template (Word Format) <span class="text-danger">*</span></label>
+                            <div class="upload-box-modal border-2 border-dashed rounded-3 p-4 text-center" style="cursor: pointer; transition: all 0.3s; border-color: #e2e8f0;">
+                                <i class="fas fa-cloud-upload-alt text-muted" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                                <p class="text-muted mb-0" style="font-size: 0.9rem;">Dragdrop file atau <strong style="color: #2563eb; text-decoration: underline;">pilih file</strong></p>
+                                <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.25rem;">Format: .doc, .docx (Maksimal 1 MB)</p>
+                                <input type="file" name="dokumen" id="fileInputModal" accept=".doc,.docx" required style="display: none;">
+                                <div class="file-selected-modal mt-3" style="display: none;">
+                                    <div class="alert alert-success py-2 px-3 mb-0">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        <span class="file-name-modal"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium text-dark">Keterangan (Opsional)</label>
+                            <textarea class="form-control" name="keterangan" rows="3" placeholder="Misal: Update struktur template, tambahan BAB, dll..."></textarea>
+                        </div>
+                        <div class="alert alert-info rounded-3" role="alert" style="font-size: 0.85rem;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Info:</strong> Template baru akan otomatis menjadi versi terbaru yang dapat diunduh Dosen
+                        </div>
+                        <div id="uploadStatusMessage"></div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0 d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-danger px-3" id="btnDeleteInactive" title="Hapus semua versi template yang tidak aktif">
+                            <i class="fas fa-trash me-1"></i> Hapus Versi Lama
+                        </button>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary px-4" id="btnSubmitTemplate">Upload Template</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Upload Template Modal - Drag & Drop
+        const uploadBoxModal = document.querySelector('.upload-box-modal');
+        const fileInputModal = document.getElementById('fileInputModal');
+        const fileSelectedModal = document.querySelector('.file-selected-modal');
+        const fileNameModal = document.querySelector('.file-name-modal');
+        const formUploadTemplate = document.getElementById('formUploadTemplate');
+        const btnSubmitTemplate = document.getElementById('btnSubmitTemplate');
+        const uploadStatusMessage = document.getElementById('uploadStatusMessage');
+
+        function preventDefaultsModal(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadBoxModal.addEventListener(eventName, preventDefaultsModal, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadBoxModal.addEventListener(eventName, () => {
+                uploadBoxModal.style.borderColor = '#2563eb';
+                uploadBoxModal.style.backgroundColor = '#f0f9ff';
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadBoxModal.addEventListener(eventName, () => {
+                uploadBoxModal.style.borderColor = '#e2e8f0';
+                uploadBoxModal.style.backgroundColor = 'transparent';
+            }, false);
+        });
+
+        uploadBoxModal.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInputModal.files = files;
+            updateFileDisplayModal();
+        }, false);
+
+        uploadBoxModal.addEventListener('click', () => {
+            fileInputModal.click();
+        });
+
+        fileInputModal.addEventListener('change', updateFileDisplayModal);
+
+        function updateFileDisplayModal() {
+            if (fileInputModal.files && fileInputModal.files.length > 0) {
+                fileNameModal.textContent = fileInputModal.files[0].name;
+                fileSelectedModal.style.display = 'block';
+            } else {
+                fileSelectedModal.style.display = 'none';
+            }
+        }
+
+        // Handle form submission via AJAX
+        formUploadTemplate.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(formUploadTemplate);
+            uploadStatusMessage.innerHTML = '';
+            btnSubmitTemplate.disabled = true;
+            btnSubmitTemplate.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+
+            try {
+                const response = await fetch("{{ route('banksoal.rps.gpm.template.store') }}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Show success message
+                    uploadStatusMessage.innerHTML = `
+                        <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
+                            <i class="fas fa-check-circle me-2"></i> 
+                            <strong>Sukses!</strong> ${data.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+
+                    // Reset form
+                    formUploadTemplate.reset();
+                    fileSelectedModal.style.display = 'none';
+
+                    // Close modal after 2 seconds
+                    setTimeout(() => {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('modalUploadTemplate'));
+                        if (modal) modal.hide();
+                        uploadStatusMessage.innerHTML = '';
+                    }, 2000);
+
+                } else {
+                    throw new Error(data.message || 'Terjadi kesalahan');
+                }
+            } catch (error) {
+                uploadStatusMessage.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i> 
+                        <strong>Error!</strong> ${error.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            } finally {
+                btnSubmitTemplate.disabled = false;
+                btnSubmitTemplate.innerHTML = '<i class="fas fa-arrow-up-from-bracket me-2"></i> Upload Template';
+            }
+        });
+
+        // Handle delete inactive templates
+        const btnDeleteInactive = document.getElementById('btnDeleteInactive');
+        btnDeleteInactive.addEventListener('click', async () => {
+            // Confirm before deleting
+            if (!confirm('Apakah Anda yakin ingin menghapus semua versi template yang tidak aktif?\n\nAksi ini tidak dapat dibatalkan.')) {
+                return;
+            }
+
+            btnDeleteInactive.disabled = true;
+            const originalHTML = btnDeleteInactive.innerHTML;
+            btnDeleteInactive.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menghapus...';
+
+            try {
+                const response = await fetch("{{ route('banksoal.rps.gpm.template.delete-inactive') }}", {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({})
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    uploadStatusMessage.innerHTML = `
+                        <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
+                            <i class="fas fa-check-circle me-2"></i> 
+                            <strong>Sukses!</strong> ${data.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.message || 'Terjadi kesalahan');
+                }
+            } catch (error) {
+                uploadStatusMessage.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i> 
+                        <strong>Error!</strong> ${error.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            } finally {
+                btnDeleteInactive.disabled = false;
+                btnDeleteInactive.innerHTML = originalHTML;
+            }
+        });
+    </script>
 
     <!-- Modal Tambah Periode -->
     <div class="modal fade" id="modalTambah" tabindex="-1" aria-hidden="true">
