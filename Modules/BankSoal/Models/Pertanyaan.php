@@ -27,6 +27,7 @@ class Pertanyaan extends Model
         'mk_id',
         'kesulitan',
         'status',
+        'tipe_soal',
     ];
 
     public function mataKuliah(): BelongsTo
