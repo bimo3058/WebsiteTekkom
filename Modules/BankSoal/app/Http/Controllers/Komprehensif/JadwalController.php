@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\BankSoal\Http\Controllers;
+namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
@@ -41,7 +41,7 @@ class JadwalController extends Controller
 
         JadwalUjian::create($validatedData);
 
-        return redirect()->route('banksoal.periode.jadwal', ['periode_id' => $request->periode_ujian_id])
+        return redirect()->route('banksoal.pendaftaran.alokasi-sesi.index', ['periode_id' => $request->periode_ujian_id])
             ->with('success', 'Sesi ujian berhasil ditambahkan.');
     }
 
@@ -51,7 +51,7 @@ class JadwalController extends Controller
         $periodeId = $jadwal->periode_ujian_id;
         $jadwal->delete();
 
-        return redirect()->route('banksoal.periode.jadwal', ['periode_id' => $periodeId])
+        return redirect()->route('banksoal.pendaftaran.alokasi-sesi.index', ['periode_id' => $periodeId])
             ->with('success', 'Sesi ujian berhasil dihapus.');
     }
 }

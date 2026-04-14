@@ -54,7 +54,9 @@
                                         target_wisuda: '{{ addslashes($item->target_wisuda ?? '-') }}',
                                         status: '{{ $item->status_pendaftaran }}',
                                         tanggal: '{{ $item->created_at->translatedFormat('d F Y, H:i') }}',
-                                        catatan: '{{ addslashes($item->catatan_admin ?? '-') }}'
+                                        catatan: '{{ addslashes($item->catatan_admin ?? '-') }}',
+                                        dosen1: '{{ addslashes($item->dosenPembimbing1->name ?? '-') }}',
+                                        dosen2: '{{ addslashes($item->dosenPembimbing2->name ?? '-') }}'
                                     })"
                                     class="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-blue-50 hover:bg-blue-100 text-blue-700 text-xs font-semibold transition-colors"
                                 >

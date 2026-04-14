@@ -30,5 +30,8 @@
         </div>
         
     </div>
+
+    <!-- Global Component untuk Toast Message -->
+    <x-banksoal::global-toast />
 </body>
 </html>

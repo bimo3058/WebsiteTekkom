@@ -129,25 +129,43 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
 
     # Periode Ujian Routes
     Route::prefix('admin/periode')->name('banksoal.periode.')->group(function () {
-        Route::middleware('role:superadmin|admin')->group(function () {
-            Route::get('/setup', [\Modules\BankSoal\Http\Controllers\PeriodeController::class, 'index'])->name('setup');
-            Route::post('/setup', [\Modules\BankSoal\Http\Controllers\PeriodeController::class, 'store'])->name('store');
-            Route::put('/setup/{id}', [\Modules\BankSoal\Http\Controllers\PeriodeController::class, 'update'])->name('update');
-            Route::delete('/setup/{id}', [\Modules\BankSoal\Http\Controllers\PeriodeController::class, 'destroy'])->name('destroy');
+        Route::middleware('role:admin_banksoal,admin')->group(function () {
+            Route::get('/setup', [\Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController::class, 'index'])->name('setup');
+            Route::post('/setup', [\Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController::class, 'store'])->name('store');
+            Route::put('/setup/{id}', [\Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController::class, 'update'])->name('update');
+            Route::delete('/setup/{id}', [\Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController::class, 'destroy'])->name('destroy');
 
-            Route::get('/jadwal', [\Modules\BankSoal\Http\Controllers\JadwalController::class, 'index'])->name('jadwal');
-            Route::post('/jadwal', [\Modules\BankSoal\Http\Controllers\JadwalController::class, 'store'])->name('jadwal.store');
-            Route::delete('/jadwal/{id}', [\Modules\BankSoal\Http\Controllers\JadwalController::class, 'destroy'])->name('jadwal.destroy');
+            Route::get('/jadwal', [\Modules\BankSoal\Http\Controllers\Komprehensif\JadwalController::class, 'index'])->name('jadwal');
+            Route::post('/jadwal', [\Modules\BankSoal\Http\Controllers\Komprehensif\JadwalController::class, 'store'])->name('jadwal.store');
+            Route::delete('/jadwal/{id}', [\Modules\BankSoal\Http\Controllers\Komprehensif\JadwalController::class, 'destroy'])->name('jadwal.destroy');
         });
     });
 
     # Manajemen Peserta Routes
     Route::prefix('admin/pendaftar')->name('banksoal.pendaftaran.')->group(function () {
-        Route::middleware('role:superadmin|admin')->group(function () {
-            Route::get('/', [\Modules\BankSoal\Http\Controllers\PendaftarAdminController::class, 'index'])->name('index');
-            Route::post('/', [\Modules\BankSoal\Http\Controllers\PendaftarAdminController::class, 'store'])->name('store');
-            Route::patch('/{id}/status', [\Modules\BankSoal\Http\Controllers\PendaftarAdminController::class, 'updateStatus'])->name('updateStatus');
-            Route::delete('/{id}', [\Modules\BankSoal\Http\Controllers\PendaftarAdminController::class, 'destroy'])->name('destroy');
+        Route::middleware('role:admin_banksoal,admin')->group(function () {
+            Route::get('/', [\Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController::class, 'index'])->name('index');
+            Route::post('/', [\Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController::class, 'store'])->name('store');
+            Route::patch('/{id}/status', [\Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController::class, 'updateStatus'])->name('updateStatus');
+            Route::delete('/{id}', [\Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController::class, 'destroy'])->name('destroy');
+        });
+    });
+
+    # Alokasi Sesi Routes
+    Route::prefix('admin/alokasi-sesi')->name('banksoal.pendaftaran.alokasi-sesi.')->group(function () {
+        Route::middleware('role:admin_banksoal,admin')->group(function () {
+            Route::get('/', [\Modules\BankSoal\Http\Controllers\Komprehensif\AlokasiSesiController::class, 'index'])->name('index');
+            Route::post('/', [\Modules\BankSoal\Http\Controllers\Komprehensif\AlokasiSesiController::class, 'store'])->name('store');
+            Route::post('/remove', [\Modules\BankSoal\Http\Controllers\Komprehensif\AlokasiSesiController::class, 'remove'])->name('remove');
+        });
+    });
+
+
+    # Aktivasi Sesi Routes
+    Route::prefix('admin/aktivasi-sesi')->name('banksoal.aktivasi.')->group(function () {
+        Route::middleware('role:admin_banksoal,admin')->group(function () {
+            Route::get('/', [\Modules\BankSoal\Http\Controllers\Komprehensif\AktivasiSesiController::class, 'index'])->name('index');
+            Route::patch('/{id}/toggle', [\Modules\BankSoal\Http\Controllers\Komprehensif\AktivasiSesiController::class, 'toggle'])->name('toggle');
         });
     });
 
@@ -160,14 +178,15 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
     ->prefix('ujian-komprehensif')
     ->name('komprehensif.mahasiswa.')
     ->group(function () {
-        Route::get('/dashboard', [\Modules\BankSoal\Http\Controllers\MahasiswaController::class, 'dashboard'])->name('dashboard');
+        Route::get('/dashboard', [\Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController::class, 'dashboard'])->name('dashboard');
         
-        Route::get('/pengajuan-pendaftaran', [\Modules\BankSoal\Http\Controllers\MahasiswaController::class, 'pendaftaran'])->name('pendaftaran');
+        Route::get('/pengajuan-pendaftaran', [\Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController::class, 'pendaftaran'])->name('pendaftaran');
         
-        Route::get('/pengajuan-pendaftaran/form', [\Modules\BankSoal\Http\Controllers\MahasiswaController::class, 'createPendaftaran'])->name('pendaftaran.form');
-        Route::post('/pengajuan-pendaftaran/form', [\Modules\BankSoal\Http\Controllers\MahasiswaController::class, 'storePendaftaran'])->name('pendaftaran.store');
+        Route::get('/pengajuan-pendaftaran/form', [\Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController::class, 'createPendaftaran'])->name('pendaftaran.form');
+        Route::post('/pengajuan-pendaftaran/form', [\Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController::class, 'storePendaftaran'])->name('pendaftaran.store');
         
         Route::get('/riwayat-ujian', function () {
             return view('banksoal::mahasiswa.riwayat');
         })->name('riwayat');
     });
+
