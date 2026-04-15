@@ -23,9 +23,11 @@ class Pertanyaan extends Model
         'gambar',
         'bobot',
         'cpl_id',
+        'cpmk_id',
         'mk_id',
         'kesulitan',
         'status',
+        'tipe_soal',
     ];
 
     public function mataKuliah(): BelongsTo
@@ -36,6 +38,11 @@ class Pertanyaan extends Model
     public function cpl(): BelongsTo
     {
         return $this->belongsTo(Cpl::class, 'cpl_id');
+    }
+
+    public function cpmk(): BelongsTo
+    {
+        return $this->belongsTo(\Modules\BankSoal\Models\Shared\Cpmk::class, 'cpmk_id');
     }
 
     public function jawaban(): HasMany

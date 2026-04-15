@@ -77,14 +77,19 @@
         </div>
 
         <!-- Logout Button -->
-        <form method="POST" action="{{ route('logout') }}">
+        <button 
+            onclick="document.getElementById('logoutForm').submit()" 
+            class="w-full flex items-center gap-3 px-4 py-2.5 text-red-600 hover:text-red-700 hover:bg-red-50 font-medium transition-colors rounded-lg text-[14px] cursor-pointer"
+        >
+            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
+            </svg>
+            <span>Logout</span>
+        </button>
+
+        <!-- Hidden Logout Form -->
+        <form id="logoutForm" method="POST" action="{{ route('logout') }}" style="display: none;">
             @csrf
-            <button type="submit" class="w-full flex items-center gap-4 text-red-500 hover:text-red-600 font-medium transition-colors text-left text-[14px]">
-                <svg class="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                </svg>
-                <span>Logout</span>
-            </button>
         </form>
     </div>
 </aside>

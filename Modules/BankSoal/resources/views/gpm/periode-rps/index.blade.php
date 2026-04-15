@@ -38,9 +38,14 @@
 
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h5 class="mb-0 fw-bold text-dark">Daftar Jadwal Pengajuan RPS</h5>
-            <button type="button" class="btn btn-primary rounded-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalTambah">
-                <i class="fas fa-plus me-2"></i> Tambah Periode
-            </button>
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary rounded-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalUploadTemplate">
+                    <i class="fas fa-file-upload me-2"></i> Upload Template
+                </button>
+                <button type="button" class="btn btn-primary rounded-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalTambah">
+                    <i class="fas fa-plus me-2"></i> Tambah Periode
+                </button>
+            </div>
         </div>
 
         <div class="table-container mb-4">
@@ -234,5 +239,133 @@
             </div>
         </div>
     </div>
+
+    <!-- Modal Upload Template RPS -->
+    <div class="modal fade" id="modalUploadTemplate" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0">
+                <form action="{{ route('banksoal.rps.gpm.template.store') }}" method="POST" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold" id="modalUploadTemplateLabel">
+                            <i class="fas fa-file-upload me-2" style="color: #667eea;"></i>Upload Template RPS Baru
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-medium text-dark">
+                                <i class="fas fa-file-word me-1" style="color: #2563eb;"></i>
+                                File Template <span class="text-danger">*</span>
+                            </label>
+                            <div class="upload-box-modal" id="uploadBoxModal" style="border: 2px dashed #cbd5e1; border-radius: 8px; padding: 2rem; text-align: center; cursor: pointer; background-color: #f8fafc; transition: all 0.2s;">
+                                <div style="font-size: 2rem; color: #64748b; margin-bottom: 0.5rem;"><i class="fas fa-cloud-upload-alt"></i></div>
+                                <div style="font-weight: 600; color: #111827; margin-bottom: 0.25rem;">Klik atau seret file</div>
+                                <div style="font-size: 0.875rem; color: #64748b;">Format: .doc atau .docx (Maksimal 1MB)</div>
+                                <input type="file" id="fileTemplateModal" name="dokumen" accept=".doc,.docx" required style="display: none;">
+                            </div>
+                            <div id="fileSelectedModal" style="margin-top: 0.75rem; padding: 0.75rem; background-color: #dcfce7; border-radius: 6px; color: #166534; display: none;">
+                                <i class="fas fa-check-circle me-2"></i>
+                                File terpilih: <strong id="selectedFileNameModal"></strong>
+                            </div>
+                            @error('dokumen')
+                                <div style="color: #991b1b; font-size: 0.875rem; margin-top: 0.5rem;">
+                                    <i class="fas fa-exclamation-circle"></i> {{ $message }}
+                                </div>
+                            @enderror
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label fw-medium text-dark">
+                                <i class="fas fa-note-sticky me-1" style="color: #6b7280;"></i>
+                                Catatan / Keterangan (Opsional)
+                            </label>
+                            <textarea 
+                                name="keterangan" 
+                                rows="2" 
+                                class="form-control" 
+                                placeholder="Misal: Update format standar, perbaikan, dll."
+                                style="resize: vertical;"
+                            ></textarea>
+                            @error('keterangan')
+                                <div style="color: #991b1b; font-size: 0.875rem; margin-top: 0.5rem;">
+                                    <i class="fas fa-exclamation-circle"></i> {{ $message }}
+                                </div>
+                            @enderror
+                        </div>
+
+                        <div class="alert alert-info alert-sm" role="alert" style="font-size: 0.875rem; padding: 0.75rem; margin-bottom: 0;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Catatan:</strong> Template baru akan otomatis menjadi versi terbaru yang dapat diunduh Dosen.
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary px-4">Upload Template</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Handle drag & drop untuk upload template modal
+        const uploadBoxModal = document.getElementById('uploadBoxModal');
+        const fileInputModal = document.getElementById('fileTemplateModal');
+        const fileSelectedModal = document.getElementById('fileSelectedModal');
+        const selectedFileNameModal = document.getElementById('selectedFileNameModal');
+
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadBoxModal.addEventListener(eventName, preventDefaultsModal, false);
+            document.body.addEventListener(eventName, preventDefaultsModal, false);
+        });
+
+        function preventDefaultsModal(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        // Highlight drop area
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadBoxModal.addEventListener(eventName, () => {
+                uploadBoxModal.style.borderColor = '#667eea';
+                uploadBoxModal.style.backgroundColor = 'rgba(102, 126, 234, 0.05)';
+            });
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadBoxModal.addEventListener(eventName, () => {
+                uploadBoxModal.style.borderColor = '#cbd5e1';
+                uploadBoxModal.style.backgroundColor = '#f8fafc';
+            });
+        });
+
+        // Handle dropped files
+        uploadBoxModal.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInputModal.files = files;
+            updateFileDisplayModal();
+        });
+
+        // Handle file input change
+        fileInputModal.addEventListener('change', updateFileDisplayModal);
+
+        function updateFileDisplayModal() {
+            if (fileInputModal.files.length > 0) {
+                const fileName = fileInputModal.files[0].name;
+                selectedFileNameModal.textContent = fileName;
+                fileSelectedModal.style.display = 'block';
+            } else {
+                fileSelectedModal.style.display = 'none';
+            }
+        }
+
+        // Make upload box clickable
+        uploadBoxModal.addEventListener('click', () => {
+            fileInputModal.click();
+        });
+    </script>
 
 </x-banksoal::layouts.gpm-master>

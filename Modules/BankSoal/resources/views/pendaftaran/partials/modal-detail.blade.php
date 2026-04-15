@@ -61,6 +61,19 @@
 
                 <div class="h-px bg-slate-100"></div>
 
+                <!-- Dosen Pembimbing -->
+                <div class="flex items-start justify-between gap-4">
+                    <span class="text-sm font-medium text-slate-500 shrink-0">Dosen Pembimbing 1</span>
+                    <span id="detail-dosen1" class="text-sm font-semibold text-slate-800 text-right"></span>
+                </div>
+
+                <div class="flex items-start justify-between gap-4">
+                    <span class="text-sm font-medium text-slate-500 shrink-0">Dosen Pembimbing 2</span>
+                    <span id="detail-dosen2" class="text-sm font-semibold text-slate-800 text-right"></span>
+                </div>
+
+                <div class="h-px bg-slate-100"></div>
+
                 <!-- Catatan Admin -->
                 <div class="flex items-start justify-between gap-4">
                     <span class="text-sm font-medium text-slate-500 shrink-0">Catatan Admin</span>
@@ -96,6 +109,8 @@ function openDetailModal(data) {
     document.getElementById('detail-nama').textContent = data.nama;
     document.getElementById('detail-semester').textContent = 'Semester ' + data.semester;
     document.getElementById('detail-wisuda').textContent = data.target_wisuda;
+    document.getElementById('detail-dosen1').textContent = data.dosen1 || '-';
+    document.getElementById('detail-dosen2').textContent = data.dosen2 || '-';
     document.getElementById('detail-catatan').textContent = data.catatan;
     document.getElementById('detail-tanggal').textContent = data.tanggal;
 

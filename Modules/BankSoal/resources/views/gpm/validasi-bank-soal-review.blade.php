@@ -328,6 +328,15 @@
 
             <!-- Right Column: Question Review -->
             <div class="col-lg-8">
+                @if(isset($review) && !empty($review->catatan))
+                <div class="alert alert-warning d-flex align-items-start gap-3 py-3" style="border-radius: 0.75rem; border: 1px solid #fde68a; background-color: #fffbeb; margin-bottom: 1.5rem;">
+                    <i class="fas fa-history text-warning mt-1" style="font-size: 1.1rem;"></i>
+                    <div>
+                        <h6 class="mb-1 fw-bold text-warning-emphasis" style="font-size: 0.9rem; color: #92400e;">Riwayat Catatan GPM Terakhir:</h6>
+                        <p class="mb-0 text-warning-emphasis" style="font-size: 0.85rem; color: #b45309;">{{ $review->catatan }}</p>
+                    </div>
+                </div>
+                @endif
                 <div class="question-card">
                     <div class="question-header">
                         <span class="badge-soal">SOAL ID. {{ $soal->id }}</span>
@@ -335,7 +344,7 @@
                     </div>
 
                     <div class="question-text">
-                        {{ $soal->soal }}
+                        {!! $soal->soal !!}
                     </div>
 
                     <div class="options-container">
@@ -350,7 +359,7 @@
                         @endforeach
                     </div>
 
-            <form action="{{ route('banksoal.soal.gpm.validasi-bank-soal.store') }}" method="POST">                        @csrf
+            <form action="{{ route('banksoal.soal.gpm.validasi-bank-soal.store', ['mk_id' => request('mk_id')]) }}" method="POST">                        @csrf
                         <input type="hidden" name="pertanyaan_id" value="{{ $soal->id }}">
 
                 <div class="decision-section">

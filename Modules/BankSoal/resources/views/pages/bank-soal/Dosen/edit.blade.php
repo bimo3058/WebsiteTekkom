@@ -6,20 +6,80 @@
     </x-banksoal::ui.page-header>
 
     @if(session('error'))
-        <div class="mb-6 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"><i class="fas fa-exclamation-circle mr-1"></i> {{ session('error') }}</div>
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Waduh, Gagal...',
+                    text: '{{ session('error') }}',
+                    confirmButtonColor: '#ef4444',
+                    background: '#ffffff',
+                    customClass: {
+                        title: 'text-slate-800 text-xl font-bold',
+                        htmlContainer: 'text-slate-600 text-sm',
+                        confirmButton: 'rounded-xl px-5 py-2.5 font-semibold transition-colors'
+                    }
+                });
+            });
+        </script>
     @endif
 
     <x-banksoal::ui.panel title="Form Edit Soal" subtitle="Pastikan jawaban benar tetap ditandai sebelum menyimpan." padding="p-0">
-        <form action="{{ route('banksoal.soal.dosen.update', $soal->id) }}" method="POST">
+        @if(isset($review) && !empty($review->catatan))
+        <div class="p-6 pb-0">
+            @if(in_array(strtolower($soal->status), ['revisi', 'ditolak']))
+            <div class="rounded-xl border border-red-200 bg-red-50 p-4">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-exclamation-triangle mt-1 text-red-500"></i>
+                    <div>
+                        <h4 class="text-sm font-bold text-red-800">Catatan Revisi dari GPM</h4>
+                        <p class="mt-1 text-sm text-red-700 leading-relaxed">{{ $review->catatan }}</p>
+                    </div>
+                </div>
+            </div>
+            @else
+            <div class="rounded-xl border border-amber-200 bg-amber-50 p-4">
+                <div class="flex items-start gap-3">
+                    <i class="fas fa-history mt-1 text-amber-500"></i>
+                    <div>
+                        <h4 class="text-sm font-bold text-amber-800">Riwayat Catatan GPM Sebelumnya</h4>
+                        <p class="mt-1 text-sm text-amber-700 leading-relaxed">{{ $review->catatan }}</p>
+                    </div>
+                </div>
+            </div>
+            @endif
+        </div>
+        @endif
+        
+        <form action="{{ route('banksoal.soal.dosen.update', $soal->id) }}" method="POST" id="formSoal">
             @csrf
             @method('PUT')
             <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
                 <div><label for="mk_id" class="mb-2 block text-sm font-semibold text-slate-700">Mata Kuliah</label><select name="mk_id" id="mk_id" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required><option value="">Pilih Mata Kuliah...</option>@foreach($mataKuliahDosen as $mk)<option value="{{ $mk->id }}" {{ old('mk_id', $soal->mk_id) == $mk->id ? 'selected' : '' }}>{{ $mk->kode }} - {{ $mk->nama }}</option>@endforeach</select></div>
                 <div><label for="cpl_id" class="mb-2 block text-sm font-semibold text-slate-700">Keterkaitan CPL / Topik</label><select name="cpl_id" id="cpl_id" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required><option value="">Pilih CPL...</option></select></div>
                 <div><label for="kesulitan" class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label><select name="kesulitan" id="kesulitan" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required><option value="easy" {{ old('kesulitan', $soal->kesulitan) == 'easy' ? 'selected' : '' }}>Mudah (Easy)</option><option value="intermediate" {{ old('kesulitan', $soal->kesulitan) == 'intermediate' ? 'selected' : '' }}>Sedang (Medium)</option><option value="advanced" {{ old('kesulitan', $soal->kesulitan) == 'advanced' ? 'selected' : '' }}>Sulit (Hard)</option></select></div>
+                <div>
+                    <label class="mb-2 block text-sm font-semibold text-slate-700">Tipe Pertanyaan</label>
+                    <div class="flex items-center gap-5 text-sm font-medium text-slate-700 mt-3">
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="tipe_soal" value="pilihan_ganda" {{ old('tipe_soal', $soal->tipe_soal ?? 'pilihan_ganda') == 'pilihan_ganda' ? 'checked' : '' }} class="text-blue-600 focus:ring-blue-500 w-4 h-4" onchange="toggleTipeSoal(this.value)"> 
+                            Pilihan Ganda
+                        </label>
+                        <label class="inline-flex items-center gap-2 cursor-pointer">
+                            <input type="radio" name="tipe_soal" value="essay" {{ old('tipe_soal', $soal->tipe_soal) == 'essay' ? 'checked' : '' }} class="text-blue-600 focus:ring-blue-500 w-4 h-4" onchange="toggleTipeSoal(this.value)"> 
+                            Essay
+                        </label>
+                    </div>
+                </div>
             </div>
-            <div class="px-6 pb-6"><label for="soal" class="mb-2 block text-sm font-semibold text-slate-700">Deskripsi Soal</label><textarea name="soal" id="soal" rows="5" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required>{{ old('soal', $soal->soal) }}</textarea></div>
-            <div class="border-t border-slate-200 px-6 py-5">
+            <div class="px-6 pb-6">
+                <label for="soal" class="mb-2 block text-sm font-semibold text-slate-700">Deskripsi Soal</label>
+                <input type="hidden" name="soal" id="soalInput" value="{{ old('soal', $soal->soal) }}">
+                <div id="editor" class="bg-white">{!! old('soal', $soal->soal) !!}</div>
+                <p class="mt-2 text-xs text-slate-500">Anda dapat menambahkan format teks rata-kiri/kanan, list, tabel, dan gambar menggunakan menu di atas.</p>
+            </div>
+            <div id="opsiContainerWrapper" class="border-t border-slate-200 px-6 py-5 {{ old('tipe_soal', $soal->tipe_soal ?? 'pilihan_ganda') == 'essay' ? 'hidden' : '' }}">
                 <div class="mb-3 flex items-center justify-between"><label class="text-sm font-semibold text-slate-700">Pilihan Jawaban</label><button type="button" id="addOptionBtn" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50"><i class="fas fa-plus mr-1"></i> Tambah Opsi</button></div>
                 <div id="optionsContainer" class="space-y-3">
                     @php $oldJawaban = old('jawaban', $soal->jawaban->toArray()); $oldJawabanBenar = old('jawaban_benar', $soal->jawaban->search(fn($j) => $j['is_benar'])); @endphp
@@ -32,8 +92,72 @@
         </form>
     </x-banksoal::ui.panel>
 
+    @push('styles')
+    <link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+    <style>
+        .ql-toolbar.ql-snow {
+            border-top-left-radius: 0.75rem;
+            border-top-right-radius: 0.75rem;
+            border-color: #e2e8f0;
+            background-color: #f8fafc;
+            padding: 0.75rem;
+        }
+        .ql-container.ql-snow {
+            border-bottom-left-radius: 0.75rem;
+            border-bottom-right-radius: 0.75rem;
+            border-color: #e2e8f0;
+            min-height: 150px;
+            font-family: inherit;
+            font-size: 0.875rem;
+        }
+        .ql-editor {
+            min-height: 150px;
+        }
+        .ql-editor.ql-blank::before {
+            color: #94a3b8;
+            font-style: normal;
+        }
+    </style>
+    @endpush
+
+    @push('scripts')
+    <script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+    @endpush
+
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            var quill = new Quill('#editor', {
+                theme: 'snow',
+                placeholder: 'Tuliskan deskripsi pertanyaan di sini...',
+                modules: {
+                    toolbar: [
+                        ['bold', 'italic', 'underline', 'strike'],
+                        ['blockquote', 'code-block'],
+                        [{ 'header': 1 }, { 'header': 2 }],
+                        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+                        [{ 'script': 'sub'}, { 'script': 'super' }],
+                        [{ 'indent': '-1'}, { 'indent': '+1' }],
+                        [{ 'size': ['small', false, 'large', 'huge'] }],
+                        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+                        [{ 'color': [] }, { 'background': [] }],
+                        [{ 'align': [] }],
+                        ['clean'],
+                        ['link', 'image', 'video']
+                    ]
+                }
+            });
+
+            var form = document.getElementById('formSoal');
+            form.onsubmit = function() {
+                var soalInput = document.getElementById('soalInput');
+                var htmlContent = quill.root.innerHTML;
+                if (quill.getText().trim().length === 0 && !htmlContent.includes('<img')) {
+                    soalInput.value = '';
+                } else {
+                    soalInput.value = htmlContent;
+                }
+            };
+
             const mkSelect = document.getElementById('mk_id');
             const cplSelect = document.getElementById('cpl_id');
             const oldCplId = "{{ old('cpl_id', $soal->cpl_id) }}";
@@ -75,6 +199,31 @@
             container.addEventListener('change', updateStyles);
             container.addEventListener('click', function(e) { if (e.target.closest('.remove-btn')) { e.target.closest('.option-item').remove(); updateStyles(); } });
             updateStyles();
+
+            // Set initial state based on old value
+            const initialTipeSoal = document.querySelector('input[name="tipe_soal"]:checked')?.value || 'pilihan_ganda';
+            toggleTipeSoal(initialTipeSoal);
         });
+
+        function toggleTipeSoal(tipe) {
+            const wrapper = document.getElementById('opsiContainerWrapper');
+            const requiredInputs = wrapper.querySelectorAll('input[required]');
+            
+            if (tipe === 'essay') {
+                wrapper.classList.add('hidden');
+                // Remove required attribute from multiple choice inputs when essay is selected
+                requiredInputs.forEach(input => {
+                    input.dataset.wasRequired = 'true';
+                    input.required = false;
+                });
+            } else {
+                wrapper.classList.remove('hidden');
+                // Restore required attribute
+                const wasRequiredInputs = wrapper.querySelectorAll('input[data-was-required="true"]');
+                wasRequiredInputs.forEach(input => {
+                    input.required = true;
+                });
+            }
+        }
     </script>
 </x-banksoal::layouts.dosen-admin>

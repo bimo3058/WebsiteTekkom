@@ -32,7 +32,7 @@
         <!-- Main Content Wrapper -->
         <div class="flex-1 flex flex-col overflow-y-auto w-full relative">
             <main class="w-full flex-1">
-                <div class="p-8 w-full max-w-screen-2xl mx-auto">
+                <div class="p-6 w-full max-w-5xl lg:max-w-4xl mx-auto">
                     {{ $slot }}
                 </div>
             </main>

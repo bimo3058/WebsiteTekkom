@@ -19,11 +19,18 @@ class JadwalUjian extends Model
         'waktu_mulai',
         'waktu_selesai',
         'ruangan',
+        'status',
+        'token',
     ];
 
     public function periode()
     {
         return $this->belongsTo(PeriodeUjian::class, 'periode_ujian_id');
+    }
+
+    public function pendaftars()
+    {
+        return $this->hasMany(PendaftarUjian::class, 'jadwal_ujian_id');
     }
 
     protected $casts = [
