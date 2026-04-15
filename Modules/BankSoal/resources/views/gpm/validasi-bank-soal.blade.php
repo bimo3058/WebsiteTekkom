@@ -46,7 +46,7 @@
             <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
                 <form action="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}" method="GET" class="search-container d-flex align-items-center px-3 py-2 flex-grow-1" style="max-width: 400px; margin: 0;">
                     <i class="fas fa-search text-muted"></i>
-                    <input type="text" name="search" autocomplete="off" list="datalistAntrean" class="form-control search-input ms-2 py-0" placeholder="Cari mata kuliah... ketik abjad" value="{{ request('search') }}" onchange="this.form.submit()">
+                    <input type="text" name="search" autocomplete="off" list="datalistAntrean" class="form-control search-input ms-2 py-0" placeholder="Cari mata kuliah..." value="{{ request('search') }}" onchange="this.form.submit()">
                     <datalist id="datalistAntrean">
                         @foreach($all_paket_soal as $item)
                             <option value="{{ $item->mk_nama }}"></option>
@@ -103,13 +103,11 @@
                             </td>
                             <td>
                                 <div class="d-flex align-items-center">
-                                    {{-- Mengambil 2 huruf awal dari nama mata kuliah sebagai avatar dummy sementara --}}
                                     <div class="avatar-text" style="background-color: #eff6ff; color: #1e3a8a;">
-                                        {{ strtoupper(substr($paket->mk_nama, 0, 2)) }}
+                                        {{ strtoupper(substr($paket->dosen_pengampu ?? $paket->mk_nama, 0, 2)) }}
                                     </div>
                                     <span class="fw-medium text-dark" style="font-size: 0.9rem;">
-                                        {{-- TODO: Hubungkan relasi nama dosen dari database --}}
-                                        Dosen Pengampu
+                                        {{ $paket->dosen_pengampu ?? 'Dosen Pengampu' }}
                                     </span>
                                 </div>
                             </td>
@@ -117,7 +115,7 @@
                             <td><span class="text-muted" style="font-size: 0.9rem;">-</span></td>
                             <td><span class="badge-menunggu">MENUNGGU</span></td>
                             <td class="text-end">
-                                <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal.review') }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
+                                <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal.review', ['mk_id' => $paket->mk_id]) }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
                                     Mulai Validasi <i class="fas fa-arrow-right ms-2" style="font-size: 0.8rem;"></i>
                                 </a>
                             </td>
