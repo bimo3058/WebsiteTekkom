@@ -1,30 +1,91 @@
-<x-banksoal::layouts.master>
-    <div class="flex justify-between items-center">
-        <h1>Hello Mahasiswa</h1>
-        <form method="POST" action="{{ route('logout') }}">
-            @csrf
-            <button type="submit" class="text-red-600 hover:text-red-800 font-medium">{{ __('Log Out') }}</button>
-        </form>
-    </div>
+<x-app-layout>
+<div class="flex min-h-screen bg-gray-100">
 
-    <p>Module: {!! config('manajemenmahasiswa.name') !!}</p>
+    <!-- Sidebar -->
+    <aside class="w-64 bg-white shadow-md p-5">
+        <h2 class="text-lg font-semibold mb-6">🎓 Portal Mahasiswa</h2>
 
-    {{-- Permission Status --}}
-    <div style="margin-top: 20px; padding: 16px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px;">
-        <p style="font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; margin-bottom: 8px;">Permission Status</p>
-        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
-            <span style="font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 600;
-                {{ auth()->user()->can('kemahasiswaan.view') ? 'background:#dcfce7;color:#166534;border:1px solid #bbf7d0;' : 'background:#fef2f2;color:#991b1b;border:1px solid #fecaca;' }}">
-                <i class="fas fa-{{ auth()->user()->can('kemahasiswaan.view') ? 'check' : 'times' }}" style="margin-right:3px;"></i> View
-            </span>
-            <span style="font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 600;
-                {{ auth()->user()->can('kemahasiswaan.edit') ? 'background:#dcfce7;color:#166534;border:1px solid #bbf7d0;' : 'background:#fef2f2;color:#991b1b;border:1px solid #fecaca;' }}">
-                <i class="fas fa-{{ auth()->user()->can('kemahasiswaan.edit') ? 'check' : 'times' }}" style="margin-right:3px;"></i> Edit
-            </span>
-            <span style="font-size: 11px; padding: 4px 10px; border-radius: 20px; font-weight: 600;
-                {{ auth()->user()->can('kemahasiswaan.delete') ? 'background:#dcfce7;color:#166534;border:1px solid #bbf7d0;' : 'background:#fef2f2;color:#991b1b;border:1px solid #fecaca;' }}">
-                <i class="fas fa-{{ auth()->user()->can('kemahasiswaan.delete') ? 'check' : 'times' }}" style="margin-right:3px;"></i> Delete
-            </span>
+        <p class="text-sm text-gray-400 mb-2">Main Menu</p>
+        <ul class="space-y-3">
+            <li class="bg-purple-100 text-purple-600 px-3 py-2 rounded-lg font-medium">
+                Pengumuman
+            </li>
+            <li class="text-gray-600 hover:text-purple-600 cursor-pointer">Direktori Mahasiswa</li>
+            <li class="text-gray-600 hover:text-purple-600 cursor-pointer">Kegiatan</li>
+            <li class="text-gray-600 hover:text-purple-600 cursor-pointer">Forum Diskusi</li>
+        </ul>
+
+        <div class="mt-10 text-sm text-gray-500 space-y-2">
+            <p>Settings</p>
+            <p>Help & Center</p>
+            <p class="text-red-500">Logout</p>
         </div>
-    </div>
-</x-banksoal::layouts.master>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 p-8">
+
+        <!-- Header -->
+        <div class="flex justify-between items-center mb-6">
+            <div>
+                <h1 class="text-3xl font-bold">Pengumuman & Informasi</h1>
+                <p class="text-gray-500 text-sm">Wadah Informasi untuk Mahasiswa dan Alumni</p>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <span class="text-sm">Username</span>
+                <img src="https://i.pravatar.cc/40" class="rounded-full">
+            </div>
+        </div>
+
+        <!-- Search & Filter -->
+        <div class="flex gap-3 mb-6">
+            <input type="text" placeholder="Search"
+                class="flex-1 px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-purple-400">
+
+            <select class="px-4 py-2 rounded-lg border">
+                <option>Filter</option>
+            </select>
+        </div>
+
+        <!-- Cards -->
+        @for ($i = 0; $i < 3; $i++)
+        <div class="bg-white p-5 rounded-xl shadow mb-5 hover:shadow-lg transition">
+            
+            <div class="flex justify-between items-start">
+                <div class="flex gap-3">
+                    
+                    <!-- Icon -->
+                    <div class="w-10 h-10 bg-purple-100 text-purple-600 flex items-center justify-center rounded-lg">
+                        📢
+                    </div>
+
+                    <!-- Content -->
+                    <div>
+                        <h3 class="font-semibold text-lg">
+                            {{ $i == 1 ? 'Jadwal KRS Semester Genap 2025/2026' : 'Judul' }}
+                        </h3>
+
+                        <p class="text-sm text-gray-600 mt-1">
+                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam.
+                        </p>
+
+                        <p class="text-xs text-gray-400 mt-3">
+                            27 Januari 2026
+                        </p>
+                    </div>
+
+                </div>
+
+                <!-- Action -->
+                <a href="#" class="text-sm text-purple-600 hover:underline">
+                    Baca Selengkapnya
+                </a>
+            </div>
+
+        </div>
+        @endfor
+
+    </main>
+</div>
+</x-app-layout>
