@@ -40,6 +40,15 @@
                 if(topbarTitle) topbarTitle.textContent = "Validasi RPS";
                 if(topbarSubtitle) topbarSubtitle.textContent = "Pantau riwayat dokumen RPS yang telah direview";
 
+                // Flash messages auto close
+                setTimeout(() => {
+                    const alerts = document.querySelectorAll('.alert-dismissible');
+                    alerts.forEach(alert => {
+                        const bsAlert = new bootstrap.Alert(alert);
+                        bsAlert.close();
+                    });
+                }, 5000);
+
                 // Debounce function
                 function debounce(func, delay) {
                     let timeoutId;
@@ -109,24 +118,105 @@
             });
         </script>
 
-        <div class="nav-tabs-custom mb-4">
-            <ul class="nav nav-tabs border-0" id="rpsTab" role="tablist">
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link active text-decoration-none" id="menunggu-tab" data-bs-toggle="tab" data-bs-target="#menunggu" type="button" role="tab">
-                        Menunggu Validasi <span class="badge-count">{{ $rpsDiajukan->total() }}</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link text-decoration-none" id="revisi-tab" data-bs-toggle="tab" data-bs-target="#revisi" type="button" role="tab">
-                        Menunggu Revisi <span class="badge-count">{{ $rpsRevisi->total() }}</span>
-                    </button>
-                </li>
-                <li class="nav-item" role="presentation">
-                    <button class="nav-link text-decoration-none" id="disetujui-tab" data-bs-toggle="tab" data-bs-target="#disetujui" type="button" role="tab">
-                        Disetujui <span class="badge-count">{{ $rpsDisetujui->total() }}</span>
-                    </button>
-                </li>
-            </ul>
+        @if(session('success'))
+            <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
+                <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+        @if(session('error'))
+            <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                <i class="fas fa-exclamation-triangle me-2"></i> {{ session('error') }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        @endif
+
+        @if($activePeriode)
+            <div class="card border-0 mb-4 rounded-4" style="box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); background: #f8fafc; border-left: 4px solid {{ $isPeriodeRunning ? '#10b981' : '#94a3b8' }} !important;">
+                <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center flex-column flex-md-row gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: {{ $isPeriodeRunning ? '#d1fae5' : '#e2e8f0' }}; color: {{ $isPeriodeRunning ? '#059669' : '#64748b' }};">
+                            <i class="fas fa-calendar-check fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1 fw-bold text-dark" style="font-size: 1rem;">{{ $activePeriode->judul }}</h6>
+                            <div class="text-muted" style="font-size: 0.85rem;">
+                                Tenggat: {{ \Carbon\Carbon::parse($activePeriode->tanggal_mulai)->translatedFormat('d M Y') }} s.d. {{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->translatedFormat('d M Y') }}
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-2" style="flex-wrap: wrap; justify-content: flex-end;">
+                        <div>
+                            @if($isPeriodeRunning)
+                                <span class="badge bg-success py-2 px-3 rounded-pill" style="background-color: #10b981 !important; color: white !important; font-weight: 500; font-size: 0.85rem;">
+                                    <i class="fas fa-circle me-1" style="font-size: 0.5rem; vertical-align: middle;"></i> Sesi Dibuka
+                                </span>
+                            @else
+                                <span class="badge bg-secondary py-2 px-3 rounded-pill" style="background-color: #64748b !important; color: white !important; font-weight: 500; font-size: 0.85rem;">
+                                    <i class="fas fa-times-circle me-1" style="font-size: 0.8rem; vertical-align: middle;"></i> Sesi Berakhir
+                                </span>
+                            @endif
+                        </div>
+                        @if($isPeriodeRunning)
+                            <button type="button" class="btn btn-sm btn-outline-danger rounded-3 px-3 py-2" data-bs-toggle="modal" data-bs-target="#modalCloseSession" style="font-weight: 500; font-size: 0.85rem;">
+                                <i class="fas fa-power-off me-1" style="font-size: 0.75rem;"></i> Matikan Sesi
+                            </button>
+                        @endif
+                    </div>
+                </div>
+            </div>
+        @else
+            <div class="card border-0 mb-4 rounded-4" style="box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); background: #f8fafc; border-left: 4px solid #f59e0b !important;">
+                <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center flex-column flex-md-row gap-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: #fef3c7; color: #d97706;">
+                            <i class="fas fa-calendar-times fs-5"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-1 fw-bold text-dark" style="font-size: 1rem;">Belum Ada Jadwal Pengajuan</h6>
+                            <div class="text-muted" style="font-size: 0.85rem;">
+                                Tidak ada sesi pengajuan RPS yang ditambahkan saat ini
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="badge py-2 px-3 rounded-pill" style="background-color: #fef3c7 !important; color: #d97706 !important; font-weight: 500; font-size: 0.85rem;">
+                            <i class="fas fa-exclamation-circle me-1" style="font-size: 0.75rem; vertical-align: middle;"></i> Belum Aktif
+                        </span>
+                    </div>
+                </div>
+            </div>
+        @endif
+
+        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom" style="border-color: #e2e8f0 !important;">
+            <div class="nav-tabs-custom mb-0" style="border-bottom: none;">
+                <ul class="nav nav-tabs border-0" id="rpsTab" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active text-decoration-none" id="menunggu-tab" data-bs-toggle="tab" data-bs-target="#menunggu" type="button" role="tab">
+                            Menunggu Validasi <span class="badge-count">{{ $rpsDiajukan->total() }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-decoration-none" id="revisi-tab" data-bs-toggle="tab" data-bs-target="#revisi" type="button" role="tab">
+                            Menunggu Revisi <span class="badge-count">{{ $rpsRevisi->total() }}</span>
+                        </button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link text-decoration-none" id="disetujui-tab" data-bs-toggle="tab" data-bs-target="#disetujui" type="button" role="tab">
+                            Disetujui <span class="badge-count">{{ $rpsDisetujui->total() }}</span>
+                        </button>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="d-flex gap-2">
+                <button type="button" class="btn btn-outline-secondary rounded-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalUploadTemplate">
+                    <i class="fas fa-file-upload me-2"></i> Upload Template
+                </button>
+                <button type="button" class="btn btn-primary rounded-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalTambah">
+                    <i class="fas fa-calendar-plus me-2"></i> Buat Periode
+                </button>
+            </div>
         </div>
 
         <div class="tab-content" id="rpsTabContent">
@@ -373,7 +463,7 @@
                                     <td><span class="text-muted" style="font-size: 0.9rem;">{{ isset($rps->tanggal_disetujui) ? \Carbon\Carbon::parse($rps->tanggal_disetujui)->format('d M Y') : '-' }}</span></td>
                                     <td><span class="badge-disetujui">DISETUJUI</span></td>
                                     <td class="text-end">
-                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.view', $rps->rps_id) }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
+                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->rps_id) }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
                                             <i class="fas fa-eye me-2" style="font-size: 0.8rem;"></i> Lihat Detail
                                         </a>
                                     </td>
@@ -405,4 +495,291 @@
         </div>
 
     </div>
+
+    <!-- Modal Upload Template -->
+    <div class="modal fade" id="modalUploadTemplate" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0">
+                <form id="formUploadTemplate" enctype="multipart/form-data">
+                    @csrf
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold">Upload Template RPS</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-medium text-dark">File Template (Word Format) <span class="text-danger">*</span></label>
+                            <div class="upload-box-modal border-2 border-dashed rounded-3 p-4 text-center" style="cursor: pointer; transition: all 0.3s; border-color: #e2e8f0;">
+                                <i class="fas fa-cloud-upload-alt text-muted" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
+                                <p class="text-muted mb-0" style="font-size: 0.9rem;">Dragdrop file atau <strong style="color: #2563eb; text-decoration: underline;">pilih file</strong></p>
+                                <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.25rem;">Format: .doc, .docx (Maksimal 1 MB)</p>
+                                <input type="file" name="dokumen" id="fileInputModal" accept=".doc,.docx" required style="display: none;">
+                                <div class="file-selected-modal mt-3" style="display: none;">
+                                    <div class="alert alert-success py-2 px-3 mb-0">
+                                        <i class="fas fa-check-circle me-2"></i>
+                                        <span class="file-name-modal"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium text-dark">Keterangan (Opsional)</label>
+                            <textarea class="form-control" name="keterangan" rows="3" placeholder="Misal: Update struktur template, tambahan BAB, dll..."></textarea>
+                        </div>
+                        <div class="alert alert-info rounded-3" role="alert" style="font-size: 0.85rem;">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Info:</strong> Template baru akan otomatis menjadi versi terbaru yang dapat diunduh Dosen
+                        </div>
+                        <div id="uploadStatusMessage"></div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0 d-flex justify-content-between">
+                        <button type="button" class="btn btn-outline-danger px-3" id="btnDeleteInactive" title="Hapus semua versi template yang tidak aktif">
+                            <i class="fas fa-trash me-1"></i> Hapus Versi Lama
+                        </button>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-primary px-4" id="btnSubmitTemplate">Upload Template</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Upload Template Modal - Drag & Drop
+        const uploadBoxModal = document.querySelector('.upload-box-modal');
+        const fileInputModal = document.getElementById('fileInputModal');
+        const fileSelectedModal = document.querySelector('.file-selected-modal');
+        const fileNameModal = document.querySelector('.file-name-modal');
+        const formUploadTemplate = document.getElementById('formUploadTemplate');
+        const btnSubmitTemplate = document.getElementById('btnSubmitTemplate');
+        const uploadStatusMessage = document.getElementById('uploadStatusMessage');
+
+        function preventDefaultsModal(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            uploadBoxModal.addEventListener(eventName, preventDefaultsModal, false);
+        });
+
+        ['dragenter', 'dragover'].forEach(eventName => {
+            uploadBoxModal.addEventListener(eventName, () => {
+                uploadBoxModal.style.borderColor = '#2563eb';
+                uploadBoxModal.style.backgroundColor = '#f0f9ff';
+            }, false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            uploadBoxModal.addEventListener(eventName, () => {
+                uploadBoxModal.style.borderColor = '#e2e8f0';
+                uploadBoxModal.style.backgroundColor = 'transparent';
+            }, false);
+        });
+
+        uploadBoxModal.addEventListener('drop', (e) => {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            fileInputModal.files = files;
+            updateFileDisplayModal();
+        }, false);
+
+        uploadBoxModal.addEventListener('click', () => {
+            fileInputModal.click();
+        });
+
+        fileInputModal.addEventListener('change', updateFileDisplayModal);
+
+        function updateFileDisplayModal() {
+            if (fileInputModal.files && fileInputModal.files.length > 0) {
+                fileNameModal.textContent = fileInputModal.files[0].name;
+                fileSelectedModal.style.display = 'block';
+            } else {
+                fileSelectedModal.style.display = 'none';
+            }
+        }
+
+        // Handle form submission via AJAX
+        formUploadTemplate.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const formData = new FormData(formUploadTemplate);
+            uploadStatusMessage.innerHTML = '';
+            btnSubmitTemplate.disabled = true;
+            btnSubmitTemplate.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+
+            try {
+                const response = await fetch("{{ route('banksoal.rps.gpm.template.store') }}", {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                    }
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    // Show success message
+                    uploadStatusMessage.innerHTML = `
+                        <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
+                            <i class="fas fa-check-circle me-2"></i> 
+                            <strong>Sukses!</strong> ${data.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+
+                    // Reset form
+                    formUploadTemplate.reset();
+                    fileSelectedModal.style.display = 'none';
+
+                    // Close modal after 2 seconds
+                    setTimeout(() => {
+                        const modal = bootstrap.Modal.getInstance(document.getElementById('modalUploadTemplate'));
+                        if (modal) modal.hide();
+                        uploadStatusMessage.innerHTML = '';
+                    }, 2000);
+
+                } else {
+                    throw new Error(data.message || 'Terjadi kesalahan');
+                }
+            } catch (error) {
+                uploadStatusMessage.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i> 
+                        <strong>Error!</strong> ${error.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            } finally {
+                btnSubmitTemplate.disabled = false;
+                btnSubmitTemplate.innerHTML = '<i class="fas fa-arrow-up-from-bracket me-2"></i> Upload Template';
+            }
+        });
+
+        // Handle delete inactive templates
+        const btnDeleteInactive = document.getElementById('btnDeleteInactive');
+        btnDeleteInactive.addEventListener('click', async () => {
+            // Confirm before deleting
+            if (!confirm('Apakah Anda yakin ingin menghapus semua versi template yang tidak aktif?\n\nAksi ini tidak dapat dibatalkan.')) {
+                return;
+            }
+
+            btnDeleteInactive.disabled = true;
+            const originalHTML = btnDeleteInactive.innerHTML;
+            btnDeleteInactive.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menghapus...';
+
+            try {
+                const response = await fetch("{{ route('banksoal.rps.gpm.template.delete-inactive') }}", {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value,
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({})
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    uploadStatusMessage.innerHTML = `
+                        <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
+                            <i class="fas fa-check-circle me-2"></i> 
+                            <strong>Sukses!</strong> ${data.message}
+                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                        </div>
+                    `;
+                } else {
+                    throw new Error(data.message || 'Terjadi kesalahan');
+                }
+            } catch (error) {
+                uploadStatusMessage.innerHTML = `
+                    <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
+                        <i class="fas fa-exclamation-triangle me-2"></i> 
+                        <strong>Error!</strong> ${error.message}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                `;
+            } finally {
+                btnDeleteInactive.disabled = false;
+                btnDeleteInactive.innerHTML = originalHTML;
+            }
+        });
+    </script>
+
+    <!-- Modal Tambah Periode -->
+    <div class="modal fade" id="modalTambah" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-4 border-0">
+                <form action="{{ route('banksoal.rps.gpm.periode-rps.store') }}" method="POST">
+                    @csrf
+                    <div class="modal-header border-bottom-0 pb-0">
+                        <h5 class="modal-title fw-bold">Buat Jadwal RPS Baru</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="mb-3">
+                            <label class="form-label fw-medium text-dark">Judul Periode <span class="text-danger">*</span></label>
+                            <input type="text" class="form-control" name="judul" required placeholder="Contoh: Pengajuan RPS Genap 2025/2026">
+                        </div>
+                        <div class="row g-3 mb-3">
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium text-dark">Semester <span class="text-danger">*</span></label>
+                                <select class="form-select" name="semester" required>
+                                    <option value="Ganjil">Ganjil</option>
+                                    <option value="Genap">Genap</option>
+                                </select>
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label fw-medium text-dark">Tahun Ajaran <span class="text-danger">*</span></label>
+                                <input type="text" class="form-control" name="tahun_ajaran" required placeholder="Contoh: 2025/2026">
+                            </div>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium text-dark">Tanggal Mulai <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="tanggal_mulai" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-medium text-dark">Tanggal Selesai (Tenggat) <span class="text-danger">*</span></label>
+                            <input type="date" class="form-control" name="tanggal_selesai" required>
+                        </div>
+                        <div class="form-check form-switch mt-4">
+                            <input class="form-check-input" type="checkbox" name="is_active" id="isActiveAdd" value="1" checked>
+                            <label class="form-check-label ms-2" for="isActiveAdd">Otomatis aktifkan jadwal ini</label>
+                            <div class="form-text mt-1 text-muted" style="font-size: 0.8rem;">GPM hanya bisa membuka 1 sesi pengajuan dalam satu waktu. Mencentang ini akan membatalkan sesi lain yang masih aktif.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top-0 pt-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary px-4">Buat & Terapkan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Matikan Sesi -->
+    <div class="modal fade" id="modalCloseSession" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content rounded-4 border-0">
+                <form action="{{ route('banksoal.rps.gpm.periode-rps.close-session') }}" method="POST">
+                    @csrf
+                    <div class="modal-body text-center p-4">
+                        <div class="text-warning mb-3">
+                            <i class="fas fa-exclamation-circle fa-3x"></i>
+                        </div>
+                        <h5 class="mb-2 fw-bold text-dark">Matikan Sesi Pengajuan?</h5>
+                        <p class="text-muted mb-4" style="font-size: 0.9rem;">Sesi pengajuan <strong>{{ $activePeriode->judul ?? 'RPS' }}</strong> akan ditutup. Dosen tidak akan bisa lagi mengajukan RPS sampai periode baru diaktifkan.</p>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button type="button" class="btn btn-light w-50" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-danger w-50">Matikan Sesi</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
 </x-banksoal::layouts.gpm-master>

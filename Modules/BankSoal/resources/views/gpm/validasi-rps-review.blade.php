@@ -116,6 +116,14 @@
             display: flex;
             justify-content: center;
         }
+        #pdfFrame {
+            background-color: #f1f5f9;
+            display: block;
+            opacity: 1;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            color-scheme: only light;
+        }
         .pdf-mock-page {
             background-color: white;
             width: 100%;
@@ -475,6 +483,39 @@
                 if(topbarTitle) topbarTitle.textContent = "Validasi RPS";
                 if(topbarSubtitle) topbarSubtitle.textContent = "Periksa kelengkapan dokumen RPS";
 
+                // Iframe handlers untuk screenshot compatibility
+                window.handleIframeLoad = function() {
+                    const pdfFrame = document.getElementById('pdfFrame');
+                    if (pdfFrame) {
+                        pdfFrame.classList.remove('loading');
+                        pdfFrame.style.opacity = '1';
+                        pdfFrame.classList.add('ready');
+                        console.log('PDF iframe ready for screenshot');
+                    }
+                };
+
+                window.handleIframeError = function() {
+                    const pdfFrame = document.getElementById('pdfFrame');
+                    if (pdfFrame) {
+                        pdfFrame.style.opacity = '1';
+                        pdfFrame.classList.add('ready');
+                        console.warn('PDF preview content loaded (may have warnings)');
+                    }
+                };
+
+                // Mark iframe as loading initially
+                const pdfFrame = document.getElementById('pdfFrame');
+                if (pdfFrame) {
+                    pdfFrame.classList.add('loading');
+                }
+
+                // Fallback: ensure iframe is ready after 3 seconds
+                setTimeout(() => {
+                    if (pdfFrame && !pdfFrame.classList.contains('ready')) {
+                        window.handleIframeLoad();
+                    }
+                }, 3000);
+
                 window.hitungSkor = function() {
                     const form = document.getElementById('validasiForm');
                     const nilaiAkhirEl = document.getElementById('nilaiAkhir');
@@ -493,7 +534,7 @@
                 };
 
                 window.updateButtonState = function(score) {
-                    const MIN_SCORE = 60;
+                    const MIN_SCORE = 60; // Atur skor minimal parameter
                     const btnSetujui = document.getElementById('btnSetujui');
                     
                     if (score < MIN_SCORE) {
@@ -659,15 +700,16 @@
                         dismissSnackbar(snackbar);
                     }, 5000);
 
-                function dismissSnackbar(snackbar) {
-                    if (!snackbar) return;
-                    snackbar.style.animation = 'slideOutDown 0.3s ease-out forwards';
+                    function dismissSnackbar(snackbar) {
+                        if (!snackbar) return;
+                        snackbar.style.animation = 'slideOutDown 0.3s ease-out forwards';
 
-                    setTimeout(() => {
-                        if (snackbar.parentElement) {
-                            snackbar.remove();
-                        }
-                    }, 300);
+                        setTimeout(() => {
+                            if (snackbar.parentElement) {
+                                snackbar.remove();
+                            }
+                        }, 300);
+                    }
                 }
             });
         </script>
@@ -711,7 +753,11 @@
                     <div class="pdf-viewer">
                         <iframe id="pdfFrame" 
                                 src="{{ route('banksoal.rps.gpm.validasi-rps.preview', ['rpsId' => $rps->rps_id]) }}"
-                                style="width: 100%; height: 100%; border: none; background: #f1f5f9;">
+                                loading="eager"
+                                title="PDF Preview RPS"
+                                style="width: 100%; height: 100%; border: none; background: #f1f5f9; display: block; -webkit-print-color-adjust: exact; print-color-adjust: exact;"
+                                onload="handleIframeLoad()"
+                                onerror="handleIframeError()">
                         </iframe>
                     </div>
                 </div>

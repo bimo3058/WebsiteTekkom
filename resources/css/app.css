@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -13,44 +13,44 @@
 @layer base {
     :root {
         /* ── Surface ───────────────────────────────────────── */
-        --background:           240 11% 98%;    /* #FAFAFB  grey-0   */
-        --foreground:           240 30% 13%;    /* #16162B  grey-900 */
+        --background: 240 11% 98%; /* #FAFAFB  grey-0   */
+        --foreground: 240 30% 13%; /* #16162B  grey-900 */
 
         /* ── Card ──────────────────────────────────────────── */
-        --card:                 0 0% 100%;      /* #FFFFFF           */
-        --card-foreground:      240 30% 13%;    /* #16162B  grey-900 */
+        --card: 0 0% 100%; /* #FFFFFF           */
+        --card-foreground: 240 30% 13%; /* #16162B  grey-900 */
 
         /* ── Popover ───────────────────────────────────────── */
-        --popover:              0 0% 100%;
-        --popover-foreground:   240 30% 13%;
+        --popover: 0 0% 100%;
+        --popover-foreground: 240 30% 13%;
 
         /* ── Primary (Purple dari design system) ───────────── */
-        --primary:              245 90% 64%;    /* #5E53F4  p-500    */
-        --primary-foreground:   0 0% 100%;      /* white             */
+        --primary: 245 90% 64%; /* #5E53F4  p-500    */
+        --primary-foreground: 0 0% 100%; /* white             */
 
         /* ── Secondary ─────────────────────────────────────── */
-        --secondary:            240 14% 95%;    /* #EEEEF3  grey-50  */
-        --secondary-foreground: 240 14% 33%;    /* #3D3D55  grey-700 */
+        --secondary: 240 14% 95%; /* #EEEEF3  grey-50  */
+        --secondary-foreground: 240 14% 33%; /* #3D3D55  grey-700 */
 
         /* ── Muted ─────────────────────────────────────────── */
-        --muted:                240 14% 95%;    /* #EEEEF3  grey-50  */
-        --muted-foreground:     240 8% 58%;     /* #8B8B9E  grey-400 */
+        --muted: 240 14% 95%; /* #EEEEF3  grey-50  */
+        --muted-foreground: 240 8% 58%; /* #8B8B9E  grey-400 */
 
         /* ── Accent ────────────────────────────────────────── */
-        --accent:               240 14% 95%;    /* #EEEEF3           */
-        --accent-foreground:    240 14% 33%;    /* #3D3D55           */
+        --accent: 240 14% 95%; /* #EEEEF3           */
+        --accent-foreground: 240 14% 33%; /* #3D3D55           */
 
         /* ── Destructive ───────────────────────────────────── */
-        --destructive:          14 100% 55%;    /* #FF6B4A  err-200  */
+        --destructive: 14 100% 55%; /* #FF6B4A  err-200  */
         --destructive-foreground: 0 0% 100%;
 
         /* ── Border / Input / Ring ──────────────────────────── */
-        --border:               240 12% 90%;    /* #DFDFE6  grey-100 */
-        --input:                240 12% 90%;    /* #DFDFE6  grey-100 */
-        --ring:                 245 90% 64%;    /* #5E53F4  p-500    */
+        --border: 240 12% 90%; /* #DFDFE6  grey-100 */
+        --input: 240 12% 90%; /* #DFDFE6  grey-100 */
+        --ring: 245 90% 64%; /* #5E53F4  p-500    */
 
         /* ── Border Radius ─────────────────────────────────── */
-        --radius:               0.75rem;        /* 12px              */
+        --radius: 0.75rem; /* 12px              */
     }
 
     /* ── Dark Mode (optional, uncomment jika perlu) ──────── */
@@ -91,8 +91,10 @@
 
     body {
         @apply bg-background text-foreground;
-        font-family: 'Inter Tight', system-ui, sans-serif;
-        font-feature-settings: "rlig" 1, "calt" 1;
+        font-family: "Inter Tight", system-ui, sans-serif;
+        font-feature-settings:
+            "rlig" 1,
+            "calt" 1;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
     }
@@ -100,9 +102,631 @@
 
 /*
  * ═══════════════════════════════════════════════════════════════
- *  UTILITY CLASSES
+ *  COMPONENT DEFINITIONS FOR DOSEN VIEWS
  * ═══════════════════════════════════════════════════════════════
  */
+@layer components {
+    /* ── Cards ──────────────────────────────────────────────── */
+    .card {
+        @apply bg-white rounded-2xl shadow-sm border border-slate-200 relative w-full;
+    }
+
+    .card-header {
+        @apply px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between;
+    }
+
+    /* ── Page Headers ───────────────────────────────────────── */
+    .page-header {
+        @apply flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8;
+    }
+
+    .page-title {
+        @apply text-3xl font-bold text-slate-800 tracking-tight;
+    }
+
+    .page-subtitle {
+        @apply text-sm text-slate-600 mt-1;
+    }
+
+    /* ── Buttons ────────────────────────────────────────────── */
+    .btn-primary {
+        @apply inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2.5 font-medium transition-colors;
+    }
+
+    .btn-secondary {
+        @apply inline-flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl px-4 py-2.5 font-medium text-slate-700 transition-colors;
+    }
+
+    .btn-success {
+        @apply inline-flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white rounded-xl px-4 py-2.5 font-medium transition-colors;
+    }
+
+    .btn-danger {
+        @apply inline-flex items-center gap-2 bg-red-600 hover:bg-red-700 text-white rounded-xl px-4 py-2.5 font-medium transition-colors;
+    }
+
+    .btn-outline {
+        @apply inline-flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl px-4 py-2.5 font-medium text-slate-700 transition-colors;
+    }
+
+    /* ── Badges ─────────────────────────────────────────────── */
+    .badge {
+        @apply inline-flex px-2.5 py-1 rounded-full text-xs font-semibold;
+    }
+
+    .badge-success {
+        @apply badge bg-green-100 text-green-700;
+    }
+
+    .badge-warning {
+        @apply badge bg-yellow-100 text-yellow-700;
+    }
+
+    .badge-danger {
+        @apply badge bg-red-100 text-red-700;
+    }
+
+    .badge-info {
+        @apply badge bg-blue-100 text-blue-700;
+    }
+
+    .badge-secondary {
+        @apply badge bg-slate-100 text-slate-700;
+    }
+
+    /* ── Form Elements ──────────────────────────────────────── */
+    .form-group {
+        @apply mb-6 relative;
+    }
+
+    .form-group-compact {
+        @apply relative mb-2;
+    }
+
+    .form-label {
+        @apply block text-sm font-semibold text-slate-800 mb-2.5;
+    }
+
+    .form-label-required::after {
+        @apply content-['*'] ml-1 text-red-600;
+    }
+
+    .form-hint {
+        @apply text-xs text-slate-500 mt-1;
+    }
+
+    .form-control {
+        @apply w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-colors relative;
+    }
+
+    .form-control:disabled {
+        @apply bg-slate-50 text-slate-500 cursor-not-allowed;
+    }
+
+    .form-control:readonly {
+        @apply bg-slate-50 text-slate-500;
+    }
+
+    /* ── Alert/Banner Styles ────────────────────────────────── */
+    .alert {
+        @apply p-4 rounded-xl flex items-start gap-3 border;
+    }
+
+    .alert-success {
+        @apply alert bg-green-50 border-green-200 text-green-700;
+    }
+
+    .alert-warning {
+        @apply alert bg-yellow-50 border-yellow-200 text-yellow-700;
+    }
+
+    .alert-danger {
+        @apply alert bg-red-50 border-red-200 text-red-700;
+    }
+
+    .alert-info {
+        @apply alert bg-blue-50 border-blue-200 text-blue-700;
+    }
+
+    .alert-icon {
+        @apply w-5 h-5 flex-shrink-0 mt-0.5;
+    }
+
+    /* ── Snackbar Notification ────────────────────────────── */
+    .snackbar {
+        position: fixed;
+        bottom: 20px;
+        left: 50%;
+        transform: translateX(-50%);
+        min-width: 300px;
+        max-width: 500px;
+        padding: 14px 16px;
+        padding-right: 40px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 14px;
+        font-weight: 500;
+        z-index: 9999;
+        animation: slideUpIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .snackbar-success {
+        background-color: #10b981;
+        color: #ffffff;
+        border-left: 4px solid #059669;
+    }
+
+    .snackbar-error {
+        background-color: #ef4444;
+        color: #ffffff;
+        border-left: 4px solid #dc2626;
+    }
+
+    .snackbar-warning {
+        background-color: #f59e0b;
+        color: #ffffff;
+        border-left: 4px solid #d97706;
+    }
+
+    .snackbar-info {
+        background-color: #3b82f6;
+        color: #ffffff;
+        border-left: 4px solid #1e40af;
+    }
+
+    .snackbar i {
+        flex-shrink: 0;
+        font-size: 18px;
+    }
+
+    .snackbar span {
+        flex: 1;
+    }
+
+    .snackbar ul {
+        margin: 0;
+        padding-left: 20px;
+    }
+
+    .snackbar-close {
+        position: absolute;
+        right: 8px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        font-size: 24px;
+        cursor: pointer;
+        color: inherit;
+        opacity: 0.8;
+        padding: 4px 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: opacity 0.2s;
+    }
+
+    .snackbar-close:hover {
+        opacity: 1;
+    }
+
+    @keyframes slideUpIn {
+        from {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+    }
+
+    @keyframes slideOutDown {
+        from {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        to {
+            opacity: 0;
+            transform: translateX(-50%) translateY(20px);
+        }
+    }
+
+    @media (max-width: 600px) {
+        .snackbar {
+            bottom: 16px;
+            left: 16px;
+            right: 16px;
+            transform: none;
+            max-width: none;
+        }
+
+        @keyframes slideUpIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes slideOutDown {
+            from {
+                opacity: 1;
+                transform: translateY(0);
+            }
+            to {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+        }
+    }
+
+    /* ── Tables ─────────────────────────────────────────────── */
+    .table-wrapper {
+        @apply overflow-x-auto;
+    }
+
+    .table-header {
+        @apply bg-slate-50 border-b border-slate-200;
+    }
+
+    .table-header-cell {
+        @apply px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider;
+    }
+
+    .table-body {
+        @apply divide-y divide-slate-100;
+    }
+
+    .table-row {
+        @apply hover:bg-slate-50/50 transition-colors;
+    }
+
+    .table-cell {
+        @apply px-6 py-4 text-slate-600;
+    }
+
+    .table-cell-strong {
+        @apply px-6 py-4 font-medium text-slate-900;
+    }
+
+    /* ── Status Banner ──────────────────────────────────────── */
+    .status-banner {
+        @apply mb-8 p-5 rounded-lg flex items-start justify-between gap-4 border-l-4;
+    }
+
+    .status-banner-success {
+        @apply status-banner bg-green-50 border-l-green-300;
+    }
+
+    .status-banner-warning {
+        @apply status-banner bg-yellow-50 border-l-yellow-300;
+    }
+
+    .status-banner-danger {
+        @apply status-banner bg-red-50 border-l-red-300;
+    }
+
+    /* ── File Upload ────────────────────────────────────────── */
+    .upload-zone {
+        @apply w-full p-8 border-2 border-dashed border-slate-300 rounded-xl text-center cursor-pointer hover:border-blue-400 hover:bg-blue-50/50 transition-all;
+    }
+
+    .upload-zone-active {
+        @apply border-blue-400 bg-blue-50;
+    }
+
+    .upload-zone-disabled {
+        @apply bg-slate-50 border-slate-300 cursor-not-allowed opacity-70;
+    }
+
+    /* ── Dashboard Layouts ──────────────────────────────────── */
+    .grid-3 {
+        @apply grid grid-cols-1 md:grid-cols-3 gap-6 mb-6;
+    }
+
+    .grid-2 {
+        @apply grid grid-cols-1 md:grid-cols-2 gap-6 mb-6;
+    }
+
+    /* ── Alert Banner ────────────────────────────────────────── */
+    .alert-banner {
+        @apply mb-6 p-4 bg-yellow-50 border border-yellow-200 rounded-xl flex items-start gap-4;
+    }
+
+    .alert-icon-wrap {
+        @apply text-yellow-600 text-xl flex-shrink-0 mt-0.5;
+    }
+
+    .alert-text {
+        @apply flex-1;
+    }
+
+    .alert-text strong {
+        @apply block text-yellow-900 font-semibold mb-1;
+    }
+
+    .alert-text p {
+        @apply text-yellow-700 text-sm m-0;
+    }
+
+    .alert-btn {
+        @apply px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg transition-colors flex-shrink-0;
+    }
+
+    /* ── Card Header Styling ────────────────────────────────── */
+    .card-header {
+        @apply px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between;
+    }
+
+    .card-title {
+        @apply font-semibold text-slate-900 text-sm;
+    }
+
+    .card-icon {
+        @apply text-slate-400 text-sm;
+    }
+
+    .card-link {
+        @apply text-blue-600 hover:text-blue-700 text-xs font-medium transition-colors;
+    }
+
+    /* ── Donut Chart ────────────────────────────────────────── */
+    .donut-wrap {
+        @apply flex items-center justify-center relative py-6;
+    }
+
+    .donut-label {
+        @apply absolute text-center;
+    }
+
+    .donut-label strong {
+        @apply block text-lg font-bold text-slate-900;
+    }
+
+    .donut-label span {
+        @apply block text-xs text-slate-500 uppercase tracking-wider;
+    }
+
+    /* ── Legend Items ────────────────────────────────────────── */
+    .legend {
+        @apply flex flex-col gap-2 mt-4 pt-4 border-t border-slate-200;
+    }
+
+    .legend-item {
+        @apply flex items-center gap-2 text-sm text-slate-600;
+    }
+
+    .legend-dot {
+        @apply inline-block w-3 h-3 rounded-full flex-shrink-0;
+    }
+
+    /* ── Bar Chart ──────────────────────────────────────────── */
+    .bar-chart {
+        @apply py-6;
+    }
+
+    /* ── Profile Section ────────────────────────────────────── */
+    .prof-avatar-placeholder {
+        @apply w-16 h-16 rounded-full bg-blue-100 text-blue-600 font-bold text-lg flex items-center justify-center mx-auto mb-3;
+    }
+
+    .prof-name {
+        @apply font-semibold text-slate-900 mb-1;
+    }
+
+    .prof-nip {
+        @apply text-sm text-slate-600 mb-2;
+    }
+
+    .prof-dept {
+        @apply text-sm text-slate-500 mb-4;
+    }
+
+    .update-btn {
+        @apply px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg transition-colors;
+    }
+
+    /* ── RPS Badge ──────────────────────────────────────────── */
+    .rps-badge {
+        @apply inline-block px-3 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full mb-2;
+    }
+
+    .academic-year {
+        @apply text-xs text-slate-500 uppercase tracking-wider mt-2;
+    }
+
+    .year-text {
+        @apply font-semibold text-slate-900 mb-3;
+    }
+
+    .courses-label {
+        @apply text-xs text-slate-500 uppercase tracking-wider mt-2;
+    }
+
+    .course-tags {
+        @apply flex gap-2 flex-wrap mt-2;
+    }
+
+    .course-tag {
+        @apply inline-block px-2 py-1 bg-slate-100 text-slate-700 text-xs font-medium rounded;
+    }
+
+    /* ── MultiSelect Component CSS ─────────────────────────── */
+    .ms-wrapper {
+        @apply relative w-full;
+    }
+
+    .ms-trigger {
+        @apply w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm cursor-pointer flex items-center justify-between hover:border-slate-300 transition-colors relative;
+    }
+
+    .ms-trigger.disabled {
+        @apply bg-slate-50 text-slate-500 cursor-not-allowed opacity-60;
+    }
+
+    .ms-placeholder {
+        @apply text-slate-500 flex-1;
+    }
+
+    .ms-trigger.active .ms-placeholder {
+        @apply hidden;
+    }
+
+    .ms-search-input {
+        @apply flex-1 border-none bg-transparent text-sm focus:outline-none px-1;
+    }
+
+    .ms-selected-labels {
+        @apply flex-1 truncate text-slate-900;
+    }
+
+    .ms-badge {
+        @apply inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold mr-2;
+    }
+
+    .ms-badge-clear {
+        @apply bg-transparent border-none cursor-pointer text-base leading-none hover:text-blue-900;
+    }
+
+    .ms-chevron {
+        @apply text-slate-400 transition-transform flex-shrink-0;
+    }
+
+    .ms-trigger.open .ms-chevron {
+        @apply rotate-180;
+    }
+
+    .ms-dropdown {
+        @apply absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-40 hidden max-h-80 overflow-y-auto;
+    }
+
+    .ms-dropdown.open {
+        @apply block;
+    }
+
+    .ms-option-list {
+        @apply py-1;
+    }
+
+    /* ── MultiSelect Option ────────────────────────────────── */
+    .ms-option {
+        @apply px-4 py-2.5 hover:bg-blue-50 cursor-pointer flex items-center gap-2.5 transition-colors text-sm;
+    }
+
+    .ms-option:hover {
+        @apply bg-blue-50;
+    }
+
+    .ms-option.selected {
+        @apply bg-blue-100;
+    }
+
+    .ms-option.select-all {
+        @apply border-b border-slate-200 font-semibold py-2;
+    }
+
+    /* Checkbox styling */
+    .ms-cb {
+        @apply w-4 h-4 rounded border-2 border-slate-300 flex items-center justify-center flex-shrink-0 bg-white;
+    }
+
+    .ms-option.selected .ms-cb {
+        @apply bg-blue-600 border-blue-600;
+    }
+
+    .ms-option.selected .ms-cb::after {
+        content: "✓";
+        @apply text-white text-xs font-bold;
+    }
+
+    .ms-option.indeterminate .ms-cb {
+        @apply bg-blue-400 border-blue-400;
+    }
+
+    .ms-option.indeterminate .ms-cb::after {
+        content: "−";
+        @apply text-white text-xs font-bold;
+    }
+
+    .ms-no-results {
+        @apply px-4 py-3 text-center text-sm text-slate-500;
+    }
+
+    /* ── Dropdown Component CSS ────────────────────────────── */
+    .dropdown-wrapper {
+        @apply relative;
+    }
+
+    .dropdown-trigger {
+        @apply cursor-pointer;
+    }
+
+    .dropdown-menu {
+        @apply absolute top-full left-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-40 min-w-max hidden;
+    }
+
+    .dropdown-menu.open {
+        @apply block;
+    }
+
+    .dropdown-item {
+        @apply px-4 py-2.5 hover:bg-slate-50 cursor-pointer transition-colors;
+    }
+
+    .dropdown-item:hover {
+        @apply bg-slate-50;
+    }
+
+    /* ── File Upload Component CSS ─────────────────────────── */
+    .file-upload-wrapper {
+        @apply relative;
+    }
+
+    .file-preview {
+        @apply mt-3 p-3 bg-green-50 border border-green-200 rounded-lg flex items-center gap-2;
+    }
+
+    .file-preview-icon {
+        @apply text-green-600 text-lg;
+    }
+
+    .file-preview-name {
+        @apply text-sm text-green-700 font-medium flex-1 truncate;
+    }
+
+    .file-preview-remove {
+        @apply text-green-600 hover:text-green-700 cursor-pointer transition-colors;
+    }
+
+    .upload-error {
+        @apply mt-2 p-2 bg-red-50 border border-red-200 rounded-lg text-xs text-red-700;
+    }
+
+    /* ── Dashboard Bar Chart Styles ────────────────────────── */
+    .bar-group {
+        @apply flex flex-col items-center gap-2;
+    }
+
+    .bar-val {
+        @apply text-lg font-bold text-slate-900;
+    }
+
+    .bar {
+        @apply w-14 bg-gradient-to-b from-blue-500 to-blue-600 rounded-t-lg transition-all hover:from-blue-600 hover:to-blue-700 cursor-pointer;
+    }
+
+    .bar-label {
+        @apply text-xs text-slate-500 font-medium;
+    }
+}
+
 @layer utilities {
     /* Focus ring (konsisten di semua komponen) */
     .focus-ring {

@@ -1,29 +1,6 @@
-/**
- * ════════════════════════════════════════════════════════════════════
- * RpsForm.js - RPS Form Component
- * ════════════════════════════════════════════════════════════════════
- * Handles cascading dropdowns and form validation for RPS submission.
- *
- * Features:
- * - Cascading: Mata Kuliah → Dosen + CPL → CPMK
- * - File drag & drop upload
- * - Form validation before submit
- * - Error handling with Snackbar notifications
- *
- * Usage:
- *   RpsForm.init({
- *       mkSelectId: 'mkSelect',           // Mata Kuliah select
- *       dosenMsId: 'dosenMs',             // Dosen multi-select
- *       cplMsId: 'cplMs',                 // CPL multi-select
- *       cpmkMsId: 'cpmkMs',               // CPMK multi-select
- *       fileInputId: 'fileInput',         // File input
- *       uploadZoneId: 'uploadZone',       // Drag & drop zone
- *       formSelector: 'form'              // Form element
- *   });
- */
-
 class RpsFormComponent {
     constructor(config) {
+        // Konfigurasi default untuk elemen form RPS.
         this.config = {
             mkSelectId: "mkSelect",
             dosenMsId: "dosenMs",
@@ -32,6 +9,7 @@ class RpsFormComponent {
             fileInputId: "fileInput",
             uploadZoneId: "uploadZone",
             formSelector: "form",
+            maxFileSizeBytes: 1024 * 1024,
             ...config,
         };
 
@@ -39,17 +17,18 @@ class RpsFormComponent {
         this.fileInput = document.getElementById(this.config.fileInputId);
         this.uploadZone = document.getElementById(this.config.uploadZoneId);
         this.form = document.querySelector(this.config.formSelector);
+        this.uploadText = document.getElementById("uploadText");
+        this.defaultUploadText =
+            this.uploadText?.textContent?.trim() ||
+            "Klik untuk unggah atau seret file ke sini";
 
-        // MultiSelect instances (will be set by init)
+        // Instance MultiSelect akan diisi saat init dipanggil.
         this.dosenMs = null;
         this.cplMs = null;
         this.cpmkMs = null;
     }
 
-    /**
-     * Initialize form component with MultiSelect instances
-     * @param {Object} multiSelectInstances - {dosenMs, cplMs, cpmkMs}
-     */
+    // Menyambungkan instance MultiSelect dan menyiapkan semua perilaku form.
     init(multiSelectInstances) {
         this.dosenMs = multiSelectInstances.dosenMs;
         this.cplMs = multiSelectInstances.cplMs;
@@ -60,17 +39,12 @@ class RpsFormComponent {
         this._setupFormValidation();
     }
 
-    /**
-     * Setup cascading dropdowns
-     * @private
-     */
+    // Mengatur alur perubahan berantai: mata kuliah, CPL, dan CPMK.
     _setupCascading() {
-        // ── CASCADE: Mata Kuliah → Dosen + CPL ──
-        this.mkSelect.addEventListener("change", () =>
-            this._onMataKuliahChange(),
-        );
+        this.mkSelect.addEventListener("change", () => {
+            this._onMataKuliahChange();
+        });
 
-        // ── CASCADE: CPL → CPMK ──
         document
             .getElementById(this.config.cplMsId)
             ?.addEventListener("ms:change", (e) => {
@@ -78,10 +52,7 @@ class RpsFormComponent {
             });
     }
 
-    /**
-     * Handle Mata Kuliah selection change
-     * @private
-     */
+    // Menangani perubahan mata kuliah dan memuat data dosen serta CPL terkait.
     _onMataKuliahChange() {
         const mkId = this.mkSelect.value;
 
@@ -96,23 +67,47 @@ class RpsFormComponent {
         this.cplMs.setLoading("Memuat CPL…");
         this.cpmkMs.setDisabled("Pilih CPL terlebih dahulu");
 
-        // Fetch Dosen
-        this._fetchDosen();
+        // Arsip logika lama:
+        // this._fetchDosen();
 
-        // Fetch CPL
+        // Ambil data dosen berdasarkan assignment pada mata kuliah terpilih.
+        this._fetchDosenByMk(mkId);
+
+        // Ambil data CPL sesuai mata kuliah yang dipilih.
         this._fetchCpl(mkId);
     }
 
-    /**
-     * Fetch dosen list from API
-     * @private
-     */
-    _fetchDosen() {
+    // Mengambil daftar dosen berdasarkan assignment di mata kuliah terpilih.
+    _fetchDosenByMk(mkId) {
         const url =
             document.querySelector("[data-route-dosen]")?.dataset.routeDosen ||
             "/bank-soal/rps/dosen/dosen";
 
-        fetch(url)
+        // Arsip logika lama:
+        // fetch(url)
+        //     .then((r) => {
+        //         if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        //         return r.json();
+        //     })
+        //     .then((data) => {
+        //         if (data?.length) {
+        //             this.dosenMs.setItems(
+        //                 data.map((d) => ({ id: d.id, label: d.name })),
+        //                 "Pilih dosen",
+        //             );
+        //         } else {
+        //             this.dosenMs.setDisabled("Tidak ada dosen terdaftar");
+        //         }
+        //     })
+        //     .catch((err) => {
+        //         console.error("Error fetching dosen:", err);
+        //         this.dosenMs.setDisabled("Error loading dosen");
+        //         Snackbar?.show?.("Gagal memuat dosen", "error");
+        //     });
+
+        const fetchUrl = `${url}?mk_id=${encodeURIComponent(String(mkId))}`;
+
+        fetch(fetchUrl)
             .then((r) => {
                 if (!r.ok) throw new Error(`HTTP ${r.status}`);
                 return r.json();
@@ -120,11 +115,17 @@ class RpsFormComponent {
             .then((data) => {
                 if (data?.length) {
                     this.dosenMs.setItems(
-                        data.map((d) => ({ id: d.id, label: d.name })),
+                        data.map((d) => ({
+                            id: d.id,
+                            label: d.name,
+                            selected: Boolean(d.selected),
+                        })),
                         "Pilih dosen",
                     );
                 } else {
-                    this.dosenMs.setDisabled("Tidak ada dosen terdaftar");
+                    this.dosenMs.setDisabled(
+                        "Tidak ada dosen pengampu lain ter-assign",
+                    );
                 }
             })
             .catch((err) => {
@@ -134,10 +135,7 @@ class RpsFormComponent {
             });
     }
 
-    /**
-     * Fetch CPL list from API
-     * @private
-     */
+    // Mengambil daftar CPL berdasarkan mata kuliah.
     _fetchCpl(mkId) {
         const baseUrl =
             document.querySelector("[data-route-cpl]")?.dataset.routeCpl ||
@@ -168,10 +166,7 @@ class RpsFormComponent {
             });
     }
 
-    /**
-     * Handle CPL selection change (fetch CPMK)
-     * @private
-     */
+    // Mengambil daftar CPMK berdasarkan CPL yang dipilih.
     _onCplChange(cplIds) {
         if (!cplIds.length) {
             this.cpmkMs.setDisabled("Pilih CPL terlebih dahulu");
@@ -210,10 +205,7 @@ class RpsFormComponent {
             });
     }
 
-    /**
-     * Setup file upload drag & drop
-     * @private
-     */
+    // Menyiapkan area unggah file agar mendukung drag and drop.
     _setupFileUpload() {
         if (!this.uploadZone || !this.fileInput) return;
 
@@ -233,46 +225,91 @@ class RpsFormComponent {
             this.uploadZone.style.borderColor = "#d1d5db";
             this.uploadZone.style.backgroundColor = "#fff";
             this.fileInput.files = e.dataTransfer.files;
-            this._updateFileName();
+            this._handleSelectedFile();
         });
 
-        this.fileInput.addEventListener("change", () => this._updateFileName());
+        this.fileInput.addEventListener("change", () =>
+            this._handleSelectedFile(),
+        );
     }
 
-    /**
-     * Update file name display
-     * @private
-     */
+    // Memvalidasi file yang dipilih lalu memperbarui label unggahan.
+    _handleSelectedFile() {
+        if (!this.fileInput?.files?.length) {
+            this._setUploadText(this.defaultUploadText);
+            return;
+        }
+
+        const file = this.fileInput.files[0];
+        const fileError = this._validateSingleFile(file);
+
+        if (fileError) {
+            this._resetSelectedFile();
+            Snackbar?.show?.(fileError, "error");
+            return;
+        }
+
+        this._setUploadText(file.name);
+    }
+
+    // Menampilkan nama file yang dipilih di area unggah.
     _updateFileName() {
         if (this.fileInput.files?.length) {
-            const uploadText = document.getElementById("uploadText");
-            if (uploadText)
-                uploadText.textContent = this.fileInput.files[0].name;
+            this._setUploadText(this.fileInput.files[0].name);
         }
     }
 
-    /**
-     * Setup form validation
-     * @private
-     */
+    // Memperbarui teks pada label upload.
+    _setUploadText(text) {
+        if (this.uploadText) {
+            this.uploadText.textContent = text;
+        }
+    }
+
+    // Mengosongkan file input lalu mengembalikan teks default upload.
+    _resetSelectedFile() {
+        if (this.fileInput) {
+            this.fileInput.value = "";
+        }
+        this._setUploadText(this.defaultUploadText);
+    }
+
+    // Memvalidasi tipe dan ukuran satu file.
+    _validateSingleFile(file) {
+        if (!file) {
+            return "File RPS harus diunggah";
+        }
+
+        const fileName = (file.name || "").toLowerCase();
+        const isPdfByName = fileName.endsWith(".pdf");
+        const isPdfByType = file.type === "application/pdf";
+
+        if (!isPdfByName && !isPdfByType) {
+            return "Hanya menerima file berformat PDF";
+        }
+
+        if (file.size > this.config.maxFileSizeBytes) {
+            return "Ukuran file maksimal 1MB";
+        }
+
+        return null;
+    }
+
+    // Menjalankan validasi sebelum form dikirim.
     _setupFormValidation() {
         this.form?.addEventListener("submit", (e) => {
             const errors = this._validateForm();
             if (errors.length) {
                 e.preventDefault();
                 const errorMsg = errors
-                    .map((e, i) => `${i + 1}. ${e}`)
+                    .map((error, index) => `${index + 1}. ${error}`)
                     .join("\n");
                 Snackbar?.show?.(`Validasi Error:\n${errorMsg}`, "error");
             }
         });
     }
 
-    /**
-     * Validate form fields
-     * @private
-     * @returns {Array<string>} Array of error messages
-     */
+    // Memeriksa kelengkapan isian form RPS.
     _validateForm() {
         const errors = [];
 
@@ -287,11 +324,16 @@ class RpsFormComponent {
         }
         if (!this.fileInput?.files?.length) {
             errors.push("File RPS harus diunggah");
+        } else {
+            const fileError = this._validateSingleFile(this.fileInput.files[0]);
+            if (fileError) {
+                errors.push(fileError);
+            }
         }
 
         return errors;
     }
 }
 
-// Export singleton
+// Instance tunggal agar bisa dipakai langsung dari komponen lain.
 const RpsForm = new RpsFormComponent();

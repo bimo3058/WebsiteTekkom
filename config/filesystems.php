@@ -69,6 +69,15 @@ return [
             'report' => false,
         ],
 
+        'supabase' => [
+            'driver' => 'local',
+            'root' => storage_path('app/supabase'),
+            'url' => env('APP_URL') . '/storage/supabase',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
     ],
 
     /*

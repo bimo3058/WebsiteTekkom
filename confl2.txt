@@ -1,3 +1,0 @@
-Modules/BankSoal/app/Http/Controllers/DashboardController.php
-Modules/BankSoal/resources/views/dashboard/admin.blade.php
-Modules/BankSoal/routes/web.php

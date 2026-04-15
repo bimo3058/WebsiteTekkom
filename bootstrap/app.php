@@ -20,14 +20,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // ← Satu withMiddleware saja, tidak boleh dua!
         $middleware->web(append: [
             CheckSuspended::class,
             CheckSessionVersion::class,
             PreventBackHistory::class,    
-            RedirectBasedOnRole::class,      // ← setelah redirect, baru kunci
+            RedirectBasedOnRole::class,
         ]);
-        
 
         $middleware->alias([
             'role'          => CheckRole::class,
@@ -36,5 +34,38 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+
+        $exceptions->renderable(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, $request) {
+            $code = $e->getStatusCode();
+            $supported = [400, 401, 403, 404, 429, 500, 503];
+
+            if (in_array($code, $supported) && !$request->expectsJson()) {
+                return redirect()->route('error.page', ['code' => $code])
+                    ->with('from_exception', true);
+            }
+        });
+
+        $exceptions->renderable(function (\Symfony\Component\HttpKernel\Exception\HttpException $e, $request) {
+            if ($e->getStatusCode() === 419) {
+                if ($request->expectsJson()) {
+                    return response()->json([
+                        'message' => 'Sesi Anda telah kedaluwarsa. Silakan muat ulang halaman.'
+                    ], 419);
+                }
+
+                return redirect()->route('login')
+                    ->with('status', 'Sesi kedaluwarsa, silakan login kembali.');
+            }
+        });
+
+        $exceptions->renderable(function (\Illuminate\Session\TokenMismatchException $e, $request) {
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'message' => 'Sesi Anda telah kedaluwarsa. Silakan muat ulang halaman.'
+                ], 419);
+            }
+
+            return redirect()->route('login')
+                ->with('status', 'Sesi kedaluwarsa, silakan login kembali.');
+        });
     })->create();

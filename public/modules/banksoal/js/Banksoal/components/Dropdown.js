@@ -1,34 +1,60 @@
-/**
- * ════════════════════════════════════════════════════════════════════
- * TomSelectDropdown.js - TomSelect Dropdown Component
- * ════════════════════════════════════════════════════════════════════
- * Initializes TomSelect instances for form dropdowns.
- *
- * Features:
- * - Consistent styling across all dropdowns
- * - Single item selection only
- * - Customizable placeholder and options
- * - Prevents clipping with dropdown parent
- *
- * Usage:
- *   const dropdowns = new TomSelectDropdown();
- *   dropdowns.init('#mkSelect', 'Pilih Mata Kuliah');
- *   dropdowns.init('#semester', 'Pilih Semester');
- *   dropdowns.init('#tahun_ajaran', 'Pilih Tahun Ajaran');
- */
-
 class Dropdown {
     constructor() {
         this.instances = {};
+        this._bindViewportEvents();
     }
 
-    /**
-     * Initialize a TomSelect instance
-     * @param {string} selector - CSS selector for the select element
-     * @param {string} placeholder - Placeholder text
-     * @param {Object} options - Additional TomSelect options
-     * @returns {TomSelect|null} - TomSelect instance or null if element not found
-     */
+    // Menutup semua dropdown yang sedang terbuka.
+    _closeAllOpenInstances() {
+        Object.values(this.instances).forEach((instance) => {
+            if (!instance) return;
+            if (instance.isOpen && typeof instance.close === "function") {
+                instance.close();
+            }
+        });
+    }
+
+    // Mengecek apakah event scroll berasal dari panel dropdown Tom Select.
+    _isInternalDropdownScroll(event) {
+        const target = event?.target;
+        if (!target || !(target instanceof Element)) return false;
+
+        if (
+            target.closest(".ts-dropdown") ||
+            target.closest(".ts-dropdown-content")
+        ) {
+            return true;
+        }
+
+        return Object.values(this.instances).some((instance) => {
+            if (!instance || !instance.isOpen) return false;
+            const dropdown = instance.dropdown;
+            const dropdownContent = instance.dropdown_content;
+            return (
+                (dropdown instanceof Element && dropdown.contains(target)) ||
+                (dropdownContent instanceof Element &&
+                    dropdownContent.contains(target))
+            );
+        });
+    }
+
+    // Menutup dropdown saat viewport berubah agar panel tidak ikut terbawa saat scroll.
+    _bindViewportEvents() {
+        const handleViewportChange = (event) => {
+            if (
+                event?.type === "scroll" &&
+                this._isInternalDropdownScroll(event)
+            ) {
+                return;
+            }
+            this._closeAllOpenInstances();
+        };
+
+        window.addEventListener("scroll", handleViewportChange, true);
+        window.addEventListener("resize", handleViewportChange);
+    }
+
+    // Menyiapkan dropdown Tom Select.
     init(selector, placeholder = "Pilih Opsi", options = {}) {
         const element = document.querySelector(selector);
         if (!element) {
@@ -58,30 +84,18 @@ class Dropdown {
         return instance;
     }
 
-    /**
-     * Get a TomSelect instance by selector
-     * @param {string} selector - CSS selector
-     * @returns {TomSelect|undefined}
-     */
+    // Mengambil instance berdasarkan selector
     getInstance(selector) {
         return this.instances[selector];
     }
 
-    /**
-     * Initialize all dropdowns at once
-     * @param {Object} dropdowns - Object with selector as key and placeholder as value
-     * Example: { '#mkSelect': 'Pilih Mata Kuliah', '#semester': 'Pilih Semester' }
-     */
     initAll(dropdowns) {
         Object.entries(dropdowns).forEach(([selector, placeholder]) => {
             this.init(selector, placeholder);
         });
     }
 
-    /**
-     * Destroy a TomSelect instance
-     * @param {string} selector - CSS selector
-     */
+    // Menghapus instance dropdown yang sudah tidak dipakai.
     destroy(selector) {
         if (this.instances[selector]) {
             this.instances[selector].destroy();
@@ -89,9 +103,6 @@ class Dropdown {
         }
     }
 
-    /**
-     * Destroy all instances
-     */
     destroyAll() {
         Object.keys(this.instances).forEach((selector) => {
             this.destroy(selector);

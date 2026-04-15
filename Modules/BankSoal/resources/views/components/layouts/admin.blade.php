@@ -18,7 +18,7 @@
     <div class="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
         
         <!-- Sidebar Component -->
-        <x-banksoal::sidebar-admin />
+        <x-banksoal::ui.sidebar-admin />
 
         <!-- Main Content Wrapper -->
         <div class="flex-1 flex flex-col overflow-y-auto w-full relative">
@@ -30,5 +30,8 @@
         </div>
         
     </div>
+
+    <!-- Global Component untuk Toast Message -->
+    <x-banksoal::global-toast />
 </body>
 </html>

@@ -90,7 +90,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         // Mahasiswa, Dosen, GPM ke dashboard global
-        if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm'])->isNotEmpty()) {
+        if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm', 'pengurus_himpunan', 'alumni'])->isNotEmpty()) {
             return redirect()->intended(route('dashboard'));
         }
 
