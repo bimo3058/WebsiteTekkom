@@ -84,8 +84,5 @@
             </div>
 
         </div>
-        @endfor
-
-    </main>
-</div>
-</x-app-layout>
+    </div>
+</x-banksoal::layouts.master>

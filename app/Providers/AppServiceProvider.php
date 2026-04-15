@@ -35,12 +35,20 @@ class AppServiceProvider extends ServiceProvider
 
                         if ($cached) {
                             $model = $this->createModel();
-                            return $model->newFromBuilder($cached);
+                            $user  = $model->newFromBuilder($cached);
+                            
+                            // Kalau password tidak ada di cache, fetch fresh dari DB
+                            if (!isset($cached['password'])) {
+                                return parent::retrieveById($identifier);
+                            }
+                            
+                            return $user;
                         }
 
                         $user = parent::retrieveById($identifier);
                         if ($user) {
-                            Cache::put($cacheKey, $user->withoutRelations()->toArray(), now()->addHours(8));
+                            Cache::put($cacheKey, $user->makeVisible(['password', 'remember_token'])
+                                ->withoutRelations()->toArray(), now()->addHours(8));
                         }
 
                         return $user;

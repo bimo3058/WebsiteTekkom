@@ -16,7 +16,7 @@ return new class extends Migration
             $table->unsignedBigInteger('mk_id');
             $table->string('semester');
             $table->string('tahun_ajaran');
-            $table->string('dokumen');
+            $table->text('dokumen');
             $table->enum('status', ['draft', 'diajukan', 'revisi', 'disetujui'])->default('diajukan');
             $table->timestamps();
         });

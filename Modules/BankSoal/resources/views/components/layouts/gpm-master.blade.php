@@ -17,7 +17,7 @@
         .sidebar { width: 260px; height: 100vh; position: fixed; top: 0; left: 0; background-color: #ffffff; border-right: 1px solid #f1f1f1; z-index: 1000; }
         .main-content { margin-left: 260px; min-height: 100vh; }
         .topbar { height: 80px; background-color: #ffffff; border-bottom: 1px solid #f1f1f1; display: flex; align-items: center; justify-content: space-between; padding: 0 2.5rem; }
-        .nav-link-custom { color: #6c757d; font-weight: 500; padding: 0.8rem 1.5rem; border-radius: 0.5rem; margin: 0.2rem 1rem; transition: all 0.2s; font-size: 0.95rem; }
+        .nav-link-custom { color: #6c757d; font-weight: 500; padding: 0.8rem 1rem; border-radius: 0.5rem; margin: 0.2rem 0.8rem; transition: all 0.2s; font-size: 0.95rem; display: flex; align-items: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .nav-link-custom:hover { background-color: #f8f9fa; color: #2563eb; }
         .nav-link-custom.active { background-color: #2563eb; color: white; }
         .icon-width { width: 25px; text-align: center; }
@@ -44,12 +44,12 @@
 
             <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.rps.gpm.validasi-rps*') ? 'active' : '' }}" 
             href="{{ route('banksoal.rps.gpm.validasi-rps') }}">
-                <i class="fas fa-check-circle icon-width me-2"></i> Validasi RPS
+                <i class="fas fa-check-circle icon-width me-2"></i> Manajemen RPS
             </a>
 
             <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.soal.gpm.validasi-bank-soal*') ? 'active' : '' }}" 
             href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}">
-                <i class="fas fa-question-circle icon-width me-2"></i> Validasi Bank Soal
+                <i class="fas fa-book icon-width me-2"></i> Manajemen Bank Soal
             </a>
 
             <a class="nav-link nav-link-custom {{ request()->routeIs('banksoal.rps.gpm.index*') ? 'active' : '' }}" 
@@ -60,10 +60,17 @@
 
         <div class="mt-auto px-4 border-top pt-4">
             <div class="d-flex align-items-center">
-                <img src="https://ui-avatars.com/api/?name=Prof+Aris&background=f1f5f9&color=334155" class="rounded-circle me-3" width="40" height="40" alt="Profile">
+                <div class="rounded-circle me-3 d-flex justify-content-center align-items-center" style="width: 40px; height: 40px; background-color: #f1f5f9; color: #334155; font-weight: bold; font-size: 0.9rem;">
+                    {{ strtoupper(substr(auth()->user()->name, 0, 2)) }}
+                </div>
                 <div>
-                    <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.9rem;">Prof. Aris S.</h6>
-                    <small class="text-muted" style="font-size: 0.75rem;">Administrator</small>
+                    <h6 class="mb-0 fw-bold text-dark" style="font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 150px;">
+                        {{ auth()->user()->name }}
+                    </h6>
+                    <small class="text-muted" style="font-size: 0.75rem;">
+                        {{-- Menampilkan role GPM atau nama role user dari database --}}
+                        {{ auth()->user()->roles->first()->name ?? 'Dosen GPM' }}
+                    </small>
                 </div>
             </div>
         </div>
@@ -77,14 +84,16 @@
             </div>
             <div class="dropdown">
                 <button class="btn text-white rounded-3 px-4 py-2 fw-semibold" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background-color: #2563eb; font-size: 0.9rem;">
-                    {{ Auth::check() ? Auth::user()->name : 'Prof. Dr. Aris S. (GPM)' }} 
+                    {{ auth()->user()->name }} 
                     <i class="fas fa-chevron-down ms-2" style="font-size: 0.75rem;"></i>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" style="border-radius: 0.5rem; min-width: 200px;">
                     <li>
                         <div class="px-3 py-2">
-                            <span class="d-block fw-bold text-dark" style="font-size: 0.9rem;">{{ Auth::check() ? Auth::user()->name : 'Prof. Dr. Aris S.' }}</span>
-                            <span class="d-block text-muted" style="font-size: 0.8rem;">Administrator / GPM</span>
+                            <span class="d-block fw-bold text-dark" style="font-size: 0.9rem;">{{ auth()->user()->name }}</span>
+                            <span class="d-block text-muted" style="font-size: 0.8rem;">
+                                {{ auth()->user()->roles->first()->name ?? 'Dosen GPM' }}
+                            </span>
                         </div>
                     </li>
                     <li><hr class="dropdown-divider"></li>

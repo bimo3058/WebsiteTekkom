@@ -1,4 +1,4 @@
-<x-banksoal::layouts.master>
+<x-eoffice::layouts.master>
     <div class="flex justify-between items-center">
         <h1>Hello Mahasiswa</h1>
         <form method="POST" action="{{ route('logout') }}">
@@ -27,4 +27,4 @@
             </span>
         </div>
     </div>
-</x-banksoal::layouts.master>
+</x-eoffice::layouts.master>

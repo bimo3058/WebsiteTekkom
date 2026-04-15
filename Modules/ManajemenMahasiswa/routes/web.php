@@ -10,24 +10,48 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
     ->name('manajemenmahasiswa.')
     ->group(function () {
 
-        // Dashboard Utama Modul
-        Route::get('/mahasiswa/dashboard', [DashboardController::class, 'index'])
+        // Dashboard Utama Modul — semua role boleh akses
+        Route::get('/dashboard', [DashboardController::class, 'index'])
             ->name('mahasiswa.dashboard');
+        Route::post('/switch-mode', [DashboardController::class, 'switchMode'])
+            ->name('switch.mode');
 
-        // -------------------------------------------------------------------------
-        // Pengumuman
-        // -------------------------------------------------------------------------
+        // ── Pengurus Himpunan ─────────────────────────────────────────────
+        Route::middleware('role:pengurus_himpunan,admin_kemahasiswaan,superadmin')
+            ->prefix('pengurus')
+            ->name('pengurus.')
+            ->group(function () {
+                Route::get('/dashboard', function () {
+                    return view('manajemenmahasiswa::dashboard.pengurus');
+                })->name('dashboard');
+            });
+
+        // ── Alumni ────────────────────────────────────────────────────────
+        Route::middleware('role:alumni,admin_kemahasiswaan,superadmin')
+            ->prefix('alumni')
+            ->name('alumni.')
+            ->group(function () {
+                Route::get('/dashboard', function () {
+                    return view('manajemenmahasiswa::dashboard.alumni');
+                })->name('dashboard');
+            });
+
+        // ── Pengumuman ────────────────────────────────────────────────────
         Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
-            Route::get('/', [PengumumanController::class , 'index'])->name('index');
-            Route::get('/create', [PengumumanController::class , 'create'])->name('create');
-            Route::post('/', [PengumumanController::class , 'store'])->name('store');
-            Route::get('/{pengumuman}', [PengumumanController::class , 'show'])->name('show');
-            Route::get('/{pengumuman}/edit', [PengumumanController::class , 'edit'])->name('edit');
-            Route::put('/{pengumuman}', [PengumumanController::class , 'update'])->name('update');
-            Route::delete('/{pengumuman}', [PengumumanController::class , 'destroy'])->name('destroy');
 
-            // Custom actions
-            Route::patch('/{pengumuman}/publish', [PengumumanController::class , 'publish'])->name('publish');
-            Route::delete('/{pengumuman}/lampiran/{lampiran}', [PengumumanController::class , 'destroyLampiran'])->name('lampiran.destroy');
+            // View only — semua role boleh
+            Route::get('/', [PengumumanController::class, 'index'])->name('index');
+            Route::get('/{pengumuman}', [PengumumanController::class, 'show'])->name('show');
+
+            // Create/Edit/Delete — hanya pengurus + admin
+            Route::middleware('role:pengurus_himpunan,admin_kemahasiswaan,superadmin')->group(function () {
+                Route::get('/create', [PengumumanController::class, 'create'])->name('create');
+                Route::post('/', [PengumumanController::class, 'store'])->name('store');
+                Route::get('/{pengumuman}/edit', [PengumumanController::class, 'edit'])->name('edit');
+                Route::put('/{pengumuman}', [PengumumanController::class, 'update'])->name('update');
+                Route::delete('/{pengumuman}', [PengumumanController::class, 'destroy'])->name('destroy');
+                Route::patch('/{pengumuman}/publish', [PengumumanController::class, 'publish'])->name('publish');
+                Route::delete('/{pengumuman}/lampiran/{lampiran}', [PengumumanController::class, 'destroyLampiran'])->name('lampiran.destroy');
+            });
         });
     });

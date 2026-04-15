@@ -43,7 +43,9 @@ class PertanyaanService
                 'status' => Pertanyaan::STATUS_DRAFT,
             ]));
 
-            $this->syncJawaban($pertanyaan->id, $jawaban);
+            if (($data['tipe_soal'] ?? 'pilihan_ganda') !== 'essay') {
+                $this->syncJawaban($pertanyaan->id, $jawaban);
+            }
 
             return $pertanyaan->load('jawaban');
         });
@@ -63,7 +65,13 @@ class PertanyaanService
             }
 
             $pertanyaan->update($data);
-            $this->syncJawaban($pertanyaan->id, $jawaban);
+
+            if (($data['tipe_soal'] ?? 'pilihan_ganda') !== 'essay') {
+                $this->syncJawaban($pertanyaan->id, $jawaban);
+            } else {
+                // Hapus jawaban sebelumnya jika tipe diubah menjadi essay
+                Jawaban::where('soal_id', $pertanyaan->id)->delete();
+            }
 
             return $pertanyaan->fresh('jawaban');
         });
@@ -128,7 +136,7 @@ class PertanyaanService
     private function syncJawaban(int $pertanyaanId, array $jawaban): void
     {
         // Validasi: minimal satu jawaban benar
-        $adaBenar = collect($jawaban)->contains(fn($j) => (bool) ($j['is_benar'] ?? false));
+        $adaBenar = collect($jawaban)->contains(fn($j) => filter_var($j['is_benar'] ?? false, FILTER_VALIDATE_BOOLEAN));
 
         if (!$adaBenar) {
             throw new \RuntimeException('Minimal satu pilihan jawaban harus ditandai benar.');
@@ -138,6 +146,8 @@ class PertanyaanService
 
         $rows = array_map(fn($j) => array_merge($j, [
             'soal_id'    => $pertanyaanId,
+            // Postgres membutuhkan literal boolean string 'true' / 'false' untuk raw insert
+            'is_benar'   => filter_var($j['is_benar'], FILTER_VALIDATE_BOOLEAN) ? 'true' : 'false',
             'created_at' => now(),
             'updated_at' => now(),
         ]), $jawaban);
