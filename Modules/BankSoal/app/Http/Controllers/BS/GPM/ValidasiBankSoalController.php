@@ -24,16 +24,18 @@ class ValidasiBankSoalController extends Controller
         return view('banksoal::gpm.validasi-bank-soal', compact('paket_soal', 'counts', 'all_paket_soal'));
     }
 
-    public function review()
+    public function review(Request $request)
     {
-        $soal = $this->validasiService->getSoalReview();
+        $mkId = $request->query('mk_id');
+        $soal = $this->validasiService->getSoalReview($mkId);
 
         if (!$soal) {
-            return redirect()->route('banksoal.soal.gpm.validasi-bank-soal')->with('success', 'Mantap! Semua soal telah selesai divalidasi.');
+            return redirect()->route('banksoal.soal.gpm.validasi-bank-soal')->with('success', 'Mantap! Semua soal pada mata kuliah ini telah selesai divalidasi.');
         }
 
         $opsi_jawaban = $this->validasiService->getOpsiJawaban($soal->id);
-        return view('banksoal::gpm.validasi-bank-soal-review', compact('soal', 'opsi_jawaban'));
+        $review = \Illuminate\Support\Facades\DB::table('bs_review')->where('pertanyaan_id', $soal->id)->orderBy('id', 'desc')->first();
+        return view('banksoal::gpm.validasi-bank-soal-review', compact('soal', 'opsi_jawaban', 'review'));
     }
 
     public function store(Request $request)
@@ -45,8 +47,10 @@ class ValidasiBankSoalController extends Controller
         ]);
 
         $this->validasiService->simpanReview($validated);
+        
+        $mkId = $request->query('mk_id');
 
-        return redirect()->route('banksoal.soal.gpm.validasi-bank-soal.review')->with('success', 'Hasil review berhasil disimpan!');
+        return redirect()->route('banksoal.soal.gpm.validasi-bank-soal.review', ['mk_id' => $mkId])->with('success', 'Hasil review berhasil disimpan!');
     }
 
     public function update(Request $request, $id)

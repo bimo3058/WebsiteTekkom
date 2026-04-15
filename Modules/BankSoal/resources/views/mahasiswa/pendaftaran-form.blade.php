@@ -129,12 +129,13 @@
 
                     <!-- Dosbing 1 -->
                     <div>
-                        <label class="block text-[13px] font-bold text-slate-700 mb-2">Dosen Pembimbing 1</label>
+                        <label class="block text-[13px] font-bold text-slate-700 mb-2">Dosen Pembimbing 1 <span class="text-red-500">*</span></label>
                         <div class="relative">
-                            <select name="dosen_pembimbing_1" class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-[14px] font-medium text-slate-700 focus:border-[#0B66E4] focus:ring-1 focus:ring-[#0B66E4] outline-none transition-all appearance-none cursor-pointer">
+                            <select name="dosen_pembimbing_1_id" required class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-[14px] font-medium text-slate-700 focus:border-[#0B66E4] focus:ring-1 focus:ring-[#0B66E4] outline-none transition-all appearance-none cursor-pointer">
                                 <option value="" disabled selected>Pilih Dosen Pembimbing 1</option>
-                                <option value="1">Prof. Yos Johan Utama</option>
-                                <option value="2">Dr. Iwan Setiawan</option>
+                                @foreach($dosens as $dosen)
+                                    <option value="{{ $dosen->id }}" {{ old('dosen_pembimbing_1_id') == $dosen->id ? 'selected' : '' }}>{{ $dosen->name }}</option>
+                                @endforeach
                             </select>
                             <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-400">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -144,12 +145,13 @@
 
                     <!-- Dosbing 2 -->
                     <div>
-                        <label class="block text-[13px] font-bold text-slate-700 mb-2">Dosen Pembimbing 2</label>
+                        <label class="block text-[13px] font-bold text-slate-700 mb-2">Dosen Pembimbing 2 <span class="text-xs font-normal text-slate-400">(Opsional)</span></label>
                         <div class="relative">
-                            <select name="dosen_pembimbing_2" class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-[14px] font-medium text-slate-700 focus:border-[#0B66E4] focus:ring-1 focus:ring-[#0B66E4] outline-none transition-all appearance-none cursor-pointer">
-                                <option value="" disabled selected>Pilih Dosen Pembimbing 2</option>
-                                <option value="3">Dr. Adian Fatchur Rochim</option>
-                                <option value="4">Ir. Kurniawan Teguh Martono</option>
+                            <select name="dosen_pembimbing_2_id" class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-[14px] font-medium text-slate-700 focus:border-[#0B66E4] focus:ring-1 focus:ring-[#0B66E4] outline-none transition-all appearance-none cursor-pointer">
+                                <option value="" selected>Tidak Ada / Pilih Dosen Pembimbing 2</option>
+                                @foreach($dosens as $dosen)
+                                    <option value="{{ $dosen->id }}" {{ old('dosen_pembimbing_2_id') == $dosen->id ? 'selected' : '' }}>{{ $dosen->name }}</option>
+                                @endforeach
                             </select>
                             <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-400">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>

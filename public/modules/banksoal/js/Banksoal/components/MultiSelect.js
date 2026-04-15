@@ -39,9 +39,35 @@ class MultiSelect {
             if (e.target.classList.contains("ms-badge-clear")) return;
             this._toggle();
         });
+
         document.addEventListener("click", (e) => {
             if (!this.wrapper.contains(e.target)) this._close();
         });
+
+        this._handleViewportChange = (event) => {
+            if (!this.open) return;
+
+            const target = event?.target;
+            const isInsideDropdownPanel =
+                target instanceof Element &&
+                (target.closest(".ms-dropdown") ||
+                    target.closest(".ms-option-list"));
+
+            const isInternalScroll =
+                target &&
+                target !== window &&
+                target !== document &&
+                (this.wrapper.contains(target) || isInsideDropdownPanel);
+
+            if (isInternalScroll) return;
+            this._close();
+        };
+
+        // Tutup dropdown saat halaman/container di-scroll agar tidak ikut terbawa.
+        window.addEventListener("scroll", this._handleViewportChange, true);
+
+        // Tutup dropdown saat ukuran viewport berubah.
+        window.addEventListener("resize", this._handleViewportChange);
     }
 
     // Membuka atau menutup dropdown.
@@ -297,12 +323,16 @@ class MultiSelect {
     }
 
     setItems(items, readyPlaceholder) {
-        this.items = items.map((i) => ({ ...i, selected: false }));
+        this.items = items.map((i) => ({
+            ...i,
+            selected: Boolean(i.selected),
+        }));
         this.placeholder = readyPlaceholder || this.placeholder;
         this.disabled = false;
         this._forceClose();
         this.trigger.classList.remove("disabled");
         this._renderTrigger();
+        this._syncHidden();
     }
 
     setLoading(msg = "Memuat…") {
