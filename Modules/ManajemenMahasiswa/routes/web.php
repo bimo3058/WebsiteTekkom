@@ -10,11 +10,13 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
     ->name('manajemenmahasiswa.')
     ->group(function () {
 
-        // Dashboard Utama Modul — semua role boleh akses
+        // Dashboard Utama Modul — semua role boleh akses, renderDashboard() menentukan view sesuai role
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->name('mahasiswa.dashboard');
-        Route::post('/switch-mode', [DashboardController::class, 'switchMode'])
-            ->name('switch.mode');
+
+        // Switch tampilan dashboard antar-role (untuk user multi-role)
+        Route::post('/dashboard/switch-mode', [DashboardController::class, 'switchMode'])
+            ->name('dashboard.switch-mode');
 
         // ── Pengurus Himpunan ─────────────────────────────────────────────
         Route::middleware('role:pengurus_himpunan,admin_kemahasiswaan,superadmin')
