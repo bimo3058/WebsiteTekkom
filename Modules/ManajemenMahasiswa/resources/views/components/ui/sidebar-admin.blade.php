@@ -4,12 +4,34 @@
 
     <div class="menu-title">Main Menu</div>
 
-    <x-sidebar-item route="dashboard" icon="📊" label="Dashboard Analitik" />
-    <x-sidebar-item route="pengumuman" icon="📢" label="Pengumuman" />
-    <x-sidebar-item route="direktori" icon="👥" label="Direktori Mahasiswa" />
-    <x-sidebar-item route="kegiatan" icon="📅" label="Kegiatan" />
-    <x-sidebar-item route="forum" icon="💬" label="Forum Diskusi" />
-    <x-sidebar-item route="pengaduan" icon="📞" label="Layanan Pengaduan" />
+    <nav class="sidebar-nav">
+        <x-manajemenmahasiswa::ui.sidebar-item
+            route="{{ route('manajemenmahasiswa.mahasiswa.dashboard') }}"
+            routeName="manajemenmahasiswa.mahasiswa.dashboard"
+            icon="📊" label="Dashboard Analitik" />
+
+        <x-manajemenmahasiswa::ui.sidebar-item
+            route="{{ route('manajemenmahasiswa.pengumuman.index') }}"
+            routeName="manajemenmahasiswa.pengumuman"
+            icon="📢" label="Pengumuman" />
+
+        <x-manajemenmahasiswa::ui.sidebar-item
+            route="#"
+            icon="👥" label="Direktori Mahasiswa" />
+
+        <x-manajemenmahasiswa::ui.sidebar-item
+            route="#"
+            icon="📅" label="Kegiatan" />
+
+        <x-manajemenmahasiswa::ui.sidebar-item
+            route="{{ route('manajemenmahasiswa.forum.index') }}"
+            routeName="manajemenmahasiswa.forum"
+            icon="💬" label="Forum Diskusi" />
+
+        <x-manajemenmahasiswa::ui.sidebar-item
+            route="#"
+            icon="📞" label="Layanan Pengaduan" />
+    </nav>
 
     <div class="bottom-menu">
         <x-sidebar-item route="settings" icon="⚙️" label="Settings" />
