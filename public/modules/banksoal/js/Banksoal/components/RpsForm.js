@@ -9,6 +9,7 @@ class RpsFormComponent {
             fileInputId: "fileInput",
             uploadZoneId: "uploadZone",
             formSelector: "form",
+            maxFileSizeBytes: 1024 * 1024,
             ...config,
         };
 
@@ -16,6 +17,10 @@ class RpsFormComponent {
         this.fileInput = document.getElementById(this.config.fileInputId);
         this.uploadZone = document.getElementById(this.config.uploadZoneId);
         this.form = document.querySelector(this.config.formSelector);
+        this.uploadText = document.getElementById("uploadText");
+        this.defaultUploadText =
+            this.uploadText?.textContent?.trim() ||
+            "Klik untuk unggah atau seret file ke sini";
 
         // Instance MultiSelect akan diisi saat init dipanggil.
         this.dosenMs = null;
@@ -62,20 +67,47 @@ class RpsFormComponent {
         this.cplMs.setLoading("Memuat CPL…");
         this.cpmkMs.setDisabled("Pilih CPL terlebih dahulu");
 
-        // Ambil data dosen sesuai mata kuliah yang dipilih.
-        this._fetchDosen();
+        // Arsip logika lama:
+        // this._fetchDosen();
+
+        // Ambil data dosen berdasarkan assignment pada mata kuliah terpilih.
+        this._fetchDosenByMk(mkId);
 
         // Ambil data CPL sesuai mata kuliah yang dipilih.
         this._fetchCpl(mkId);
     }
 
-    // Mengambil daftar dosen untuk pilihan dosen pengampu.
-    _fetchDosen() {
+    // Mengambil daftar dosen berdasarkan assignment di mata kuliah terpilih.
+    _fetchDosenByMk(mkId) {
         const url =
             document.querySelector("[data-route-dosen]")?.dataset.routeDosen ||
             "/bank-soal/rps/dosen/dosen";
 
-        fetch(url)
+        // Arsip logika lama:
+        // fetch(url)
+        //     .then((r) => {
+        //         if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        //         return r.json();
+        //     })
+        //     .then((data) => {
+        //         if (data?.length) {
+        //             this.dosenMs.setItems(
+        //                 data.map((d) => ({ id: d.id, label: d.name })),
+        //                 "Pilih dosen",
+        //             );
+        //         } else {
+        //             this.dosenMs.setDisabled("Tidak ada dosen terdaftar");
+        //         }
+        //     })
+        //     .catch((err) => {
+        //         console.error("Error fetching dosen:", err);
+        //         this.dosenMs.setDisabled("Error loading dosen");
+        //         Snackbar?.show?.("Gagal memuat dosen", "error");
+        //     });
+
+        const fetchUrl = `${url}?mk_id=${encodeURIComponent(String(mkId))}`;
+
+        fetch(fetchUrl)
             .then((r) => {
                 if (!r.ok) throw new Error(`HTTP ${r.status}`);
                 return r.json();
@@ -83,11 +115,17 @@ class RpsFormComponent {
             .then((data) => {
                 if (data?.length) {
                     this.dosenMs.setItems(
-                        data.map((d) => ({ id: d.id, label: d.name })),
+                        data.map((d) => ({
+                            id: d.id,
+                            label: d.name,
+                            selected: Boolean(d.selected),
+                        })),
                         "Pilih dosen",
                     );
                 } else {
-                    this.dosenMs.setDisabled("Tidak ada dosen terdaftar");
+                    this.dosenMs.setDisabled(
+                        "Tidak ada dosen pengampu lain ter-assign",
+                    );
                 }
             })
             .catch((err) => {
@@ -187,20 +225,74 @@ class RpsFormComponent {
             this.uploadZone.style.borderColor = "#d1d5db";
             this.uploadZone.style.backgroundColor = "#fff";
             this.fileInput.files = e.dataTransfer.files;
-            this._updateFileName();
+            this._handleSelectedFile();
         });
 
-        this.fileInput.addEventListener("change", () => this._updateFileName());
+        this.fileInput.addEventListener("change", () =>
+            this._handleSelectedFile(),
+        );
+    }
+
+    // Memvalidasi file yang dipilih lalu memperbarui label unggahan.
+    _handleSelectedFile() {
+        if (!this.fileInput?.files?.length) {
+            this._setUploadText(this.defaultUploadText);
+            return;
+        }
+
+        const file = this.fileInput.files[0];
+        const fileError = this._validateSingleFile(file);
+
+        if (fileError) {
+            this._resetSelectedFile();
+            Snackbar?.show?.(fileError, "error");
+            return;
+        }
+
+        this._setUploadText(file.name);
     }
 
     // Menampilkan nama file yang dipilih di area unggah.
     _updateFileName() {
         if (this.fileInput.files?.length) {
-            const uploadText = document.getElementById("uploadText");
-            if (uploadText) {
-                uploadText.textContent = this.fileInput.files[0].name;
-            }
+            this._setUploadText(this.fileInput.files[0].name);
         }
+    }
+
+    // Memperbarui teks pada label upload.
+    _setUploadText(text) {
+        if (this.uploadText) {
+            this.uploadText.textContent = text;
+        }
+    }
+
+    // Mengosongkan file input lalu mengembalikan teks default upload.
+    _resetSelectedFile() {
+        if (this.fileInput) {
+            this.fileInput.value = "";
+        }
+        this._setUploadText(this.defaultUploadText);
+    }
+
+    // Memvalidasi tipe dan ukuran satu file.
+    _validateSingleFile(file) {
+        if (!file) {
+            return "File RPS harus diunggah";
+        }
+
+        const fileName = (file.name || "").toLowerCase();
+        const isPdfByName = fileName.endsWith(".pdf");
+        const isPdfByType = file.type === "application/pdf";
+
+        if (!isPdfByName && !isPdfByType) {
+            return "Hanya menerima file berformat PDF";
+        }
+
+        if (file.size > this.config.maxFileSizeBytes) {
+            return "Ukuran file maksimal 1MB";
+        }
+
+        return null;
     }
 
     // Menjalankan validasi sebelum form dikirim.
@@ -232,6 +324,11 @@ class RpsFormComponent {
         }
         if (!this.fileInput?.files?.length) {
             errors.push("File RPS harus diunggah");
+        } else {
+            const fileError = this._validateSingleFile(this.fileInput.files[0]);
+            if (fileError) {
+                errors.push(fileError);
+            }
         }
 
         return errors;

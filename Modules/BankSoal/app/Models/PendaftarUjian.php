@@ -40,4 +40,14 @@ class PendaftarUjian extends Model
     {
         return $this->belongsTo(JadwalUjian::class, 'jadwal_ujian_id');
     }
+
+    public function dosenPembimbing1()
+    {
+        return $this->belongsTo(User::class, 'dosen_pembimbing_1_id');
+    }
+
+    public function dosenPembimbing2()
+    {
+        return $this->belongsTo(User::class, 'dosen_pembimbing_2_id');
+    }
 }

@@ -44,7 +44,8 @@ class RpsController extends Controller
                 $query->where('users.id', $user->id);
             })
             ->orderBy('created_at', 'desc')
-            ->get();
+            ->paginate(4)
+            ->withQueryString();
 
         $currentYear  = (int) now()->format('Y');
         $tahunAjarans = [
@@ -116,7 +117,7 @@ class RpsController extends Controller
             }
         }
 
-        $rpsUploaded = $riwayat->isNotEmpty();
+        $rpsUploaded = $riwayat->total() > 0;
 
         return view('banksoal::pages.rps.dosen.index', compact(
             'mataKuliahs',
@@ -307,41 +308,48 @@ class RpsController extends Controller
     }
 
 
-    public function getDosenByMk(): JsonResponse
+    public function getDosenByMk(Request $request): JsonResponse
     {
         try {
-            $query = User::whereHas('roles', function ($q) {
-                $q->whereRaw('LOWER(name) = ?', ['dosen']);
-            })
-                ->where('id', '!=', Auth::id())  // Exclude user yang sedang login
-                ->with('roles');
+            $mkId = (int) $request->query('mk_id', 0);
 
-            // DEBUG: Log SQL query dan hasil
-            \Log::info('getDosenByMk Query', [
-                'sql' => $query->toSql(),
-                'bindings' => $query->getBindings(),
-            ]);
+            $assignedUserIds = collect();
+            if ($mkId > 0) {
+                $assignedUserIds = DB::table('bs_dosen_pengampu_mk')
+                    ->where('mk_id', $mkId)
+                    ->pluck('user_id')
+                    ->map(fn ($id) => (int) $id);
+            }
 
-            $dosenList = $query->get();
+            // Arsip logika lama:
+            // $query = User::whereHas('roles', function ($q) {
+            //     $q->whereRaw('LOWER(name) = ?', ['dosen']);
+            // })
+            //     ->where('id', '!=', Auth::id())
+            //     ->with('roles');
+            // $dosenList = $query->get();
 
-            // DEBUG: Log hasil dan roles dari setiap user
-            $dosenList->each(function ($user) {
-                \Log::info('User Found', [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                    'email' => $user->email,
-                    'roles' => $user->roles->pluck('name')->toArray(),
-                ]);
-            });
+            $dosenList = User::whereHas('roles', function ($q) {
+                    $q->whereRaw('LOWER(name) = ?', ['dosen']);
+                })
+                ->where('id', '!=', Auth::id())
+                ->orderBy('name')
+                ->get()
+                ->map(function ($user) use ($assignedUserIds) {
+                    $isAssigned = $assignedUserIds->contains((int) $user->id);
 
-            return response()->json($dosenList->map(function ($user) {
-                return [
-                    'id' => $user->id,
-                    'name' => $user->name,
-                ];
-            }));
+                    return [
+                        'id' => $user->id,
+                        'name' => $user->name,
+                        'selected' => $isAssigned,
+                    ];
+                })
+                ->sortByDesc('selected')
+                ->values();
+
+            return response()->json($dosenList);
         } catch (\Exception $e) {
-            \Log::error('getDosenByMk Error', [
+            Log::error('getDosenByMk Error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);

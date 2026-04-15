@@ -62,7 +62,12 @@
 
         <!-- File Upload -->
         <div class="form-group">
-            <label class="form-label form-label-required">Dokumen RPS</label>
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+                <label class="form-label form-label-required">Dokumen RPS</label>
+                <a href="{{ route('rps.template.download') }}" target="_blank" style="color: #2563eb; text-decoration: none; font-size: 0.875rem; display: flex; align-items: center; gap: 0.25rem;" title="Download template RPS">
+                    <i class="fas fa-download"></i> Download Template
+                </a>
+            </div>
             <label class="upload-zone {{ !$isUploadOpen ? 'upload-zone-closed' : '' }}" id="uploadZone">
                 <input type="file" name="dokumen" accept=".pdf" id="fileInput" required {{ !$isUploadOpen ? 'disabled' : '' }}>
                 <i class="fas fa-cloud-upload-alt {{ !$isUploadOpen ? 'upload-icon-closed' : '' }}" id="uploadIcon"></i>

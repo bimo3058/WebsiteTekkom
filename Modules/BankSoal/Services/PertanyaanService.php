@@ -43,7 +43,9 @@ class PertanyaanService
                 'status' => Pertanyaan::STATUS_DRAFT,
             ]));
 
-            $this->syncJawaban($pertanyaan->id, $jawaban);
+            if (($data['tipe_soal'] ?? 'pilihan_ganda') !== 'essay') {
+                $this->syncJawaban($pertanyaan->id, $jawaban);
+            }
 
             return $pertanyaan->load('jawaban');
         });
@@ -63,7 +65,13 @@ class PertanyaanService
             }
 
             $pertanyaan->update($data);
-            $this->syncJawaban($pertanyaan->id, $jawaban);
+
+            if (($data['tipe_soal'] ?? 'pilihan_ganda') !== 'essay') {
+                $this->syncJawaban($pertanyaan->id, $jawaban);
+            } else {
+                // Hapus jawaban sebelumnya jika tipe diubah menjadi essay
+                Jawaban::where('soal_id', $pertanyaan->id)->delete();
+            }
 
             return $pertanyaan->fresh('jawaban');
         });
