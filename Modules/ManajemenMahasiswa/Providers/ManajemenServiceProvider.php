@@ -12,7 +12,7 @@ use Modules\ManajemenMahasiswa\Services\PengurusHimaskomService;
 use Modules\ManajemenMahasiswa\Services\PengumumanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
 
-class ManajemenMahasiswaServiceProvider extends ServiceProvider
+class ManajemenServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
