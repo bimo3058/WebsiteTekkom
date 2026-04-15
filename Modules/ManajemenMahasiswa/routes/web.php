@@ -3,7 +3,8 @@
 use Illuminate\Support\Facades\Route;
 use Modules\ManajemenMahasiswa\Http\Controllers\DashboardController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PengumumanController;
-use Modules\ManajemenMahasiswa\Models\KemahasiswaanController;
+use Modules\ManajemenMahasiswa\Http\Controllers\KemahasiswaanController;
+use Modules\ManajemenMahasiswa\Http\Controllers\ForumController;
 
 Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
     ->prefix('manajemen-mahasiswa')
@@ -62,5 +63,12 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 Route::patch('/{pengumuman}/publish', [PengumumanController::class, 'publish'])->name('publish');
                 Route::delete('/{pengumuman}/lampiran/{lampiran}', [PengumumanController::class, 'removeLampiran'])->name('lampiran.remove');
             });
+        });
+
+        // ── Forum Diskusi ──────────────────────────────────────────────────
+        Route::prefix('forum')->name('forum.')->group(function () {
+            Route::get('/', [ForumController::class, 'index'])->name('index');
+            Route::get('/create', [ForumController::class, 'create'])->name('create');
+            Route::get('/{id}', [ForumController::class, 'show'])->name('show');
         });
     });
