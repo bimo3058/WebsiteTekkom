@@ -73,22 +73,25 @@ class RpsController extends Controller
         $daysLeft = 0;
         
         if ($activePeriode) {
-            $now   = now('Asia/Jakarta');
+            $now   = \Carbon\Carbon::now('Asia/Jakarta');
+            $deadline = $activePeriode->tanggal_selesai->timezone('Asia/Jakarta');
             $start = $activePeriode->tanggal_mulai->timezone('Asia/Jakarta')->startOfDay();
-            $end   = $activePeriode->tanggal_selesai->timezone('Asia/Jakarta')->endOfDay();
+            $end = $deadline->endOfDay();
 
             // Cek apakah sekarang dalam rentang periode aktif
             if ($now->between($start, $end)) {
                 $isUploadOpen = true;
                 
                 // Cek H-7 Reminder - hitung sisa waktu
-                $deadlineDate = $activePeriode->tanggal_selesai->startOfDay();
-                $todayDate = $now->startOfDay();
+                $deadlineDate = $deadline->copy()->startOfDay();
+                $todayDate = $now->copy()->startOfDay();
                 
                 // Jika deadline adalah hari yang sama dengan hari ini
                 if ($deadlineDate->isSameDay($todayDate)) {
-                    // Hitung sisa jam
-                    $hoursLeft = (int) $now->diffInHours($activePeriode->tanggal_selesai->endOfDay(), false);
+                    // Hitung sisa jam dari sekarang sampai akhir hari deadline
+                    $endOfDay = $deadline->endOfDay();
+                    $hoursLeft = (int) $now->diffInHours($endOfDay);
+                    
                     if ($hoursLeft > 0) {
                         $tenggatH7 = true;
                         $daysLeft = $hoursLeft; // Simpan sebagai jam
