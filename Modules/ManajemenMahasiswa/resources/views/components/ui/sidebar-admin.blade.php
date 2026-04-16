@@ -5,41 +5,28 @@
     <div class="menu-title">Main Menu</div>
 
     <nav class="sidebar-nav">
-        <x-manajemenmahasiswa::ui.sidebar-item
-            route="{{ route('manajemenmahasiswa.mahasiswa.dashboard') }}"
-            routeName="manajemenmahasiswa.mahasiswa.dashboard"
-            icon="📊" label="Dashboard Analitik" />
+        <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.mahasiswa.dashboard') }}"
+            routeName="manajemenmahasiswa.mahasiswa.dashboard" icon="📊" label="Dashboard Analitik" />
 
-        <x-manajemenmahasiswa::ui.sidebar-item
-            route="{{ route('manajemenmahasiswa.pengumuman.index') }}"
-            routeName="manajemenmahasiswa.pengumuman"
-            icon="📢" label="Pengumuman" />
+        <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengumuman.index') }}"
+            routeName="manajemenmahasiswa.pengumuman" icon="📢" label="Pengumuman" />
 
-        <x-manajemenmahasiswa::ui.sidebar-item
-            route="#"
-            icon="👥" label="Direktori Mahasiswa" />
+        <x-manajemenmahasiswa::ui.sidebar-item route="#" icon="👥" label="Direktori Mahasiswa" />
 
-        <x-manajemenmahasiswa::ui.sidebar-item
-            route="#"
-            icon="📅" label="Kegiatan" />
+        <x-manajemenmahasiswa::ui.sidebar-item route="#" icon="📅" label="Kegiatan" />
 
-        <x-manajemenmahasiswa::ui.sidebar-item
-            route="{{ route('manajemenmahasiswa.forum.index') }}"
-            routeName="manajemenmahasiswa.forum"
-            icon="💬" label="Forum Diskusi" />
+        <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.forum.index') }}"  routeName="manaje
+ m          enma hasiswa.forum" icon="💬" label="Forum Diskusi" />
 
-        <x-manajemenmahasiswa::ui.sidebar-item
-            route="#"
-            icon="📞" label="Layanan Pengaduan" />
+        <x-manajemenmahasiswa::ui.sidebar-item route="#" icon="📞" label="Layanan Pengaduan" />
     </nav>
 
     <div class="bottom-menu">
-        <x-sidebar-item route="settings" icon="⚙️" label="Settings" />
+        <x-manajemenmahasiswa::ui.sidebar-item route="#" icon="⚙️" label="Settings" />
         <a href="#">🆘 Help & Center</a>
 
         <form action="{{ route('logout') }}" method="POST">
-            @csrf
-            <button class="btn btn-link text-danger p-0 mt-2">🚪 Logout</button>
-        </form>
+  @csrf      <button class="btn btn-link text-danger p-0 mt-2">🚪 Logout</button>
+            </form>
     </div>
-</div>
+    </div>
