@@ -26,7 +26,6 @@ package-lock.json
 boost.json
 composer.json
 Modules/BankSoal/node_modules
-database/migrations/
 /bootstrap/*
 composer.json
 composer.lock

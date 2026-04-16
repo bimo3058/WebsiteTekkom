@@ -8,47 +8,71 @@ use Symfony\Component\HttpFoundation\Response;
 
 class RedirectBasedOnRole
 {
+    private array $excludedPaths = [
+        'telescope', 'telescope/*', 'vendor/telescope/*',
+        'pulse*',
+        'profile*',
+        'logout',
+        'sso/password',
+        'sso/verify',
+    ];
+
+    // Role yang diarahkan ke dashboard global
+    private array $generalRoles = [
+        'mahasiswa',
+        'dosen',
+        'gpm',
+        'pengurus_himpunan', // ← tambah
+        'alumni',            // ← tambah
+    ];
+
     public function handle(Request $request, Closure $next): Response
     {
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return $next($request);
         }
 
-        // ✅ PENTING: Check & redirect TERLEBIH DAHULU
-        // Sebelum route middleware check permissions
-        
-        // Jika user bukan SUPERADMIN tapi coba akses /superadmin/*
-        if ($request->path() === 'dashboard' || $request->path() === '/') {
-            return $this->redirectBasedOnRole(auth()->user());
+        $user = auth()->user();
+
+        if ($user->isSuspended()) {
+            return $next($request);
         }
 
-        // Jika user coba akses /superadmin tapi bukan superadmin
-        if (str_starts_with($request->path(), 'superadmin') && 
-            !auth()->user()->hasRole('SUPERADMIN')) {
-            return $this->redirectBasedOnRole(auth()->user());
+        foreach ($this->excludedPaths as $path) {
+            if ($request->is($path)) {
+                return $next($request);
+            }
         }
 
-        return $next($request);
-    }
+        $roleNames = $user->getCachedRoles()->pluck('name')->map(fn($r) => strtolower($r));
 
-    private function redirectBasedOnRole($user)
-    {
-        if ($user->roles()->whereIn('name', ['SUPERADMIN', 'superadmin'])->exists()) {
+        // 1. Superadmin — lock ke area /superadmin
+        if ($roleNames->contains('superadmin') && $request->is('dashboard')) {
             return redirect()->route('superadmin.dashboard');
         }
 
-        if ($user->roles()->whereIn('name', ['ADMIN', 'admin'])->exists()) {
-            return redirect()->route('admin.dashboard'); // sesuaikan kalau nanti ada route admin tersendiri
+        // 2. Admin modul — lock ke prefix modul masing-masing
+        $adminModuleRoles = [
+            'admin_banksoal'      => ['route' => 'banksoal.dashboard',                     'prefix' => 'bank-soal*'],
+            'admin_capstone'      => ['route' => 'capstone.dashboard',                     'prefix' => 'capstone*'],
+            'admin_eoffice'       => ['route' => 'eoffice.dashboard',                      'prefix' => 'eoffice*'],
+            'admin_kemahasiswaan' => ['route' => 'manajemenmahasiswa.mahasiswa.dashboard', 'prefix' => 'manajemen-mahasiswa*'],
+        ];
+
+        foreach ($adminModuleRoles as $role => $config) {
+            if ($roleNames->contains($role)) {
+                if (! $request->is($config['prefix'])) {
+                    return redirect()->route($config['route']);
+                }
+                return $next($request);
+            }
         }
 
-        if ($user->roles()->whereIn('name', ['DOSEN', 'dosen'])->exists()) {
-            return redirect()->route('banksoal.dashboard');
+        // 3. User umum — redirect root ke dashboard global
+        if ($request->is('/') && $roleNames->intersect($this->generalRoles)->isNotEmpty()) {
+            return redirect()->route('dashboard');
         }
 
-        if ($user->roles()->whereIn('name', ['MAHASISWA', 'mahasiswa'])->exists()) {
-            return redirect()->route('mahasiswa.dashboard');
-        }
-
-        return redirect()->route('dashboard');
+        return $next($request);
     }
 }

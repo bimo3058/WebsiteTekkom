@@ -24,10 +24,10 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             ->prefix('pengurus')
             ->name('pengurus.')
             ->group(function () {
-            Route::get('/dashboard', function () {
-                return view('manajemenmahasiswa::dashboard.pengurus');
-            })->name('dashboard');
-        });
+                Route::get('/dashboard', function () {
+                    return view('manajemenmahasiswa::dashboard.pengurus');
+                })->name('dashboard');
+            });
 
         // ── Alumni ────────────────────────────────────────────────────────
         Route::middleware('role:alumni,admin_kemahasiswaan,superadmin')

@@ -16,18 +16,19 @@ class DashboardController extends Controller
         }
 
         $isMahasiswa = $user->hasRole('mahasiswa');
-        $isDosen     = $user->hasRole('dosen') && !$user->hasRole('gpm');
+        $isDosen     = $user->hasRole('dosen');
+        // $isDosen     = $user->hasRole('dosen') && !$user->hasRole('gpm');
 
         $cards = [
             [
                 'icon'        => $isMahasiswa ? 'quiz' : ($isDosen ? 'description' : 'menu_book'),
-                'title'       => $isMahasiswa ? 'Ujian Komprehensif' : ($isDosen ? 'RPS' : 'Bank Soal'),
+                'title'       => $isMahasiswa ? 'Ujian Komprehensif' : ($isDosen ? 'Manajemen RPS / Bank Soal' : 'Bank Soal'),
                 'description' => $isMahasiswa
                     ? 'Ikuti ujian komprehensif online.'
                     : ($isDosen
                         ? 'Buat dan kelola RPS mata kuliah.'
                         : 'Kelola soal, RPS, dan kompre.'),
-                'route'       => 'banksoal.dashboard',
+                'route'       => $isMahasiswa ? 'komprehensif.mahasiswa.dashboard' : 'banksoal.dashboard',
                 'color'       => 'blue',
             ],
             [
@@ -41,11 +42,11 @@ class DashboardController extends Controller
             ],
             [
                 'icon'        => 'groups',
-                'title'       => $isMahasiswa ? 'Kemahasiswaan' : 'Manajemen Mahasiswa',
+                'title'       => $isMahasiswa ? 'Forum Mahasiswa' : 'Manajemen Mahasiswa',
                 'description' => $isMahasiswa
                     ? 'Kegiatan, prestasi, dan forum mahasiswa.'
                     : 'Kegiatan, alumni, dan forum mahasiswa.',
-                'route'       => 'mahasiswa.dashboard',
+                'route'       => 'manajemenmahasiswa.mahasiswa.dashboard',
                 'color'       => 'green',
             ],
             [

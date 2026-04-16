@@ -8,6 +8,19 @@ use Illuminate\Support\Facades\Route;
 
 Route::redirect('/', '/login');
 
+Route::get('/error/{code}', function ($code) {
+    if (!session('from_exception')) {
+        return redirect('/');
+    }
+
+    return view("errors.{$code}");
+})->name('error.page')->where('code', '400|401|403|404|419|429|500|503');
+
+Route::middleware('web')->group(function () {
+    Route::get('/sso/password',  [MicrosoftController::class, 'showPasswordForm'])->name('sso.password');
+    Route::post('/sso/password', [MicrosoftController::class, 'verifyPassword'])->name('sso.verify');
+});
+
 Route::middleware('guest')->group(function () {
 
     Route::get('/login', function () {
@@ -30,8 +43,36 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/users', [SuperAdminController::class, 'users'])
             ->name('users.index');
-
+        Route::get('/permissions/category/{category}', [SuperAdminController::class, 'usersByCategory'])
+            ->name('permissions.category');
+        Route::get('/import-status/{id}', [SuperAdminController::class, 'getImportStatus'])
+            ->name('import.status');
+        Route::get('/modules', [SuperAdminController::class, 'modules'])->name('modules');
+        Route::get('/permissions', [SuperAdminController::class, 'permissions'])
+            ->name('permissions');
+        Route::post('/permissions/repair-all', [SuperAdminController::class, 'repairAllPermissions'])
+            ->name('permissions.repair-all');
+        Route::post('/modules/{slug}/settings', [SuperAdminController::class, 'updateModuleSettings'])->name('modules.settings');
+        Route::post('/modules/{slug}/purge-cache', [SuperAdminController::class, 'purgeModuleCache'])->name('modules.purge-cache');
+        Route::post('/modules/{slug}/toggle', [SuperAdminController::class, 'toggleModule'])->name('modules.toggle');
+        Route::post('/modules/{slug}/update-config', [SuperAdminController::class, 'updateConfig'])->name('modules.update-config');
+        Route::post('/users/{user}/update-permissions', [SuperAdminController::class, 'updatePermissions'])
+            ->name('users.update-permissions');
+        Route::patch('/users/{user}/update',       [SuperAdminController::class, 'updateUser'])
+            ->name('users.update');
+        Route::post('/users/{user}/force-logout',  [SuperAdminController::class, 'forceLogout'])
+            ->name('users.force-logout');
+        Route::post('/users/{user}/suspend',       [SuperAdminController::class, 'suspend'])
+            ->name('users.suspend');
+        Route::post('/users/{user}/unsuspend',     [SuperAdminController::class, 'unsuspend'])
+            ->name('users.unsuspend');
         // Tambah user baru
+        Route::post('/users/bulk-import', [SuperAdminController::class, 'bulkImport'])->name('users.bulkImport');
+        Route::post('/import-status/{id}/cancel', [SuperAdminController::class, 'cancelImport'])->name('import.cancel');
+        Route::post('/clear-import-session', function() {
+            session()->forget('import_id');
+            return response()->json(['success' => true]);
+        })->name('clear-import-session');
         Route::post('/users', [SuperAdminController::class, 'storeUser'])
             ->name('users.store');
 
@@ -41,6 +82,8 @@ Route::middleware('auth')->group(function () {
         Route::delete('/storage/delete', [SuperAdminController::class, 'testDelete'])
             ->name('storage.delete');
 
+        Route::post('/bust-stats-cache', [SuperAdminController::class, 'bustStatsCache'])
+            ->name('bust-stats-cache'); 
         // Update role user (ganti dari POST ke PATCH, nama route tetap bisa dipakai keduanya)
         Route::post('/users/{user}/update-role', [SuperAdminController::class, 'updateRole'])
             ->name('users.update-role');
@@ -48,25 +91,38 @@ Route::middleware('auth')->group(function () {
             ->name('users.update-roles');       
 
         // Hapus user (soft-delete)
+        Route::delete('/users/bulk-destroy', [SuperAdminController::class, 'bulkDestroy'])->name('users.bulk-destroy');
         Route::delete('/users/{user}', [SuperAdminController::class, 'destroyUser'])
             ->name('users.destroy');
+        Route::delete('/users/{user}/destroy', [SuperAdminController::class, 'destroyUser'])->name('users.destroy');
 
         Route::get('/modules', [SuperAdminController::class, 'modules'])
             ->name('modules');
 
-        Route::get('/audit-logs', [SuperAdminController::class, 'auditLogs'])
+        Route::get('audit-logs/audit-logs', [SuperAdminController::class, 'auditLogs'])
             ->name('audit-logs');
 
-        Route::get('/audit-logs/table', [SuperAdminController::class, 'auditLogsTable'])
+        Route::get('audit-logs/audit-logs/table', [SuperAdminController::class, 'auditLogsTable'])
             ->name('audit-logs.table');
+
+        Route::delete('/audit-logs/bulk-destroy', [SuperAdminController::class, 'bulkDeleteAuditLogs'])
+            ->name('audit-logs.bulk-destroy');
     });
 
     // Global dashboard — pakai DashboardController
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::post('/profile/avatar', [ProfileController::class, 'updateAvatar'])->name('profile.avatar.update');
+    Route::delete('/profile/avatar', [ProfileController::class, 'destroyAvatar'])->name('profile.avatar.destroy');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::get('/users/online', [\App\Http\Controllers\SuperAdminController::class, 'onlineUsers'])->name('superadmin.users.online');
+    Route::get('/users/suspended', [\App\Http\Controllers\SuperAdminController::class, 'suspendedUsers'])->name('superadmin.users.suspended');
+
+    Route::post('/audit-logs/bulk-delete', [App\Http\Controllers\SuperAdminController::class, 'bulkDeleteAuditLogs'])
+    ->name('superadmin.audit-logs.bulk-delete');
 
     Route::post('/logout', function () {
         $user = auth()->user();

@@ -20,21 +20,6 @@ return new class extends Migration
             $table->enum('kesulitan_now',['easy','intermediate','advanced']);
             $table->boolean('is_benar_now');
             $table->timestamps();
-
-            $table->foreign('kompre_session_id')
-                ->references('id')->on('bs_kompre_session')
-                ->cascadeOnUpdate()
-                ->cascadeOnDelete();
-
-            $table->foreign('pertanyaan_id')
-                ->references('id')->on('bs_pertanyaan')
-                ->cascadeOnUpdate()
-                ->cascadeOnDelete();
-
-            $table->foreign('jawaban_dipilih')
-                ->references('id')->on('bs_jawaban')
-                ->cascadeOnUpdate()
-                ->cascadeOnDelete();
         });
     }
 
