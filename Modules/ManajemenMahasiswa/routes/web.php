@@ -19,10 +19,10 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
         // Switch tampilan dashboard antar-role (untuk user multi-role)
         Route::post('/dashboard/switch-mode', [DashboardController::class, 'switchMode'])
-            ->name('dashboard.switch-mode');
+            ->name('switch.mode');
 
         // ── Pengurus Himpunan ─────────────────────────────────────────────
-        Route::middleware('role:pengurus_himpunan,admin_kemahasiswaan,superadmin')
+        Route::middleware('role:pengurus_himpunan,gpm,admin,admin_kemahasiswaan,superadmin')
             ->prefix('pengurus')
             ->name('pengurus.')
             ->group(function () {
@@ -30,8 +30,9 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 return view('manajemenmahasiswa::dashboard.pengurus');
             })->name('dashboard');
         });
+
         // ── Alumni ────────────────────────────────────────────────────────
-        Route::middleware('role:alumni,admin_kemahasiswaan,superadmin')
+        Route::middleware('role:alumni,gpm,admin,admin_kemahasiswaan,superadmin')
             ->prefix('alumni')
             ->name('alumni.')
             ->group(function () {
@@ -43,13 +44,11 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
         // ── Pengumuman ────────────────────────────────────────────────────
         Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
 
-
-            // View only — semua role boleh
+            // Index — semua role boleh
             Route::get('/', [PengumumanController::class, 'index'])->name('index');
-            Route::get('/{pengumuman}', [PengumumanController::class, 'show'])->name('show');
 
             // Create/Edit/Delete — hanya pengurus + admin
-            Route::middleware('role:pengurus_himpunan,admin_kemahasiswaan,superadmin')->group(function () {
+            Route::middleware('role:pengurus_himpunan,gpm,admin,admin_kemahasiswaan,superadmin')->group(function () {
                 Route::get('/create', [PengumumanController::class, 'create'])->name('create');
                 Route::post('/', [PengumumanController::class, 'store'])->name('store');
                 Route::get('/{pengumuman}/edit', [PengumumanController::class, 'edit'])->name('edit');
@@ -58,6 +57,12 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 Route::patch('/{pengumuman}/publish', [PengumumanController::class, 'publish'])->name('publish');
                 Route::delete('/{pengumuman}/lampiran/{lampiran}', [PengumumanController::class, 'removeLampiran'])->name('lampiran.remove');
             });
+
+            // Download lampiran — semua role boleh
+            Route::get('/lampiran/{lampiran}/download', [PengumumanController::class, 'downloadLampiran'])->name('lampiran.download');
+
+            // Show — semua role boleh (HARUS setelah /create agar tidak konflik)
+            Route::get('/{pengumuman}', [PengumumanController::class, 'show'])->name('show');
         });
 
         // ── Layanan Pengaduan ─────────────────────────────────────────────
@@ -93,4 +98,5 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::get('/leaderboard', [GamificationController::class, 'leaderboard'])->name('leaderboard');
             Route::get('/stats', [GamificationController::class, 'userStats'])->name('stats');
         });
+
     });
