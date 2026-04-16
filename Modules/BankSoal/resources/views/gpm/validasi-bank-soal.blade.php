@@ -151,4 +151,26 @@
         </div>
 
     </div>
+
+    @if(session('success'))
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Validasi Selesai!',
+                text: '{{ session('success') }}',
+                confirmButtonColor: '#3b82f6',
+                background: '#ffffff',
+                showConfirmButton: true,
+                customClass: {
+                    title: 'text-slate-800 text-xl font-bold',
+                    htmlContainer: 'text-slate-600 text-sm',
+                    confirmButton: 'rounded-xl px-5 py-2.5 font-semibold transition-colors'
+                }
+            });
+        });
+    </script>
+    @endif
+
 </x-banksoal::layouts.gpm-master>

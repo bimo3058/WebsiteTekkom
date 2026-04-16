@@ -8,7 +8,7 @@
     </x-banksoal::ui.page-header>
 
     <x-banksoal::ui.panel :title="'Detail Soal (' . ('Q-' . str_pad($soal->id, 3, '0', STR_PAD_LEFT)) . ')'" subtitle="Status dan metadata soal" padding="p-6">
-        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div class="mb-6 grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Mata Kuliah</p>
                 <p class="mt-1 text-sm font-semibold text-slate-800">{{ $soal->mataKuliah->kode ?? '-' }} - {{ $soal->mataKuliah->nama ?? '-' }}</p>
@@ -18,8 +18,16 @@
                 <p class="mt-1 text-sm font-semibold text-slate-800">{{ $soal->cpl->kode ?? '-' }}</p>
             </div>
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">CPMK</p>
+                <p class="mt-1 text-sm font-semibold text-slate-800">{{ $soal->cpmk->kode ?? '-' }}</p>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Kesulitan / Bobot</p>
                 <p class="mt-1 text-sm font-semibold text-slate-800">{{ ucfirst($soal->kesulitan) }} ({{ $soal->bobot }} Poin)</p>
+            </div>
+            <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
+                <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Tipe Soal</p>
+                <p class="mt-1 text-sm font-semibold text-slate-800">{{ ucwords(str_replace('_', ' ', $soal->tipe_soal ?? 'Pilihan Ganda')) }}</p>
             </div>
             <div class="rounded-xl border border-slate-200 bg-slate-50 p-4">
                 <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Status Pertanyaan</p>
