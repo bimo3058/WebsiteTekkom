@@ -27,12 +27,20 @@ class ForumController extends Controller
         $user = Auth::user();
         $roles = $user->roles->pluck('name');
 
+        // Fetch necessary data for the forum view
+        $threads = $this->threadService->listThreads($request->all(), 15);
+        $leaderboard = $this->gamificationService->getLeaderboard(10);
+        $userStats = $this->gamificationService->getUserStats($user->id);
+        $categories = Thread::KATEGORI_LABELS;
+
+        $viewData = compact('threads', 'leaderboard', 'userStats', 'categories', 'user');
+
         // Admin, GPM, Pengurus, Dosen Koordinator: admin layout
         if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'pengurus_himpunan', 'gpm', 'admin_kemahasiswaan'])->isNotEmpty()) {
-            return view('manajemenmahasiswa::forum.admin');
+            return view('manajemenmahasiswa::forum.admin', $viewData);
         }
 
-        return view('manajemenmahasiswa::forum.mahasiswa');
+        return view('manajemenmahasiswa::forum.mahasiswa', $viewData);
     }
 
     /**
