@@ -5,6 +5,7 @@ use Modules\ManajemenMahasiswa\Http\Controllers\DashboardController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PengumumanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\KemahasiswaanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\ForumController;
+use Modules\ManajemenMahasiswa\Http\Controllers\PengaduanController;
 
 Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
     ->prefix('manajemen-mahasiswa')
@@ -57,6 +58,19 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 Route::patch('/{pengumuman}/publish', [PengumumanController::class, 'publish'])->name('publish');
                 Route::delete('/{pengumuman}/lampiran/{lampiran}', [PengumumanController::class, 'removeLampiran'])->name('lampiran.remove');
             });
+        });
+
+        // ── Layanan Pengaduan ─────────────────────────────────────────────
+        Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
+            Route::get('/', [PengaduanController::class, 'index'])->name('index');
+            Route::get('/create', [PengaduanController::class, 'create'])->name('create');
+            Route::post('/', [PengaduanController::class, 'store'])->name('store');
+            Route::get('/{pengaduan}', [PengaduanController::class, 'show'])->name('show');
+
+            // Jawab pengaduan — admin
+            Route::post('/{pengaduan}/reply', [PengaduanController::class, 'reply'])
+                ->name('reply')
+                ->middleware('role:superadmin,admin,admin_kemahasiswaan,gpm');
         });
 
         // ── Forum Diskusi ──────────────────────────────────────────────────
