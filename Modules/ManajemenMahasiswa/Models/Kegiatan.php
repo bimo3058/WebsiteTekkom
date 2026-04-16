@@ -20,11 +20,13 @@ class Kegiatan extends Model
         'ketua_student_id',
         'kepengurusan_id',
         'nama_kegiatan',
-        'tanggal',
+        'tanggal_mulai',
+        'tanggal_selesai',
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal_mulai' => 'date',
+        'tanggal_selesai' => 'date',
     ];
 
     // -------------------------------------------------------------------------
@@ -72,7 +74,7 @@ class Kegiatan extends Model
 
     public function scopeByTahun($query, int $tahun)
     {
-        return $query->whereYear('tanggal', $tahun);
+        return $query->whereYear('tanggal_mulai', $tahun);
     }
 
     public function scopeByBidang($query, int $bidangId)

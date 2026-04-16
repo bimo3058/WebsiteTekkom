@@ -48,18 +48,18 @@
         }
 
         .sidebar a:hover {
-            background: #f3f4f6;
+            background: #f8fafc;
             color: #1f2937;
         }
 
         .sidebar a.active {
-            background: transparent;
-            color: #4f46e5;
+            background: #f8fafc; /* Subtle light background */
+            color: #111827; /* Dark text */
             font-weight: 600;
         }
         
         .sidebar a svg {
-            color: #9ca3af;
+            color: #6b7280;
             transition: color 0.2s;
         }
         
@@ -120,7 +120,7 @@
 <body>
 
     <!-- Sidebar -->
-    <x-manajemenmahasiswa::ui.sidebar-admin />
+    <x-manajemenmahasiswa::ui.sidebar-a />
 
     <!-- Navbar -->
     <x-manajemenmahasiswa::ui.navbar-admin />

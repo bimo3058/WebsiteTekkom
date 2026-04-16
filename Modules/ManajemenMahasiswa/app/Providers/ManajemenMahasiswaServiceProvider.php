@@ -34,6 +34,27 @@ class ManajemenMahasiswaServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        // PostgreSQL (Supabase): pastikan binding boolean tidak di-cast jadi integer (1/0),
+        // karena PostgreSQL tidak menerima integer untuk kolom bertipe boolean.
+        \Illuminate\Database\Connection::resolverFor('pgsql', function ($connection, $database, $prefix, $config) {
+            return new class($connection, $database, $prefix, $config) extends \Illuminate\Database\PostgresConnection {
+                public function prepareBindings(array $bindings)
+                {
+                    $grammar = $this->getQueryGrammar();
+
+                    foreach ($bindings as $key => $value) {
+                        if ($value instanceof \DateTimeInterface) {
+                            $bindings[$key] = $value->format($grammar->getDateFormat());
+                        } elseif (is_bool($value)) {
+                            $bindings[$key] = $value ? 'true' : 'false';
+                        }
+                    }
+
+                    return $bindings;
+                }
+            };
+        });
+
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
     }
