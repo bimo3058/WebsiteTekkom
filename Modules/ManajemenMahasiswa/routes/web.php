@@ -4,17 +4,20 @@ use Illuminate\Support\Facades\Route;
 use Modules\ManajemenMahasiswa\Http\Controllers\DashboardController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PengumumanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\KemahasiswaanController;
+use Modules\ManajemenMahasiswa\Http\Controllers\ForumController;
 
 Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
     ->prefix('manajemen-mahasiswa')
     ->name('manajemenmahasiswa.')
     ->group(function () {
 
-        // Dashboard Utama Modul — semua role boleh akses
+        // Dashboard Utama Modul — semua role boleh akses, renderDashboard() menentukan view sesuai role
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->name('mahasiswa.dashboard');
-        Route::post('/switch-mode', [DashboardController::class, 'switchMode'])
-            ->name('switch.mode');
+
+        // Switch tampilan dashboard antar-role (untuk user multi-role)
+        Route::post('/dashboard/switch-mode', [DashboardController::class, 'switchMode'])
+            ->name('dashboard.switch-mode');
 
         // ── Pengurus Himpunan ─────────────────────────────────────────────
         Route::middleware('role:pengurus_himpunan,admin_kemahasiswaan,superadmin')
@@ -31,13 +34,14 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             ->prefix('alumni')
             ->name('alumni.')
             ->group(function () {
-                Route::get('/dashboard', function () {
-                    return view('manajemenmahasiswa::dashboard.alumni');
-                })->name('dashboard');
-            });
+            Route::get('/dashboard', function () {
+                return view('manajemenmahasiswa::dashboard.alumni');
+            })->name('dashboard');
+        });
 
         // ── Pengumuman ────────────────────────────────────────────────────
         Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
+
 
             // View only — semua role boleh
             Route::get('/', [PengumumanController::class, 'index'])->name('index');
@@ -49,9 +53,16 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 Route::post('/', [PengumumanController::class, 'store'])->name('store');
                 Route::get('/{pengumuman}/edit', [PengumumanController::class, 'edit'])->name('edit');
                 Route::put('/{pengumuman}', [PengumumanController::class, 'update'])->name('update');
-                Route::delete('/{pengumuman}', [PengumumanController::class, 'destroy'])->name('destroy');
+                Route::delete('/{pengumuman}', [PengumumanController::class, 'remove'])->name('remove');
                 Route::patch('/{pengumuman}/publish', [PengumumanController::class, 'publish'])->name('publish');
-                Route::delete('/{pengumuman}/lampiran/{lampiran}', [PengumumanController::class, 'destroyLampiran'])->name('lampiran.destroy');
+                Route::delete('/{pengumuman}/lampiran/{lampiran}', [PengumumanController::class, 'removeLampiran'])->name('lampiran.remove');
             });
+        });
+
+        // ── Forum Diskusi ──────────────────────────────────────────────────
+        Route::prefix('forum')->name('forum.')->group(function () {
+            Route::get('/', [ForumController::class, 'index'])->name('index');
+            Route::get('/create', [ForumController::class, 'create'])->name('create');
+            Route::get('/{id}', [ForumController::class, 'show'])->name('show');
         });
     });
