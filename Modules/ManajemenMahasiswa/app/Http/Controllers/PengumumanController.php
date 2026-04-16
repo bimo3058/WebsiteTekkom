@@ -33,22 +33,19 @@ class PengumumanController extends Controller
                 $filters['kategori'] = $filterKategori;
             }
             $pengumuman = $this->pengumumanService->listAll($filters);
-        } else {
-            // Role lain (Mahasiswa, Alumni, Dosen): bisa filter kategori & search
-            $userAudience = $this->resolveAudience($roles);
 
-            $targetKategoriFilter = ($filterKategori && $filterKategori !== 'semua') ? $filterKategori : null;
-            $searchString = $request->query('search'); // <--- Tangkap input pencarian
-
-            // Kirim search ke service
-            $pengumuman = $this->pengumumanService->listPublished($userAudience, $targetKategoriFilter, $searchString);
+            return view('manajemenmahasiswa::pengumuman.index', compact('pengumuman'));
         }
 
-        return response()->json([
-            'status' => 'success',
-            'user_yang_akses' => $user->name ?? 'Belum Login',
-            'data_pengumuman' => $pengumuman
-        ]);
+        // Role lain (Mahasiswa, Alumni, Dosen): bisa filter kategori & search
+        $userAudience = $this->resolveAudience($roles);
+
+        $targetKategoriFilter = ($filterKategori && $filterKategori !== 'semua') ? $filterKategori : null;
+        $searchString = $request->query('search');
+
+        $pengumuman = $this->pengumumanService->listPublished($userAudience, $targetKategoriFilter, $searchString);
+
+        return view('manajemenmahasiswa::mahasiswa.pengumuman-mahasiswa', compact('pengumuman'));
     }
 
 
