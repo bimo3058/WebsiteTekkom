@@ -120,7 +120,7 @@
 <body>
 
     <!-- Sidebar Mahasiswa -->
-    <x-manajemenmahasiswa::ui.sidebar-mahasiswa />
+    <x-manajemenmahasiswa::ui.sidebar-b />
 
     <!-- Navbar (reuse admin) -->
     <x-manajemenmahasiswa::ui.navbar-admin />

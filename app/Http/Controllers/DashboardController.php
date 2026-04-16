@@ -46,7 +46,7 @@ class DashboardController extends Controller
                 'description' => $isMahasiswa
                     ? 'Kegiatan, prestasi, dan forum mahasiswa.'
                     : 'Kegiatan, alumni, dan forum mahasiswa.',
-                'route' => $isMahasiswa ? 'manajemenmahasiswa.mahasiswa.dashboard' : 'manajemenmahasiswa.dashboard',
+                'route' => 'manajemenmahasiswa.dashboard',
                 'color' => 'green',
             ],
             [
