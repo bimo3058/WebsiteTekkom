@@ -31,6 +31,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::get('/', [DosenRpsController::class, 'index'])->name('index');
                 Route::get('/preview/{rpsId}', [DosenRpsController::class, 'previewDokumen'])->name('preview');
+                Route::get('/{rpsId}/edit', [DosenRpsController::class, 'edit'])->name('edit');
                 Route::get('/cpl/{mkId?}', [DosenRpsController::class, 'getCplByMk'])->name('cpl');
                 Route::get('/cpmk', [DosenRpsController::class, 'getCpmkByCpl'])->name('cpmk');
                 Route::get('/dosen', [DosenRpsController::class, 'getDosenByMk'])->name('dosen');
@@ -105,6 +106,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             // RPS - Dosen
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::post('/submit', [DosenRpsController::class, 'store'])->name('store');
+                Route::put('/{rpsId}', [DosenRpsController::class, 'update'])->name('update');
             });
             // RPS - GPM
             Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
@@ -130,6 +132,13 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
     // -------------------------------------------------------------------------
     Route::middleware(['permission:banksoal.delete'])->group(function () {
         Route::delete('/destroy/{id}', [BankSoalController::class, 'destroy'])->name('banksoal.destroy');
+        
+        // RPS Dosen Delete
+        Route::prefix('rps')->name('banksoal.rps.')->group(function () {
+            Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
+                Route::delete('/{rpsId}', [DosenRpsController::class, 'destroy'])->name('destroy');
+            });
+        });
     });
 
     // -------------------------------------------------------------------------

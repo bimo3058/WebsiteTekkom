@@ -15,7 +15,7 @@
         "laravel/pulse": "*",
         "laravel/socialite": "*",
         "laravel/tinker": "^2.10.1",
-        "maatwebsite/excel": "*",
+        "maatwebsite/excel": "^3.1",
         "nwidart/laravel-modules": "*",
         "predis/predis": "*",
         "socialiteproviders/microsoft-azure": "*"
