@@ -6,6 +6,7 @@ use Modules\ManajemenMahasiswa\Http\Controllers\PengumumanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\KemahasiswaanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\ForumController;
 use Modules\ManajemenMahasiswa\Http\Controllers\GamificationController;
+use Modules\ManajemenMahasiswa\Http\Controllers\PengaduanController;
 
 Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
     ->prefix('manajemen-mahasiswa')
