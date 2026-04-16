@@ -52,8 +52,6 @@ class ThreadService
                 'judul'    => $data['judul'],
                 'konten'   => $data['konten'],
                 'kategori' => $data['kategori'],
-                'is_pinned' => false,
-                'is_locked' => false,
                 'vote_count' => 0,
                 'comment_count' => 0,
             ]);
