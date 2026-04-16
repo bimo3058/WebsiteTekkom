@@ -27,8 +27,8 @@ class DashboardAnalitikService
                 'total_pengumuman'      => Pengumuman::published()->count(),
 
                 // Tren kegiatan per bulan (12 bulan terakhir)
-                'kegiatan_per_bulan' => Kegiatan::selectRaw("TO_CHAR(tanggal, 'YYYY-MM') as bulan, count(*) as total")
-                    ->where('tanggal', '>=', now()->subMonths(12))
+                'kegiatan_per_bulan' => Kegiatan::selectRaw("TO_CHAR(tanggal_mulai, 'YYYY-MM') as bulan, count(*) as total")
+                    ->where('tanggal_mulai', '>=', now()->subMonths(12))
                     ->groupBy('bulan')
                     ->orderBy('bulan')
                     ->pluck('total', 'bulan'),
@@ -41,8 +41,8 @@ class DashboardAnalitikService
                     ->pluck('total', 'angkatan'),
 
                 // Distribusi alumni per status pekerjaan
-                'alumni_per_status'     => Alumni::selectRaw('status_posisi_pekerjaan, count(*) as total')
-                    ->groupBy('status_posisi_pekerjaan')
+                'alumni_per_status'     => Alumni::selectRaw("CASE WHEN perusahaan IS NOT NULL THEN 'bekerja' ELSE 'belum_bekerja' END as status_posisi_pekerjaan, count(*) as total")
+                    ->groupByRaw("CASE WHEN perusahaan IS NOT NULL THEN 'bekerja' ELSE 'belum_bekerja' END")
                     ->pluck('total', 'status_posisi_pekerjaan'),
             ];
         });
