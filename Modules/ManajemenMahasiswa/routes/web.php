@@ -5,11 +5,7 @@ use Modules\ManajemenMahasiswa\Http\Controllers\DashboardController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PengumumanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\KemahasiswaanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\ForumController;
-<<<<<<< HEAD
 use Modules\ManajemenMahasiswa\Http\Controllers\GamificationController;
-=======
-use Modules\ManajemenMahasiswa\Http\Controllers\PengaduanController;
->>>>>>> 9e69f3c91646cc0c6cc224ab880b839346db6e41
 
 Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
     ->prefix('manajemen-mahasiswa')
@@ -29,10 +25,10 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             ->prefix('pengurus')
             ->name('pengurus.')
             ->group(function () {
-                Route::get('/dashboard', function () {
-                    return view('manajemenmahasiswa::dashboard.pengurus');
-                })->name('dashboard');
-            });
+            Route::get('/dashboard', function () {
+                return view('manajemenmahasiswa::dashboard.pengurus');
+            })->name('dashboard');
+        });
 
         // ── Alumni ────────────────────────────────────────────────────────
         Route::middleware('role:alumni,admin_kemahasiswaan,superadmin')
