@@ -1,6 +1,4 @@
-@extends('layouts.mahasiswa')
-
-@section('content')
+<x-manajemenmahasiswa::layouts.mahasiswa>
 
     <h4 class="fw-bold mb-1">Pengumuman & Informasi</h4>
     <p class="text-muted mb-4">Wadah Informasi untuk Mahasiswa dan Alumni</p>
@@ -89,4 +87,4 @@
         <button class="btn btn-light rounded-circle">›</button>
     </div>
 
-@endsection
+</x-manajemenmahasiswa::layouts.mahasiswa>

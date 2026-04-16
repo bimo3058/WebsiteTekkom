@@ -41,13 +41,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
         // ── Pengumuman ────────────────────────────────────────────────────
         Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
-            Route::get('/', [PengumumanController::class, 'index'])->name('index');
-            Route::get('/create', [PengumumanController::class, 'create'])->name('create');
-            Route::post('/', [PengumumanController::class, 'store'])->name('store');
-            Route::get('/{pengumuman}', [PengumumanController::class, 'show'])->name('show');
-            Route::get('/{pengumuman}/edit', [PengumumanController::class, 'edit'])->name('edit');
-            Route::put('/{pengumuman}', [PengumumanController::class, 'update'])->name('update');
-            Route::delete('/{pengumuman}', [PengumumanController::class, 'remove'])->name('remove');
+
 
             // View only — semua role boleh
             Route::get('/', [PengumumanController::class, 'index'])->name('index');

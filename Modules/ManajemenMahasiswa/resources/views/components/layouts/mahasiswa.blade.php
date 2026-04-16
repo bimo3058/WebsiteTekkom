@@ -8,14 +8,14 @@
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap"
         rel="stylesheet">
 
     <style>
         body {
             margin: 0;
             background-color: #f5f6fa;
-            font-family: 'Segoe UI', sans-serif;
+            font-family: 'Inter Tight', sans-serif;
         }
 
         .sidebar {
@@ -34,20 +34,41 @@
         }
 
         .sidebar a {
-            display: block;
-            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
             border-radius: 8px;
             text-decoration: none;
-            color: #374151;
+            color: #6b7280;
+            font-weight: 500;
+            font-size: 15px;
+            margin-bottom: 2px;
+            transition: all 0.2s;
         }
 
         .sidebar a:hover {
             background: #f3f4f6;
+            color: #1f2937;
         }
 
         .sidebar a.active {
-            background: #e0e7ff;
+            background: transparent;
             color: #4f46e5;
+            font-weight: 600;
+        }
+        
+        .sidebar a svg {
+            color: #9ca3af;
+            transition: color 0.2s;
+        }
+        
+        .sidebar a.active svg {
+            color: #4f46e5;
+        }
+        
+        .sidebar a:hover svg {
+            color: #4b5563;
         }
 
         .bottom-menu {
@@ -92,23 +113,26 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
     </style>
+
+    @stack('styles')
 </head>
 
 <body>
 
     <!-- Sidebar Mahasiswa -->
-    <x-sidebar-mahasiswa />
+    <x-manajemenmahasiswa::ui.sidebar-mahasiswa />
 
     <!-- Navbar (reuse admin) -->
-    <x-navbar-admin />
+    <x-manajemenmahasiswa::ui.navbar-admin />
 
     <!-- Content -->
     <div class="content">
         <div class="main-wrapper">
-            @yield('content')
+            {{ $slot }}
         </div>
     </div>
 
+    @stack('scripts')
 </body>
 
 </html>
