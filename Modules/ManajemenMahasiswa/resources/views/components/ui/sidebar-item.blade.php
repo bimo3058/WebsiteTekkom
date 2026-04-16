@@ -6,6 +6,6 @@
 
 <a href="{{ $route }}"
    class="nav-link-item {{ $isActive ? 'active' : '' }}">
-    <span class="nav-icon">{{ $icon }}</span>
-    {{ $label }}
+    <span class="nav-icon d-inline-flex">{!! $iconSlot ?? $icon !!}</span>
+    <span class="nav-label">{{ $slot->isNotEmpty() ? $slot : $label }}</span>
 </a>

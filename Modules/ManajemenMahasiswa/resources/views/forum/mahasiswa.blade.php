@@ -3,7 +3,7 @@
     @push('styles')
         <style>
             .bg-gradient-purple {
-                background: linear-gradient(135deg, #5b54fa, #4f46e5);
+                background: #4D4DFF;
             }
 
             .forum-card {
@@ -111,6 +111,7 @@
                 color: rgba(255, 255, 255, 0.8);
                 border: none;
                 padding-bottom: 15px;
+                background-color: #4D4DFF;
             }
 
             .leaderboard-table td {
@@ -118,6 +119,8 @@
                 color: #ffffff;
                 font-size: 14px;
                 padding: 6px 0;
+                background-color: #4D4DFF;
+                ;
             }
 
             .tag-label {
@@ -246,7 +249,6 @@
                         </div>
                     </div>
                     <div class="d-flex align-items-center gap-3">
-                        <button class="btn-join" onclick="event.preventDefault();">Join</button>
                         <span class="text-muted fw-bold" style="cursor: pointer; font-size: 20px; line-height: 1;"
                             onclick="event.preventDefault();">...</span>
                     </div>

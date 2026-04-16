@@ -15,7 +15,7 @@
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
 
     {{-- Vite CSS --}}
     {{-- {{ module_vite('build-manajemenmahasiswa', 'resources/assets/sass/app.scss') }} --}}
