@@ -95,6 +95,7 @@ class CommentService
         $comment = Comment::findOrFail($commentId);
         $value   = $value > 0 ? 1 : -1;
 
+        /** @var \Modules\ManajemenMahasiswa\Models\Vote|null $existingVote */
         $existingVote = Vote::where('user_id', $userId)
             ->where('voteable_type', Comment::class)
             ->where('voteable_id', $commentId)
