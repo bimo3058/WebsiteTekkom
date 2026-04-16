@@ -24,5 +24,7 @@
 
     <x-banksoal::ui.rps-document-modal />
 
+    <x-banksoal::ui.rps-delete-confirmation-modal />
+
     <x-banksoal::ui.rps-scripts />
 </x-banksoal::layouts.dosen-admin>

@@ -236,6 +236,11 @@ class RpsController extends Controller
                 'action' => $action === 'setuju' ? 'disetujui' : 'revisi',
                 'description' => $descriptionLog,
                 'user_id' => Auth::id(),
+                'new_data' => json_encode([
+                    'status' => $statusBaru,
+                    'nilai_akhir' => $nilaiAkhir,
+                    'catatan' => $catatan,
+                ]),
                 'created_at' => now(),
             ]);
 

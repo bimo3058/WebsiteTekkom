@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use App\Models\User;
+use App\Models\BsAuditLog;
 use App\Services\SupabaseStorage;
 use Modules\BankSoal\Models\Shared\MataKuliah;
 use Modules\BankSoal\Models\Shared\Cpl;
@@ -43,6 +44,13 @@ class RpsController extends Controller
             ->whereHas('dosens', function ($query) use ($user) {
                 $query->where('users.id', $user->id);
             })
+            // Custom sorting: Revisi (1) > Disetujui (2) > Diajukan (3) > others (4)
+            ->orderByRaw("CASE 
+                WHEN status = ? THEN 1
+                WHEN status = ? THEN 2
+                WHEN status = ? THEN 3
+                ELSE 4
+            END ASC", [RpsStatus::REVISI->value, RpsStatus::DISETUJUI->value, RpsStatus::DIAJUKAN->value])
             ->orderBy('created_at', 'desc')
             ->paginate(4)
             ->withQueryString();
@@ -234,6 +242,23 @@ class RpsController extends Controller
                 ->where('mk_id', $validated['mata_kuliah_id'])
                 ->update(['is_rps' => 'TRUE']);
 
+            // Log audit
+            DB::table('bs_audit_logs')->insert([
+                'user_id' => Auth::id(),
+                'action' => 'created',
+                'subject_type' => 'rps',
+                'subject_id' => $rps->id,
+                'description' => 'RPS baru telah dibuat dan diajukan',
+                'old_data' => null,
+                'new_data' => json_encode([
+                    'mk_id' => $rps->mk_id,
+                    'semester' => $rps->semester,
+                    'tahun_ajaran' => $rps->tahun_ajaran,
+                    'status' => $rps->status->value,
+                ]),
+                'created_at' => now(),
+            ]);
+
             // Commit perubahan ke DB
             DB::commit();
 
@@ -380,6 +405,331 @@ class RpsController extends Controller
         } catch (\Exception $e) {
             \Log::error('previewDokumen Error', ['rps_id' => $rpsId, 'error' => $e->getMessage()]);
             abort(404, 'Dokumen tidak ditemukan');
+        }
+    }
+
+    /**
+     * Tampilkan form edit RPS
+     */
+    public function edit(int $rpsId): \Illuminate\View\View
+    {
+        $user = Auth::user()->load('lecturer');
+        $rps = RpsDetail::with(['mataKuliah', 'cpls', 'cpmks', 'dosens'])->findOrFail($rpsId);
+
+        // Cek apakah user adalah salah satu dosen yang terkait dengan RPS ini
+        $isAuthorized = $rps->dosens->contains('id', $user->id);
+        abort_if(!$isAuthorized, 403, 'Anda tidak memiliki akses untuk mengedit RPS ini.');
+
+        // Cek apakah status memungkinkan edit (DIAJUKAN atau REVISI)
+        $editableStatuses = [RpsStatus::DIAJUKAN->value, RpsStatus::REVISI->value];
+        abort_if(!in_array($rps->status->value, $editableStatuses), 403, 'RPS dengan status ' . $rps->status->label() . ' tidak dapat diedit.');
+
+        // Fetch semua mata kuliah (untuk dropdown)
+        $mataKuliahs = MataKuliah::all();
+
+        // Fetch CPL dan CPMK yang sudah dipilih
+        $selectedCplIds = $rps->cpls->pluck('id')->toArray();
+        $selectedCpmkIds = $rps->cpmks->pluck('id')->toArray();
+        $selectedDosenIds = $rps->dosens->pluck('id')->toArray();
+
+        // Fetch tahun ajaran
+        $currentYear = (int) now()->format('Y');
+        $tahunAjarans = [
+            ($currentYear - 1) . '/' . $currentYear,
+            $currentYear . '/' . ($currentYear + 1),
+            ($currentYear + 1) . '/' . ($currentYear + 2),
+        ];
+
+        // Fetch Active Periode (untuk cek apakah upload masih dibuka)
+        $activePeriode = PeriodeRps::where('is_active', 'true')->first();
+        $isUploadOpen = true;
+        
+        if ($activePeriode) {
+            $now = \Carbon\Carbon::now('Asia/Jakarta');
+            $deadline = $activePeriode->tanggal_selesai->timezone('Asia/Jakarta');
+            $start = $activePeriode->tanggal_mulai->timezone('Asia/Jakarta')->startOfDay();
+            $end = $deadline->endOfDay();
+
+            $isUploadOpen = $now->between($start, $end);
+        }
+
+        // Fetch RPS audit history (activity log)
+        $history = DB::table('bs_audit_logs')
+            ->where('subject_type', 'rps')
+            ->where('subject_id', $rpsId)
+            ->orderBy('created_at', 'desc')
+            ->limit(10)
+            ->get()
+            ->map(function ($item) {
+                // Parse new_data jika string JSON
+                $newData = $item->new_data;
+                if (is_string($newData)) {
+                    $newData = json_decode($newData, true) ?? [];
+                } elseif (is_array($newData)) {
+                    $newData = $newData;
+                } else {
+                    $newData = [];
+                }
+                
+                if ($item->action === 'created') {
+                    $item->processed_description = 'RPS baru telah dibuat dan diajukan';
+                } elseif ($item->action === 'updated') {
+                    $item->processed_description = 'RPS telah diperbarui';
+                    if (!empty($newData)) {
+                        $changes = array_keys($newData);
+                        if (in_array('status', $changes)) {
+                            $status = $newData['status'] ?? null;
+                            $item->processed_description = 'Status RPS diubah ke: ' . ucfirst($status ?? 'tidak diketahui');
+                        }
+                    }
+                } elseif ($item->action === 'disetujui') {
+                    // Cek di new_data terlebih dahulu
+                    if (!empty($newData['nilai_akhir']) || !empty($newData['catatan'])) {
+                        $nilaiAkhir = $newData['nilai_akhir'] ?? 0;
+                        $item->processed_description = 'RPS telah disetujui oleh GPM. Nilai: ' . $nilaiAkhir . '/100';
+                        if (!empty($newData['catatan'])) {
+                            $item->processed_description .= ' Catatan: ' . $newData['catatan'];
+                        }
+                    } else {
+                        // Fallback ke description jika new_data kosong
+                        $item->processed_description = $item->description ?? 'RPS telah disetujui oleh GPM';
+                    }
+                } elseif ($item->action === 'revisi') {
+                    // Cek di new_data terlebih dahulu
+                    if (!empty($newData['catatan'])) {
+                        $item->processed_description = 'RPS dikembalikan untuk revisi. Catatan: ' . $newData['catatan'];
+                    } else {
+                        // Fallback ke description jika new_data kosong
+                        $item->processed_description = $item->description ?? 'RPS dikembalikan untuk revisi';
+                    }
+                } else {
+                    $item->processed_description = $item->description ?? ucfirst($item->action);
+                }
+                
+                return $item;
+            });
+
+        return view('banksoal::pages.rps.dosen.edit', compact(
+            'rps',
+            'mataKuliahs',
+            'tahunAjarans',
+            'selectedCplIds',
+            'selectedCpmkIds',
+            'selectedDosenIds',
+            'isUploadOpen',
+            'history'
+        ));
+    }
+
+    /**
+     * Update RPS yang sudah ada
+     */
+    public function update(int $rpsId, Request $request): RedirectResponse
+    {
+        $user = Auth::user()->load('lecturer');
+        $rps = RpsDetail::with('dosens')->findOrFail($rpsId);
+
+        // Cek autorisasi
+        $isAuthorized = $rps->dosens->contains('id', $user->id);
+        abort_if(!$isAuthorized, 403, 'Anda tidak memiliki akses untuk mengedit RPS ini.');
+
+        // Cek status
+        $editableStatuses = [RpsStatus::DIAJUKAN->value, RpsStatus::REVISI->value];
+        abort_if(!in_array($rps->status->value, $editableStatuses), 403, 'RPS dengan status ' . $rps->status->label() . ' tidak dapat diedit.');
+
+        // Validasi Input
+        $validated = $request->validate([
+            'mata_kuliah_id' => ['required', 'exists:bs_mata_kuliah,id'],
+            'dosen_lain' => ['nullable', 'array'],
+            'dosen_lain.*' => ['exists:users,id'],
+            'semester' => ['required', 'in:Ganjil,Genap'],
+            'tahun_ajaran' => ['required', 'string'],
+            'cpl_ids' => ['required', 'array'],
+            'cpl_ids.*' => ['exists:bs_cpl,id'],
+            'cpmk_ids' => ['required', 'array'],
+            'cpmk_ids.*' => ['exists:bs_cpmk,id'],
+            'dokumen' => ['nullable', 'file', 'mimes:pdf', 'max:1024'],
+        ], [
+            'dokumen.max' => 'Ukuran file maksimal 1MB',
+            'dokumen.mimes' => 'Hanya menerima File berformat PDF',
+        ]);
+
+        // Cek apakah Periode RPS Aktif
+        $activePeriode = PeriodeRps::where('is_active', 'true')->first();
+        if (!$activePeriode) {
+            return back()->withInput()->with('error', 'Sesi unggah RPS sedang ditutup atau belum ada jadwal yang aktif.');
+        }
+
+        $now = now('Asia/Jakarta');
+        $start = $activePeriode->tanggal_mulai->timezone('Asia/Jakarta')->startOfDay();
+        $end = $activePeriode->tanggal_selesai->timezone('Asia/Jakarta')->endOfDay();
+
+        if (!$now->between($start, $end)) {
+            return back()->withInput()->with('error', 'Di luar jadwal unggah RPS. Tenggat waktu sudah terlewati atau jadwal belum dimulai.');
+        }
+
+        DB::beginTransaction();
+
+        try {
+            $oldData = $rps->toArray(); // Simpan data lama untuk audit
+
+            // Update dokumen jika ada file baru
+            if ($request->hasFile('dokumen')) {
+                $file = $request->file('dokumen');
+                
+                // Ambil informasi untuk naming
+                $mataKuliah = MataKuliah::findOrFail($validated['mata_kuliah_id']);
+                $kodeMk = $mataKuliah->kode;
+                $tahun = now()->year;
+                $semester = $validated['semester'];
+                $employeeNumber = $user->lecturer->employee_number;
+                
+                // Format nama file
+                $fileName = "{$kodeMk}_{$tahun}_{$semester}_{$employeeNumber}";
+                
+                $supabaseStorage = new SupabaseStorage();
+                $pathDokumen = $supabaseStorage->upload($file, 'rps', 'rps', $fileName);
+
+                if (!$pathDokumen) {
+                    throw new \Exception('Gagal mengupload file ke Supabase. Silakan periksa koneksi internet atau coba lagi');
+                }
+
+                $rps->dokumen = $pathDokumen;
+            }
+
+            // Update data RPS
+            $rps->mk_id = $validated['mata_kuliah_id'];
+            $rps->semester = $validated['semester'];
+            $rps->tahun_ajaran = $validated['tahun_ajaran'];
+            $rps->save();
+
+            // Update relasi CPL, CPMK, dan Dosen
+            $dosenIds = $request->dosen_lain ?? [];
+            $dosenIds[] = $user->id;
+
+            $rps->cpls()->sync($validated['cpl_ids']);
+            $rps->cpmks()->sync($validated['cpmk_ids']);
+            $rps->dosens()->sync($dosenIds);
+
+            // Update is_rps di bs_dosen_pengampu_mk
+            DB::table('bs_dosen_pengampu_mk')
+                ->whereIn('user_id', $dosenIds)
+                ->where('mk_id', $validated['mata_kuliah_id'])
+                ->update(['is_rps' => 'TRUE']);
+
+            // Log audit
+            DB::table('bs_audit_logs')->insert([
+                'user_id' => Auth::id(),
+                'action' => 'updated',
+                'subject_type' => 'rps',
+                'subject_id' => $rpsId,
+                'description' => 'RPS telah diperbarui oleh dosen',
+                'old_data' => null,
+                'new_data' => json_encode([
+                    'mk_id' => $rps->mk_id,
+                    'semester' => $rps->semester,
+                    'tahun_ajaran' => $rps->tahun_ajaran,
+                    'status' => $rps->status->value,
+                ]),
+                'created_at' => now(),
+            ]);
+
+            DB::commit();
+
+            return redirect()->route('banksoal.rps.dosen.index')
+                ->with('success', 'RPS berhasil diperbarui.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            \Log::error('RPS Update Error', [
+                'rps_id' => $rpsId,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            
+            return back()->withInput()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
+        }
+    }
+
+    /**
+     * Hapus RPS (Hard Delete)
+     */
+    public function destroy(int $rpsId, Request $request): RedirectResponse|JsonResponse
+    {
+        $user = Auth::user()->load('lecturer');
+        $rps = RpsDetail::with('dosens')->findOrFail($rpsId);
+
+        // Cek autorisasi
+        $isAuthorized = $rps->dosens->contains('id', $user->id);
+        abort_if(!$isAuthorized, 403, 'Anda tidak memiliki akses untuk menghapus RPS ini.');
+
+        // Cek status - hanya DIAJUKAN dan REVISI yang bisa dihapus
+        $deletableStatuses = [RpsStatus::DIAJUKAN->value, RpsStatus::REVISI->value];
+        abort_if(!in_array($rps->status->value, $deletableStatuses), 403, 'RPS dengan status ' . $rps->status->label() . ' tidak dapat dihapus.');
+
+        DB::beginTransaction();
+
+        try {
+            // Hapus file dari Supabase
+            if ($rps->dokumen) {
+                $supabaseStorage = new SupabaseStorage();
+                $supabaseStorage->delete($rps->dokumen);
+            }
+
+            // Hapus relasi di junction table
+            $rps->cpls()->detach();
+            $rps->cpmks()->detach();
+            $rps->dosens()->detach();
+
+            // Hapus RPS record (hard delete)
+            $rps->forceDelete();
+
+            // Log audit
+            DB::table('bs_audit_logs')->insert([
+                'user_id' => Auth::id(),
+                'action' => 'deleted',
+                'subject_type' => 'rps',
+                'subject_id' => $rpsId,
+                'description' => 'RPS telah dihapus oleh dosen',
+                'old_data' => null,
+                'new_data' => null,
+                'created_at' => now(),
+            ]);
+
+            DB::commit();
+
+            // Cek apakah request dari AJAX
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'RPS berhasil dihapus.'
+                ]);
+            }
+
+            return redirect()->route('banksoal.rps.dosen.index')
+                ->with('success', 'RPS berhasil dihapus.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            \Log::error('RPS Delete Error', [
+                'rps_id' => $rpsId,
+                'user_id' => Auth::id(),
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            // Cek apakah request dari AJAX
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat menghapus RPS: ' . $e->getMessage()
+                ], 500);
+            }
+            
+            return back()->with('error', 'Terjadi kesalahan saat menghapus RPS: ' . $e->getMessage());
         }
     }
 }
