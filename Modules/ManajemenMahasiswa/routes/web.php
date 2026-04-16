@@ -5,6 +5,7 @@ use Modules\ManajemenMahasiswa\Http\Controllers\DashboardController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PengumumanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\KemahasiswaanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\ForumController;
+use Modules\ManajemenMahasiswa\Http\Controllers\GamificationController;
 
 Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
     ->prefix('manajemen-mahasiswa')
@@ -63,6 +64,20 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
         Route::prefix('forum')->name('forum.')->group(function () {
             Route::get('/', [ForumController::class, 'index'])->name('index');
             Route::get('/create', [ForumController::class, 'create'])->name('create');
+            Route::post('/', [ForumController::class, 'store'])->name('store');
             Route::get('/{id}', [ForumController::class, 'show'])->name('show');
+            Route::post('/{id}/vote', [ForumController::class, 'vote'])->name('vote');
+            Route::delete('/{id}', [ForumController::class, 'destroy'])->name('destroy');
+
+            // Comments
+            Route::post('/{threadId}/comments', [ForumController::class, 'storeComment'])->name('comments.store');
+            Route::post('/comments/{commentId}/vote', [ForumController::class, 'voteComment'])->name('comments.vote');
+            Route::delete('/comments/{commentId}', [ForumController::class, 'destroyComment'])->name('comments.destroy');
+        });
+
+        // ── Gamification API ──────────────────────────────────────────────
+        Route::prefix('gamification')->name('gamification.')->group(function () {
+            Route::get('/leaderboard', [GamificationController::class, 'leaderboard'])->name('leaderboard');
+            Route::get('/stats', [GamificationController::class, 'userStats'])->name('stats');
         });
     });
