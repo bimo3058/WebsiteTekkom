@@ -98,8 +98,14 @@ class PengumumanController extends Controller
     {
         $pengumuman = $this->pengumumanService->findById($id);
         $user = Auth::user();
+        $roles = $user->roles->pluck('name');
 
-        return view('manajemenmahasiswa::pengumuman.show', compact('pengumuman', 'user'));
+        // Admin, Dosen Koordinator, Pengurus Himpunan: lihat view admin
+        if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'pengurus_himpunan'])->isNotEmpty()) {
+            return view('manajemenmahasiswa::pengumuman.show', compact('pengumuman', 'user'));
+        }
+
+        return view('manajemenmahasiswa::mahasiswa.pengumuman-mahasiswa-detail', compact('pengumuman', 'user'));
     }
 
     /**
