@@ -14,7 +14,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
         // Dashboard Utama Modul — semua role boleh akses, renderDashboard() menentukan view sesuai role
         Route::get('/dashboard', [DashboardController::class, 'index'])
-            ->name('mahasiswa.dashboard');
+            ->name('dashboard');
 
         // Switch tampilan dashboard antar-role (untuk user multi-role)
         Route::post('/dashboard/switch-mode', [DashboardController::class, 'switchMode'])
