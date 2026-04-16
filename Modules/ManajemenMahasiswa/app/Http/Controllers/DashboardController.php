@@ -27,11 +27,11 @@ class DashboardController extends Controller
         }
 
         if (in_array('mahasiswa', $roles)) {
-            return view('manajemenmahasiswa::dashboard.mahasiswa');
+            return redirect()->route('manajemenmahasiswa.pengumuman.index');
         }
 
         if (in_array('alumni', $roles)) {
-            return view('manajemenmahasiswa::dashboard.mahasiswa');
+            return redirect()->route('manajemenmahasiswa.pengumuman.index');
         }
 
         abort(403);
