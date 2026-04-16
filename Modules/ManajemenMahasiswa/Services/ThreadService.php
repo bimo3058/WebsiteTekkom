@@ -90,6 +90,7 @@ class ThreadService
         $thread = Thread::findOrFail($threadId);
         $value  = $value > 0 ? 1 : -1;
 
+        /** @var \Modules\ManajemenMahasiswa\Models\Vote|null $existingVote */
         $existingVote = Vote::where('user_id', $userId)
             ->where('voteable_type', Thread::class)
             ->where('voteable_id', $threadId)
