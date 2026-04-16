@@ -39,7 +39,7 @@
                 padding: 16px;
             }
             .table-custom td {
-                padding: 16px;
+                padding: 20px 16px;
                 vertical-align: middle;
                 border-bottom: 1px solid #f3f4f6;
                 font-size: 14px;
@@ -49,6 +49,13 @@
             }
             .table-custom tbody tr:hover {
                 background-color: #f8fafc;
+            }
+            .pengaduan-row {
+                cursor: pointer;
+            }
+            .pengaduan-row:focus-visible {
+                outline: 2px solid #4D4DFF;
+                outline-offset: -2px;
             }
             .custom-badge {
                 font-size: 12px;
@@ -115,9 +122,11 @@
                                     ? (optional($item->pelapor)->name ?? '—')
                                     : 'Anda';
                             }
+
+                            $detailUrl = route('manajemenmahasiswa.pengaduan.show', $item->id);
                         @endphp
 
-                        <tr>
+                        <tr class="pengaduan-row" data-href="{{ $detailUrl }}" tabindex="0" role="link">
                             <td class="text-muted fw-bold">#{{ $item->id }}</td>
                             <td>
                                 <a class="text-decoration-none fw-bold" style="color: #111827;"
@@ -168,5 +177,30 @@
             </div>
         @endif
     </div>
+
+    @push('scripts')
+        <script>
+            document.addEventListener('click', function (e) {
+                const row = e.target.closest('tr[data-href]');
+                if (!row) return;
+
+                if (e.target.closest('a, button, input, textarea, select, label')) return;
+
+                window.location.href = row.dataset.href;
+            });
+
+            document.addEventListener('keydown', function (e) {
+                if (e.key !== 'Enter' && e.key !== ' ') return;
+
+                if (e.target.closest('a, button, input, textarea, select, label')) return;
+
+                const row = e.target.closest('tr[data-href]');
+                if (!row) return;
+
+                e.preventDefault();
+                window.location.href = row.dataset.href;
+            });
+        </script>
+    @endpush
 
 </x-dynamic-component>
