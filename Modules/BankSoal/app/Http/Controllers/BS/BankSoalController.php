@@ -38,8 +38,8 @@ class BankSoalController extends Controller
             ->when($request->mk_id, function($q, $mk_id) {
                 return $q->where('bs_pertanyaan.mk_id', $mk_id);
             })
-            ->when($request->kesulitan, function($q, $kesulitan) {
-                return $q->where('bs_pertanyaan.kesulitan', $kesulitan);
+            ->when($request->status, function($q, $status) {
+                return $q->where('bs_pertanyaan.status', $status);
             })
             // Tambahkan orderBy mataKuliah.nama agar soal dalam satu MK terkumpul
             ->join('bs_mata_kuliah', 'bs_pertanyaan.mk_id', '=', 'bs_mata_kuliah.id')
@@ -60,7 +60,10 @@ class BankSoalController extends Controller
             ->whereIn('id', $mkIds)
             ->has('pertanyaan')
             ->when($request->searchPackages, function($q, $search) {
-                return $q->where('nama', 'like', "%{$search}%")->orWhere('kode', 'like', "%{$search}%");
+                return $q->where(function($query) use ($search) {
+                    $query->where('nama', 'like', "%{$search}%")
+                          ->orWhere('kode', 'like', "%{$search}%");
+                });
             })
             ->withCount('pertanyaan as jumlah_soal')
             ->paginate(5, ['*'], 'pkg_page');

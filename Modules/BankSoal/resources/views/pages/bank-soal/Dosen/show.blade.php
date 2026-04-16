@@ -87,7 +87,7 @@
                 @foreach($soal->jawaban as $jawab)
                     <div class="flex items-start gap-3 rounded-xl border p-4 {{ $jawab->is_benar ? 'border-green-400 bg-green-50' : 'border-slate-200 bg-white' }}">
                         <span class="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold {{ $jawab->is_benar ? 'bg-green-600 text-white' : 'bg-slate-200 text-slate-700' }}">{{ $jawab->opsi }}</span>
-                        <p class="flex-1 text-sm text-slate-700">{{ $jawab->deskripsi }}</p>
+                        <div class="flex-1 text-sm text-slate-700 prose prose-sm max-w-none">{!! $jawab->deskripsi !!}</div>
                         @if($jawab->is_benar)
                             <i class="fas fa-check-circle text-green-600" title="Jawaban Benar"></i>
                         @endif

@@ -40,8 +40,7 @@ class DashboardController extends Controller
             // 1. Ambil Antrean Bank Soal (Mata kuliah yang belum direview)
             $prioritasBankSoal = DB::table('bs_mata_kuliah')
                 ->join('bs_pertanyaan', 'bs_mata_kuliah.id', '=', 'bs_pertanyaan.mk_id')
-                ->leftJoin('bs_review', 'bs_pertanyaan.id', '=', 'bs_review.pertanyaan_id')
-                ->whereNull('bs_review.id')
+                ->where('bs_pertanyaan.status', 'diajukan')
                 ->select(
                     'bs_mata_kuliah.id as mk_id',
                     'bs_mata_kuliah.kode as mk_kode',
@@ -80,8 +79,7 @@ class DashboardController extends Controller
             $statRpsMenunggu  = $rpsDiajukan->count() + $rpsRevisi->count();
             $statBankSoalMenunggu = DB::table('bs_mata_kuliah')
                 ->join('bs_pertanyaan', 'bs_mata_kuliah.id', '=', 'bs_pertanyaan.mk_id')
-                ->leftJoin('bs_review', 'bs_pertanyaan.id', '=', 'bs_review.pertanyaan_id')
-                ->whereNull('bs_review.id')
+                ->where('bs_pertanyaan.status', 'diajukan')
                 ->distinct('bs_mata_kuliah.id')
                 ->count('bs_mata_kuliah.id');
             

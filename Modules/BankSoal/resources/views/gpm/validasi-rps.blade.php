@@ -15,6 +15,7 @@
         .btn-filter { border: 1px solid #e2e8f0; background-color: white; color: #475569; font-weight: 500; font-size: 0.9rem;}
         
         .table-container { background-color: white; border-radius: 0.75rem; border: 1px solid #e2e8f0; overflow: hidden; }
+        .table-rps { table-layout: fixed; }
         .table-rps th { text-transform: uppercase; font-size: 0.75rem; color: #64748b; font-weight: 600; padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; background-color: white; letter-spacing: 0.5px;}
         .table-rps td { padding: 1.25rem 1.5rem; vertical-align: middle; border-bottom: 1px solid #e2e8f0; }
         .table-rps tr:last-child td { border-bottom: none; }
