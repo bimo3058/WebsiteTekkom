@@ -15,8 +15,8 @@
     <div class="menu-title mb-2" style="font-size: 13px; font-weight: 500; color: #9ca3af;">Main Menu</div>
 
     <nav class="sidebar-nav d-flex flex-column gap-1">
-        <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.mahasiswa.dashboard') }}"
-            routeName="manajemenmahasiswa.mahasiswa.dashboard" label="Dashboard Analitik">
+        <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.dashboard') }}"
+            routeName="manajemenmahasiswa.dashboard" label="Dashboard Analitik">
             <x-slot:iconSlot>
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 17V9"></path><path d="M13 17V5"></path><path d="M8 17v-3"></path></svg>
             </x-slot:iconSlot>
