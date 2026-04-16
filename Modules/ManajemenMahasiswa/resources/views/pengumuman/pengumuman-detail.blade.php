@@ -1,4 +1,4 @@
-<x-manajemenmahasiswa::layouts.mahasiswa>
+<x-manajemenmahasiswa::layouts.admin>
 
     @push('styles')
     <style>
@@ -209,6 +209,10 @@
         } else {
             $targetAudienceStr = ucfirst(str_replace('_', ' ', $targetAudienceStr));
         }
+
+        $roles = $user->roles->pluck('name');
+        $isAdminOrKoor = $roles->intersect(['superadmin', 'admin', 'dosen_koordinator'])->isNotEmpty();
+        $canDelete = $user->id === $pengumuman->user_id || $isAdminOrKoor;
     @endphp
 
     <div class="detail-card">
@@ -294,9 +298,16 @@
             @endforelse
         </div>
 
-        <div class="btn-kembali-wrapper">
+        <div class="btn-kembali-wrapper" style="display: flex; gap: 10px; justify-content: center; align-items: center; margin-top: 10px;">
             <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="btn-kembali">Kembali</a>
+            @if($canDelete)
+                <form action="{{ route('manajemenmahasiswa.pengumuman.remove', $pengumuman->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengumuman ini?');" style="margin: 0;">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="btn-kembali" style="background: #ef4444; box-shadow: none;">Hapus</button>
+                </form>
+            @endif
         </div>
     </div>
 
-</x-manajemenmahasiswa::layouts.mahasiswa>
+</x-manajemenmahasiswa::layouts.admin>

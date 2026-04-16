@@ -22,10 +22,12 @@ class Pengumuman extends Model
         'target_audience',
         'status_publish',
         'scheduled_at',
+        'published_at',
     ];
 
     protected $casts = [
         'scheduled_at' => 'datetime',
+        'published_at' => 'datetime',
     ];
 
     // -------------------------------------------------------------------------

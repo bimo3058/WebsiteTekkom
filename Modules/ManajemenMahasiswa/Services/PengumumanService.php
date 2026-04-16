@@ -79,7 +79,11 @@ class PengumumanService
      */
     public function publish(int $id): Pengumuman
     {
-        return $this->update($id, ['status_publish' => Pengumuman::STATUS_PUBLISHED, 'scheduled_at' => null]);
+        return $this->update($id, [
+            'status_publish' => Pengumuman::STATUS_PUBLISHED, 
+            'scheduled_at' => null,
+            'published_at' => now()
+        ]);
     }
 
     /**
