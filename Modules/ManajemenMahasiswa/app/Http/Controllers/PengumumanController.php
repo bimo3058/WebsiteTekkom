@@ -10,11 +10,12 @@ use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
 
 class PengumumanController extends Controller
 {
-    public function __construct(private
-        PengumumanService $pengumumanService, private
+    public function __construct(
+        private
+        PengumumanService $pengumumanService,
+        private
         RepoMulmedService $repoMulmedService,
-        )
-    {
+    ) {
     }
 
     //Daftar semua pengumuman (Admin/Koor/Pengurus view).
@@ -23,7 +24,7 @@ class PengumumanController extends Controller
         $user = Auth::user();
         $roles = $user->roles->pluck('name');
 
-        $filterKategori = $request->query('kategori'); // e.g., 'semua', 'akademik', 'himpunan' dsb.
+        $filterKategori = $request->query('kategori');
 
         // Admin, Dosen Koordinator, Pengurus Himpunan: lihat semua
         if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'pengurus_himpunan'])->isNotEmpty()) {
@@ -32,8 +33,7 @@ class PengumumanController extends Controller
                 $filters['kategori'] = $filterKategori;
             }
             $pengumuman = $this->pengumumanService->listAll($filters);
-        }
-        else {
+        } else {
             // Role lain (Mahasiswa, Alumni, Dosen): bisa filter kategori & search
             $userAudience = $this->resolveAudience($roles);
 
@@ -44,7 +44,11 @@ class PengumumanController extends Controller
             $pengumuman = $this->pengumumanService->listPublished($userAudience, $targetKategoriFilter, $searchString);
         }
 
-        return view('manajemenmahasiswa::pengumuman.index', compact('pengumuman', 'user'));
+        return response()->json([
+            'status' => 'success',
+            'user_yang_akses' => $user->name ?? 'Belum Login',
+            'data_pengumuman' => $pengumuman
+        ]);
     }
 
 
@@ -152,7 +156,7 @@ class PengumumanController extends Controller
     /**
      * Hapus pengumuman.
      */
-    public function destroy(int $id)
+    public function remove(int $id)
     {
         $pengumuman = $this->pengumumanService->findById($id);
         $this->authorizeOwnerOrAdmin($pengumuman->user_id);
@@ -180,7 +184,7 @@ class PengumumanController extends Controller
     /**
      * Hapus lampiran tertentu.
      */
-    public function destroyLampiran(int $pengumumanId, int $lampiranId)
+    public function removeLampiran(int $pengumumanId, int $lampiranId)
     {
         $pengumuman = $this->pengumumanService->findById($pengumumanId);
         $this->authorizeOwnerOrAdmin($pengumuman->user_id);

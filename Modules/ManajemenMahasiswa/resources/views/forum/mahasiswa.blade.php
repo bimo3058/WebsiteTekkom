@@ -1,120 +1,287 @@
-@extends('layouts.app')
+<x-manajemenmahasiswa::layouts.mahasiswa>
 
-@section('content')
-<div class="flex min-h-screen bg-gray-100">
+    @push('styles')
+        <style>
+            .bg-gradient-purple {
+                background: linear-gradient(135deg, #5b54fa, #4f46e5);
+            }
 
-    <!-- Sidebar -->
-    <aside class="w-64 bg-white shadow-md p-5">
-        <h2 class="text-lg font-semibold mb-6">🎓 Portal Mahasiswa</h2>
+            .forum-card {
+                background: #ffffff;
+                border-radius: 12px;
+                padding: 20px;
+                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+                margin-bottom: 20px;
+            }
 
-        <p class="text-sm text-gray-400 mb-2">Main Menu</p>
-        <ul class="space-y-3">
-            <li class="text-gray-600 hover:text-purple-600 cursor-pointer">Pengumuman</li>
-            <li class="text-gray-600 hover:text-purple-600 cursor-pointer">Direktori Mahasiswa</li>
-            <li class="text-gray-600 hover:text-purple-600 cursor-pointer">Kegiatan</li>
-            <li class="bg-purple-100 text-purple-600 px-3 py-2 rounded-lg font-medium">
-                Forum Diskusi
-            </li>
-        </ul>
+            .avatar-placeholder {
+                width: 40px;
+                height: 40px;
+                border-radius: 50%;
+                background-color: #e0e7ff;
+                color: #4f46e5;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 600;
+                font-size: 16px;
+            }
 
-        <div class="mt-10 text-sm text-gray-500 space-y-2">
-            <p>Settings</p>
-            <p>Help & Center</p>
-            <p class="text-red-500">Logout</p>
+            .btn-join {
+                background-color: #818cf8;
+                color: white;
+                border: none;
+                border-radius: 6px;
+                padding: 4px 16px;
+                font-size: 13px;
+                font-weight: 600;
+                transition: background-color 0.2s;
+            }
+
+            .btn-join:hover {
+                background-color: #6366f1;
+            }
+
+            .btn-post {
+                background-color: #818cf8;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 0 20px;
+                height: 42px;
+                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
+                white-space: nowrap;
+            }
+
+            .btn-post:hover {
+                background-color: #6366f1;
+            }
+
+            .post-actions button {
+                background: #f3f4f6;
+                border: none;
+                padding: 6px 14px;
+                border-radius: 20px;
+                color: #4b5563;
+                font-size: 13px;
+                font-weight: 600;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                margin-right: 8px;
+            }
+
+            .post-actions button:hover {
+                background: #e5e7eb;
+            }
+
+            .search-input {
+                background-color: #f3f4f6;
+                border: none;
+                border-radius: 8px;
+                height: 42px;
+                padding-left: 36px;
+            }
+
+            .search-input:focus {
+                background-color: #ffffff;
+                box-shadow: 0 0 0 2px #e0e7ff;
+            }
+
+            .search-wrapper {
+                position: relative;
+                flex-grow: 1;
+            }
+
+            .search-icon {
+                position: absolute;
+                left: 12px;
+                top: 50%;
+                transform: translateY(-50%);
+                color: #9ca3af;
+                font-size: 14px;
+            }
+
+            .leaderboard-table th {
+                font-weight: 500;
+                font-size: 13px;
+                color: rgba(255, 255, 255, 0.8);
+                border: none;
+                padding-bottom: 15px;
+            }
+
+            .leaderboard-table td {
+                border: none;
+                color: #ffffff;
+                font-size: 14px;
+                padding: 6px 0;
+            }
+
+            .tag-label {
+                font-size: 11px;
+                font-weight: 600;
+                padding: 2px 8px;
+                border-radius: 4px;
+            }
+
+            .tag-green {
+                background: #dcfce7;
+                color: #16a34a;
+            }
+
+            .tag-red {
+                background: #fee2e2;
+                color: #dc2626;
+            }
+
+            .tag-gray {
+                background: #f3f4f6;
+                color: #6b7280;
+            }
+        </style>
+    @endpush
+
+    <div class="mb-5">
+        <h3 class="fw-bold mb-1 text-dark">Forum Diskusi</h3>
+        <p class="text-dark fw-bold" style="font-size: 14px;">Wadah komunikasi mahasiswa & alumni</p>
+    </div>
+
+    <!-- Header Cards -->
+    <div class="row mb-4">
+        <!-- Leaderboard -->
+        <div class="col-md-7 mb-3 mb-md-0">
+            <div class="bg-gradient-purple rounded-4 p-4 h-100 text-white shadow-sm">
+                <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+                    🏆 Leaderboard
+                </h6>
+                <div class="table-responsive">
+                    <table class="table table-borderless table-sm mb-0 leaderboard-table">
+                        <thead>
+                            <tr>
+                                <th style="width: 10%">No.</th>
+                                <th style="width: 40%">User</th>
+                                <th style="width: 20%">Level</th>
+                                <th style="width: 30%">Badges</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>1.</td>
+                                <td>Lutfi Halimawan</td>
+                                <td>Lvl ...</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>2.</td>
+                                <td>Reza</td>
+                                <td>Lvl ...</td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>3.</td>
+                                <td>Surya</td>
+                                <td>Lvl ...</td>
+                                <td></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
-    </aside>
 
-    <!-- Main Content -->
-    <main class="flex-1 p-8">
-
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h1 class="text-3xl font-bold">Forum Diskusi</h1>
-                <p class="text-gray-500 text-sm">Wadah komunikasi mahasiswa & alumni</p>
-            </div>
-            <div class="flex items-center gap-3">
-                <span class="text-sm">Username</span>
-                <img src="https://i.pravatar.cc/40" class="rounded-full">
+        <!-- Streak -->
+        <div class="col-md-5">
+            <div
+                class="bg-gradient-purple rounded-4 p-4 h-100 text-white shadow-sm d-flex flex-column justify-content-center">
+                <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
+                    🔥 Streak Kamu Hari Ini : ...
+                </h6>
+                <div class="mb-3 ps-4">
+                    <span style="font-size: 14px; font-weight: 500;">Rank : ...</span>
+                </div>
+                <div class="mb-3 ps-4 d-flex align-items-center gap-2">
+                    <span>🏵️</span> <span style="font-size: 14px; font-weight: 500;">Level Kamu : ...</span>
+                </div>
+                <div class="ps-4 d-flex align-items-center gap-2">
+                    <span>📊</span> <span style="font-size: 14px; font-weight: 500;">Exp : .../...</span>
+                </div>
             </div>
         </div>
+    </div>
 
-        <!-- Cards -->
-        <div class="grid grid-cols-2 gap-5 mb-6">
-
-            <!-- Leaderboard -->
-            <div class="bg-gradient-to-r from-indigo-500 to-purple-600 text-white p-5 rounded-xl shadow">
-                <h3 class="font-semibold mb-3">🏆 Leaderboard</h3>
-                <ul class="text-sm space-y-1">
-                    <li>1. Lutfi Halimawan - Lv1</li>
-                    <li>2. Reza - Lv1</li>
-                    <li>3. Surya - Lv1</li>
-                </ul>
-            </div>
-
-            <!-- Streak -->
-            <div class="bg-gradient-to-r from-purple-500 to-indigo-600 text-white p-5 rounded-xl shadow">
-                <h3 class="font-semibold mb-2">🔥 Streak Kamu Hari Ini</h3>
-                <p class="text-sm">Rank: ...</p>
-                <p class="text-sm">Level: ...</p>
-                <p class="text-sm">Exp: ...</p>
-            </div>
-
+    <!-- Search & Filter Area -->
+    <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-4">
+        <div class="search-wrapper w-100 me-0 me-md-2">
+            <span class="search-icon">🔍</span>
+            <input type="text" class="form-control search-input w-100" placeholder="Search">
         </div>
 
-        <!-- Search & Action -->
-        <div class="flex gap-3 mb-6">
-            <input type="text" placeholder="Search"
-                class="flex-1 px-4 py-2 rounded-lg border focus:outline-none focus:ring-2 focus:ring-purple-400">
-
-            <select class="px-3 py-2 rounded-lg border">
+        <div class="d-flex gap-3">
+            <select class="form-select border-1" style="border-radius: 8px; height: 42px; min-width: 130px;">
                 <option>Filter</option>
             </select>
-
-            <button class="bg-purple-600 text-white px-5 py-2 rounded-lg hover:bg-purple-700">
-                + Post
-            </button>
+            <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post text-decoration-none">
+                Post ⊕
+            </a>
         </div>
+    </div>
 
-        <!-- Post Card -->
-        @for ($i = 0; $i < 3; $i++)
-        <div class="bg-white p-5 rounded-xl shadow mb-5">
-            <div class="flex justify-between items-center mb-2">
-                <div class="flex items-center gap-3">
-                    <div class="w-10 h-10 bg-purple-200 rounded-full flex items-center justify-center">
-                        👤
+    <!-- Forum Posts -->
+    @for ($i = 0; $i < 3; $i++)
+        <a href="{{ route('manajemenmahasiswa.forum.show', $i + 1) }}" class="text-decoration-none">
+            <div class="forum-card">
+                <div class="d-flex justify-content-between align-items-start mb-3">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="avatar-placeholder">
+                            👤
+                        </div>
+                        <div>
+                            <div class="d-flex align-items-center gap-2">
+                                <h6 class="fw-bold text-dark mb-0">Username</h6>
+                                <span class="text-primary fw-medium" style="font-size: 12px;">• 2h ago</span>
+                            </div>
+                        </div>
                     </div>
-                    <div>
-                        <h4 class="font-semibold">Username</h4>
-                        <p class="text-xs text-gray-400">2h ago</p>
+                    <div class="d-flex align-items-center gap-3">
+                        <button class="btn-join" onclick="event.preventDefault();">Join</button>
+                        <span class="text-muted fw-bold" style="cursor: pointer; font-size: 20px; line-height: 1;"
+                            onclick="event.preventDefault();">...</span>
                     </div>
                 </div>
 
-                <button class="bg-purple-500 text-white text-sm px-3 py-1 rounded-lg">
-                    Join
-                </button>
+                <p class="text-dark" style="font-size: 14px; margin-bottom: 12px; line-height: 1.5;">
+                    Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et
+                    dolore magna aliqua. Ut enim ad minim veniam.
+                </p>
+
+                <!-- Labels -->
+                <div class="d-flex gap-2 mb-3">
+                    <span class="tag-label tag-green">Label</span>
+                    <span class="tag-label tag-red">Label</span>
+                    <span class="tag-label tag-gray">+4</span>
+                </div>
+
+                <!-- Actions -->
+                <div class="post-actions d-flex align-items-center">
+                    <!-- Up/Down vote -->
+                    <button onclick="event.preventDefault();">
+                        <span class="me-1" style="font-size: 14px;">↑</span> ... <span class="ms-1"
+                            style="font-size: 14px;">↓</span>
+                    </button>
+                    <!-- Comments -->
+                    <button onclick="event.preventDefault();">
+                        <span class="me-1" style="font-size: 14px;">💬</span> ...
+                    </button>
+                    <!-- Share -->
+                    <button onclick="event.preventDefault();">
+                        <span style="font-size: 14px;">🔗</span>
+                    </button>
+                </div>
             </div>
+        </a>
+    @endfor
 
-            <p class="text-gray-600 text-sm mb-3">
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.
-            </p>
-
-            <!-- Labels -->
-            <div class="flex gap-2 mb-3">
-                <span class="text-xs bg-green-100 text-green-600 px-2 py-1 rounded">Label</span>
-                <span class="text-xs bg-red-100 text-red-600 px-2 py-1 rounded">Label</span>
-            </div>
-
-            <!-- Actions -->
-            <div class="flex gap-4 text-gray-400 text-sm">
-                <button>⬆</button>
-                <button>⬇</button>
-                <button>💬</button>
-                <button>🔗</button>
-            </div>
-        </div>
-        @endfor
-
-    </main>
-</div>
-@endsection
+</x-manajemenmahasiswa::layouts.mahasiswa>
