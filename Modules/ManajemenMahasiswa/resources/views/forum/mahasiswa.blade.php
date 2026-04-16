@@ -357,11 +357,11 @@
                             </div>
                         </div>
                     </div>
-                    @if($thread->user_id === $user->id)
-                        <div class="dropdown" onclick="event.preventDefault(); event.stopPropagation();">
-                            <span class="text-muted fw-bold" style="cursor: pointer; font-size: 20px; line-height: 1;"
-                                  data-bs-toggle="dropdown">⋯</span>
-                            <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 8px;">
+                    <div class="dropdown" onclick="event.preventDefault(); event.stopPropagation();">
+                        <span class="text-muted fw-bold" style="cursor: pointer; font-size: 20px; line-height: 1;"
+                              data-bs-toggle="dropdown">⋯</span>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 8px;">
+                            @if($thread->user_id === $user->id)
                                 <li>
                                     <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
                                           onsubmit="return confirm('Yakin ingin menghapus thread ini?')">
@@ -369,9 +369,27 @@
                                         <button type="submit" class="dropdown-item text-danger">🗑️ Hapus</button>
                                     </form>
                                 </li>
-                            </ul>
-                        </div>
-                    @endif
+                            @else
+                                @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
+                                    <li>
+                                        <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
+                                              onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
+                                            @csrf @method('DELETE')
+                                            <button type="submit" class="dropdown-item text-danger">🗑️ Hapus (Admin)</button>
+                                        </form>
+                                    </li>
+                                @endif
+                                <li>
+                                    <button type="button" class="dropdown-item text-danger"
+                                            data-bs-toggle="modal" data-bs-target="#reportModal"
+                                            data-thread-id="{{ $thread->id }}"
+                                            data-thread-title="{{ $thread->judul }}">
+                                        🚩 Laporkan Thread
+                                    </button>
+                                </li>
+                            @endif
+                        </ul>
+                    </div>
                 </div>
 
                 <h6 class="fw-bold text-dark mb-2">{{ $thread->judul }}</h6>
@@ -388,16 +406,30 @@
                 </div>
 
                 <!-- Actions -->
-                <div class="post-actions d-flex align-items-center">
+                @php
+                    $threadVoteKey = \Modules\ManajemenMahasiswa\Models\Thread::class . '_' . $thread->id;
+                    $threadUserVote = $userVotes[$threadVoteKey] ?? null;
+                @endphp
+                <div class="post-actions d-flex align-items-center" onclick="event.preventDefault(); event.stopPropagation();">
                     <!-- Up/Down vote -->
-                    <button onclick="event.preventDefault();">
+                    <button class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === 1 ? 'vote-active-up' : '' }}"
+                            data-thread-id="{{ $thread->id }}" data-value="1">
                         <span class="me-1" style="font-size: 14px;">↑</span>
-                        {{ $thread->vote_count }}
-                        <span class="ms-1" style="font-size: 14px;">↓</span>
                     </button>
+                    <span class="fw-bold text-dark mx-1 thread-vote-count-{{ $thread->id }}" style="font-size: 14px; min-width: 15px; text-align: center;">{{ $thread->vote_count }}</span>
+                    <button class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === -1 ? 'vote-active-down' : '' }}"
+                            data-thread-id="{{ $thread->id }}" data-value="-1">
+                        <span style="font-size: 14px;">↓</span>
+                    </button>
+                    
                     <!-- Comments -->
-                    <button onclick="event.preventDefault();">
+                    <button class="ms-2" onclick="window.location.href='{{ route('manajemenmahasiswa.forum.show', $thread->id) }}'">
                         <span class="me-1" style="font-size: 14px;">💬</span> {{ $thread->comments_count ?? $thread->comment_count }}
+                    </button>
+
+                    <!-- Share -->
+                    <button class="share-btn ms-1" data-url="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}">
+                        <span style="font-size: 14px;">🔗</span>
                     </button>
                 </div>
             </div>
@@ -420,8 +452,126 @@
         </div>
     @endif
 
+    @if($errors->has('alasan'))
+        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert" style="border-radius: 10px; border: none; font-weight: 600;">
+            {{ $errors->first('alasan') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    @endif
+
+    <!-- Report Modal -->
+    <div class="modal fade" id="reportModal" tabindex="-1" aria-labelledby="reportModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 12px; border: none;">
+                <form id="reportForm" method="POST" action="">
+                    @csrf
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold text-dark" id="reportModalLabel">🚩 Laporkan Thread</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p class="text-muted" style="font-size: 14px;">Apakah thread <strong id="reportThreadTitle"></strong> melanggar panduan komunitas?</p>
+                        
+                        <div class="mb-3">
+                            <label for="alasan" class="form-label fw-bold" style="font-size: 14px;">Alasan Pelaporan <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="alasan" id="alasan" rows="4" placeholder="Tulis alasan spesifik (misal: SARA, Spam, Hoax)..." required minlength="5"></textarea>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-danger">Kirim Laporan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+        <script>
+            // CSRF token
+            const csrfToken = '{{ csrf_token() }}';
+
+            // Vote Thread (AJAX)
+            document.querySelectorAll('.vote-thread-btn').forEach(btn => {
+                btn.addEventListener('click', async function(e) {
+                    e.preventDefault();
+                    
+                    // Optimistic UI toggle could be added here, but waiting for server ensures consistency
+                    const threadId = this.dataset.threadId;
+                    const value = parseInt(this.dataset.value);
+
+                    try {
+                        const res = await fetch(`{{ url('manajemen-mahasiswa/forum') }}/${threadId}/vote`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                                'Accept': 'application/json',
+                            },
+                            body: JSON.stringify({ value })
+                        });
+
+                        const data = await res.json();
+
+                        // Update all matching counters on the page
+                        document.querySelectorAll(`.thread-vote-count-${threadId}`).forEach(el => {
+                            el.textContent = data.vote_count;
+                        });
+
+                        // Update button states locally inside this post-actions div
+                        const parent = this.closest('.post-actions');
+                        if (parent) {
+                            parent.querySelectorAll('.vote-thread-btn').forEach(b => {
+                                b.classList.remove('vote-active-up', 'vote-active-down');
+                            });
+
+                            if (data.user_vote === 1) {
+                                parent.querySelector('.vote-thread-btn[data-value="1"]').classList.add('vote-active-up');
+                            } else if (data.user_vote === -1) {
+                                parent.querySelector('.vote-thread-btn[data-value="-1"]').classList.add('vote-active-down');
+                            }
+                        }
+                    } catch (err) {
+                        console.error('Vote error:', err);
+                    }
+                });
+            });
+
+            // Share functionality (Copy Link)
+            document.querySelectorAll('.share-btn').forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const targetUrl = this.dataset.url;
+                    
+                    navigator.clipboard.writeText(targetUrl).then(() => {
+                        const originalHtml = this.innerHTML;
+                        this.innerHTML = '<span style="font-size: 14px;">✅</span>';
+                        setTimeout(() => {
+                            this.innerHTML = originalHtml;
+                        }, 2000);
+                    }).catch(err => {
+                        console.error('Failed to copy link: ', err);
+                    });
+                });
+            });
+
+            // Handling Report Modal data
+            const reportModal = document.getElementById('reportModal');
+            if (reportModal) {
+                reportModal.addEventListener('show.bs.modal', function (event) {
+                    const button = event.relatedTarget;
+                    const threadId = button.getAttribute('data-thread-id');
+                    const threadTitle = button.getAttribute('data-thread-title');
+                    
+                    const modalTitleDisplay = reportModal.querySelector('#reportThreadTitle');
+                    const form = reportModal.querySelector('#reportForm');
+                    
+                    modalTitleDisplay.textContent = `"${threadTitle}"`;
+                    form.action = `{{ url('manajemen-mahasiswa/forum') }}/${threadId}/report`;
+                });
+            }
+        </script>
     @endpush
 
 </x-manajemenmahasiswa::layouts.mahasiswa>
