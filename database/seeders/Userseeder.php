@@ -51,6 +51,12 @@ class UserSeeder extends Seeder
                 'email'           => 'siti.rahayu@kampus.ac.id',
                 'employee_number' => 'NIP-2001-002',
             ],
+            [
+                'external_id'     => 'EXT-DSN-003',
+                'name'            => 'Prof. Rini Handayani',
+                'email'           => 'rini.handayani@kampus.ac.id',
+                'employee_number' => 'NIP-2001-005',
+            ],
         ];
 
         foreach ($dosenUsers as $data) {
@@ -64,6 +70,7 @@ class UserSeeder extends Seeder
             );
             $user->roles()->syncWithoutDetaching([$roles['dosen']->id]);
 
+            // Buat Lecturer record
             Lecturer::firstOrCreate(
                 ['user_id' => $user->id],
                 ['employee_number' => $data['employee_number']]
@@ -71,9 +78,9 @@ class UserSeeder extends Seeder
         }
 
         // -------------------------------------------------------
-        // 3. DOSEN + GPM
+        // 3. GPM + Dosen
         // -------------------------------------------------------
-        $dosenGpmUsers = [
+        $gpmUsers = [
             [
                 'external_id'     => 'EXT-GPM-001',
                 'name'            => 'Prof. Ahmad Fauzi',
@@ -86,9 +93,21 @@ class UserSeeder extends Seeder
                 'email'           => 'dewi.lestari@kampus.ac.id',
                 'employee_number' => 'NIP-2001-004',
             ],
+            [
+                'external_id'     => 'EXT-GPM-003',
+                'name'            => 'Dr. Arif Budiman',
+                'email'           => 'arif.budiman@kampus.ac.id',
+                'employee_number' => 'NIP-2001-006',
+            ],
+            [
+                'external_id'     => 'EXT-GPM-004',
+                'name'            => 'Prof. Sri Mulyana',
+                'email'           => 'sri.mulyana@kampus.ac.id',
+                'employee_number' => 'NIP-2001-007',
+            ],
         ];
 
-        foreach ($dosenGpmUsers as $data) {
+        foreach ($gpmUsers as $data) {
             $user = User::firstOrCreate(
                 ['email' => $data['email']],
                 [

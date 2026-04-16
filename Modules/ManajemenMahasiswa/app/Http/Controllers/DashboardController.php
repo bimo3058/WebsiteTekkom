@@ -21,7 +21,7 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
-        $user = auth()->user();
+        $user  = auth()->user();
         $roles = $user->getCachedRoles()->pluck('name')->map(fn($r) => strtolower($r));
 
         if (!$user->can('kemahasiswaan.view')) {
@@ -48,8 +48,8 @@ class DashboardController extends Controller
 
     public function switchMode(Request $request)
     {
-        $user = auth()->user();
-        $roles = $user->getCachedRoles()->pluck('name')->map(fn($r) => strtolower($r));
+        $user      = auth()->user();
+        $roles     = $user->getCachedRoles()->pluck('name')->map(fn($r) => strtolower($r));
         $targetMode = $request->input('mode');
 
         // Validasi — user hanya bisa switch ke role yang dia punya
@@ -67,13 +67,13 @@ class DashboardController extends Controller
     {
         $kemahasiswaan = app(KemahasiswaanController::class);
 
-        return match ($mode) {
+        return match($mode) {
             'superadmin', 'admin_kemahasiswaan' => $kemahasiswaan->adminDashboard(),
-            'dosen', 'gpm' => $kemahasiswaan->dosenDashboard(),
-            'pengurus_himpunan' => $kemahasiswaan->pengurusDashboard(),
-            'alumni' => $kemahasiswaan->alumniDashboard(),
-            'mahasiswa' => $kemahasiswaan->mahasiswaDashboard(),
-            default => abort(403, 'Akses Ditolak.'),
+            'dosen', 'gpm'                      => $kemahasiswaan->dosenDashboard(),
+            'pengurus_himpunan'                 => $kemahasiswaan->pengurusDashboard(),
+            'alumni'                            => $kemahasiswaan->alumniDashboard(),
+            'mahasiswa'                         => $kemahasiswaan->mahasiswaDashboard(),
+            default                             => abort(403, 'Akses Ditolak.'),
         };
     }
 }

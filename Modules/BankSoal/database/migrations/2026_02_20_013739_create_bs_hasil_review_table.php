@@ -17,14 +17,6 @@ return new class extends Migration
             $table->unsignedBigInteger('parameter_id');
             $table->integer('skor');
             $table->timestamps();
-
-            $table->foreign('rps_detail_id')
-                ->references('id')->on('bs_rps_detail');
-
-            $table->foreign('parameter_id')
-                ->references('id')->on('bs_parameter')
-                ->restrictOnDelete()
-                ->cascadeOnUpdate();
         });
     }
 
@@ -33,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('bs_hasil_review');
+        Schema::dropIfExists('bs_hasil_review_rps');
     }
 };

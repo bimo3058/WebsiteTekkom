@@ -17,14 +17,9 @@ return new class extends Migration
             $table->string('title');
             $table->timestamp('started_at')->useCurrent();
             $table->timestamp('finished_at')->nullable();
-            $table->decimal('score',5,2)->default(0);
+            $table->decimal('score', 8, 2)->default(0);
             $table->string('status')->default('ongoing');
             $table->timestamps();
-
-            $table->foreign('user_id')
-                ->references('id')->on('users')
-                ->cascadeOnUpdate()
-                ->cascadeOnDelete();
         });
     }
 

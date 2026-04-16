@@ -83,24 +83,25 @@ return [
             ]) : [],
         ],
 
-    'pgsql' => [
-        'driver'      => 'pgsql',
-        'url'         => env('DB_URL'),
-        'host'        => env('DB_HOST', '127.0.0.1'),
-        'port'        => env('DB_PORT', '5432'),
-        'database'    => env('DB_DATABASE', 'laravel'),
-        'username'    => env('DB_USERNAME', 'root'),
-        'password'    => env('DB_PASSWORD', ''),
-        'charset'     => env('DB_CHARSET', 'utf8'),
-        'prefix'      => '',
-        'prefix_indexes' => true,
-        'search_path' => 'public',
-        'sslmode'     => 'require', // dari 'prefer' → 'require' untuk Supabase
-        'options'     => [
-            PDO::ATTR_TIMEOUT              => 10,
-            PDO::ATTR_PERSISTENT           => true, // persistent connection, kurangi overhead handshake
+        'pgsql' => [
+            'driver'      => 'pgsql',
+            'url'         => env('DB_URL'),
+            'host'        => env('DB_HOST', '127.0.0.1'),
+            'port'        => env('DB_PORT', '5432'),
+            'database'    => env('DB_DATABASE', 'laravel'),
+            'username'    => env('DB_USERNAME', 'root'),
+            'password'    => env('DB_PASSWORD', ''),
+            'charset'     => env('DB_CHARSET', 'utf8'),
+            'prefix'      => '',
+            'prefix_indexes' => true,
+            'search_path' => 'public',
+            'sslmode'     => 'require', // dari 'prefer' → 'require' untuk Supabase
+            'options'     => [
+                PDO::ATTR_TIMEOUT              => 10, 
+                PDO::ATTR_EMULATE_PREPARES     => true,
+            ],
+            'prepare' => false,
         ],
-    ],
 
         'sqlsrv' => [
             'driver' => 'sqlsrv',
@@ -148,7 +149,7 @@ return [
 
     'redis' => [
 
-        'client' => env('REDIS_CLIENT', 'phpredis'),
+        'client' => env('REDIS_CLIENT', 'predis'),
 
         'options' => [
             'cluster' => env('REDIS_CLUSTER', 'redis'),

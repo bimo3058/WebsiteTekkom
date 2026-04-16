@@ -14,8 +14,9 @@ return new class extends Migration
         Schema::create('bs_cpl', function (Blueprint $table) {
             $table->id();
             $table->string('kode');
-            $table->string('deskripsi');
-            $table->timestamps();
+            $table->text('deskripsi');
+            $table->timestamp('created_at')->useCurrent();
+            $table->timestamp('updated_at')->useCurrent();
         });
     }
 

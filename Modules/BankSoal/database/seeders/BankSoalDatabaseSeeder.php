@@ -11,6 +11,14 @@ class BankSoalDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $this->call([
+            BsMataKuliahSeeder::class,
+            BsCplSeeder::class,
+            BsCpmkSeeder::class,
+            BsMataKuliahCplSeeder::class,
+            BsCplCpmkSeeder::class,
+            BsRpsParamSeeder::class,
+            DosenPengampuMkSeeder::class,
+        ]);
     }
 }
