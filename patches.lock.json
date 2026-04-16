@@ -6,7 +6,7 @@
                 "package": "laravel/telescope",
                 "description": "Fix boolean query for PostgreSQL",
                 "url": "patches/telescope-boolean-fix.patch",
-                "sha256": "b2ed4b772341831b6c7f4318c062215ce1bd4de9513259bba71d51807d3096e3",
+                "sha256": "f232d3ada1e20add2d56ab21742fdc5502343c1fd4b434513d7e178eb107cbfb",
                 "depth": 1,
                 "extra": {
                     "provenance": "root"
