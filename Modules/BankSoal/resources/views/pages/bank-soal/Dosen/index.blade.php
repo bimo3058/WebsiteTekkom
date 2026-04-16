@@ -78,39 +78,49 @@
         <h2 class="text-lg font-semibold text-slate-900">Daftar Soal</h2>
     </div>
 
-    <form action="{{ route('banksoal.soal.dosen.index') }}" method="GET" class="p-6 border-b border-slate-200 flex flex-col sm:flex-row gap-3 flex-wrap">
-        <div class="relative flex-1 max-w-md">
+    <form action="{{ route('banksoal.soal.dosen.index') }}" method="GET" class="p-6 border-b border-slate-200 flex flex-col md:flex-row gap-3 flex-wrap items-center">
+        <div class="relative flex-1 min-w-[250px] w-full">
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                 <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
             </div>
-            <input type="text" name="searchSoal" value="{{ request('searchSoal') }}" placeholder="Cari soal, kursus, atau topik..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500">
+            <input type="text" name="searchSoal" list="search-suggestions" value="{{ request('searchSoal') }}" placeholder="Cari soal, kursus, atau topik..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" autocomplete="off">
+            <datalist id="search-suggestions">
+                @foreach($mataKuliahDosen as $mk)
+                    <option value="{{ $mk->nama }}"></option>
+                @endforeach
+                {{-- Bisa dtambahkan list CPL atau Topik jika perlu --}}
+            </datalist>
         </div>
 
-        <select name="mk_id" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+        <select name="mk_id" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer min-w-[160px] flex-shrink-0">
             <option value="">Semua Mata Kuliah...</option>
             @foreach($mataKuliahDosen as $mk)
                 <option value="{{ $mk->id }}" {{ request('mk_id') == $mk->id ? 'selected' : '' }}>{{ $mk->nama }}</option>
             @endforeach
         </select>
 
-        <select name="kesulitan" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-            <option value="">Semua Kesulitan...</option>
-            <option value="easy" {{ request('kesulitan') == 'easy' ? 'selected' : '' }}>Mudah</option>
-            <option value="intermediate" {{ request('kesulitan') == 'intermediate' ? 'selected' : '' }}>Sedang</option>
-            <option value="advanced" {{ request('kesulitan') == 'advanced' ? 'selected' : '' }}>Sulit</option>
+        <select name="status" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer min-w-[140px] flex-shrink-0">
+            <option value="">Semua Status...</option>
+            <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Draft</option>
+            <option value="diajukan" {{ request('status') == 'diajukan' ? 'selected' : '' }}>Diajukan</option>
+            <option value="disetujui" {{ request('status') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
+            <option value="revisi" {{ request('status') == 'revisi' ? 'selected' : '' }}>Perlu Revisi</option>
+            <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
         </select>
 
-        <button type="submit" class="inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl px-4 py-2.5 font-medium transition-colors border border-blue-200">
-            <i class="fas fa-filter"></i> Filter
-        </button>
+        <div class="flex items-center gap-2">
+            <button type="submit" class="inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl px-4 py-2.5 font-medium transition-colors border border-blue-200">
+                <i class="fas fa-filter"></i> Filter
+            </button>
 
-        @if(request()->hasAny(['searchSoal', 'mk_id', 'kesulitan']))
-            <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl px-4 py-2.5 font-medium transition-colors border border-red-200">
-                <i class="fas fa-times"></i> Reset
-            </a>
-        @endif
+            @if(request()->hasAny(['searchSoal', 'mk_id', 'status']))
+                <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl px-4 py-2.5 font-medium transition-colors border border-red-200">
+                    <i class="fas fa-times"></i> Reset
+                </a>
+            @endif
+        </div>
     </form>
 
     <div class="overflow-x-auto">
@@ -168,7 +178,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="5" class="px-6 py-12 text-center text-slate-600">
+                        <td colspan="6" class="px-6 py-12 text-center text-slate-600">
                             <div class="flex flex-col items-center justify-center">
                                 <i class="fas fa-folder-open text-4xl text-slate-300 mb-3"></i>
                                 <p class="font-medium">Belum ada soal di dalam bank soal.</p>
@@ -204,18 +214,29 @@
             </button>
         </div>
 
-        <form class="p-6 border-b border-slate-200 flex flex-col sm:flex-row gap-3">
+        <form action="{{ route('banksoal.soal.dosen.index') }}" method="GET" class="p-6 border-b border-slate-200 flex flex-col sm:flex-row gap-3">
             <div class="relative flex-1 max-w-md">
                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
                 </div>
-                <input type="text" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder="Cari paket soal, kode mata kuliah, atau nama..." id="searchPackages">
+                <input type="text" list="packageSuggestions" autocomplete="off" name="searchPackages" value="{{ request('searchPackages') }}" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder="Cari paket soal, kode mata kuliah, atau nama..." id="searchPackages">
+                <datalist id="packageSuggestions">
+                    @foreach(($mataKuliahDosen ?? collect()) as $mk)
+                        <option value="{{ $mk->nama }}"></option>
+                        <option value="{{ $mk->kode }}"></option>
+                    @endforeach
+                </datalist>
             </div>
-            <button class="inline-flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl px-4 py-2.5 font-medium text-slate-700 transition-colors">
-                <i class="fas fa-sliders-h"></i> Filter
+            <button type="submit" class="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-xl px-4 py-2.5 font-medium text-blue-700 transition-colors">
+                <i class="fas fa-filter"></i> Filter
             </button>
+            @if(request('searchPackages'))
+                <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl px-4 py-2.5 font-medium transition-colors border border-red-200">
+                    <i class="fas fa-times"></i> Reset
+                </a>
+            @endif
         </form>
 
         <div class="overflow-x-auto">

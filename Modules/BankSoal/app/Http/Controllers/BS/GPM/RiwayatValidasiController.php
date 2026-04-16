@@ -33,7 +33,8 @@ class RiwayatValidasiController extends Controller
                 'bs_mata_kuliah.kode as mk_kode',
                 'bs_mata_kuliah.nama as mk_nama',
                 DB::raw('COUNT(DISTINCT bs_pertanyaan.id) as jumlah_soal'), // Hitung jumlah soal yang sudah direview
-                DB::raw('MAX(bs_review.created_at) as tanggal_review') // Ambil tanggal review paling terakhir
+                DB::raw('MAX(bs_review.created_at) as tanggal_review'), // Ambil tanggal review paling terakhir
+                DB::raw("SUM(CASE WHEN bs_review.status_review IN ('Revisi Total', 'Kurang Sesuai', 'Revisi') THEN 1 ELSE 0 END) as jumlah_revisi")
             )
             ->groupBy('bs_mata_kuliah.id', 'bs_mata_kuliah.kode', 'bs_mata_kuliah.nama');
 
