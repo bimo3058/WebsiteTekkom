@@ -1,23 +1,10 @@
-<!DOCTYPE html>
-<html lang="en">
+@extends('layouts.master')
 
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal Mahasiswa - Admin</title>
+@section('content')
+@endsection
 
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap"
-        rel="stylesheet">
-
+@push('styles')
     <style>
-        body {
-            margin: 0;
-            background-color: #f5f6fa;
-            font-family: 'Inter Tight', sans-serif;
-        }
-
         .sidebar {
             width: 260px;
             height: 100vh;
@@ -34,41 +21,20 @@
         }
 
         .sidebar a {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 12px 16px;
+            display: block;
+            padding: 10px;
             border-radius: 8px;
             text-decoration: none;
-            color: #6b7280;
-            font-weight: 500;
-            font-size: 15px;
-            margin-bottom: 2px;
-            transition: all 0.2s;
+            color: #374151;
         }
 
         .sidebar a:hover {
             background: #f3f4f6;
-            color: #1f2937;
         }
 
         .sidebar a.active {
-            background: transparent;
+            background: #e0e7ff;
             color: #4f46e5;
-            font-weight: 600;
-        }
-        
-        .sidebar a svg {
-            color: #9ca3af;
-            transition: color 0.2s;
-        }
-        
-        .sidebar a.active svg {
-            color: #4f46e5;
-        }
-        
-        .sidebar a:hover svg {
-            color: #4b5563;
         }
 
         .bottom-menu {
@@ -113,26 +79,23 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
     </style>
+@endpush
 
-    @stack('styles')
-</head>
+@section('body')
+    {{-- Sidebar Dinamis --}}
+    @if(auth()->user()->role == 'admin')
+        <x-sidebar-admin />
+    @else
+        <x-sidebar-mahasiswa />
+    @endif
 
-<body>
+    {{-- Navbar --}}
+    <x-navbar-admin />
 
-    <!-- Sidebar -->
-    <x-manajemenmahasiswa::ui.sidebar-admin />
-
-    <!-- Navbar -->
-    <x-manajemenmahasiswa::ui.navbar-admin />
-
-    <!-- Content -->
+    {{-- Content --}}
     <div class="content">
         <div class="main-wrapper">
-            {{ $slot }}
+            @yield('content')
         </div>
     </div>
-
-    @stack('scripts')
-</body>
-
-</html>
+@endsection
