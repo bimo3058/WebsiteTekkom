@@ -137,10 +137,17 @@
 
                 {{-- Bukan kamu? --}}
                 <div class="mt-5 pt-5 border-t border-slate-200 dark:border-slate-700 text-center">
-                    <a href="{{ route('login') }}" 
-                       class="text-sm text-slate-500 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                        ← Bukan akun Anda? Login dengan akun lain
-                    </a>
+                    <span class="text-sm text-slate-500 dark:text-slate-400">
+                        Bukan akun Anda?
+                    </span>
+
+                    <form method="POST" action="{{ route('logout.switch') }}" class="inline">
+                        @csrf
+                        <button type="submit"
+                            class="ml-1 text-sm text-blue-600 dark:text-blue-400 underline hover:text-blue-700 dark:hover:text-blue-300 transition-colors bg-transparent p-0 border-none">
+                            Login dengan akun lain!
+                        </button>
+                    </form>
                 </div>
             </div>
         </div>

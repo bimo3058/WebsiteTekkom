@@ -48,6 +48,16 @@ class MicrosoftController extends Controller
             ->redirect();
     }
 
+    public function switchAccount()
+    {
+        session()->forget(['sso_pending_user_id', 'sso_verified']);
+
+        return Socialite::driver('azure')
+            ->scopes(['User.Read'])
+            ->with(['prompt' => 'select_account'])
+            ->redirect();
+    }
+
     // ─────────────────────────────────────────────────────────────────────────
     public function callback()
     {
