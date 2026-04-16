@@ -101,7 +101,7 @@
                 <div class="flex gap-4">
                     <div class="font-bold">{{ $index + 1 }}.</div>
                     <div class="flex-1">
-                        <div class="text-justify">{!! nl2br(e($soal->soal)) !!}</div>
+                        <div class="text-justify prose prose-sm max-w-none">{!! $soal->soal !!}</div>
                         
                         @if($soal->jawaban && $soal->jawaban->count() > 0)
                         <div class="mt-3 space-y-1">
@@ -109,15 +109,15 @@
                                 @php $char = chr(65 + $idx); @endphp
                                 <div class="flex gap-2 {{ $jawab->is_benar ? 'font-bold' : '' }}">
                                     <div>{{ $jawab->opsi ?? $char }}.</div>
-                                    <div>{{ $jawab->deskripsi }}</div>
+                                    <div class="prose prose-sm max-w-none">{!! $jawab->deskripsi !!}</div>
                                 </div>
                             @endforeach
                         </div>
                         @endif
                         
                         <div class="mt-4 text-xs text-gray-500 text-right italic no-print">
-                            Tipe: Pilihan Ganda &bull; \
-                            CPL: {{ $soal->cpl?->kode ?? '-' }} \
+                            Tipe: {{ ucwords(str_replace('_', ' ', $soal->tipe_soal ?? 'Essay')) }} &bull; 
+                            CPL: {{ $soal->cpl?->kode ?? '-' }} 
                             @if($soal->cpmk) &bull; CPMK: {{ $soal->cpmk->kode }} @endif
                         </div>
                     </div>

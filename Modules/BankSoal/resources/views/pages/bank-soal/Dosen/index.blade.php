@@ -120,7 +120,8 @@
                     <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">ID</th>
                     <th class="px-2 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mata Kuliah</th>
                     <th class="px-2 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Topik</th>
-                    <th class="px-3 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tingkat & Status</th>
+                    <th class="px-3 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tingkat Kesulitan</th>
+                    <th class="px-3 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
                     <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tindakan</th>
                 </tr>
             </thead>
@@ -138,29 +139,28 @@
                             </div>
                         </td>
                         <td class="px-2 py-4 text-slate-600">{{ $soal->mataKuliah->nama ?? '-' }}</td>
-                        <td class="px-2 py-4 text-slate-600">{{ strip_tags(\Illuminate\Support\Str::limit($soal->soal, 50)) }}</td>
+                        <td class="px-2 py-4 text-slate-600">{!! \Illuminate\Support\Str::limit(strip_tags($soal->soal), 80, '...') !!}</td>
                         <td class="px-3 py-4">
-                            <div class="flex flex-col gap-2 items-start">
-                                @php $diff = strtolower($soal->kesulitan ?? ''); @endphp
-                                @if($diff === 'easy')
-                                    <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">{{ ucfirst($soal->kesulitan) }}</span>
-                                @elseif($diff === 'advanced')
-                                    <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">{{ ucfirst($soal->kesulitan) }}</span>
-                                @else
-                                    <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">{{ ucfirst($soal->kesulitan) }}</span>
-                                @endif
-
-                                @php $status = strtolower($soal->status ?? 'draft'); @endphp
-                                @if($status === 'draft')
-                                    <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200"><i class="fas fa-file-alt mr-1 mt-0.5"></i> Draf</span>
-                                @elseif($status === 'diajukan')
-                                    <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200"><i class="fas fa-paper-plane mr-1 mt-0.5"></i> Diajukan</span>
-                                @elseif($status === 'disetujui')
-                                    <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-600 border border-emerald-200"><i class="fas fa-check mr-1 mt-0.5"></i> Disetujui</span>
-                                @elseif($status === 'revisi' || $status === 'ditolak')
-                                    <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-600 border border-red-200"><i class="fas fa-times mr-1 mt-0.5"></i> Revisi/Ditolak</span>
-                                @endif
-                            </div>
+                            @php $diff = strtolower($soal->kesulitan ?? ''); @endphp
+                            @if($diff === 'easy')
+                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">{{ ucfirst($soal->kesulitan) }}</span>
+                            @elseif($diff === 'advanced')
+                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700">{{ ucfirst($soal->kesulitan) }}</span>
+                            @else
+                                <span class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">{{ ucfirst($soal->kesulitan) }}</span>
+                            @endif
+                        </td>
+                        <td class="px-3 py-4">
+                            @php $status = strtolower($soal->status ?? 'draft'); @endphp
+                            @if($status === 'draft')
+                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200"><i class="fas fa-file-alt mr-1 mt-0.5"></i> Draf</span>
+                            @elseif($status === 'diajukan')
+                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200"><i class="fas fa-paper-plane mr-1 mt-0.5"></i> Diajukan</span>
+                            @elseif($status === 'disetujui')
+                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-600 border border-emerald-200"><i class="fas fa-check mr-1 mt-0.5"></i> Disetujui</span>
+                            @elseif($status === 'revisi' || $status === 'ditolak')
+                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-red-50 text-red-600 border border-red-200"><i class="fas fa-times mr-1 mt-0.5"></i> Revisi/Ditolak</span>
+                            @endif
                         </td>
                         <td class="px-6 py-4">
                             @include('banksoal::partials.dosen._soal-actions', ['soal' => $soal])
@@ -323,7 +323,7 @@
                     <label class="block text-sm font-medium text-slate-700 mb-2">Mata Kuliah</label>
                     <div class="relative">
                         <select class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="mk_id" id="tarikMkId" required onchange="loadCplCpmk(this.value)">
-                            <option value="">Pilih Mata Kuliah</option>
+                            <option value="">Pilih  Mata Kuliah</option>
                             @foreach($mataKuliahDosen as $mk)
                                 <option value="{{ $mk->id }}">{{ $mk->kode }} - {{ $mk->nama }}</option>
                             @endforeach
@@ -345,18 +345,6 @@
                         <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
                             <input type="checkbox" name="jenis_soal[]" value="Essay" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
                             <span class="text-sm font-medium text-slate-700">Essay</span>
-                        </label>
-                        <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                            <input type="checkbox" name="jenis_soal[]" value="Benar/Salah" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
-                            <span class="text-sm font-medium text-slate-700">Benar / Salah</span>
-                        </label>
-                        <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                            <input type="checkbox" name="jenis_soal[]" value="Isian Singkat" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
-                            <span class="text-sm font-medium text-slate-700">Isian Singkat</span>
-                        </label>
-                        <label class="col-span-2 flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                            <input type="checkbox" name="jenis_soal[]" value="Menjodohkan" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
-                            <span class="text-sm font-medium text-slate-700">Menjodohkan</span>
                         </label>
                     </div>
                 </div>
@@ -391,7 +379,7 @@
                 <div class="mb-2">
                     <label class="block text-sm font-medium text-slate-700 mb-2">Bobot Total</label>
                     <div class="relative">
-                        <input type="number" name="bobot_total" class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2.5 pl-4 pr-12 shadow-sm" placeholder="Contoh: 100">
+                        <input type="number" name="bobot_total" min="1" max="100" class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2.5 pl-4 pr-12 shadow-sm" placeholder="Contoh: 100" oninput="if(this.value > 100) this.value = 100; if(this.value < 0) this.value = 0;">
                         <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                             <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">Pts</span>
                         </div>
@@ -415,30 +403,102 @@
 
 <script>
     const mkData = {!! $mataKuliahDosen->toJson() !!};
+    window.tarikSoalsData = [];
+    window.currentTarikMkId = null;
 
-    function loadCplCpmk(mk_id) {
+    function renderCplCpmk(selectedMk, validCplIds = null, validCpmkIds = null) {
         const cplSelect = document.querySelector('select[name="cpl_id"]');
         const cpmkSelect = document.querySelector('select[name="cpmk_id"]');
-        
+
         cplSelect.innerHTML = '<option value="">Pilih CPL</option>';
         cpmkSelect.innerHTML = '<option value="">Pilih CPMK</option>';
-        
-        if (!mk_id) return;
-        
-        const selectedMk = mkData.find(mk => mk.id == mk_id);
-        if (selectedMk) {
-            if (selectedMk.all_cpls && selectedMk.all_cpls.length > 0) {
-                selectedMk.all_cpls.forEach(cpl => {
+
+        if (selectedMk.all_cpls && selectedMk.all_cpls.length > 0) {
+            selectedMk.all_cpls.forEach(cpl => {
+                if (validCplIds === null || validCplIds.includes(cpl.id)) {
                     cplSelect.innerHTML += `<option value="${cpl.id}">${cpl.kode}</option>`;
-                });
-            }
-            if (selectedMk.all_cpmks && selectedMk.all_cpmks.length > 0) {
-                selectedMk.all_cpmks.forEach(cpmk => {
+                }
+            });
+        }
+        if (selectedMk.all_cpmks && selectedMk.all_cpmks.length > 0) {
+            selectedMk.all_cpmks.forEach(cpmk => {
+                if (validCpmkIds === null || validCpmkIds.includes(cpmk.id)) {
                     cpmkSelect.innerHTML += `<option value="${cpmk.id}">${cpmk.kode}</option>`;
-                });
-            }
+                }
+            });
         }
     }
+
+    function filterCplCpmk() {
+        if (!window.currentTarikMkId || window.tarikSoalsData.length === 0) {
+            return;
+        }
+        
+        const cbs = Array.from(document.querySelectorAll('input[name="jenis_soal[]"]:checked'));
+        const typesChecked = cbs.map(cb => {
+            return cb.value === 'Pilihan Ganda' ? 'pilihan_ganda' : 'essay';
+        });
+
+        const selectedMk = mkData.find(mk => mk.id == window.currentTarikMkId);
+        if (!selectedMk) return;
+
+        if (typesChecked.length === 0) {
+            renderCplCpmk(selectedMk, [], []);
+        } else {
+            const validCplIds = window.tarikSoalsData
+                .filter(soal => typesChecked.includes(soal.tipe_soal))
+                .map(soal => soal.cpl_id)
+                .filter(id => id !== null);
+                
+            const validCpmkIds = window.tarikSoalsData
+                .filter(soal => typesChecked.includes(soal.tipe_soal))
+                .map(soal => soal.cpmk_id)
+                .filter(id => id !== null);
+            
+            const uniqueCplIds = [...new Set(validCplIds)];
+            const uniqueCpmkIds = [...new Set(validCpmkIds)];
+            renderCplCpmk(selectedMk, uniqueCplIds, uniqueCpmkIds);
+        }
+    }
+
+    function loadCplCpmk(mk_id) {
+        window.currentTarikMkId = mk_id;
+        const selectedMk = mkData.find(mk => mk.id == mk_id);
+        
+        if (!selectedMk) return;
+
+        // Reset checkboxes state
+        document.querySelectorAll('input[name="jenis_soal[]"]').forEach(cb => {
+            cb.checked = false;
+        });
+
+        renderCplCpmk(selectedMk, [], []);
+
+        // Fetch questions exactly for this MK to drive the filtering
+        fetch(`/bank-soal/soal/dosen/get-by-mk/${mk_id}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if(data.success && data.soals) {
+                window.tarikSoalsData = data.soals;
+            } else {
+                window.tarikSoalsData = [];
+            }
+        })
+        .catch(() => {
+            window.tarikSoalsData = [];
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('input[name="jenis_soal[]"]').forEach(cb => {
+            cb.addEventListener('change', filterCplCpmk);
+        });
+    });
 
     function openTarikModal(mk_id = null) {
         const modal = document.getElementById('tarikSoalModal');
@@ -524,8 +584,6 @@
                     const tipeLabel = soal.tipe_soal === 'essay' ? 'Essay' : 'Pilihan Ganda';
                     const tipeColor = soal.tipe_soal === 'essay' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-blue-50 text-blue-700 border-blue-200';
                     badges += `<span class="px-2 py-0.5 ${tipeColor} border text-[10px] font-bold rounded uppercase">${tipeLabel}</span>`;
-                    
-                    const safeSoal = soal.soal.replace(/"/g, '&quot;');
 
                     listDiv.innerHTML += `
                         <div class="px-5 py-4 border-b border-slate-100 hover:bg-slate-50/50 transition-colors flex items-start cursor-default">
@@ -536,7 +594,9 @@
                                 <div class="flex flex-wrap gap-2 items-center mb-1">
                                     ${badges}
                                 </div>
-                                <p class="text-sm text-slate-700 leading-relaxed">${safeSoal}</p>
+                                <div class="text-sm text-slate-700 leading-relaxed prose prose-sm prose-slate max-w-none prose-img:max-h-48 prose-img:w-auto prose-img:rounded-md mt-2">
+                                    ${soal.soal}
+                                </div>
                             </div>
                         </div>
                     `;
@@ -852,7 +912,7 @@
                     Batal
                 </button>
                 <button type="submit" onclick="this.innerHTML='<i class=\'fas fa-spinner fa-spin mr-2\'></i>Memproses...'; this.classList.add('opacity-75');" class="inline-flex items-center gap-2 bg-[#059669] hover:bg-[#047857] text-white rounded-lg px-5 py-2.5 text-sm font-medium transition-colors shadow-sm">
-                    <i class="fas fa-paper-plane"></i> Ya, Ajukan Semua Pilihan
+                    <i class="fas fa-paper-plane"></i> Ya, Ajukan Pilihan
                 </button>
             </div>
         </form>
