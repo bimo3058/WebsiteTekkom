@@ -391,7 +391,7 @@
 <!-- Validation Errors -->
 @if($errors->any())
     <div class="alert alert-danger" style="border-radius: 10px; border: none; background: #fee2e2; color: #991b1b; font-size: 14px;">
-        <strong>⚠️ Terjadi kesalahan:</strong>
+        <strong><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg> Terjadi kesalahan:</strong>
         <ul class="mb-0 mt-1">
             @foreach($errors->all() as $error)
                 <li>{{ $error }}</li>
@@ -406,7 +406,7 @@
 
     <!-- Info Utama -->
     <div class="form-card">
-        <div class="form-card-title">📋 Informasi Utama</div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg> Informasi Utama</div>
 
         <div class="mb-3">
             <label class="form-label-custom">Judul Kegiatan <span class="required">*</span></label>
@@ -471,7 +471,7 @@
 
     <!-- Waktu & Lokasi -->
     <div class="form-card">
-        <div class="form-card-title">📅 Waktu & Lokasi</div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg> Waktu & Lokasi</div>
 
         <div class="row g-3 mb-3">
             <div class="col-md-3">
@@ -505,7 +505,7 @@
 
     <!-- Personel -->
     <div class="form-card">
-        <div class="form-card-title">👥 Personel Kegiatan</div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> Personel Kegiatan</div>
 
         <div class="row g-3 mb-3">
             <div class="col-md-6">
@@ -514,7 +514,7 @@
                     <input type="hidden" name="ketua_pelaksana_id" id="ketuaPelaksanaId"
                            value="{{ old('ketua_pelaksana_id', $kegiatan->ketua_pelaksana_id) }}">
                     <input type="text" class="form-control form-control-custom" id="ketuaPelaksanaSearch"
-                           placeholder="🔍 Cari nama mahasiswa..."
+                           placeholder="Cari nama mahasiswa..."
                            value="{{ $ketuaNama }}"
                            autocomplete="off"
                            onfocus="showDropdown('ketuaPelaksanaDropdown')"
@@ -539,7 +539,7 @@
                     <input type="hidden" name="dosen_pendamping_id" id="dosenPendampingId"
                            value="{{ old('dosen_pendamping_id', $kegiatan->dosen_pendamping_id) }}">
                     <input type="text" class="form-control form-control-custom" id="dosenPendampingSearch"
-                           placeholder="🔍 Cari nama dosen..."
+                           placeholder="Cari nama dosen..."
                            value="{{ $dosenNama }}"
                            autocomplete="off"
                            onfocus="showDropdown('dosenPendampingDropdown')"
@@ -562,7 +562,7 @@
 
     <!-- Detail Tambahan -->
     <div class="form-card">
-        <div class="form-card-title">📝 Detail Tambahan</div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Detail Tambahan</div>
 
         <div class="row g-3 mb-3">
             <div class="col-md-6">
@@ -580,7 +580,7 @@
 
     <!-- Banner -->
     <div class="form-card">
-        <div class="form-card-title">🖼️ Banner Kegiatan</div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg> Banner Kegiatan</div>
 
         @if($kegiatan->banner)
             <div class="banner-current">
@@ -591,7 +591,7 @@
         @endif
 
         <div class="banner-upload-area" onclick="document.getElementById('bannerInput').click()">
-            <div class="upload-icon">📷</div>
+            <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
             <p>Klik untuk upload banner {{ $kegiatan->banner ? 'baru' : 'kegiatan' }}</p>
             <small>Format: JPG, PNG, WebP • Maks: 5MB</small>
         </div>
@@ -602,7 +602,7 @@
 
     <!-- Foto Kegiatan -->
     <div class="form-card">
-        <div class="form-card-title">📸 Foto Kegiatan <span style="color: #9ca3af; font-weight: 400; font-size: 13px;">(opsional, maks 10 foto)</span></div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Foto Kegiatan <span style="color: #9ca3af; font-weight: 400; font-size: 13px;">(opsional, maks 10 foto)</span></div>
 
         @if($existingFoto->count() > 0)
             <div class="existing-file-label">Foto yang sudah diupload</div>
@@ -618,7 +618,7 @@
         @endif
 
         <div class="file-upload-area" id="fotoUploadArea" onclick="document.getElementById('fotoInput').click()">
-            <div class="upload-icon">🖼️</div>
+            <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
             <p>Klik atau drag & drop foto baru ke sini</p>
             <small>Format: JPG, PNG, WebP • Maks: 5MB per file</small>
         </div>
@@ -629,15 +629,15 @@
 
     <!-- Dokumen Kegiatan -->
     <div class="form-card">
-        <div class="form-card-title">📄 Dokumen Kegiatan <span style="color: #9ca3af; font-weight: 400; font-size: 13px;">(opsional, maks 10 dokumen)</span></div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen Kegiatan <span style="color: #9ca3af; font-weight: 400; font-size: 13px;">(opsional, maks 10 dokumen)</span></div>
 
         @if($existingDokumen->count() > 0)
             <div class="existing-file-label">Dokumen yang sudah diupload</div>
             @foreach($existingDokumen as $doc)
                 @php
                     $ext = pathinfo($doc->nama_file, PATHINFO_EXTENSION);
-                    $iconMap = ['pdf' => '📕', 'doc' => '📘', 'docx' => '📘', 'xls' => '📗', 'xlsx' => '📗', 'ppt' => '📙', 'pptx' => '📙'];
-                    $icon = $iconMap[strtolower($ext)] ?? '📄';
+                    $iconMap = ['pdf' => 'PDF', 'doc' => 'DOC', 'docx' => 'DOC', 'xls' => 'XLS', 'xlsx' => 'XLS', 'ppt' => 'PPT', 'pptx' => 'PPT'];
+                    $icon = $iconMap[strtolower($ext)] ?? 'FILE';
                 @endphp
                 <div class="doc-preview-item" id="existingFile{{ $doc->id }}">
                     <span class="doc-icon">{{ $icon }}</span>
@@ -653,7 +653,7 @@
         @endif
 
         <div class="file-upload-area" id="dokumenUploadArea" onclick="document.getElementById('dokumenInput').click()">
-            <div class="upload-icon">📎</div>
+            <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></div>
             <p>Klik atau drag & drop dokumen baru ke sini</p>
             <small>Format: PDF, DOC, DOCX, XLS, XLSX, PPT, PPTX • Maks: 10MB per file</small>
         </div>
@@ -808,8 +808,8 @@ function renderDokumenPreviews() {
     list.innerHTML = '';
     dokumenFiles.forEach((file, i) => {
         const ext = file.name.split('.').pop().toLowerCase();
-        const icons = { pdf: '📕', doc: '📘', docx: '📘', xls: '📗', xlsx: '📗', ppt: '📙', pptx: '📙' };
-        const icon = icons[ext] || '📄';
+        const icons = { pdf: 'PDF', doc: 'DOC', docx: 'DOC', xls: 'XLS', xlsx: 'XLS', ppt: 'PPT', pptx: 'PPT' };
+        const icon = icons[ext] || '\u25A1';
         const item = document.createElement('div');
         item.className = 'doc-preview-item';
         item.innerHTML = `

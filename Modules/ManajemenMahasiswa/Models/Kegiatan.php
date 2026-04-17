@@ -35,9 +35,9 @@ class Kegiatan extends Model
     ];
 
     protected $casts = [
-        'tanggal_mulai'   => 'date',
+        'tanggal_mulai' => 'date',
         'tanggal_selesai' => 'date',
-        'anggaran'        => 'decimal:2',
+        'anggaran' => 'decimal:2',
     ];
 
     // -------------------------------------------------------------------------
@@ -60,7 +60,7 @@ class Kegiatan extends Model
 
     const STATUS_AKAN_DATANG = 'akan_datang';
     const STATUS_BERLANGSUNG = 'berlangsung';
-    const STATUS_SELESAI     = 'selesai';
+    const STATUS_SELESAI = 'selesai';
 
     const STATUS_LIST = [
         self::STATUS_AKAN_DATANG,
@@ -142,21 +142,21 @@ class Kegiatan extends Model
 
     public function getStatusLabelAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_AKAN_DATANG => 'Akan Datang',
             self::STATUS_BERLANGSUNG => 'Berlangsung',
-            self::STATUS_SELESAI     => 'Selesai',
-            default                  => ucfirst($this->status ?? ''),
+            self::STATUS_SELESAI => 'Selesai',
+            default => ucfirst($this->status ?? ''),
         };
     }
 
     public function getStatusColorAttribute(): string
     {
-        return match($this->status) {
+        return match ($this->status) {
             self::STATUS_AKAN_DATANG => 'warning',
             self::STATUS_BERLANGSUNG => 'primary',
-            self::STATUS_SELESAI     => 'success',
-            default                  => 'secondary',
+            self::STATUS_SELESAI => 'success',
+            default => 'secondary',
         };
     }
 }

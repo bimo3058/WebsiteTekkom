@@ -1,17 +1,102 @@
 <x-dynamic-component :component="$isAdmin ? 'manajemenmahasiswa::layouts.admin' : 'manajemenmahasiswa::layouts.mahasiswa'">
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
+    @push('styles')
+        <style>
+            .custom-card {
+                background: #ffffff;
+                border-radius: 12px;
+                padding: 32px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                border: none;
+            }
+            .btn-custom {
+                background-color: #4D4DFF;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 24px;
+                font-weight: 600;
+                transition: all 0.2s;
+            }
+            .btn-custom:hover {
+                background-color: #3b3be5;
+                color: white;
+                transform: translateY(-1px);
+            }
+            .btn-outline-custom {
+                background-color: transparent;
+                color: #6b7280;
+                border: 2px solid #e5e7eb;
+                border-radius: 8px;
+                padding: 8px 20px;
+                font-weight: 600;
+                transition: all 0.2s;
+            }
+            .btn-outline-custom:hover {
+                background-color: #f3f4f6;
+                color: #374151;
+            }
+            .form-control-custom, .form-select-custom {
+                background-color: #f9fafb;
+                border: 2px solid #f3f4f6;
+                border-radius: 8px;
+                padding: 12px 16px;
+                font-size: 14px;
+                transition: all 0.2s;
+                font-weight: 500;
+            }
+            .form-control-custom:focus, .form-select-custom:focus {
+                background-color: #ffffff;
+                border-color: #a5a5ff;
+                box-shadow: 0 0 0 4px rgba(77, 77, 255, 0.1);
+                outline: none;
+            }
+            .form-label-custom {
+                font-size: 13px;
+                font-weight: 600;
+                color: #4b5563;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                margin-bottom: 8px;
+            }
+            .section-title {
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-weight: 700;
+                color: #111827;
+                font-size: 16px;
+                margin-bottom: 24px;
+                padding-bottom: 12px;
+                border-bottom: 2px solid #f3f4f6;
+            }
+            .checkbox-wrapper {
+                background: #f8fafc;
+                border: 2px solid #e2e8f0;
+                padding: 16px;
+                border-radius: 12px;
+                transition: all 0.2s;
+            }
+            .checkbox-wrapper:hover {
+                border-color: #cbd5e1;
+            }
+        </style>
+    @endpush
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h4 class="fw-bold mb-1">Buat Pengaduan</h4>
-            <p class="text-muted mb-0">Isi template pengaduan, lalu sistem akan mengirimkannya ke admin terkait.</p>
+            <h3 class="fw-bold mb-1 text-dark">Buat Pengaduan</h3>
+            <p class="text-muted mb-0 fw-medium">Isi form di bawah ini dengan detail yang jelas dan valid.</p>
         </div>
-        <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="btn btn-outline-secondary">Kembali</a>
+        <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="btn-outline-custom text-decoration-none">
+            ← Kembali
+        </a>
     </div>
 
     @if ($errors->any())
-        <div class="alert alert-danger">
-            <div class="fw-semibold mb-1">Periksa kembali input:</div>
-            <ul class="mb-0">
+        <div class="alert alert-danger border-0 shadow-sm" style="background-color: #fee2e2; color: #dc2626; border-radius: 12px;">
+            <div class="fw-bold mb-2">⚠ Terdapat kesalahan pada input:</div>
+            <ul class="mb-0 fw-medium" style="font-size: 14px;">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
                 @endforeach
@@ -19,76 +104,83 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.store') }}" class="card border-0 shadow-sm rounded-4">
+    <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.store') }}" class="custom-card">
         @csrf
 
-        <div class="card-body">
-
-            <div class="form-check mb-3">
-                <input class="form-check-input" type="checkbox" name="is_anonim" value="1" id="isAnonim" {{ old('is_anonim') ? 'checked' : '' }}>
-                <label class="form-check-label" for="isAnonim">
-                    Kirim sebagai anonim (identitas tidak ditampilkan di sistem)
-                </label>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Kategori Pengaduan</label>
-                <select name="kategori" class="form-select" required>
-                    <option value="" disabled {{ old('kategori') ? '' : 'selected' }}>Pilih kategori…</option>
-                    @foreach($kategoriList as $value => $label)
-                        <option value="{{ $value }}" {{ old('kategori') === $value ? 'selected' : '' }}>
-                            {{ $label }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
-
-            <hr class="my-4">
-
-            <h6 class="fw-bold mb-3">Template Pengaduan</h6>
-
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Judul</label>
-                <input type="text" class="form-control" name="template[judul]" value="{{ old('template.judul') }}" placeholder="Contoh: Keluhan terkait jadwal kuliah" required>
-            </div>
-
-            <div class="mb-3">
-                <label class="form-label fw-semibold">Kronologi / Isi Pengaduan</label>
-                <textarea class="form-control" name="template[kronologi]" rows="6" placeholder="Jelaskan masalah secara ringkas dan jelas…" required>{{ old('template.kronologi') }}</textarea>
-                <div class="form-text">Minimal 20 karakter.</div>
-            </div>
-
-            <div class="row g-3">
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">Lokasi (opsional)</label>
-                    <input type="text" class="form-control" name="template[lokasi]" value="{{ old('template.lokasi') }}" placeholder="Contoh: Ruang 3.12 / Gedung A">
-                </div>
-                <div class="col-md-6">
-                    <label class="form-label fw-semibold">Tanggal Kejadian (opsional)</label>
-                    <input type="date" class="form-control" name="template[tanggal_kejadian]" value="{{ old('template.tanggal_kejadian') }}">
-                </div>
-            </div>
-
-            <div class="row g-3 mt-0">
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold">Mata Kuliah (opsional)</label>
-                    <input type="text" class="form-control" name="template[mata_kuliah]" value="{{ old('template.mata_kuliah') }}" placeholder="Contoh: Pemrograman Web">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold">Nama Dosen (opsional)</label>
-                    <input type="text" class="form-control" name="template[nama_dosen]" value="{{ old('template.nama_dosen') }}" placeholder="Contoh: Dr. A">
-                </div>
-                <div class="col-md-4">
-                    <label class="form-label fw-semibold">Nama Tendik (opsional)</label>
-                    <input type="text" class="form-control" name="template[nama_tendik]" value="{{ old('template.nama_tendik') }}" placeholder="Contoh: Staf TU">
-                </div>
-            </div>
-
+        <div class="checkbox-wrapper d-flex align-items-center gap-3 mb-4">
+            <input class="form-check-input" type="checkbox" name="is_anonim" value="1" id="isAnonim" {{ old('is_anonim') ? 'checked' : '' }} style="width: 20px; height: 20px; cursor: pointer; flex-shrink: 0;">
+            <label class="form-check-label mb-0" for="isAnonim" style="cursor: pointer;">
+                <span class="fw-bold text-dark d-block">Sembunyikan Identitas (Anonim)</span>
+                <span class="text-muted" style="font-size: 13px;">Identitas Anda tidak akan ditampilkan kepada siapapun di dalam sistem.</span>
+            </label>
         </div>
 
-        <div class="card-footer bg-transparent d-flex justify-content-end gap-2">
-            <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="btn btn-outline-secondary">Batal</a>
-            <button type="submit" class="btn btn-primary">Kirim Pengaduan</button>
+        <div class="mb-4">
+            <label class="form-label-custom d-block">Kategori Pengaduan <span class="text-danger">*</span></label>
+            <select name="kategori" class="form-select form-control-custom" required>
+                <option value="" disabled {{ old('kategori') ? '' : 'selected' }}>Pilih kategori masalah…</option>
+                @foreach($kategoriList as $value => $label)
+                    <option value="{{ $value }}" {{ old('kategori') === $value ? 'selected' : '' }}>
+                        {{ $label }}
+                    </option>
+                @endforeach
+            </select>
+        </div>
+
+        <div class="mt-5">
+            <h6 class="section-title">
+                📝 Detail Pengaduan
+            </h6>
+
+            <div class="mb-4">
+                <label class="form-label-custom d-block">Judul <span class="text-danger">*</span></label>
+                <input type="text" class="form-control form-control-custom" name="template[judul]" value="{{ old('template.judul') }}"
+                    placeholder="Contoh: AC Ruang 3.12 tidak berfungsi" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label-custom d-block">Kronologi / Isi Pengaduan <span class="text-danger">*</span></label>
+                <textarea class="form-control form-control-custom" name="template[kronologi]" rows="6"
+                    placeholder="Ceritakan dengan jelas masalah yang Anda hadapi…"
+                    required>{{ old('template.kronologi') }}</textarea>
+                <div class="form-text mt-2 fw-medium" style="color: #9ca3af; font-size: 13px;">Minimal 20 karakter untuk memberikan konteks yang jelas.</div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-6">
+                    <label class="form-label-custom d-block">Lokasi Kejadian <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
+                    <input type="text" class="form-control form-control-custom" name="template[lokasi]" value="{{ old('template.lokasi') }}"
+                        placeholder="Contoh: Lab Komputer">
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label-custom d-block">Tanggal Kejadian <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
+                    <input type="date" class="form-control form-control-custom" name="template[tanggal_kejadian]"
+                        value="{{ old('template.tanggal_kejadian') }}">
+                </div>
+            </div>
+
+            <div class="row g-4 mt-0">
+                <div class="col-md-4">
+                    <label class="form-label-custom d-block">Mata Kuliah <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
+                    <input type="text" class="form-control form-control-custom" name="template[mata_kuliah]"
+                        value="{{ old('template.mata_kuliah') }}" placeholder="Contoh: Basis Data">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label-custom d-block">Dosen Terkait <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
+                    <input type="text" class="form-control form-control-custom" name="template[nama_dosen]"
+                        value="{{ old('template.nama_dosen') }}" placeholder="Contoh: Pak Budi">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label-custom d-block">Tendik Terkait <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
+                    <input type="text" class="form-control form-control-custom" name="template[nama_tendik]"
+                        value="{{ old('template.nama_tendik') }}" placeholder="Contoh: Bu Siti">
+                </div>
+            </div>
+        </div>
+
+        <div class="d-flex justify-content-end gap-3 mt-5 pt-4" style="border-top: 1px solid #f3f4f6;">
+            <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="btn-outline-custom text-decoration-none">Batal</a>
+            <button type="submit" class="btn-custom">🚀 Kirim Pengaduan</button>
         </div>
     </form>
 
