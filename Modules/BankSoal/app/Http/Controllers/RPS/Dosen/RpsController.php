@@ -26,17 +26,41 @@ class RpsController extends Controller
     {
         $user = Auth::user()->load('lecturer');
 
-        // Fetch mata kuliah — exclude MK yang sudah punya RPS aktif
-        // (status: diajukan, revisi, atau disetujui) untuk cegah duplikasi
-        $mkIdsWithActiveRps = RpsDetail::whereIn('status', [
+        $currentYear  = (int) now()->format('Y');
+        $tahunAjarans = [
+            ($currentYear - 1) . '/' . $currentYear,
+            $currentYear . '/' . ($currentYear + 1),
+            ($currentYear + 1) . '/' . ($currentYear + 2),
+        ];
+
+        // Semester Ganjil: Juli-Desember (bulan 7-12)
+        // Semester Genap: Januari-Juni (bulan 1-6)
+        $semester = now()->month >= 7 ? 'Ganjil' : 'Genap';
+        $semesterParity = now()->month >= 7 ? 1 : 0; // 1 = Ganjil, 0 = Genap
+        
+        // Set tahun ajaran
+        $academicYear = $semester === 'Ganjil'
+            ? $currentYear . '/' . ($currentYear + 1)
+            : ($currentYear - 1) . '/' . $currentYear;
+
+
+            $mkIdsWithActiveRps = RpsDetail::whereIn('status', [
                 RpsStatus::DIAJUKAN->value,
                 RpsStatus::REVISI->value,
                 RpsStatus::DISETUJUI->value,
             ])
+            ->where('semester', $semester)
+            ->where('tahun_ajaran', $academicYear)
             ->pluck('mk_id')
             ->unique();
 
-        $mataKuliahs = MataKuliah::whereNotIn('id', $mkIdsWithActiveRps)->get();
+        $mataKuliahs = MataKuliah::whereNotIn('id', $mkIdsWithActiveRps)
+            ->whereHas('dosenPengampu', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->whereRaw('semester % 2 = ?', [$semesterParity])
+            ->orderBy('nama')
+            ->get();
 
         // Fetch riwayat RPS — hanya tampilkan RPS dimana dosen ini terdaftar
         // (baik sebagai pembuat maupun dosen pengampu tambahan via pivot bs_rps_dosen)
@@ -54,22 +78,6 @@ class RpsController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(4)
             ->withQueryString();
-
-        $currentYear  = (int) now()->format('Y');
-        $tahunAjarans = [
-            ($currentYear - 1) . '/' . $currentYear,
-            $currentYear . '/' . ($currentYear + 1),
-            ($currentYear + 1) . '/' . ($currentYear + 2),
-        ];
-
-        // Semester Ganjil: Juli-Desember (bulan 7-12)
-        // Semester Genap: Januari-Juni (bulan 1-6)
-        $semester = now()->month >= 7 ? 'Ganjil' : 'Genap';
-        
-        // Set tahun ajaran
-        $academicYear = $semester === 'Ganjil'
-            ? $currentYear . '/' . ($currentYear + 1)
-            : ($currentYear - 1) . '/' . $currentYear;
 
         // Fetch Active Periode
         $activePeriode = PeriodeRps::where('is_active', 'true')->first();
@@ -122,6 +130,7 @@ class RpsController extends Controller
                         ->join('bs_dosen_pengampu_mk', 'bs_mata_kuliah.id', '=', 'bs_dosen_pengampu_mk.mk_id')
                         ->where('bs_dosen_pengampu_mk.user_id', $user->id)
                         ->whereNotIn('bs_mata_kuliah.id', $mkIdsWithActiveRps)
+                        ->whereRaw('semester % 2 = ?', [$semesterParity])
                         ->pluck('bs_mata_kuliah.nama')
                         ->toArray();
                 }
@@ -385,6 +394,57 @@ class RpsController extends Controller
         }
     }
 
+    public function getMkByDosen(Request $request): JsonResponse
+    {
+        try {
+            $user = Auth::user();
+            
+            // Selalu gunakan tahun dan semester SEKARANG (server time)
+            // Bukan dari query parameter frontend
+            $currentYear = (int) now()->format('Y');
+            $semester = now()->month >= 7 ? 'Ganjil' : 'Genap';
+            $semesterParity = now()->month >= 7 ? 1 : 0; // 1 = Ganjil, 0 = Genap
+            $academicYear = $semester === 'Ganjil'
+                ? $currentYear . '/' . ($currentYear + 1)
+                : ($currentYear - 1) . '/' . $currentYear;
+
+            // Cari MK dengan RPS aktif di semester/tahun SAAT INI
+            $mkIdsWithActiveRps = RpsDetail::whereIn('status', [
+                    RpsStatus::DIAJUKAN->value,
+                    RpsStatus::REVISI->value,
+                    RpsStatus::DISETUJUI->value,
+                ])
+                ->where('semester', $semester)
+                ->where('tahun_ajaran', $academicYear)
+                ->pluck('mk_id')
+                ->unique();
+
+            $mataKuliahs = MataKuliah::whereNotIn('id', $mkIdsWithActiveRps)
+                ->whereHas('dosenPengampu', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
+                ->whereRaw('semester % 2 = ?', [$semesterParity])
+                ->orderBy('nama')
+                ->get()
+                ->map(function ($mk) {
+                    return [
+                        'id' => $mk->id,
+                        'kode' => $mk->kode,
+                        'nama' => $mk->nama,
+                        'sks' => $mk->sks,
+                    ];
+                });
+
+            return response()->json($mataKuliahs);
+        } catch (\Exception $e) {
+            Log::error('getMkByDosen Error', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json(['error' => 'Error fetching mata kuliah'], 500);
+        }
+    }
+
     public function previewDokumen(int $rpsId)
     {
         try {
@@ -424,8 +484,9 @@ class RpsController extends Controller
         $editableStatuses = [RpsStatus::DIAJUKAN->value, RpsStatus::REVISI->value];
         abort_if(!in_array($rps->status->value, $editableStatuses), 403, 'RPS dengan status ' . $rps->status->label() . ' tidak dapat diedit.');
 
-        // Fetch semua mata kuliah (untuk dropdown)
-        $mataKuliahs = MataKuliah::all();
+        // Fetch mata kuliah berdasarkan semester saat ini (dengan parity check)
+        $semesterParity = now()->month >= 7 ? 1 : 0; // 1 = Ganjil, 0 = Genap
+        $mataKuliahs = MataKuliah::whereRaw('semester % 2 = ?', [$semesterParity])->orderBy('nama')->get();
 
         // Fetch CPL dan CPMK yang sudah dipilih
         $selectedCplIds = $rps->cpls->pluck('id')->toArray();

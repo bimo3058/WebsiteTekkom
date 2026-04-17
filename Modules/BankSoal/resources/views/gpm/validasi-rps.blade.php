@@ -214,7 +214,7 @@
                 <button type="button" class="btn btn-outline-secondary rounded-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalUploadTemplate">
                     <i class="fas fa-file-upload me-2"></i> Upload Template
                 </button>
-                <button type="button" class="btn btn-primary rounded-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalTambah">
+                <button type="button" class="btn btn-primary rounded-3 px-4 py-2px-3 py-2" data-bs-toggle="modal" data-bs-target="#modalTambah">
                     <i class="fas fa-calendar-plus me-2"></i> Buat Periode
                 </button>
             </div>

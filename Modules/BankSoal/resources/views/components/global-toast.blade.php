@@ -31,7 +31,7 @@
     <template x-for="toast in toasts" :key="toast.id">
         <div 
             x-show="toast.visible"
-            x-transition:enter="transition ease-[cubic-bezier(0.16,1,0.3,1)] duration-500"
+            x-transition:enter="transition ease-&lsqb;cubic-bezier(0.16,1,0.3,1)&rsqb; duration-500"
             x-transition:enter-start="opacity-0 -translate-y-6 scale-95"
             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
             x-transition:leave="transition ease-in duration-200"
