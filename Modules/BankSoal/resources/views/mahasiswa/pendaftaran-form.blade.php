@@ -1,173 +1,179 @@
 <x-banksoal::layouts.mahasiswa>
-    <!-- Simple Header (Matching Wireframe) -->
-    <div class="mb-4 flex items-center gap-3">
-        <div class="w-6 h-6 rounded flex items-center justify-center text-[#0B66E4] border border-[#0B66E4]/20 bg-blue-50/50">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-        </div>
-        <h1 class="text-[22px] font-bold text-slate-900 tracking-tight">Pengajuan Pendaftaran Ujian</h1>
-    </div>
-
-    <!-- Divider Line -->
-    <div class="h-px w-full bg-slate-200 mb-6"></div>
-
-    <p class="text-[15px] font-bold text-slate-500 mb-8 tracking-wide">Pendaftaran Ujian Komprehensif S1 Teknik Komputer - {{ $activePeriode->nama_periode }}</p>
-
-    <div class="flex flex-col lg:flex-row gap-6 lg:gap-8 items-start">
+    <!-- We break the standard container bounds by using raw expansive space -->
+    <div class="relative py-8 lg:py-16">
         
-        <!-- Left Column: Information -->
-        <div class="w-full lg:w-7/12 flex flex-col gap-6">
+        <!-- Background subtle accent outside normal flow -->
+        <div class="absolute top-0 right-0 -translate-y-12 translate-x-1/4 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl opacity-50 pointer-events-none"></div>
+
+        <div class="flex flex-col lg:flex-row gap-12 xl:gap-24 items-start relative z-10 w-full max-w-[1400px] mx-auto">
             
-            <!-- Info Card -->
-            <div class="bg-white rounded-[20px] shadow-sm border border-slate-100 overflow-hidden">
-                <!-- Graphic top bar -->
-                <div class="h-[180px] bg-[#E8F0FE] relative flex items-center justify-center overflow-hidden">
-                    <div class="absolute inset-0 bg-gradient-to-b from-transparent to-white/20"></div>
-                    <div class="relative z-10 w-24 h-24 text-[#0B66E4]/30">
-                        <svg fill="none" class="w-full h-full" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path><circle cx="15" cy="15" r="4" stroke-width="1.5" fill="none"></circle></svg>
-                    </div>
+            <!-- LEFT COLUMN: Canvas-Integrated Information (No Cards) -->
+            <div class="w-full lg:w-1/2 flex flex-col pt-4">
+                
+                <div class="inline-flex items-center gap-2 text-primary font-semibold tracking-widest text-xs uppercase mb-8">
+                    <span class="w-8 h-px bg-primary"></span>
+                    <span>Periode {{ $activePeriode->nama_periode }}</span>
                 </div>
 
-                <div class="p-8">
-                    <div class="flex items-center gap-3 mb-6">
-                        <span class="inline-flex items-center px-4 py-1.5 rounded-full text-[11px] font-bold bg-[#E8F0FE] text-[#0B66E4] tracking-widest uppercase">
-                            INFORMASI PENDAFTARAN
-                        </span>
-                        <span class="text-[13px] font-medium text-slate-500">&bull; {{ $activePeriode->nama_periode }}</span>
-                    </div>
+                <h1 class="text-4xl lg:text-6xl font-bold text-slate-900 tracking-tighter leading-[1.1] mb-8">
+                    Pengajuan <br/>
+                    <span class="text-slate-400">Pendaftaran Ujian.</span>
+                </h1>
 
-                    <h3 class="text-[18px] font-bold text-slate-900 mb-4 tracking-tight">Ketentuan & Jadwal Ujian</h3>
-                    <p class="text-[14.5px] text-slate-600 leading-relaxed mb-8">
-                        Pendaftaran hanya dibuka untuk mahasiswa minimal semester 7 dan diprioritaskan bagi mahasiswa yang telah siap mengikuti Sidang Tugas Akhir pada bulan Desember 2025.
-                    </p>
+                <p class="text-lg lg:text-xl text-slate-600 leading-relaxed font-medium mb-12 max-w-lg">
+                    Lengkapi persyaratan administratif untuk mengikuti sidang komprehensif S1 Teknik Komputer. Pastikan data yang Anda masukkan mutlak benar dan sesuai.
+                </p>
 
-                    <!-- Info list boxes -->
-                    <div class="space-y-4">
-                        <!-- Jadwal -->
-                        <div class="flex items-start gap-4 p-5 rounded-2xl bg-[#F8FAFC]">
-                            <div class="flex-shrink-0 text-[#0B66E4] mt-0.5">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            </div>
-                            <div>
-                                <p class="text-[13px] font-bold text-slate-900 mb-1">Jadwal Pelaksanaan</p>
-                                <p class="text-[14px] text-slate-600">
-                                    {{ $activePeriode->tanggal_mulai_ujian ? \Carbon\Carbon::parse($activePeriode->tanggal_mulai_ujian)->translatedFormat('l, d F Y') : '-' }} s.d.<br>
-                                    {{ $activePeriode->tanggal_selesai_ujian ? \Carbon\Carbon::parse($activePeriode->tanggal_selesai_ujian)->translatedFormat('l, d F Y') : '-' }}
-                                </p>
-                            </div>
-                        </div>
-
-                        <!-- Lokasi -->
-                        <div class="flex items-start gap-4 p-5 rounded-2xl bg-[#F8FAFC]">
-                            <div class="flex-shrink-0 text-[#0B66E4] mt-0.5">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                            </div>
-                            <div>
-                                <p class="text-[13px] font-bold text-slate-900 mb-1">Lokasi</p>
-                                <p class="text-[14px] text-slate-600">Lab. Jaringan Komputer, Lt. 3</p>
-                            </div>
-                        </div>
-
-                        <!-- Durasi -->
-                        <div class="flex items-start gap-4 p-5 rounded-2xl bg-[#F8FAFC]">
-                            <div class="flex-shrink-0 text-[#0B66E4] mt-0.5">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                            </div>
-                            <div>
-                                <p class="text-[13px] font-bold text-slate-900 mb-1">Durasi Ujian</p>
-                                <p class="text-[14px] text-slate-600">100 Menit</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Catatan Warning instead of Sesi Ujian -->
-            <div class="bg-amber-50 rounded-[20px] shadow-sm border border-amber-100 p-6 flex items-start gap-4 mt-6">
-                <div class="text-amber-500 shrink-0 mt-0.5">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                </div>
-                <div>
-                    <p class="text-[13.5px] font-bold text-amber-700 mb-1.5">Catatan Penting:</p>
-                    <p class="text-[13.5px] text-amber-600 leading-relaxed">Form pendaftaran akan otomatis ditutup melewati tanggal <strong class="font-extrabold">{{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->translatedFormat('l, d F Y') }} pukul 23:59 WIB</strong>.</p>
-                </div>
-            </div>
-        </div>
-
-        <!-- Right Column: Registration Form -->
-        <div class="w-full lg:w-5/12">
-            <div class="bg-white rounded-[20px] shadow-[0_2px_10px_-4px_rgba(0,0,0,0.1)] border border-slate-100 p-8 lg:sticky lg:top-8">
-                <h2 class="text-[20px] font-bold text-slate-900 mb-2 tracking-tight">Form Pendaftaran</h2>
-                <p class="text-[13px] text-slate-500 mb-8">Lengkapi data diri dengan benar untuk mengikuti ujian.</p>
-
-                <form action="{{ route('komprehensif.mahasiswa.pendaftaran.store') }}" method="POST" class="space-y-6">
-                    @csrf
+                <!-- Typographic Info Grid (No borders/boxes) -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-x-12 gap-y-10 mt-4 max-w-xl">
                     
-                    <!-- NIM -->
-                    <div>
-                        <label class="block text-[13px] font-bold text-slate-700 mb-2">NIM (Nomor Induk Mahasiswa)</label>
-                        <input type="text" name="nim" required value="{{ old('nim', optional(auth()->user()->student)->student_number ?? auth()->user()->external_id) }}" class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-[14px] text-slate-800 focus:border-[#0B66E4] focus:ring-1 focus:ring-[#0B66E4] outline-none transition-all placeholder-slate-400" placeholder="Contoh: 210101xxx">
-                    </div>
-
-                    <!-- Nama Lengkap -->
-                    <div>
-                        <label class="block text-[13px] font-bold text-slate-700 mb-2">Nama Lengkap</label>
-                        <input type="text" name="nama" required value="{{ old('nama', auth()->user()->name) }}" class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-[14px] text-slate-800 focus:border-[#0B66E4] focus:ring-1 focus:ring-[#0B66E4] outline-none transition-all placeholder-slate-400" placeholder="Masukkan nama sesuai KTM">
-                    </div>
-
-                    <!-- Semester Aktif -->
-                    <div>
-                        <label class="block text-[13px] font-bold text-slate-700 mb-2">Semester Aktif</label>
-                        <input type="number" name="semester" class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-[14px] text-slate-800 focus:border-[#0B66E4] focus:ring-1 focus:ring-[#0B66E4] outline-none transition-all placeholder-slate-400" placeholder="Contoh: 7">
-                        <p class="text-[11px] text-slate-500 mt-2 font-medium">Catatan: minimal semester 7</p>
-                    </div>
-
-                    <!-- Target Wisuda -->
-                    <div>
-                        <label class="block text-[13px] font-bold text-slate-700 mb-2">Target Wisuda (Sidang Skripsi) <span class="text-red-500">*</span></label>
-                        <input type="text" name="target_wisuda" required class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-[14px] text-slate-800 focus:border-[#0B66E4] focus:ring-1 focus:ring-[#0B66E4] outline-none transition-all placeholder-slate-400" placeholder="Contoh: Periode 183 (Apr-Jun '26)">
-                    </div>
-
-                    <!-- Dosbing 1 -->
-                    <div>
-                        <label class="block text-[13px] font-bold text-slate-700 mb-2">Dosen Pembimbing 1 <span class="text-red-500">*</span></label>
-                        <div class="relative">
-                            <select name="dosen_pembimbing_1_id" required class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-[14px] font-medium text-slate-700 focus:border-[#0B66E4] focus:ring-1 focus:ring-[#0B66E4] outline-none transition-all appearance-none cursor-pointer">
-                                <option value="" disabled selected>Pilih Dosen Pembimbing 1</option>
-                                @foreach($dosens as $dosen)
-                                    <option value="{{ $dosen->id }}" {{ old('dosen_pembimbing_1_id') == $dosen->id ? 'selected' : '' }}>{{ $dosen->name }}</option>
-                                @endforeach
-                            </select>
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </div>
+                    <div class="space-y-3">
+                        <div class="text-primary flex items-center gap-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                            <h4 class="font-bold text-slate-900 text-sm tracking-widest uppercase">Pelaksanaan Ujian</h4>
                         </div>
+                        <p class="text-sm font-medium text-slate-600 leading-relaxed">
+                            {{ $activePeriode->tanggal_mulai_ujian ? \Carbon\Carbon::parse($activePeriode->tanggal_mulai_ujian)->translatedFormat('d M') : '-' }} — {{ $activePeriode->tanggal_selesai_ujian ? \Carbon\Carbon::parse($activePeriode->tanggal_selesai_ujian)->translatedFormat('d M Y') : '-' }}
+                        </p>
                     </div>
 
-                    <!-- Dosbing 2 -->
-                    <div>
-                        <label class="block text-[13px] font-bold text-slate-700 mb-2">Dosen Pembimbing 2 <span class="text-xs font-normal text-slate-400">(Opsional)</span></label>
-                        <div class="relative">
-                            <select name="dosen_pembimbing_2_id" class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-[14px] font-medium text-slate-700 focus:border-[#0B66E4] focus:ring-1 focus:ring-[#0B66E4] outline-none transition-all appearance-none cursor-pointer">
-                                <option value="" selected>Tidak Ada / Pilih Dosen Pembimbing 2</option>
-                                @foreach($dosens as $dosen)
-                                    <option value="{{ $dosen->id }}" {{ old('dosen_pembimbing_2_id') == $dosen->id ? 'selected' : '' }}>{{ $dosen->name }}</option>
-                                @endforeach
-                            </select>
-                            <div class="absolute inset-y-0 right-0 flex items-center pr-4 pointer-events-none text-slate-400">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </div>
+                    <div class="space-y-3">
+                        <div class="text-primary flex items-center gap-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <h4 class="font-bold text-slate-900 text-sm tracking-widest uppercase">Durasi</h4>
                         </div>
+                        <p class="text-sm font-medium text-slate-600 leading-relaxed">
+                            100 Menit
+                        </p>
                     </div>
 
-                    <div class="pt-2">
-                        <button type="submit" class="w-full inline-flex items-center justify-center gap-2 bg-[#0B66E4] hover:bg-blue-700 text-white rounded-lg px-4 py-3 text-[14px] font-bold shadow-sm transition-all group">
-                            <svg class="w-[18px] h-[18px] transition-transform group-hover:translate-x-1 group-hover:-translate-y-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path></svg>
-                            Submit Pendaftaran
-                        </button>
+                    <div class="space-y-3">
+                        <div class="text-primary flex items-center gap-3">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path></svg>
+                            <h4 class="font-bold text-slate-900 text-sm tracking-widest uppercase">Ruangan</h4>
+                        </div>
+                        <p class="text-sm font-medium text-slate-600 leading-relaxed">
+                            Lab. Jaringan Komputer
+                        </p>
                     </div>
-                </form>
+
+                </div>
             </div>
-        </div>
 
+            <!-- RIGHT COLUMN: The Interactive Surface -->
+            <div class="w-full lg:w-1/2">
+                <!-- We still use a card for the form to clearly demarcate the interactive zone, but styled much more intentionally -->
+                <div class="bg-white rounded-[32px] p-8 sm:p-12 shadow-[0_24px_64px_-12px_rgba(0,0,0,0.06)] border border-slate-100 lg:sticky lg:top-8">
+                    
+                    <div class="mb-10">
+                        <h2 class="text-2xl font-bold text-slate-900 tracking-tight">Data Pendaftar</h2>
+                        <div class="w-12 h-1 bg-primary mt-4 rounded-full"></div>
+                    </div>
+
+                    <form action="{{ route('komprehensif.mahasiswa.pendaftaran.store') }}" method="POST" class="space-y-7 block">
+                        @csrf
+                        
+                        <!-- Seksi 1: Data Identitas -->
+                        <div class="space-y-5">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                                <!-- NIM -->
+                                <div class="space-y-2">
+                                    <x-ui.label class="text-[15px] text-grey-700 font-semibold">NIM</x-ui.label>
+                                    <x-ui.input type="text" name="nim" required readonly value="{{ old('nim', optional(auth()->user()->student)->student_number ?? auth()->user()->external_id) }}" class="h-14 bg-grey-50/70 border-grey-100/50 text-grey-900 text-lg font-medium rounded-[16px] px-5 outline-none cursor-not-allowed placeholder:text-grey-400" placeholder="210101xxx" />
+                                </div>
+
+                                <!-- Semester Aktif -->
+                                <div class="space-y-2">
+                                    <x-ui.label required class="text-[15px] text-grey-700 font-semibold">Semester Aktif</x-ui.label>
+                                    <x-ui.input type="number" name="semester" required :error="$errors->has('semester')" value="{{ old('semester') }}" class="h-14 bg-grey-25 border border-grey-100/80 hover:bg-white focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 text-grey-900 text-lg font-medium rounded-[16px] px-5 transition-all outline-none placeholder:text-grey-400" placeholder="Misal: 7" />
+                                    @error('semester')
+                                        <p class="text-[13px] text-error-600 font-medium mt-1.5 flex items-center gap-1.5">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            {{ $message }}
+                                        </p>
+                                    @enderror
+                                </div>
+                            </div>
+
+                            <!-- Nama Lengkap -->
+                            <div class="space-y-2">
+                                <x-ui.label class="text-[15px] text-grey-700 font-semibold">Nama Lengkap</x-ui.label>
+                                <x-ui.input type="text" name="nama" required readonly value="{{ old('nama', auth()->user()->name) }}" class="h-14 bg-grey-50/70 border-grey-100/50 text-grey-900 text-lg font-medium rounded-[16px] px-5 outline-none cursor-not-allowed placeholder:text-grey-400" placeholder="Masukkan nama lengkap" />
+                            </div>
+                        </div>
+
+                        <!-- Seksi 2: Kontak & Akademik -->
+                        <div class="space-y-5">
+                            <!-- Kontak WA -->
+                            <div class="space-y-2">
+                                <x-ui.label required class="text-[15px] text-grey-700 font-semibold">Kontak WA Aktif</x-ui.label>
+                                <x-ui.input type="text" name="kontak_wa" required :error="$errors->has('kontak_wa')" value="{{ old('kontak_wa') }}" class="h-14 bg-grey-25 border border-grey-100/80 hover:bg-white focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 text-grey-900 text-lg font-medium rounded-[16px] px-5 transition-all outline-none placeholder:text-grey-400" placeholder="Contoh: 0812345678" />
+                                @error('kontak_wa')
+                                    <p class="text-[13px] text-error-600 font-medium mt-1.5 flex items-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Target Wisuda -->
+                            <div class="space-y-2">
+                                <x-ui.label required class="text-[15px] text-grey-700 font-semibold">Target Wisuda (Sidang Skripsi)</x-ui.label>
+                                <x-ui.input type="text" name="target_wisuda" required :error="$errors->has('target_wisuda')" value="{{ old('target_wisuda') }}" class="h-14 bg-grey-25 border border-grey-100/80 hover:bg-white focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 text-grey-900 text-lg font-medium rounded-[16px] px-5 transition-all outline-none placeholder:text-grey-400" placeholder="Misal: Periode 183 (Apr-Jun '26)" />
+                                @error('target_wisuda')
+                                    <p class="text-[13px] text-error-600 font-medium mt-1.5 flex items-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="h-px bg-grey-100/60 w-full my-3"></div>
+
+                        <!-- Seksi 3: Dosen Pembimbing Grid -->
+                        <div class="grid grid-cols-1 gap-5">
+                            <!-- Dosbing 1 -->
+                            <div class="space-y-2">
+                                <x-ui.label required class="text-[15px] text-grey-700 font-semibold">Dosen Pembimbing 1</x-ui.label>
+                                <div class="relative">
+                                    <select name="dosen_pembimbing_1_id" required 
+                                            onchange="this.classList.remove('text-grey-400'); this.classList.add('text-grey-900')"
+                                            class="w-full h-14 bg-grey-25 border border-grey-100/80 hover:bg-white focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 text-lg font-medium rounded-[16px] px-5 transition-all outline-none cursor-pointer {{ old('dosen_pembimbing_1_id') ? 'text-grey-900' : 'text-grey-400' }} @error('dosen_pembimbing_1_id') border-error-500 ring-error-500/20 @enderror">
+                                        <option value="" disabled selected class="text-grey-400">Pilih Pembimbing</option>
+                                        @foreach($dosens as $dosen)
+                                            <option value="{{ $dosen->id }}" class="text-grey-900" {{ old('dosen_pembimbing_1_id') == $dosen->id ? 'selected' : '' }}>{{ $dosen->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @error('dosen_pembimbing_1_id')
+                                    <p class="text-[13px] text-error-600 font-medium mt-1.5 flex items-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>{{ $message }}</p>
+                                @enderror
+                            </div>
+
+                            <!-- Dosbing 2 -->
+                            <div class="space-y-2">
+                                <x-ui.label class="text-[15px] text-grey-700 font-semibold">Dosen Pembimbing 2</x-ui.label>
+                                <div class="relative">
+                                    <select name="dosen_pembimbing_2_id" 
+                                            onchange="this.classList.remove('text-grey-400'); this.classList.add('text-grey-900')"
+                                            class="w-full h-14 bg-grey-25 border border-grey-100/80 hover:bg-white focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 text-lg font-medium rounded-[16px] px-5 transition-all outline-none cursor-pointer {{ old('dosen_pembimbing_2_id') ? 'text-grey-900' : 'text-grey-400' }} @error('dosen_pembimbing_2_id') border-error-500 ring-error-500/20 @enderror">
+                                        <option value="" selected class="text-grey-400">Pilih Pembimbing</option>
+                                         @foreach($dosens as $dosen)
+                                            <option value="{{ $dosen->id }}" class="text-grey-900" {{ old('dosen_pembimbing_2_id') == $dosen->id ? 'selected' : '' }}>{{ $dosen->name }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                @error('dosen_pembimbing_2_id')
+                                    <p class="text-[13px] text-error-600 font-medium mt-1.5 flex items-center gap-1.5"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>{{ $message }}</p>
+                                @enderror
+                            </div>
+                        </div>
+
+                        <div class="pt-5">
+                            <button type="submit" class="w-full h-14 inline-flex items-center justify-center gap-2.5 bg-primary-500 hover:bg-primary-600 text-white rounded-[16px] text-lg font-semibold shadow-[0_8px_20px_-4px_rgba(107,79,244,0.4)] hover:shadow-[0_12px_24px_-6px_rgba(107,79,244,0.5)] transform transition-all active:scale-[0.98] group">
+                                <span>Kirim Pengajuan</span>
+                                <svg class="w-6 h-6 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
     </div>
 </x-banksoal::layouts.mahasiswa>

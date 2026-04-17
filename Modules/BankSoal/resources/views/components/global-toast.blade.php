@@ -12,6 +12,10 @@
         <div x-init="addToast({ type: 'error', message: '{{ addslashes(session('error')) }}' })"></div>
     @endif
 
+    @if($errors->any())
+        <div x-init="addToast({ type: 'error', message: '{{ addslashes($errors->first()) }}' })"></div>
+    @endif
+
     @if(session('warning'))
         <div x-init="addToast({ type: 'warning', message: '{{ addslashes(session('warning')) }}' })"></div>
     @endif
