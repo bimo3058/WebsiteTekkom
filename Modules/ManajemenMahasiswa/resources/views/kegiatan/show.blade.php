@@ -484,7 +484,7 @@
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
          style="border-radius: 10px; border: none; background: #dcfce7; color: #166534; font-weight: 500; font-size: 14px;">
-        ✅ {{ session('success') }}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
@@ -529,7 +529,7 @@
     @if($kegiatan->banner)
         <img src="{{ asset('storage/' . $kegiatan->banner) }}" alt="{{ $kegiatan->judul }}">
     @else
-        <span class="placeholder-icon">📋</span>
+        <span class="placeholder-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></span>
     @endif
 </div>
 
@@ -540,7 +540,7 @@
         @if($kegiatan->bidang)
             <span class="badge-bidang">{{ $kegiatan->bidang->nama_bidang }}</span>
         @else
-            <span class="badge-bidang" style="background: #f3e8ff; color: #7c3aed;">🎓 Prodi</span>
+            <span class="badge-bidang" style="background: #f3e8ff; color: #7c3aed;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> Prodi</span>
         @endif
         @if($kegiatan->kategoriKegiatan)
             <span class="badge-kategori">{{ $kegiatan->kategoriKegiatan->nama_kategori }}</span>
@@ -558,7 +558,7 @@
         <div class="meta-item">
             <div class="meta-item-label">Tanggal Pelaksanaan</div>
             <div class="meta-item-value">
-                📅 {{ $kegiatan->tanggal_mulai->translatedFormat('d F Y') }}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg> {{ $kegiatan->tanggal_mulai->translatedFormat('d F Y') }}
                 @if($kegiatan->jam_mulai)
                     pukul {{ $kegiatan->jam_mulai_formatted }}
                 @endif
@@ -574,28 +574,28 @@
         @if($kegiatan->lokasi)
         <div class="meta-item">
             <div class="meta-item-label">Lokasi</div>
-            <div class="meta-item-value">📍 {{ $kegiatan->lokasi }}</div>
+            <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> {{ $kegiatan->lokasi }}</div>
         </div>
         @endif
 
         @if($kegiatan->ketuaPelaksana)
         <div class="meta-item">
             <div class="meta-item-label">Ketua Pelaksana</div>
-            <div class="meta-item-value">👤 {{ $kegiatan->ketuaPelaksana->user->name ?? '-' }}
+            <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> {{ $kegiatan->ketuaPelaksana->user->name ?? '-' }}
                 <span style="font-size: 11px; color: #9ca3af; font-weight: 400;">({{ $kegiatan->ketuaPelaksana->student_number }})</span>
             </div>
         </div>
         @elseif($kegiatan->penanggung_jawab)
         <div class="meta-item">
             <div class="meta-item-label">Ketua Pelaksana</div>
-            <div class="meta-item-value">👤 {{ $kegiatan->penanggung_jawab }}</div>
+            <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> {{ $kegiatan->penanggung_jawab }}</div>
         </div>
         @endif
 
         @if($kegiatan->dosenPendamping)
         <div class="meta-item">
             <div class="meta-item-label">Dosen Pendamping</div>
-            <div class="meta-item-value">🎓 {{ $kegiatan->dosenPendamping->user->name ?? '-' }}
+            <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> {{ $kegiatan->dosenPendamping->user->name ?? '-' }}
                 <span style="font-size: 11px; color: #9ca3af; font-weight: 400;">({{ $kegiatan->dosenPendamping->employee_number }})</span>
             </div>
         </div>
@@ -604,21 +604,21 @@
         @if($kegiatan->kepengurusan)
         <div class="meta-item">
             <div class="meta-item-label">Tahun Kepengurusan</div>
-            <div class="meta-item-value">🏛️ {{ $kegiatan->kepengurusan->tahun_periode }}</div>
+            <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> {{ $kegiatan->kepengurusan->tahun_periode }}</div>
         </div>
         @endif
 
         @if($kegiatan->target_peserta)
         <div class="meta-item">
             <div class="meta-item-label">Target Peserta</div>
-            <div class="meta-item-value">👥 {{ $kegiatan->target_peserta }} orang</div>
+            <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> {{ $kegiatan->target_peserta }} orang</div>
         </div>
         @endif
 
         @if($kegiatan->anggaran)
         <div class="meta-item">
             <div class="meta-item-label">Anggaran</div>
-            <div class="meta-item-value">💰 Rp {{ number_format($kegiatan->anggaran, 0, ',', '.') }}</div>
+            <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Rp {{ number_format($kegiatan->anggaran, 0, ',', '.') }}</div>
         </div>
         @endif
     </div>
@@ -626,7 +626,7 @@
 
 <!-- Deskripsi -->
 <div class="detail-card">
-    <div class="detail-card-title">📝 Deskripsi & Tujuan Kegiatan</div>
+    <div class="detail-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg> Deskripsi & Tujuan Kegiatan</div>
     <div class="detail-description">{{ $kegiatan->deskripsi }}</div>
 </div>
 
@@ -646,7 +646,7 @@
     @if($images->count() > 0)
     <div class="detail-card">
         <div class="gallery-header">
-            <div class="detail-card-title" style="margin-bottom: 0;">📷 Galeri Foto Kegiatan</div>
+            <div class="detail-card-title" style="margin-bottom: 0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg> Galeri Foto Kegiatan</div>
             <span class="gallery-count">{{ $images->count() }} foto</span>
         </div>
         <div class="photo-gallery-grid">
@@ -690,7 +690,7 @@
     @if($videos->count() > 0)
     <div class="detail-card">
         <div class="gallery-header">
-            <div class="detail-card-title" style="margin-bottom: 0;">🎬 Video Kegiatan</div>
+            <div class="detail-card-title" style="margin-bottom: 0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><polygon points="23 7 16 12 23 17 23 7"></polygon><rect x="1" y="5" width="15" height="14" rx="2" ry="2"></rect></svg> Video Kegiatan</div>
             <span class="gallery-count">{{ $videos->count() }} video</span>
         </div>
         <div class="video-gallery-grid">
@@ -714,7 +714,7 @@
     @if($documents->count() > 0)
     <div class="detail-card">
         <div class="gallery-header">
-            <div class="detail-card-title" style="margin-bottom: 0;">📄 Dokumen & Laporan</div>
+            <div class="detail-card-title" style="margin-bottom: 0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen & Laporan</div>
             <span class="gallery-count">{{ $documents->count() }} dokumen</span>
         </div>
         <div class="document-list">
@@ -722,15 +722,15 @@
                 @php
                     $ext = strtolower(pathinfo($doc->nama_file, PATHINFO_EXTENSION));
                     $iconMap = [
-                        'pdf'  => ['📕', 'doc-icon-pdf', 'ext-pdf'],
-                        'doc'  => ['📘', 'doc-icon-word', 'ext-doc'],
-                        'docx' => ['📘', 'doc-icon-word', 'ext-docx'],
-                        'xls'  => ['📗', 'doc-icon-excel', 'ext-xls'],
-                        'xlsx' => ['📗', 'doc-icon-excel', 'ext-xlsx'],
-                        'ppt'  => ['📙', 'doc-icon-ppt', 'ext-ppt'],
-                        'pptx' => ['📙', 'doc-icon-ppt', 'ext-pptx'],
+                        'pdf'  => ['PDF', 'doc-icon-pdf', 'ext-pdf'],
+                        'doc'  => ['DOC', 'doc-icon-word', 'ext-doc'],
+                        'docx' => ['DOC', 'doc-icon-word', 'ext-docx'],
+                        'xls'  => ['XLS', 'doc-icon-excel', 'ext-xls'],
+                        'xlsx' => ['XLS', 'doc-icon-excel', 'ext-xlsx'],
+                        'ppt'  => ['PPT', 'doc-icon-ppt', 'ext-ppt'],
+                        'pptx' => ['PPT', 'doc-icon-ppt', 'ext-pptx'],
                     ];
-                    $iconInfo = $iconMap[$ext] ?? ['📄', 'doc-icon-other', 'ext-default'];
+                    $iconInfo = $iconMap[$ext] ?? ['FILE', 'doc-icon-other', 'ext-default'];
                 @endphp
                 <a href="{{ asset('storage/' . $doc->path_file) }}" target="_blank" class="document-card" download>
                     <div class="doc-icon-wrapper {{ $iconInfo[1] }}">
@@ -759,9 +759,9 @@
 @else
     {{-- Empty state when no files uploaded --}}
     <div class="detail-card">
-        <div class="detail-card-title">📎 Foto & Dokumen Kegiatan</div>
+        <div class="detail-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg> Foto & Dokumen Kegiatan</div>
         <div class="empty-luaran">
-            <div class="empty-luaran-icon">📭</div>
+            <div class="empty-luaran-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V21H3V8"></path><path d="M23 3H1v5h22V3z"></path><path d="M10 12h4"></path></svg></div>
             <h6 style="font-weight: 600; color: #6b7280; margin-bottom: 4px;">Belum ada file untuk kegiatan ini</h6>
             <p style="font-size: 13px; color: #9ca3af; margin: 0;">Foto dan dokumen kegiatan akan ditampilkan di sini setelah diunggah oleh admin</p>
         </div>

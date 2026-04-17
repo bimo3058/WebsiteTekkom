@@ -207,7 +207,7 @@
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
          style="border-radius: 10px; border: none; background: #dcfce7; color: #166534; font-weight: 500; font-size: 14px;">
-        ✅ {{ session('success') }}
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
@@ -235,7 +235,7 @@
 <form method="GET" action="{{ route('manajemenmahasiswa.kegiatan.index') }}" id="filterForm">
     <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-3">
         <div class="search-wrapper w-100 me-0 me-md-2">
-            <span class="search-icon">🔍</span>
+            <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
             <input type="text" name="search" class="form-control search-input w-100"
                    placeholder="Cari kegiatan..." value="{{ request('search') }}">
         </div>
@@ -243,7 +243,7 @@
         <div class="d-flex gap-3">
             <select name="kepengurusan" class="form-select border-1 filter-select-custom"
                     style="min-width: 160px;" onchange="document.getElementById('filterForm').submit()">
-                <option value="semua">📅 Semua Tahun</option>
+                <option value="semua">Semua Tahun</option>
                 @foreach($kepengurusanList as $kp)
                     <option value="{{ $kp->id }}" {{ request('kepengurusan') == $kp->id ? 'selected' : '' }}>
                         {{ $kp->tahun_periode }}
@@ -284,7 +284,7 @@
                         @if($item->banner)
                             <img src="{{ $item->banner_url }}" alt="{{ $item->judul }}">
                         @else
-                            <span class="placeholder-icon">📋</span>
+                            <span class="placeholder-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></span>
                         @endif
                     </div>
 
@@ -312,14 +312,14 @@
 
                         <!-- Meta -->
                         <div class="kegiatan-card-meta">
-                            <span>📅 {{ $item->tanggal_mulai->translatedFormat('d M Y') }}</span>
+                            <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg> {{ $item->tanggal_mulai->translatedFormat('d M Y') }}</span>
                             @if($item->lokasi)
-                                <span>📍 {{ Str::limit($item->lokasi, 20) }}</span>
+                                <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> {{ Str::limit($item->lokasi, 20) }}</span>
                             @endif
                             @if($item->ketuaPelaksana && $item->ketuaPelaksana->user)
-                                <span>👤 {{ Str::limit($item->ketuaPelaksana->user->name, 18) }}</span>
+                                <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> {{ Str::limit($item->ketuaPelaksana->user->name, 18) }}</span>
                             @elseif($item->penanggung_jawab)
-                                <span>👤 {{ Str::limit($item->penanggung_jawab, 18) }}</span>
+                                <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg> {{ Str::limit($item->penanggung_jawab, 18) }}</span>
                             @endif
                         </div>
                     </div>
@@ -336,7 +336,7 @@
     @endif
 @else
     <div class="empty-state">
-        <div class="empty-icon">📭</div>
+        <div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V21H3V8"></path><path d="M23 3H1v5h22V3z"></path><path d="M10 12h4"></path></svg></div>
         <h5>Belum ada kegiatan</h5>
         <p>Kegiatan yang tersedia akan muncul di sini</p>
     </div>
