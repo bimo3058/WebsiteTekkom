@@ -3,17 +3,37 @@
         <!-- Page Header -->
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Manajemen Periode Ujian</h1>
-                <p class="text-sm text-slate-500 mt-1">Atur periode pelaksanaan ujian komprehensif mahasiswa.</p>
+                <h1 class="text-3xl font-bold text-grey-900 tracking-tight">Manajemen Periode Ujian</h1>
+                <p class="text-base text-grey-500 mt-2 font-medium">Atur periode pelaksanaan ujian komprehensif mahasiswa.</p>
             </div>
             
-            <button @click="openModal = true" class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 transition-colors rounded-xl px-5 py-2.5 text-white font-medium text-sm shadow-sm shadow-blue-600/20">
+            <button @click="openModal = true" class="inline-flex items-center justify-center gap-2 bg-primary-500 hover:bg-primary-400 transition-colors rounded-xl px-5 py-2.5 text-white font-medium text-sm shadow-sm shadow-primary-500/20">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
-                Buat Periode Baru
+                Buat Periode Ujian
             </button>
         </div>
+
+        @php
+            $activeCount = collect($periodes)->where('status', 'aktif')->count();
+        @endphp
+
+        @if ($activeCount > 1)
+        <div class="mb-4 bg-[#FEF2F2] border border-[#FEE2E2] rounded-xl flex items-center justify-between p-5 border-l-4 border-l-[#DC2626] shadow-sm animate-pulse">
+            <div class="flex items-center gap-4">
+                <div class="w-10 h-10 rounded-full bg-[#FEE2E2] text-[#DC2626] flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <div>
+                    <h4 class="text-[15px] font-bold text-[#991B1B] mb-0.5">Peringatan Konflik Sistem</h4>
+                    <p class="text-[13px] text-[#DC2626]">
+                        Terdeteksi ada <strong>{{ $activeCount }} periode ujian komprehensif</strong> yang sedang berstatus AKTIF secara bersamaan. Harap segera set hanya menjadi 1 periode aktif agar mahasiswa tidak bingung.
+                    </p>
+                </div>
+            </div>
+        </div>
+        @endif
 
 
 
@@ -44,13 +64,13 @@
         </div>
 
         <!-- Table Card -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-white rounded-2xl shadow-sm border border-grey-100/80 overflow-hidden">
             <div class="overflow-x-auto w-full">
-                <table class="w-full text-left text-sm text-slate-600">
-                    <thead class="bg-slate-50 border-b border-slate-200 text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                <table class="w-full text-left text-[14px] text-grey-600">
+                    <thead class="bg-grey-50/70 border-b border-grey-100/80 text-[12px] font-bold text-grey-500 uppercase tracking-wider">
                         <tr>
                             <th scope="col" class="px-6 py-4 w-12 text-center">
-                                <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500/20 cursor-pointer">
+                                <input type="checkbox" class="w-4 h-4 rounded border-grey-300 text-primary-600 focus:ring-primary-500/20 cursor-pointer">
                             </th>
                             <th scope="col" class="px-6 py-4 whitespace-nowrap">Nama Periode</th>
                             <th scope="col" class="px-6 py-4 whitespace-nowrap">Timeline Pendaftaran</th>
@@ -59,32 +79,32 @@
                             <th scope="col" class="px-6 py-4 whitespace-nowrap text-center">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100">
+                    <tbody class="divide-y divide-grey-100/50">
                         @forelse($periodes as $periode)
-                        <tr class="hover:bg-slate-50/50 transition-colors">
+                        <tr class="hover:bg-grey-50/50 transition-colors">
                             <td class="px-6 py-4 text-center">
-                                <input type="checkbox" class="w-4 h-4 rounded border-slate-300 text-blue-600 cursor-pointer">
+                                <input type="checkbox" class="w-4 h-4 rounded border-grey-300 text-primary-600 cursor-pointer">
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="font-semibold text-slate-800">{{ $periode->nama_periode }}</span>
+                                <span class="font-bold text-grey-900 border-b border-grey-300 border-dashed pb-0.5">{{ $periode->nama_periode }}</span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-slate-500">
+                            <td class="px-6 py-4 whitespace-nowrap text-grey-600 font-medium">
                                 {{ \Carbon\Carbon::parse($periode->tanggal_mulai)->format('d M Y') }} - {{ \Carbon\Carbon::parse($periode->tanggal_selesai)->format('d M Y') }}
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-slate-500">
+                            <td class="px-6 py-4 whitespace-nowrap text-grey-600 font-medium">
                                 @if($periode->tanggal_mulai_ujian && $periode->tanggal_selesai_ujian)
                                     {{ \Carbon\Carbon::parse($periode->tanggal_mulai_ujian)->format('d M') }} - {{ \Carbon\Carbon::parse($periode->tanggal_selesai_ujian)->format('d M Y') }}
                                 @else
-                                    <span class="text-slate-400 italic">Belum diatur</span>
+                                    <span class="text-grey-400 italic">Belum diatur</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center">
                                 @if($periode->status === 'aktif')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700">Aktif</span>
+                                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-success-50 text-success-700 tracking-wide border border-success-200/50">AKTIF</span>
                                 @elseif($periode->status === 'selesai')
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700">Selesai</span>
+                                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-grey-100 text-grey-700 tracking-wide border border-grey-300">SELESAI</span>
                                 @else
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700">Draft</span>
+                                    <span class="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-warning-50 text-warning-700 tracking-wide border border-warning-200/50">DRAFT</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
@@ -101,12 +121,12 @@
                                             'deskripsi' => $periode->deskripsi,
                                         ];
                                     @endphp
-                                    <button @click="editData = {{ json_encode($periodeData) }}; editModal = true" class="text-blue-600 hover:text-blue-900 bg-blue-50 p-1.5 rounded-lg transition-colors">Edit</button>
+                                    <button @click="editData = {{ json_encode($periodeData) }}; editModal = true" class="text-primary-600 hover:text-primary-800 bg-primary-50 px-3 py-1.5 font-semibold rounded-lg transition-colors border border-primary-100">Edit</button>
                                     
                                     <form action="{{ route('banksoal.periode.destroy', $periode->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus periode ini?');" class="inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-900 bg-red-50 p-1.5 rounded-lg transition-colors">Hapus</button>
+                                        <button type="submit" class="text-error-600 hover:text-error-800 bg-error-50 px-3 py-1.5 font-semibold rounded-lg transition-colors border border-error-100">Hapus</button>
                                     </form>
                                 </div>
                             </td>
@@ -178,76 +198,63 @@
                 </div>
 
                 <!-- Modal Body -->
-                <div class="p-6 overflow-y-auto">
+                <div class="p-6 sm:p-8 overflow-y-auto">
                     <!-- Alert Info -->
-                    <div class="mb-6 bg-blue-50 border border-blue-100/50 rounded-xl p-4 flex gap-3">
-                        <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <div class="mb-8 bg-primary-50 border border-primary-100/50 rounded-[16px] p-5 flex gap-4">
+                        <svg class="w-6 h-6 text-primary-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        <div class="text-[13px] leading-relaxed text-blue-800">
+                        <div class="text-[14px] leading-relaxed text-primary-800 font-medium">
                             Pastikan seluruh data periode terisi dengan benar. Mahasiswa hanya dapat mendaftar jika periode dalam status aktif dan masih dalam rentang masa pendaftaran.
                         </div>
                     </div>
 
                     <!-- Setup Form Grid -->
-                    <form action="{{ route('banksoal.periode.store') }}" method="POST" id="formPeriodeBaru" class="space-y-5">
+                    <form action="{{ route('banksoal.periode.store') }}" method="POST" id="formPeriodeBaru" class="space-y-6">
                         @csrf
                         <!-- Box 1: Nama Periode -->
-                        <div>
-                            <label class="block text-[13px] font-semibold text-slate-800 mb-1.5">Nama Periode</label>
-                            <input type="text" name="nama_periode" placeholder="Ujian Nov 2025" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-shadow">
+                        <div class="space-y-2">
+                            <x-ui.label required class="text-[15px] font-semibold text-grey-700">Nama Periode</x-ui.label>
+                            <x-ui.input type="text" name="nama_periode" placeholder="Misal: Periode Ujian Komprehensif bulan Februari 2026" required class="h-14 bg-grey-25 border border-grey-100/80 hover:bg-white focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 text-grey-900 text-lg font-medium rounded-[16px] px-5 transition-all outline-none placeholder:text-grey-400" />
                         </div>
 
                         <!-- Box 2 & 3: Tanggal Pendaftaran -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-800 mb-1.5">Tanggal Buka Pendaftaran</label>
-                                <div class="relative">
-                                    <input type="date" name="tanggal_mulai" required class="w-full pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
-                                </div>
+                            <div class="space-y-2">
+                                <x-ui.label required class="text-[15px] font-semibold text-grey-700">Tanggal Buka Pendaftaran</x-ui.label>
+                                <x-ui.input type="date" name="tanggal_mulai" required class="h-14 bg-grey-25 border border-grey-100/80 hover:bg-white focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 text-grey-900 text-lg font-medium rounded-[16px] px-5 transition-all outline-none" />
                             </div>
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-800 mb-1.5">Tanggal Tutup Pendaftaran</label>
-                                <div class="relative">
-                                    <input type="date" name="tanggal_selesai" required class="w-full pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
-                                </div>
+                            <div class="space-y-2">
+                                <x-ui.label required class="text-[15px] font-semibold text-grey-700">Tanggal Tutup Pendaftaran</x-ui.label>
+                                <x-ui.input type="date" name="tanggal_selesai" required class="h-14 bg-grey-25 border border-grey-100/80 hover:bg-white focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 text-grey-900 text-lg font-medium rounded-[16px] px-5 transition-all outline-none" />
                             </div>
                         </div>
 
                         <!-- Box 4: Rentang Ujian -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-800 mb-1.5">Tanggal Mulai Ujian</label>
-                                <div class="relative">
-                                    <input type="date" name="tanggal_mulai_ujian" class="w-full pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
-                                </div>
+                            <div class="space-y-2">
+                                <x-ui.label class="text-[15px] font-semibold text-grey-700">Tanggal Mulai Ujian</x-ui.label>
+                                <x-ui.input type="date" name="tanggal_mulai_ujian" class="h-14 bg-grey-25 border border-grey-100/80 hover:bg-white focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 text-grey-900 text-lg font-medium rounded-[16px] px-5 transition-all outline-none" />
                             </div>
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-800 mb-1.5">Tanggal Selesai Ujian</label>
-                                <div class="relative">
-                                    <input type="date" name="tanggal_selesai_ujian" class="w-full pl-4 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
-                                </div>
+                            <div class="space-y-2">
+                                <x-ui.label class="text-[15px] font-semibold text-grey-700">Tanggal Selesai Ujian</x-ui.label>
+                                <x-ui.input type="date" name="tanggal_selesai_ujian" class="h-14 bg-grey-25 border border-grey-100/80 hover:bg-white focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 text-grey-900 text-lg font-medium rounded-[16px] px-5 transition-all outline-none" />
                             </div>
-                        </div>
-
-                        <!-- Keterangan -->
-                        <div>
-                            <label class="block text-[13px] font-semibold text-slate-800 mb-1.5">Deskripsi / Keterangan (Opsional)</label>
-                            <textarea name="deskripsi" placeholder="Informasi tambahan..." class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-shadow"></textarea>
                         </div>
 
                         <!-- Box 5: Toggle -->
-                        <div x-data="{ isActive: false }" class="flex items-center justify-between pt-2">
+                        <div x-data="{ isActive: false }" class="flex items-center justify-between pt-4 border-t border-grey-100">
                             <div>
-                                <h4 class="text-[13px] font-semibold text-slate-800">Aktifkan Pendaftaran</h4>
+                                <h4 class="text-[16px] font-bold text-grey-900">Aktifkan Pendaftaran</h4>
+                                <p class="text-sm text-grey-500 mt-0.5">Memungkinkan mahasiswa melihat dan mendaftar di periode ini.</p>
                             </div>
                             <button type="button" 
                                     @click="isActive = !isActive"
-                                    :class="isActive ? 'bg-blue-600' : 'bg-slate-300'"
-                                    class="relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none">
+                                    :class="isActive ? 'bg-success-500' : 'bg-grey-200'"
+                                    class="relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-4 focus:ring-primary-500/20">
                                 <span aria-hidden="true" 
                                       :class="isActive ? 'translate-x-5' : 'translate-x-0'"
-                                      class="pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
+                                      class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"></span>
                             </button>
                             <input type="hidden" name="status" :value="isActive ? 'aktif' : 'draft'">
                         </div>
@@ -255,11 +262,11 @@
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 rounded-b-2xl bg-white">
-                    <button @click="openModal = false" type="button" class="px-5 py-2 text-[13px] font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 focus:outline-none transition-colors">
+                <div class="px-6 sm:px-8 py-5 border-t border-grey-100/80 flex items-center justify-end gap-4 bg-grey-50/50">
+                    <button @click="openModal = false" type="button" class="px-6 py-3 border border-grey-200 text-grey-700 font-bold bg-white rounded-xl hover:bg-grey-50 hover:text-grey-900 transition-colors shadow-sm">
                         Batal
                     </button>
-                    <button type="button" onclick="document.getElementById('formPeriodeBaru').submit()" class="px-5 py-2 text-[13px] font-medium text-slate-100 bg-blue-600 rounded-xl hover:bg-blue-700 focus:outline-none transition-colors shadow-sm">
+                    <button type="button" onclick="document.getElementById('formPeriodeBaru').submit()" class="px-6 py-3 bg-primary-500 hover:bg-primary-400 text-white font-bold rounded-xl shadow-sm transition-all shadow-primary-500/25">
                         Simpan Periode
                     </button>
                 </div>
@@ -292,65 +299,60 @@
                 </div>
 
                 <!-- Modal Body -->
-                <div class="p-6 overflow-y-auto">
+                <div class="p-6 sm:p-8 overflow-y-auto">
                     <!-- Setup Form Grid -->
-                    <form :action="`{{ url('bank-soal/admin/periode/setup') }}/${editData.id}`" method="POST" id="formEditPeriode" class="space-y-5">
+                    <form :action="`{{ url('bank-soal/admin/periode/setup') }}/${editData.id}`" method="POST" id="formEditPeriode" class="space-y-6">
                         @csrf
                         @method('PUT')
                         
                         <!-- Box 1: Nama Periode -->
-                        <div>
-                            <label class="block text-[13px] font-semibold text-slate-800 mb-1.5">Nama Periode</label>
-                            <input type="text" name="nama_periode" x-model="editData.nama_periode" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
+                        <div class="space-y-2">
+                            <x-ui.label required class="text-[15px] font-semibold text-grey-700">Nama Periode</x-ui.label>
+                            <x-ui.input type="text" name="nama_periode" x-model="editData.nama_periode" required class="h-14 bg-grey-25 border border-grey-100/80 hover:bg-white focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 text-grey-900 text-lg font-medium rounded-[16px] px-5 transition-all outline-none placeholder:text-grey-400" />
                         </div>
 
                         <!-- Box 2 & 3: Tanggal Pendaftaran -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-800 mb-1.5">Tanggal Buka Pendaftaran</label>
-                                <input type="date" name="tanggal_mulai" x-model="editData.tanggal_mulai" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
+                            <div class="space-y-2">
+                                <x-ui.label required class="text-[15px] font-semibold text-grey-700">Tanggal Buka Pendaftaran</x-ui.label>
+                                <x-ui.input type="date" name="tanggal_mulai" x-model="editData.tanggal_mulai" required class="h-14 bg-grey-25 border border-grey-100/80 hover:bg-white focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 text-grey-900 text-lg font-medium rounded-[16px] px-5 transition-all outline-none" />
                             </div>
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-800 mb-1.5">Tanggal Tutup Pendaftaran</label>
-                                <input type="date" name="tanggal_selesai" x-model="editData.tanggal_selesai" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
+                            <div class="space-y-2">
+                                <x-ui.label required class="text-[15px] font-semibold text-grey-700">Tanggal Tutup Pendaftaran</x-ui.label>
+                                <x-ui.input type="date" name="tanggal_selesai" x-model="editData.tanggal_selesai" required class="h-14 bg-grey-25 border border-grey-100/80 hover:bg-white focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 text-grey-900 text-lg font-medium rounded-[16px] px-5 transition-all outline-none" />
                             </div>
                         </div>
 
                         <!-- Box 4: Rentang Ujian -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-800 mb-1.5">Tanggal Mulai Ujian</label>
-                                <input type="date" name="tanggal_mulai_ujian" x-model="editData.tanggal_mulai_ujian" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
+                            <div class="space-y-2">
+                                <x-ui.label class="text-[15px] font-semibold text-grey-700">Tanggal Mulai Ujian</x-ui.label>
+                                <x-ui.input type="date" name="tanggal_mulai_ujian" x-model="editData.tanggal_mulai_ujian" class="h-14 bg-grey-25 border border-grey-100/80 hover:bg-white focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 text-grey-900 text-lg font-medium rounded-[16px] px-5 transition-all outline-none" />
                             </div>
-                            <div>
-                                <label class="block text-[13px] font-semibold text-slate-800 mb-1.5">Tanggal Selesai Ujian</label>
-                                <input type="date" name="tanggal_selesai_ujian" x-model="editData.tanggal_selesai_ujian" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
+                            <div class="space-y-2">
+                                <x-ui.label class="text-[15px] font-semibold text-grey-700">Tanggal Selesai Ujian</x-ui.label>
+                                <x-ui.input type="date" name="tanggal_selesai_ujian" x-model="editData.tanggal_selesai_ujian" class="h-14 bg-grey-25 border border-grey-100/80 hover:bg-white focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 text-grey-900 text-lg font-medium rounded-[16px] px-5 transition-all outline-none" />
                             </div>
                         </div>
 
                         <!-- Status & Keterangan -->
-                        <div>
-                            <label class="block text-[13px] font-semibold text-slate-800 mb-1.5">Status Periode</label>
-                            <select name="status" x-model="editData.status" required class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
+                        <div class="space-y-2">
+                            <x-ui.label required class="text-[15px] font-semibold text-grey-700">Status Periode</x-ui.label>
+                            <select name="status" x-model="editData.status" required class="w-full h-14 bg-grey-25 border border-grey-100/80 hover:bg-white focus:bg-white focus:border-primary-500 focus:ring-4 focus:ring-primary-500/15 text-grey-900 text-lg font-medium rounded-[16px] px-5 transition-all outline-none cursor-pointer">
                                 <option value="draft">Draft (Tidak aktif)</option>
                                 <option value="aktif">Aktif (Pendaftaran Buka)</option>
                                 <option value="selesai">Selesai (Ditutup)</option>
                             </select>
                         </div>
-
-                        <div>
-                            <label class="block text-[13px] font-semibold text-slate-800 mb-1.5">Deskripsi / Keterangan</label>
-                            <textarea name="deskripsi" x-model="editData.deskripsi" class="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-[13px] focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow"></textarea>
-                        </div>
                     </form>
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="px-6 py-4 border-t border-slate-100 flex items-center justify-end gap-3 rounded-b-2xl bg-white">
-                    <button @click="editModal = false" type="button" class="px-5 py-2 text-[13px] font-medium text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 focus:outline-none transition-colors">
+                <div class="px-6 sm:px-8 py-5 border-t border-grey-100/80 flex items-center justify-end gap-4 bg-grey-50/50">
+                    <button @click="editModal = false" type="button" class="px-6 py-3 border border-grey-200 text-grey-700 font-bold bg-white rounded-xl hover:bg-grey-50 hover:text-grey-900 transition-colors shadow-sm">
                         Batal
                     </button>
-                    <button type="button" onclick="document.getElementById('formEditPeriode').submit()" class="px-5 py-2 text-[13px] font-medium text-slate-100 bg-blue-600 rounded-xl hover:bg-blue-700 focus:outline-none transition-colors shadow-sm">
+                    <button type="button" onclick="document.getElementById('formEditPeriode').submit()" class="px-6 py-3 bg-primary-500 hover:bg-primary-400 text-white font-bold rounded-xl shadow-sm transition-all shadow-primary-500/25">
                         Simpan Perubahan
                     </button>
                 </div>
