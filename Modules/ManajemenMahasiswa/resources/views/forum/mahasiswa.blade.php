@@ -174,7 +174,7 @@
 
             .xp-progress-bar {
                 height: 8px;
-                background: rgba(255,255,255,0.2);
+                background: rgba(255, 255, 255, 0.2);
                 border-radius: 4px;
                 overflow: hidden;
                 margin-top: 6px;
@@ -219,7 +219,8 @@
 
     {{-- Flash Message --}}
     @if(session('success'))
-        <div class="alert alert-success alert-dismissible fade show" role="alert" style="border-radius: 10px; border: none; background: #dcfce7; color: #16a34a; font-weight: 600;">
+        <div class="alert alert-success alert-dismissible fade show" role="alert"
+            style="border-radius: 10px; border: none; background: #dcfce7; color: #16a34a; font-weight: 600;">
             {{ session('success') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -231,7 +232,7 @@
         <div class="col-md-7 mb-3 mb-md-0">
             <div class="bg-gradient-purple rounded-4 p-4 h-100 text-white shadow-sm">
                 <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
-                    🏆 Leaderboard
+                    Leaderboard
                 </h6>
                 <div class="table-responsive">
                     <table class="table table-borderless table-sm mb-0 leaderboard-table">
@@ -254,13 +255,15 @@
                                             <span title="{{ $badge->name }}">{{ $badge->icon }}</span>
                                         @endforeach
                                         @if($entry->badges->count() > 3)
-                                            <span style="font-size: 11px; opacity: 0.7;">+{{ $entry->badges->count() - 3 }}</span>
+                                            <span
+                                                style="font-size: 11px; opacity: 0.7;">+{{ $entry->badges->count() - 3 }}</span>
                                         @endif
                                     </td>
                                 </tr>
                             @empty
                                 <tr>
-                                    <td colspan="4" class="text-center" style="opacity: 0.7;">Belum ada data leaderboard</td>
+                                    <td colspan="4" class="text-center" style="opacity: 0.7;">Belum ada data leaderboard
+                                    </td>
                                 </tr>
                             @endforelse
                         </tbody>
@@ -274,17 +277,18 @@
             <div
                 class="bg-gradient-purple rounded-4 p-4 h-100 text-white shadow-sm d-flex flex-column justify-content-center">
                 <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
-                    🔥 Streak Kamu Hari Ini : {{ $userStats['current_streak'] }} Hari
+                    <span></span>Streak Kamu Hari Ini : {{ $userStats['current_streak'] }} Hari
                 </h6>
                 <div class="mb-3 ps-4">
                     <span style="font-size: 14px; font-weight: 500;">Rank : #{{ $userStats['rank'] }}</span>
                 </div>
                 <div class="mb-3 ps-4 d-flex align-items-center gap-2">
-                    <span>🏵️</span> <span style="font-size: 14px; font-weight: 500;">Level Kamu : {{ $userStats['level'] }}</span>
+                    <span></span> <span style="font-size: 14px; font-weight: 500;">Level Kamu :
+                        {{ $userStats['level'] }}</span>
                 </div>
                 <div class="ps-4">
                     <div class="d-flex align-items-center gap-2">
-                        <span>📊</span>
+                        <span></span>
                         <span style="font-size: 14px; font-weight: 500;">
                             Exp : {{ $userStats['total_xp'] }}/{{ $userStats['xp_for_next'] }}
                         </span>
@@ -303,7 +307,8 @@
                 @if($userStats['badges']->isNotEmpty())
                     <div class="mt-3 ps-4 d-flex align-items-center gap-1 flex-wrap">
                         @foreach($userStats['badges'] as $badge)
-                            <span title="{{ $badge->name }}: {{ $badge->description }}" style="font-size: 18px; cursor: help;">{{ $badge->icon }}</span>
+                            <span title="{{ $badge->name }}: {{ $badge->description }}"
+                                style="font-size: 18px; cursor: help;">{{ $badge->icon }}</span>
                         @endforeach
                     </div>
                 @endif
@@ -315,16 +320,17 @@
     <form method="GET" action="{{ route('manajemenmahasiswa.forum.index') }}" id="forumFilterForm">
         <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-4">
             <div class="search-wrapper w-100 me-0 me-md-2">
-                <span class="search-icon">🔍</span>
-                <input type="text" name="search" class="form-control search-input w-100"
-                       placeholder="Cari diskusi..."
-                       value="{{ request('search') }}">
+                <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+                <input type="text" name="search" class="form-control search-input w-100" placeholder="Cari diskusi..."
+                    value="{{ request('search') }}">
             </div>
 
             <div class="d-flex gap-3">
-                <select name="kategori" class="form-select border-1" style="border-radius: 8px; height: 42px; min-width: 130px;"
-                        onchange="document.getElementById('forumFilterForm').submit()">
-                    <option value="semua" {{ request('kategori') == 'semua' || !request('kategori') ? 'selected' : '' }}>Semua</option>
+                <select name="kategori" class="form-select border-1"
+                    style="border-radius: 8px; height: 42px; min-width: 130px;"
+                    onchange="document.getElementById('forumFilterForm').submit()">
+                    <option value="semua" {{ request('kategori') == 'semua' || !request('kategori') ? 'selected' : '' }}>
+                        Semua</option>
                     @foreach($categories as $key => $label)
                         <option value="{{ $key }}" {{ request('kategori') == $key ? 'selected' : '' }}>
                             {{ $label }}
@@ -332,7 +338,12 @@
                     @endforeach
                 </select>
                 <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post text-decoration-none">
-                    Post ⊕
+                    Post
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
                 </a>
             </div>
         </div>
@@ -350,7 +361,8 @@
                         <div>
                             <div class="d-flex align-items-center gap-2">
                                 <h6 class="fw-bold text-dark mb-0">{{ $thread->author->name ?? 'Unknown' }}</h6>
-                                <span class="text-primary fw-medium" style="font-size: 12px;">• {{ $thread->created_at->diffForHumans() }}</span>
+                                <span class="text-primary fw-medium" style="font-size: 12px;">•
+                                    {{ $thread->created_at->diffForHumans() }}</span>
                                 @if($thread->is_pinned)
                                     <span class="pinned-badge">📌 Pinned</span>
                                 @endif
@@ -359,12 +371,12 @@
                     </div>
                     <div class="dropdown" onclick="event.preventDefault(); event.stopPropagation();">
                         <span class="text-muted fw-bold" style="cursor: pointer; font-size: 20px; line-height: 1;"
-                              data-bs-toggle="dropdown">⋯</span>
+                            data-bs-toggle="dropdown">⋯</span>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 8px;">
                             @if($thread->user_id === $user->id)
                                 <li>
                                     <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
-                                          onsubmit="return confirm('Yakin ingin menghapus thread ini?')">
+                                        onsubmit="return confirm('Yakin ingin menghapus thread ini?')">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="dropdown-item text-danger">🗑️ Hapus</button>
                                     </form>
@@ -373,17 +385,16 @@
                                 @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
                                     <li>
                                         <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
-                                              onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
+                                            onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
                                             @csrf @method('DELETE')
                                             <button type="submit" class="dropdown-item text-danger">🗑️ Hapus (Admin)</button>
                                         </form>
                                     </li>
                                 @endif
                                 <li>
-                                    <button type="button" class="dropdown-item text-danger"
-                                            data-bs-toggle="modal" data-bs-target="#reportModal"
-                                            data-thread-id="{{ $thread->id }}"
-                                            data-thread-title="{{ $thread->judul }}">
+                                    <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal"
+                                        data-bs-target="#reportModal" data-thread-id="{{ $thread->id }}"
+                                        data-thread-title="{{ $thread->judul }}">
                                         🚩 Laporkan Thread
                                     </button>
                                 </li>
@@ -410,26 +421,32 @@
                     $threadVoteKey = \Modules\ManajemenMahasiswa\Models\Thread::class . '_' . $thread->id;
                     $threadUserVote = $userVotes[$threadVoteKey] ?? null;
                 @endphp
-                <div class="post-actions d-flex align-items-center" onclick="event.preventDefault(); event.stopPropagation();">
+                <div class="post-actions d-flex align-items-center"
+                    onclick="event.preventDefault(); event.stopPropagation();">
                     <!-- Up/Down vote -->
-                    <button class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === 1 ? 'vote-active-up' : '' }}"
-                            data-thread-id="{{ $thread->id }}" data-value="1">
+                    <button
+                        class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === 1 ? 'vote-active-up' : '' }}"
+                        data-thread-id="{{ $thread->id }}" data-value="1">
                         <span class="me-1" style="font-size: 14px;">↑</span>
                     </button>
-                    <span class="fw-bold text-dark mx-1 thread-vote-count-{{ $thread->id }}" style="font-size: 14px; min-width: 15px; text-align: center;">{{ $thread->vote_count }}</span>
-                    <button class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === -1 ? 'vote-active-down' : '' }}"
-                            data-thread-id="{{ $thread->id }}" data-value="-1">
+                    <span class="fw-bold text-dark mx-1 thread-vote-count-{{ $thread->id }}"
+                        style="font-size: 14px; min-width: 15px; text-align: center;">{{ $thread->vote_count }}</span>
+                    <button
+                        class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === -1 ? 'vote-active-down' : '' }}"
+                        data-thread-id="{{ $thread->id }}" data-value="-1">
                         <span style="font-size: 14px;">↓</span>
                     </button>
-                    
+
                     <!-- Comments -->
-                    <button class="ms-2" onclick="window.location.href='{{ route('manajemenmahasiswa.forum.show', $thread->id) }}'">
-                        <span class="me-1" style="font-size: 14px;">💬</span> {{ $thread->comments_count ?? $thread->comment_count }}
+                    <button class="ms-2"
+                        onclick="window.location.href='{{ route('manajemenmahasiswa.forum.show', $thread->id) }}'">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        {{ $thread->comments_count ?? $thread->comment_count }}
                     </button>
 
                     <!-- Share -->
                     <button class="share-btn ms-1" data-url="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}">
-                        <span style="font-size: 14px;">🔗</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
                     </button>
                 </div>
             </div>
@@ -453,7 +470,8 @@
     @endif
 
     @if($errors->has('alasan'))
-        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert" style="border-radius: 10px; border: none; font-weight: 600;">
+        <div class="alert alert-danger alert-dismissible fade show mt-3" role="alert"
+            style="border-radius: 10px; border: none; font-weight: 600;">
             {{ $errors->first('alasan') }}
             <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
@@ -470,11 +488,15 @@
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
-                        <p class="text-muted" style="font-size: 14px;">Apakah thread <strong id="reportThreadTitle"></strong> melanggar panduan komunitas?</p>
-                        
+                        <p class="text-muted" style="font-size: 14px;">Apakah thread <strong
+                                id="reportThreadTitle"></strong> melanggar panduan komunitas?</p>
+
                         <div class="mb-3">
-                            <label for="alasan" class="form-label fw-bold" style="font-size: 14px;">Alasan Pelaporan <span class="text-danger">*</span></label>
-                            <textarea class="form-control" name="alasan" id="alasan" rows="4" placeholder="Tulis alasan spesifik (misal: SARA, Spam, Hoax)..." required minlength="5"></textarea>
+                            <label for="alasan" class="form-label fw-bold" style="font-size: 14px;">Alasan Pelaporan
+                                <span class="text-danger">*</span></label>
+                            <textarea class="form-control" name="alasan" id="alasan" rows="4"
+                                placeholder="Tulis alasan spesifik (misal: SARA, Spam, Hoax)..." required
+                                minlength="5"></textarea>
                         </div>
                     </div>
                     <div class="modal-footer border-0 pt-0">
@@ -494,9 +516,9 @@
 
             // Vote Thread (AJAX)
             document.querySelectorAll('.vote-thread-btn').forEach(btn => {
-                btn.addEventListener('click', async function(e) {
+                btn.addEventListener('click', async function (e) {
                     e.preventDefault();
-                    
+
                     // Optimistic UI toggle could be added here, but waiting for server ensures consistency
                     const threadId = this.dataset.threadId;
                     const value = parseInt(this.dataset.value);
@@ -540,10 +562,10 @@
 
             // Share functionality (Copy Link)
             document.querySelectorAll('.share-btn').forEach(btn => {
-                btn.addEventListener('click', function(e) {
+                btn.addEventListener('click', function (e) {
                     e.preventDefault();
                     const targetUrl = this.dataset.url;
-                    
+
                     navigator.clipboard.writeText(targetUrl).then(() => {
                         const originalHtml = this.innerHTML;
                         this.innerHTML = '<span style="font-size: 14px;">✅</span>';
@@ -563,10 +585,10 @@
                     const button = event.relatedTarget;
                     const threadId = button.getAttribute('data-thread-id');
                     const threadTitle = button.getAttribute('data-thread-title');
-                    
+
                     const modalTitleDisplay = reportModal.querySelector('#reportThreadTitle');
                     const form = reportModal.querySelector('#reportForm');
-                    
+
                     modalTitleDisplay.textContent = `"${threadTitle}"`;
                     form.action = `{{ url('manajemen-mahasiswa/forum') }}/${threadId}/report`;
                 });

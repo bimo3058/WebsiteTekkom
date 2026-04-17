@@ -7,6 +7,7 @@ use Modules\ManajemenMahasiswa\Http\Controllers\KemahasiswaanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\ForumController;
 use Modules\ManajemenMahasiswa\Http\Controllers\GamificationController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PengaduanController;
+use Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController;
 
 Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
     ->prefix('manajemen-mahasiswa')
@@ -38,6 +39,16 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             ->group(function () {
             Route::get('/dashboard', function () {
                 return view('manajemenmahasiswa::dashboard.alumni');
+            })->name('dashboard');
+        });
+
+        // ── Dosen ─────────────────────────────────────────────────────────
+        Route::middleware('role:dosen,dosen_koordinator,gpm,admin,admin_kemahasiswaan,superadmin')
+            ->prefix('dosen')
+            ->name('dosen.')
+            ->group(function () {
+            Route::get('/dashboard', function () {
+                return view('manajemenmahasiswa::dashboard.dosen');
             })->name('dashboard');
         });
 
@@ -94,10 +105,20 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::delete('/comments/{commentId}', [ForumController::class, 'destroyComment'])->name('comments.destroy');
         });
 
-        // ── Gamification API ──────────────────────────────────────────────
-        Route::prefix('gamification')->name('gamification.')->group(function () {
-            Route::get('/leaderboard', [GamificationController::class, 'leaderboard'])->name('leaderboard');
-            Route::get('/stats', [GamificationController::class, 'userStats'])->name('stats');
+        // ── Kegiatan ──────────────────────────────────────────────────────
+        Route::prefix('kegiatan')->name('kegiatan.')->group(function () {
+            // View — semua role boleh
+            Route::get('/', [KegiatanController::class, 'index'])->name('index');
+            Route::get('/{id}', [KegiatanController::class, 'show'])->name('show')->where('id', '[0-9]+');
+
+            // Create/Edit/Delete — hanya pengurus + admin
+            Route::middleware('role:pengurus_himpunan,admin_kemahasiswaan,superadmin')->group(function () {
+                Route::get('/create', [KegiatanController::class, 'create'])->name('create');
+                Route::post('/', [KegiatanController::class, 'store'])->name('store');
+                Route::get('/{id}/edit', [KegiatanController::class, 'edit'])->name('edit');
+                Route::put('/{id}', [KegiatanController::class, 'update'])->name('update');
+                Route::delete('/{id}', [KegiatanController::class, 'destroy'])->name('destroy');
+            });
         });
 
     });
