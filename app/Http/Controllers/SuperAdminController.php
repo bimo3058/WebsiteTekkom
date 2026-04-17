@@ -188,9 +188,15 @@ class SuperAdminController extends Controller
         }
 
         // Menggunakan Cache Tags agar manajemen cache user lebih rapi
-        $users = Cache::tags(['sa_users'])->remember($cacheKey, self::TTL_USERS, function() use ($query, $perPage) {
+        $rememberCb = function() use ($query, $perPage) {
             return $query->latest()->paginate($perPage);
-        });
+        };
+
+        try {
+            $users = Cache::tags(['sa_users'])->remember($cacheKey, self::TTL_USERS, $rememberCb);
+        } catch (\BadMethodCallException $e) {
+            $users = Cache::remember($cacheKey, self::TTL_USERS, $rememberCb);
+        }
 
         $paginator = $users;
 

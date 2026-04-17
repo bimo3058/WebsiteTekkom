@@ -113,15 +113,23 @@ class PendaftarAdminController extends Controller
         ]);
 
         $pendaftar = PendaftarUjian::findOrFail($id);
-        $pendaftar->update([
+        
+        $dataToUpdate = [
             'status_pendaftaran' => $request->status_pendaftaran,
             'catatan_admin'      => $request->catatan_admin,
-        ]);
+        ];
+
+        // Jika pendaftar ditolak, cabut alokasi sesinya agar kuota kembali tersedia
+        if ($request->status_pendaftaran === 'rejected' || $request->status_pendaftaran === 'pending') {
+            $dataToUpdate['jadwal_ujian_id'] = null;
+        }
+
+        $pendaftar->update($dataToUpdate);
 
         $label = match ($request->status_pendaftaran) {
             'approved' => 'disetujui',
-            'rejected' => 'ditolak',
-            default    => 'diperbarui',
+            'rejected' => 'ditolak (dan alokasi sesi dicabut)',
+            default    => 'dikembalikan ke pending (dan alokasi sesi dicabut)',
         };
 
         return back()->with('success', "Status pendaftar {$pendaftar->nama_lengkap} berhasil {$label}.");
@@ -133,6 +141,9 @@ class PendaftarAdminController extends Controller
     public function destroy($id)
     {
         $pendaftar = PendaftarUjian::findOrFail($id);
+        
+        // Cabut alokasi sesi sebelum dihapus
+        $pendaftar->update(['jadwal_ujian_id' => null]);
         $pendaftar->delete();
 
         return back()->with('success', "Pendaftar {$pendaftar->nama_lengkap} berhasil dihapus.");
