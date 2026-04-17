@@ -268,12 +268,16 @@
                                             @endphp
                                             @forelse($dosensList as $dosenItem)
                                                 @php
-                                                    [$initials, $dosenName] = explode('|', $dosenItem, 2);
+                                                    $parts = explode('|', $dosenItem, 2);
+                                                    $initials = $parts[0] ?? '';
+                                                    $dosenName = $parts[1] ?? $dosenItem;
                                                 @endphp
-                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                    <div class="avatar-text">{{ strtoupper($initials) }}</div>
-                                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosenName }}</span>
-                                                </div>
+                                                @if(!empty($dosenName))
+                                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                        <div class="avatar-text">{{ strtoupper($initials) }}</div>
+                                                        <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosenName }}</span>
+                                                    </div>
+                                                @endif
                                             @empty
                                                 <span class="text-muted" style="font-size: 0.85rem;">-</span>
                                             @endforelse
@@ -359,12 +363,16 @@
                                             @endphp
                                             @forelse($dosensList as $dosenItem)
                                                 @php
-                                                    [$initials, $dosenName] = explode('|', $dosenItem, 2);
+                                                    $parts = explode('|', $dosenItem, 2);
+                                                    $initials = $parts[0] ?? '';
+                                                    $dosenName = $parts[1] ?? $dosenItem;
                                                 @endphp
-                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                    <div class="avatar-text">{{ strtoupper($initials) }}</div>
-                                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosenName }}</span>
-                                                </div>
+                                                @if(!empty($dosenName))
+                                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                        <div class="avatar-text">{{ strtoupper($initials) }}</div>
+                                                        <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosenName }}</span>
+                                                    </div>
+                                                @endif
                                             @empty
                                                 <span class="text-muted" style="font-size: 0.85rem;">-</span>
                                             @endforelse
@@ -450,12 +458,16 @@
                                             @endphp
                                             @forelse($dosensList as $dosenItem)
                                                 @php
-                                                    [$initials, $dosenName] = explode('|', $dosenItem, 2);
+                                                    $parts = explode('|', $dosenItem, 2);
+                                                    $initials = $parts[0] ?? '';
+                                                    $dosenName = $parts[1] ?? $dosenItem;
                                                 @endphp
-                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                    <div class="avatar-text">{{ strtoupper($initials) }}</div>
-                                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosenName }}</span>
-                                                </div>
+                                                @if(!empty($dosenName))
+                                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                        <div class="avatar-text">{{ strtoupper($initials) }}</div>
+                                                        <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosenName }}</span>
+                                                    </div>
+                                                @endif
                                             @empty
                                                 <span class="text-muted" style="font-size: 0.85rem;">-</span>
                                             @endforelse
