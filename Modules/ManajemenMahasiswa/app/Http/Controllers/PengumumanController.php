@@ -5,16 +5,18 @@ namespace Modules\ManajemenMahasiswa\Http\Controllers;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Modules\ManajemenMahasiswa\Services\PengumumanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
 
 class PengumumanController extends Controller
 {
-    public function __construct(private
-        PengumumanService $pengumumanService, private
+    public function __construct(
+        private
+        PengumumanService $pengumumanService,
+        private
         RepoMulmedService $repoMulmedService,
-        )
-    {
+    ) {
     }
 
     //Daftar semua pengumuman (Admin/Koor/Pengurus view).
@@ -23,36 +25,36 @@ class PengumumanController extends Controller
         $user = Auth::user();
         $roles = $user->roles->pluck('name');
 
-        $filterKategori = $request->query('kategori'); // e.g., 'semua', 'akademik', 'himpunan' dsb.
+        $filterKategori = $request->query('kategori');
 
-        // Admin, Dosen Koordinator, Pengurus Himpunan: lihat semua
-        if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'pengurus_himpunan'])->isNotEmpty()) {
+        // Admin, Dosen Koordinator, Pengurus Himpunan, GPM, Admin Kemahasiswaan: lihat semua
+        if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'pengurus_himpunan', 'gpm', 'admin_kemahasiswaan'])->isNotEmpty()) {
             $filters = $request->only(['status', 'search', 'audience']);
             if ($filterKategori && $filterKategori !== 'semua') {
                 $filters['kategori'] = $filterKategori;
             }
             $pengumuman = $this->pengumumanService->listAll($filters);
-        }
-        else {
-            // Role lain (Mahasiswa, Alumni, Dosen): bisa filter kategori & search
-            $userAudience = $this->resolveAudience($roles);
 
-            $targetKategoriFilter = ($filterKategori && $filterKategori !== 'semua') ? $filterKategori : null;
-            $searchString = $request->query('search'); // <--- Tangkap input pencarian
-
-            // Kirim search ke service
-            $pengumuman = $this->pengumumanService->listPublished($userAudience, $targetKategoriFilter, $searchString);
+            return view('manajemenmahasiswa::pengumuman.pengumuman-a', compact('pengumuman'));
         }
 
-        return view('manajemenmahasiswa::pengumuman.index', compact('pengumuman', 'user'));
+        // Role lain (Mahasiswa, Alumni, Dosen): bisa filter kategori & search
+        $userAudience = $this->resolveAudience($roles);
+
+        $targetKategoriFilter = ($filterKategori && $filterKategori !== 'semua') ? $filterKategori : null;
+        $searchString = $request->query('search');
+
+        $pengumuman = $this->pengumumanService->listPublished($userAudience, $targetKategoriFilter, $searchString);
+
+        return view('manajemenmahasiswa::mahasiswa.pengumuman-mahasiswa', compact('pengumuman'));
     }
 
 
     //Form buat pengumuman baru.
-    //Akses: Admin, Dosen Koordinator, Pengurus Himpunan
+    //Akses: Admin, Dosen Koordinator, Pengurus Himpunan, GPM
     public function create()
     {
-        return view('manajemenmahasiswa::pengumuman.create');
+        return view('manajemenmahasiswa::pengumuman.pengumuman-create');
     }
 
     //Simpan pengumuman baru.
@@ -62,20 +64,34 @@ class PengumumanController extends Controller
             'judul' => 'required|string|max:255',
             'konten' => 'required|string|min:50',
             'kategori' => 'nullable|string|max:100',
-            'target_audience' => 'required|in:all,mahasiswa,alumni,dosen,pengurus',
+            'target_audience' => 'required|in:all,mahasiswa,alumni',
             'status_publish' => 'required|in:draft,published',
+            'poster' => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
             'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:10240',
         ]);
 
+        // Remove poster & lampiran from $validated before creating Pengumuman
+        $posterFile = $request->file('poster');
+        unset($validated['poster'], $validated['lampiran']);
+
         $pengumuman = $this->pengumumanService->create(Auth::id(), $validated);
+
+        // Handle poster upload via RepoMulmed
+        if ($posterFile) {
+            $this->repoMulmedService->upload($posterFile, [
+                'judul_file' => 'Poster: ' . $validated['judul'],
+                'visibility_status' => 'public',
+                'pengumuman_id' => $pengumuman->id,
+            ]);
+        }
 
         // Handle lampiran upload
         if ($request->hasFile('lampiran')) {
             foreach ($request->file('lampiran') as $file) {
                 $this->repoMulmedService->upload($file, [
                     'judul_file' => $file->getClientOriginalName(),
-                    'visibility_status' => 'public', // Set as public or default visibility
-                    'pengumuman_id' => $pengumuman->id
+                    'visibility_status' => 'public',
+                    'pengumuman_id' => $pengumuman->id,
                 ]);
             }
         }
@@ -97,8 +113,14 @@ class PengumumanController extends Controller
     {
         $pengumuman = $this->pengumumanService->findById($id);
         $user = Auth::user();
+        $roles = $user->roles->pluck('name');
 
-        return view('manajemenmahasiswa::pengumuman.show', compact('pengumuman', 'user'));
+        // Admin, GPM, Pengurus, Dosen Koordinator: admin layout
+        if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'pengurus_himpunan', 'gpm', 'admin_kemahasiswaan'])->isNotEmpty()) {
+            return view('manajemenmahasiswa::pengumuman.pengumuman-detail', compact('pengumuman', 'user'));
+        }
+
+        return view('manajemenmahasiswa::mahasiswa.pengumuman-mahasiswa-detail', compact('pengumuman', 'user'));
     }
 
     /**
@@ -152,7 +174,7 @@ class PengumumanController extends Controller
     /**
      * Hapus pengumuman.
      */
-    public function destroy(int $id)
+    public function remove(int $id)
     {
         $pengumuman = $this->pengumumanService->findById($id);
         $this->authorizeOwnerOrAdmin($pengumuman->user_id);
@@ -180,7 +202,7 @@ class PengumumanController extends Controller
     /**
      * Hapus lampiran tertentu.
      */
-    public function destroyLampiran(int $pengumumanId, int $lampiranId)
+    public function removeLampiran(int $pengumumanId, int $lampiranId)
     {
         $pengumuman = $this->pengumumanService->findById($pengumumanId);
         $this->authorizeOwnerOrAdmin($pengumuman->user_id);
@@ -211,5 +233,15 @@ class PengumumanController extends Controller
         if ($user->id !== $ownerId && !$isAdminOrKoor) {
             abort(403, 'Anda tidak memiliki akses untuk aksi ini.');
         }
+    }
+
+    /**
+     * Download lampiran file.
+     */
+    public function downloadLampiran(int $lampiran)
+    {
+        $file = \Modules\ManajemenMahasiswa\Models\RepoMulmed::findOrFail($lampiran);
+
+        return Storage::disk('public')->download($file->path_file, $file->nama_file);
     }
 }

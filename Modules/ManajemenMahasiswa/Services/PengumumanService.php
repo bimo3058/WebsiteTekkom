@@ -27,13 +27,16 @@ class PengumumanService
      * Listing pengumuman publik untuk mahasiswa/alumni/dosen.
      * Di-cache karena sering dibaca oleh ribuan user.
      */
-    public function listPublished(string $userRoleAudience, ?string $filterKategori = null, int $perPage = 10): LengthAwarePaginator
+    public function listPublished(string $userRoleAudience, ?string $filterKategori = null, ?string $search = null, int $perPage = 10): LengthAwarePaginator
     {
         return Pengumuman::with('author')
             ->published()
             ->forAudience($userRoleAudience)
             ->when($filterKategori, function ($query, $filter) {
                 return $query->where('kategori', $filter);
+            })
+            ->when($search, function ($query, $search) {
+                return $query->where('judul', 'like', "%{$search}%");
             })
             ->orderByDesc('created_at')
             ->paginate($perPage);
@@ -76,7 +79,11 @@ class PengumumanService
      */
     public function publish(int $id): Pengumuman
     {
-        return $this->update($id, ['status_publish' => Pengumuman::STATUS_PUBLISHED, 'scheduled_at' => null]);
+        return $this->update($id, [
+            'status_publish' => Pengumuman::STATUS_PUBLISHED, 
+            'scheduled_at' => null,
+            'published_at' => now()
+        ]);
     }
 
     /**

@@ -14,17 +14,58 @@ class Kegiatan extends Model
     protected $table = 'mk_kegiatan';
 
     protected $fillable = [
+        'user_id',
         'kategori_kegiatan_id',
         'bidang_id',
-        'lecturer_id',
-        'ketua_student_id',
         'kepengurusan_id',
-        'nama_kegiatan',
-        'tanggal',
+        'judul',
+        'deskripsi',
+        'tanggal_mulai',
+        'jam_mulai',
+        'tanggal_selesai',
+        'jam_selesai',
+        'lokasi',
+        'banner',
+        'anggaran',
+        'penanggung_jawab',
+        'ketua_pelaksana_id',
+        'dosen_pendamping_id',
+        'target_peserta',
+        'status',
     ];
 
     protected $casts = [
-        'tanggal' => 'date',
+        'tanggal_mulai' => 'date',
+        'tanggal_selesai' => 'date',
+        'anggaran' => 'decimal:2',
+    ];
+
+    // -------------------------------------------------------------------------
+    // Attribute Accessors for Time
+    // -------------------------------------------------------------------------
+
+    public function getJamMulaiFormattedAttribute(): ?string
+    {
+        return $this->jam_mulai ? \Carbon\Carbon::parse($this->jam_mulai)->format('H:i') : null;
+    }
+
+    public function getJamSelesaiFormattedAttribute(): ?string
+    {
+        return $this->jam_selesai ? \Carbon\Carbon::parse($this->jam_selesai)->format('H:i') : null;
+    }
+
+    // -------------------------------------------------------------------------
+    // Constants
+    // -------------------------------------------------------------------------
+
+    const STATUS_AKAN_DATANG = 'akan_datang';
+    const STATUS_BERLANGSUNG = 'berlangsung';
+    const STATUS_SELESAI = 'selesai';
+
+    const STATUS_LIST = [
+        self::STATUS_AKAN_DATANG,
+        self::STATUS_BERLANGSUNG,
+        self::STATUS_SELESAI,
     ];
 
     // -------------------------------------------------------------------------
@@ -41,19 +82,24 @@ class Kegiatan extends Model
         return $this->belongsTo(Bidang::class, 'bidang_id');
     }
 
-    public function lecturer(): BelongsTo
-    {
-        return $this->belongsTo(\App\Models\Lecturer::class, 'lecturer_id');
-    }
-
-    public function ketuaStudent(): BelongsTo
-    {
-        return $this->belongsTo(\App\Models\Student::class, 'ketua_student_id');
-    }
-
     public function kepengurusan(): BelongsTo
     {
         return $this->belongsTo(Kepengurusan::class, 'kepengurusan_id');
+    }
+
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
+    }
+
+    public function ketuaPelaksana(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Student::class, 'ketua_pelaksana_id');
+    }
+
+    public function dosenPendamping(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Lecturer::class, 'dosen_pendamping_id');
     }
 
     public function riwayatKegiatan(): HasMany
@@ -72,7 +118,7 @@ class Kegiatan extends Model
 
     public function scopeByTahun($query, int $tahun)
     {
-        return $query->whereYear('tanggal', $tahun);
+        return $query->whereYear('tanggal_mulai', $tahun);
     }
 
     public function scopeByBidang($query, int $bidangId)
@@ -83,5 +129,34 @@ class Kegiatan extends Model
     public function scopeByKategori($query, int $kategoriId)
     {
         return $query->where('kategori_kegiatan_id', $kategoriId);
+    }
+
+    // -------------------------------------------------------------------------
+    // Accessors
+    // -------------------------------------------------------------------------
+
+    public function getBannerUrlAttribute(): ?string
+    {
+        return $this->banner ? \Storage::url($this->banner) : null;
+    }
+
+    public function getStatusLabelAttribute(): string
+    {
+        return match ($this->status) {
+            self::STATUS_AKAN_DATANG => 'Akan Datang',
+            self::STATUS_BERLANGSUNG => 'Berlangsung',
+            self::STATUS_SELESAI => 'Selesai',
+            default => ucfirst($this->status ?? ''),
+        };
+    }
+
+    public function getStatusColorAttribute(): string
+    {
+        return match ($this->status) {
+            self::STATUS_AKAN_DATANG => 'warning',
+            self::STATUS_BERLANGSUNG => 'primary',
+            self::STATUS_SELESAI => 'success',
+            default => 'secondary',
+        };
     }
 }
