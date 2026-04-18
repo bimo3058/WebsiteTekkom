@@ -115,18 +115,7 @@
             </div>
         </div>
 
-        @if(session('success'))
-        <div class="mb-6 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl flex items-center gap-3">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <p class="text-sm font-medium">{{ session('success') }}</p>
-        </div>
-        @endif
-        @if(session('error') || $errors->any())
-        <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-3">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <p class="text-sm font-medium">{{ session('error') ?? $errors->first() }}</p>
-        </div>
-        @endif
+
 
         <!-- Rentang tanggal periode terpilih -->
         @if($selectedPeriode)
@@ -166,7 +155,7 @@
                     <thead class="bg-white border-b border-slate-200 text-xs font-bold text-slate-800 uppercase tracking-wider">
                         <tr>
                             <th scope="col" class="px-6 py-4 whitespace-nowrap w-3/12">Nama Sesi</th>
-                            <th scope="col" class="px-6 py-4 whitespace-nowrap w-3/12">Waktu & Tempat</th>
+                            <th scope="col" class="px-6 py-4 whitespace-nowrap w-3/12">Waktu</th>
                             <th scope="col" class="px-6 py-4 whitespace-nowrap w-3/12">Alokasi & Kuota</th>
                             <th scope="col" class="px-6 py-4 whitespace-nowrap text-center w-3/12">Aksi</th>
                         </tr>
@@ -180,10 +169,6 @@
                             <td class="px-6 py-4 whitespace-nowrap text-slate-600 font-medium">
                                 <div class="flex flex-col gap-1">
                                     <span>{{ $jadwal->tanggal_ujian ? \Carbon\Carbon::parse($jadwal->tanggal_ujian)->format('d M Y') . ' • ' : '' }} {{ \Carbon\Carbon::parse($jadwal->waktu_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwal->waktu_selesai)->format('H:i') }} WIB</span>
-                                    <span class="text-[11px] text-slate-500 flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                                        {{ $jadwal->ruangan ?? 'Ruangan belum diatur' }}
-                                    </span>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -233,6 +218,65 @@
         </div>
         @endif
 
+        @if($activePeriode)
+            @php
+                $allocatedGroups = collect($pendaftars ?? [])->whereNotNull('jadwal_ujian_id')->groupBy('jadwal_ujian_id')->sortBy(function($group) {
+                    return optional($group->first()->jadwal)->waktu_mulai;
+                });
+            @endphp
+            
+            @if($allocatedGroups->count() > 0)
+            <!-- Table Peserta Terjadwal -->
+            <div class="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="px-6 py-5 flex items-center justify-between border-b border-slate-200 bg-slate-50">
+                    <h2 class="font-bold text-slate-800">Daftar Peserta Ujian Komprehensif ({{ \Carbon\Carbon::parse($activePeriode->tanggal_mulai)->translatedFormat('F Y') }})</h2>
+                </div>
+                <div class="p-6 space-y-8">
+                    @foreach($allocatedGroups as $jadwalId => $pesertas)
+                        @php
+                            $jadwal = $pesertas->first()->jadwal;
+                            $tanggal = $jadwal && $jadwal->tanggal_ujian ? \Carbon\Carbon::parse($jadwal->tanggal_ujian)->translatedFormat('l, d F Y') : 'Tanggal Belum Diatur';
+                            $mulai = $jadwal && $jadwal->waktu_mulai ? \Carbon\Carbon::parse($jadwal->waktu_mulai)->format('H.i') : '...';
+                            $selesai = $jadwal && $jadwal->waktu_selesai ? \Carbon\Carbon::parse($jadwal->waktu_selesai)->format('H.i') : '...';
+                        @endphp
+                        <div>
+                            <h3 class="font-bold text-[15px] text-primary-700 mb-3 ml-1 flex items-center gap-2">
+                                <div class="w-2 h-2 rounded-full bg-primary-500"></div>
+                                {{ $jadwal->nama_sesi ?? 'Nama Sesi Kosong' }}: {{ $tanggal }} pukul {{ $mulai }}-{{ $selesai }} WIB
+                            </h3>
+                            <div class="overflow-x-auto w-full border border-slate-200 rounded-xl">
+                                <table class="w-full text-left text-sm text-slate-600">
+                                    <thead class="bg-slate-50/80 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
+                                        <tr>
+                                            <th scope="col" class="px-6 py-3.5 w-16 text-center">No.</th>
+                                            <th scope="col" class="px-6 py-3.5 w-48">NIM</th>
+                                            <th scope="col" class="px-6 py-3.5">Nama Mahasiswa</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-100 bg-white">
+                                        @foreach($pesertas as $index => $peserta)
+                                        <tr class="hover:bg-slate-50/50 transition-colors">
+                                            <td class="px-6 py-3.5 text-center text-slate-500 font-medium">
+                                                {{ $index + 1 }}
+                                            </td>
+                                            <td class="px-6 py-3.5 font-semibold text-slate-800">
+                                                {{ $peserta->nim }}
+                                            </td>
+                                            <td class="px-6 py-3.5 font-medium text-slate-700">
+                                                {{ $peserta->nama_lengkap }}
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+        @endif
+
         <!-- Drawer Panel -->
         <div x-show="openDrawer" tabindex="-1" class="fixed inset-0 z-[60] overflow-hidden" style="display: none;" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
             <div class="absolute inset-0 overflow-hidden">
@@ -264,9 +308,6 @@
                                     <div>
                                         <h2 class="text-xl font-bold text-slate-800" id="slide-over-title"><span x-text="selectedJadwal?.nama_sesi"></span></h2>
                                         <p class="text-[13px] text-slate-500 mt-1.5 flex items-center gap-2">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                                            <span x-text="selectedJadwal?.ruangan || 'Ruangan Belum Diatur'"></span>
-                                            <span class="text-slate-300">|</span>
                                             <span x-text="formatTime(selectedJadwal?.waktu_mulai)"></span> - <span x-text="formatTime(selectedJadwal?.waktu_selesai)"></span> WIB
                                         </p>
                                     </div>
@@ -284,7 +325,7 @@
                                 <div class="mt-5 flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
                                     <div class="flex-1">
                                         <div class="flex justify-between mb-1.5">
-                                            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Kapasitas Ruangan</span>
+                                            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Kapasitas Sesi</span>
                                             <span class="text-[11px] font-bold text-slate-700"><span x-text="selectedJadwal?.terisi"></span> / <span x-text="selectedJadwal?.kuota"></span></span>
                                         </div>
                                         <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
@@ -500,18 +541,10 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                            <!-- Ruangan -->
-                            <div>
-                                <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Ruangan</label>
-                                <input type="text" name="ruangan" placeholder="Lab Jaringan" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-shadow">
-                            </div>
-
-                            <!-- Box 4: Kapasitas -->
-                            <div>
-                                <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Kapasitas Maksimal</label>
-                                <input type="number" name="kuota" placeholder="50" min="1" step="1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-shadow">
-                            </div>
+                        <!-- Box 4: Kapasitas -->
+                        <div>
+                            <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Kapasitas Maksimal</label>
+                            <input type="number" name="kuota" placeholder="50" min="1" step="1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-shadow">
                         </div>
                     </form>
                 </div>

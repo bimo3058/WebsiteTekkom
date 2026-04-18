@@ -51,6 +51,18 @@
 
         /* ── Border Radius ─────────────────────────────────── */
         --radius: 0.75rem; /* 12px              */
+
+        /* ── Custom Colors for MultiSelect ─────────────────── */
+        --blue: #1b4fd8;
+        --blue-light: #e8f1ff;
+        --gray-50: #f2f3f7;
+        --gray-100: #e8e9f0;
+        --gray-200: #dfdfe6;
+        --gray-300: #d5d5de;
+        --gray-400: #8b8b9e;
+        --gray-700: #3d3d55;
+        --gray-800: #28293d;
+        --gray-900: #16162b;
     }
 
     /* ── Dark Mode (optional, uncomment jika perlu) ──────── */
@@ -560,103 +572,294 @@
 
     /* ── MultiSelect Component CSS ─────────────────────────── */
     .ms-wrapper {
-        @apply relative w-full;
+        position: relative;
+        width: 100%;
+        font-family: inherit;
+        z-index: 1;
+    }
+
+    .ms-wrapper:focus-within,
+    .ms-wrapper:has(.ms-trigger.open) {
+        z-index: 100;
+    }
+
+    .form-control.ms-wrapper {
+        padding: 0;
+        border: none;
+        background: transparent;
+    }
+
+    .form-control.ms-wrapper.compact-control {
+        height: auto;
+        min-height: 0;
+        padding: 0;
     }
 
     .ms-trigger {
-        @apply w-full px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm cursor-pointer flex items-center justify-between hover:border-slate-300 transition-colors relative;
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+        width: 100%;
+        min-height: 52px;
+        padding: 10px 14px;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        background: #ffffff;
+        cursor: pointer;
+        box-sizing: border-box;
+        user-select: none;
+        transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease,
+            background-color 0.2s ease;
+    }
+
+    .ms-trigger:hover:not(.disabled) {
+        border-color: #cbd5e1;
+        background: #f8fafc;
+    }
+
+    .ms-trigger.open {
+        border-color: #3b82f6;
+        background: #ffffff;
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
     }
 
     .ms-trigger.disabled {
-        @apply bg-slate-50 text-slate-500 cursor-not-allowed opacity-60;
+        background: #f8fafc;
+        cursor: not-allowed;
+        border-color: #e2e8f0;
+        color: #94a3b8;
+        opacity: 0.7;
     }
 
     .ms-placeholder {
-        @apply text-slate-500 flex-1;
-    }
-
-    .ms-trigger.active .ms-placeholder {
-        @apply hidden;
-    }
-
-    .ms-search-input {
-        @apply flex-1 border-none bg-transparent text-sm focus:outline-none px-1;
+        font-size: 0.85rem;
+        color: #94a3b8;
+        line-height: 1.4;
+        flex: 1 1 auto;
+        min-width: 60px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .ms-selected-labels {
-        @apply flex-1 truncate text-slate-900;
-    }
-
-    .ms-badge {
-        @apply inline-flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-semibold mr-2;
-    }
-
-    .ms-badge-clear {
-        @apply bg-transparent border-none cursor-pointer text-base leading-none hover:text-blue-900;
+        font-size: 0.85rem;
+        color: #0f172a;
+        line-height: 1.4;
+        flex: 1 1 auto;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
     }
 
     .ms-chevron {
-        @apply text-slate-400 transition-transform flex-shrink-0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 22px;
+        height: 22px;
+        color: #94a3b8;
+        font-size: 13px;
+        transition: transform 0.2s ease;
+        margin-left: auto;
     }
 
     .ms-trigger.open .ms-chevron {
-        @apply rotate-180;
+        transform: rotate(180deg);
+    }
+
+    .ms-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        background: #eff6ff;
+        color: #1d4ed8;
+        border: 1px solid #bfdbfe;
+        border-radius: 9999px;
+        padding: 3px 8px;
+        font-size: 12px;
+        font-weight: 600;
+        flex-shrink: 0;
+        line-height: 1;
+        white-space: nowrap;
+    }
+
+    .ms-badge-clear {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: none;
+        border: none;
+        color: #1d4ed8;
+        cursor: pointer;
+        padding: 0;
+        line-height: 1;
+        font-size: 14px;
+        font-weight: 600;
+        opacity: 0.7;
+        transition:
+            opacity 0.15s ease,
+            color 0.15s ease;
+    }
+
+    .ms-badge-clear:hover {
+        color: #1e40af;
+        opacity: 1;
+    }
+
+    .ms-search-input {
+        flex: 1 1 auto;
+        border: none;
+        outline: none;
+        background: transparent;
+        font-size: 0.85rem;
+        font-family: inherit;
+        color: #0f172a;
+        min-width: 80px;
+        line-height: 1.4;
+        padding: 0;
+    }
+
+    .ms-search-input::placeholder {
+        color: #cbd5e1;
     }
 
     .ms-dropdown {
-        @apply absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-xl shadow-lg z-40 hidden max-h-80 overflow-y-auto;
+        position: absolute;
+        top: calc(100% + 6px);
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
+        border-radius: 0.75rem;
+        box-shadow: 0 14px 26px -16px rgba(15, 23, 42, 0.3);
+        z-index: 9999;
+        overflow: hidden;
+        display: none;
+        padding: 4px;
     }
 
     .ms-dropdown.open {
-        @apply block;
+        display: block;
+        animation: ms-slideDown 0.2s ease;
+    }
+
+    @keyframes ms-slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-8px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
     }
 
     .ms-option-list {
-        @apply py-1;
+        max-height: 224px;
+        overflow-y: auto;
+        padding: 2px 0;
+        background: #ffffff;
+        border-radius: 0.6rem;
     }
 
-    /* ── MultiSelect Option ────────────────────────────────── */
+    .ms-option-list::-webkit-scrollbar {
+        width: 6px;
+    }
+
+    .ms-option-list::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .ms-option-list::-webkit-scrollbar-thumb {
+        background: #e2e8f0;
+        border-radius: 4px;
+    }
+
+    .ms-option-list::-webkit-scrollbar-thumb:hover {
+        background: #cbd5e1;
+    }
+
+    /* Select All Option */
+    .ms-option.select-all {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: background 0.15s ease;
+        color: #475569;
+        font-size: 0.8rem;
+        font-weight: 600;
+        border-bottom: 1px solid #e2e8f0;
+        background: #f8fafc;
+    }
+
+    .ms-option.select-all:hover {
+        background: #f1f5f9;
+    }
+
+    /* Regular Options */
     .ms-option {
-        @apply px-4 py-2.5 hover:bg-blue-50 cursor-pointer flex items-center gap-2.5 transition-colors text-sm;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 12px;
+        cursor: pointer;
+        transition: background 0.15s ease;
+        color: #1f2937;
+        font-size: 0.85rem;
+        font-weight: 500;
+        line-height: 1.4;
+        min-height: 36px;
+        background: #ffffff;
+        border-bottom: 1px solid #f1f5f9;
+    }
+
+    .ms-option:last-child {
+        border-bottom: none;
     }
 
     .ms-option:hover {
-        @apply bg-blue-50;
+        background: #f8fafc;
     }
 
     .ms-option.selected {
-        @apply bg-blue-100;
+        background: #eff6ff;
+        color: #1d4ed8;
     }
 
-    .ms-option.select-all {
-        @apply border-b border-slate-200 font-semibold py-2;
+    .ms-option.selected:hover {
+        background: #dbeafe;
     }
 
-    /* Checkbox styling */
-    .ms-cb {
-        @apply w-4 h-4 rounded border-2 border-slate-300 flex items-center justify-center flex-shrink-0 bg-white;
-    }
-
-    .ms-option.selected .ms-cb {
-        @apply bg-blue-600 border-blue-600;
-    }
-
-    .ms-option.selected .ms-cb::after {
-        content: "✓";
-        @apply text-white text-xs font-bold;
-    }
-
-    .ms-option.indeterminate .ms-cb {
-        @apply bg-blue-400 border-blue-400;
-    }
-
-    .ms-option.indeterminate .ms-cb::after {
-        content: "−";
-        @apply text-white text-xs font-bold;
+    /* Checkbox Styling */
+    .ms-option-checkbox {
+        width: 16px;
+        height: 16px;
+        min-width: 16px;
+        min-height: 16px;
+        margin: 0;
+        accent-color: #3b82f6;
+        flex-shrink: 0;
+        pointer-events: none;
     }
 
     .ms-no-results {
-        @apply px-4 py-3 text-center text-sm text-slate-500;
+        padding: 16px;
+        color: #94a3b8;
+        font-size: 0.875rem;
+        text-align: center;
+        font-weight: 500;
+    }
+
+    .ms-trigger-content {
+        display: none;
     }
 
     /* ── Dropdown Component CSS ────────────────────────────── */
