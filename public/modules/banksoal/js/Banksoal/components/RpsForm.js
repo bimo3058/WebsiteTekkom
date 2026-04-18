@@ -3,6 +3,8 @@ class RpsFormComponent {
         // Konfigurasi default untuk elemen form RPS.
         this.config = {
             mkSelectId: "mkSelect",
+            semesterSelectId: "semester",
+            tahunAjaranSelectId: "tahun_ajaran",
             dosenMsId: "dosenMs",
             cplMsId: "cplMs",
             cpmkMsId: "cpmkMs",
@@ -14,6 +16,12 @@ class RpsFormComponent {
         };
 
         this.mkSelect = document.getElementById(this.config.mkSelectId);
+        this.semesterSelect = document.getElementById(
+            this.config.semesterSelectId,
+        );
+        this.tahunAjaranSelect = document.getElementById(
+            this.config.tahunAjaranSelectId,
+        );
         this.fileInput = document.getElementById(this.config.fileInputId);
         this.uploadZone = document.getElementById(this.config.uploadZoneId);
         this.form = document.querySelector(this.config.formSelector);

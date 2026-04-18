@@ -160,7 +160,9 @@
                                 <span class="font-bold text-slate-800 text-sm">Q-${soalId}</span>
                                 ${badges}
                             </div>
-                            <p class="text-sm text-slate-600 leading-relaxed line-clamp-2">${soal.soal}</p>
+                            <div class="text-sm text-slate-600 leading-relaxed max-h-32 overflow-y-auto prose prose-sm prose-slate max-w-none prose-img:max-h-24 prose-img:w-auto prose-img:rounded-md mt-2">
+                                ${soal.soal}
+                            </div>
                         </div>
 
                         <button type="button" onclick="removeSoal(${soal.id})" class="flex-shrink-0 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg transition-colors p-2 mt-1">
