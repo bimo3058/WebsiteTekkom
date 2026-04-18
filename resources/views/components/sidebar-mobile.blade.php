@@ -24,6 +24,7 @@
 <div x-data="{ show: window.innerWidth < 768, openMenu: false, startY: 0 }"
      x-init="window.addEventListener('resize', () => show = window.innerWidth < 768)"
      x-show="show"
+     style="display: none;"
      class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] font-['Inter_Tight']">
 
     {{-- More Menu Drawer (Lainnya) --}}
@@ -103,7 +104,7 @@
                             <span class="text-[13px] font-semibold">Capstone & TA</span>
                         </a>
 
-                        <a href="{{ route('manajemenmahasiswa.mahasiswa.dashboard') }}"
+                        <a href="{{ route('manajemenmahasiswa.dashboard') }}"
                            @click="openMenu = false"
                            class="flex items-center gap-3 px-3 py-2.5 rounded-xl {{ str_contains($currentRoute, 'manajemen-mahasiswa') ? 'bg-[#F1E9FF] text-[#5E53F4]' : 'text-slate-600 hover:bg-slate-50' }} transition-colors">
                             <svg class="w-5 h-5 flex-shrink-0 {{ str_contains($currentRoute, 'manajemen-mahasiswa') ? 'text-[#5E53F4]' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
@@ -242,4 +243,5 @@
 <div x-data="{ show: window.innerWidth < 768 }"
      x-init="window.addEventListener('resize', () => show = window.innerWidth < 768)"
      x-show="show"
+     style="display: none;"
      class="h-16"></div>
