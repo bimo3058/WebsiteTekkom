@@ -42,142 +42,169 @@
             </a>
 
             @php
-                $isPeriodeActive = request()->routeIs('banksoal.periode.*') || request()->routeIs('banksoal.pendaftaran.alokasi-sesi.*');
+                $isKontrolUmumActive = request()->routeIs('banksoal.admin.kontrol-umum.*');
             @endphp
-            <!-- Manajemen Periode Ujian (with Submenu) -->
-            <div x-data="{ open: {{ $isPeriodeActive ? 'true' : 'false' }} }" class="space-y-1">
+            <!-- Kontrol Umum (Akordion) -->
+            <div x-data="{ open: {{ $isKontrolUmumActive ? 'true' : 'false' }} }" class="space-y-1">
                 <button @click="open = !open"
-                    class="w-full flex items-center justify-between py-2.5 px-4 rounded-xl hover:bg-slate-50 font-medium transition-all group {{ $isPeriodeActive ? 'bg-slate-50' : 'text-slate-600' }}">
+                    class="w-full flex items-center justify-between py-2.5 px-4 rounded-xl hover:bg-slate-50 font-medium transition-all group {{ $isKontrolUmumActive ? 'bg-slate-50' : 'text-slate-600' }}">
                     <div class="flex items-center gap-3">
-                        <svg class="w-5 h-5 flex-shrink-0 {{ $isPeriodeActive ? 'text-blue-600' : 'text-slate-600' }}"
+                        <svg class="w-5 h-5 flex-shrink-0 {{ $isKontrolUmumActive ? 'text-blue-600' : 'text-slate-600' }}"
                             fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <rect width="18" height="18" x="3" y="4" rx="2" ry="2" stroke-width="2" />
-                            <line x1="16" x2="16" y1="2" y2="6" stroke-width="2" />
-                            <line x1="8" x2="8" y1="2" y2="6" stroke-width="2" />
-                            <line x1="3" x2="21" y1="10" y2="10" stroke-width="2" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                            </path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
+                            </path>
                         </svg>
                         <span
-                            class="text-[13px] text-left leading-tight {{ $isPeriodeActive ? 'text-blue-600 font-semibold' : 'text-slate-600' }}">Manajemen
-                            Periode<br>Ujian</span>
+                            class="text-[13px] text-left {{ $isKontrolUmumActive ? 'text-blue-600 font-semibold' : 'text-slate-600' }}">Kontrol
+                            Umum</span>
                     </div>
-                    <svg class="w-4 h-4 transition-transform duration-200 {{ $isPeriodeActive ? 'text-blue-600' : 'text-slate-400' }}"
+                    <svg class="w-4 h-4 transition-transform duration-200 {{ $isKontrolUmumActive ? 'text-blue-600' : 'text-slate-400' }}"
                         :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
                 <div x-show="open" class="pl-11 pr-4 py-1 space-y-2">
-                    <a href="{{ route('banksoal.periode.setup') }}"
-                        class="block text-[13px] {{ request()->routeIs('banksoal.periode.setup') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Setup
-                        Periode</a>
-                    <a href="{{ route('banksoal.pendaftaran.alokasi-sesi.index') }}"
-                        class="block text-[13px] {{ request()->routeIs('banksoal.pendaftaran.alokasi-sesi.*') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Jadwal
-                        & Sesi</a>
+                    <a href="{{ route('banksoal.admin.kontrol-umum.mata-kuliah') }}"
+                        class="block text-[13px] {{ request()->routeIs('banksoal.admin.kontrol-umum.mata-kuliah') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Manajemen
+                        Mata Kuliah</a>
+                    <a href="{{ route('banksoal.admin.kontrol-umum.cpl-cpmk') }}"
+                        class="block text-[13px] {{ request()->routeIs('banksoal.admin.kontrol-umum.cpl-cpmk') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Manajemen
+                        CPL & CPMK</a>
+                    <a href="{{ route('banksoal.admin.kontrol-umum.pemetaan') }}"
+                        class="block text-[13px] {{ request()->routeIs('banksoal.admin.kontrol-umum.pemetaan') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Pemetaan</a>
                 </div>
             </div>
 
             @php
-                $isPesertaActive = request()->routeIs('banksoal.pendaftaran.*') && !request()->routeIs('banksoal.pendaftaran.alokasi-sesi.*');
+                $isKontrolBankSoalActive = request()->routeIs('banksoal.admin.kontrol-banksoal.*');
             @endphp
-            <!-- Manajemen Peserta -->
-            <div x-data="{ open: {{ $isPesertaActive ? 'true' : 'false' }} }" class="space-y-1 mt-1">
+            <!-- Kontrol BankSoal (Akordion) -->
+            <div x-data="{ open: {{ $isKontrolBankSoalActive ? 'true' : 'false' }} }" class="space-y-1 mt-1">
                 <button @click="open = !open"
-                    class="w-full flex items-center justify-between py-2.5 px-4 rounded-xl {{ $isPesertaActive ? 'bg-slate-50' : 'text-slate-600' }} hover:bg-slate-50 font-medium transition-all group">
+                    class="w-full flex items-center justify-between py-2.5 px-4 rounded-xl hover:bg-slate-50 font-medium transition-all group {{ $isKontrolBankSoalActive ? 'bg-slate-50' : 'text-slate-600' }}">
                     <div class="flex items-center gap-3">
-                        <svg class="w-5 h-5 flex-shrink-0 {{ $isPesertaActive ? 'text-blue-600' : 'text-slate-600' }}"
+                        <svg class="w-5 h-5 flex-shrink-0 {{ $isKontrolBankSoalActive ? 'text-blue-600' : 'text-slate-600' }}"
                             fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z">
+                                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253">
                             </path>
                         </svg>
                         <span
-                            class="text-[13px] text-left {{ $isPesertaActive ? 'text-blue-600 font-semibold' : 'text-slate-600' }}">Manajemen
-                            Peserta</span>
+                            class="text-[13px] text-left {{ $isKontrolBankSoalActive ? 'text-blue-600 font-semibold' : 'text-slate-600' }}">Kontrol
+                            BankSoal</span>
                     </div>
-                    <svg class="w-4 h-4 {{ $isPesertaActive ? 'text-blue-600' : 'text-slate-400' }} transition-transform duration-200"
+                    <svg class="w-4 h-4 transition-transform duration-200 {{ $isKontrolBankSoalActive ? 'text-blue-600' : 'text-slate-400' }}"
                         :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
                 <div x-show="open" class="pl-11 pr-4 py-1 space-y-2">
-                    <a href="{{ route('banksoal.pendaftaran.index') }}"
-                        class="block text-[13px] {{ $isPesertaActive ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Daftar
-                        Pendaftar</a>
-
+                    <a href="{{ route('banksoal.admin.kontrol-banksoal.rps') }}"
+                        class="block text-[13px] {{ request()->routeIs('banksoal.admin.kontrol-banksoal.rps') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Manajemen
+                        RPS</a>
+                    <a href="{{ route('banksoal.admin.kontrol-banksoal.soal') }}"
+                        class="block text-[13px] {{ request()->routeIs('banksoal.admin.kontrol-banksoal.soal') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Manajemen
+                        Soal</a>
                 </div>
             </div>
-
-            <!-- Manajemen CBT & Soal -->
-            <a href="#"
-                class="flex items-center gap-3 py-2.5 px-4 rounded-xl text-slate-600 hover:bg-slate-50 font-medium transition-all mt-1">
-                <svg class="w-5 h-5 flex-shrink-0 text-slate-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                    </path>
-                </svg>
-                <span class="text-[13px]">Manajemen CBT & Soal</span>
-            </a>
 
             @php
-                $isMonitoringActive = request()->routeIs('banksoal.aktivasi.*');
+                $isKontrolUjianActive = request()->routeIs('banksoal.periode.*') || request()->routeIs('banksoal.pendaftaran.*') || request()->routeIs('banksoal.aktivasi.*');
             @endphp
-            <!-- Monitoring Ujian (with Submenu) -->
-            <div x-data="{ open: {{ $isMonitoringActive ? 'true' : 'false' }} }" class="space-y-1 mt-1">
+            <!-- Kontrol Ujian Komprehensif (Akordion Utama) -->
+            <div x-data="{ open: {{ $isKontrolUjianActive ? 'true' : 'false' }} }" class="space-y-1 mt-1">
                 <button @click="open = !open"
-                    class="w-full flex items-center justify-between py-2.5 px-4 rounded-xl {{ $isMonitoringActive ? 'bg-slate-50' : 'text-slate-600' }} hover:bg-slate-50 font-medium transition-all group">
+                    class="w-full flex items-center justify-between py-2.5 px-4 rounded-xl hover:bg-slate-50 font-medium transition-all group {{ $isKontrolUjianActive ? 'bg-slate-50' : 'text-slate-600' }}">
                     <div class="flex items-center gap-3">
-                        <svg class="w-5 h-5 flex-shrink-0 {{ $isMonitoringActive ? 'text-blue-600' : 'text-slate-600' }}"
+                        <svg class="w-5 h-5 flex-shrink-0 {{ $isKontrolUjianActive ? 'text-blue-600' : 'text-slate-600' }}"
                             fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z">
+                                d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
                             </path>
                         </svg>
                         <span
-                            class="text-[13px] text-left {{ $isMonitoringActive ? 'text-blue-600 font-semibold' : '' }}">Monitoring
-                            Ujian</span>
+                            class="text-[13px] text-left {{ $isKontrolUjianActive ? 'text-blue-600 font-semibold' : 'text-slate-600' }}">Kontrol Ujian<br>Komprehensif</span>
                     </div>
-                    <svg class="w-4 h-4 {{ $isMonitoringActive ? 'text-blue-600' : 'text-slate-400' }} transition-transform duration-200"
+                    <svg class="w-4 h-4 transition-transform duration-200 {{ $isKontrolUjianActive ? 'text-blue-600' : 'text-slate-400' }}"
                         :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                         xmlns="http://www.w3.org/2000/svg">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                     </svg>
                 </button>
-                <div x-show="open" class="pl-11 pr-4 py-1 space-y-2">
-                    <a href="{{ route('banksoal.aktivasi.index') }}"
-                        class="block text-[13px] {{ request()->routeIs('banksoal.aktivasi.index') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Aktivasi
-                        Sesi</a>
-                    <a href="#" class="block text-[13px] text-slate-500 hover:text-slate-800 py-1 transition-colors">Pantau Status</a>
-                </div>
-            </div>
+                <div x-show="open" class="pl-10 pr-4 py-2 space-y-2 bg-slate-50/50 rounded-lg ml-2 mb-1">
+                    @php
+                        $isPeriodeActive = request()->routeIs('banksoal.periode.*') || request()->routeIs('banksoal.pendaftaran.*') || request()->routeIs('banksoal.pendaftaran.alokasi-sesi.*');
+                    @endphp
+                    <!-- Manajemen Ujian & Peserta (Sub-Akordion) -->
+                    <div x-data="{ open: {{ $isPeriodeActive ? 'true' : 'false' }} }" class="space-y-1">
+                        <button @click="open = !open"
+                            class="w-full flex items-center justify-between py-1.5 px-3 rounded-lg text-slate-600 hover:bg-slate-100/50 font-medium transition-all group text-[12px]">
+                            <span class="text-left {{ $isPeriodeActive ? 'text-blue-600 font-semibold' : 'text-slate-600' }}">Manajemen Ujian & Peserta</span>
+                            <svg class="w-3.5 h-3.5 transition-transform duration-200 {{ $isPeriodeActive ? 'text-blue-600' : 'text-slate-400' }}"
+                                :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="open" class="pl-7 pr-2 py-1 space-y-1">
+                            <a href="{{ route('banksoal.periode.setup') }}"
+                                class="block text-[11px] {{ request()->routeIs('banksoal.periode.setup') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Setup Periode</a>
+                            <a href="{{ route('banksoal.pendaftaran.alokasi-sesi.index') }}"
+                                class="block text-[11px] {{ request()->routeIs('banksoal.pendaftaran.alokasi-sesi.*') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Jadwal & Sesi</a>
+                            <a href="{{ route('banksoal.pendaftaran.index') }}"
+                                class="block text-[11px] {{ request()->routeIs('banksoal.pendaftaran.index') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Daftar Pendaftar</a>
+                        </div>
+                    </div>
 
-            <!-- Hasil & Analitik (with Submenu) -->
-            <div x-data="{ open: false }" class="space-y-1 mt-1">
-                <button @click="open = !open"
-                    class="w-full flex items-center justify-between py-2.5 px-4 rounded-xl text-slate-600 hover:bg-slate-50 font-medium transition-all group">
-                    <div class="flex items-center gap-3">
-                        <svg class="w-5 h-5 flex-shrink-0 text-slate-600" fill="none" stroke="currentColor"
-                            viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z">
-                            </path>
-                        </svg>
-                        <span class="text-[13px] text-left">Hasil & Analitik</span>
+                    <!-- Manajemen CBT & Soal -->
+                    <a href="#"
+                        class="block text-[12px] text-slate-600 hover:text-slate-800 py-1.5 px-3 rounded-lg transition-colors font-medium hover:bg-slate-100/50">Manajemen CBT & Soal</a>
+
+                    @php
+                        $isMonitoringActive = request()->routeIs('banksoal.aktivasi.*');
+                    @endphp
+                    <!-- Monitoring Ujian (Sub-Akordion) -->
+                    <div x-data="{ open: {{ $isMonitoringActive ? 'true' : 'false' }} }" class="space-y-1">
+                        <button @click="open = !open"
+                            class="w-full flex items-center justify-between py-1.5 px-3 rounded-lg text-slate-600 hover:bg-slate-100/50 font-medium transition-all group text-[12px]">
+                            <span class="text-left {{ $isMonitoringActive ? 'text-blue-600 font-semibold' : 'text-slate-600' }}">Monitoring Ujian</span>
+                            <svg class="w-3.5 h-3.5 transition-transform duration-200 {{ $isMonitoringActive ? 'text-blue-600' : 'text-slate-400' }}"
+                                :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="open" class="pl-7 pr-2 py-1 space-y-1">
+                            <a href="{{ route('banksoal.aktivasi.index') }}"
+                                class="block text-[11px] {{ request()->routeIs('banksoal.aktivasi.index') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Aktivasi Sesi</a>
+                            <a href="#"
+                                class="block text-[11px] text-slate-500 hover:text-slate-800 py-1 transition-colors">Pantau Status</a>
+                        </div>
                     </div>
-                    <svg class="w-4 h-4 text-slate-400 transition-transform duration-200"
-                        :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                        xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                </button>
-                <div x-show="open" class="pl-11 pr-4 py-1 space-y-2">
-                    <a href="#"
-                        class="block text-[13px] text-slate-500 hover:text-slate-800 py-1 transition-colors">Data
-                        Kelulusan</a>
-                    <a href="#"
-                        class="block text-[13px] text-slate-500 hover:text-slate-800 py-1 transition-colors">Laporan
-                        CPL</a>
+
+                    <!-- Hasil & Analitik (Sub-Akordion) -->
+                    <div x-data="{ open: false }" class="space-y-1">
+                        <button @click="open = !open"
+                            class="w-full flex items-center justify-between py-1.5 px-3 rounded-lg text-slate-600 hover:bg-slate-100/50 font-medium transition-all group text-[12px]">
+                            <span class="text-left">Hasil & Analitik</span>
+                            <svg class="w-3.5 h-3.5 transition-transform duration-200 text-slate-400"
+                                :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                                xmlns="http://www.w3.org/2000/svg">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="open" class="pl-7 pr-2 py-1 space-y-1">
+                            <a href="#"
+                                class="block text-[11px] text-slate-500 hover:text-slate-800 py-1 transition-colors">Data Kelulusan</a>
+                            <a href="#"
+                                class="block text-[11px] text-slate-500 hover:text-slate-800 py-1 transition-colors">Laporan CPL</a>
+                        </div>
+                    </div>
                 </div>
             </div>
 

@@ -14,7 +14,8 @@
         .review-box.status-sesuai { border-left-color: #16a34a; background-color: #f0fdf4; }
         .review-box.status-kurang-sesuai { border-left-color: #f59e0b; background-color: #fffbeb; }
         .review-box.status-revisi { border-left-color: #ef4444; background-color: #fef2f2; }
-        .question-card { border: 1px solid #cbd5e1; border-top: none; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); background: #fff; margin-bottom: 1.5rem; }
+        .question-card { border: 1px solid #cbd5e1; border-top: none; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); background: #fff; margin-bottom: 1.5rem; overflow-wrap: break-word; }
+        .question-card img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 1rem 0; }
         .question-color-bar { height: 5px; width: 100%; }
         .bg-color-sesuai { background-color: #16a34a; }
         .bg-color-kurang-sesuai { background-color: #f59e0b; }
@@ -66,7 +67,9 @@
                                 <i class="fas {{ $iconStatus }}"></i> {{ strtoupper($soal->status_review) }}
                             </span>
                         </div>
-                        <h5 class="text-dark fw-bold mb-4" style="line-height: 1.6; font-size: 1.15rem;">{!! nl2br(e($soal->soal)) !!}</h5>
+                        <div class="text-dark fw-bold mb-4 prose prose-sm max-w-none align-middle" style="line-height: 1.6; font-size: 1.15rem;">
+                            {!! $soal->soal !!}
+                        </div>
                         
                         @if($soal->jawaban && count($soal->jawaban) > 0)
                             <ul class="opt-list">
@@ -74,7 +77,7 @@
                                     @php $char = chr(65 + $idx); @endphp
                                     <li class="opt-item {{ $jawab->is_benar ? 'is-correct' : '' }}">
                                         <div class="opt-label">{{ $jawab->opsi ?? $char }}.</div>
-                                        <div class="text-dark" style="font-size: 0.95rem;">{{ $jawab->deskripsi }}</div>
+                                        <div class="text-dark prose prose-sm max-w-none" style="font-size: 0.95rem;">{!! $jawab->deskripsi !!}</div>
                                         @if($jawab->is_benar)
                                             <div class="ms-auto text-success" title="Kunci Jawaban"><i class="fas fa-check-circle fs-5"></i></div>
                                         @endif
