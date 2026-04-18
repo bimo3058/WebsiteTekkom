@@ -28,7 +28,7 @@
     <x-banksoal::ui.panel title="Form Soal" subtitle="Gunakan format pilihan ganda dan tandai satu jawaban benar." padding="p-0">
         <form action="{{ route('banksoal.soal.dosen.store') }}" method="POST" id="formSoal">
             @csrf
-            <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2">
+            <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2 lg:grid-cols-3">
                 <div>
                     <label for="mk_id" class="mb-2 block text-sm font-semibold text-slate-700">Mata Kuliah</label>
                     <select name="mk_id" id="mk_id" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required>
@@ -43,6 +43,11 @@
                     <label for="cpl_id" class="mb-2 block text-sm font-semibold text-slate-700">CPL</label>
                     <select name="cpl_id" id="cpl_id" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required><option value="">Pilih CPL...</option></select>
                     @error('cpl_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
+                </div>
+                <div>
+                    <label for="cpmk_id" class="mb-2 block text-sm font-semibold text-slate-700">CPMK</label>
+                    <select name="cpmk_id" id="cpmk_id" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required><option value="">Pilih CPMK...</option></select>
+                    @error('cpmk_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label for="kesulitan" class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label>
@@ -155,6 +160,34 @@
                 }
             });
 
+            // Kustomisasi Handler Upload Gambar untuk mengatur batas ukuran file (Maks 2MB)
+            quill.getModule('toolbar').addHandler('image', function() {
+                const input = document.createElement('input');
+                input.setAttribute('type', 'file');
+                input.setAttribute('accept', 'image/*');
+                input.click();
+
+                input.onchange = () => {
+                    const file = input.files[0];
+                    if (!file) return;
+
+                    const maxMB = 2; // Maksimal ukuran dalam MB
+                    const maxSize = maxMB * 1024 * 1024; 
+                    if (file.size > maxSize) {
+                        alert(`Ukuran gambar terlalu besar! Maksimal ${maxMB}MB.`);
+                        return;
+                    }
+
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        const range = quill.getSelection(true);
+                        quill.insertEmbed(range.index, 'image', e.target.result);
+                        quill.setSelection(range.index + 1);
+                    };
+                    reader.readAsDataURL(file);
+                };
+            });
+
             // Sinkronkan Quill HTML ke hidden input sebelum submit form
             var form = document.getElementById('formSoal');
             form.onsubmit = function() {
@@ -171,10 +204,14 @@
 
             const mkSelect = document.getElementById('mk_id');
             const cplSelect = document.getElementById('cpl_id');
+            const cpmkSelect = document.getElementById('cpmk_id');
             const oldCplId = "{{ old('cpl_id') }}";
+            const oldCpmkId = "{{ old('cpmk_id') }}";
+            
             mkSelect.addEventListener('change', function() {
                 const mkId = this.value;
                 cplSelect.innerHTML = '<option value="">Memuat CPL...</option>';
+                cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
                 if (mkId) {
                     fetch(`{{ route('banksoal.rps.dosen.cpl', '') }}/${mkId}`)
                         .then(r => r.json())
@@ -184,12 +221,34 @@
                                 const selected = oldCplId == c.id ? 'selected' : '';
                                 cplSelect.innerHTML += `<option value="${c.id}" ${selected}>${c.kode} - ${c.deskripsi.substring(0, 60)}...</option>`;
                             });
+                            // Trigger change on CPL to load CPMK if old value exists
+                            if (oldCplId) cplSelect.dispatchEvent(new Event('change'));
                         })
                         .catch(() => { cplSelect.innerHTML = '<option value="">Gagal memuat cpl</option>'; });
                 } else {
                     cplSelect.innerHTML = '<option value="">Pilih CPL...</option>';
                 }
             });
+
+            cplSelect.addEventListener('change', function() {
+                const cplId = this.value;
+                cpmkSelect.innerHTML = '<option value="">Memuat CPMK...</option>';
+                if (cplId) {
+                    fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_ids[]=${cplId}`)
+                        .then(r => r.json())
+                        .then(data => {
+                            cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
+                            data.forEach(c => {
+                                const selected = oldCpmkId == c.id ? 'selected' : '';
+                                cpmkSelect.innerHTML += `<option value="${c.id}" ${selected}>${c.kode} - ${c.deskripsi.substring(0, 60)}...</option>`;
+                            });
+                        })
+                        .catch(() => { cpmkSelect.innerHTML = '<option value="">Gagal memuat cpmk</option>'; });
+                } else {
+                    cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
+                }
+            });
+
             if (mkSelect.value) { mkSelect.dispatchEvent(new Event('change')); }
             const container = document.getElementById('optionsContainer');
             const addBtn = document.getElementById('addOptionBtn');

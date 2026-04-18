@@ -57,6 +57,7 @@ class ValidasiBankSoalService
     {
         $query = DB::table('bs_pertanyaan')
             ->join('bs_cpl', 'bs_pertanyaan.cpl_id', '=', 'bs_cpl.id')
+            ->leftJoin('bs_cpmk', 'bs_pertanyaan.cpmk_id', '=', 'bs_cpmk.id')
             ->join('bs_mata_kuliah', 'bs_pertanyaan.mk_id', '=', 'bs_mata_kuliah.id')
             ->where('bs_pertanyaan.status', Pertanyaan::STATUS_DIAJUKAN);
             
@@ -67,6 +68,7 @@ class ValidasiBankSoalService
         return $query->select(
                 'bs_pertanyaan.*', 
                 'bs_cpl.kode as cpl_kode', 'bs_cpl.deskripsi as cpl_deskripsi',
+                'bs_cpmk.kode as cpmk_kode', 'bs_cpmk.deskripsi as cpmk_deskripsi',
                 'bs_mata_kuliah.nama as mk_nama', 'bs_mata_kuliah.kode as mk_kode'
             )
             ->orderBy('bs_pertanyaan.id', 'asc')
@@ -87,7 +89,7 @@ class ValidasiBankSoalService
             'pertanyaan_id' => $data['pertanyaan_id'],
             'gpm_user_id'   => auth()->id() ?? 1,
             'status_review' => $data['status_review'],
-            'catatan'       => $data['catatan'],
+            'catatan'       => $data['catatan'] ?? 'Soal telah disetujui tanpa catatan.',
             'created_at'    => now(),
             'updated_at'    => now()
         ]);

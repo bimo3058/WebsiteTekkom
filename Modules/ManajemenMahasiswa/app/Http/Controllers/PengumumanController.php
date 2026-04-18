@@ -64,7 +64,7 @@ class PengumumanController extends Controller
             'judul' => 'required|string|max:255',
             'konten' => 'required|string|min:50',
             'kategori' => 'nullable|string|max:100',
-            'target_audience' => 'required|in:all,mahasiswa,alumni,dosen,pengurus',
+            'target_audience' => 'required|in:all,mahasiswa,alumni',
             'status_publish' => 'required|in:draft,published',
             'poster' => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
             'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:10240',
