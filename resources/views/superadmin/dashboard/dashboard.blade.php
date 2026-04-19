@@ -3,7 +3,7 @@
 <x-sidebar :user="auth()->user()">
 
     <div class="min-h-screen bg-background font-sans">
-        <div class="max-w-full px-7 py-7 pb-12">
+        <div class="max-w-full px-0 sm:px-2 py-4 sm:py-7 pb-8">
 
             @include('superadmin.dashboard._header')
             @include('superadmin.dashboard._stats')
