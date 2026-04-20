@@ -121,7 +121,12 @@
                                                 </div>
                                                 <div class="col-md-6">
                                                     <label class="form-label fw-medium text-dark">Tahun Ajaran <span class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control" name="tahun_ajaran" value="{{ $periode->tahun_ajaran }}" required placeholder="Contoh: 2025/2026">
+                                                    <select class="form-select" name="tahun_ajaran" required>
+                                                        <option value="" disabled>Pilih Tahun Ajaran</option>
+                                                        @foreach($tahunAjarans as $ta)
+                                                            <option value="{{ $ta }}" {{ $periode->tahun_ajaran == $ta ? 'selected' : '' }}>{{ $ta }}</option>
+                                                        @endforeach
+                                                    </select>
                                                 </div>
                                             </div>
                                             <div class="mb-3">
@@ -208,13 +213,18 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-medium text-dark">Semester <span class="text-danger">*</span></label>
                                 <select class="form-select" name="semester" required>
-                                    <option value="Ganjil" {{ old('semester') == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
-                                    <option value="Genap" {{ old('semester') == 'Genap' ? 'selected' : '' }}>Genap</option>
+                                    <option value="Ganjil" {{ old('semester', $currentSemester) == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                                    <option value="Genap" {{ old('semester', $currentSemester) == 'Genap' ? 'selected' : '' }}>Genap</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-medium text-dark">Tahun Ajaran <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="tahun_ajaran" required placeholder="Contoh: 2025/2026" value="{{ old('tahun_ajaran') }}">
+                                <select class="form-select" name="tahun_ajaran" required>
+                                    <option value="" disabled selected>Pilih Tahun Ajaran</option>
+                                    @foreach($tahunAjarans as $ta)
+                                        <option value="{{ $ta }}" {{ old('tahun_ajaran') == $ta ? 'selected' : '' }}>{{ $ta }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                         <div class="mb-3">

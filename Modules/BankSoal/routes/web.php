@@ -48,6 +48,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::get('/mk', [DosenRpsController::class, 'getMkByDosen'])->name('mk');
                 Route::get('/cpl/{mkId?}', [DosenRpsController::class, 'getCplByMk'])->name('cpl');
                 Route::get('/cpmk', [DosenRpsController::class, 'getCpmkByCpl'])->name('cpmk');
+                Route::get('/cpmk-by-rps/{rpsId}', [DosenRpsController::class, 'getCpmkByRps'])->name('cpmk-by-rps');
                 Route::get('/dosen', [DosenRpsController::class, 'getDosenByMk'])->name('dosen');
             });
             // RPS - GPM
@@ -127,6 +128,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::post('/validasi-rps/store', [GpmRpsController::class, 'storeValidasi'])->name('validasi-rps.store');                
                 Route::post('/periode-rps', [PeriodeRpsController::class, 'store'])->name('periode-rps.store');
                 Route::put('/periode-rps/{id}', [PeriodeRpsController::class, 'update'])->name('periode-rps.update');
+                Route::post('/periode-rps/open-session', [PeriodeRpsController::class, 'openSession'])->name('periode-rps.open-session');
                 Route::post('/periode-rps/close-session', [PeriodeRpsController::class, 'closeSession'])->name('periode-rps.close-session');
                 Route::post('/template', [TemplateRpsController::class, 'store'])->name('template.store');
             });

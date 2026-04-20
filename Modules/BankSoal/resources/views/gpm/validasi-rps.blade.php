@@ -174,9 +174,19 @@
                             <i class="fas fa-calendar-times fs-5"></i>
                         </div>
                         <div>
-                            <h6 class="mb-1 fw-bold text-dark" style="font-size: 1rem;">Belum Ada Jadwal Pengajuan</h6>
+                            <h6 class="mb-1 fw-bold text-dark" style="font-size: 1rem;">
+                                @if($inactivePeriodes->count() > 0)
+                                    Tidak Ada Sesi yang Aktif
+                                @else
+                                    Belum Ada Jadwal Pengajuan
+                                @endif
+                            </h6>
                             <div class="text-muted" style="font-size: 0.85rem;">
-                                Tidak ada sesi pengajuan RPS yang ditambahkan saat ini
+                                @if($inactivePeriodes->count() > 0)
+                                    Pilih periode di bawah untuk mengaktifkan sesi
+                                @else
+                                    Tidak ada sesi pengajuan RPS yang ditambahkan saat ini
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -187,6 +197,37 @@
                     </div>
                 </div>
             </div>
+
+            @if($inactivePeriodes->count() > 0)
+                <div class="mb-4">
+                    <h6 class="fw-bold text-dark mb-3">Periode Tersedia</h6>
+                    @foreach($inactivePeriodes as $periode)
+                        <div class="card border-0 mb-2 rounded-3" style="box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); background: #ffffff;">
+                            <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center flex-column flex-md-row gap-3">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background-color: #e0e7ff; color: #4f46e5;">
+                                        <i class="fas fa-calendar fa-sm"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="mb-1 fw-bold text-dark" style="font-size: 0.95rem;">{{ $periode->judul }}</h6>
+                                        <div class="text-muted" style="font-size: 0.8rem;">
+                                            {{ \Carbon\Carbon::parse($periode->tanggal_mulai)->translatedFormat('d M Y H:i') }} s.d. {{ \Carbon\Carbon::parse($periode->tanggal_selesai)->translatedFormat('d M Y H:i') }}
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="button" class="btn btn-sm btn-outline-primary rounded-3 px-3 py-2" 
+                                    data-bs-toggle="modal" data-bs-target="#modalOpenSession" 
+                                    data-periode-id="{{ $periode->id }}" 
+                                    data-periode-judul="{{ $periode->judul }}" 
+                                    onclick="setPeriodeData(this)"
+                                    style="font-weight: 500; font-size: 0.85rem;">
+                                    <i class="fas fa-power-off me-1" style="font-size: 0.75rem;"></i> Nyalakan Sesi
+                                </button>
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            @endif
         @endif
 
         <div class="d-flex justify-content-between align-items-center mb-4 border-bottom" style="border-color: #e2e8f0 !important;">
@@ -258,35 +299,28 @@
                                 @forelse($rpsDiajukan as $rps)
                                 <tr>
                                     <td>
-                                        <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $rps->mk_nama }} ({{ $rps->kode }})</div>
+                                        <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $rps->mataKuliah->nama }} ({{ $rps->mataKuliah->kode }})</div>
                                         <div class="text-muted" style="font-size: 0.8rem;">Semester {{ $rps->semester }} {{ $rps->tahun_ajaran }}</div>
                                     </td>
                                     <td>
                                         <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                            @php
-                                                $dosensList = !empty($rps->dosens_list) ? array_map('trim', explode(',', $rps->dosens_list)) : [];
-                                            @endphp
-                                            @forelse($dosensList as $dosenItem)
+                                            @forelse($rps->dosens as $dosen)
                                                 @php
-                                                    $parts = explode('|', $dosenItem, 2);
-                                                    $initials = $parts[0] ?? '';
-                                                    $dosenName = $parts[1] ?? $dosenItem;
+                                                    $initials = strtoupper(substr($dosen->name, 0, 1) . substr(explode(' ', $dosen->name)[array_key_last(explode(' ', $dosen->name))] ?? '', 0, 1));
                                                 @endphp
-                                                @if(!empty($dosenName))
-                                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                        <div class="avatar-text">{{ strtoupper($initials) }}</div>
-                                                        <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosenName }}</span>
-                                                    </div>
-                                                @endif
+                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                    <div class="avatar-text">{{ $initials }}</div>
+                                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosen->name }}</span>
+                                                </div>
                                             @empty
                                                 <span class="text-muted" style="font-size: 0.85rem;">-</span>
                                             @endforelse
                                         </div>
                                     </td>
-                                    <td><span class="text-muted" style="font-size: 0.9rem;">{{ \Carbon\Carbon::parse($rps->tanggal_diajukan)->format('d M Y') }}</span></td>
+                                    <td><span class="text-muted" style="font-size: 0.9rem;">{{ $rps->created_at->format('d M Y') }}</span></td>
                                     <td><span class="badge-menunggu">MENUNGGU</span></td>
                                     <td class="text-end">
-                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->rps_id) }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
+                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
                                             <i class="fas fa-comment-dots me-2" style="font-size: 0.8rem;"></i> Review Sekarang
                                         </a>
                                     </td>
@@ -353,35 +387,28 @@
                                 @forelse($rpsRevisi as $rps)
                                 <tr>
                                     <td>
-                                        <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $rps->mk_nama }} ({{ $rps->kode }})</div>
+                                        <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $rps->mataKuliah->nama }} ({{ $rps->mataKuliah->kode }})</div>
                                         <div class="text-muted" style="font-size: 0.8rem;">Semester {{ $rps->semester }} {{ $rps->tahun_ajaran }}</div>
                                     </td>
                                     <td>
                                         <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                            @php
-                                                $dosensList = !empty($rps->dosens_list) ? array_map('trim', explode(',', $rps->dosens_list)) : [];
-                                            @endphp
-                                            @forelse($dosensList as $dosenItem)
+                                            @forelse($rps->dosens as $dosen)
                                                 @php
-                                                    $parts = explode('|', $dosenItem, 2);
-                                                    $initials = $parts[0] ?? '';
-                                                    $dosenName = $parts[1] ?? $dosenItem;
+                                                    $initials = strtoupper(substr($dosen->name, 0, 1) . substr(explode(' ', $dosen->name)[array_key_last(explode(' ', $dosen->name))] ?? '', 0, 1));
                                                 @endphp
-                                                @if(!empty($dosenName))
-                                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                        <div class="avatar-text">{{ strtoupper($initials) }}</div>
-                                                        <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosenName }}</span>
-                                                    </div>
-                                                @endif
+                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                    <div class="avatar-text">{{ $initials }}</div>
+                                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosen->name }}</span>
+                                                </div>
                                             @empty
                                                 <span class="text-muted" style="font-size: 0.85rem;">-</span>
                                             @endforelse
                                         </div>
                                     </td>
-                                    <td><span class="text-muted" style="font-size: 0.9rem;">{{ isset($rps->tanggal_review) ? \Carbon\Carbon::parse($rps->tanggal_review)->format('d M Y') : '-' }}</span></td>
+                                    <td><span class="text-muted" style="font-size: 0.9rem;">{{ $rps->updated_at->format('d M Y') }}</span></td>
                                     <td><span class="badge-revisi">REVISI</span></td>
                                     <td class="text-end">
-                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->rps_id) }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
+                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
                                             <i class="fas fa-edit me-2" style="font-size: 0.8rem;"></i> Lihat Catatan
                                         </a>
                                     </td>
@@ -448,35 +475,28 @@
                                 @forelse($rpsDisetujui as $rps)
                                 <tr>
                                     <td>
-                                        <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $rps->mk_nama }} ({{ $rps->kode }})</div>
+                                        <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $rps->mataKuliah->nama }} ({{ $rps->mataKuliah->kode }})</div>
                                         <div class="text-muted" style="font-size: 0.8rem;">Semester {{ $rps->semester }} {{ $rps->tahun_ajaran }}</div>
                                     </td>
                                     <td>
                                         <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                            @php
-                                                $dosensList = !empty($rps->dosens_list) ? array_map('trim', explode(',', $rps->dosens_list)) : [];
-                                            @endphp
-                                            @forelse($dosensList as $dosenItem)
+                                            @forelse($rps->dosens as $dosen)
                                                 @php
-                                                    $parts = explode('|', $dosenItem, 2);
-                                                    $initials = $parts[0] ?? '';
-                                                    $dosenName = $parts[1] ?? $dosenItem;
+                                                    $initials = strtoupper(substr($dosen->name, 0, 1) . substr(explode(' ', $dosen->name)[array_key_last(explode(' ', $dosen->name))] ?? '', 0, 1));
                                                 @endphp
-                                                @if(!empty($dosenName))
-                                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                        <div class="avatar-text">{{ strtoupper($initials) }}</div>
-                                                        <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosenName }}</span>
-                                                    </div>
-                                                @endif
+                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                    <div class="avatar-text">{{ $initials }}</div>
+                                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosen->name }}</span>
+                                                </div>
                                             @empty
                                                 <span class="text-muted" style="font-size: 0.85rem;">-</span>
                                             @endforelse
                                         </div>
                                     </td>
-                                    <td><span class="text-muted" style="font-size: 0.9rem;">{{ isset($rps->tanggal_disetujui) ? \Carbon\Carbon::parse($rps->tanggal_disetujui)->format('d M Y') : '-' }}</span></td>
+                                    <td><span class="text-muted" style="font-size: 0.9rem;">{{ $rps->updated_at->format('d M Y') }}</span></td>
                                     <td><span class="badge-disetujui">DISETUJUI</span></td>
                                     <td class="text-end">
-                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->rps_id) }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
+                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
                                             <i class="fas fa-eye me-2" style="font-size: 0.8rem;"></i> Lihat Detail
                                         </a>
                                     </td>
@@ -742,13 +762,18 @@
                             <div class="col-md-6">
                                 <label class="form-label fw-medium text-dark">Semester <span class="text-danger">*</span></label>
                                 <select class="form-select" name="semester" required>
-                                    <option value="Ganjil">Ganjil</option>
-                                    <option value="Genap">Genap</option>
+                                    <option value="Ganjil" {{ $currentSemester == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                                    <option value="Genap" {{ $currentSemester == 'Genap' ? 'selected' : '' }}>Genap</option>
                                 </select>
                             </div>
                             <div class="col-md-6">
                                 <label class="form-label fw-medium text-dark">Tahun Ajaran <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="tahun_ajaran" required placeholder="Contoh: 2025/2026">
+                                <select class="form-select" name="tahun_ajaran" required>
+                                    <option value="" disabled selected>Pilih Tahun Ajaran</option>
+                                    @foreach($tahunAjarans as $ta)
+                                        <option value="{{ $ta }}">{{ $ta }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
                         <div class="mb-3">
@@ -794,5 +819,38 @@
                 </form>
             </div>
         </div>
+    </div>
+
+    <!-- Modal Nyalakan Sesi -->
+    <div class="modal fade" id="modalOpenSession" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-sm">
+            <div class="modal-content rounded-4 border-0">
+                <form action="{{ route('banksoal.rps.gpm.periode-rps.open-session') }}" method="POST">
+                    @csrf
+                    <input type="hidden" name="periode_id" id="periodeId">
+                    <div class="modal-body text-center p-4">
+                        <div class="text-info mb-3">
+                            <i class="fas fa-info-circle fa-3x"></i>
+                        </div>
+                        <h5 class="mb-2 fw-bold text-dark">Nyalakan Sesi Pengajuan?</h5>
+                        <p class="text-muted mb-4" style="font-size: 0.9rem;">Sesi pengajuan <strong id="periodeJudul">RPS</strong> akan diaktifkan. Dosen akan bisa mengajukan RPS sesuai dengan jadwal periode.</p>
+                        <div class="d-flex gap-2 justify-content-center">
+                            <button type="button" class="btn btn-light w-50" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn btn-success w-50">Nyalakan Sesi</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function setPeriodeData(element) {
+            const periodeId = element.getAttribute('data-periode-id');
+            const periodeJudul = element.getAttribute('data-periode-judul');
+            document.getElementById('periodeId').value = periodeId;
+            document.getElementById('periodeJudul').textContent = periodeJudul;
+        }
+    </script>
 
 </x-banksoal::layouts.gpm-master>
