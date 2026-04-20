@@ -127,6 +127,21 @@
             </select>
         </div>
 
+        <div class="row g-4 mb-4">
+            <div class="col-md-6">
+                <label class="form-label-custom d-block">Nama Mahasiswa <span class="text-muted fw-normal text-lowercase">(akan dirahasiakan)</span></label>
+                <input type="text" class="form-control form-control-custom" value="{{ auth()->user()->name ?? '-' }}" disabled>
+                <div class="form-text mt-2 fw-medium" style="color: #9ca3af; font-size: 13px;">
+                    Identitas disimpan oleh sistem dan bisa disembunyikan dengan opsi anonim.
+                </div>
+            </div>
+            <div class="col-md-6">
+                <label class="form-label-custom d-block">Angkatan <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
+                <input type="text" class="form-control form-control-custom" name="template[angkatan]"
+                    value="{{ old('template.angkatan') }}" placeholder="Contoh: 2022">
+            </div>
+        </div>
+
         <div class="mt-5">
             <h6 class="section-title">
                 📝 Detail Pengaduan
@@ -136,6 +151,12 @@
                 <label class="form-label-custom d-block">Judul <span class="text-danger">*</span></label>
                 <input type="text" class="form-control form-control-custom" name="template[judul]" value="{{ old('template.judul') }}"
                     placeholder="Contoh: AC Ruang 3.12 tidak berfungsi" required>
+            </div>
+
+            <div class="mb-4">
+                <label class="form-label-custom d-block">Hal Aduan <span class="text-danger">*</span></label>
+                <textarea class="form-control form-control-custom" name="template[hal_aduan]" rows="3"
+                    placeholder="Tuliskan ringkas inti aduan Anda…" required>{{ old('template.hal_aduan') }}</textarea>
             </div>
 
             <div class="mb-4">
@@ -153,9 +174,9 @@
                         placeholder="Contoh: Lab Komputer">
                 </div>
                 <div class="col-md-6">
-                    <label class="form-label-custom d-block">Tanggal Kejadian <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
-                    <input type="date" class="form-control form-control-custom" name="template[tanggal_kejadian]"
-                        value="{{ old('template.tanggal_kejadian') }}">
+                    <label class="form-label-custom d-block">Waktu Kejadian <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
+                    <input type="datetime-local" class="form-control form-control-custom" name="template[waktu_kejadian]"
+                        value="{{ old('template.waktu_kejadian') ?? old('template.tanggal_kejadian') }}">
                 </div>
             </div>
 
@@ -167,13 +188,42 @@
                 </div>
                 <div class="col-md-4">
                     <label class="form-label-custom d-block">Dosen Terkait <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
-                    <input type="text" class="form-control form-control-custom" name="template[nama_dosen]"
-                        value="{{ old('template.nama_dosen') }}" placeholder="Contoh: Pak Budi">
+                    <select class="form-select form-control-custom" name="template[nama_dosen]">
+                        <option value="" {{ old('template.nama_dosen') ? '' : 'selected' }}>Pilih dosen…</option>
+                        @foreach(($dosenList ?? []) as $namaDosen)
+                            <option value="{{ $namaDosen }}" {{ old('template.nama_dosen') === $namaDosen ? 'selected' : '' }}>
+                                {{ $namaDosen }}
+                            </option>
+                        @endforeach
+                    </select>
                 </div>
                 <div class="col-md-4">
                     <label class="form-label-custom d-block">Tendik Terkait <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
                     <input type="text" class="form-control form-control-custom" name="template[nama_tendik]"
                         value="{{ old('template.nama_tendik') }}" placeholder="Contoh: Bu Siti">
+                </div>
+            </div>
+
+            <div class="row g-4 mt-0 mb-1 pt-4">
+                <div class="col-md-6">
+                    <label class="form-label-custom d-block">Seberapa Sering Terjadi <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
+                    <select class="form-select form-control-custom" name="template[frekuensi]">
+                        <option value="" {{ old('template.frekuensi') ? '' : 'selected' }}>Pilih frekuensi…</option>
+                        @foreach(($frekuensiList ?? []) as $value => $label)
+                            <option value="{{ $value }}" {{ old('template.frekuensi') === $value ? 'selected' : '' }}>
+                                {{ $label }}
+                            </option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-md-6">
+                    <label class="form-label-custom d-block">Link Bukti Dukung <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
+                    <input type="url" class="form-control form-control-custom" name="template[link_bukti]"
+                        value="{{ old('template.link_bukti') }}"
+                        placeholder="Contoh: https://drive.google.com/...">
+                    <div class="form-text mt-2 fw-medium" style="color: #9ca3af; font-size: 13px;">
+                        Bukti berupa screenshot/foto/dokumen, simpan di drive yang bisa diakses.
+                    </div>
                 </div>
             </div>
         </div>
