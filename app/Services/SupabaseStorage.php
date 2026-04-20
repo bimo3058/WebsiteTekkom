@@ -46,7 +46,7 @@ class SupabaseStorage
                 ->withHeaders([
                     'Authorization' => 'Bearer ' . $this->key,
                     'Content-Type'  => $mimeType,
-                    'x-upsert'      => 'false',
+                    'x-upsert'      => 'true',
                 ])
                 ->withBody(
                     file_get_contents($file->getRealPath()),

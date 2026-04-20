@@ -4,7 +4,10 @@
         <h2 class="text-lg font-semibold text-slate-900">Formulir Rencana Pembelajaran</h2>
     </div>
 
-    <form action="{{ route('banksoal.rps.dosen.store') }}" method="POST" enctype="multipart/form-data" class="p-4 space-y-6">
+    <form action="{{ route('banksoal.rps.dosen.store') }}" method="POST" enctype="multipart/form-data" class="p-4 space-y-6"
+        data-route-cpl="{{ route('banksoal.rps.dosen.cpl') }}"
+        data-route-dosen="{{ route('banksoal.rps.dosen.dosen') }}"
+        data-route-cpmk="{{ route('banksoal.rps.dosen.cpmk') }}">
         @csrf
 
         <!-- Row 1: Mata Kuliah & Dosen Lain -->
@@ -21,7 +24,8 @@
 
             <div class="form-group-compact">
                 <label class="form-label">Dosen Pengampu Lain</label>
-                <div id="dosenMs" class="form-control compact-control" data-name="dosen_lain[]" data-placeholder="{{ !$isUploadOpen ? 'Ditutup' : 'Pilih mata kuliah terlebih dahulu' }}" data-disabled="true"></div>
+                <select name="dosen_lain[]" id="dosenSelect" class="form-control compact-control" multiple {{ !$isUploadOpen ? 'disabled' : '' }}>
+                </select>
                 <small class="form-hint">Pilih satu atau lebih dosen pengampu tambahan.</small>
             </div>
         </div>
@@ -46,18 +50,20 @@
             </div>
         </div>
 
-        <!-- CPL (Full Width) -->
+        <!-- CPL (Full Width) - Multiselect -->
         <div class="form-group">
             <label class="form-label form-label-required">Capaian Pembelajaran Lulusan (CPL)</label>
-            <div id="cplMs" class="form-control" data-name="cpl_ids[]" data-placeholder="{{ !$isUploadOpen ? 'Ditutup' : 'Pilih mata kuliah terlebih dahulu' }}" data-disabled="true"></div>
-            <small class="form-hint">CPL akan tersedia setelah mata kuliah dipilih.</small>
+            <select name="cpl_id[]" id="cplSelect" class="form-control" multiple required {{ !$isUploadOpen ? 'disabled' : '' }}>
+            </select>
+            <small class="form-hint">Pilih satu atau lebih CPL dari daftar yang tersedia.</small>
         </div>
 
-        <!-- CPMK (Full Width) -->
+        <!-- CPMK (Full Width) - Multiselect -->
         <div class="form-group">
             <label class="form-label form-label-required">Capaian Pembelajaran Mata Kuliah (CPMK)</label>
-            <div id="cpmkMs" class="form-control" data-name="cpmk_ids[]" data-placeholder="{{ !$isUploadOpen ? 'Ditutup' : 'Pilih CPL terlebih dahulu' }}" data-disabled="true"></div>
-            <small class="form-hint">CPMK akan tersedia setelah CPL dipilih.</small>
+            <select name="cpmk_id[]" id="cpmkSelect" class="form-control" multiple required {{ !$isUploadOpen ? 'disabled' : '' }}>
+            </select>
+            <small class="form-hint">Pilih satu atau lebih CPMK.</small>
         </div>
 
         <!-- File Upload -->
@@ -136,10 +142,9 @@
                 }
 
                 .compact-control {
-                    height: 52px;
-                    min-height: 52px;
-                    padding-top: 10px;
-                    padding-bottom: 10px;
+                    height: auto;
+                    min-height: 44px;
+                    padding: 8px 12px;
                 }
 
             </style>

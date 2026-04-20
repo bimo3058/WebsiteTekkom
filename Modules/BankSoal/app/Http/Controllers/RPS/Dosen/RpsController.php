@@ -64,7 +64,8 @@ class RpsController extends Controller
 
         // Fetch riwayat RPS — hanya tampilkan RPS dimana dosen ini terdaftar
         // (baik sebagai pembuat maupun dosen pengampu tambahan via pivot bs_rps_dosen)
-        $riwayat = RpsDetail::with('mataKuliah')
+        // Eager load mataKuliah dan dosens untuk menghindari N+1 queries
+        $riwayat = RpsDetail::with('mataKuliah', 'dosens')
             ->whereHas('dosens', function ($query) use ($user) {
                 $query->where('users.id', $user->id);
             })
@@ -165,10 +166,10 @@ class RpsController extends Controller
             'dosen_lain.*'   => ['exists:users,id'],
             'semester'       => ['required', 'in:Ganjil,Genap'],
             'tahun_ajaran'   => ['required', 'string'],
-            'cpl_ids'        => ['required', 'array'],
-            'cpl_ids.*'      => ['exists:bs_cpl,id'],
-            'cpmk_ids'       => ['required', 'array'],
-            'cpmk_ids.*'     => ['exists:bs_cpmk,id'],
+            'cpl_id'         => ['required', 'array'],
+            'cpl_id.*'       => ['exists:bs_cpl,id'],
+            'cpmk_id'        => ['required', 'array'],
+            'cpmk_id.*'      => ['exists:bs_cpmk,id'],
             'dokumen'        => ['required', 'file', 'mimes:pdf', 'max:1024'], 
         ], [
             'dokumen.max' => 'Ukuran file maksimal 1MB',
@@ -237,12 +238,13 @@ class RpsController extends Controller
             ]);
 
             // Informasi Data Dosen Terkait
-            $dosenIds = $request->dosen_lain ?? []; // Dosen lain
-            $dosenIds[] = Auth::id(); // User
+            $dosenIds = $validated['dosen_lain'] ?? [];
+            $dosenIds[] = Auth::id(); // Always include user
+            $dosenIds = array_unique($dosenIds); // Remove duplicates
             
             // Simpan ke Tabel menggunakan sync()
-            $rps->cpls()->sync($validated['cpl_ids']);
-            $rps->cpmks()->sync($validated['cpmk_ids']);
+            $rps->cpls()->sync($validated['cpl_id']);
+            $rps->cpmks()->sync($validated['cpmk_id']);
             $rps->dosens()->sync($dosenIds);
 
             // Update is_rps menjadi 'TRUE' di bs_dosen_pengampu_mk untuk semua dosen
@@ -290,44 +292,81 @@ class RpsController extends Controller
     }
 
     /**
-     * Fetch semua CPL
+     * Fetch CPL berdasarkan relasi di bs_mata_kuliah_cpl junction table
      */
     public function getCplByMk(int $mkId = null): JsonResponse
     {
         try {
-            // Fetch semua CPL tanpa filter MK
-            $cpls = Cpl::all()->map(function ($cpl) {
-                return [
-                    'id' => $cpl->id,
-                    'kode' => $cpl->kode,
-                    'deskripsi' => $cpl->deskripsi,
-                ];
-            });
+            // Always return all CPL from bs_cpl table (regardless of mkId)
+            // MK parameter is ignored - CPL selection is independent of MK choice
+            $cpls = Cpl::orderBy('kode')
+                ->get()
+                ->map(function ($cpl) {
+                    return [
+                        'id' => $cpl->id,
+                        'kode' => $cpl->kode,
+                        'deskripsi' => $cpl->deskripsi,
+                    ];
+                });
 
             return response()->json($cpls);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Error fetching CPL'], 500);
+            \Log::error('getCplByMk Error', ['error' => $e->getMessage(), 'mkId' => $mkId]);
+            return response()->json(['error' => 'Error fetching CPL: ' . $e->getMessage()], 500);
         }
     }
 
 
     public function getCpmkByCpl(Request $request): JsonResponse
     {
-        $cplIds = (array) $request->query('cpl_ids', []);
-
-        if (empty($cplIds)) {
-            return response()->json([]);
-        }
+        // Handle both single and array cpl_id parameters
+        // Laravel automatically converts cpl_id[]=1&cpl_id[]=2 to array
+        $cplIds = $request->input('cpl_id'); // Gunakan input() untuk handle array
 
         try {
-            // Query CPMK melalui junction table bs_cpl_cpmk
+            // Jika cpl_id tidak disediakan, return semua CPMK (untuk CREATE form)
+            if (!$cplIds) {
+                $cpmks = Cpmk::orderBy('kode')
+                    ->get()
+                    ->map(function ($cpmk) {
+                        return [
+                            'id' => $cpmk->id,
+                            'kode' => $cpmk->kode,
+                            'deskripsi' => $cpmk->deskripsi,
+                        ];
+                    });
+                return response()->json($cpmks);
+            }
+
+            // Ensure cplIds is an array
+            $cplIds = is_array($cplIds) ? $cplIds : [$cplIds];
+
+            // Filter out empty values
+            $cplIds = array_filter($cplIds);
+
+            if (empty($cplIds)) {
+                $cpmks = Cpmk::orderBy('kode')
+                    ->get()
+                    ->map(function ($cpmk) {
+                        return [
+                            'id' => $cpmk->id,
+                            'kode' => $cpmk->kode,
+                            'deskripsi' => $cpmk->deskripsi,
+                        ];
+                    });
+                return response()->json($cpmks);
+            }
+
+            \Log::info('getCpmkByCpl Request', ['cplIds' => $cplIds]);
+
+            // Query CPMK melalui junction table bs_cpl_cpmk untuk semua CPL yang dipilih
             $cpmks = Cpmk::whereIn('id', function($query) use ($cplIds) {
                 $query->select('cpmk_id')
                     ->from('bs_cpl_cpmk')
                     ->whereIn('cpl_id', $cplIds);
             })
                 ->distinct()
-                ->orderBy('id')
+                ->orderBy('kode')
                 ->get()
                 ->map(function ($cpmk) {
                     return [
@@ -337,6 +376,8 @@ class RpsController extends Controller
                     ];
                 });
 
+            \Log::info('getCpmkByCpl Response', ['count' => count($cpmks), 'cpmks' => $cpmks]);
+
             return response()->json($cpmks);
         } catch (\Exception $e) {
             \Log::error('getCpmkByCpl Error', ['error' => $e->getMessage()]);
@@ -345,52 +386,70 @@ class RpsController extends Controller
     }
 
 
+    /**
+     * Fetch semua user dengan role "dosen"
+     * Exclude user yang sedang login
+     * Untuk CREATE form: tampilkan semua dosen tanpa filter MK
+     */
     public function getDosenByMk(Request $request): JsonResponse
     {
         try {
-            $mkId = (int) $request->query('mk_id', 0);
-
-            $assignedUserIds = collect();
-            if ($mkId > 0) {
-                $assignedUserIds = DB::table('bs_dosen_pengampu_mk')
-                    ->where('mk_id', $mkId)
-                    ->pluck('user_id')
-                    ->map(fn ($id) => (int) $id);
-            }
-
-            // Arsip logika lama:
-            // $query = User::whereHas('roles', function ($q) {
-            //     $q->whereRaw('LOWER(name) = ?', ['dosen']);
-            // })
-            //     ->where('id', '!=', Auth::id())
-            //     ->with('roles');
-            // $dosenList = $query->get();
-
-            $dosenList = User::whereHas('roles', function ($q) {
-                    $q->whereRaw('LOWER(name) = ?', ['dosen']);
+            // Query semua user dengan role "dosen" (role_id = 3)
+            // Menggunakan direct join ke user_roles table untuk fetch all dosen
+            $dosenList = User::whereIn('id', function($query) {
+                    $query->select('user_id')
+                        ->from('user_roles')
+                        ->where('role_id', 3); // role_id = 3 is "dosen"
                 })
                 ->where('id', '!=', Auth::id())
+                ->whereNull('suspended_at')
                 ->orderBy('name')
                 ->get()
-                ->map(function ($user) use ($assignedUserIds) {
-                    $isAssigned = $assignedUserIds->contains((int) $user->id);
-
+                ->map(function ($user) {
                     return [
                         'id' => $user->id,
                         'name' => $user->name,
-                        'selected' => $isAssigned,
                     ];
-                })
-                ->sortByDesc('selected')
-                ->values();
+                });
+
+            \Log::info('getDosenByMk Response', ['count' => count($dosenList), 'dosenList' => $dosenList]);
 
             return response()->json($dosenList);
         } catch (\Exception $e) {
-            Log::error('getDosenByMk Error', [
+            \Log::error('getDosenByMk Error', [
                 'error' => $e->getMessage(),
                 'trace' => $e->getTraceAsString(),
             ]);
             return response()->json(['error' => 'Error fetching dosen'], 500);
+        }
+    }
+
+    /**
+     * Fetch CPMK yang sudah dipilih untuk RPS tertentu (untuk form edit)
+     */
+    public function getCpmkByRps(int $rpsId): JsonResponse
+    {
+        try {
+            // Fetch CPMK dari junction table bs_rps_cpmk
+            $cpmks = Cpmk::whereIn('id', function($query) use ($rpsId) {
+                $query->select('cpmk_id')
+                    ->from('bs_rps_cpmk')
+                    ->where('rps_id', $rpsId);
+            })
+            ->orderBy('kode')
+            ->get()
+            ->map(function ($cpmk) {
+                return [
+                    'id' => $cpmk->id,
+                    'kode' => $cpmk->kode,
+                    'deskripsi' => $cpmk->deskripsi,
+                ];
+            });
+
+            return response()->json($cpmks);
+        } catch (\Exception $e) {
+            \Log::error('getCpmkByRps Error', ['error' => $e->getMessage(), 'rpsId' => $rpsId]);
+            return response()->json(['error' => 'Error fetching CPMK: ' . $e->getMessage()], 500);
         }
     }
 
@@ -601,15 +660,15 @@ class RpsController extends Controller
         // Validasi Input
         $validated = $request->validate([
             'mata_kuliah_id' => ['required', 'exists:bs_mata_kuliah,id'],
-            'dosen_lain' => ['nullable', 'array'],
-            'dosen_lain.*' => ['exists:users,id'],
-            'semester' => ['required', 'in:Ganjil,Genap'],
-            'tahun_ajaran' => ['required', 'string'],
-            'cpl_ids' => ['required', 'array'],
-            'cpl_ids.*' => ['exists:bs_cpl,id'],
-            'cpmk_ids' => ['required', 'array'],
-            'cpmk_ids.*' => ['exists:bs_cpmk,id'],
-            'dokumen' => ['nullable', 'file', 'mimes:pdf', 'max:1024'],
+            'dosen_lain'     => ['nullable', 'array'],
+            'dosen_lain.*'   => ['exists:users,id'],
+            'semester'       => ['required', 'in:Ganjil,Genap'],
+            'tahun_ajaran'   => ['required', 'string'],
+            'cpl_id'         => ['required', 'array'],
+            'cpl_id.*'       => ['exists:bs_cpl,id'],
+            'cpmk_id'        => ['required', 'array'],
+            'cpmk_id.*'      => ['exists:bs_cpmk,id'],
+            'dokumen'        => ['nullable', 'file', 'mimes:pdf', 'max:1024'],
         ], [
             'dokumen.max' => 'Ukuran file maksimal 1MB',
             'dokumen.mimes' => 'Hanya menerima File berformat PDF',
@@ -662,14 +721,21 @@ class RpsController extends Controller
             $rps->mk_id = $validated['mata_kuliah_id'];
             $rps->semester = $validated['semester'];
             $rps->tahun_ajaran = $validated['tahun_ajaran'];
+            
+            // Jika status saat ini 'revisi', ubah menjadi 'diajukan' (re-submission setelah revisi)
+            if ($rps->status->value === RpsStatus::REVISI->value) {
+                $rps->status = RpsStatus::DIAJUKAN;
+            }
+            
             $rps->save();
 
             // Update relasi CPL, CPMK, dan Dosen
-            $dosenIds = $request->dosen_lain ?? [];
+            $dosenIds = $validated['dosen_lain'] ?? [];
             $dosenIds[] = $user->id;
+            $dosenIds = array_unique($dosenIds); // Remove duplicates
 
-            $rps->cpls()->sync($validated['cpl_ids']);
-            $rps->cpmks()->sync($validated['cpmk_ids']);
+            $rps->cpls()->sync($validated['cpl_id']);
+            $rps->cpmks()->sync($validated['cpmk_id']);
             $rps->dosens()->sync($dosenIds);
 
             // Update is_rps di bs_dosen_pengampu_mk

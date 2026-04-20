@@ -57,6 +57,26 @@ class RpsController extends Controller
             $end   = $activePeriode->tanggal_selesai->timezone('Asia/Jakarta')->endOfDay();
             $isPeriodeRunning = $now->between($start, $end);
         }
+        
+        // Ambil periode yang tidak aktif untuk tombol "Nyalakan Sesi"
+        // Hanya tampilkan sesi terakhir (paling baru dibuat)
+        $inactivePeriodes = PeriodeRps::where('is_active', 'false')
+            ->orderBy('created_at', 'desc')
+            ->limit(1)
+            ->get();
+        
+        // Generate tahun ajaran options
+        $currentYear = (int) now()->format('Y');
+        $tahunAjarans = [
+            ($currentYear - 1) . '/' . $currentYear,
+            $currentYear . '/' . ($currentYear + 1),
+            ($currentYear + 1) . '/' . ($currentYear + 2),
+        ];
+        
+        // Auto-detect current semester
+        // Semester Ganjil: Juli-Desember (bulan 7-12)
+        // Semester Genap: Januari-Juni (bulan 1-6)
+        $currentSemester = now()->month >= 7 ? 'Ganjil' : 'Genap';
 
         return view('banksoal::gpm.validasi-rps', [
             'rpsDiajukan' => $rpsDiajukan,
@@ -64,6 +84,9 @@ class RpsController extends Controller
             'rpsDisetujui' => $rpsDisetujui,
             'activePeriode' => $activePeriode,
             'isPeriodeRunning' => $isPeriodeRunning,
+            'inactivePeriodes' => $inactivePeriodes,
+            'tahunAjarans' => $tahunAjarans,
+            'currentSemester' => $currentSemester,
         ]);
     }
 
@@ -118,8 +141,8 @@ class RpsController extends Controller
     public function previewDokumen(int $rpsId)
     {
         try {
-            // Fetch RPS record atau throw 404
-            $rps = RpsDetail::findOrFail($rpsId);
+            // Fetch RPS record dengan eager loading atau throw 404
+            $rps = RpsDetail::with('mataKuliah', 'dosens')->findOrFail($rpsId);
             
             if (!$rps->dokumen) {
                 abort(404, 'Dokumen tidak ditemukan');
