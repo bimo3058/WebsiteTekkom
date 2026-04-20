@@ -197,6 +197,11 @@
                     <div class="chronology-box mt-2">{{ data_get($pengaduan, 'data_template.kronologi', '-') }}</div>
                 </div>
 
+                <div class="mb-4">
+                    <div class="section-label">Hal Aduan</div>
+                    <div class="section-value mt-2" style="white-space: pre-wrap;">{{ data_get($pengaduan, 'data_template.hal_aduan', '—') ?: '—' }}</div>
+                </div>
+
                 <div class="row g-4 mb-4">
                     <div class="col-md-6">
                         <div class="d-flex gap-3 align-items-start">
@@ -211,8 +216,42 @@
                         <div class="d-flex gap-3 align-items-start">
                             <div style="background: #eff6ff; padding: 10px; border-radius: 10px; color: #3b82f6;">📅</div>
                             <div>
-                                <div class="section-label">Tanggal Kejadian</div>
-                                <div class="section-value">{{ data_get($pengaduan, 'data_template.tanggal_kejadian', '—') ?: '—' }}</div>
+                                <div class="section-label">Waktu Kejadian</div>
+                                @php
+                                    $waktuKejadian = data_get($pengaduan, 'data_template.waktu_kejadian')
+                                        ?? data_get($pengaduan, 'data_template.tanggal_kejadian');
+                                @endphp
+                                <div class="section-value">{{ $waktuKejadian ?: '—' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-md-6">
+                        <div class="d-flex gap-3 align-items-start">
+                            <div style="background: #f5f3ff; padding: 10px; border-radius: 10px; color: #7c3aed;">🧾</div>
+                            <div>
+                                <div class="section-label">Seberapa Sering Terjadi</div>
+                                <div class="section-value">{{ data_get($pengaduan, 'data_template.frekuensi', '—') ?: '—' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="d-flex gap-3 align-items-start">
+                            <div style="background: #ecfeff; padding: 10px; border-radius: 10px; color: #0891b2;">🔗</div>
+                            <div>
+                                <div class="section-label">Link Bukti Dukung</div>
+                                @php
+                                    $linkBukti = data_get($pengaduan, 'data_template.link_bukti');
+                                @endphp
+                                @if($linkBukti)
+                                    <a class="section-value" href="{{ $linkBukti }}" target="_blank" rel="noopener noreferrer">
+                                        {{ Str::limit($linkBukti, 60) }}
+                                    </a>
+                                @else
+                                    <div class="section-value">—</div>
+                                @endif
                             </div>
                         </div>
                     </div>
@@ -221,6 +260,10 @@
                 <div class="p-4" style="background: #f8fafc; border-radius: 12px;">
                     <div class="section-label mb-3">Informasi Akademik Terkait</div>
                     <div class="row g-3">
+                        <div class="col-md-4">
+                            <div class="text-muted mb-1" style="font-size: 11px; font-weight: 600; text-transform: uppercase;">Angkatan</div>
+                            <div class="section-value text-truncate" title="{{ data_get($pengaduan, 'data_template.angkatan', '—') ?: '—' }}">{{ data_get($pengaduan, 'data_template.angkatan', '—') ?: '—' }}</div>
+                        </div>
                         <div class="col-md-4">
                             <div class="text-muted mb-1" style="font-size: 11px; font-weight: 600; text-transform: uppercase;">Mata Kuliah</div>
                             <div class="section-value text-truncate" title="{{ data_get($pengaduan, 'data_template.mata_kuliah', '—') ?: '—' }}">{{ data_get($pengaduan, 'data_template.mata_kuliah', '—') ?: '—' }}</div>
