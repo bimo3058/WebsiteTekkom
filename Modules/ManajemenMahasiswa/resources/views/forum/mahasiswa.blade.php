@@ -232,7 +232,7 @@
         <div class="col-md-7 mb-3 mb-md-0">
             <div class="bg-gradient-purple rounded-4 p-4 h-100 text-white shadow-sm">
                 <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
-                    🏆 Leaderboard
+                    Leaderboard
                 </h6>
                 <div class="table-responsive">
                     <table class="table table-borderless table-sm mb-0 leaderboard-table">
@@ -277,18 +277,18 @@
             <div
                 class="bg-gradient-purple rounded-4 p-4 h-100 text-white shadow-sm d-flex flex-column justify-content-center">
                 <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
-                    🔥 Streak Kamu Hari Ini : {{ $userStats['current_streak'] }} Hari
+                    <span></span>Streak Kamu Hari Ini : {{ $userStats['current_streak'] }} Hari
                 </h6>
                 <div class="mb-3 ps-4">
                     <span style="font-size: 14px; font-weight: 500;">Rank : #{{ $userStats['rank'] }}</span>
                 </div>
                 <div class="mb-3 ps-4 d-flex align-items-center gap-2">
-                    <span>🏵️</span> <span style="font-size: 14px; font-weight: 500;">Level Kamu :
+                    <span></span> <span style="font-size: 14px; font-weight: 500;">Level Kamu :
                         {{ $userStats['level'] }}</span>
                 </div>
                 <div class="ps-4">
                     <div class="d-flex align-items-center gap-2">
-                        <span>📊</span>
+                        <span></span>
                         <span style="font-size: 14px; font-weight: 500;">
                             Exp : {{ $userStats['total_xp'] }}/{{ $userStats['xp_for_next'] }}
                         </span>
@@ -342,7 +342,12 @@
                     @endforeach
                 </select>
                 <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post text-decoration-none">
-                    Post ⊕
+                    Post
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
                 </a>
             </div>
         </div>

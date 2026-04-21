@@ -268,5 +268,6 @@
             </div>
         </footer>
     </main>
-
+    {{-- ── MOBILE BOTTOM NAV — hanya muncul di mobile ── --}}
+    <x-sidebar-mobile :user="$user" />
 </div>

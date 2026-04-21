@@ -20,7 +20,7 @@ return new class extends Migration
             $table->unsignedBigInteger('created_by'); // User ID yang upload
             $table->boolean('is_latest')->default('true'); // Flag untuk versi terbaru
             $table->text('keterangan')->nullable(); // Deskripsi/keterangan template
-            $table->timestamps();
+            $table->timestampsTz();
             
             // Foreign key
             $table->foreign('created_by')->references('id')->on('users')->onDelete('cascade');

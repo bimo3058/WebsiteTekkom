@@ -35,6 +35,10 @@ class PeriodeController extends Controller
             'deskripsi' => 'nullable|string',
         ]);
 
+        if ($request->status === 'aktif' && PeriodeUjian::where('status', 'aktif')->exists()) {
+            return back()->withErrors(['status' => 'Gagal: Sudah ada Periode Ujian Komprehensif yang sedang aktif. Harap selesaikan periode sebelumnya terlebih dahulu.'])->withInput();
+        }
+
         PeriodeUjian::create([
             'nama_periode' => $request->nama_periode,
             'slug' => Str::slug($request->nama_periode . '-' . time()),
@@ -62,6 +66,10 @@ class PeriodeController extends Controller
             'status' => 'required|in:draft,aktif,selesai',
             'deskripsi' => 'nullable|string',
         ]);
+
+        if ($request->status === 'aktif' && PeriodeUjian::where('status', 'aktif')->where('id', '!=', $id)->exists()) {
+            return back()->withErrors(['status' => 'Gagal: Sudah ada Periode Ujian Komprehensif LAIN yang sedang aktif. Harap selesaikan periode sebelumnya.'])->withInput();
+        }
 
         $periode->update([
             'nama_periode' => $request->nama_periode,
