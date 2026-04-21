@@ -368,12 +368,7 @@
                                 <span class="text-primary fw-medium" style="font-size: 12px;">•
                                     {{ $thread->created_at->diffForHumans() }}</span>
                                 @if($thread->is_pinned)
-                                    <span class="pinned-badge">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M14 2l8 8-2 2-3-3-4 4v7h-2v-7l-4-4-3 3-2-2 8-8z" />
-                                        </svg>
-                                        Pinned
-                                    </span>
+                                    <span class="pinned-badge">📌 Pinned</span>
                                 @endif
                             </div>
                         </div>
@@ -404,10 +399,7 @@
                                     <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal"
                                         data-bs-target="#reportModal" data-thread-id="{{ $thread->id }}"
                                         data-thread-title="{{ $thread->judul }}">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M4 2v20h2v-7h10l-2-4 2-4H6V2H4z" />
-                                        </svg>
-                                        Laporkan Thread
+                                        🚩 Laporkan Thread
                                     </button>
                                 </li>
                             @endif
@@ -424,14 +416,7 @@
                 <div class="d-flex gap-2 mb-3">
                     <span class="tag-label {{ $thread->kategoriColor() }}">{{ $thread->kategoriLabel() }}</span>
                     @if($thread->is_locked)
-                        <span class="tag-label tag-red">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                class="me-1">
-                                <rect x="3" y="11" width="18" height="11" rx="2"></rect>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                            </svg>
-                            Dikunci
-                        </span>
+                        <span class="tag-label tag-red">🔒 Dikunci</span>
                     @endif
                 </div>
 
@@ -479,21 +464,11 @@
         </a>
     @empty
         <div class="empty-state">
-            <div class="icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
-            </div>
+            <div class="icon">💬</div>
             <h5 class="fw-bold text-dark">Belum ada diskusi</h5>
             <p>Jadilah yang pertama memulai diskusi!</p>
             <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post text-decoration-none">
-                Buat Post Pertama
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    class="ms-1">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="16"></line>
-                    <line x1="8" y1="12" x2="16" y2="12"></line>
-                </svg>
+                Buat Post Pertama ⊕
             </a>
         </div>
     @endforelse

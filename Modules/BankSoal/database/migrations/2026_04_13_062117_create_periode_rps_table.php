@@ -16,10 +16,10 @@ return new class extends Migration
             $table->string('judul');
             $table->string('semester');
             $table->string('tahun_ajaran');
-            $table->dateTime('tanggal_mulai');
-            $table->dateTime('tanggal_selesai');
+            $table->dateTimeTz('tanggal_mulai');
+            $table->dateTimeTz('tanggal_selesai');
             $table->boolean('is_active')->default(false);
-            $table->timestamps();
+            $table->timestampsTz();
             $table->softDeletes();
         });
     }
