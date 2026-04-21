@@ -13,11 +13,12 @@ document.addEventListener('DOMContentLoaded', function() {
             '#tahun_ajaran': 'Pilih Tahun Ajaran',
         });
 
-        const dosenMs = new MultiSelect(document.getElementById('dosenMs'), { maxWidth: 467, keepOpen: true });
-        const cplMs = new MultiSelect(document.getElementById('cplMs'), { maxWidth: 467, keepOpen: true });
-        const cpmkMs = new MultiSelect(document.getElementById('cpmkMs'), { maxWidth: 467, keepOpen: true });
+        const dosenMs = new MultiSelect(document.getElementById('dosenMs'), { maxWidth: null, keepOpen: true });
+        const cplMs = new MultiSelect(document.getElementById('cplMs'), { maxWidth: null, keepOpen: true });
+        const cpmkMs = new MultiSelect(document.getElementById('cpmkMs'), { maxWidth: null, keepOpen: true });
 
-        RpsForm.init({ dosenMs, cplMs, cpmkMs });
+        const rpsForm = new RpsFormComponent();
+        rpsForm.init({ dosenMs, cplMs, cpmkMs });
         console.log('RPS Form initialized successfully');
     } catch (error) {
         console.error('Error during RPS form initialization:', error);

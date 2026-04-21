@@ -33,9 +33,14 @@ class ValidasiBankSoalController extends Controller
             return redirect()->route('banksoal.soal.gpm.validasi-bank-soal')->with('success', 'Mantap! Semua soal pada mata kuliah ini telah selesai divalidasi.');
         }
 
+        $semuaSoalMK = \Modules\BankSoal\Models\Pertanyaan::where('mk_id', $mkId)->orderBy('id', 'asc')->pluck('id')->toArray();
+        $currentIndex = array_search($soal->id, $semuaSoalMK) + 1;
+        $totalSoalMK = count($semuaSoalMK);
+        $progressPercentage = $totalSoalMK > 0 ? ($currentIndex / $totalSoalMK) * 100 : 0;
+
         $opsi_jawaban = $this->validasiService->getOpsiJawaban($soal->id);
         $review = \Illuminate\Support\Facades\DB::table('bs_review')->where('pertanyaan_id', $soal->id)->orderBy('id', 'desc')->first();
-        return view('banksoal::gpm.validasi-bank-soal-review', compact('soal', 'opsi_jawaban', 'review'));
+        return view('banksoal::gpm.validasi-bank-soal-review', compact('soal', 'opsi_jawaban', 'review', 'currentIndex', 'totalSoalMK', 'progressPercentage'));
     }
 
     public function store(Request $request)
@@ -43,7 +48,7 @@ class ValidasiBankSoalController extends Controller
         $validated = $request->validate([
             'pertanyaan_id' => 'required|integer',
             'status_review' => 'required|string',
-            'catatan'       => 'required|string'
+            'catatan'       => 'nullable|string'
         ]);
 
         $this->validasiService->simpanReview($validated);
@@ -57,7 +62,7 @@ class ValidasiBankSoalController extends Controller
     {
         $validated = $request->validate([
             'status_review' => 'required|string',
-            'catatan'       => 'required|string'
+            'catatan'       => 'nullable|string'
         ]);
 
         $this->validasiService->updateReview($id, $validated);

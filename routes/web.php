@@ -19,6 +19,28 @@ Route::get('/error/{code}', function ($code) {
 Route::middleware('web')->group(function () {
     Route::get('/sso/password',  [MicrosoftController::class, 'showPasswordForm'])->name('sso.password');
     Route::post('/sso/password', [MicrosoftController::class, 'verifyPassword'])->name('sso.verify');
+    Route::get('/auth/microsoft/switch', [MicrosoftController::class, 'switchAccount'])->name('microsoft.switch');
+    Route::post('/logout-and-switch', function () {
+        if (auth()->check()) {
+            $user = auth()->user();
+
+            \App\Models\UserAuditLog::create([
+                'user_id' => $user->id,
+                'action'  => 'logout',
+                'source'  => 'sso_switch',
+            ]);
+
+            $user->clearUserCache();
+            auth()->logout();
+        }
+
+        request()->session()->invalidate();
+        request()->session()->regenerateToken();
+
+        session()->forget(['sso_pending_user_id', 'sso_verified']);
+
+        return redirect()->route('microsoft.switch');
+    })->name('logout.switch');
 });
 
 Route::middleware('guest')->group(function () {

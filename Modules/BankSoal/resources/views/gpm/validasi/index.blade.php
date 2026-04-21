@@ -4,7 +4,7 @@
         <div class="mb-4">
             <h3 class="text-lg font-bold">Mata Kuliah: {{ $soal->mk_nama }} ({{ $soal->mk_kode }})</h3>
             <p class="text-sm text-gray-600">CPL: {{ $soal->cpl_kode }} - {{ $soal->cpl_deskripsi }}</p>
-            <p class="mt-2 text-md">{{ $soal->soal }}</p>
+            <div class="mt-2 text-md prose prose-sm max-w-none">{!! $soal->soal !!}</div>
             <p class="text-sm text-gray-500">Bobot: {{ $soal->bobot }} | Kesulitan: {{ $soal->kesulitan }}</p>
         </div>
 
