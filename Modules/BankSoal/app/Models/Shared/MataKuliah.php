@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class MataKuliah extends Model
 {
     protected $table    = 'bs_mata_kuliah';
-    protected $fillable = ['kode', 'nama', 'sks'];
+    protected $fillable = ['kode', 'nama', 'sks', 'semester'];
 
     public function cpls()
     {

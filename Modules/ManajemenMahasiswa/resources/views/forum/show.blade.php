@@ -195,6 +195,14 @@
                     @else
                         @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
                             <li>
+                                <form method="POST" action="{{ route('manajemenmahasiswa.forum.pin', $thread->id) }}">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" class="dropdown-item">
+                                        @if($thread->is_pinned) 🔓 Unpin Thread @else 📌 Pin Thread @endif
+                                    </button>
+                                </form>
+                            </li>
+                            <li>
                                 <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
                                       onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
                                     @csrf @method('DELETE')
@@ -218,8 +226,8 @@
 
     <h4 class="fw-bold text-dark mb-3">{{ $thread->judul }}</h4>
 
-    <div class="text-dark" style="font-size: 15px; margin-bottom: 24px; line-height: 1.6;">
-        {!! nl2br(e($thread->konten)) !!}
+    <div class="text-dark" style="font-size: 15px; margin-bottom: 24px; line-height: 1.6; overflow-wrap: break-word;">
+        {!! nl2br(strip_tags($thread->konten, '<img><video><source><a><br>')) !!}
     </div>
 
     <!-- Labels -->
@@ -249,10 +257,10 @@
             <span style="font-size: 16px;">↓</span>
         </button>
         <button class="shadow-sm ms-2" style="cursor: default;">
-            <span class="me-1" style="font-size: 15px;">💬</span> {{ $thread->comments_count ?? $thread->comment_count }} Komentar
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> {{ $thread->comments_count ?? $thread->comment_count }} Komentar
         </button>
         <button class="shadow-sm ms-2 share-btn" data-url="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}">
-            <span style="font-size: 15px;">🔗</span>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
         </button>
     </div>
 
@@ -357,7 +365,7 @@
         </div>
         @empty
             <div class="text-center py-4" style="color: #9ca3af;">
-                <p class="mb-0">Belum ada komentar. Jadilah yang pertama berkomentar!</p>
+                <p class="mb-0">Belum ada komentar.</p>
             </div>
         @endforelse
 

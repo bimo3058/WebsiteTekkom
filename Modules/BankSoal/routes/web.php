@@ -25,12 +25,27 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             ->middleware('role:admin_banksoal,dosen,gpm')
             ->name('banksoal.dashboard');
 
+        # Admin Routes - Kontrol Umum
+        Route::middleware('role:admin_banksoal')->prefix('admin/kontrol-umum')->name('banksoal.admin.kontrol-umum.')->group(function () {
+            Route::get('/mata-kuliah', fn() => view('banksoal::pages.admin.kontrol-umum.mata-kuliah'))->name('mata-kuliah');
+            Route::get('/cpl-cpmk', fn() => view('banksoal::pages.admin.kontrol-umum.cpl-cpmk'))->name('cpl-cpmk');
+            Route::get('/pemetaan', fn() => view('banksoal::pages.admin.kontrol-umum.pemetaan'))->name('pemetaan');
+        });
+
+        # Admin Routes - Kontrol BankSoal
+        Route::middleware('role:admin_banksoal')->prefix('admin/kontrol-banksoal')->name('banksoal.admin.kontrol-banksoal.')->group(function () {
+            Route::get('/rps', fn() => view('banksoal::pages.admin.kontrol-banksoal.rps'))->name('rps');
+            Route::get('/soal', fn() => view('banksoal::pages.admin.kontrol-banksoal.soal'))->name('soal');
+        });
+
         # RPS Routes - View Mode
         Route::prefix('rps')->name('banksoal.rps.')->group(function () {
             // RPS - Dosen
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::get('/', [DosenRpsController::class, 'index'])->name('index');
                 Route::get('/preview/{rpsId}', [DosenRpsController::class, 'previewDokumen'])->name('preview');
+                Route::get('/{rpsId}/edit', [DosenRpsController::class, 'edit'])->name('edit');
+                Route::get('/mk', [DosenRpsController::class, 'getMkByDosen'])->name('mk');
                 Route::get('/cpl/{mkId?}', [DosenRpsController::class, 'getCplByMk'])->name('cpl');
                 Route::get('/cpmk', [DosenRpsController::class, 'getCpmkByCpl'])->name('cpmk');
                 Route::get('/dosen', [DosenRpsController::class, 'getDosenByMk'])->name('dosen');
@@ -105,6 +120,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             // RPS - Dosen
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::post('/submit', [DosenRpsController::class, 'store'])->name('store');
+                Route::put('/{rpsId}', [DosenRpsController::class, 'update'])->name('update');
             });
             // RPS - GPM
             Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
@@ -130,6 +146,13 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
     // -------------------------------------------------------------------------
     Route::middleware(['permission:banksoal.delete'])->group(function () {
         Route::delete('/destroy/{id}', [BankSoalController::class, 'destroy'])->name('banksoal.destroy');
+        
+        // RPS Dosen Delete
+        Route::prefix('rps')->name('banksoal.rps.')->group(function () {
+            Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
+                Route::delete('/{rpsId}', [DosenRpsController::class, 'destroy'])->name('destroy');
+            });
+        });
     });
 
     // -------------------------------------------------------------------------

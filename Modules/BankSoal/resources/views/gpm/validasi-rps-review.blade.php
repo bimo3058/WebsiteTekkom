@@ -727,9 +727,12 @@
                     @endphp
                     @forelse($dosensList as $index => $dosenItem)
                         @php
-                            [$initials, $dosenName] = explode('|', $dosenItem, 2);
+                            $parts = explode('|', $dosenItem, 3);
+                            $dosenName = $parts[1] ?? $dosenItem;
                         @endphp
-                        {{ $dosenName }}{{ $index < count($dosensList) - 1 ? ', ' : '' }}
+                        @if(!empty($dosenName))
+                            {{ $dosenName }}{{ $index < count($dosensList) - 1 ? ', ' : '' }}
+                        @endif
                     @empty
                         -
                     @endforelse

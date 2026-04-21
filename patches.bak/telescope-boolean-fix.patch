@@ -1,0 +1,10 @@
+--- a/src/Storage/EntryModel.php
++++ b/src/Storage/EntryModel.php
+@@ -175,7 +175,7 @@
+         }
+ 
+-        $query->where('should_display_on_index', true);
++        $query->whereRaw('"should_display_on_index" = true');
+ 
+         return $this;
+     }
