@@ -1,337 +1,108 @@
 <x-banksoal::layouts.gpm-master>
+    <x-banksoal::notification.alerts />
+    <x-banksoal::ui.page-header title="Manajemen Template RPS" subtitle="Kelola template RPS yang dapat diunduh oleh dosen" />
 
-    @section('page-title', 'Manajemen Template RPS')
-    @section('page-subtitle', 'Kelola template RPS yang dapat diunduh oleh dosen')
-
-    <style>
-        .template-card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            margin-bottom: 1.5rem;
-            overflow: hidden;
-        }
-
-        .template-card-header {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 1.5rem;
-            border-bottom: 3px solid #764ba2;
-        }
-
-        .template-card-body {
-            padding: 1.5rem;
-        }
-
-        .template-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-
-        .template-item {
-            display: flex;
-            align-items: center;
-            padding: 1rem;
-            border-bottom: 1px solid #e2e8f0;
-            transition: background-color 0.2s;
-        }
-
-        .template-item:last-child {
-            border-bottom: none;
-        }
-
-        .template-item:hover {
-            background-color: #f8fafc;
-        }
-
-        .template-badge {
-            display: inline-block;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            margin-right: 0.5rem;
-        }
-
-        .badge-latest {
-            background-color: #dcfce7;
-            color: #166534;
-        }
-
-        .badge-version {
-            background-color: #e0e7ff;
-            color: #3730a3;
-        }
-
-        .template-info {
-            flex: 1;
-        }
-
-        .template-filename {
-            font-weight: 600;
-            color: #111827;
-            margin-bottom: 0.25rem;
-        }
-
-        .template-meta {
-            font-size: 0.875rem;
-            color: #64748b;
-        }
-
-        .template-actions {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-        }
-
-        .btn-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 36px;
-            height: 36px;
-            border-radius: 6px;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            transition: all 0.2s;
-        }
-
-        .btn-delete {
-            background-color: #fee2e2;
-            color: #991b1b;
-        }
-
-        .btn-delete:hover {
-            background-color: #fca5a5;
-            color: #7f1d1d;
-        }
-
-        .upload-form-card {
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-            padding: 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .form-group-upload {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-group-upload label {
-            display: block;
-            margin-bottom: 0.5rem;
-            font-weight: 600;
-            color: #111827;
-        }
-
-        .upload-box {
-            border: 2px dashed #cbd5e1;
-            border-radius: 8px;
-            padding: 2rem;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.2s;
-            background-color: #f8fafc;
-        }
-
-        .upload-box:hover {
-            border-color: #667eea;
-            background-color: #f1f5f9;
-        }
-
-        .upload-box.drag-over {
-            border-color: #667eea;
-            background-color: rgba(102, 126, 234, 0.05);
-        }
-
-        .upload-icon {
-            font-size: 2rem;
-            color: #64748b;
-            margin-bottom: 0.5rem;
-        }
-
-        .upload-text {
-            margin-bottom: 0.25rem;
-        }
-
-        .upload-subtext {
-            font-size: 0.875rem;
-            color: #64748b;
-        }
-
-        #fileTemplate {
-            display: none;
-        }
-
-        .btn-primary {
-            background-color: #667eea;
-            color: white;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .btn-primary:hover {
-            background-color: #5568d3;
-        }
-
-        .btn-secondary {
-            background-color: #e2e8f0;
-            color: #334155;
-            padding: 0.75rem 1.5rem;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.2s;
-        }
-
-        .btn-secondary:hover {
-            background-color: #cbd5e1;
-        }
-
-        .empty-state {
-            text-align: center;
-            padding: 2rem;
-            color: #64748b;
-        }
-
-        .empty-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
-            opacity: 0.5;
-        }
-    </style>
-
-    <div class="container-lg" style="padding: 2rem 0;">
-
-        <!-- Upload Form -->
-        <div class="upload-form-card">
-            <h3 style="margin-top: 0; margin-bottom: 1.5rem; color: #111827;">
-                <i class="fas fa-upload" style="margin-right: 0.5rem;"></i> Upload Template RPS Baru
+    <div class="space-y-6">
+        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm p-6">
+            <h3 class="text-sm font-semibold text-slate-900 flex items-center gap-2 mb-4">
+                <i class="fas fa-upload text-blue-600"></i> Upload Template RPS Baru
             </h3>
 
-            <form action="{{ route('banksoal.rps.gpm.template.store') }}" method="POST" enctype="multipart/form-data">
+            <form action="{{ route('banksoal.rps.gpm.template.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
                 @csrf
 
-                <div class="form-group-upload">
-                    <label for="fileTemplate">
-                        <i class="fas fa-file-word" style="color: #2563eb; margin-right: 0.5rem;"></i>
-                        File Template (Word/DOCX)
+                <div>
+                    <label for="fileTemplate" class="text-xs font-semibold text-slate-600 flex items-center gap-2">
+                        <i class="fas fa-file-word text-blue-600"></i> File Template (Word/DOCX)
                     </label>
-                    <div class="upload-box" id="uploadBox">
-                        <div class="upload-icon"><i class="fas fa-cloud-upload-alt"></i></div>
-                        <div class="upload-text" style="font-weight: 600; color: #111827;">
-                            Klik di sini atau seret file untuk upload
+                    <div id="uploadBox" class="mt-2 rounded-xl border-2 border-dashed border-slate-200 p-6 text-center cursor-pointer">
+                        <div class="text-2xl text-slate-400 mb-2"><i class="fas fa-cloud-upload-alt"></i></div>
+                        <div class="text-sm font-semibold text-slate-900">Klik di sini atau seret file untuk upload</div>
+                        <div class="text-xs text-slate-500">Format: .doc atau .docx (Maksimal 1MB)</div>
+                        <input type="file" id="fileTemplate" name="dokumen" accept=".doc,.docx" required class="hidden">
+                        <div id="fileSelected" class="mt-3 hidden">
+                            <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+                                <i class="fas fa-check-circle mr-2"></i> File terpilih: <span id="selectedFileName"></span>
+                            </div>
                         </div>
-                        <div class="upload-subtext">
-                            Format: .doc atau .docx (Maksimal 1MB)
-                        </div>
-                        <input type="file" id="fileTemplate" name="dokumen" accept=".doc,.docx" required>
                     </div>
                     @error('dokumen')
-                        <div style="color: #991b1b; font-size: 0.875rem; margin-top: 0.5rem;">
-                            <i class="fas fa-exclamation-circle"></i> {{ $message }}
-                        </div>
+                        <div class="mt-2 text-xs text-rose-600"><i class="fas fa-exclamation-circle"></i> {{ $message }}</div>
                     @enderror
                 </div>
 
-                <div class="form-group-upload">
-                    <label for="keterangan">
-                        <i class="fas fa-note-sticky" style="color: #6b7280; margin-right: 0.5rem;"></i>
-                        Catatan / Keterangan (Opsional)
+                <div>
+                    <label for="keterangan" class="text-xs font-semibold text-slate-600 flex items-center gap-2">
+                        <i class="fas fa-note-sticky text-slate-500"></i> Catatan / Keterangan (Opsional)
                     </label>
-                    <textarea 
-                        id="keterangan" 
-                        name="keterangan" 
-                        rows="3" 
+                    <textarea
+                        id="keterangan"
+                        name="keterangan"
+                        rows="3"
                         placeholder="Masukkan keterangan tentang template ini, misal: Perbaikan format, update standar, dll."
-                        style="width: 100%; padding: 0.75rem; border: 1px solid #cbd5e1; border-radius: 6px; font-family: inherit; resize: vertical;"
+                        class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm"
                     ></textarea>
                     @error('keterangan')
-                        <div style="color: #991b1b; font-size: 0.875rem; margin-top: 0.5rem;">
-                            <i class="fas fa-exclamation-circle"></i> {{ $message }}
-                        </div>
+                        <div class="mt-2 text-xs text-rose-600"><i class="fas fa-exclamation-circle"></i> {{ $message }}</div>
                     @enderror
                 </div>
 
-                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
-                    <button type="reset" class="btn-secondary">
-                        <i class="fas fa-times" style="margin-right: 0.5rem;"></i> Reset
+                <div class="flex flex-wrap items-center justify-end gap-3">
+                    <button type="reset" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600">Reset</button>
+                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700" id="submitBtn">
+                        <i class="fas fa-arrow-up-from-bracket mr-2"></i> Upload Template
                     </button>
-                    <button type="submit" class="btn-primary" id="submitBtn">
-                        <i class="fas fa-arrow-up-from-bracket" style="margin-right: 0.5rem;"></i> Upload Template
-                    </button>
-                </div>
-
-                <div id="fileSelected" style="margin-top: 1rem; padding: 0.75rem; background-color: #dcfce7; border-radius: 6px; color: #166534; display: none;">
-                    <i class="fas fa-check-circle" style="margin-right: 0.5rem;"></i>
-                    File terpilih: <strong id="selectedFileName"></strong>
                 </div>
             </form>
         </div>
 
-        <!-- Template List -->
-        <div class="template-card">
-            <div class="template-card-header">
-                <h3 style="margin: 0; display: flex; align-items: center; gap: 0.75rem;">
-                    <i class="fas fa-list"></i>
-                    Daftar Template ({{ $templates->count() }} versi)
+        <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+            <div class="bg-gradient-to-r from-blue-600 to-indigo-600 px-6 py-4 text-white">
+                <h3 class="text-sm font-semibold flex items-center gap-2">
+                    <i class="fas fa-list"></i> Daftar Template ({{ $templates->count() }} versi)
                 </h3>
             </div>
-
-            <div class="template-card-body">
+            <div class="p-4">
                 @if($templates->isEmpty())
-                    <div class="empty-state">
-                        <div class="empty-icon"><i class="fas fa-file-circle-question"></i></div>
-                        <p>Belum ada template yang diupload</p>
-                        <p style="font-size: 0.875rem;">Upload template pertama Anda di atas untuk memulai</p>
+                    <div class="flex flex-col items-center gap-2 py-6 text-slate-500">
+                        <i class="fas fa-file-circle-question text-3xl text-slate-300"></i>
+                        <p class="text-sm font-semibold">Belum ada template yang diupload</p>
+                        <p class="text-xs">Upload template pertama Anda di atas untuk memulai</p>
                     </div>
                 @else
-                    <ul class="template-list">
+                    <ul class="divide-y divide-slate-200">
                         @foreach($templates as $template)
-                            <li class="template-item">
-                                <div style="display: flex; align-items: center; gap: 0.75rem; flex: 1;">
-                                    <i class="fas fa-file-word" style="font-size: 1.5rem; color: #2563eb;"></i>
-                                    
-                                    <div class="template-info">
-                                        <div class="template-filename">
+                            <li class="py-4 flex flex-wrap items-center gap-4">
+                                <div class="flex items-center gap-3 flex-1">
+                                    <i class="fas fa-file-word text-2xl text-blue-600"></i>
+                                    <div>
+                                        <div class="text-sm font-semibold text-slate-900">
                                             {{ $template->original_filename }}
                                             @if($template->is_latest)
-                                                <span class="template-badge badge-latest">
-                                                    <i class="fas fa-star"></i> Versi Terbaru
+                                                <span class="ml-2 inline-flex items-center rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-semibold text-emerald-700">
+                                                    <i class="fas fa-star mr-1"></i> Versi Terbaru
                                                 </span>
                                             @endif
                                         </div>
-                                        <div class="template-meta">
-                                            <span class="template-badge badge-version">v{{ $template->version }}</span>
-                                            Upload oleh: <strong>{{ $template->uploadedBy->name }}</strong>
-                                            <br>
-                                            Tanggal: <strong>{{ $template->created_at->format('d M Y H:i') }}</strong>
+                                        <div class="text-xs text-slate-500">
+                                            <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700">v{{ $template->version }}</span>
+                                            <span class="ml-2">Upload oleh: <strong>{{ $template->uploadedBy->name }}</strong></span>
+                                            <span class="ml-2">Tanggal: <strong>{{ $template->created_at->format('d M Y H:i') }}</strong></span>
                                             @if($template->keterangan)
-                                                <br>
-                                                Keterangan: <em>{{ $template->keterangan }}</em>
+                                                <span class="block">Keterangan: <em>{{ $template->keterangan }}</em></span>
                                             @endif
                                         </div>
                                     </div>
                                 </div>
 
-                                <div class="template-actions">
+                                <div class="flex items-center gap-2">
                                     @if($template->is_latest)
-                                        <span style="padding: 0.5rem 0.75rem; background-color: #dcfce7; color: #166534; border-radius: 6px; font-size: 0.75rem; font-weight: 600;">
-                                            AKTIF
-                                        </span>
+                                        <span class="rounded-lg bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700">AKTIF</span>
                                     @else
-                                        <form action="{{ route('banksoal.rps.gpm.template.destroy', $template->id) }}" method="POST" style="display: inline;" onsubmit="return confirm('Yakin ingin menghapus template ini?');">
+                                        <form action="{{ route('banksoal.rps.gpm.template.destroy', $template->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus template ini?');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="btn-icon btn-delete" title="Hapus template">
+                                            <button type="submit" class="inline-flex items-center justify-center rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50" title="Hapus template">
                                                 <i class="fas fa-trash"></i>
                                             </button>
                                         </form>
@@ -344,12 +115,11 @@
             </div>
         </div>
 
-        <!-- Info Box -->
-        <div style="background-color: #e0e7ff; border-left: 4px solid #667eea; padding: 1rem; border-radius: 6px; margin-top: 2rem;">
-            <h4 style="margin-top: 0; color: #3730a3; display: flex; align-items: center; gap: 0.5rem;">
+        <div class="rounded-xl border border-blue-200 bg-blue-50 p-4 text-blue-700">
+            <h4 class="text-sm font-semibold flex items-center gap-2">
                 <i class="fas fa-info-circle"></i> Informasi Penting
             </h4>
-            <ul style="margin: 0.5rem 0 0 0; padding-left: 1.5rem; color: #3730a3;">
+            <ul class="mt-2 text-xs list-disc pl-5 space-y-1">
                 <li>Template disimpan dengan struktur folder: <code>TemplateRPS_V1</code>, <code>TemplateRPS_V2</code>, dst</li>
                 <li>Dosen hanya dapat mengunduh <strong>versi tertinggi</strong> (V dengan angka paling besar)</li>
                 <li>Versi sebelumnya tetap tersimpan untuk referensi dan riwayat</li>
@@ -361,60 +131,56 @@
     </div>
 
     <script>
-        // Handle drag & drop upload
-        const uploadBox = document.getElementById('uploadBox');
-        const fileInput = document.getElementById('fileTemplate');
-        const fileSelected = document.getElementById('fileSelected');
-        const selectedFileName = document.getElementById('selectedFileName');
+        document.addEventListener('DOMContentLoaded', function () {
+            const uploadBox = document.getElementById('uploadBox');
+            const fileInput = document.getElementById('fileTemplate');
+            const fileSelected = document.getElementById('fileSelected');
+            const selectedFileName = document.getElementById('selectedFileName');
 
-        // Prevent default drag behaviors
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadBox.addEventListener(eventName, preventDefaults, false);
-            document.body.addEventListener(eventName, preventDefaults, false);
-        });
+            if (!uploadBox || !fileInput) return;
 
-        function preventDefaults(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        // Highlight drop area when item is dragged over it
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadBox.addEventListener(eventName, () => {
-                uploadBox.classList.add('drag-over');
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadBox.addEventListener(eventName, preventDefaults, false);
             });
-        });
 
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadBox.addEventListener(eventName, () => {
-                uploadBox.classList.remove('drag-over');
-            });
-        });
-
-        // Handle dropped files
-        uploadBox.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            fileInput.files = files;
-            updateFileDisplay();
-        });
-
-        // Handle file input change
-        fileInput.addEventListener('change', updateFileDisplay);
-
-        function updateFileDisplay() {
-            if (fileInput.files.length > 0) {
-                const fileName = fileInput.files[0].name;
-                selectedFileName.textContent = fileName;
-                fileSelected.style.display = 'block';
-            } else {
-                fileSelected.style.display = 'none';
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
             }
-        }
 
-        // Make upload box clickable
-        uploadBox.addEventListener('click', () => {
-            fileInput.click();
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadBox.addEventListener(eventName, () => {
+                    uploadBox.classList.add('border-blue-300', 'bg-blue-50/40');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadBox.addEventListener(eventName, () => {
+                    uploadBox.classList.remove('border-blue-300', 'bg-blue-50/40');
+                });
+            });
+
+            uploadBox.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                fileInput.files = files;
+                updateFileDisplay();
+            });
+
+            fileInput.addEventListener('change', updateFileDisplay);
+
+            function updateFileDisplay() {
+                if (fileInput.files.length > 0) {
+                    const fileName = fileInput.files[0].name;
+                    selectedFileName.textContent = fileName;
+                    fileSelected.classList.remove('hidden');
+                } else {
+                    fileSelected.classList.add('hidden');
+                }
+            }
+
+            uploadBox.addEventListener('click', () => {
+                fileInput.click();
+            });
         });
     </script>
 </x-banksoal::layouts.gpm-master>

@@ -1,117 +1,77 @@
 <x-banksoal::layouts.gpm-master>
+    <x-banksoal::notification.alerts />
+    <x-banksoal::ui.page-header title="Riwayat Validasi RPS" subtitle="Pantau riwayat dokumen RPS yang telah direview" />
 
-    @section('page-title', 'Riwayat Validasi RPS')
-    @section('page-subtitle', 'Pantau riwayat dokumen RPS yang telah direview')
-
-    <style>
-        .nav-tabs-custom { border-bottom: 2px solid #e2e8f0; }
-        .nav-tabs-custom .nav-link { border: none; color: #64748b; font-weight: 600; padding: 1rem 0; margin-right: 2rem; background: transparent; font-size: 0.95rem; }
-        .nav-tabs-custom .nav-link.active { color: #2563eb; border-bottom: 2px solid #2563eb; }
-        .badge-count { background-color: #dbeafe; color: #1e40af; border-radius: 9999px; padding: 0.15rem 0.6rem; font-size: 0.75rem; margin-left: 0.5rem; font-weight: 700;}
-
-        .table-container { background-color: white; border-radius: 0.75rem; border: 1px solid #e2e8f0; overflow: hidden; margin-top: 2rem;}
-        .table-custom { table-layout: fixed; }
-        .table-custom th { text-transform: uppercase; font-size: 0.75rem; color: #64748b; font-weight: 700; padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; background-color: #f8fafc; letter-spacing: 0.5px;}
-        .table-custom td { padding: 1.25rem 1.5rem; vertical-align: middle; border-bottom: 1px solid #e2e8f0; }
-        .table-custom tr:last-child td { border-bottom: none; }
-        
-        .badge-status { font-weight: 600; padding: 0.35rem 0.8rem; font-size: 0.7rem; border-radius: 0.375rem; letter-spacing: 0.5px;}
-        .status-disetujui { background-color: #dcfce7; color: #059669; border: 1px solid #a7f3d0; }
-        .status-revisi { background-color: #fee2e2; color: #e11d48; border: 1px solid #fecaca; }
-        
-        .btn-action { color: #2563eb; font-weight: 600; font-size: 0.85rem; text-decoration: none; display: inline-flex; align-items: center; }
-        .btn-action:hover { color: #1d4ed8; }
-        
-        .pagination-custom .page-link { color: #475569; border: 1px solid #e2e8f0; margin: 0 0.25rem; border-radius: 0.375rem; font-size: 0.875rem;}
-        .pagination-custom .page-item.active .page-link { background-color: #2563eb; border-color: #2563eb; color: white; }
-    </style>
-
-    <div class="container-fluid py-4 px-4 px-xl-5">
-
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                const topbarTitle = document.getElementById('topbar-title');
-                const topbarSubtitle = document.getElementById('topbar-subtitle');
-                if(topbarTitle) topbarTitle.textContent = "Riwayat Validasi RPS";
-                if(topbarSubtitle) topbarSubtitle.textContent = "Pantau riwayat dokumen RPS yang telah direview";
-            });
-        </script>
-
-        <div class="nav-tabs-custom d-flex">
-            <a href="#" class="nav-link active text-decoration-none">
-                Selesai Direview <span class="badge-count" style="background-color: #e0e7ff;">{{ $riwayat_rps->total() }}</span>
-            </a>
+    <div class="border-b border-slate-200 mb-4">
+        <div class="inline-flex items-center gap-2 border-b-2 border-blue-600 pb-3 text-sm font-semibold text-blue-600">
+            Selesai Direview
+            <span class="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">{{ $riwayat_rps->total() }}</span>
         </div>
+    </div>
 
-        <div class="table-container">
-            <div class="table-responsive">
-                <table class="table table-borderless table-custom mb-0">
-                    <thead>
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                    <tr>
+                        <th class="px-6 py-4 text-left">Mata Kuliah</th>
+                        <th class="px-6 py-4 text-left">Dosen Pengampu</th>
+                        <th class="px-6 py-4 text-left">Tanggal Disetujui</th>
+                        <th class="px-6 py-4 text-left">Status Akhir</th>
+                        <th class="px-6 py-4 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    @forelse($riwayat_rps as $rps)
                         <tr>
-                            <th width="30%">MATA KULIAH</th>
-                            <th width="25%">DOSEN PENGAMPU</th>
-                            <th width="20%">TANGGAL DISETUJUI</th>
-                            <th width="15%">STATUS AKHIR</th>
-                            <th width="10%" class="text-end">AKSI</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($riwayat_rps as $rps)
-                        <tr>
-                            <td>
-                                <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $rps->mk_nama }}</div>
-                                <div class="text-muted" style="font-size: 0.8rem;">{{ $rps->kode }} &bull; {{ $rps->semester }}</div>
+                            <td class="px-6 py-4">
+                                <p class="text-sm font-semibold text-slate-900">{{ $rps->mk_nama }}</p>
+                                <p class="text-xs text-slate-500">{{ $rps->kode }} &bull; {{ $rps->semester }}</p>
                             </td>
-                            <td>
+                            <td class="px-6 py-4">
                                 @php
                                     $dosens = collect(explode(', ', $rps->dosens_list ?? ''))
                                         ->filter()
                                         ->map(fn($d) => explode('|', $d)[1] ?? $d);
                                 @endphp
                                 @if($dosens->isNotEmpty())
-                                    <span class="text-muted" style="font-size: 0.9rem;">{{ $dosens->join(', ') }}</span>
+                                    <span class="text-sm text-slate-600">{{ $dosens->join(', ') }}</span>
                                 @else
-                                    <span class="text-muted fst-italic" style="font-size: 0.85rem;">–</span>
+                                    <span class="text-xs text-slate-400">-</span>
                                 @endif
                             </td>
-                            <td>
-                                <span class="text-muted" style="font-size: 0.9rem;">
-                                    {{ $rps->tanggal_disetujui ? \Carbon\Carbon::parse($rps->tanggal_disetujui)->translatedFormat('d F Y') : '–' }}
-                                </span>
+                            <td class="px-6 py-4 text-sm text-slate-600">
+                                {{ $rps->tanggal_disetujui ? \Carbon\Carbon::parse($rps->tanggal_disetujui)->translatedFormat('d F Y') : '-' }}
                             </td>
-                            <td><span class="badge-status status-disetujui">DISETUJUI</span></td>
-                            <td class="text-end">
-                                <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->rps_id) }}" class="btn-action">
-                                    <i class="far fa-eye me-2"></i> Lihat Detail
+                            <td class="px-6 py-4">
+                                <span class="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">Disetujui</span>
+                            </td>
+                            <td class="px-6 py-4 text-right">
+                                <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->rps_id) }}" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
+                                    <i class="far fa-eye"></i> Lihat Detail
                                 </a>
                             </td>
                         </tr>
-                        @empty
+                    @empty
                         <tr>
-                            <td colspan="5" class="text-center py-5">
-                                <div class="text-muted">
-                                    <i class="fas fa-folder-open mb-3" style="font-size: 2.5rem; opacity: 0.4;"></i>
-                                    <h6 class="fw-bold">Belum ada riwayat</h6>
-                                    <p style="font-size: 0.9rem;">Belum ada RPS yang berstatus disetujui.</p>
+                            <td colspan="5" class="px-6 py-12 text-center text-slate-500">
+                                <div class="flex flex-col items-center gap-2">
+                                    <i class="fas fa-folder-open text-3xl text-slate-300"></i>
+                                    <p class="text-sm font-semibold">Belum ada riwayat</p>
+                                    <p class="text-xs">Belum ada RPS yang berstatus disetujui.</p>
                                 </div>
                             </td>
                         </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
-            
-            @if($riwayat_rps->hasPages())
-            <div class="border-top px-4 py-3 d-flex justify-content-between align-items-center">
-                <span class="text-muted" style="font-size: 0.85rem;">
-                    Menampilkan {{ $riwayat_rps->firstItem() }}–{{ $riwayat_rps->lastItem() }} dari {{ $riwayat_rps->total() }} hasil
-                </span>
-                <nav>
-                    {{ $riwayat_rps->links('pagination::bootstrap-5') }}
-                </nav>
-            </div>
-            @endif
+                    @endforelse
+                </tbody>
+            </table>
         </div>
 
+        @if($riwayat_rps->hasPages())
+            <div class="flex flex-col gap-3 border-t border-slate-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
+                <span class="text-xs text-slate-500">Menampilkan {{ $riwayat_rps->firstItem() }}-{{ $riwayat_rps->lastItem() }} dari {{ $riwayat_rps->total() }} hasil</span>
+                {{ $riwayat_rps->links('pagination::tailwind') }}
+            </div>
+        @endif
     </div>
 </x-banksoal::layouts.gpm-master>
