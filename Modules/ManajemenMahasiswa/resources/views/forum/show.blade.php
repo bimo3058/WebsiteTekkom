@@ -195,6 +195,14 @@
                     @else
                         @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
                             <li>
+                                <form method="POST" action="{{ route('manajemenmahasiswa.forum.pin', $thread->id) }}">
+                                    @csrf @method('PATCH')
+                                    <button type="submit" class="dropdown-item">
+                                        @if($thread->is_pinned) 🔓 Unpin Thread @else 📌 Pin Thread @endif
+                                    </button>
+                                </form>
+                            </li>
+                            <li>
                                 <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
                                       onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
                                     @csrf @method('DELETE')
@@ -218,8 +226,8 @@
 
     <h4 class="fw-bold text-dark mb-3">{{ $thread->judul }}</h4>
 
-    <div class="text-dark" style="font-size: 15px; margin-bottom: 24px; line-height: 1.6;">
-        {!! nl2br(e($thread->konten)) !!}
+    <div class="text-dark" style="font-size: 15px; margin-bottom: 24px; line-height: 1.6; overflow-wrap: break-word;">
+        {!! nl2br(strip_tags($thread->konten, '<img><video><source><a><br>')) !!}
     </div>
 
     <!-- Labels -->
@@ -357,7 +365,7 @@
         </div>
         @empty
             <div class="text-center py-4" style="color: #9ca3af;">
-                <p class="mb-0">Belum ada komentar. Jadilah yang pertama berkomentar!</p>
+                <p class="mb-0">Belum ada komentar.</p>
             </div>
         @endforelse
 

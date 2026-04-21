@@ -388,6 +388,14 @@
                             @else
                                 @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
                                     <li>
+                                        <form method="POST" action="{{ route('manajemenmahasiswa.forum.pin', $thread->id) }}">
+                                            @csrf @method('PATCH')
+                                            <button type="submit" class="dropdown-item">
+                                                @if($thread->is_pinned) 🔓 Unpin @else 📌 Pin @endif
+                                            </button>
+                                        </form>
+                                    </li>
+                                    <li>
                                         <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
                                             onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
                                             @csrf @method('DELETE')

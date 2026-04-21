@@ -387,11 +387,28 @@
                                     <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
                                         onsubmit="return confirm('Yakin ingin menghapus thread ini?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="dropdown-item text-danger">🗑️ Hapus</button>
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" class="me-1">
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path d="M19 6l-1 14H6L5 6"></path>
+                                                <path d="M10 11v6"></path>
+                                                <path d="M14 11v6"></path>
+                                                <path d="M9 6V4h6v2"></path>
+                                            </svg>
+                                            Hapus</button>
                                     </form>
                                 </li>
                             @else
                                 @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
+                                    <li>
+                                        <form method="POST" action="{{ route('manajemenmahasiswa.forum.pin', $thread->id) }}">
+                                            @csrf @method('PATCH')
+                                            <button type="submit" class="dropdown-item">
+                                                @if($thread->is_pinned) 🔓 Unpin @else 📌 Pin @endif
+                                            </button>
+                                        </form>
+                                    </li>
                                     <li>
                                         <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
                                             onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
@@ -404,7 +421,10 @@
                                     <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal"
                                         data-bs-target="#reportModal" data-thread-id="{{ $thread->id }}"
                                         data-thread-title="{{ $thread->judul }}">
-                                        🚩 Laporkan Thread
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="me-1">
+                                            <path d="M4 2v20h2v-7h10l-2-4 2-4H6V2H4z" />
+                                        </svg>
+                                        Laporkan Thread
                                     </button>
                                 </li>
                             @endif
@@ -606,7 +626,10 @@
 
                     navigator.clipboard.writeText(targetUrl).then(() => {
                         const originalHtml = this.innerHTML;
-                        this.innerHTML = '<span style="font-size: 14px;">✅</span>';
+                        this.innerHTML = `
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>`;
                         setTimeout(() => {
                             this.innerHTML = originalHtml;
                         }, 2000);
