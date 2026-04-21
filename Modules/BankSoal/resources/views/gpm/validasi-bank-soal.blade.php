@@ -19,10 +19,10 @@
         .table-rps td { padding: 1.25rem 1.5rem; vertical-align: middle; border-bottom: 1px solid #e2e8f0; }
         .table-rps tr:last-child td { border-bottom: none; }
         
-        .badge-menunggu { background-color: #fef3c7; color: #d97706; border: 1px solid #fde68a; font-weight: 600; padding: 0.35rem 0.8rem; font-size: 0.7rem; border-radius: 0.375rem; letter-spacing: 0.5px;}
+        .badge-menunggu { background-color: #fef3c7; color: #d97706; border: 1px solid #fde68a; font-weight: 600; padding: 0.35rem 0.8rem; font-size: 0.7rem; border-radius: 0.375rem; letter-spacing: 0.5px; white-space: nowrap;}
         .avatar-text { width: 32px; height: 32px; border-radius: 50%; background-color: #eff6ff; color: #2563eb; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; margin-right: 0.75rem; }
         
-        .btn-review { background-color: #2563eb; color: white; border-radius: 0.375rem; font-weight: 500; font-size: 0.85rem; padding: 0.5rem 1.25rem; border: none; transition: 0.2s; }
+        .btn-review { background-color: #2563eb; color: white; border-radius: 0.375rem; font-weight: 500; font-size: 0.85rem; padding: 0.5rem 1.25rem; border: none; transition: 0.2s; white-space: nowrap;}
         .btn-review:hover { background-color: #1d4ed8; color: white;}
         
         .pagination-custom .page-link { color: #475569; border: 1px solid #e2e8f0; margin: 0 0.25rem; border-radius: 0.375rem; font-size: 0.875rem;}
@@ -66,7 +66,7 @@
         </div>
 
         <div class="card border-0 shadow-sm rounded-4 mb-4">
-            <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
+            <div class="card-body p-4">
                 <div class="d-flex align-items-center border-bottom mb-4" style="gap: 2.5rem; border-color: #e2e8f0 !important;">
             <a href="#" class="text-decoration-none pb-3 position-relative d-flex align-items-center" style="color: #2563eb; font-weight: 600; font-size: 0.95rem;">
                 Menunggu Validasi 
@@ -83,15 +83,15 @@
 
         <div class="table-container mb-4">
             <div class="table-responsive">
-                <table class="table table-borderless table-rps mb-0">
+                <table class="table table-borderless table-rps mb-0 w-100">
                     <thead>
                         <tr>
                             <th width="28%">MATA KULIAH</th>
-                            <th width="22%">DOSEN PENGAMPU</th>
+                            <th width="26%">DOSEN PENGAMPU</th>
                             <th width="12%">JUMLAH SOAL</th>
-                            <th width="15%">TANGGAL DIAJUKAN</th>
+                            <th width="14%">TANGGAL DIAJUKAN</th>
                             <th width="10%">STATUS</th>
-                            <th width="13%" class="text-end">AKSI</th>
+                            <th width="10%" class="text-end">AKSI</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -151,4 +151,26 @@
         </div>
 
     </div>
+
+    @if(session('success'))
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                icon: 'success',
+                title: 'Validasi Selesai!',
+                text: '{{ session('success') }}',
+                confirmButtonColor: '#3b82f6',
+                background: '#ffffff',
+                showConfirmButton: true,
+                customClass: {
+                    title: 'text-slate-800 text-xl font-bold',
+                    htmlContainer: 'text-slate-600 text-sm',
+                    confirmButton: 'rounded-xl px-5 py-2.5 font-semibold transition-colors'
+                }
+            });
+        });
+    </script>
+    @endif
+
 </x-banksoal::layouts.gpm-master>

@@ -38,7 +38,7 @@
         .progress-custom .progress-fill {
             height: 100%;
             background-color: #2563eb;
-            width: 12.5%; /* 5 of 40 */
+            /* width diatur inline via style="width: ...%" */
         }
 
         .cpl-card {
@@ -128,6 +128,15 @@
             font-weight: 700;
             line-height: 1.6;
             margin-bottom: 2rem;
+            overflow-wrap: break-word;
+        }
+
+        .question-text img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 0.5rem;
+            margin-top: 1rem;
+            margin-bottom: 1rem;
         }
 
         .option-item {
@@ -286,9 +295,9 @@
             <span class="fw-bold">Dosen:</span> Budi Santoso {{-- TODO: Hubungkan dengan relasi Dosen nanti ya --}}
         </div>
         <div class="progress-bar-container">
-            Review Progress: Soal {{ $soal->id }}
+            Review Progress: Soal {{ $currentIndex ?? $soal->id }} dari {{ $totalSoalMK ?? '?' }}
             <div class="progress-custom">
-                <div class="progress-fill"></div>
+                <div class="progress-fill" style="width: {{ $progressPercentage ?? 0 }}%;"></div>
             </div>
         </div>
     </div>
@@ -315,12 +324,27 @@
                     <div class="cpl-label">KODE CAPAIAN</div>
                     <div class="cpl-value">{{ $soal->cpl_kode }}</div>
                     
-                    <div class="cpl-label">DESKRIPSI KOMPETENSI</div>
+                    <div class="cpl-label">DESKRIPSI KOMPETENSI (CPL)</div>
                     <div class="cpl-desc">
                         {{ $soal->cpl_deskripsi }}
                     </div>
+
+                    @if($soal->cpmk_kode)
+                        <hr class="my-3">
+                        <div class="cpl-title mt-3">
+                            <i class="far fa-dot-circle" style="font-size: 1.25rem;"></i> Target Capaian Mata Kuliah (CPMK)
+                        </div>
+                        
+                        <div class="cpl-label">KODE CAPAIAN</div>
+                        <div class="cpl-value">{{ $soal->cpmk_kode }}</div>
+                        
+                        <div class="cpl-label">DESKRIPSI KOMPETENSI (CPMK)</div>
+                        <div class="cpl-desc">
+                            {{ $soal->cpmk_deskripsi }}
+                        </div>
+                    @endif
                     
-                    <div class="badge-cognitive">
+                    <div class="badge-cognitive mt-4">
                         LEVEL KOGNITIF: C4 (MENGANALISIS) {{-- TODO: Ganti ini jika sudah ada di DB --}}
                     </div>
                 </div>
@@ -407,18 +431,42 @@
                             });
                             // 2. Tambahkan class 'active' ke tombol yang sedang diklik
                             element.classList.add('active');
-                        }
-                    </script>
-    
-                    <script>
-                        function selectDecision(element) {
-                            // 1. Hapus class 'active' dari semua tombol
-                            document.querySelectorAll('.btn-decision').forEach(btn => {
-                                btn.classList.remove('active');
-                            });
-                            // 2. Tambahkan class 'active' ke tombol yang sedang diklik
-                            element.classList.add('active');
+
+                            // 3. Atur status required pada catatan berdasarkan pilihan
+                            const radioVal = element.querySelector('input[type="radio"]').value;
+                            const catatanElement = document.querySelector('textarea[name="catatan"]');
+                            
+                            if (radioVal === 'Sesuai') {
+                                catatanElement.removeAttribute('required');
+                                catatanElement.placeholder = "Opsional: Tambahkan catatan jika ada...";
+                            } else {
+                                catatanElement.setAttribute('required', 'required');
+                                catatanElement.placeholder = "Masukkan feedback untuk dosen...";
+                            }
                         }
                     </script>
 
-                </div> </div> </div> </div> </x-banksoal::layouts.gpm-master>
+                </div> </div> </div> </div> 
+
+    @if(session('success'))
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: 'Data Tersimpan!',
+                text: '{{ session('success') }}',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                customClass: {
+                    popup: 'rounded-3 shadow-sm border border-success border-opacity-25'
+                }
+            });
+        });
+    </script>
+    @endif
+
+</x-banksoal::layouts.gpm-master>

@@ -18,6 +18,7 @@ class MultiSelect {
 
     // Membangun struktur HTML awal untuk komponen multi-select.
     _build() {
+        this.wrapper.classList.add("ms-wrapper");
         this.wrapper.innerHTML = `
             <div class="ms-trigger${this.disabled ? " disabled" : ""}">
                 <span class="ms-placeholder">${this.placeholder}</span>
@@ -41,7 +42,12 @@ class MultiSelect {
         });
 
         document.addEventListener("click", (e) => {
-            if (!this.wrapper.contains(e.target)) this._close();
+            if (
+                !this.wrapper.contains(e.target) &&
+                !this.dropdown.contains(e.target)
+            ) {
+                this._close();
+            }
         });
 
         this._handleViewportChange = (event) => {
@@ -59,7 +65,11 @@ class MultiSelect {
                 target !== document &&
                 (this.wrapper.contains(target) || isInsideDropdownPanel);
 
-            if (isInternalScroll) return;
+            if (isInternalScroll) {
+                // Update dropdown position on internal scroll
+                this._positionDropdown();
+                return;
+            }
             this._close();
         };
 
@@ -67,7 +77,9 @@ class MultiSelect {
         window.addEventListener("scroll", this._handleViewportChange, true);
 
         // Tutup dropdown saat ukuran viewport berubah.
-        window.addEventListener("resize", this._handleViewportChange);
+        window.addEventListener("resize", () => {
+            if (this.open) this._positionDropdown();
+        });
     }
 
     // Membuka atau menutup dropdown.
@@ -79,6 +91,7 @@ class MultiSelect {
         this.open = true;
         this.trigger.classList.add("open");
         this.dropdown.classList.add("open");
+        this.dropdown.style.display = "block";
 
         const ph = this.trigger.querySelector(
             ".ms-placeholder, .ms-selected-labels",
@@ -100,13 +113,28 @@ class MultiSelect {
             });
             inp.focus();
         }
+
+        // Position AFTER search input is in DOM so trigger height is accurate
+        this._positionDropdown();
         this._renderList();
+    }
+
+    _positionDropdown() {
+        const gapFromTrigger = 6;
+        const width = this.trigger.offsetWidth;
+        const height = this.trigger.offsetHeight;
+
+        // Position below trigger inside wrapper
+        this.dropdown.style.top = height + gapFromTrigger + "px";
+        this.dropdown.style.left = "0px";
+        this.dropdown.style.width = width + "px";
     }
 
     _forceClose() {
         this.open = false;
         this.trigger.classList.remove("open");
         this.dropdown.classList.remove("open");
+        this.dropdown.style.display = "none";
         const inp = this.trigger.querySelector(".ms-search-input");
         if (inp) inp.remove();
         this.searchVal = "";
@@ -225,21 +253,32 @@ class MultiSelect {
               ];
 
         const saClass = allSel ? "selected" : someSel ? "indeterminate" : "";
+        const saChecked = allSel ? "checked" : "";
         let html = `<div class="ms-option select-all ${saClass}" data-action="select-all">
-                        <span class="ms-cb"></span><span>Pilih Semua</span>
+                        <input type="checkbox" class="ms-option-checkbox" ${saChecked} tabindex="-1" aria-hidden="true" />
+                        <span>Pilih Semua</span>
                     </div>`;
 
         if (!sorted.length) {
             html += `<div class="ms-no-results">Tidak ada hasil</div>`;
         } else {
             sorted.forEach((item) => {
+                const checked = item.selected ? "checked" : "";
                 html += `<div class="ms-option ${item.selected ? "selected" : ""}" data-id="${item.id}">
-                            <span class="ms-cb"></span><span>${item.label}</span>
+                            <input type="checkbox" class="ms-option-checkbox" ${checked} tabindex="-1" aria-hidden="true" />
+                            <span>${item.label}</span>
                          </div>`;
             });
         }
 
         this.list.innerHTML = html;
+
+        const selectAllCheckbox = this.list.querySelector(
+            ".ms-option.select-all .ms-option-checkbox",
+        );
+        if (selectAllCheckbox) {
+            selectAllCheckbox.indeterminate = someSel && !allSel;
+        }
 
         this.list.querySelectorAll(".ms-option").forEach((el) => {
             el.addEventListener("click", (e) => {
