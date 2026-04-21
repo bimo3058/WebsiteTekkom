@@ -168,6 +168,22 @@ class ForumController extends Controller
     }
 
     /**
+     * Pin / Unpin thread.
+     */
+    public function pin(int $id)
+    {
+        $isAdmin = Auth::user()->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+        if (!$isAdmin) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $thread = $this->threadService->pinThread($id);
+        
+        $status = $thread->is_pinned ? 'dipin' : 'di-unpin';
+        return back()->with('success', "Thread berhasil {$status}.");
+    }
+
+    /**
      * Tambah komentar.
      */
     public function storeComment(int $threadId, Request $request)
