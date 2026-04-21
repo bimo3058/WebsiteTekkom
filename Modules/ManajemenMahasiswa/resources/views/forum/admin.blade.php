@@ -232,7 +232,7 @@
         <div class="col-md-7 mb-3 mb-md-0">
             <div class="bg-gradient-purple rounded-4 p-4 h-100 text-white shadow-sm">
                 <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
-                    🏆 Leaderboard
+                    Leaderboard
                 </h6>
                 <div class="table-responsive">
                     <table class="table table-borderless table-sm mb-0 leaderboard-table">
@@ -277,18 +277,17 @@
             <div
                 class="bg-gradient-purple rounded-4 p-4 h-100 text-white shadow-sm d-flex flex-column justify-content-center">
                 <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
-                    🔥 Streak Kamu Hari Ini : {{ $userStats['current_streak'] }} Hari
+                    <span></span>Streak Kamu Hari Ini : {{ $userStats['current_streak'] }} Hari
                 </h6>
                 <div class="mb-3 ps-4">
                     <span style="font-size: 14px; font-weight: 500;">Rank : #{{ $userStats['rank'] }}</span>
                 </div>
                 <div class="mb-3 ps-4 d-flex align-items-center gap-2">
-                    <span>🏵️</span> <span style="font-size: 14px; font-weight: 500;">Level Kamu :
+                    <span style="font-size: 14px; font-weight: 500;">Level Kamu :
                         {{ $userStats['level'] }}</span>
                 </div>
                 <div class="ps-4">
                     <div class="d-flex align-items-center gap-2">
-                        <span>📊</span>
                         <span style="font-size: 14px; font-weight: 500;">
                             Exp : {{ $userStats['total_xp'] }}/{{ $userStats['xp_for_next'] }}
                         </span>
@@ -320,7 +319,11 @@
     <form method="GET" action="{{ route('manajemenmahasiswa.forum.index') }}" id="forumFilterForm">
         <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-4">
             <div class="search-wrapper w-100 me-0 me-md-2">
-                <span class="search-icon">🔍</span>
+                <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg></span>
                 <input type="text" name="search" class="form-control search-input w-100" placeholder="Cari diskusi..."
                     value="{{ request('search') }}">
             </div>
@@ -338,7 +341,12 @@
                     @endforeach
                 </select>
                 <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post text-decoration-none">
-                    Post ⊕
+                    Post
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
                 </a>
             </div>
         </div>
@@ -373,7 +381,17 @@
                                     <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
                                         onsubmit="return confirm('Yakin ingin menghapus thread ini?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="dropdown-item text-danger">🗑️ Hapus</button>
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" class="me-1">
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path d="M19 6l-1 14H6L5 6"></path>
+                                                <path d="M10 11v6"></path>
+                                                <path d="M14 11v6"></path>
+                                                <path d="M9 6V4h6v2"></path>
+                                            </svg>
+                                            Hapus
+                                        </button>
                                     </form>
                                 </li>
                             @else
@@ -435,13 +453,20 @@
                     <!-- Comments -->
                     <button class="ms-2"
                         onclick="window.location.href='{{ route('manajemenmahasiswa.forum.show', $thread->id) }}'">
-                        <span class="me-1" style="font-size: 14px;">💬</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
                         {{ $thread->comments_count ?? $thread->comment_count }}
                     </button>
 
                     <!-- Share -->
                     <button class="share-btn ms-1" data-url="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}">
-                        <span style="font-size: 14px;">🔗</span>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                        </svg>
                     </button>
                 </div>
             </div>
@@ -563,7 +588,10 @@
 
                     navigator.clipboard.writeText(targetUrl).then(() => {
                         const originalHtml = this.innerHTML;
-                        this.innerHTML = '<span style="font-size: 14px;">✅</span>';
+                        this.innerHTML = `
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>`;
                         setTimeout(() => {
                             this.innerHTML = originalHtml;
                         }, 2000);

@@ -56,7 +56,7 @@ class RedirectBasedOnRole
             'admin_banksoal'      => ['route' => 'banksoal.dashboard',                     'prefix' => 'bank-soal*'],
             'admin_capstone'      => ['route' => 'capstone.dashboard',                     'prefix' => 'capstone*'],
             'admin_eoffice'       => ['route' => 'eoffice.dashboard',                      'prefix' => 'eoffice*'],
-            'admin_kemahasiswaan' => ['route' => 'manajemenmahasiswa.mahasiswa.dashboard', 'prefix' => 'manajemen-mahasiswa*'],
+            'admin_kemahasiswaan' => ['route' => 'manajemenmahasiswa.dashboard',           'prefix' => 'manajemen-mahasiswa*'],
         ];
 
         foreach ($adminModuleRoles as $role => $config) {

@@ -17,6 +17,7 @@ class PendaftarUjian extends Model
         'mahasiswa_id', 
         'nim', 
         'nama_lengkap', 
+        'kontak_wa',
         'semester_aktif',
         'target_wisuda', 
         'dosen_pembimbing_1_id', 

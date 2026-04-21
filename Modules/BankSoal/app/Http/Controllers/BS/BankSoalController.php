@@ -38,8 +38,8 @@ class BankSoalController extends Controller
             ->when($request->mk_id, function($q, $mk_id) {
                 return $q->where('bs_pertanyaan.mk_id', $mk_id);
             })
-            ->when($request->kesulitan, function($q, $kesulitan) {
-                return $q->where('bs_pertanyaan.kesulitan', $kesulitan);
+            ->when($request->status, function($q, $status) {
+                return $q->where('bs_pertanyaan.status', $status);
             })
             // Tambahkan orderBy mataKuliah.nama agar soal dalam satu MK terkumpul
             ->join('bs_mata_kuliah', 'bs_pertanyaan.mk_id', '=', 'bs_mata_kuliah.id')
@@ -60,7 +60,10 @@ class BankSoalController extends Controller
             ->whereIn('id', $mkIds)
             ->has('pertanyaan')
             ->when($request->searchPackages, function($q, $search) {
-                return $q->where('nama', 'like', "%{$search}%")->orWhere('kode', 'like', "%{$search}%");
+                return $q->where(function($query) use ($search) {
+                    $query->where('nama', 'like', "%{$search}%")
+                          ->orWhere('kode', 'like', "%{$search}%");
+                });
             })
             ->withCount('pertanyaan as jumlah_soal')
             ->paginate(5, ['*'], 'pkg_page');
@@ -110,11 +113,14 @@ class BankSoalController extends Controller
         $query = \Modules\BankSoal\Models\Pertanyaan::with(['mataKuliah', 'cpl', 'jawaban'])
             ->where('mk_id', $request->mk_id);
 
-        // TODO: Filter jenis soal dinonaktifkan sementara karena kolom 'tipe_soal' 
-        // belum tersedia di skema tabel bs_pertanyaan saat ini.
-        // if ($request->filled('jenis_soal')) {
-        //     $query->whereIn('tipe_soal', $request->jenis_soal);
-        // }
+        if ($request->filled('jenis_soal')) {
+            // Mapping from checkboxes "Pilihan Ganda" / "Essay" to DB values "pilihan_ganda" / "essay"
+            $tipe_soal_map = collect($request->jenis_soal)->map(function ($tipe) {
+                return $tipe === 'Pilihan Ganda' ? 'pilihan_ganda' : 'essay';
+            })->toArray();
+            
+            $query->whereIn('tipe_soal', $tipe_soal_map);
+        }
 
         if ($request->filled('cpl_id')) {
             $query->where('cpl_id', $request->cpl_id);
@@ -139,7 +145,7 @@ class BankSoalController extends Controller
                     // Sertakan cpmk_id jika ada relasi CPMK
                     return [
                         'id' => $soal->id,
-                        'soal' => strip_tags(\Illuminate\Support\Str::limit($soal->soal, 200)),
+                        'soal' => $soal->soal, // tidak dilimit / distrip_tags agar format HTML / gambar bawaan dari editor tetap berfungsi
                         'cpl' => $soal->cpl ? $soal->cpl->kode : null,
                         'cpmk' => $soal->cpmk ? $soal->cpmk->kode : null,
                     ];
@@ -184,7 +190,9 @@ class BankSoalController extends Controller
             'soals' => $soals->map(function ($soal) {
                 return [
                     'id' => $soal->id,
-                    'soal' => strip_tags(\Illuminate\Support\Str::limit($soal->soal, 150)),
+                    'soal' => $soal->soal, // tidak dilimit / distrip_tags agar format HTML / gambar bawaan dari editor tetap berfungsi
+                    'cpl_id' => $soal->cpl_id,
+                    'cpmk_id' => $soal->cpmk_id,
                     'cpl' => $soal->cpl ? $soal->cpl->kode : null,
                     'cpmk' => $soal->cpmk ? $soal->cpmk->kode : null,
                     'tipe_soal' => $soal->tipe_soal,
@@ -223,7 +231,61 @@ class BankSoalController extends Controller
         $this->authorize('banksoal.view'); // FIX: tambahkan
         $user = auth()->user();
         $mataKuliah = $this->mataKuliahService->getMkByDosen($user->id);
-        return view('banksoal::dashboard.dosen', compact('mataKuliah'));
+        $mkIds = $mataKuliah->pluck('id')->toArray();
+
+        // Query Pertanyaan Status Data
+        $totalSoal = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)->count();
+        $approved = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)->where('status', 'disetujui')->count();
+        $perluReview = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)->whereIn('status', ['diajukan'])->count();
+        $revisi = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)->where('status', 'revisi')->count();
+        $ditolak = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)->where('status', 'ditolak')->count();
+
+        // Data CPL untuk Bar Chart
+        $cplDistRaw = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)
+            ->join('bs_cpl', 'bs_cpl.id', '=', 'bs_pertanyaan.cpl_id')
+            ->selectRaw('bs_cpl.kode, COUNT(bs_pertanyaan.id) as count')
+            ->groupBy('bs_cpl.id', 'bs_cpl.kode')
+            ->get();
+            
+        $cplDist = $cplDistRaw->pluck('count', 'kode')->toArray();
+
+        // Data MK untuk Bar Chart
+        $mkDist = [];
+        $mkTanpaRps = [];
+        foreach ($mataKuliah as $mk) {
+            $count = \Modules\BankSoal\Models\Pertanyaan::where('mk_id', $mk->id)->count();
+            $mkDist[] = [
+                'mk' => $mk->kode,
+                'count' => $count,
+                'color' => $count > 0 ? '#22C55E' : '#CBD5E1'
+            ];
+
+            // Cek RPS
+            $rpsCount = \Modules\BankSoal\Models\Rps::where('mk_id', $mk->id)->count();
+            if ($rpsCount == 0) {
+                $mkTanpaRps[] = $mk->kode;
+            }
+        }
+        
+        $donutData = [
+            ['value' => $approved, 'color' => '#22C55E'],
+            ['value' => $revisi, 'color' => '#F59E0B'],
+            ['value' => $perluReview, 'color' => '#3B82F6'],
+            ['value' => $ditolak, 'color' => '#EF4444'],
+        ];
+
+        return view('banksoal::dashboard.dosen', compact(
+            'mataKuliah',
+            'totalSoal',
+            'approved',
+            'perluReview',
+            'revisi',
+            'ditolak',
+            'cplDist',
+            'mkDist',
+            'donutData',
+            'mkTanpaRps'
+        ));
     }
 
     public function mahasiswaDashboard()
@@ -256,6 +318,7 @@ class BankSoalController extends Controller
         $rules = [
             'mk_id' => 'required|exists:bs_mata_kuliah,id',
             'cpl_id' => 'required|exists:bs_cpl,id',
+            'cpmk_id' => 'nullable|exists:bs_cpmk,id',
             'soal' => 'required|string',
             'kesulitan' => 'required|in:easy,intermediate,advanced',
             'tipe_soal' => 'nullable|string|in:pilihan_ganda,essay',
@@ -281,6 +344,7 @@ class BankSoalController extends Controller
             $dataSoal = [
                 'mk_id' => $request->mk_id,
                 'cpl_id' => $request->cpl_id,
+                'cpmk_id' => $request->cpmk_id,
                 'soal' => $request->soal,
                 'kesulitan' => $request->kesulitan,
                 'bobot' => $bobot,
@@ -338,6 +402,7 @@ class BankSoalController extends Controller
         $rules = [
             'mk_id' => 'required|exists:bs_mata_kuliah,id',
             'cpl_id' => 'required|exists:bs_cpl,id',
+            'cpmk_id' => 'nullable|exists:bs_cpmk,id',
             'soal' => 'required|string',
             'kesulitan' => 'required|in:easy,intermediate,advanced',
             'tipe_soal' => 'nullable|string|in:pilihan_ganda,essay',
@@ -365,6 +430,7 @@ class BankSoalController extends Controller
             $dataSoal = [
                 'mk_id' => $request->mk_id,
                 'cpl_id' => $request->cpl_id,
+                'cpmk_id' => $request->cpmk_id,
                 'soal' => $request->soal,
                 'kesulitan' => $request->kesulitan,
                 'bobot' => $bobot,

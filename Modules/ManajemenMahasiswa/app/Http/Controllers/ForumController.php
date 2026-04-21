@@ -5,6 +5,7 @@ namespace Modules\ManajemenMahasiswa\Http\Controllers;
 use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Modules\ManajemenMahasiswa\Models\Thread;
 use Modules\ManajemenMahasiswa\Services\ThreadService;
 use Modules\ManajemenMahasiswa\Services\CommentService;
@@ -47,6 +48,11 @@ class ForumController extends Controller
             return view('manajemenmahasiswa::forum.admin', $viewData);
         }
 
+        // Dosen: dosen layout
+        if ($roles->intersect(['dosen'])->isNotEmpty()) {
+            return view('manajemenmahasiswa::forum.dosen', $viewData);
+        }
+
         return view('manajemenmahasiswa::forum.mahasiswa', $viewData);
     }
 
@@ -66,13 +72,52 @@ class ForumController extends Controller
      */
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'judul' => 'required|string|max:255',
-            'konten' => 'required|string|min:10',
-            'kategori' => 'required|string|in:' . implode(',', Thread::KATEGORI_LIST),
-        ]);
+        $format = $request->input('format', 'text');
 
-        $this->threadService->createThread(Auth::id(), $validated);
+        // Base validation
+        $rules = [
+            'judul' => 'required|string|max:255',
+            'kategori' => 'required|string|in:' . implode(',', Thread::KATEGORI_LIST),
+        ];
+
+        // Format-specific validation
+        if ($format === 'media') {
+            $rules['media_files'] = 'required|array|min:1|max:5';
+            $rules['media_files.*'] = 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:10240';
+            $rules['media_caption'] = 'nullable|string';
+        } else {
+            $rules['konten'] = 'required|string|min:10';
+        }
+
+        $validated = $request->validate($rules);
+
+        // Build konten based on format
+        $konten = $validated['konten'] ?? '';
+
+        if ($format === 'media' && $request->hasFile('media_files')) {
+            $mediaHtml = '';
+
+            foreach ($request->file('media_files') as $file) {
+                $path = $file->store('forum/media', 'public');
+                $url = Storage::url($path);
+                $mime = $file->getMimeType();
+
+                if (str_starts_with($mime, 'image/')) {
+                    $mediaHtml .= '<img src="' . $url . '" alt="Media Post" style="max-width: 100%; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">';
+                } elseif (str_starts_with($mime, 'video/')) {
+                    $mediaHtml .= '<video width="100%" controls style="border-radius: 8px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);"><source src="' . $url . '" type="' . $mime . '"></video>';
+                }
+            }
+
+            $caption = $request->input('media_caption', '');
+            $konten = $mediaHtml . ($caption ? '<br>' . e($caption) : '');
+        }
+
+        $this->threadService->createThread(Auth::id(), [
+            'judul' => $validated['judul'],
+            'konten' => $konten,
+            'kategori' => $validated['kategori'],
+        ]);
 
         return redirect()
             ->route('manajemenmahasiswa.forum.index')
@@ -120,6 +165,22 @@ class ForumController extends Controller
 
         return redirect()->route('manajemenmahasiswa.forum.index')
             ->with('success', 'Thread berhasil dihapus.');
+    }
+
+    /**
+     * Pin / Unpin thread.
+     */
+    public function pin(int $id)
+    {
+        $isAdmin = Auth::user()->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+        if (!$isAdmin) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $thread = $this->threadService->pinThread($id);
+        
+        $status = $thread->is_pinned ? 'dipin' : 'di-unpin';
+        return back()->with('success', "Thread berhasil {$status}.");
     }
 
     /**
