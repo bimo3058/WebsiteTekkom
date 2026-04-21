@@ -263,35 +263,7 @@
         .level-part-time  { background: #d1fae5; color: #065f46; }
         .level-freelance  { background: #ede9fe; color: #5b21b6; }
 
-        /* ── Buttons ─────────────────────────────────────────────────────── */
-        .btn-manage {
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-size: 13px;
-            font-weight: 500;
-            color: #374151;
-            background: #fff;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            text-decoration: none;
-        }
-        .btn-export {
-            border: none;
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #fff;
-            background: #4f46e5;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-export:hover { background: #4338ca; }
+    
 
         /* ── Period select ───────────────────────────────────────────────── */
         .period-select {
@@ -320,31 +292,6 @@
         }
     </style>
     @endpush
-
-    {{-- ── Breadcrumb ────────────────────────────────────────────────── --}}
-    <div class="breadcrumb-bar">
-        <div class="bc-path">
-            Home &rsaquo; <span>Dashboard</span>
-        </div>
-        <div class="bc-actions">
-            <a href="#" class="btn-manage">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
-                </svg>
-                Manage Dashboard
-            </a>
-            <a href="#" class="btn-export">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Export
-            </a>
-        </div>
-    </div>
 
     {{-- ── Page Title ─────────────────────────────────────────────────── --}}
     <div class="page-title">
