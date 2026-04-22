@@ -98,6 +98,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::get('/{id}', [ForumController::class, 'show'])->name('show');
             Route::post('/{id}/vote', [ForumController::class, 'vote'])->name('vote');
             Route::post('/{id}/report', [ForumController::class, 'reportThread'])->name('report');
+            Route::patch('/{id}/pin', [ForumController::class, 'pin'])->name('pin');
             Route::delete('/{id}', [ForumController::class, 'destroy'])->name('destroy');
 
             // Comments

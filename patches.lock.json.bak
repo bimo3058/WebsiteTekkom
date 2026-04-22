@@ -1,4 +1,5 @@
 {
+<<<<<<< Updated upstream
     "_hash": "0c48f2fb1e6e9b3c18ccfce11ba69324287bc81b3bc426b52ef680e755453de1",
     "patches": {
         "laravel/telescope": [
@@ -14,4 +15,8 @@
             }
         ]
     }
+=======
+    "_hash": "6142bfcb78f54dfbf5247ae5e463f25bdb8fff1890806e2e45aa81a59c211653",
+    "patches": []
+>>>>>>> Stashed changes
 }

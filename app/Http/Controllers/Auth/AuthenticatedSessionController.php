@@ -80,7 +80,7 @@ class AuthenticatedSessionController extends Controller
             'admin_banksoal'      => 'banksoal.dashboard',
             'admin_capstone'      => 'capstone.dashboard',
             'admin_eoffice'       => 'eoffice.dashboard',
-            'admin_kemahasiswaan' => 'manajemenmahasiswa.mahasiswa.dashboard',
+            'admin_kemahasiswaan' => 'manajemenmahasiswa.dashboard',
         ];
 
         foreach ($adminRedirects as $role => $routeName) {

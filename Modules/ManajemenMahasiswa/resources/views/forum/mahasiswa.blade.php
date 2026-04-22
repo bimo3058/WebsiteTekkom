@@ -320,7 +320,11 @@
     <form method="GET" action="{{ route('manajemenmahasiswa.forum.index') }}" id="forumFilterForm">
         <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-4">
             <div class="search-wrapper w-100 me-0 me-md-2">
-                <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+                <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg></span>
                 <input type="text" name="search" class="form-control search-input w-100" placeholder="Cari diskusi..."
                     value="{{ request('search') }}">
             </div>
@@ -364,7 +368,12 @@
                                 <span class="text-primary fw-medium" style="font-size: 12px;">•
                                     {{ $thread->created_at->diffForHumans() }}</span>
                                 @if($thread->is_pinned)
-                                    <span class="pinned-badge">📌 Pinned</span>
+                                    <span class="pinned-badge">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M14 2l8 8-2 2-3-3-4 4v7h-2v-7l-4-4-3 3-2-2 8-8z" />
+                                        </svg>
+                                        Pinned
+                                    </span>
                                 @endif
                             </div>
                         </div>
@@ -378,11 +387,28 @@
                                     <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
                                         onsubmit="return confirm('Yakin ingin menghapus thread ini?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="dropdown-item text-danger">🗑️ Hapus</button>
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" class="me-1">
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path d="M19 6l-1 14H6L5 6"></path>
+                                                <path d="M10 11v6"></path>
+                                                <path d="M14 11v6"></path>
+                                                <path d="M9 6V4h6v2"></path>
+                                            </svg>
+                                            Hapus</button>
                                     </form>
                                 </li>
                             @else
                                 @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
+                                    <li>
+                                        <form method="POST" action="{{ route('manajemenmahasiswa.forum.pin', $thread->id) }}">
+                                            @csrf @method('PATCH')
+                                            <button type="submit" class="dropdown-item">
+                                                @if($thread->is_pinned) 🔓 Unpin @else 📌 Pin @endif
+                                            </button>
+                                        </form>
+                                    </li>
                                     <li>
                                         <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
                                             onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
@@ -395,7 +421,10 @@
                                     <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal"
                                         data-bs-target="#reportModal" data-thread-id="{{ $thread->id }}"
                                         data-thread-title="{{ $thread->judul }}">
-                                        🚩 Laporkan Thread
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="me-1">
+                                            <path d="M4 2v20h2v-7h10l-2-4 2-4H6V2H4z" />
+                                        </svg>
+                                        Laporkan Thread
                                     </button>
                                 </li>
                             @endif
@@ -412,7 +441,14 @@
                 <div class="d-flex gap-2 mb-3">
                     <span class="tag-label {{ $thread->kategoriColor() }}">{{ $thread->kategoriLabel() }}</span>
                     @if($thread->is_locked)
-                        <span class="tag-label tag-red">🔒 Dikunci</span>
+                        <span class="tag-label tag-red">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                class="me-1">
+                                <rect x="3" y="11" width="18" height="11" rx="2"></rect>
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                            </svg>
+                            Dikunci
+                        </span>
                     @endif
                 </div>
 
@@ -440,24 +476,41 @@
                     <!-- Comments -->
                     <button class="ms-2"
                         onclick="window.location.href='{{ route('manajemenmahasiswa.forum.show', $thread->id) }}'">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
                         {{ $thread->comments_count ?? $thread->comment_count }}
                     </button>
 
                     <!-- Share -->
                     <button class="share-btn ms-1" data-url="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                        </svg>
                     </button>
                 </div>
             </div>
         </a>
     @empty
         <div class="empty-state">
-            <div class="icon">💬</div>
+            <div class="icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+            </div>
             <h5 class="fw-bold text-dark">Belum ada diskusi</h5>
             <p>Jadilah yang pertama memulai diskusi!</p>
             <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post text-decoration-none">
-                Buat Post Pertama ⊕
+                Buat Post Pertama
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    class="ms-1">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
             </a>
         </div>
     @endforelse
@@ -484,7 +537,12 @@
                 <form id="reportForm" method="POST" action="">
                     @csrf
                     <div class="modal-header border-0 pb-0">
-                        <h5 class="modal-title fw-bold text-dark" id="reportModalLabel">🚩 Laporkan Thread</h5>
+                        <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M4 2v20h2v-7h10l-2-4 2-4H6V2H4z" />
+                            </svg>
+                            Laporkan Thread
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -568,7 +626,10 @@
 
                     navigator.clipboard.writeText(targetUrl).then(() => {
                         const originalHtml = this.innerHTML;
-                        this.innerHTML = '<span style="font-size: 14px;">✅</span>';
+                        this.innerHTML = `
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <polyline points="20 6 9 17 4 12"></polyline>
+                            </svg>`;
                         setTimeout(() => {
                             this.innerHTML = originalHtml;
                         }, 2000);

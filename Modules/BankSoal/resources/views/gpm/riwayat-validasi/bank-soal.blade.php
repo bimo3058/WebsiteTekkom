@@ -45,6 +45,7 @@
         .btn-filter:hover { background-color: #f8fafc; }
 
         .table-container { background-color: white; border-radius: 0.75rem; border: 1px solid #e2e8f0; overflow: hidden; }
+        .table-custom { table-layout: fixed; }
         .table-custom th { text-transform: uppercase; font-size: 0.75rem; color: #64748b; font-weight: 700; padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; background-color: #f8fafc; letter-spacing: 0.5px;}
         .table-custom td { padding: 1.25rem 1.5rem; vertical-align: middle; border-bottom: 1px solid #e2e8f0; }
         .table-custom tr:last-child td { border-bottom: none; }
@@ -125,7 +126,13 @@
                                     {{ $riwayat->tanggal_review ? \Carbon\Carbon::parse($riwayat->tanggal_review)->format('d M Y') : '-' }}
                                 </span>
                             </td>
-                            <td><span class="badge-status status-disetujui">SELESAI</span></td>
+                            <td>
+                                @if($riwayat->jumlah_revisi > 0)
+                                    <span class="badge-status status-ditolak text-danger bg-danger bg-opacity-10 w-100 text-center" style="font-size: 0.75rem; letter-spacing: 0.5px; border-color: #fca5a5;">DIKEMBALIKAN</span>
+                                @else
+                                    <span class="badge-status status-disetujui w-100 text-center">SELESAI</span>
+                                @endif
+                            </td>
                             <td class="text-center">
                                 <a href="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal.detail', $riwayat->mk_id) }}" class="btn btn-link text-decoration-none p-0 d-flex flex-column align-items-center">
                                     <i class="fas fa-eye fs-5"></i>

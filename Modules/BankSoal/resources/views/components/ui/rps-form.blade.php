@@ -1,5 +1,5 @@
 <!-- RPS Form Component -->
-<div class="card mb-8 overflow-hidden">
+<div class="card mb-8">
     <div class="card-header">
         <h2 class="text-lg font-semibold text-slate-900">Formulir Rencana Pembelajaran</h2>
     </div>
@@ -142,15 +142,6 @@
                     padding-bottom: 10px;
                 }
 
-                #dosenMs .ms-trigger {
-                    height: 38px;
-                    min-height: 38px;
-                }
-
-                #dosenMs .ms-placeholder,
-                #dosenMs .ms-selected {
-                    font-size: 14px;
-                }
             </style>
         @endonce
 

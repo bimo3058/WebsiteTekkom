@@ -71,12 +71,14 @@ class MahasiswaController extends Controller
         $request->validate([
             'nim' => 'required|string',
             'nama' => 'required|string',
+            'kontak_wa' => 'required|string|max:20',
             'semester' => 'required|integer|min:7',
             'target_wisuda' => 'required|string',
             'dosen_pembimbing_1_id' => 'required|exists:users,id',
             'dosen_pembimbing_2_id' => 'nullable|exists:users,id|different:dosen_pembimbing_1_id',
         ], [
-            'dosen_pembimbing_2_id.different' => 'Dosen Pembimbing 2 tidak boleh sama dengan Dosen Pembimbing 1'
+            'dosen_pembimbing_2_id.different' => 'Dosen Pembimbing 2 tidak boleh sama dengan Dosen Pembimbing 1',
+            'semester.min' => 'Mahasiswa minimal semester 7'
         ]);
 
         PendaftarUjian::create([
@@ -84,6 +86,7 @@ class MahasiswaController extends Controller
             'mahasiswa_id' => auth()->id(),
             'nim' => $request->nim,
             'nama_lengkap' => $request->nama,
+            'kontak_wa' => $request->kontak_wa,
             'semester_aktif' => $request->semester,
             'target_wisuda' => $request->target_wisuda,
             'dosen_pembimbing_1_id' => $request->dosen_pembimbing_1_id, 
