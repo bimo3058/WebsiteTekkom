@@ -41,24 +41,50 @@
             </x-slot:iconSlot>
         </x-manajemenmahasiswa::ui.sidebar-item>
 
-        <x-manajemenmahasiswa::ui.sidebar-item route="#">
-            <x-slot:iconSlot>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="9" cy="7" r="4"></circle>
-                    <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+        <div class="sidebar-dropdown {{ request()->routeIs('manajemenmahasiswa.direktori.*') ? 'open' : '' }}">
+            <a href="javascript:void(0)" class="nav-link-item sidebar-dropdown-toggle {{ request()->routeIs('manajemenmahasiswa.direktori.*') ? 'active' : '' }}"
+               onclick="this.closest('.sidebar-dropdown').classList.toggle('open')">
+                <span class="nav-icon d-inline-flex">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                    </svg>
+                </span>
+                <span class="nav-label" style="flex-grow: 1;">Direktori Mahasiswa</span>
+                <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
+                    <path d="m6 9 6 6 6-6" />
                 </svg>
-            </x-slot:iconSlot>
-            <div class="d-flex justify-content-between align-items-center w-100" style="flex-grow: 1;">
-                <span>Direktori Mahasiswa</span>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="m9 18 6-6-6-6" />
-                </svg>
+            </a>
+            <div class="sidebar-dropdown-menu">
+                <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.index') }}"
+                   class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.direktori.mahasiswa.*') ? 'active' : '' }}">
+                    <span class="nav-icon d-inline-flex">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                            <circle cx="12" cy="7" r="4"></circle>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Mahasiswa</span>
+                </a>
+                <a href="#"
+                   class="nav-link-item sub-item" style="opacity: 0.5; pointer-events: none;">
+                    <span class="nav-icon d-inline-flex">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                            <path d="M6 12v5c3 3 9 3 12 0v-5" />
+                        </svg>
+                    </span>
+                    <span class="nav-label">Alumni</span>
+                    <span style="font-size: 10px; background: #e5e7eb; color: #6b7280; padding: 1px 6px; border-radius: 8px; margin-left: auto; font-weight: 600;">Soon</span>
+                </a>
             </div>
-        </x-manajemenmahasiswa::ui.sidebar-item>
+        </div>
 
         <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.kegiatan.index') }}"
             routeName="manajemenmahasiswa.kegiatan" label="Kegiatan">
