@@ -15,6 +15,7 @@
         .btn-filter { border: 1px solid #e2e8f0; background-color: white; color: #475569; font-weight: 500; font-size: 0.9rem;}
         
         .table-container { background-color: white; border-radius: 0.75rem; border: 1px solid #e2e8f0; overflow: hidden; }
+        .table-rps { table-layout: fixed; }
         .table-rps th { text-transform: uppercase; font-size: 0.75rem; color: #64748b; font-weight: 600; padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; background-color: white; letter-spacing: 0.5px;}
         .table-rps td { padding: 1.25rem 1.5rem; vertical-align: middle; border-bottom: 1px solid #e2e8f0; }
         .table-rps tr:last-child td { border-bottom: none; }
@@ -213,7 +214,7 @@
                 <button type="button" class="btn btn-outline-secondary rounded-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalUploadTemplate">
                     <i class="fas fa-file-upload me-2"></i> Upload Template
                 </button>
-                <button type="button" class="btn btn-primary rounded-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalTambah">
+                <button type="button" class="btn btn-primary rounded-3 px-4 py-2px-3 py-2" data-bs-toggle="modal" data-bs-target="#modalTambah">
                     <i class="fas fa-calendar-plus me-2"></i> Buat Periode
                 </button>
             </div>
@@ -267,12 +268,16 @@
                                             @endphp
                                             @forelse($dosensList as $dosenItem)
                                                 @php
-                                                    [$initials, $dosenName] = explode('|', $dosenItem, 2);
+                                                    $parts = explode('|', $dosenItem, 2);
+                                                    $initials = $parts[0] ?? '';
+                                                    $dosenName = $parts[1] ?? $dosenItem;
                                                 @endphp
-                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                    <div class="avatar-text">{{ strtoupper($initials) }}</div>
-                                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosenName }}</span>
-                                                </div>
+                                                @if(!empty($dosenName))
+                                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                        <div class="avatar-text">{{ strtoupper($initials) }}</div>
+                                                        <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosenName }}</span>
+                                                    </div>
+                                                @endif
                                             @empty
                                                 <span class="text-muted" style="font-size: 0.85rem;">-</span>
                                             @endforelse
@@ -358,12 +363,16 @@
                                             @endphp
                                             @forelse($dosensList as $dosenItem)
                                                 @php
-                                                    [$initials, $dosenName] = explode('|', $dosenItem, 2);
+                                                    $parts = explode('|', $dosenItem, 2);
+                                                    $initials = $parts[0] ?? '';
+                                                    $dosenName = $parts[1] ?? $dosenItem;
                                                 @endphp
-                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                    <div class="avatar-text">{{ strtoupper($initials) }}</div>
-                                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosenName }}</span>
-                                                </div>
+                                                @if(!empty($dosenName))
+                                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                        <div class="avatar-text">{{ strtoupper($initials) }}</div>
+                                                        <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosenName }}</span>
+                                                    </div>
+                                                @endif
                                             @empty
                                                 <span class="text-muted" style="font-size: 0.85rem;">-</span>
                                             @endforelse
@@ -449,12 +458,16 @@
                                             @endphp
                                             @forelse($dosensList as $dosenItem)
                                                 @php
-                                                    [$initials, $dosenName] = explode('|', $dosenItem, 2);
+                                                    $parts = explode('|', $dosenItem, 2);
+                                                    $initials = $parts[0] ?? '';
+                                                    $dosenName = $parts[1] ?? $dosenItem;
                                                 @endphp
-                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                    <div class="avatar-text">{{ strtoupper($initials) }}</div>
-                                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosenName }}</span>
-                                                </div>
+                                                @if(!empty($dosenName))
+                                                    <div style="display: flex; align-items: center; gap: 0.5rem;">
+                                                        <div class="avatar-text">{{ strtoupper($initials) }}</div>
+                                                        <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosenName }}</span>
+                                                    </div>
+                                                @endif
                                             @empty
                                                 <span class="text-muted" style="font-size: 0.85rem;">-</span>
                                             @endforelse

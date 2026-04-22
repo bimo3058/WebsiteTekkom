@@ -40,8 +40,7 @@ class DashboardController extends Controller
             // 1. Ambil Antrean Bank Soal (Mata kuliah yang belum direview)
             $prioritasBankSoal = DB::table('bs_mata_kuliah')
                 ->join('bs_pertanyaan', 'bs_mata_kuliah.id', '=', 'bs_pertanyaan.mk_id')
-                ->leftJoin('bs_review', 'bs_pertanyaan.id', '=', 'bs_review.pertanyaan_id')
-                ->whereNull('bs_review.id')
+                ->where('bs_pertanyaan.status', 'diajukan')
                 ->select(
                     'bs_mata_kuliah.id as mk_id',
                     'bs_mata_kuliah.kode as mk_kode',
@@ -80,8 +79,7 @@ class DashboardController extends Controller
             $statRpsMenunggu  = $rpsDiajukan->count() + $rpsRevisi->count();
             $statBankSoalMenunggu = DB::table('bs_mata_kuliah')
                 ->join('bs_pertanyaan', 'bs_mata_kuliah.id', '=', 'bs_pertanyaan.mk_id')
-                ->leftJoin('bs_review', 'bs_pertanyaan.id', '=', 'bs_review.pertanyaan_id')
-                ->whereNull('bs_review.id')
+                ->where('bs_pertanyaan.status', 'diajukan')
                 ->distinct('bs_mata_kuliah.id')
                 ->count('bs_mata_kuliah.id');
             
@@ -112,7 +110,65 @@ class DashboardController extends Controller
 
         // Dosen
         if ($roles->contains('dosen')) {
-            return view('banksoal::dashboard.dosen');
+            $mataKuliah = \Modules\BankSoal\Models\MataKuliah::whereHas('dosenPengampu', function($q) use($user) {
+                $q->where('user_id', $user->id);
+            })->get();
+
+            $mkIds = $mataKuliah->pluck('id')->toArray();
+
+            // Query Pertanyaan Status Data
+            $totalSoal = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)->count();
+            $approved = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)->where('status', 'disetujui')->count();
+            $perluReview = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)->whereIn('status', ['diajukan'])->count();
+            $revisi = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)->where('status', 'revisi')->count();
+            $ditolak = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)->where('status', 'ditolak')->count();
+
+            // Data CPL untuk Bar Chart
+            $cplDistRaw = \Modules\BankSoal\Models\Pertanyaan::whereIn('mk_id', $mkIds)
+                ->join('bs_cpl', 'bs_cpl.id', '=', 'bs_pertanyaan.cpl_id')
+                ->selectRaw('bs_cpl.kode, COUNT(bs_pertanyaan.id) as count')
+                ->groupBy('bs_cpl.id', 'bs_cpl.kode')
+                ->get();
+                
+            $cplDist = $cplDistRaw->pluck('count', 'kode')->toArray();
+
+            // Data MK untuk Bar Chart
+            $mkDist = [];
+            $mkTanpaRps = [];
+            foreach ($mataKuliah as $mk) {
+                $count = \Modules\BankSoal\Models\Pertanyaan::where('mk_id', $mk->id)->count();
+                $mkDist[] = [
+                    'mk' => $mk->kode,
+                    'count' => $count,
+                    'color' => $count > 0 ? '#22C55E' : '#CBD5E1'
+                ];
+
+                // Cek RPS
+                $rpsCount = \Illuminate\Support\Facades\DB::table('bs_rps_detail')->where('mk_id', $mk->id)->count();
+                if ($rpsCount == 0) {
+                    $mkTanpaRps[] = $mk->nama;
+                }
+            }
+            
+            $donutData = [
+                ['value' => $approved, 'color' => '#22C55E'],
+                ['value' => $revisi, 'color' => '#F59E0B'],
+                ['value' => $perluReview, 'color' => '#3B82F6'],
+                ['value' => $ditolak, 'color' => '#EF4444'],
+            ];
+
+            return view('banksoal::dashboard.dosen', compact(
+                'mataKuliah',
+                'totalSoal',
+                'approved',
+                'perluReview',
+                'revisi',
+                'ditolak',
+                'cplDist',
+                'mkDist',
+                'donutData',
+                'mkTanpaRps'
+            ));
         }
 
         // Mahasiswa

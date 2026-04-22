@@ -319,7 +319,11 @@
     <form method="GET" action="{{ route('manajemenmahasiswa.forum.index') }}" id="forumFilterForm">
         <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-4">
             <div class="search-wrapper w-100 me-0 me-md-2">
-                <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg></span>
+                <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="11" cy="11" r="8"></circle>
+                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg></span>
                 <input type="text" name="search" class="form-control search-input w-100" placeholder="Cari diskusi..."
                     value="{{ request('search') }}">
             </div>
@@ -377,7 +381,17 @@
                                     <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
                                         onsubmit="return confirm('Yakin ingin menghapus thread ini?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="dropdown-item text-danger">🗑️ Hapus</button>
+                                        <button type="submit" class="dropdown-item text-danger">
+                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2" class="me-1">
+                                                <polyline points="3 6 5 6 21 6"></polyline>
+                                                <path d="M19 6l-1 14H6L5 6"></path>
+                                                <path d="M10 11v6"></path>
+                                                <path d="M14 11v6"></path>
+                                                <path d="M9 6V4h6v2"></path>
+                                            </svg>
+                                            Hapus
+                                        </button>
                                     </form>
                                 </li>
                             @else
@@ -439,13 +453,20 @@
                     <!-- Comments -->
                     <button class="ms-2"
                         onclick="window.location.href='{{ route('manajemenmahasiswa.forum.show', $thread->id) }}'">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" class="me-1">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
                         {{ $thread->comments_count ?? $thread->comment_count }}
                     </button>
 
                     <!-- Share -->
                     <button class="share-btn ms-1" data-url="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                        </svg>
                     </button>
                 </div>
             </div>
@@ -567,7 +588,10 @@
 
                     navigator.clipboard.writeText(targetUrl).then(() => {
                         const originalHtml = this.innerHTML;
-                        this.innerHTML = '<span style="font-size: 14px;">✅</span>';
+                        this.innerHTML = `
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <polyline points="20 6 9 17 4 12"></polyline>
+                                </svg>`;
                         setTimeout(() => {
                             this.innerHTML = originalHtml;
                         }, 2000);
