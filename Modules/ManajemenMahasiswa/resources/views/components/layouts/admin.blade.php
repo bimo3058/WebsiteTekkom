@@ -112,6 +112,24 @@
             min-height: calc(100vh - 120px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
+
+        /* Sidebar Dropdown */
+        .sidebar-dropdown-menu {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.25s ease;
+            padding-left: 20px;
+        }
+        .sidebar-dropdown.open .sidebar-dropdown-menu {
+            max-height: 200px;
+        }
+        .sidebar-dropdown.open .dropdown-arrow {
+            transform: rotate(180deg);
+        }
+        .sidebar-dropdown .sub-item {
+            font-size: 14px !important;
+            padding: 9px 16px !important;
+        }
     </style>
 
     @stack('styles')
