@@ -101,6 +101,57 @@
         font-weight: 400;
     }
 
+    /* ── Checkbox Card Group ── */
+    .checkbox-card-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .checkbox-card {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        background: #fff;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 13px;
+        font-weight: 500;
+        color: #374151;
+        user-select: none;
+    }
+    .checkbox-card:hover {
+        border-color: #a5b4fc;
+        background: #f5f3ff;
+    }
+    .checkbox-card input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #4f46e5;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .checkbox-card.checked {
+        border-color: #4f46e5;
+        background: #eef2ff;
+        color: #4338ca;
+        font-weight: 600;
+    }
+    .checkbox-card.disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+    .checkbox-hint {
+        font-size: 11px;
+        color: #9ca3af;
+        font-weight: 400;
+        margin-top: 6px;
+    }
+
     /* ── Banner Preview ── */
     .banner-upload-area {
         border: 2px dashed #d1d5db;
@@ -375,6 +426,8 @@
     }
     $existingFoto = $kegiatan->repoMulmed->where('tipe_file', 'image');
     $existingDokumen = $kegiatan->repoMulmed->where('tipe_file', 'document');
+    $selectedKategoriIds = old('kategori_kegiatan_id', $kegiatan->kategoris->pluck('id')->toArray());
+    $selectedBidangIds = old('bidang_id', $kegiatan->bidangs->pluck('id')->toArray());
 @endphp
 
 <!-- Header -->
@@ -417,37 +470,42 @@
         <div class="row g-3 mb-3">
             <div class="col-md-4">
                 <label class="form-label-custom">Kategori <span class="required">*</span></label>
-                <select name="kategori_kegiatan_id" id="kategoriSelect" class="form-select form-select-custom" required onchange="toggleBidangField()">
-                    <option value="">— Pilih Kategori —</option>
+                <div class="checkbox-card-group" id="kategoriGroup">
                     @foreach($kategoriList as $kategori)
-                        <option value="{{ $kategori->id }}"
-                                data-is-prodi="{{ stripos($kategori->nama_kategori, 'prodi') !== false ? '1' : '0' }}"
-                            {{ old('kategori_kegiatan_id', $kegiatan->kategori_kegiatan_id) == $kategori->id ? 'selected' : '' }}>
+                        <label class="checkbox-card" id="kategoriCard{{ $kategori->id }}">
+                            <input type="checkbox" name="kategori_kegiatan_id[]"
+                                   value="{{ $kategori->id }}"
+                                   data-is-prodi="{{ stripos($kategori->nama_kategori, 'prodi') !== false ? '1' : '0' }}"
+                                   onchange="handleKategoriChange()"
+                                   {{ in_array($kategori->id, $selectedKategoriIds) ? 'checked' : '' }}>
                             {{ $kategori->nama_kategori }}
-                        </option>
+                        </label>
                     @endforeach
-                </select>
+                </div>
+                <div class="checkbox-hint">Pilih maksimal 2 kategori</div>
             </div>
             <div class="col-md-4" id="bidangFieldWrapper">
                 <label class="form-label-custom">Bidang <span class="required" id="bidangRequired">*</span></label>
-                <select name="bidang_id" id="bidangSelect" class="form-select form-select-custom" required>
-                    <option value="">— Pilih Bidang —</option>
+                <div class="checkbox-card-group" id="bidangGroup">
                     @foreach($bidangList as $bidang)
-                        <option value="{{ $bidang->id }}"
-                            {{ old('bidang_id', $kegiatan->bidang_id) == $bidang->id ? 'selected' : '' }}>
+                        <label class="checkbox-card" id="bidangCard{{ $bidang->id }}">
+                            <input type="checkbox" name="bidang_id[]"
+                                   value="{{ $bidang->id }}"
+                                   {{ in_array($bidang->id, $selectedBidangIds) ? 'checked' : '' }}>
                             {{ $bidang->nama_bidang }}
-                        </option>
+                        </label>
                     @endforeach
-                </select>
+                </div>
+                <div class="checkbox-hint">Pilih satu atau lebih bidang</div>
             </div>
             <div class="col-md-4">
-                <label class="form-label-custom">Kepengurusan</label>
-                <select name="kepengurusan_id" class="form-select form-select-custom">
-                    <option value="">— Pilih Kepengurusan —</option>
-                    @foreach($kepengurusanList as $kp)
-                        <option value="{{ $kp->id }}"
-                            {{ old('kepengurusan_id', $kegiatan->kepengurusan_id) == $kp->id ? 'selected' : '' }}>
-                            {{ $kp->tahun_periode }}
+                <label class="form-label-custom">Tahun</label>
+                <select name="tahun" class="form-select form-select-custom">
+                    <option value="">— Pilih Tahun —</option>
+                    @foreach($tahunList as $t)
+                        <option value="{{ $t }}"
+                            {{ old('tahun', $kegiatan->tahun) == $t ? 'selected' : '' }}>
+                            {{ $t }}
                         </option>
                     @endforeach
                 </select>
@@ -861,29 +919,79 @@ function formatFileSize(bytes) {
     });
 });
 
-// ── Toggle Bidang Field based on Kategori ──
-function toggleBidangField() {
-    const kategoriSelect = document.getElementById('kategoriSelect');
-    const bidangWrapper = document.getElementById('bidangFieldWrapper');
-    const bidangSelect = document.getElementById('bidangSelect');
-    const bidangRequired = document.getElementById('bidangRequired');
-    const selected = kategoriSelect.options[kategoriSelect.selectedIndex];
-    const isProdi = selected && selected.getAttribute('data-is-prodi') === '1';
+// ── Toggle Bidang Field based on Kategori (checkbox version) ──
+function handleKategoriChange() {
+    const checkboxes = document.querySelectorAll('#kategoriGroup input[type="checkbox"]');
+    const checked = document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked');
+    const maxKategori = 2;
 
-    if (isProdi) {
-        bidangWrapper.style.display = 'none';
-        bidangSelect.removeAttribute('required');
-        bidangSelect.value = '';
+    // Enforce max 2 selections
+    checkboxes.forEach(cb => {
+        const card = cb.closest('.checkbox-card');
+        if (cb.checked) {
+            card.classList.add('checked');
+        } else {
+            card.classList.remove('checked');
+        }
+    });
+
+    if (checked.length >= maxKategori) {
+        checkboxes.forEach(cb => {
+            if (!cb.checked) {
+                cb.closest('.checkbox-card').classList.add('disabled');
+                cb.disabled = true;
+            }
+        });
+    } else {
+        checkboxes.forEach(cb => {
+            cb.closest('.checkbox-card').classList.remove('disabled');
+            cb.disabled = false;
+        });
+    }
+
+    // Toggle bidang visibility
+    toggleBidangField();
+}
+
+function toggleBidangField() {
+    const checked = document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked');
+    const bidangRequired = document.getElementById('bidangRequired');
+
+    // Only hide the required asterisk if ALL selected are prodi
+    let allProdi = checked.length > 0;
+    checked.forEach(cb => {
+        if (cb.getAttribute('data-is-prodi') !== '1') {
+            allProdi = false;
+        }
+    });
+
+    if (allProdi && checked.length > 0) {
         if (bidangRequired) bidangRequired.style.display = 'none';
     } else {
-        bidangWrapper.style.display = '';
-        bidangSelect.setAttribute('required', 'required');
         if (bidangRequired) bidangRequired.style.display = '';
     }
 }
 
-// Run on page load in case kegiatan already has prodi kategori
-document.addEventListener('DOMContentLoaded', toggleBidangField);
+// ── Initialize checkbox card states on page load ──
+document.addEventListener('DOMContentLoaded', function() {
+    // Set initial 'checked' class on pre-selected cards
+    document.querySelectorAll('.checkbox-card input[type="checkbox"]:checked').forEach(cb => {
+        cb.closest('.checkbox-card').classList.add('checked');
+    });
+
+    // Add change listeners for bidang cards styling
+    document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', function() {
+            if (this.checked) {
+                this.closest('.checkbox-card').classList.add('checked');
+            } else {
+                this.closest('.checkbox-card').classList.remove('checked');
+            }
+        });
+    });
+
+    handleKategoriChange();
+});
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
