@@ -1,586 +1,593 @@
 <x-banksoal::layouts.gpm-master>
-
-    @section('page-title', 'Validasi RPS')
-    @section('page-subtitle', 'Pantau riwayat dokumen RPS yang telah direview')
-
     <style>
-        .nav-tabs-custom { border-bottom: 2px solid #e2e8f0; }
-        .nav-tabs-custom .nav-link { border: none; color: #64748b; font-weight: 600; padding: 1rem 0; margin-right: 2rem; background: transparent; font-size: 0.95rem; }
-        .nav-tabs-custom .nav-link.active { color: #2563eb; border-bottom: 2px solid #2563eb; }
-        .badge-count { background-color: #dbeafe; color: #1e40af; border-radius: 9999px; padding: 0.15rem 0.6rem; font-size: 0.75rem; margin-left: 0.5rem; font-weight: 700;}
+        /* Animasi untuk background gelap (fade in) */
+        @keyframes modalFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
         
-        .search-container { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; }
-        .search-input { border: none; background: transparent; box-shadow: none !important; }
-        .search-input:focus { outline: none; box-shadow: none; background: transparent; }
-        .btn-filter { border: 1px solid #e2e8f0; background-color: white; color: #475569; font-weight: 500; font-size: 0.9rem;}
-        
-        .table-container { background-color: white; border-radius: 0.75rem; border: 1px solid #e2e8f0; overflow: hidden; }
-        .table-rps { table-layout: fixed; }
-        .table-rps th { text-transform: uppercase; font-size: 0.75rem; color: #64748b; font-weight: 600; padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; background-color: white; letter-spacing: 0.5px;}
-        .table-rps td { padding: 1.25rem 1.5rem; vertical-align: middle; border-bottom: 1px solid #e2e8f0; }
-        .table-rps tr:last-child td { border-bottom: none; }
-        
-        .badge-menunggu { background-color: #fef3c7; color: #d97706; border: 1px solid #fde68a; font-weight: 600; padding: 0.35rem 0.75rem; font-size: 0.7rem; border-radius: 0.375rem; letter-spacing: 0.5px;}
-        .badge-revisi { background-color: #fed7aa; color: #b45309; border: 1px solid #fdba74; font-weight: 600; padding: 0.35rem 0.75rem; font-size: 0.7rem; border-radius: 0.375rem; letter-spacing: 0.5px;}
-        .badge-disetujui { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; font-weight: 600; padding: 0.35rem 0.75rem; font-size: 0.7rem; border-radius: 0.375rem; letter-spacing: 0.5px;}
-        .avatar-text { width: 32px; height: 32px; border-radius: 50%; background-color: #eff6ff; color: #2563eb; display: inline-flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: 600; margin-right: 0.75rem; }
-        
-        .btn-review { background-color: #2563eb; color: white; border-radius: 0.375rem; font-weight: 500; font-size: 0.85rem; padding: 0.5rem 1.25rem; border: none; transition: 0.2s; }
-        .btn-review:hover { background-color: #1d4ed8; color: white;}
-        
-        .pagination-custom .page-link { color: #475569; border: 1px solid #e2e8f0; margin: 0 0.25rem; border-radius: 0.375rem; font-size: 0.875rem;}
-        .pagination-custom .page-item.active .page-link { background-color: #2563eb; border-color: #2563eb; color: white; }
+        /* Animasi untuk kotak modal (pop up dari bawah/kecil ke ukuran asli) */
+        @keyframes modalPopUp {
+            from { opacity: 0; transform: scale(0.95) translateY(10px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
+        }
+
+        .animate-backdrop {
+            animation: modalFadeIn 0.25s ease-out forwards;
+        }
+
+        .animate-popup {
+            animation: modalPopUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
     </style>
 
-    <div class="container-fluid py-4 px-4 px-xl-5">
+    <x-banksoal::notification.alerts />
+    <x-banksoal::ui.page-header title="Validasi RPS" subtitle="Pantau riwayat dokumen RPS yang telah direview">
+        <x-slot:actions>
+            <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50" data-modal-open="modalUploadTemplate">
+                <i class="fas fa-file-upload"></i> Upload Template
+            </button>
+            <button type="button" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700" data-modal-open="modalTambah">
+                <i class="fas fa-calendar-plus"></i> Buat Periode
+            </button>
+        </x-slot:actions>
+    </x-banksoal::ui.page-header>
 
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                const topbarTitle = document.getElementById('topbar-title');
-                const topbarSubtitle = document.getElementById('topbar-subtitle');
-                if(topbarTitle) topbarTitle.textContent = "Validasi RPS";
-                if(topbarSubtitle) topbarSubtitle.textContent = "Pantau riwayat dokumen RPS yang telah direview";
-
-                // Flash messages auto close
-                setTimeout(() => {
-                    const alerts = document.querySelectorAll('.alert-dismissible');
-                    alerts.forEach(alert => {
-                        const bsAlert = new bootstrap.Alert(alert);
-                        bsAlert.close();
-                    });
-                }, 5000);
-
-                // Debounce function
-                function debounce(func, delay) {
-                    let timeoutId;
-                    return function(...args) {
-                        clearTimeout(timeoutId);
-                        timeoutId = setTimeout(() => func.apply(this, args), delay);
-                    };
-                }
-
-                // Enhanced search table function
-                function searchTable(searchInput, tabId) {
-                    const searchValue = searchInput.value.toLowerCase().trim();
-                    const tabContent = document.getElementById(tabId);
-                    
-                    if (!tabContent) {
-                        console.error(`Tab ${tabId} tidak ditemukan`);
-                        return;
-                    }
-
-                    // Cari semua rows dalam table tbody
-                    const rows = tabContent.querySelectorAll('table tbody tr');
-                    let visibleCount = 0;
-
-                    rows.forEach(row => {
-                        // Ambil text dari cell mata kuliah dan dosen
-                        const cells = row.querySelectorAll('td');
-                        let rowText = '';
-                        
-                        // Gabung text dari cell 1 (mata kuliah) dan cell 2 (dosen)
-                        if (cells.length >= 2) {
-                            rowText = (cells[0].textContent + ' ' + cells[1].textContent).toLowerCase();
-                        } else {
-                            rowText = row.textContent.toLowerCase();
-                        }
-
-                        // Cari apakah searchValue ada di dalam rowText
-                        if (rowText.includes(searchValue) || searchValue === '') {
-                            row.style.display = '';
-                            visibleCount++;
-                        } else {
-                            row.style.display = 'none';
-                        }
-                    });
-
-                    // Tampilkan/sembunyikan no results message
-                    const noResultsMsg = tabContent.querySelector('.no-results-message');
-                    if (noResultsMsg) {
-                        noResultsMsg.style.display = visibleCount === 0 ? '' : 'none';
-                    }
-
-                    console.log(`Tab ${tabId}: menampilkan ${visibleCount} dari ${rows.length} results`);
-                }
-
-                // Initialize search inputs dengan debounce
-                const searchInputs = document.querySelectorAll('.search-input');
-                console.log(`Ditemukan ${searchInputs.length} search input`);
-
-                searchInputs.forEach((input, index) => {
-                    const tabId = input.getAttribute('data-search-tab');
-                    console.log(`Input ${index}: target tab = ${tabId}`);
-
-                    input.addEventListener('input', debounce(function() {
-                        console.log(`Searching in ${tabId}: "${this.value}"`);
-                        searchTable(this, tabId);
-                    }, 300));
-                });
-            });
-        </script>
-
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
-                <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i> {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        @if($activePeriode)
-            <div class="card border-0 mb-4 rounded-4" style="box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); background: #f8fafc; border-left: 4px solid {{ $isPeriodeRunning ? '#10b981' : '#94a3b8' }} !important;">
-                <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center flex-column flex-md-row gap-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: {{ $isPeriodeRunning ? '#d1fae5' : '#e2e8f0' }}; color: {{ $isPeriodeRunning ? '#059669' : '#64748b' }};">
-                            <i class="fas fa-calendar-check fs-5"></i>
-                        </div>
-                        <div>
-                            <h6 class="mb-1 fw-bold text-dark" style="font-size: 1rem;">{{ $activePeriode->judul }}</h6>
-                            <div class="text-muted" style="font-size: 0.85rem;">
-                                Tenggat: {{ \Carbon\Carbon::parse($activePeriode->tanggal_mulai)->translatedFormat('d M Y') }} s.d. {{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->translatedFormat('d M Y') }}
-                            </div>
-                        </div>
+    @if($activePeriode)
+        <div class="mb-6 rounded-2xl border border-slate-200 bg-slate-50 p-4 border-l-4 {{ $isPeriodeRunning ? 'border-emerald-500' : 'border-slate-400' }}">
+            <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full {{ $isPeriodeRunning ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-600' }}">
+                        <i class="fas fa-calendar-check"></i>
                     </div>
-                    <div class="d-flex align-items-center gap-2" style="flex-wrap: wrap; justify-content: flex-end;">
-                        <div>
-                            @if($isPeriodeRunning)
-                                <span class="badge bg-success py-2 px-3 rounded-pill" style="background-color: #10b981 !important; color: white !important; font-weight: 500; font-size: 0.85rem;">
-                                    <i class="fas fa-circle me-1" style="font-size: 0.5rem; vertical-align: middle;"></i> Sesi Dibuka
-                                </span>
-                            @else
-                                <span class="badge bg-secondary py-2 px-3 rounded-pill" style="background-color: #64748b !important; color: white !important; font-weight: 500; font-size: 0.85rem;">
-                                    <i class="fas fa-times-circle me-1" style="font-size: 0.8rem; vertical-align: middle;"></i> Sesi Berakhir
-                                </span>
-                            @endif
-                        </div>
-                        @if($isPeriodeRunning)
-                            <button type="button" class="btn btn-sm btn-outline-danger rounded-3 px-3 py-2" data-bs-toggle="modal" data-bs-target="#modalCloseSession" style="font-weight: 500; font-size: 0.85rem;">
-                                <i class="fas fa-power-off me-1" style="font-size: 0.75rem;"></i> Matikan Sesi
-                            </button>
-                        @endif
+                    <div>
+                        <p class="text-sm font-semibold text-slate-900">{{ $activePeriode->judul }}</p>
+                        <p class="text-xs text-slate-500">Tenggat: {{ \Carbon\Carbon::parse($activePeriode->tanggal_mulai)->translatedFormat('d M Y') }} s.d. {{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->translatedFormat('d M Y') }}</p>
                     </div>
                 </div>
+                <div class="flex items-center gap-3 flex-wrap">
+                    @if($isPeriodeRunning)
+                        <span class="inline-flex items-center rounded-full bg-emerald-100 px-3 py-1 text-xs font-semibold text-emerald-700">
+                            <i class="fas fa-circle mr-2 text-[8px]"></i> Sesi Dibuka
+                        </span>
+                        <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50" data-modal-open="modalCloseSession">
+                            <i class="fas fa-power-off"></i> Matikan Sesi
+                        </button>
+                    @else
+                        <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                            <i class="fas fa-times-circle mr-2"></i> Sesi Berakhir
+                        </span>
+                    @endif
+                </div>
             </div>
-        @else
-            <div class="card border-0 mb-4 rounded-4" style="box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03); background: #f8fafc; border-left: 4px solid #f59e0b !important;">
-                <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center flex-column flex-md-row gap-3">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 40px; height: 40px; background-color: #fef3c7; color: #d97706;">
-                            <i class="fas fa-calendar-times fs-5"></i>
+        </div>
+    @else
+        <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 border-l-4 border-amber-400">
+            <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600">
+                        <i class="fas fa-calendar-times"></i>
+                    </div>
+                    <div>
+                        <p class="text-sm font-semibold text-amber-900">
+                            @if($inactivePeriodes->count() > 0)
+                                Tidak ada sesi yang aktif
+                            @else
+                                Belum ada jadwal pengajuan
+                            @endif
+                        </p>
+                        <p class="text-xs text-amber-800">
+                            @if($inactivePeriodes->count() > 0)
+                                Pilih periode di bawah untuk mengaktifkan sesi
+                            @else
+                                Tidak ada sesi pengajuan RPS yang ditambahkan saat ini
+                            @endif
+                        </p>
+                    </div>
+                </div>
+                <span class="inline-flex items-center rounded-full bg-amber-100 px-3 py-1 text-xs font-semibold text-amber-700">
+                    <i class="fas fa-exclamation-circle mr-2"></i> Belum Aktif
+                </span>
+            </div>
+        </div>
+
+        @if($inactivePeriodes->count() > 0)
+            <div class="mb-6">
+                <h3 class="text-sm font-semibold text-slate-900 mb-3">Periode Tersedia</h3>
+                <div class="space-y-3">
+                    @foreach($inactivePeriodes as $periode)
+                        <div class="bg-white border border-slate-200 rounded-2xl p-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="flex h-9 w-9 items-center justify-center rounded-full bg-indigo-100 text-indigo-600">
+                                    <i class="fas fa-calendar"></i>
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-900">{{ $periode->judul }}</p>
+                                    <p class="text-xs text-slate-500">{{ \Carbon\Carbon::parse($periode->tanggal_mulai)->translatedFormat('d M Y H:i') }} s.d. {{ \Carbon\Carbon::parse($periode->tanggal_selesai)->translatedFormat('d M Y H:i') }}</p>
+                                </div>
+                            </div>
+                            <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50" data-modal-open="modalOpenSession" data-periode-id="{{ $periode->id }}" data-periode-judul="{{ $periode->judul }}" onclick="setPeriodeData(this)">
+                                <i class="fas fa-power-off"></i> Nyalakan Sesi
+                            </button>
                         </div>
-                        <div>
-                            <h6 class="mb-1 fw-bold text-dark" style="font-size: 1rem;">
-                                @if($inactivePeriodes->count() > 0)
-                                    Tidak Ada Sesi yang Aktif
-                                @else
-                                    Belum Ada Jadwal Pengajuan
-                                @endif
-                            </h6>
-                            <div class="text-muted" style="font-size: 0.85rem;">
-                                @if($inactivePeriodes->count() > 0)
-                                    Pilih periode di bawah untuk mengaktifkan sesi
-                                @else
-                                    Tidak ada sesi pengajuan RPS yang ditambahkan saat ini
-                                @endif
+                    @endforeach
+                </div>
+            </div>
+        @endif
+    @endif
+
+    <div data-tabs>
+        <div class="flex flex-col gap-4 border-b border-slate-200 pb-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
+            <div class="flex flex-wrap gap-6 text-sm font-semibold">
+                <button type="button" class="pb-2 border-b-2 border-blue-600 text-blue-600" data-tab-target="menunggu" data-tab-active>
+                    Menunggu Validasi
+                    <span class="ml-2 inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-200">{{ $rpsDiajukan->total() }}</span>
+                </button>
+                <button type="button" class="pb-2 border-b-2 border-transparent text-slate-500" data-tab-target="revisi">
+                    Menunggu Revisi
+                    <span class="ml-2 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600 border border-slate-200">{{ $rpsRevisi->total() }}</span>
+                </button>
+                <button type="button" class="pb-2 border-b-2 border-transparent text-slate-500" data-tab-target="disetujui">
+                    Disetujui
+                    <span class="ml-2 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600 border border-slate-200">{{ $rpsDisetujui->total() }}</span>
+                </button>
+            </div>
+        </div>
+
+        <div data-tab-panel="menunggu">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <input type="text" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" data-search-tab="menunggu" placeholder="Cari mata kuliah atau dosen...">
+                </div>
+                <button class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mata Kuliah</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Dosen Pengampu</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanggal Diajukan</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse($rpsDiajukan as $rps)
+                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="font-semibold text-slate-900">{{ $rps->mataKuliah->nama }} ({{ $rps->mataKuliah->kode }})</div>
+                                        <div class="text-xs text-slate-500">Semester {{ $rps->semester }} {{ $rps->tahun_ajaran }}</div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col gap-2">
+                                            @forelse($rps->dosens as $dosen)
+                                                @php
+                                                    $names = explode(' ', $dosen->name);
+                                                    $first = $names[0] ?? '';
+                                                    $last = $names[array_key_last($names)] ?? '';
+                                                    $initials = strtoupper(substr($first, 0, 1) . substr($last, 0, 1));
+                                                @endphp
+                                                <div class="flex items-center gap-2">
+                                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ $initials }}</div>
+                                                    <span class="text-sm font-medium text-slate-700">{{ $dosen->name }}</span>
+                                                </div>
+                                            @empty
+                                                <span class="text-xs text-slate-500">-</span>
+                                            @endforelse
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-slate-600">{{ $rps->created_at->format('d M Y') }}</td>
+                                    <td class="px-6 py-4"><span class="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 border border-amber-200">Menunggu</span></td>
+                                    <td class="px-6 py-4 text-right">
+                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700">
+                                            <i class="fas fa-comment-dots"></i> Review Sekarang
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-6 py-10 text-center text-slate-600">Tidak ada RPS yang menunggu validasi</td>
+                                </tr>
+                            @endforelse
+                            <tr class="no-results-message hidden">
+                                <td colspan="5" class="px-6 py-10 text-center text-slate-600">Tidak ada hasil pencarian</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <span class="text-xs text-slate-500">Menampilkan {{ $rpsDiajukan->count() }} dari {{ $rpsDiajukan->total() }} entri</span>
+                {{ $rpsDiajukan->links() }}
+            </div>
+        </div>
+
+        <div class="hidden" data-tab-panel="revisi">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <input type="text" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" data-search-tab="revisi" placeholder="Cari mata kuliah atau dosen...">
+                </div>
+                <button class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mata Kuliah</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Dosen Pengampu</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanggal Review</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse($rpsRevisi as $rps)
+                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="font-semibold text-slate-900">{{ $rps->mataKuliah->nama }} ({{ $rps->mataKuliah->kode }})</div>
+                                        <div class="text-xs text-slate-500">Semester {{ $rps->semester }} {{ $rps->tahun_ajaran }}</div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col gap-2">
+                                            @forelse($rps->dosens as $dosen)
+                                                @php
+                                                    $names = explode(' ', $dosen->name);
+                                                    $first = $names[0] ?? '';
+                                                    $last = $names[array_key_last($names)] ?? '';
+                                                    $initials = strtoupper(substr($first, 0, 1) . substr($last, 0, 1));
+                                                @endphp
+                                                <div class="flex items-center gap-2">
+                                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ $initials }}</div>
+                                                    <span class="text-sm font-medium text-slate-700">{{ $dosen->name }}</span>
+                                                </div>
+                                            @empty
+                                                <span class="text-xs text-slate-500">-</span>
+                                            @endforelse
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-slate-600">{{ $rps->updated_at->format('d M Y') }}</td>
+                                    <td class="px-6 py-4"><span class="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 border border-amber-200">Revisi</span></td>
+                                    <td class="px-6 py-4 text-right">
+                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700">
+                                            <i class="fas fa-edit"></i> Lihat Catatan
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-6 py-10 text-center text-slate-600">Tidak ada RPS yang menunggu revisi</td>
+                                </tr>
+                            @endforelse
+                            <tr class="no-results-message hidden">
+                                <td colspan="5" class="px-6 py-10 text-center text-slate-600">Tidak ada hasil pencarian</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <span class="text-xs text-slate-500">Menampilkan {{ $rpsRevisi->count() }} dari {{ $rpsRevisi->total() }} entri</span>
+                {{ $rpsRevisi->links() }}
+            </div>
+        </div>
+
+        <div class="hidden" data-tab-panel="disetujui">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                <div class="relative flex-1">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                        </svg>
+                    </div>
+                    <input type="text" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" data-search-tab="disetujui" placeholder="Cari mata kuliah atau dosen...">
+                </div>
+                <button class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+                    <i class="fas fa-filter"></i> Filter
+                </button>
+            </div>
+
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-slate-50 border-b border-slate-200">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mata Kuliah</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Dosen Pengampu</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanggal Disetujui</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @forelse($rpsDisetujui as $rps)
+                                <tr class="hover:bg-slate-50/50 transition-colors">
+                                    <td class="px-6 py-4">
+                                        <div class="font-semibold text-slate-900">{{ $rps->mataKuliah->nama }} ({{ $rps->mataKuliah->kode }})</div>
+                                        <div class="text-xs text-slate-500">Semester {{ $rps->semester }} {{ $rps->tahun_ajaran }}</div>
+                                    </td>
+                                    <td class="px-6 py-4">
+                                        <div class="flex flex-col gap-2">
+                                            @forelse($rps->dosens as $dosen)
+                                                @php
+                                                    $names = explode(' ', $dosen->name);
+                                                    $first = $names[0] ?? '';
+                                                    $last = $names[array_key_last($names)] ?? '';
+                                                    $initials = strtoupper(substr($first, 0, 1) . substr($last, 0, 1));
+                                                @endphp
+                                                <div class="flex items-center gap-2">
+                                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ $initials }}</div>
+                                                    <span class="text-sm font-medium text-slate-700">{{ $dosen->name }}</span>
+                                                </div>
+                                            @empty
+                                                <span class="text-xs text-slate-500">-</span>
+                                            @endforelse
+                                        </div>
+                                    </td>
+                                    <td class="px-6 py-4 text-sm text-slate-600">{{ $rps->updated_at->format('d M Y') }}</td>
+                                    <td class="px-6 py-4"><span class="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 border border-emerald-200">Disetujui</span></td>
+                                    <td class="px-6 py-4 text-right">
+                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700">
+                                            <i class="fas fa-eye"></i> Lihat Detail
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="5" class="px-6 py-10 text-center text-slate-600">Belum ada RPS yang disetujui</td>
+                                </tr>
+                            @endforelse
+                            <tr class="no-results-message hidden">
+                                <td colspan="5" class="px-6 py-10 text-center text-slate-600">Tidak ada hasil pencarian</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <span class="text-xs text-slate-500">Menampilkan {{ $rpsDisetujui->count() }} dari {{ $rpsDisetujui->total() }} entri</span>
+                {{ $rpsDisetujui->links() }}
+            </div>
+        </div>
+    </div>
+
+    <div id="modalUploadTemplate" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+        <div class="absolute inset-0 bg-slate-900/40 animate-backdrop" data-modal-overlay="modalUploadTemplate"></div>
+        <div class="relative mx-auto mt-16 w-full max-w-xl rounded-2xl bg-white shadow-xl animate-popup">
+            <form id="formUploadTemplate" enctype="multipart/form-data">
+                @csrf
+                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                    <h2 class="text-sm font-semibold text-slate-900">Upload Template RPS</h2>
+                    <button type="button" class="text-slate-400 hover:text-slate-600" data-modal-close="modalUploadTemplate">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="px-5 py-4 space-y-4">
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600">File Template (Word Format) <span class="text-rose-500">*</span></label>
+                        <div class="upload-box-modal mt-2 rounded-xl border-2 border-dashed border-slate-200 p-4 text-center cursor-pointer">
+                            <i class="fas fa-cloud-upload-alt text-slate-400 text-2xl mb-2"></i>
+                            <p class="text-sm text-slate-500">Dragdrop file atau <span class="text-blue-600 underline">pilih file</span></p>
+                            <p class="text-xs text-slate-400">Format: .doc, .docx (Maksimal 1 MB)</p>
+                            <input type="file" name="dokumen" id="fileInputModal" accept=".doc,.docx" required class="hidden">
+                            <div class="file-selected-modal mt-3 hidden">
+                                <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+                                    <i class="fas fa-check-circle mr-2"></i>
+                                    <span class="file-name-modal"></span>
+                                </div>
                             </div>
                         </div>
                     </div>
                     <div>
-                        <span class="badge py-2 px-3 rounded-pill" style="background-color: #fef3c7 !important; color: #d97706 !important; font-weight: 500; font-size: 0.85rem;">
-                            <i class="fas fa-exclamation-circle me-1" style="font-size: 0.75rem; vertical-align: middle;"></i> Belum Aktif
-                        </span>
+                        <label class="text-xs font-semibold text-slate-600">Keterangan (Opsional)</label>
+                        <textarea class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="keterangan" rows="3" placeholder="Misal: Update struktur template, tambahan BAB, dll..."></textarea>
+                    </div>
+                    <div class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Template baru akan otomatis menjadi versi terbaru yang dapat diunduh dosen.
+                    </div>
+                    <div id="uploadStatusMessage"></div>
+                </div>
+                <div class="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50" id="btnDeleteInactive">
+                        <i class="fas fa-trash"></i> Hapus Versi Lama
+                    </button>
+                    <div class="flex gap-2">
+                        <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalUploadTemplate">Batal</button>
+                        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700" id="btnSubmitTemplate">Upload Template</button>
                     </div>
                 </div>
-            </div>
-
-            @if($inactivePeriodes->count() > 0)
-                <div class="mb-4">
-                    <h6 class="fw-bold text-dark mb-3">Periode Tersedia</h6>
-                    @foreach($inactivePeriodes as $periode)
-                        <div class="card border-0 mb-2 rounded-3" style="box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); background: #ffffff;">
-                            <div class="card-body py-3 px-4 d-flex justify-content-between align-items-center flex-column flex-md-row gap-3">
-                                <div class="d-flex align-items-center gap-3">
-                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background-color: #e0e7ff; color: #4f46e5;">
-                                        <i class="fas fa-calendar fa-sm"></i>
-                                    </div>
-                                    <div>
-                                        <h6 class="mb-1 fw-bold text-dark" style="font-size: 0.95rem;">{{ $periode->judul }}</h6>
-                                        <div class="text-muted" style="font-size: 0.8rem;">
-                                            {{ \Carbon\Carbon::parse($periode->tanggal_mulai)->translatedFormat('d M Y H:i') }} s.d. {{ \Carbon\Carbon::parse($periode->tanggal_selesai)->translatedFormat('d M Y H:i') }}
-                                        </div>
-                                    </div>
-                                </div>
-                                <button type="button" class="btn btn-sm btn-outline-primary rounded-3 px-3 py-2" 
-                                    data-bs-toggle="modal" data-bs-target="#modalOpenSession" 
-                                    data-periode-id="{{ $periode->id }}" 
-                                    data-periode-judul="{{ $periode->judul }}" 
-                                    onclick="setPeriodeData(this)"
-                                    style="font-weight: 500; font-size: 0.85rem;">
-                                    <i class="fas fa-power-off me-1" style="font-size: 0.75rem;"></i> Nyalakan Sesi
-                                </button>
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
-            @endif
-        @endif
-
-        <div class="d-flex justify-content-between align-items-center mb-4 border-bottom" style="border-color: #e2e8f0 !important;">
-            <div class="nav-tabs-custom mb-0" style="border-bottom: none;">
-                <ul class="nav nav-tabs border-0" id="rpsTab" role="tablist">
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link active text-decoration-none" id="menunggu-tab" data-bs-toggle="tab" data-bs-target="#menunggu" type="button" role="tab">
-                            Menunggu Validasi <span class="badge-count">{{ $rpsDiajukan->total() }}</span>
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link text-decoration-none" id="revisi-tab" data-bs-toggle="tab" data-bs-target="#revisi" type="button" role="tab">
-                            Menunggu Revisi <span class="badge-count">{{ $rpsRevisi->total() }}</span>
-                        </button>
-                    </li>
-                    <li class="nav-item" role="presentation">
-                        <button class="nav-link text-decoration-none" id="disetujui-tab" data-bs-toggle="tab" data-bs-target="#disetujui" type="button" role="tab">
-                            Disetujui <span class="badge-count">{{ $rpsDisetujui->total() }}</span>
-                        </button>
-                    </li>
-                </ul>
-            </div>
-            
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-outline-secondary rounded-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalUploadTemplate">
-                    <i class="fas fa-file-upload me-2"></i> Upload Template
-                </button>
-                <button type="button" class="btn btn-primary rounded-3 px-4 py-2px-3 py-2" data-bs-toggle="modal" data-bs-target="#modalTambah">
-                    <i class="fas fa-calendar-plus me-2"></i> Buat Periode
-                </button>
-            </div>
+            </form>
         </div>
-
-        <div class="tab-content" id="rpsTabContent">
-            <!-- Tab Menunggu Validasi -->
-            <div class="tab-pane fade show active" id="menunggu" role="tabpanel">
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
-                        <div class="search-container d-flex align-items-center px-3 py-2 flex-grow-1" 
-                                style="max-width: 500px;">
-
-                            <i class="fas fa-search text-muted me-2" 
-                            style="font-size: 0.9rem;"></i>
-
-                            <input type="text" class="form-control search-input p-0" data-search-tab="menunggu"
-                            placeholder="Cari mata kuliah atau dosen...">
-                        </div>
-                        
-                        <button class="btn btn-filter px-4 py-2 rounded-3 d-flex align-items-center">
-                            <i class="fas fa-filter me-2 text-muted" 
-                                style="font-size: 0.85rem;"></i> Filter
-                        </button>
-                    </div>
-                </div>
-
-                <div class="table-container shadow-sm mb-4">
-                    <div class="table-responsive">
-                        <table class="table table-rps mb-0">
-                            <thead>
-                                <tr>
-                                    <th width="35%">MATA KULIAH</th>
-                                    <th width="20%">DOSEN PENGAMPU</th>
-                                    <th width="15%">TANGGAL DIAJUKAN</th>
-                                    <th width="15%">STATUS</th>
-                                    <th width="15%" class="text-end">AKSI</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($rpsDiajukan as $rps)
-                                <tr>
-                                    <td>
-                                        <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $rps->mataKuliah->nama }} ({{ $rps->mataKuliah->kode }})</div>
-                                        <div class="text-muted" style="font-size: 0.8rem;">Semester {{ $rps->semester }} {{ $rps->tahun_ajaran }}</div>
-                                    </td>
-                                    <td>
-                                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                            @forelse($rps->dosens as $dosen)
-                                                @php
-                                                    $initials = strtoupper(substr($dosen->name, 0, 1) . substr(explode(' ', $dosen->name)[array_key_last(explode(' ', $dosen->name))] ?? '', 0, 1));
-                                                @endphp
-                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                    <div class="avatar-text">{{ $initials }}</div>
-                                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosen->name }}</span>
-                                                </div>
-                                            @empty
-                                                <span class="text-muted" style="font-size: 0.85rem;">-</span>
-                                            @endforelse
-                                        </div>
-                                    </td>
-                                    <td><span class="text-muted" style="font-size: 0.9rem;">{{ $rps->created_at->format('d M Y') }}</span></td>
-                                    <td><span class="badge-menunggu">MENUNGGU</span></td>
-                                    <td class="text-end">
-                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
-                                            <i class="fas fa-comment-dots me-2" style="font-size: 0.8rem;"></i> Review Sekarang
-                                        </a>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="5" class="text-center py-4">
-                                        <p class="text-muted mb-0">Tidak ada RPS yang menunggu validasi</p>
-                                    </td>
-                                </tr>
-                                @endforelse
-                                <tr class="no-results-message" style="display: none;">
-                                    <td colspan="5" class="text-center py-4">
-                                        <p class="text-muted mb-0">Tidak ada hasil pencarian</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-2 px-2">
-                    <span class="text-muted mb-3 mb-sm-0" style="font-size: 0.875rem;">Menampilkan {{ $rpsDiajukan->count() }} dari {{ $rpsDiajukan->total() }} entri</span>
-                    <nav>
-                        {{ $rpsDiajukan->links('pagination::bootstrap-4') }}
-                    </nav>
-                </div>
-            </div>
-
-            <!-- Tab Menunggu Revisi Dosen -->
-            <div class="tab-pane fade" id="revisi" role="tabpanel">
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
-                        <div class="search-container d-flex align-items-center px-3 py-2 flex-grow-1" 
-                                style="max-width: 500px;">
-
-                            <i class="fas fa-search text-muted me-2" 
-                            style="font-size: 0.9rem;"></i>
-
-                            <input type="text" class="form-control search-input p-0" data-search-tab="revisi"
-                            placeholder="Cari mata kuliah atau dosen...">
-                        </div>
-                        
-                        <button class="btn btn-filter px-4 py-2 rounded-3 d-flex align-items-center">
-                            <i class="fas fa-filter me-2 text-muted" 
-                                style="font-size: 0.85rem;"></i> Filter
-                        </button>
-                    </div>
-                </div>
-
-                <div class="table-container shadow-sm mb-4">
-                    <div class="table-responsive">
-                        <table class="table table-rps mb-0">
-                            <thead>
-                                <tr>
-                                    <th width="35%">MATA KULIAH</th>
-                                    <th width="20%">DOSEN PENGAMPU</th>
-                                    <th width="15%">TANGGAL REVIEW</th>
-                                    <th width="15%">STATUS</th>
-                                    <th width="15%" class="text-end">AKSI</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($rpsRevisi as $rps)
-                                <tr>
-                                    <td>
-                                        <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $rps->mataKuliah->nama }} ({{ $rps->mataKuliah->kode }})</div>
-                                        <div class="text-muted" style="font-size: 0.8rem;">Semester {{ $rps->semester }} {{ $rps->tahun_ajaran }}</div>
-                                    </td>
-                                    <td>
-                                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                            @forelse($rps->dosens as $dosen)
-                                                @php
-                                                    $initials = strtoupper(substr($dosen->name, 0, 1) . substr(explode(' ', $dosen->name)[array_key_last(explode(' ', $dosen->name))] ?? '', 0, 1));
-                                                @endphp
-                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                    <div class="avatar-text">{{ $initials }}</div>
-                                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosen->name }}</span>
-                                                </div>
-                                            @empty
-                                                <span class="text-muted" style="font-size: 0.85rem;">-</span>
-                                            @endforelse
-                                        </div>
-                                    </td>
-                                    <td><span class="text-muted" style="font-size: 0.9rem;">{{ $rps->updated_at->format('d M Y') }}</span></td>
-                                    <td><span class="badge-revisi">REVISI</span></td>
-                                    <td class="text-end">
-                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
-                                            <i class="fas fa-edit me-2" style="font-size: 0.8rem;"></i> Lihat Catatan
-                                        </a>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="5" class="text-center py-4">
-                                        <p class="text-muted mb-0">Tidak ada RPS yang menunggu revisi</p>
-                                    </td>
-                                </tr>
-                                @endforelse
-                                <tr class="no-results-message" style="display: none;">
-                                    <td colspan="5" class="text-center py-4">
-                                        <p class="text-muted mb-0">Tidak ada hasil pencarian</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-2 px-2">
-                    <span class="text-muted mb-3 mb-sm-0" style="font-size: 0.875rem;">Menampilkan {{ $rpsRevisi->count() }} dari {{ $rpsRevisi->total() }} entri</span>
-                    <nav>
-                        {{ $rpsRevisi->links('pagination::bootstrap-4') }}
-                    </nav>
-                </div>
-            </div>
-
-            <!-- Tab Disetujui -->
-            <div class="tab-pane fade" id="disetujui" role="tabpanel">
-                <div class="card border-0 shadow-sm rounded-4 mb-4">
-                    <div class="card-body p-3 d-flex justify-content-between align-items-center flex-wrap gap-3">
-                        <div class="search-container d-flex align-items-center px-3 py-2 flex-grow-1" 
-                                style="max-width: 500px;">
-
-                            <i class="fas fa-search text-muted me-2" 
-                            style="font-size: 0.9rem;"></i>
-
-                            <input type="text" class="form-control search-input p-0" data-search-tab="disetujui"
-                            placeholder="Cari mata kuliah atau dosen...">
-                        </div>
-                        
-                        <button class="btn btn-filter px-4 py-2 rounded-3 d-flex align-items-center">
-                            <i class="fas fa-filter me-2 text-muted" 
-                                style="font-size: 0.85rem;"></i> Filter
-                        </button>
-                    </div>
-                </div>
-
-                <div class="table-container shadow-sm mb-4">
-                    <div class="table-responsive">
-                        <table class="table table-rps mb-0">
-                            <thead>
-                                <tr>
-                                    <th width="35%">MATA KULIAH</th>
-                                    <th width="20%">DOSEN PENGAMPU</th>
-                                    <th width="15%">TANGGAL DISETUJUI</th>
-                                    <th width="15%">STATUS</th>
-                                    <th width="15%" class="text-end">AKSI</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse($rpsDisetujui as $rps)
-                                <tr>
-                                    <td>
-                                        <div class="fw-bold text-dark" style="font-size: 0.95rem;">{{ $rps->mataKuliah->nama }} ({{ $rps->mataKuliah->kode }})</div>
-                                        <div class="text-muted" style="font-size: 0.8rem;">Semester {{ $rps->semester }} {{ $rps->tahun_ajaran }}</div>
-                                    </td>
-                                    <td>
-                                        <div style="display: flex; flex-direction: column; gap: 0.5rem;">
-                                            @forelse($rps->dosens as $dosen)
-                                                @php
-                                                    $initials = strtoupper(substr($dosen->name, 0, 1) . substr(explode(' ', $dosen->name)[array_key_last(explode(' ', $dosen->name))] ?? '', 0, 1));
-                                                @endphp
-                                                <div style="display: flex; align-items: center; gap: 0.5rem;">
-                                                    <div class="avatar-text">{{ $initials }}</div>
-                                                    <span class="fw-medium text-dark" style="font-size: 0.9rem;">{{ $dosen->name }}</span>
-                                                </div>
-                                            @empty
-                                                <span class="text-muted" style="font-size: 0.85rem;">-</span>
-                                            @endforelse
-                                        </div>
-                                    </td>
-                                    <td><span class="text-muted" style="font-size: 0.9rem;">{{ $rps->updated_at->format('d M Y') }}</span></td>
-                                    <td><span class="badge-disetujui">DISETUJUI</span></td>
-                                    <td class="text-end">
-                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="btn btn-review d-inline-flex align-items-center text-decoration-none">
-                                            <i class="fas fa-eye me-2" style="font-size: 0.8rem;"></i> Lihat Detail
-                                        </a>
-                                    </td>
-                                </tr>
-                                @empty
-                                <tr>
-                                    <td colspan="5" class="text-center py-4">
-                                        <p class="text-muted mb-0">Belum ada RPS yang disetujui</p>
-                                    </td>
-                                </tr>
-                                @endforelse
-                                <tr class="no-results-message" style="display: none;">
-                                    <td colspan="5" class="text-center py-4">
-                                        <p class="text-muted mb-0">Tidak ada hasil pencarian</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="d-flex flex-column flex-sm-row justify-content-between align-items-center mt-2 px-2">
-                    <span class="text-muted mb-3 mb-sm-0" style="font-size: 0.875rem;">Menampilkan {{ $rpsDisetujui->count() }} dari {{ $rpsDisetujui->total() }} entri</span>
-                    <nav>
-                        {{ $rpsDisetujui->links('pagination::bootstrap-4') }}
-                    </nav>
-                </div>
-            </div>
-        </div>
-
     </div>
 
-    <!-- Modal Upload Template -->
-    <div class="modal fade" id="modalUploadTemplate" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0">
-                <form id="formUploadTemplate" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal-header border-bottom-0 pb-0">
-                        <h5 class="modal-title fw-bold">Upload Template RPS</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    <div id="modalTambah" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+        <div class="absolute inset-0 bg-slate-900/40 animate-backdrop" data-modal-overlay="modalTambah"></div>
+        <div class="relative mx-auto mt-16 w-full max-w-xl rounded-2xl bg-white shadow-xl animate-popup">
+            <form action="{{ route('banksoal.rps.gpm.periode-rps.store') }}" method="POST">
+                @csrf
+                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                    <h2 class="text-sm font-semibold text-slate-900">Buat Jadwal RPS Baru</h2>
+                    <button type="button" class="text-slate-400 hover:text-slate-600" data-modal-close="modalTambah">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="px-5 py-4 space-y-4">
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600">Judul Periode <span class="text-rose-500">*</span></label>
+                        <input type="text" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="judul" required placeholder="Contoh: Pengajuan RPS Genap 2025/2026">
                     </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-medium text-dark">File Template (Word Format) <span class="text-danger">*</span></label>
-                            <div class="upload-box-modal border-2 border-dashed rounded-3 p-4 text-center" style="cursor: pointer; transition: all 0.3s; border-color: #e2e8f0;">
-                                <i class="fas fa-cloud-upload-alt text-muted" style="font-size: 2rem; margin-bottom: 0.5rem; display: block;"></i>
-                                <p class="text-muted mb-0" style="font-size: 0.9rem;">Dragdrop file atau <strong style="color: #2563eb; text-decoration: underline;">pilih file</strong></p>
-                                <p class="text-muted" style="font-size: 0.8rem; margin-top: 0.25rem;">Format: .doc, .docx (Maksimal 1 MB)</p>
-                                <input type="file" name="dokumen" id="fileInputModal" accept=".doc,.docx" required style="display: none;">
-                                <div class="file-selected-modal mt-3" style="display: none;">
-                                    <div class="alert alert-success py-2 px-3 mb-0">
-                                        <i class="fas fa-check-circle me-2"></i>
-                                        <span class="file-name-modal"></span>
-                                    </div>
-                                </div>
-                            </div>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-600">Semester <span class="text-rose-500">*</span></label>
+                            <select class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="semester" required>
+                                <option value="Ganjil" {{ $currentSemester == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                                <option value="Genap" {{ $currentSemester == 'Genap' ? 'selected' : '' }}>Genap</option>
+                            </select>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-medium text-dark">Keterangan (Opsional)</label>
-                            <textarea class="form-control" name="keterangan" rows="3" placeholder="Misal: Update struktur template, tambahan BAB, dll..."></textarea>
-                        </div>
-                        <div class="alert alert-info rounded-3" role="alert" style="font-size: 0.85rem;">
-                            <i class="fas fa-info-circle me-2"></i>
-                            <strong>Info:</strong> Template baru akan otomatis menjadi versi terbaru yang dapat diunduh Dosen
-                        </div>
-                        <div id="uploadStatusMessage"></div>
-                    </div>
-                    <div class="modal-footer border-top-0 pt-0 d-flex justify-content-between">
-                        <button type="button" class="btn btn-outline-danger px-3" id="btnDeleteInactive" title="Hapus semua versi template yang tidak aktif">
-                            <i class="fas fa-trash me-1"></i> Hapus Versi Lama
-                        </button>
-                        <div class="d-flex gap-2">
-                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-primary px-4" id="btnSubmitTemplate">Upload Template</button>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-600">Tahun Ajaran <span class="text-rose-500">*</span></label>
+                            <select class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="tahun_ajaran" required>
+                                <option value="" disabled selected>Pilih Tahun Ajaran</option>
+                                @foreach($tahunAjarans as $ta)
+                                    <option value="{{ $ta }}">{{ $ta }}</option>
+                                @endforeach
+                            </select>
                         </div>
                     </div>
-                </form>
-            </div>
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600">Tanggal Mulai <span class="text-rose-500">*</span></label>
+                        <input type="date" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="tanggal_mulai" required>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600">Tanggal Selesai (Tenggat) <span class="text-rose-500">*</span></label>
+                        <input type="date" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="tanggal_selesai" required>
+                    </div>
+                    <label class="flex items-start gap-3 rounded-lg border border-slate-200 p-3 text-xs text-slate-600">
+                        <input class="mt-1" type="checkbox" name="is_active" value="1" checked>
+                        <span>
+                            <span class="font-semibold text-slate-700">Otomatis aktifkan jadwal ini</span>
+                            <span class="block text-[11px] text-slate-500">GPM hanya bisa membuka 1 sesi pengajuan dalam satu waktu. Mencentang ini akan membatalkan sesi lain yang masih aktif.</span>
+                        </span>
+                    </label>
+                </div>
+                <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
+                    <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalTambah">Batal</button>
+                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700">Buat & Terapkan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalCloseSession" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+        <div class="absolute inset-0 bg-slate-900/40 animate-backdrop" data-modal-overlay="modalCloseSession"></div>
+        <div class="relative mx-auto mt-24 w-full max-w-sm rounded-2xl bg-white shadow-xl animate-popup">
+            <form action="{{ route('banksoal.rps.gpm.periode-rps.close-session') }}" method="POST">
+                @csrf
+                <div class="px-5 py-5 text-center">
+                    <div class="text-rose-500 mb-3"><i class="fas fa-exclamation-circle text-3xl"></i></div>
+                    <h3 class="text-sm font-semibold text-slate-900">Matikan Sesi Pengajuan?</h3>
+                    <p class="text-xs text-slate-500 mt-2">Sesi pengajuan <strong>{{ $activePeriode->judul ?? 'RPS' }}</strong> akan ditutup. Dosen tidak akan bisa lagi mengajukan RPS sampai periode baru diaktifkan.</p>
+                    <div class="mt-4 flex gap-2">
+                        <button type="button" class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalCloseSession">Batal</button>
+                        <button type="submit" class="flex-1 rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-700">Matikan Sesi</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="modalOpenSession" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+        <div class="absolute inset-0 bg-slate-900/40 animate-backdrop" data-modal-overlay="modalOpenSession"></div>
+        <div class="relative mx-auto mt-24 w-full max-w-sm rounded-2xl bg-white shadow-xl animate-popup">
+            <form action="{{ route('banksoal.rps.gpm.periode-rps.open-session') }}" method="POST">
+                @csrf
+                <input type="hidden" name="periode_id" id="periodeId">
+                <div class="px-5 py-5 text-center">
+                    <div class="text-blue-500 mb-3"><i class="fas fa-info-circle text-3xl"></i></div>
+                    <h3 class="text-sm font-semibold text-slate-900">Nyalakan Sesi Pengajuan?</h3>
+                    <p class="text-xs text-slate-500 mt-2">Sesi pengajuan <strong id="periodeJudul">RPS</strong> akan diaktifkan. Dosen akan bisa mengajukan RPS sesuai dengan jadwal periode.</p>
+                    <div class="mt-4 flex gap-2">
+                        <button type="button" class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalOpenSession">Batal</button>
+                        <button type="submit" class="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700">Nyalakan Sesi</button>
+                    </div>
+                </div>
+            </form>
         </div>
     </div>
 
     <script>
-        // Upload Template Modal - Drag & Drop
+        document.addEventListener('DOMContentLoaded', function () {
+            function debounce(func, delay) {
+                let timeoutId;
+                return function (...args) {
+                    clearTimeout(timeoutId);
+                    timeoutId = setTimeout(() => func.apply(this, args), delay);
+                };
+            }
+
+            function searchTable(searchInput, tabId) {
+                const searchValue = searchInput.value.toLowerCase().trim();
+                const tabContent = document.querySelector(`[data-tab-panel="${tabId}"]`);
+                if (!tabContent) return;
+
+                const rows = tabContent.querySelectorAll('table tbody tr');
+                let visibleCount = 0;
+
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    let rowText = '';
+                    if (cells.length >= 2) {
+                        rowText = (cells[0].textContent + ' ' + cells[1].textContent).toLowerCase();
+                    } else {
+                        rowText = row.textContent.toLowerCase();
+                    }
+
+                    if (rowText.includes(searchValue) || searchValue === '') {
+                        row.classList.remove('hidden');
+                        visibleCount++;
+                    } else {
+                        row.classList.add('hidden');
+                    }
+                });
+
+                const noResultsMsg = tabContent.querySelector('.no-results-message');
+                if (noResultsMsg) {
+                    if (visibleCount === 0) {
+                        noResultsMsg.classList.remove('hidden');
+                    } else {
+                        noResultsMsg.classList.add('hidden');
+                    }
+                }
+            }
+
+            const searchInputs = document.querySelectorAll('[data-search-tab]');
+            searchInputs.forEach((input) => {
+                const tabId = input.getAttribute('data-search-tab');
+                input.addEventListener('input', debounce(function () {
+                    searchTable(this, tabId);
+                }, 300));
+            });
+        });
+
+        function setPeriodeData(element) {
+            const periodeId = element.getAttribute('data-periode-id');
+            const periodeJudul = element.getAttribute('data-periode-judul');
+            const periodeInput = document.getElementById('periodeId');
+            const periodeLabel = document.getElementById('periodeJudul');
+            if (periodeInput) periodeInput.value = periodeId;
+            if (periodeLabel) periodeLabel.textContent = periodeJudul;
+        }
+
+        function closeModalById(id) {
+            const modal = document.getElementById(id);
+            if (!modal) return;
+            modal.classList.add('hidden');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('overflow-hidden');
+        }
+
         const uploadBoxModal = document.querySelector('.upload-box-modal');
         const fileInputModal = document.getElementById('fileInputModal');
         const fileSelectedModal = document.querySelector('.file-selected-modal');
@@ -594,263 +601,126 @@
             e.stopPropagation();
         }
 
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-            uploadBoxModal.addEventListener(eventName, preventDefaultsModal, false);
-        });
+        if (uploadBoxModal && fileInputModal) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadBoxModal.addEventListener(eventName, preventDefaultsModal, false);
+            });
 
-        ['dragenter', 'dragover'].forEach(eventName => {
-            uploadBoxModal.addEventListener(eventName, () => {
-                uploadBoxModal.style.borderColor = '#2563eb';
-                uploadBoxModal.style.backgroundColor = '#f0f9ff';
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadBoxModal.addEventListener(eventName, () => {
+                    uploadBoxModal.classList.add('border-blue-500', 'bg-blue-50');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadBoxModal.addEventListener(eventName, () => {
+                    uploadBoxModal.classList.remove('border-blue-500', 'bg-blue-50');
+                }, false);
+            });
+
+            uploadBoxModal.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt.files;
+                fileInputModal.files = files;
+                updateFileDisplayModal();
             }, false);
-        });
 
-        ['dragleave', 'drop'].forEach(eventName => {
-            uploadBoxModal.addEventListener(eventName, () => {
-                uploadBoxModal.style.borderColor = '#e2e8f0';
-                uploadBoxModal.style.backgroundColor = 'transparent';
-            }, false);
-        });
+            uploadBoxModal.addEventListener('click', () => {
+                fileInputModal.click();
+            });
 
-        uploadBoxModal.addEventListener('drop', (e) => {
-            const dt = e.dataTransfer;
-            const files = dt.files;
-            fileInputModal.files = files;
-            updateFileDisplayModal();
-        }, false);
-
-        uploadBoxModal.addEventListener('click', () => {
-            fileInputModal.click();
-        });
-
-        fileInputModal.addEventListener('change', updateFileDisplayModal);
+            fileInputModal.addEventListener('change', updateFileDisplayModal);
+        }
 
         function updateFileDisplayModal() {
-            if (fileInputModal.files && fileInputModal.files.length > 0) {
-                fileNameModal.textContent = fileInputModal.files[0].name;
-                fileSelectedModal.style.display = 'block';
+            if (fileInputModal?.files && fileInputModal.files.length > 0) {
+                if (fileNameModal) fileNameModal.textContent = fileInputModal.files[0].name;
+                fileSelectedModal?.classList.remove('hidden');
             } else {
-                fileSelectedModal.style.display = 'none';
+                fileSelectedModal?.classList.add('hidden');
             }
         }
 
-        // Handle form submission via AJAX
-        formUploadTemplate.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        if (formUploadTemplate) {
+            formUploadTemplate.addEventListener('submit', async (e) => {
+                e.preventDefault();
 
-            const formData = new FormData(formUploadTemplate);
-            uploadStatusMessage.innerHTML = '';
-            btnSubmitTemplate.disabled = true;
-            btnSubmitTemplate.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+                const formData = new FormData(formUploadTemplate);
+                uploadStatusMessage.innerHTML = '';
+                if (btnSubmitTemplate) {
+                    btnSubmitTemplate.disabled = true;
+                    btnSubmitTemplate.textContent = 'Uploading...';
+                }
 
-            try {
-                const response = await fetch("{{ route('banksoal.rps.gpm.template.store') }}", {
-                    method: 'POST',
-                    body: formData,
-                    headers: {
-                        'X-Requested-With': 'XMLHttpRequest',
+                try {
+                    const response = await fetch("{{ route('banksoal.rps.gpm.template.store') }}", {
+                        method: 'POST',
+                        body: formData,
+                        headers: {
+                            'X-Requested-With': 'XMLHttpRequest',
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        uploadStatusMessage.innerHTML = `<div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700"><i class="fas fa-check-circle mr-2"></i>${data.message}</div>`;
+                        formUploadTemplate.reset();
+                        fileSelectedModal?.classList.add('hidden');
+                        setTimeout(() => {
+                            closeModalById('modalUploadTemplate');
+                            uploadStatusMessage.innerHTML = '';
+                        }, 2000);
+                    } else {
+                        throw new Error(data.message || 'Terjadi kesalahan');
                     }
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    // Show success message
-                    uploadStatusMessage.innerHTML = `
-                        <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
-                            <i class="fas fa-check-circle me-2"></i> 
-                            <strong>Sukses!</strong> ${data.message}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    `;
-
-                    // Reset form
-                    formUploadTemplate.reset();
-                    fileSelectedModal.style.display = 'none';
-
-                    // Close modal after 2 seconds
-                    setTimeout(() => {
-                        const modal = bootstrap.Modal.getInstance(document.getElementById('modalUploadTemplate'));
-                        if (modal) modal.hide();
-                        uploadStatusMessage.innerHTML = '';
-                    }, 2000);
-
-                } else {
-                    throw new Error(data.message || 'Terjadi kesalahan');
+                } catch (error) {
+                    uploadStatusMessage.innerHTML = `<div class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><i class="fas fa-exclamation-triangle mr-2"></i>${error.message}</div>`;
+                } finally {
+                    if (btnSubmitTemplate) {
+                        btnSubmitTemplate.disabled = false;
+                        btnSubmitTemplate.textContent = 'Upload Template';
+                    }
                 }
-            } catch (error) {
-                uploadStatusMessage.innerHTML = `
-                    <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i> 
-                        <strong>Error!</strong> ${error.message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                `;
-            } finally {
-                btnSubmitTemplate.disabled = false;
-                btnSubmitTemplate.innerHTML = '<i class="fas fa-arrow-up-from-bracket me-2"></i> Upload Template';
-            }
-        });
+            });
+        }
 
-        // Handle delete inactive templates
         const btnDeleteInactive = document.getElementById('btnDeleteInactive');
-        btnDeleteInactive.addEventListener('click', async () => {
-            // Confirm before deleting
-            if (!confirm('Apakah Anda yakin ingin menghapus semua versi template yang tidak aktif?\n\nAksi ini tidak dapat dibatalkan.')) {
-                return;
-            }
-
-            btnDeleteInactive.disabled = true;
-            const originalHTML = btnDeleteInactive.innerHTML;
-            btnDeleteInactive.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menghapus...';
-
-            try {
-                const response = await fetch("{{ route('banksoal.rps.gpm.template.delete-inactive') }}", {
-                    method: 'DELETE',
-                    headers: {
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value,
-                        'X-Requested-With': 'XMLHttpRequest',
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({})
-                });
-
-                const data = await response.json();
-
-                if (response.ok && data.success) {
-                    uploadStatusMessage.innerHTML = `
-                        <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
-                            <i class="fas fa-check-circle me-2"></i> 
-                            <strong>Sukses!</strong> ${data.message}
-                            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                        </div>
-                    `;
-                } else {
-                    throw new Error(data.message || 'Terjadi kesalahan');
+        if (btnDeleteInactive) {
+            btnDeleteInactive.addEventListener('click', async () => {
+                if (!confirm('Apakah Anda yakin ingin menghapus semua versi template yang tidak aktif?\n\nAksi ini tidak dapat dibatalkan.')) {
+                    return;
                 }
-            } catch (error) {
-                uploadStatusMessage.innerHTML = `
-                    <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
-                        <i class="fas fa-exclamation-triangle me-2"></i> 
-                        <strong>Error!</strong> ${error.message}
-                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                    </div>
-                `;
-            } finally {
-                btnDeleteInactive.disabled = false;
-                btnDeleteInactive.innerHTML = originalHTML;
-            }
-        });
-    </script>
 
-    <!-- Modal Tambah Periode -->
-    <div class="modal fade" id="modalTambah" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0">
-                <form action="{{ route('banksoal.rps.gpm.periode-rps.store') }}" method="POST">
-                    @csrf
-                    <div class="modal-header border-bottom-0 pb-0">
-                        <h5 class="modal-title fw-bold">Buat Jadwal RPS Baru</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-medium text-dark">Judul Periode <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="judul" required placeholder="Contoh: Pengajuan RPS Genap 2025/2026">
-                        </div>
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-medium text-dark">Semester <span class="text-danger">*</span></label>
-                                <select class="form-select" name="semester" required>
-                                    <option value="Ganjil" {{ $currentSemester == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
-                                    <option value="Genap" {{ $currentSemester == 'Genap' ? 'selected' : '' }}>Genap</option>
-                                </select>
-                            </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-medium text-dark">Tahun Ajaran <span class="text-danger">*</span></label>
-                                <select class="form-select" name="tahun_ajaran" required>
-                                    <option value="" disabled selected>Pilih Tahun Ajaran</option>
-                                    @foreach($tahunAjarans as $ta)
-                                        <option value="{{ $ta }}">{{ $ta }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-medium text-dark">Tanggal Mulai <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" name="tanggal_mulai" required>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-medium text-dark">Tanggal Selesai (Tenggat) <span class="text-danger">*</span></label>
-                            <input type="date" class="form-control" name="tanggal_selesai" required>
-                        </div>
-                        <div class="form-check form-switch mt-4">
-                            <input class="form-check-input" type="checkbox" name="is_active" id="isActiveAdd" value="1" checked>
-                            <label class="form-check-label ms-2" for="isActiveAdd">Otomatis aktifkan jadwal ini</label>
-                            <div class="form-text mt-1 text-muted" style="font-size: 0.8rem;">GPM hanya bisa membuka 1 sesi pengajuan dalam satu waktu. Mencentang ini akan membatalkan sesi lain yang masih aktif.</div>
-                        </div>
-                    </div>
-                    <div class="modal-footer border-top-0 pt-0">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary px-4">Buat & Terapkan</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+                btnDeleteInactive.disabled = true;
+                const originalHTML = btnDeleteInactive.innerHTML;
+                btnDeleteInactive.textContent = 'Menghapus...';
 
-    <!-- Modal Matikan Sesi -->
-    <div class="modal fade" id="modalCloseSession" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content rounded-4 border-0">
-                <form action="{{ route('banksoal.rps.gpm.periode-rps.close-session') }}" method="POST">
-                    @csrf
-                    <div class="modal-body text-center p-4">
-                        <div class="text-warning mb-3">
-                            <i class="fas fa-exclamation-circle fa-3x"></i>
-                        </div>
-                        <h5 class="mb-2 fw-bold text-dark">Matikan Sesi Pengajuan?</h5>
-                        <p class="text-muted mb-4" style="font-size: 0.9rem;">Sesi pengajuan <strong>{{ $activePeriode->judul ?? 'RPS' }}</strong> akan ditutup. Dosen tidak akan bisa lagi mengajukan RPS sampai periode baru diaktifkan.</p>
-                        <div class="d-flex gap-2 justify-content-center">
-                            <button type="button" class="btn btn-light w-50" data-bs-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-danger w-50">Matikan Sesi</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+                try {
+                    const response = await fetch("{{ route('banksoal.rps.gpm.template.delete-inactive') }}", {
+                        method: 'DELETE',
+                        headers: {
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({})
+                    });
 
-    <!-- Modal Nyalakan Sesi -->
-    <div class="modal fade" id="modalOpenSession" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered modal-sm">
-            <div class="modal-content rounded-4 border-0">
-                <form action="{{ route('banksoal.rps.gpm.periode-rps.open-session') }}" method="POST">
-                    @csrf
-                    <input type="hidden" name="periode_id" id="periodeId">
-                    <div class="modal-body text-center p-4">
-                        <div class="text-info mb-3">
-                            <i class="fas fa-info-circle fa-3x"></i>
-                        </div>
-                        <h5 class="mb-2 fw-bold text-dark">Nyalakan Sesi Pengajuan?</h5>
-                        <p class="text-muted mb-4" style="font-size: 0.9rem;">Sesi pengajuan <strong id="periodeJudul">RPS</strong> akan diaktifkan. Dosen akan bisa mengajukan RPS sesuai dengan jadwal periode.</p>
-                        <div class="d-flex gap-2 justify-content-center">
-                            <button type="button" class="btn btn-light w-50" data-bs-dismiss="modal">Batal</button>
-                            <button type="submit" class="btn btn-success w-50">Nyalakan Sesi</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
+                    const data = await response.json();
 
-    <script>
-        function setPeriodeData(element) {
-            const periodeId = element.getAttribute('data-periode-id');
-            const periodeJudul = element.getAttribute('data-periode-judul');
-            document.getElementById('periodeId').value = periodeId;
-            document.getElementById('periodeJudul').textContent = periodeJudul;
+                    if (response.ok && data.success) {
+                        uploadStatusMessage.innerHTML = `<div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700"><i class="fas fa-check-circle mr-2"></i>${data.message}</div>`;
+                    } else {
+                        throw new Error(data.message || 'Terjadi kesalahan');
+                    }
+                } catch (error) {
+                    uploadStatusMessage.innerHTML = `<div class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><i class="fas fa-exclamation-triangle mr-2"></i>${error.message}</div>`;
+                } finally {
+                    btnDeleteInactive.disabled = false;
+                    btnDeleteInactive.innerHTML = originalHTML;
+                }
+            });
         }
     </script>
-
 </x-banksoal::layouts.gpm-master>
