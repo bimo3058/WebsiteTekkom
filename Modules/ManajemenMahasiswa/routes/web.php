@@ -78,15 +78,33 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
         // ── Layanan Pengaduan ─────────────────────────────────────────────
         Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
-            Route::get('/', [PengaduanController::class, 'index'])->name('index');
-            Route::get('/create', [PengaduanController::class, 'create'])->name('create');
-            Route::post('/', [PengaduanController::class, 'store'])->name('store');
-            Route::get('/{pengaduan}', [PengaduanController::class, 'show'])->name('show');
+            // Mahasiswa membuat pengaduan (dengan step konfirmasi)
+            // NOTE: HARUS didefinisikan sebelum /{pengaduan} agar tidak konflik dengan path seperti /create
+            Route::middleware('role:mahasiswa')->group(function () {
+                Route::get('/create', [PengaduanController::class, 'create'])->name('create');
+                Route::post('/confirm', [PengaduanController::class, 'confirm'])->name('confirm');
+                Route::post('/', [PengaduanController::class, 'store'])->name('store');
+            });
 
-            // Jawab pengaduan — admin
+            // Akses pengaduan: hanya mahasiswa + staff (dosen/gpm/admin)
+            Route::middleware('role:mahasiswa,dosen,gpm,admin,superadmin,admin_kemahasiswaan')->group(function () {
+                Route::get('/', [PengaduanController::class, 'index'])->name('index');
+                Route::get('/{pengaduan}', [PengaduanController::class, 'show'])
+                    ->whereNumber('pengaduan')
+                    ->name('show');
+            });
+
+            // Jawab pengaduan — hanya Admin & GPM
             Route::post('/{pengaduan}/reply', [PengaduanController::class, 'reply'])
                 ->name('reply')
-                ->middleware('role:superadmin,admin,admin_kemahasiswaan,gpm');
+                ->whereNumber('pengaduan')
+                ->middleware('role:admin,superadmin,admin_kemahasiswaan,gpm');
+
+            // Hapus pengaduan — hanya Admin & GPM
+            Route::delete('/{pengaduan}', [PengaduanController::class, 'destroy'])
+                ->name('destroy')
+                ->whereNumber('pengaduan')
+                ->middleware('role:admin,superadmin,admin_kemahasiswaan,gpm');
         });
 
         // ── Forum Diskusi ──────────────────────────────────────────────────
