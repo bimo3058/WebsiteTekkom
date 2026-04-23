@@ -33,7 +33,7 @@
     /* ── Banner ── */
     .detail-banner {
         width: 100%;
-        height: 260px;
+        aspect-ratio: 16 / 9;
         border-radius: 12px;
         overflow: hidden;
         margin-bottom: 24px;
