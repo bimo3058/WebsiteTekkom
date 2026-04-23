@@ -33,7 +33,7 @@
     /* ── Banner ── */
     .detail-banner {
         width: 100%;
-        height: 260px;
+        aspect-ratio: 16 / 9;
         border-radius: 12px;
         overflow: hidden;
         margin-bottom: 24px;
@@ -537,12 +537,20 @@
 <div class="detail-card">
     <!-- Badges -->
     <div class="d-flex flex-wrap gap-2 mb-3">
-        @if($kegiatan->bidang)
+        @if($kegiatan->bidangs && $kegiatan->bidangs->count() > 0)
+            @foreach($kegiatan->bidangs as $b)
+                <span class="badge-bidang">{{ $b->nama_bidang }}</span>
+            @endforeach
+        @elseif($kegiatan->bidang)
             <span class="badge-bidang">{{ $kegiatan->bidang->nama_bidang }}</span>
         @else
             <span class="badge-bidang" style="background: #f3e8ff; color: #7c3aed;"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg> Prodi</span>
         @endif
-        @if($kegiatan->kategoriKegiatan)
+        @if($kegiatan->kategoris && $kegiatan->kategoris->count() > 0)
+            @foreach($kegiatan->kategoris as $kat)
+                <span class="badge-kategori">{{ $kat->nama_kategori }}</span>
+            @endforeach
+        @elseif($kegiatan->kategoriKegiatan)
             <span class="badge-kategori">{{ $kegiatan->kategoriKegiatan->nama_kategori }}</span>
         @endif
         @if($kegiatan->status)
@@ -601,10 +609,10 @@
         </div>
         @endif
 
-        @if($kegiatan->kepengurusan)
+        @if($kegiatan->tahun)
         <div class="meta-item">
-            <div class="meta-item-label">Tahun Kepengurusan</div>
-            <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> {{ $kegiatan->kepengurusan->tahun_periode }}</div>
+            <div class="meta-item-label">Tahun</div>
+            <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg> {{ $kegiatan->tahun }}</div>
         </div>
         @endif
 

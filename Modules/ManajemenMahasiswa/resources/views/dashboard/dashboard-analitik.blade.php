@@ -103,6 +103,35 @@
             gap: 16px;
             margin-bottom: 20px;
         }
+
+        /* ── Donut chart container — fixed size to prevent resize on hover ── */
+        .donut-canvas-wrapper {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+
+        /* ── Responsive breakpoints ─────────────────────────────────────── */
+        @media (max-width: 1024px) {
+            .chart-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 768px) {
+            .stat-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 480px) {
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+            .donut-canvas-wrapper {
+                width: 160px;
+                height: 160px;
+            }
+        }
         .chart-card {
             background: #fff;
             border-radius: 12px;
@@ -263,35 +292,7 @@
         .level-part-time  { background: #d1fae5; color: #065f46; }
         .level-freelance  { background: #ede9fe; color: #5b21b6; }
 
-        /* ── Buttons ─────────────────────────────────────────────────────── */
-        .btn-manage {
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-size: 13px;
-            font-weight: 500;
-            color: #374151;
-            background: #fff;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            text-decoration: none;
-        }
-        .btn-export {
-            border: none;
-            border-radius: 8px;
-            padding: 8px 16px;
-            font-size: 13px;
-            font-weight: 600;
-            color: #fff;
-            background: #4f46e5;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-        }
-        .btn-export:hover { background: #4338ca; }
+    
 
         /* ── Period select ───────────────────────────────────────────────── */
         .period-select {
@@ -320,31 +321,6 @@
         }
     </style>
     @endpush
-
-    {{-- ── Breadcrumb ────────────────────────────────────────────────── --}}
-    <div class="breadcrumb-bar">
-        <div class="bc-path">
-            Home &rsaquo; <span>Dashboard</span>
-        </div>
-        <div class="bc-actions">
-            <a href="#" class="btn-manage">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 20h9"/><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/>
-                </svg>
-                Manage Dashboard
-            </a>
-            <a href="#" class="btn-export">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                    <polyline points="7 10 12 15 17 10"/>
-                    <line x1="12" y1="15" x2="12" y2="3"/>
-                </svg>
-                Export
-            </a>
-        </div>
-    </div>
 
     {{-- ── Page Title ─────────────────────────────────────────────────── --}}
     <div class="page-title">
@@ -477,9 +453,9 @@
                 <span class="chart-title">Status Mahasiswa</span>
                 <button class="info-icon-btn" title="Info">i</button>
             </div>
-            <div style="position:relative; max-width: 200px; margin: 0 auto;">
+            <div class="donut-canvas-wrapper">
                 <canvas id="statusChart"></canvas>
-                <div class="donut-total" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+                <div class="donut-total" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;">
                     <span class="total-num">{{ number_format($statusMahasiswa['aktif'] + $statusMahasiswa['cuti'] + $statusMahasiswa['do'] + $statusMahasiswa['lulus']) }}</span>
                     <span class="total-label" style="font-size:11px;color:#9ca3af;display:block;">Total Employees</span>
                 </div>
@@ -697,11 +673,12 @@
                     ],
                     backgroundColor: ['#4f46e5', '#f59e0b', '#ef4444', '#10b981'],
                     borderWidth: 0,
-                    hoverOffset: 6,
+                    hoverOffset: 0,
                 }]
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 cutout: '68%',
                 plugins: {
                     legend: { display: false },
@@ -712,6 +689,18 @@
                         padding: 10,
                         cornerRadius: 8,
                     }
+                },
+                hover: {
+                    mode: 'nearest',
+                    animationDuration: 0
+                },
+                animation: {
+                    duration: 800
+                },
+                onResize: function(chart, size) {
+                    // Prevent chart from shrinking below minimum size
+                    chart.canvas.parentNode.style.minWidth = '160px';
+                    chart.canvas.parentNode.style.minHeight = '160px';
                 }
             }
         });

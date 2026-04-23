@@ -22,10 +22,11 @@
 
         .detail-card {
             background: #fff;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #111827;
             border-radius: 14px;
             padding: 32px;
-            margin-top: 24px;
+            margin: 24px auto 0;
+            max-width: 900px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.03);
         }
 
@@ -45,17 +46,25 @@
         .detail-image-wrapper {
             background: #e5e7eb;
             border-radius: 10px;
-            height: 300px;
+            border: 1px solid #111827;
+            width: 100%;
+            min-height: 200px;
             display: flex;
             align-items: center;
             justify-content: center;
             margin-bottom: 24px;
             overflow: hidden;
+            text-align: center;
         }
         .detail-image-wrapper img {
+            max-width: 100%;
             width: 100%;
-            height: 100%;
-            object-fit: cover;
+            height: auto;
+            max-height: 500px;
+            object-fit: contain;
+            border-radius: 10px;
+            background: #e5e7eb;
+            display: block;
         }
         .detail-image-placeholder h3 {
             font-size: 1.8rem;
@@ -66,11 +75,11 @@
         }
 
         .meta-box {
-            border: 1px solid #e5e7eb;
+            border: 1px solid #111827;
             border-radius: 10px;
             padding: 16px 20px;
             margin-bottom: 24px;
-            background: #f9fafb;
+            background: #fff;
         }
 
         .meta-table {
@@ -104,21 +113,37 @@
         }
         .section-container hr {
             flex-grow: 1;
-            border-top: 1px solid #e5e7eb;
+            border-top: 1px solid #111827;
             margin: 0;
             opacity: 1;
         }
 
         .content-box {
-            border: 1px solid #e5e7eb;
+            border: 1px solid #111827;
             border-radius: 10px;
             padding: 24px;
             font-size: 0.95rem;
-            color: #374151;
+            color: #111827;
             line-height: 1.7;
             margin-bottom: 30px;
             word-wrap: break-word;
             overflow-wrap: break-word;
+            overflow: hidden;
+            background: #fff;
+        }
+        .content-box img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            border-radius: 6px;
+        }
+        .content-box table {
+            max-width: 100%;
+            overflow-x: auto;
+            display: block;
+        }
+        .content-box * {
+            max-width: 100%;
         }
 
         .lampiran-list {
@@ -132,16 +157,16 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            border: 1px solid #e5e7eb;
+            border: 1px solid #111827;
             border-radius: 10px;
             padding: 14px 20px;
             text-decoration: none;
             color: #111827;
             transition: all 0.2s;
+            background: #fff;
         }
         .lampiran-item:hover {
-            background: #f5f3ff;
-            border-color: #818cf8;
+            background: #f9fafb;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
             color: #111827;
         }
@@ -158,7 +183,7 @@
             align-items: center;
             gap: 20px;
             font-size: 0.85rem;
-            color: #4f46e5;
+            color: #111827;
             font-weight: 600;
         }
 
@@ -167,11 +192,11 @@
             margin-top: 10px;
         }
         .btn-kembali {
-            background: #4f46e5;
+            background: #818cf8;
             color: #fff;
             border: none;
-            border-radius: 10px;
-            padding: 10px 30px;
+            border-radius: 8px;
+            padding: 10px 40px;
             font-weight: 600;
             font-size: 0.95rem;
             text-decoration: none;
@@ -179,10 +204,10 @@
             transition: all 0.2s;
         }
         .btn-kembali:hover {
-            background: #4338ca;
+            background: #6366f1;
             color: #fff;
             transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
         }
     </style>
     @endpush
@@ -218,7 +243,7 @@
     <div class="detail-card">
         <!-- Title -->
         <div class="detail-title">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="#111827" stroke="#111827" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m3 11 18-5v12L3 14v-3z"></path>
                 <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path>
             </svg>

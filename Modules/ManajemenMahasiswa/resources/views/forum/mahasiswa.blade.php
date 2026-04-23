@@ -209,6 +209,33 @@
                 font-size: 48px;
                 margin-bottom: 16px;
             }
+
+            .thread-thumbnail {
+                width: 100%;
+                max-height: 200px;
+                object-fit: cover;
+                border-radius: 8px;
+                border: 1px solid #e5e7eb;
+                margin-bottom: 12px;
+            }
+
+            .edited-badge {
+                font-size: 11px;
+                color: #9ca3af;
+                font-style: italic;
+            }
+
+            .personal-pin-badge {
+                background: #dbeafe;
+                color: #2563eb;
+                font-size: 10px;
+                font-weight: 700;
+                padding: 2px 8px;
+                border-radius: 4px;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+            }
         </style>
     @endpush
 
@@ -356,17 +383,20 @@
     <!-- Forum Posts -->
     @forelse($threads as $thread)
         <a href="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}" class="text-decoration-none">
-            <div class="forum-card">
+            <div class="forum-card" data-thread-id="{{ $thread->id }}">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div class="d-flex align-items-center gap-3">
                         <div class="avatar-placeholder">
                             {{ strtoupper(substr($thread->author->name ?? '?', 0, 2)) }}
                         </div>
                         <div>
-                            <div class="d-flex align-items-center gap-2">
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
                                 <h6 class="fw-bold text-dark mb-0">{{ $thread->author->name ?? 'Unknown' }}</h6>
                                 <span class="text-primary fw-medium" style="font-size: 12px;">•
                                     {{ $thread->created_at->diffForHumans() }}</span>
+                                @if($thread->isEdited())
+                                    <span class="edited-badge">(diedit)</span>
+                                @endif
                                 @if($thread->is_pinned)
                                     <span class="pinned-badge">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
@@ -375,6 +405,7 @@
                                         Pinned
                                     </span>
                                 @endif
+                                <span class="personal-pin-badge" data-personal-pin="{{ $thread->id }}" style="display: none;">📌 Pin Pribadi</span>
                             </div>
                         </div>
                     </div>
@@ -382,49 +413,54 @@
                         <span class="text-muted fw-bold" style="cursor: pointer; font-size: 20px; line-height: 1;"
                             data-bs-toggle="dropdown">⋯</span>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 8px;">
+                            {{-- Edit (owner + admin) --}}
+                            @if($thread->user_id === $user->id || $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
+                                <li>
+                                    <a href="{{ route('manajemenmahasiswa.forum.edit', $thread->id) }}" class="dropdown-item">✏️ Edit</a>
+                                </li>
+                            @endif
+                            {{-- Pin Global (admin only) --}}
+                            @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
+                                <li>
+                                    <form method="POST" action="{{ route('manajemenmahasiswa.forum.pin', $thread->id) }}">
+                                        @csrf @method('PATCH')
+                                        <button type="submit" class="dropdown-item">
+                                            @if($thread->is_pinned) 🔓 Unpin Global @else 📌 Pin Global @endif
+                                        </button>
+                                    </form>
+                                </li>
+                            @endif
+                            {{-- Pin Pribadi (semua role) --}}
+                            <li>
+                                <button type="button" class="dropdown-item personal-pin-toggle" data-thread-id="{{ $thread->id }}">
+                                    📌 <span class="personal-pin-label" data-thread-id="{{ $thread->id }}">Pin Pribadi</span>
+                                </button>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            {{-- Delete --}}
                             @if($thread->user_id === $user->id)
                                 <li>
                                     <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
                                         onsubmit="return confirm('Yakin ingin menghapus thread ini?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="dropdown-item text-danger">
-                                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                stroke-width="2" class="me-1">
-                                                <polyline points="3 6 5 6 21 6"></polyline>
-                                                <path d="M19 6l-1 14H6L5 6"></path>
-                                                <path d="M10 11v6"></path>
-                                                <path d="M14 11v6"></path>
-                                                <path d="M9 6V4h6v2"></path>
-                                            </svg>
-                                            Hapus</button>
+                                        <button type="submit" class="dropdown-item text-danger">🗑️ Hapus</button>
                                     </form>
                                 </li>
-                            @else
-                                @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
-                                    <li>
-                                        <form method="POST" action="{{ route('manajemenmahasiswa.forum.pin', $thread->id) }}">
-                                            @csrf @method('PATCH')
-                                            <button type="submit" class="dropdown-item">
-                                                @if($thread->is_pinned) 🔓 Unpin @else 📌 Pin @endif
-                                            </button>
-                                        </form>
-                                    </li>
-                                    <li>
-                                        <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
-                                            onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
-                                            @csrf @method('DELETE')
-                                            <button type="submit" class="dropdown-item text-danger">🗑️ Hapus (Admin)</button>
-                                        </form>
-                                    </li>
-                                @endif
+                            @elseif($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
+                                <li>
+                                    <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
+                                        onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="dropdown-item text-danger">🗑️ Hapus (Admin)</button>
+                                    </form>
+                                </li>
+                            @endif
+                            @if($thread->user_id !== $user->id)
                                 <li>
                                     <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal"
                                         data-bs-target="#reportModal" data-thread-id="{{ $thread->id }}"
                                         data-thread-title="{{ $thread->judul }}">
-                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="me-1">
-                                            <path d="M4 2v20h2v-7h10l-2-4 2-4H6V2H4z" />
-                                        </svg>
-                                        Laporkan Thread
+                                        🚩 Laporkan Thread
                                     </button>
                                 </li>
                             @endif
@@ -433,22 +469,21 @@
                 </div>
 
                 <h6 class="fw-bold text-dark mb-2">{{ $thread->judul }}</h6>
+
+                {{-- Image thumbnail --}}
+                @if($thread->getFirstImageUrl())
+                    <img src="{{ $thread->getFirstImageUrl() }}" alt="Thumbnail" class="thread-thumbnail">
+                @endif
+
                 <p class="text-dark" style="font-size: 14px; margin-bottom: 12px; line-height: 1.5;">
-                    {{ Str::limit(strip_tags($thread->konten), 200) }}
+                    {{ Str::limit($thread->getTextContent() ?: strip_tags($thread->konten), 200) }}
                 </p>
 
                 <!-- Labels -->
                 <div class="d-flex gap-2 mb-3">
                     <span class="tag-label {{ $thread->kategoriColor() }}">{{ $thread->kategoriLabel() }}</span>
                     @if($thread->is_locked)
-                        <span class="tag-label tag-red">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                class="me-1">
-                                <rect x="3" y="11" width="18" height="11" rx="2"></rect>
-                                <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
-                            </svg>
-                            Dikunci
-                        </span>
+                        <span class="tag-label tag-red">🔒 Dikunci</span>
                     @endif
                 </div>
 
@@ -459,7 +494,6 @@
                 @endphp
                 <div class="post-actions d-flex align-items-center"
                     onclick="event.preventDefault(); event.stopPropagation();">
-                    <!-- Up/Down vote -->
                     <button
                         class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === 1 ? 'vote-active-up' : '' }}"
                         data-thread-id="{{ $thread->id }}" data-value="1">
@@ -472,8 +506,6 @@
                         data-thread-id="{{ $thread->id }}" data-value="-1">
                         <span style="font-size: 14px;">↓</span>
                     </button>
-
-                    <!-- Comments -->
                     <button class="ms-2"
                         onclick="window.location.href='{{ route('manajemenmahasiswa.forum.show', $thread->id) }}'">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
@@ -482,8 +514,6 @@
                         </svg>
                         {{ $thread->comments_count ?? $thread->comment_count }}
                     </button>
-
-                    <!-- Share -->
                     <button class="share-btn ms-1" data-url="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
@@ -569,89 +599,69 @@
     @push('scripts')
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
         <script>
-            // CSRF token
             const csrfToken = '{{ csrf_token() }}';
 
-            // Vote Thread (AJAX)
+            // ---- Personal Pin (localStorage) ----
+            const PERSONAL_PINS_KEY = 'forum_personal_pins';
+            function getPersonalPins() { try { return JSON.parse(localStorage.getItem(PERSONAL_PINS_KEY)) || []; } catch { return []; } }
+            function togglePersonalPin(threadId) {
+                let pins = getPersonalPins();
+                const idx = pins.indexOf(threadId);
+                if (idx > -1) pins.splice(idx, 1); else pins.push(threadId);
+                localStorage.setItem(PERSONAL_PINS_KEY, JSON.stringify(pins));
+                refreshPersonalPinUI();
+            }
+            function refreshPersonalPinUI() {
+                const pins = getPersonalPins();
+                document.querySelectorAll('[data-personal-pin]').forEach(b => { b.style.display = pins.includes(parseInt(b.dataset.personalPin)) ? 'inline-flex' : 'none'; });
+                document.querySelectorAll('.personal-pin-label').forEach(l => { l.textContent = pins.includes(parseInt(l.dataset.threadId)) ? 'Unpin Pribadi' : 'Pin Pribadi'; });
+            }
+            document.querySelectorAll('.personal-pin-toggle').forEach(btn => btn.addEventListener('click', function(e) { e.preventDefault(); togglePersonalPin(parseInt(this.dataset.threadId)); }));
+            refreshPersonalPinUI();
+
+            // ---- Vote Thread (AJAX) ----
             document.querySelectorAll('.vote-thread-btn').forEach(btn => {
                 btn.addEventListener('click', async function (e) {
                     e.preventDefault();
-
-                    // Optimistic UI toggle could be added here, but waiting for server ensures consistency
                     const threadId = this.dataset.threadId;
                     const value = parseInt(this.dataset.value);
-
                     try {
                         const res = await fetch(`{{ url('manajemen-mahasiswa/forum') }}/${threadId}/vote`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken,
-                                'Accept': 'application/json',
-                            },
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
                             body: JSON.stringify({ value })
                         });
-
                         const data = await res.json();
-
-                        // Update all matching counters on the page
-                        document.querySelectorAll(`.thread-vote-count-${threadId}`).forEach(el => {
-                            el.textContent = data.vote_count;
-                        });
-
-                        // Update button states locally inside this post-actions div
+                        document.querySelectorAll(`.thread-vote-count-${threadId}`).forEach(el => el.textContent = data.vote_count);
                         const parent = this.closest('.post-actions');
                         if (parent) {
-                            parent.querySelectorAll('.vote-thread-btn').forEach(b => {
-                                b.classList.remove('vote-active-up', 'vote-active-down');
-                            });
-
-                            if (data.user_vote === 1) {
-                                parent.querySelector('.vote-thread-btn[data-value="1"]').classList.add('vote-active-up');
-                            } else if (data.user_vote === -1) {
-                                parent.querySelector('.vote-thread-btn[data-value="-1"]').classList.add('vote-active-down');
-                            }
+                            parent.querySelectorAll('.vote-thread-btn').forEach(b => b.classList.remove('vote-active-up', 'vote-active-down'));
+                            if (data.user_vote === 1) parent.querySelector('.vote-thread-btn[data-value="1"]').classList.add('vote-active-up');
+                            else if (data.user_vote === -1) parent.querySelector('.vote-thread-btn[data-value="-1"]').classList.add('vote-active-down');
                         }
-                    } catch (err) {
-                        console.error('Vote error:', err);
-                    }
+                    } catch (err) { console.error('Vote error:', err); }
                 });
             });
 
-            // Share functionality (Copy Link)
+            // ---- Share (Copy Link) ----
             document.querySelectorAll('.share-btn').forEach(btn => {
                 btn.addEventListener('click', function (e) {
                     e.preventDefault();
-                    const targetUrl = this.dataset.url;
-
-                    navigator.clipboard.writeText(targetUrl).then(() => {
-                        const originalHtml = this.innerHTML;
-                        this.innerHTML = `
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <polyline points="20 6 9 17 4 12"></polyline>
-                            </svg>`;
-                        setTimeout(() => {
-                            this.innerHTML = originalHtml;
-                        }, 2000);
-                    }).catch(err => {
-                        console.error('Failed to copy link: ', err);
+                    navigator.clipboard.writeText(this.dataset.url).then(() => {
+                        const orig = this.innerHTML;
+                        this.innerHTML = '<span style="font-size:14px">✅</span>';
+                        setTimeout(() => this.innerHTML = orig, 2000);
                     });
                 });
             });
 
-            // Handling Report Modal data
+            // ---- Report Modal ----
             const reportModal = document.getElementById('reportModal');
             if (reportModal) {
                 reportModal.addEventListener('show.bs.modal', function (event) {
-                    const button = event.relatedTarget;
-                    const threadId = button.getAttribute('data-thread-id');
-                    const threadTitle = button.getAttribute('data-thread-title');
-
-                    const modalTitleDisplay = reportModal.querySelector('#reportThreadTitle');
-                    const form = reportModal.querySelector('#reportForm');
-
-                    modalTitleDisplay.textContent = `"${threadTitle}"`;
-                    form.action = `{{ url('manajemen-mahasiswa/forum') }}/${threadId}/report`;
+                    const btn = event.relatedTarget;
+                    reportModal.querySelector('#reportThreadTitle').textContent = `"${btn.dataset.threadTitle}"`;
+                    reportModal.querySelector('#reportForm').action = `{{ url('manajemen-mahasiswa/forum') }}/${btn.dataset.threadId}/report`;
                 });
             }
         </script>
