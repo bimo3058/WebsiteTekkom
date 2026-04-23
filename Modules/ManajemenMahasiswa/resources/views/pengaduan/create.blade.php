@@ -1,4 +1,4 @@
-<x-dynamic-component :component="$isAdmin ? 'manajemenmahasiswa::layouts.admin' : 'manajemenmahasiswa::layouts.mahasiswa'">
+<x-dynamic-component :component="$isStaff ? 'manajemenmahasiswa::layouts.admin' : 'manajemenmahasiswa::layouts.mahasiswa'">
 
     @push('styles')
         <style>
@@ -104,7 +104,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.store') }}" class="custom-card">
+    <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.confirm') }}" class="custom-card">
         @csrf
 
         <div class="checkbox-wrapper d-flex align-items-center gap-3 mb-4">
@@ -117,14 +117,26 @@
 
         <div class="mb-4">
             <label class="form-label-custom d-block">Kategori Pengaduan <span class="text-danger">*</span></label>
-            <select name="kategori" class="form-select form-control-custom" required>
-                <option value="" disabled {{ old('kategori') ? '' : 'selected' }}>Pilih kategori masalah…</option>
-                @foreach($kategoriList as $value => $label)
-                    <option value="{{ $value }}" {{ old('kategori') === $value ? 'selected' : '' }}>
-                        {{ $label }}
-                    </option>
+            <div class="d-flex flex-column gap-2">
+                @foreach($kategoriList as $value => $meta)
+                    <label class="d-flex align-items-start justify-content-between gap-3 p-3" style="border: 2px solid #f3f4f6; border-radius: 10px; background: #f9fafb; cursor: pointer;">
+                        <span class="d-flex align-items-start gap-2" style="min-width: 0;">
+                            <input
+                                class="form-check-input mt-1"
+                                type="radio"
+                                name="kategori"
+                                value="{{ $value }}"
+                                {{ old('kategori') === $value ? 'checked' : '' }}
+                                {{ $loop->first ? 'required' : '' }}
+                                style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;">
+                            <span style="min-width: 0;">
+                                <span class="fw-bold text-dark d-block" style="font-size: 14px;">{{ $meta['label'] }}</span>
+                                <span class="text-muted d-block" style="font-size: 12px; line-height: 1.4;">Contoh: {{ $meta['example'] }}</span>
+                            </span>
+                        </span>
+                    </label>
                 @endforeach
-            </select>
+            </div>
         </div>
 
         <div class="row g-4 mb-4">
@@ -230,7 +242,7 @@
 
         <div class="d-flex justify-content-end gap-3 mt-5 pt-4" style="border-top: 1px solid #f3f4f6;">
             <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="btn-outline-custom text-decoration-none">Batal</a>
-            <button type="submit" class="btn-custom">🚀 Kirim Pengaduan</button>
+            <button type="submit" class="btn-custom">Lanjut Konfirmasi</button>
         </div>
     </form>
 
