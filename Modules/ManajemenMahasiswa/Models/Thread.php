@@ -133,6 +133,84 @@ class Thread extends Model
         return self::KATEGORI_COLORS[$this->kategori] ?? 'tag-gray';
     }
 
+    /**
+     * Cek apakah thread pernah diedit (updated_at > created_at).
+     */
+    public function isEdited(): bool
+    {
+        return $this->updated_at && $this->updated_at->gt($this->created_at);
+    }
+
+    /**
+     * Extract semua URL media (img src, video source src) dari konten HTML.
+     */
+    public function extractMediaUrls(): array
+    {
+        $urls = [];
+        if (!$this->konten) {
+            return $urls;
+        }
+
+        // Extract <img src="...">
+        if (preg_match_all('/<img[^>]+src=["\']([^"\']+)["\']/i', $this->konten, $matches)) {
+            foreach ($matches[1] as $url) {
+                $urls[] = ['type' => 'image', 'url' => $url];
+            }
+        }
+
+        // Extract <video>...<source src="...">
+        if (preg_match_all('/<source[^>]+src=["\']([^"\']+)["\']/i', $this->konten, $matches)) {
+            foreach ($matches[1] as $url) {
+                $urls[] = ['type' => 'video', 'url' => $url];
+            }
+        }
+
+        return $urls;
+    }
+
+    /**
+     * Hitung jumlah media di konten.
+     */
+    public function getMediaCount(): int
+    {
+        return count($this->extractMediaUrls());
+    }
+
+    /**
+     * Ambil teks murni dari konten (tanpa media tags).
+     */
+    public function getTextContent(): string
+    {
+        if (!$this->konten) {
+            return '';
+        }
+
+        // Hapus img tags
+        $text = preg_replace('/<img[^>]*>/i', '', $this->konten);
+        // Hapus video tags beserta isinya
+        $text = preg_replace('/<video[^>]*>.*?<\/video>/is', '', $text);
+        // Hapus link cards (anchor tag dengan class tertentu)
+        $text = preg_replace('/<a[^>]*class="[^"]*d-inline-flex[^"]*"[^>]*>.*?<\/a>/is', '', $text);
+        // Bersihkan br berlebih
+        $text = preg_replace('/(<br\s*\/?>)+/', "\n", $text);
+
+        return trim(strip_tags($text));
+    }
+
+    /**
+     * Ambil URL pertama gambar dari konten (untuk thumbnail di listing).
+     */
+    public function getFirstImageUrl(): ?string
+    {
+        $media = $this->extractMediaUrls();
+        foreach ($media as $item) {
+            if ($item['type'] === 'image') {
+                return $item['url'];
+            }
+        }
+        return null;
+    }
+
     public function syncVoteCount(): void
     {
         $this->update([

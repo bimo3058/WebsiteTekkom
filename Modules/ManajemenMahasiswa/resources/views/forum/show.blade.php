@@ -147,6 +147,40 @@
     .vote-btn:hover { color: #4f46e5; }
     .vote-btn.active-up { color: #16a34a; }
     .vote-btn.active-down { color: #dc2626; }
+
+    .edited-badge {
+        font-size: 12px;
+        color: #9ca3af;
+        font-style: italic;
+    }
+
+    .media-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+
+    .media-gallery img {
+        width: 100%;
+        border-radius: 8px;
+        border: 1px solid #e5e7eb;
+        cursor: pointer;
+        transition: transform 0.15s;
+    }
+
+    .media-gallery img:hover {
+        transform: scale(1.02);
+    }
+
+    .personal-pin-badge-show {
+        background: #dbeafe;
+        color: #2563eb;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 4px;
+    }
 </style>
 @endpush
 
@@ -169,7 +203,7 @@
 </div>
 
 <div class="forum-card">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+<div class="d-flex justify-content-between align-items-center mb-4">
         <div class="d-flex align-items-center gap-3">
             <div class="avatar-placeholder">
                 {{ strtoupper(substr($thread->author->name ?? '?', 0, 2)) }}
@@ -177,6 +211,9 @@
             <div>
                 <h5 class="fw-bold text-dark mb-0">{{ $thread->author->name ?? 'Unknown' }}</h5>
                 <span class="text-primary fw-medium" style="font-size: 13px;">• {{ $thread->created_at->diffForHumans() }}</span>
+                @if($thread->isEdited())
+                    <span class="edited-badge">(diedit {{ $thread->updated_at->diffForHumans() }})</span>
+                @endif
             </div>
         </div>
         <div class="d-flex align-items-center gap-3">
@@ -184,6 +221,31 @@
                 <span class="text-muted" style="cursor: pointer; font-size: 24px; line-height: 1;"
                       data-bs-toggle="dropdown">⋯</span>
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 8px;">
+                    {{-- Edit (owner + admin) --}}
+                    @if($thread->user_id === $user->id || $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
+                        <li>
+                            <a href="{{ route('manajemenmahasiswa.forum.edit', $thread->id) }}" class="dropdown-item">✏️ Edit Thread</a>
+                        </li>
+                    @endif
+                    {{-- Pin Global (admin only) --}}
+                    @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
+                        <li>
+                            <form method="POST" action="{{ route('manajemenmahasiswa.forum.pin', $thread->id) }}">
+                                @csrf @method('PATCH')
+                                <button type="submit" class="dropdown-item">
+                                    @if($thread->is_pinned) 🔓 Unpin Global @else 📌 Pin Global @endif
+                                </button>
+                            </form>
+                        </li>
+                    @endif
+                    {{-- Pin Pribadi --}}
+                    <li>
+                        <button type="button" class="dropdown-item" id="personalPinToggle">
+                            📌 <span id="personalPinLabel">Pin Pribadi</span>
+                        </button>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    {{-- Delete --}}
                     @if($thread->user_id === $user->id)
                         <li>
                             <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
@@ -192,24 +254,16 @@
                                 <button type="submit" class="dropdown-item text-danger">🗑️ Hapus Thread</button>
                             </form>
                         </li>
-                    @else
-                        @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
-                            <li>
-                                <form method="POST" action="{{ route('manajemenmahasiswa.forum.pin', $thread->id) }}">
-                                    @csrf @method('PATCH')
-                                    <button type="submit" class="dropdown-item">
-                                        @if($thread->is_pinned) 🔓 Unpin Thread @else 📌 Pin Thread @endif
-                                    </button>
-                                </form>
-                            </li>
-                            <li>
-                                <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
-                                      onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
-                                    @csrf @method('DELETE')
-                                    <button type="submit" class="dropdown-item text-danger">🗑️ Hapus Thread (Admin)</button>
-                                </form>
-                            </li>
-                        @endif
+                    @elseif($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
+                        <li>
+                            <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
+                                  onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="dropdown-item text-danger">🗑️ Hapus Thread (Admin)</button>
+                            </form>
+                        </li>
+                    @endif
+                    @if($thread->user_id !== $user->id)
                         <li>
                             <button type="button" class="dropdown-item text-danger"
                                     data-bs-toggle="modal" data-bs-target="#reportModal"
@@ -519,17 +573,33 @@
     const reportModal = document.getElementById('reportModal');
     if (reportModal) {
         reportModal.addEventListener('show.bs.modal', function (event) {
-            const button = event.relatedTarget;
-            const threadId = button.getAttribute('data-thread-id');
-            const threadTitle = button.getAttribute('data-thread-title');
-            
-            const modalTitleDisplay = reportModal.querySelector('#reportThreadTitle');
-            const form = reportModal.querySelector('#reportForm');
-            
-            modalTitleDisplay.textContent = `"${threadTitle}"`;
-            form.action = `{{ url('manajemen-mahasiswa/forum') }}/${threadId}/report`;
+            const btn = event.relatedTarget;
+            reportModal.querySelector('#reportThreadTitle').textContent = `"${btn.dataset.threadTitle}"`;
+            reportModal.querySelector('#reportForm').action = `{{ url('manajemen-mahasiswa/forum') }}/${btn.dataset.threadId}/report`;
         });
     }
+
+    // ---- Personal Pin (localStorage) ----
+    const PERSONAL_PINS_KEY = 'forum_personal_pins';
+    const threadId = {{ $thread->id }};
+    function getPersonalPins() { try { return JSON.parse(localStorage.getItem(PERSONAL_PINS_KEY)) || []; } catch { return []; } }
+    function updatePinLabel() {
+        const pins = getPersonalPins();
+        const label = document.getElementById('personalPinLabel');
+        if (label) label.textContent = pins.includes(threadId) ? 'Unpin Pribadi' : 'Pin Pribadi';
+    }
+    const pinToggle = document.getElementById('personalPinToggle');
+    if (pinToggle) {
+        pinToggle.addEventListener('click', function() {
+            let pins = getPersonalPins();
+            const idx = pins.indexOf(threadId);
+            if (idx > -1) pins.splice(idx, 1); else pins.push(threadId);
+            localStorage.setItem(PERSONAL_PINS_KEY, JSON.stringify(pins));
+            updatePinLabel();
+        });
+    }
+    updatePinLabel();
+
 </script>
 @endpush
 
