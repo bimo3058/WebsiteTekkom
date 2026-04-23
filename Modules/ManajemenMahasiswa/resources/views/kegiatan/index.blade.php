@@ -97,7 +97,7 @@
     }
     .kegiatan-card-image {
         width: 100%;
-        height: 170px;
+        aspect-ratio: 16 / 9;
         background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
         display: flex;
         align-items: center;
@@ -277,7 +277,7 @@
 @if($kegiatan->count() > 0)
     <div class="row g-4">
         @foreach($kegiatan as $item)
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 col-xxl-3">
                 <a href="{{ route('manajemenmahasiswa.kegiatan.show', $item->id) }}" class="kegiatan-card">
                     <!-- Image -->
                     <div class="kegiatan-card-image">

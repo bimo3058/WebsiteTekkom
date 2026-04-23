@@ -11,7 +11,7 @@ use App\Models\Lecturer;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\Bidang;
 use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
-use Modules\ManajemenMahasiswa\Models\Kepengurusan;
+use Modules\ManajemenMahasiswa\Models\KegiatanPeserta;
 use Modules\ManajemenMahasiswa\Models\RepoMulmed;
 
 class KegiatanController extends Controller
@@ -25,7 +25,7 @@ class KegiatanController extends Controller
         $kategoriList     = KategoriKegiatan::orderBy('nama_kategori')->get();
         $tahunList        = range(date('Y') + 1, 2008);
 
-        $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'kepengurusan', 'ketuaPelaksana.user', 'dosenPendamping.user'])
+        $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'ketuaPelaksana.user', 'dosenPendamping.user'])
             ->orderBy('tanggal_mulai', 'desc');
 
         // Filter by bidang or prodi
