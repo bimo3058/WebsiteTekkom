@@ -31,7 +31,7 @@
             <div class="grid grid-cols-1 gap-5 p-6 md:grid-cols-2 lg:grid-cols-3">
                 <div>
                     <label for="mk_id" class="mb-2 block text-sm font-semibold text-slate-700">Mata Kuliah</label>
-                    <select name="mk_id" id="mk_id" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required>
+                    <select name="mk_id" id="mk_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required>
                         <option value="">Pilih Mata Kuliah...</option>
                         @foreach($mataKuliahDosen as $mk)
                             <option value="{{ $mk->id }}" {{ old('mk_id') == $mk->id ? 'selected' : '' }}>{{ $mk->kode }} - {{ $mk->nama }}</option>
@@ -41,17 +41,17 @@
                 </div>
                 <div>
                     <label for="cpl_id" class="mb-2 block text-sm font-semibold text-slate-700">CPL</label>
-                    <select name="cpl_id" id="cpl_id" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required><option value="">Pilih CPL...</option></select>
+                    <select name="cpl_id" id="cpl_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="">Pilih CPL...</option></select>
                     @error('cpl_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label for="cpmk_id" class="mb-2 block text-sm font-semibold text-slate-700">CPMK</label>
-                    <select name="cpmk_id" id="cpmk_id" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required><option value="">Pilih CPMK...</option></select>
+                    <select name="cpmk_id" id="cpmk_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="">Pilih CPMK...</option></select>
                     @error('cpmk_id')<p class="mt-1 text-xs text-red-600">{{ $message }}</p>@enderror
                 </div>
                 <div>
                     <label for="kesulitan" class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label>
-                    <select name="kesulitan" id="kesulitan" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required>
+                    <select name="kesulitan" id="kesulitan" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required>
                         <option value="easy" {{ old('kesulitan') == 'easy' ? 'selected' : '' }}>Mudah (Easy)</option>
                         <option value="intermediate" {{ old('kesulitan') == 'intermediate' ? 'selected' : '' }}>Sedang (Medium)</option>
                         <option value="advanced" {{ old('kesulitan') == 'advanced' ? 'selected' : '' }}>Sulit (Hard)</option>
@@ -59,7 +59,7 @@
                 </div>
                 <div>
                     <label for="bobot" class="mb-2 block text-sm font-semibold text-slate-700">Bobot / Skor</label>
-                    <input type="number" id="bobot" name="bobot" min="1" value="{{ old('bobot', 10) }}" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required>
+                    <input type="number" id="bobot" name="bobot" min="1" value="{{ old('bobot', 10) }}" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:outline-none" required>
                 </div>
             </div>
 
@@ -67,11 +67,11 @@
                 <label class="mb-2 block text-sm font-semibold text-slate-700">Tipe Pertanyaan</label>
                 <div class="flex items-center gap-5 text-sm font-medium text-slate-700">
                     <label class="inline-flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="tipe_soal" value="pilihan_ganda" id="radioPg" {{ old('tipe_soal', 'pilihan_ganda') == 'pilihan_ganda' ? 'checked' : '' }} class="text-blue-600 focus:ring-blue-500 w-4 h-4" onchange="toggleTipeSoal(this.value)"> 
+                        <input type="radio" name="tipe_soal" value="pilihan_ganda" id="radioPg" {{ old('tipe_soal', 'pilihan_ganda') == 'pilihan_ganda' ? 'checked' : '' }} class="w-4 h-4" onchange="toggleTipeSoal(this.value)"> 
                         Pilihan Ganda
                     </label>
                     <label class="inline-flex items-center gap-2 cursor-pointer">
-                        <input type="radio" name="tipe_soal" value="essay" id="radioEssay" {{ old('tipe_soal') == 'essay' ? 'checked' : '' }} class="text-blue-600 focus:ring-blue-500 w-4 h-4" onchange="toggleTipeSoal(this.value)"> 
+                        <input type="radio" name="tipe_soal" value="essay" id="radioEssay" {{ old('tipe_soal') == 'essay' ? 'checked' : '' }} class="w-4 h-4" onchange="toggleTipeSoal(this.value)"> 
                         Essay
                     </label>
                 </div>
@@ -89,9 +89,9 @@
                 <div class="mb-3 flex items-center justify-between"><label class="text-sm font-semibold text-slate-700">Opsi Jawaban & Kunci</label><button type="button" id="addOptionBtn" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-colors">+ Tambah Opsi</button></div>
                 <div id="optionsContainer" class="space-y-3">
                     @for($i = 0; $i < max(count(old('jawaban', []) ?: [0, 1, 2]), 3); $i++)
-                        <label class="option-item flex items-start gap-3 rounded-xl border border-slate-200 p-4 {{ old('jawaban_benar') == (string)$i ? 'border-green-400 bg-green-50' : '' }}">
+                        <label class="option-item flex items-start gap-3 rounded-lg border border-slate-200 p-4 {{ old('jawaban_benar') == (string)$i ? 'border-green-400 bg-green-50' : '' }}">
                             <input type="radio" name="jawaban_benar" value="{{ $i }}" class="mt-1 h-4 w-4 text-green-600 focus:ring-green-500" {{ old('jawaban_benar') == (string)$i ? 'checked' : '' }} required>
-                            <div class="flex-1"><span class="option-title mb-1 block text-[11px] font-bold uppercase tracking-wide {{ old('jawaban_benar') == (string)$i ? 'text-green-700' : 'text-slate-400' }}">Pilihan {{ chr(65 + $i) }} {{ old('jawaban_benar') == (string)$i ? '(Kunci Jawaban)' : '' }}</span><input type="text" name="jawaban[{{$i}}][teks]" value="{{ old('jawaban.'.$i.'.teks') }}" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required></div>
+                            <div class="flex-1"><span class="option-title mb-1 block text-[11px] font-bold uppercase tracking-wide {{ old('jawaban_benar') == (string)$i ? 'text-green-700' : 'text-slate-400' }}">Pilihan {{ chr(65 + $i) }} {{ old('jawaban_benar') == (string)$i ? '(Kunci Jawaban)' : '' }}</span><input type="text" name="jawaban[{{$i}}][teks]" value="{{ old('jawaban.'.$i.'.teks') }}" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none" required></div>
                             @if($i > 2)<button type="button" class="remove-btn text-red-500 hover:text-red-600" aria-label="Hapus opsi"><i class="fas fa-times-circle"></i></button>@endif
                         </label>
                     @endfor
@@ -100,7 +100,7 @@
 
             <div class="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-4">
                 <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-sm font-semibold text-slate-600 hover:text-slate-700">Batalkan</a>
-                <div class="flex items-center gap-2"><button type="submit" name="submit_action" value="draft" class="rounded-xl bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-900">Simpan Draft</button><button type="submit" name="submit_action" value="publish" class="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">Publikasi Soal</button></div>
+                <div class="flex items-center gap-2"><button type="submit" name="submit_action" value="draft" class="rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-900">Simpan Draft</button><button type="submit" name="submit_action" value="publish" class="rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-900">Publikasi Soal</button></div>
             </div>
         </form>
     </x-banksoal::ui.panel>
@@ -234,7 +234,7 @@
                 const cplId = this.value;
                 cpmkSelect.innerHTML = '<option value="">Memuat CPMK...</option>';
                 if (cplId) {
-                    fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_ids[]=${cplId}`)
+                    fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${cplId}`)
                         .then(r => r.json())
                         .then(data => {
                             cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
@@ -276,8 +276,8 @@
                 const optIndex = container.children.length;
                 const letter = String.fromCharCode(65 + optIndex);
                 const label = document.createElement('label');
-                label.className = 'option-item flex items-start gap-3 rounded-xl border border-slate-200 p-4';
-                label.innerHTML = `<input type="radio" name="jawaban_benar" value="${optIndex}" class="mt-1 h-4 w-4 text-green-600 focus:ring-green-500" required><div class="flex-1"><span class="option-title mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Pilihan ${letter}</span><input type="text" name="jawaban[${optIndex}][teks]" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20" required></div><button type="button" class="remove-btn text-red-500 hover:text-red-600" aria-label="Hapus opsi"><i class="fas fa-times-circle"></i></button>`;
+                div.className = 'option-item flex items-start gap-3 rounded-lg border border-slate-200 p-4';
+                label.innerHTML = `<input type="radio" name="jawaban_benar" value="${optIndex}" class="mt-1 h-4 w-4 text-green-600 focus:ring-green-500" required><div class="flex-1"><span class="option-title mb-1 block text-[11px] font-bold uppercase tracking-wide text-slate-400">Pilihan ${letter}</span><input type="text" name="jawaban[${optIndex}][teks]" class="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none" required></div><button type="button" class="remove-btn text-red-500 hover:text-red-600" aria-label="Hapus opsi"><i class="fas fa-times-circle"></i></button>`;
                 container.appendChild(label);
                 updateStyles();
             });

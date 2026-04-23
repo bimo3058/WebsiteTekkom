@@ -18,7 +18,7 @@
                 </div>
             </div>
 
-            <a href="{{ route('banksoal.soal.dosen.create') }}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2.5 font-medium transition-colors shadow-sm">
+            <a href="{{ route('banksoal.soal.dosen.create') }}" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg px-4 py-2.5 font-medium transition-colors shadow-sm">
                 <i class="fas fa-plus"></i> Buat Soal
             </a>
             
@@ -85,7 +85,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
             </div>
-            <input type="text" name="searchSoal" list="search-suggestions" value="{{ request('searchSoal') }}" placeholder="Cari soal, kursus, atau topik..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" autocomplete="off">
+            <input type="text" name="searchSoal" list="search-suggestions" value="{{ request('searchSoal') }}" placeholder="Cari soal, kursus, atau topik..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" autocomplete="off">
             <datalist id="search-suggestions">
                 @foreach($mataKuliahDosen as $mk)
                     <option value="{{ $mk->nama }}"></option>
@@ -94,14 +94,14 @@
             </datalist>
         </div>
 
-        <select name="mk_id" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer min-w-[160px] flex-shrink-0">
+        <select name="mk_id" class="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none cursor-pointer min-w-[160px] flex-shrink-0">
             <option value="">Semua Mata Kuliah...</option>
             @foreach($mataKuliahDosen as $mk)
                 <option value="{{ $mk->id }}" {{ request('mk_id') == $mk->id ? 'selected' : '' }}>{{ $mk->nama }}</option>
             @endforeach
         </select>
 
-        <select name="status" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer min-w-[140px] flex-shrink-0">
+        <select name="status" class="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none cursor-pointer min-w-[140px] flex-shrink-0">
             <option value="">Semua Status...</option>
             <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Draft</option>
             <option value="diajukan" {{ request('status') == 'diajukan' ? 'selected' : '' }}>Diajukan</option>
@@ -221,7 +221,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
                 </div>
-                <input type="text" list="packageSuggestions" autocomplete="off" name="searchPackages" value="{{ request('searchPackages') }}" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder="Cari paket soal, kode mata kuliah, atau nama..." id="searchPackages">
+                <input type="text" list="packageSuggestions" autocomplete="off" name="searchPackages" value="{{ request('searchPackages') }}" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" placeholder="Cari paket soal, kode mata kuliah, atau nama..." id="searchPackages">
                 <datalist id="packageSuggestions">
                     @foreach(($mataKuliahDosen ?? collect()) as $mk)
                         <option value="{{ $mk->nama }}"></option>
@@ -343,7 +343,7 @@
                 <div class="mb-5">
                     <label class="block text-sm font-medium text-slate-700 mb-2">Mata Kuliah</label>
                     <div class="relative">
-                        <select class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="mk_id" id="tarikMkId" required onchange="loadCplCpmk(this.value)">
+                        <select class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="mk_id" id="tarikMkId" required onchange="loadCplCpmk(this.value)">
                             <option value="">Pilih  Mata Kuliah</option>
                             @foreach($mataKuliahDosen as $mk)
                                 <option value="{{ $mk->id }}">{{ $mk->kode }} - {{ $mk->nama }}</option>
@@ -360,11 +360,11 @@
                     <label class="block text-sm font-medium text-slate-700 mb-3">Jenis Soal</label>
                     <div class="grid grid-cols-2 gap-3">
                         <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                            <input type="checkbox" name="jenis_soal[]" value="Pilihan Ganda" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
+                            <input type="checkbox" name="jenis_soal[]" value="Pilihan Ganda" class="w-4 h-4 border-slate-300 rounded">
                             <span class="text-sm font-medium text-slate-700">Pilihan Ganda</span>
                         </label>
                         <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                            <input type="checkbox" name="jenis_soal[]" value="Essay" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
+                            <input type="checkbox" name="jenis_soal[]" value="Essay" class="w-4 h-4 border-slate-300 rounded">
                             <span class="text-sm font-medium text-slate-700">Essay</span>
                         </label>
                     </div>
@@ -374,7 +374,7 @@
                 <div class="mb-5">
                     <label class="block text-sm font-medium text-slate-700 mb-2">CPL (Capaian Pembelajaran Lulusan)</label>
                     <div class="relative">
-                        <select class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="cpl_id">
+                        <select class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="cpl_id">
                             <option value="">Pilih CPL</option>
                         </select>
                         <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
@@ -387,7 +387,7 @@
                 <div class="mb-5">
                     <label class="block text-sm font-medium text-slate-700 mb-2">CPMK (Capaian Pembelajaran Mata Kuliah)</label>
                     <div class="relative">
-                        <select class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="cpmk_id">
+                        <select class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="cpmk_id">
                             <option value="">Pilih CPMK</option>
                         </select>
                         <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
@@ -400,7 +400,7 @@
                 <div class="mb-2">
                     <label class="block text-sm font-medium text-slate-700 mb-2">Bobot Total</label>
                     <div class="relative">
-                        <input type="number" name="bobot_total" min="1" max="100" class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2.5 pl-4 pr-12 shadow-sm" placeholder="Contoh: 100" oninput="if(this.value > 100) this.value = 100; if(this.value < 0) this.value = 0;">
+                        <input type="number" name="bobot_total" min="1" max="100" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-12 shadow-sm" placeholder="Contoh: 100" oninput="if(this.value > 100) this.value = 100; if(this.value < 0) this.value = 0;">
                         <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                             <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">Pts</span>
                         </div>

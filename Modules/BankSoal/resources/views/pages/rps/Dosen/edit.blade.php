@@ -6,7 +6,7 @@
         subtitle="Perbarui data rencana pembelajaran semester dan dokumen pendukung." 
     />
 
-    <div class="card mb-8 overflow-hidden">
+    <div class="card mb-8">
         <div class="card-header">
             <h2 class="text-lg font-semibold text-slate-900">Formulir Edit RPS</h2>
             <p class="text-sm text-slate-600 mt-1">Status: <span class="badge {{ match($rps->status->value) {
@@ -17,7 +17,12 @@
             } }}">{{ $rps->status->label() }}</span></p>
         </div>
 
-        <form action="{{ route('banksoal.rps.dosen.update', $rps->id) }}" method="POST" enctype="multipart/form-data" class="p-4 space-y-6">
+        <form action="{{ route('banksoal.rps.dosen.update', $rps->id) }}" method="POST" enctype="multipart/form-data" class="p-4 space-y-6"
+            data-route-dosen="{{ route('banksoal.rps.dosen.dosen') }}"
+            data-route-cpl="{{ route('banksoal.rps.dosen.cpl') }}"
+            data-route-cpmk="{{ route('banksoal.rps.dosen.cpmk') }}"
+            data-route-cpmk-by-rps="{{ route('banksoal.rps.dosen.cpmk-by-rps', $rps->id) }}"
+            data-rps-id="{{ $rps->id }}">
             @csrf
             @method('PUT')
 
@@ -40,7 +45,8 @@
 
                 <div class="form-group-compact">
                     <label class="form-label">Dosen Pengampu Lain</label>
-                    <div id="dosenMs" class="form-control compact-control" data-name="dosen_lain[]" data-placeholder="Pilih dosen pengampu tambahan" data-disabled="false"></div>
+                    <select name="dosen_lain[]" id="dosenSelect" class="form-control compact-control" multiple {{ !$isUploadOpen ? 'disabled' : '' }}>
+                    </select>
                     <small class="form-hint">Pilih satu atau lebih dosen pengampu tambahan.</small>
                 </div>
             </div>
@@ -65,22 +71,24 @@
                 </div>
             </div>
 
-            <!-- CPL (Full Width) -->
+            <!-- CPL (Full Width) - Multiselect -->
             <div class="form-group">
                 <label class="form-label form-label-required">Capaian Pembelajaran Lulusan (CPL)</label>
-                <div id="cplMs" class="form-control" data-name="cpl_ids[]" data-placeholder="Pilih CPL" data-disabled="false"></div>
-                <small class="form-hint">CPL akan tersedia setelah mata kuliah dipilih.</small>
-                @error('cpl_ids')
+                <select name="cpl_id[]" id="cplSelect" class="form-control" multiple required {{ !$isUploadOpen ? 'disabled' : '' }}>
+                </select>
+                <small class="form-hint">Pilih satu atau lebih CPL. CPL akan tersedia setelah mata kuliah dipilih.</small>
+                @error('cpl_id')
                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>
 
-            <!-- CPMK (Full Width) -->
+            <!-- CPMK (Full Width) - Multiselect -->
             <div class="form-group">
                 <label class="form-label form-label-required">Capaian Pembelajaran Mata Kuliah (CPMK)</label>
-                <div id="cpmkMs" class="form-control" data-name="cpmk_ids[]" data-placeholder="Pilih CPMK" data-disabled="false"></div>
-                <small class="form-hint">CPMK akan tersedia setelah CPL dipilih.</small>
-                @error('cpmk_ids')
+                <select name="cpmk_id[]" id="cpmkSelect" class="form-control" multiple required {{ !$isUploadOpen ? 'disabled' : '' }}>
+                </select>
+                <small class="form-hint">Pilih satu atau lebih CPMK.</small>
+                @error('cpmk_id')
                     <p class="text-red-600 text-sm mt-1">{{ $message }}</p>
                 @enderror
             </div>
@@ -169,21 +177,11 @@
                     }
 
                     .compact-control {
-                        height: 52px;
-                        min-height: 52px;
-                        padding-top: 10px;
-                        padding-bottom: 10px;
+                        height: auto;
+                        min-height: 44px;
+                        padding: 8px 12px;
                     }
 
-                    #dosenMs .ms-trigger {
-                        height: 38px;
-                        min-height: 38px;
-                    }
-
-                    #dosenMs .ms-placeholder,
-                    #dosenMs .ms-selected {
-                        font-size: 14px;
-                    }
                 </style>
             @endonce
 
@@ -238,7 +236,6 @@
     </div>
 
     <script src="{{ asset('modules/banksoal/js/Banksoal/components/Dropdown.js') }}"></script>
-    <script src="{{ asset('modules/banksoal/js/Banksoal/components/MultiSelect.js') }}"></script>
     <script src="{{ asset('modules/banksoal/js/Banksoal/components/RpsForm.js') }}"></script>
 
     <script>
@@ -251,68 +248,101 @@
                 '#tahun_ajaran': 'Pilih Tahun Ajaran',
             });
 
-            const dosenMs = new MultiSelect(document.getElementById('dosenMs'), { maxWidth: 467, keepOpen: true });
-            const cplMs = new MultiSelect(document.getElementById('cplMs'), { maxWidth: 467, keepOpen: true });
-            const cpmkMs = new MultiSelect(document.getElementById('cpmkMs'), { maxWidth: 467, keepOpen: true });
+            // Pre-select existing data - now single values instead of arrays
+            const selectedDosenId = @json($selectedDosenIds[0] ?? null);
+            const selectedCplId = @json($selectedCplIds[0] ?? null);
+            const selectedCpmkId = @json($selectedCpmkIds[0] ?? null);
 
-            // Pre-select existing data
-            const selectedDosenIds = @json($selectedDosenIds ?? []);
-            const selectedCplIds = @json($selectedCplIds ?? []);
-            const selectedCpmkIds = @json($selectedCpmkIds ?? []);
+            // Initialize RPS Form
+            const rpsForm = new RpsFormComponent();
+            rpsForm.init();
 
-            // Initialize dosen multi-select with existing data
-            if (selectedDosenIds.length > 0) {
-                const mkId = document.getElementById('mkSelect').value;
-                if (mkId) {
-                    fetch(`{{ route('banksoal.rps.dosen.dosen') }}?mk_id=${mkId}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            const options = data.map(d => ({
-                                text: d.name,
-                                value: d.id,
-                                selected: selectedDosenIds.includes(d.id)
-                            }));
-                            dosenMs.setOptData(options);
-                        })
-                        .catch(err => console.error('Error loading dosen:', err));
-                }
-            }
+            // Populate select elements with existing data on page load
+            const mkSelect = document.getElementById('mkSelect');
+            const dosenSelect = document.getElementById('dosenSelect');
+            const cplSelect = document.getElementById('cplSelect');
+            const cpmkSelect = document.getElementById('cpmkSelect');
 
-            // Initialize CPL multi-select with existing data
-            if (selectedCplIds.length > 0) {
-                fetch(`{{ route('banksoal.rps.dosen.cpl') }}`)
+            // Load dosen data if mata kuliah is selected
+            if (mkSelect.value) {
+                fetch(`{{ route('banksoal.rps.dosen.dosen') }}?mk_id=${mkSelect.value}`)
                     .then(response => response.json())
                     .then(data => {
-                        const options = data.map(c => ({
-                            text: `${c.kode} - ${c.deskripsi}`,
-                            value: c.id,
-                            selected: selectedCplIds.includes(c.id)
-                        }));
-                        cplMs.setOptData(options);
+                        dosenSelect.innerHTML = '<option value="">Pilih dosen pengampu tambahan</option>';
+                        data.forEach(d => {
+                            const option = document.createElement('option');
+                            option.value = d.id;
+                            option.textContent = d.name;
+                            if (selectedDosenId && d.id === selectedDosenId) {
+                                option.selected = true;
+                            }
+                            dosenSelect.appendChild(option);
+                        });
                     })
-                    .catch(err => console.error('Error loading CPL:', err));
+                    .catch(err => console.error('Error loading dosen:', err));
             }
 
-            // Initialize CPMK multi-select with existing data
-            if (selectedCpmkIds.length > 0) {
-                const cplIds = selectedCplIds;
-                if (cplIds.length > 0) {
-                    const queryString = cplIds.map(id => `cpl_ids[]=${id}`).join('&');
-                    fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?${queryString}`)
-                        .then(response => response.json())
-                        .then(data => {
-                            const options = data.map(c => ({
-                                text: `${c.kode} - ${c.deskripsi}`,
-                                value: c.id,
-                                selected: selectedCpmkIds.includes(c.id)
-                            }));
-                            cpmkMs.setOptData(options);
-                        })
-                        .catch(err => console.error('Error loading CPMK:', err));
+            // Load CPL data
+            fetch(`{{ route('banksoal.rps.dosen.cpl') }}`)
+                .then(response => response.json())
+                .then(data => {
+                    cplSelect.innerHTML = '<option value="">Pilih CPL</option>';
+                    data.forEach(c => {
+                        const option = document.createElement('option');
+                        option.value = c.id;
+                        option.textContent = c.kode;
+                        if (selectedCplId && c.id === selectedCplId) {
+                            option.selected = true;
+                        }
+                        cplSelect.appendChild(option);
+                    });
+                })
+                .catch(err => console.error('Error loading CPL:', err));
+
+            // Load CPMK data if CPL is selected
+            if (selectedCplId) {
+                fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${selectedCplId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        cpmkSelect.innerHTML = '<option value="">Pilih CPMK</option>';
+                        data.forEach(c => {
+                            const option = document.createElement('option');
+                            option.value = c.id;
+                            option.textContent = c.kode;
+                            if (selectedCpmkId && c.id === selectedCpmkId) {
+                                option.selected = true;
+                            }
+                            cpmkSelect.appendChild(option);
+                        });
+                    })
+                    .catch(err => console.error('Error loading CPMK:', err));
+            }
+
+            // Handle CPL change to update CPMK
+            cplSelect.addEventListener('change', function() {
+                const cplId = cplSelect.value;
+                
+                if (!cplId) {
+                    cpmkSelect.innerHTML = '<option value="">Pilih CPMK</option>';
+                    cpmkSelect.disabled = true;
+                    return;
                 }
-            }
 
-            RpsForm.init({ dosenMs, cplMs, cpmkMs });
+                cpmkSelect.disabled = false;
+                fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${cplId}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        cpmkSelect.innerHTML = '<option value="">Pilih CPMK</option>';
+                        data.forEach(c => {
+                            const option = document.createElement('option');
+                            option.value = c.id;
+                            option.textContent = c.kode;
+                            cpmkSelect.appendChild(option);
+                        });
+                    })
+                    .catch(err => console.error('Error loading CPMK:', err));
+            });
+
             console.log('RPS Edit Form initialized successfully');
         } catch (error) {
             console.error('Error during RPS edit form initialization:', error);

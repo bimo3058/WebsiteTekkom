@@ -1,7 +1,6 @@
 <!-- RPS Page Scripts Component -->
+<script src="{{ asset('modules/banksoal/js/Banksoal/shared/RpsMultiselectHandler.js') }}"></script>
 <script src="{{ asset('modules/banksoal/js/Banksoal/components/Dropdown.js') }}"></script>
-<script src="{{ asset('modules/banksoal/js/Banksoal/components/MultiSelect.js') }}"></script>
-<script src="{{ asset('modules/banksoal/js/Banksoal/components/RpsForm.js') }}"></script>
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
@@ -13,11 +12,23 @@ document.addEventListener('DOMContentLoaded', function() {
             '#tahun_ajaran': 'Pilih Tahun Ajaran',
         });
 
-        const dosenMs = new MultiSelect(document.getElementById('dosenMs'), { maxWidth: 467, keepOpen: true });
-        const cplMs = new MultiSelect(document.getElementById('cplMs'), { maxWidth: 467, keepOpen: true });
-        const cpmkMs = new MultiSelect(document.getElementById('cpmkMs'), { maxWidth: 467, keepOpen: true });
+        // Initialize multiselect handler
+        const rpsMultiselect = new RpsMultiselectHandler();
+        rpsMultiselect.init();
 
-        RpsForm.init({ dosenMs, cplMs, cpmkMs });
+        // For edit form, populate pre-selected data
+        const rpsId = document.querySelector('form')?.dataset.rpsId;
+        if (rpsId) {
+            // Pre-populate CPMK from RPS ID
+            rpsMultiselect.populateCpmkForEdit(rpsId);
+
+            // Trigger MK change to load CPL and Dosen
+            const mkSelect = document.getElementById('mkSelect');
+            if (mkSelect && mkSelect.value) {
+                mkSelect.dispatchEvent(new Event('change'));
+            }
+        }
+
         console.log('RPS Form initialized successfully');
     } catch (error) {
         console.error('Error during RPS form initialization:', error);
