@@ -10,7 +10,6 @@
                 margin-bottom: 20px;
             }
 
-            /* Form Elements */
             .form-label {
                 font-weight: 600;
                 color: #1f2937;
@@ -51,7 +50,6 @@
                 position: relative;
             }
 
-            /* Action Buttons */
             .btn-action {
                 border-radius: 8px;
                 padding: 10px 24px;
@@ -64,25 +62,11 @@
                 transition: all 0.2s;
             }
 
-            .btn-post {
-                background-color: #818cf8;
-                color: white;
-            }
+            .btn-post { background-color: #818cf8; color: white; }
+            .btn-post:hover { background-color: #6366f1; }
+            .btn-cancel { background-color: #ef4444; color: white; }
+            .btn-cancel:hover { background-color: #dc2626; }
 
-            .btn-post:hover {
-                background-color: #6366f1;
-            }
-
-            .btn-cancel {
-                background-color: #ef4444;
-                color: white;
-            }
-
-            .btn-cancel:hover {
-                background-color: #dc2626;
-            }
-
-            /* Collapsible Section */
             .section-toggle {
                 display: flex;
                 align-items: center;
@@ -100,17 +84,8 @@
                 text-align: left;
             }
 
-            .section-toggle:hover {
-                background: #eef2ff;
-                border-color: #818cf8;
-                color: #4f46e5;
-            }
-
-            .section-toggle.active {
-                background: #eef2ff;
-                border-color: #818cf8;
-                color: #4f46e5;
-            }
+            .section-toggle:hover { background: #eef2ff; border-color: #818cf8; color: #4f46e5; }
+            .section-toggle.active { background: #eef2ff; border-color: #818cf8; color: #4f46e5; }
 
             .section-content {
                 max-height: 0;
@@ -123,7 +98,6 @@
                 padding-top: 16px;
             }
 
-            /* Media Upload Dropzone */
             .media-dropzone {
                 border: 2px dashed #d1d5db;
                 border-radius: 12px;
@@ -135,30 +109,14 @@
                 position: relative;
             }
 
-            .media-dropzone:hover,
-            .media-dropzone.dragover {
+            .media-dropzone:hover, .media-dropzone.dragover {
                 border-color: #818cf8;
                 background: #eef2ff;
             }
 
-            .media-dropzone .dropzone-text {
-                font-size: 15px;
-                font-weight: 600;
-                color: #374151;
-                margin-bottom: 4px;
-            }
-
-            .media-dropzone .dropzone-hint {
-                font-size: 13px;
-                color: #9ca3af;
-            }
-
-            .media-dropzone input[type="file"] {
-                position: absolute;
-                inset: 0;
-                opacity: 0;
-                cursor: pointer;
-            }
+            .media-dropzone .dropzone-text { font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 4px; }
+            .media-dropzone .dropzone-hint { font-size: 13px; color: #9ca3af; }
+            .media-dropzone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
 
             .media-preview-grid {
                 display: grid;
@@ -176,75 +134,59 @@
                 aspect-ratio: 1;
             }
 
-            .media-preview-item img,
-            .media-preview-item video {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
+            .media-preview-item img, .media-preview-item video {
+                width: 100%; height: 100%; object-fit: cover;
             }
 
             .media-preview-item .remove-media {
-                position: absolute;
-                top: 6px;
-                right: 6px;
-                width: 26px;
-                height: 26px;
-                border-radius: 50%;
-                background: rgba(239, 68, 68, 0.9);
-                color: white;
-                border: none;
-                font-size: 14px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                transition: transform 0.15s;
-                z-index: 2;
+                position: absolute; top: 6px; right: 6px;
+                width: 26px; height: 26px; border-radius: 50%;
+                background: rgba(239, 68, 68, 0.9); color: white;
+                border: none; font-size: 14px;
+                display: flex; align-items: center; justify-content: center;
+                cursor: pointer; transition: transform 0.15s; z-index: 2;
             }
 
-            .media-preview-item .remove-media:hover {
-                transform: scale(1.15);
-            }
+            .media-preview-item .remove-media:hover { transform: scale(1.15); }
 
             .media-preview-item .file-name {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                padding: 4px 8px;
-                background: rgba(0, 0, 0, 0.55);
-                color: white;
-                font-size: 11px;
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
+                position: absolute; bottom: 0; left: 0; right: 0;
+                padding: 4px 8px; background: rgba(0, 0, 0, 0.55);
+                color: white; font-size: 11px;
+                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+            }
+
+            .existing-badge {
+                position: absolute; top: 6px; left: 6px;
+                background: rgba(79, 70, 229, 0.85); color: white;
+                font-size: 10px; font-weight: 700;
+                padding: 2px 6px; border-radius: 4px; z-index: 2;
             }
 
             .media-counter {
-                font-size: 13px;
-                font-weight: 600;
-                padding: 4px 12px;
-                border-radius: 20px;
-                display: inline-block;
-                margin-top: 8px;
+                font-size: 13px; font-weight: 600;
+                padding: 4px 12px; border-radius: 20px;
+                display: inline-block; margin-top: 8px;
             }
-
             .media-counter.ok { background: #dcfce7; color: #16a34a; }
             .media-counter.warn { background: #fef3c7; color: #d97706; }
             .media-counter.full { background: #fee2e2; color: #dc2626; }
         </style>
     @endpush
 
-    <div class="mb-4">
-        <h3 class="fw-bold mb-1 text-dark">Forum Diskusi</h3>
-        <p class="text-dark fw-bold" style="font-size: 14px;">Wadah komunikasi mahasiswa & alumni</p>
+    <div class="mb-4 d-flex align-items-center gap-3">
+        <a href="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}"
+            class="btn btn-light rounded-circle shadow-sm d-flex align-items-center justify-content-center"
+            style="width: 40px; height: 40px;">
+            <span aria-hidden="true">&larr;</span>
+        </a>
+        <div>
+            <h3 class="fw-bold mb-0 text-dark">Edit Thread</h3>
+            <p class="text-muted text-sm fw-medium mb-0">Perbarui konten postingan Anda</p>
+        </div>
     </div>
 
     <div class="create-post-card">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h4 class="fw-bold text-dark mb-0">Buat Post</h4>
-        </div>
-
         @if($errors->any())
             <div class="alert alert-danger" style="border-radius: 10px; border: none; font-size: 14px;">
                 <ul class="mb-0">
@@ -255,9 +197,20 @@
             </div>
         @endif
 
-        <form action="{{ route('manajemenmahasiswa.forum.store') }}" method="POST" id="createPostForm"
+        @php
+            $existingMedia = $thread->extractMediaUrls();
+            $existingText = $thread->getTextContent();
+            // Extract link from konten
+            $existingLink = '';
+            if (preg_match('/href=["\']([^"\']+)["\']/', $thread->konten ?? '', $m)) {
+                $existingLink = $m[1];
+            }
+        @endphp
+
+        <form action="{{ route('manajemenmahasiswa.forum.update', $thread->id) }}" method="POST" id="editPostForm"
             enctype="multipart/form-data">
             @csrf
+            @method('PUT')
 
             {{-- Judul --}}
             <div class="mb-4">
@@ -266,7 +219,7 @@
                     <input type="text" name="judul" id="inputJudul"
                         class="custom-input @error('judul') border-danger @enderror"
                         placeholder="Tuliskan judul yang menarik dan deskriptif..." maxlength="200" required
-                        value="{{ old('judul') }}">
+                        value="{{ old('judul', $thread->judul) }}">
                     <span class="char-count"><span id="judulCount">0</span>/200</span>
                 </div>
             </div>
@@ -276,9 +229,8 @@
                 <label class="form-label">Kategori Postingan <span class="text-danger">*</span></label>
                 <select name="kategori" id="inputKategori"
                     class="custom-select form-select @error('kategori') border-danger @enderror" required>
-                    <option value="" disabled {{ old('kategori') ? '' : 'selected' }}>Pilih Kategori Obrolan</option>
                     @foreach($categories as $key => $label)
-                        <option value="{{ $key }}" {{ old('kategori') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                        <option value="{{ $key }}" {{ old('kategori', $thread->kategori) === $key ? 'selected' : '' }}>{{ $label }}</option>
                     @endforeach
                 </select>
             </div>
@@ -287,47 +239,72 @@
             <div class="mb-4">
                 <label class="form-label">Isi Postingan</label>
                 <textarea name="konten" id="inputKonten" class="custom-textarea" rows="6"
-                    placeholder="Bagikan apa yang ada di pikiranmu...">{{ old('konten') }}</textarea>
+                    placeholder="Bagikan apa yang ada di pikiranmu...">{{ old('konten', $existingText) }}</textarea>
             </div>
 
             {{-- Media Upload (Collapsible) --}}
             <div class="mb-4">
-                <button type="button" class="section-toggle" id="toggleMedia" onclick="toggleSection('media')">
-                    📷 Tambah Gambar / Video
+                <button type="button" class="section-toggle {{ count($existingMedia) > 0 ? 'active' : '' }}" id="toggleMedia" onclick="toggleSection('media')">
+                    📷 Gambar / Video
+                    @if(count($existingMedia) > 0)
+                        <span style="background: #818cf8; color: white; font-size: 11px; padding: 1px 8px; border-radius: 10px; margin-left: 4px;">{{ count($existingMedia) }} file</span>
+                    @endif
                     <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
                 </button>
-                <div class="section-content" id="sectionMedia">
+                <div class="section-content {{ count($existingMedia) > 0 ? 'open' : '' }}" id="sectionMedia">
+                    {{-- Existing media --}}
+                    @if(count($existingMedia) > 0)
+                        <label class="form-label mb-2" style="font-size: 13px; color: #6b7280;">Media yang sudah ada (klik ✕ untuk menghapus):</label>
+                        <div class="media-preview-grid mb-3" id="existingMediaGrid">
+                            @foreach($existingMedia as $i => $media)
+                                <div class="media-preview-item" id="existing-media-{{ $i }}">
+                                    <span class="existing-badge">Existing</span>
+                                    <button type="button" class="remove-media" onclick="removeExistingMedia({{ $i }}, '{{ $media['url'] }}')">✕</button>
+                                    @if($media['type'] === 'image')
+                                        <img src="{{ $media['url'] }}" alt="Media">
+                                    @else
+                                        <video src="{{ $media['url'] }}" muted></video>
+                                    @endif
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    {{-- Upload new media --}}
                     <div class="media-dropzone" id="mediaDropzone">
                         <input type="file" name="media_files[]" id="mediaFileInput" multiple
                             accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm">
-                        <div class="dropzone-text">Click atau drag file ke sini</div>
-                        <div class="dropzone-hint">JPG, PNG, GIF, WEBP, MP4, WEBM • Maks 10MB per file • Maks 5 file</div>
+                        <div class="dropzone-text">Tambah gambar / video baru</div>
+                        <div class="dropzone-hint">JPG, PNG, GIF, WEBP, MP4, WEBM • Maks 10MB per file</div>
                     </div>
                     <div id="mediaCounter"></div>
                     <div class="media-preview-grid" id="mediaPreviewGrid"></div>
                 </div>
             </div>
 
+            {{-- Hidden inputs untuk media yang dihapus --}}
+            <div id="removeMediaInputs"></div>
+
             {{-- Link (Collapsible) --}}
             <div class="mb-5">
-                <button type="button" class="section-toggle" id="toggleLink" onclick="toggleSection('link')">
-                    🔗 Tambah Link
+                <button type="button" class="section-toggle {{ $existingLink ? 'active' : '' }}" id="toggleLink" onclick="toggleSection('link')">
+                    🔗 Link
                     <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
                 </button>
-                <div class="section-content" id="sectionLink">
+                <div class="section-content {{ $existingLink ? 'open' : '' }}" id="sectionLink">
                     <input type="url" name="link_url" id="inputLinkUrl" class="custom-input"
-                        placeholder="https://contoh.com/artikel-menarik" value="{{ old('link_url') }}">
+                        placeholder="https://contoh.com/artikel-menarik" value="{{ old('link_url', $existingLink) }}">
                 </div>
             </div>
 
             {{-- Action Buttons --}}
             <div class="d-flex justify-content-end gap-3 align-items-center pb-2">
-                <a href="{{ route('manajemenmahasiswa.forum.index') }}"
+                <a href="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}"
                     class="btn-action btn-cancel text-decoration-none shadow-sm">
                     <span>✕</span> Batal
                 </a>
                 <button type="submit" class="btn-action btn-post shadow-sm px-4">
-                    Terbitkan
+                    💾 Simpan Perubahan
                 </button>
             </div>
         </form>
@@ -346,12 +323,32 @@
             // ---- Character Counter ----
             const judulInput = document.getElementById('inputJudul');
             const judulCount = document.getElementById('judulCount');
-            if (judulInput.value) judulCount.textContent = judulInput.value.length;
+            judulCount.textContent = judulInput.value.length;
             judulInput.addEventListener('input', function() {
                 judulCount.textContent = this.value.length;
             });
 
-            // ---- Media Upload ----
+            // ---- Existing Media Removal ----
+            let removedMediaUrls = [];
+            let existingKeptCount = {{ count($existingMedia) }};
+
+            function removeExistingMedia(index, url) {
+                document.getElementById(`existing-media-${index}`).remove();
+                removedMediaUrls.push(url);
+                existingKeptCount--;
+
+                // Add hidden input
+                const container = document.getElementById('removeMediaInputs');
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'remove_media[]';
+                input.value = url;
+                container.appendChild(input);
+
+                updateCounter();
+            }
+
+            // ---- New Media Upload ----
             const mediaFileInput = document.getElementById('mediaFileInput');
             const mediaDropzone = document.getElementById('mediaDropzone');
             const mediaPreviewGrid = document.getElementById('mediaPreviewGrid');
@@ -369,9 +366,10 @@
             });
 
             function addMediaFiles(fileList) {
+                const totalAllowed = MAX_FILES - existingKeptCount;
                 for (const file of fileList) {
-                    if (selectedFiles.length >= MAX_FILES) {
-                        alert(`Maksimal ${MAX_FILES} file yang bisa diupload.`);
+                    if (selectedFiles.length >= totalAllowed) {
+                        alert(`Maksimal ${MAX_FILES} file total (${existingKeptCount} existing + ${totalAllowed} baru).`);
                         break;
                     }
                     if (file.size > MAX_SIZE) {
@@ -387,12 +385,6 @@
                 syncFileInput();
                 renderPreviews();
                 updateCounter();
-
-                // Auto-open media section
-                if (selectedFiles.length > 0) {
-                    document.getElementById('sectionMedia').classList.add('open');
-                    document.getElementById('toggleMedia').classList.add('active');
-                }
             }
 
             function removeMediaFile(index) {
@@ -409,14 +401,15 @@
             }
 
             function updateCounter() {
-                if (selectedFiles.length === 0) {
+                const total = existingKeptCount + selectedFiles.length;
+                if (total === 0) {
                     mediaCounter.innerHTML = '';
                     return;
                 }
                 let cls = 'ok';
-                if (selectedFiles.length >= 4) cls = 'warn';
-                if (selectedFiles.length >= MAX_FILES) cls = 'full';
-                mediaCounter.innerHTML = `<span class="media-counter ${cls}">${selectedFiles.length}/${MAX_FILES} file</span>`;
+                if (total >= 4) cls = 'warn';
+                if (total >= MAX_FILES) cls = 'full';
+                mediaCounter.innerHTML = `<span class="media-counter ${cls}">${total}/${MAX_FILES} file (${existingKeptCount} existing + ${selectedFiles.length} baru)</span>`;
             }
 
             function renderPreviews() {
@@ -453,6 +446,9 @@
                     mediaPreviewGrid.appendChild(item);
                 });
             }
+
+            // Init counter
+            updateCounter();
         </script>
     @endpush
 
