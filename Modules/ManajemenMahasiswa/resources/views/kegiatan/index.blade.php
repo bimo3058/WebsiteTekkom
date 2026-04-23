@@ -241,12 +241,12 @@
         </div>
 
         <div class="d-flex gap-3">
-            <select name="kepengurusan" class="form-select border-1 filter-select-custom"
+            <select name="tahun" class="form-select border-1 filter-select-custom"
                     style="min-width: 160px;" onchange="document.getElementById('filterForm').submit()">
                 <option value="semua">Semua Tahun</option>
-                @foreach($kepengurusanList as $kp)
-                    <option value="{{ $kp->id }}" {{ request('kepengurusan') == $kp->id ? 'selected' : '' }}>
-                        {{ $kp->tahun_periode }}
+                @foreach($tahunList as $t)
+                    <option value="{{ $t }}" {{ request('tahun') == $t ? 'selected' : '' }}>
+                        {{ $t }}
                     </option>
                 @endforeach
             </select>
@@ -292,10 +292,19 @@
                     <div class="kegiatan-card-body">
                         <!-- Badges -->
                         <div class="kegiatan-badges">
-                            @if($item->bidang)
+                            @if($item->bidangs && $item->bidangs->count() > 0)
+                                @foreach($item->bidangs as $b)
+                                    <span class="badge-bidang">{{ $b->nama_bidang }}</span>
+                                @endforeach
+                            @elseif($item->bidang)
                                 <span class="badge-bidang">{{ $item->bidang->nama_bidang }}</span>
                             @else
                                 <span class="badge-bidang" style="background: #f3e8ff; color: #7c3aed;">Prodi</span>
+                            @endif
+                            @if($item->kategoris && $item->kategoris->count() > 0)
+                                @foreach($item->kategoris as $kat)
+                                    <span class="badge-bidang" style="background: #fef3c7; color: #92400e;">{{ $kat->nama_kategori }}</span>
+                                @endforeach
                             @endif
                             @if($item->status)
                                 <span class="badge-status {{ $item->status }}">{{ $item->status_label }}</span>
