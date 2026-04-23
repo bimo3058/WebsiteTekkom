@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Http\Controllers\BS\DashboardController;
+use Modules\BankSoal\Http\Controllers\BS\Admin\CplCpmkController;
 use Modules\BankSoal\Http\Controllers\BS\Admin\MataKuliahController;
 use Modules\BankSoal\Http\Controllers\RPS\Dosen\RpsController as DosenRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\RpsController as GpmRpsController;
@@ -29,8 +30,18 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         # Admin Routes - Kontrol Umum
         Route::middleware('role:admin_banksoal')->prefix('admin/kontrol-umum')->name('banksoal.admin.kontrol-umum.')->group(function () {
             Route::get('/mata-kuliah', [MataKuliahController::class, 'index'])->name('mata-kuliah');
-            Route::get('/cpl-cpmk', fn() => view('banksoal::pages.admin.kontrol-umum.cpl-cpmk'))->name('cpl-cpmk');
+            Route::get('/cpl-cpmk', [CplCpmkController::class, 'index'])->name('cpl-cpmk');
             Route::get('/pemetaan', fn() => view('banksoal::pages.admin.kontrol-umum.pemetaan'))->name('pemetaan');
+        });
+
+        Route::middleware('role:admin_banksoal')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
+            Route::get('/cpl', [CplCpmkController::class, 'listCpl'])->name('cpl.index');
+            Route::get('/cpl/next-code', [CplCpmkController::class, 'nextCplCode'])->name('cpl.next-code');
+            Route::get('/cpl/{id}', [CplCpmkController::class, 'showCpl'])->name('cpl.show');
+
+            Route::get('/cpmk', [CplCpmkController::class, 'listCpmk'])->name('cpmk.index');
+            Route::get('/cpmk/next-code', [CplCpmkController::class, 'nextCpmkCode'])->name('cpmk.next-code');
+            Route::get('/cpmk/{id}', [CplCpmkController::class, 'showCpmk'])->name('cpmk.show');
         });
 
         # Admin Routes - Kontrol BankSoal
@@ -125,6 +136,14 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::put('/{id}', [MataKuliahController::class, 'update'])->name('update');
         });
 
+        Route::middleware('role:admin_banksoal')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
+            Route::post('/cpl', [CplCpmkController::class, 'storeCpl'])->name('cpl.store');
+            Route::put('/cpl/{id}', [CplCpmkController::class, 'updateCpl'])->name('cpl.update');
+
+            Route::post('/cpmk', [CplCpmkController::class, 'storeCpmk'])->name('cpmk.store');
+            Route::put('/cpmk/{id}', [CplCpmkController::class, 'updateCpmk'])->name('cpmk.update');
+        });
+
         // 1. Blok RPS
         Route::prefix('rps')->name('banksoal.rps.')->group(function () {
             // RPS - Dosen
@@ -162,6 +181,11 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         Route::middleware('role:admin_banksoal')->prefix('admin/api/mata-kuliah')->name('banksoal.api.v1.admin.mata-kuliah.')->group(function () {
             Route::delete('/{id}', [MataKuliahController::class, 'destroy'])->name('destroy');
             Route::post('/bulk-delete', [MataKuliahController::class, 'bulkDelete'])->name('bulk-delete');
+        });
+
+        Route::middleware('role:admin_banksoal')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
+            Route::delete('/cpl/{id}', [CplCpmkController::class, 'destroyCpl'])->name('cpl.destroy');
+            Route::delete('/cpmk/{id}', [CplCpmkController::class, 'destroyCpmk'])->name('cpmk.destroy');
         });
         
         // RPS Dosen Delete
