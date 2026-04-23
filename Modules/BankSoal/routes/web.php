@@ -6,6 +6,7 @@ use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Http\Controllers\BS\DashboardController;
 use Modules\BankSoal\Http\Controllers\BS\Admin\CplCpmkController;
 use Modules\BankSoal\Http\Controllers\BS\Admin\MataKuliahController;
+use Modules\BankSoal\Http\Controllers\BS\Admin\PemetaanController;
 use Modules\BankSoal\Http\Controllers\RPS\Dosen\RpsController as DosenRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\RpsController as GpmRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Admin\RpsController as AdminRpsController;
@@ -31,7 +32,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         Route::middleware('role:admin_banksoal')->prefix('admin/kontrol-umum')->name('banksoal.admin.kontrol-umum.')->group(function () {
             Route::get('/mata-kuliah', [MataKuliahController::class, 'index'])->name('mata-kuliah');
             Route::get('/cpl-cpmk', [CplCpmkController::class, 'index'])->name('cpl-cpmk');
-            Route::get('/pemetaan', fn() => view('banksoal::pages.admin.kontrol-umum.pemetaan'))->name('pemetaan');
+            Route::get('/pemetaan', [PemetaanController::class, 'index'])->name('pemetaan');
         });
 
         Route::middleware('role:admin_banksoal')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
@@ -42,6 +43,11 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::get('/cpmk', [CplCpmkController::class, 'listCpmk'])->name('cpmk.index');
             Route::get('/cpmk/next-code', [CplCpmkController::class, 'nextCpmkCode'])->name('cpmk.next-code');
             Route::get('/cpmk/{id}', [CplCpmkController::class, 'showCpmk'])->name('cpmk.show');
+
+            Route::get('/pemetaan/options', [PemetaanController::class, 'options'])->name('pemetaan.options');
+            Route::get('/pemetaan/cpmk-cpl', [PemetaanController::class, 'listCpmkCpl'])->name('pemetaan.cpmk-cpl.index');
+            Route::get('/pemetaan/mk-cpl', [PemetaanController::class, 'listMkCpl'])->name('pemetaan.mk-cpl.index');
+            Route::get('/pemetaan/dosen-mk', [PemetaanController::class, 'listDosenMk'])->name('pemetaan.dosen-mk.index');
         });
 
         # Admin Routes - Kontrol BankSoal
@@ -142,6 +148,10 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
 
             Route::post('/cpmk', [CplCpmkController::class, 'storeCpmk'])->name('cpmk.store');
             Route::put('/cpmk/{id}', [CplCpmkController::class, 'updateCpmk'])->name('cpmk.update');
+
+            Route::post('/pemetaan/cpmk-cpl', [PemetaanController::class, 'storeCpmkCpl'])->name('pemetaan.cpmk-cpl.store');
+            Route::post('/pemetaan/mk-cpl', [PemetaanController::class, 'storeMkCpl'])->name('pemetaan.mk-cpl.store');
+            Route::post('/pemetaan/dosen-mk', [PemetaanController::class, 'storeDosenMk'])->name('pemetaan.dosen-mk.store');
         });
 
         // 1. Blok RPS
@@ -186,6 +196,10 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         Route::middleware('role:admin_banksoal')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
             Route::delete('/cpl/{id}', [CplCpmkController::class, 'destroyCpl'])->name('cpl.destroy');
             Route::delete('/cpmk/{id}', [CplCpmkController::class, 'destroyCpmk'])->name('cpmk.destroy');
+
+            Route::delete('/pemetaan/cpmk-cpl', [PemetaanController::class, 'destroyCpmkCpl'])->name('pemetaan.cpmk-cpl.destroy');
+            Route::delete('/pemetaan/mk-cpl', [PemetaanController::class, 'destroyMkCpl'])->name('pemetaan.mk-cpl.destroy');
+            Route::delete('/pemetaan/dosen-mk/{id}', [PemetaanController::class, 'destroyDosenMk'])->name('pemetaan.dosen-mk.destroy');
         });
         
         // RPS Dosen Delete
