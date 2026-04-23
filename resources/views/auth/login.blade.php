@@ -21,7 +21,7 @@
 
                     <div class="space-y-4">
                         <p class="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-500">Akses Cepat</p>
-                        <a href="{{ route('microsoft.redirect') }}" 
+                        <a href="{{ route('microsoft.switch') }}" 
                            class="group w-full flex items-center justify-center gap-3 px-4 py-3.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-md hover:shadow-lg active:scale-[0.98]">
                             <svg class="w-5 h-5 transition-transform group-hover:scale-110" fill="currentColor" viewBox="0 0 20 20">
                                 <path d="M2 2h8v8H2V2zm10 0h6v6h-6V2zm-10 10h6v6H2v-6zm8 0h6v6h-6v-6z"/>

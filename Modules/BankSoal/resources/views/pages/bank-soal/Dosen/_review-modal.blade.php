@@ -28,7 +28,7 @@
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-1.5">Agenda</label>
-                            <select name="agenda" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2 px-3 shadow-sm">
+                            <select name="agenda" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2 px-3 shadow-sm">
                                 <option value="Ujian Akhir Semester (UAS)">Ujian Akhir Semester (UAS)</option>
                                 <option value="Ujian Tengah Semester (UTS)">Ujian Tengah Semester (UTS)</option>
                                 <option value="Kuis">Kuis</option>
@@ -36,11 +36,11 @@
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-1.5">Tahun Ajaran</label>
-                            <input type="text" name="tahun_ajaran" value="{{ date('Y') }}/{{ date('Y')+1 }}" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2 px-3 shadow-sm">
+                            <input type="text" name="tahun_ajaran" value="{{ date('Y') }}/{{ date('Y')+1 }}" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2 px-3 shadow-sm">
                         </div>
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-1.5">Semester</label>
-                            <select name="semester" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2 px-3 shadow-sm">
+                            <select name="semester" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2 px-3 shadow-sm">
                                 <option value="Ganjil">Ganjil</option>
                                 <option value="Genap" selected>Genap</option>
                                 <option value="Antara">Antara</option>
@@ -78,7 +78,7 @@
                 <button type="button" onclick="ulangAcakSoal()" class="px-4 py-2.5 bg-blue-50 text-blue-600 font-semibold text-sm rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2 border border-blue-200">
                     <i class="fas fa-sync-alt"></i> Buat Ulang Acak
                 </button>
-                <button type="submit" form="formCetakUjian" class="px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm rounded-lg shadow-md transition-colors flex items-center gap-2" onclick="setTimeout(closeReviewModal, 500)">
+                <button type="submit" form="formCetakUjian" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm rounded-lg shadow-md transition-colors flex items-center gap-2" onclick="setTimeout(closeReviewModal, 500)">
                     <i class="fas fa-print"></i> Simpan Ujian & Cetak
                 </button>
             </div>

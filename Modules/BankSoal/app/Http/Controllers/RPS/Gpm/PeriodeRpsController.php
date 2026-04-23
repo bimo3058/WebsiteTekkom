@@ -12,7 +12,21 @@ class PeriodeRpsController extends Controller
     public function index()
     {
         $periodes = PeriodeRps::orderBy('created_at', 'desc')->get();
-        return view('banksoal::gpm.periode-rps.index', compact('periodes'));
+        
+        // Generate tahun ajaran options
+        $currentYear = (int) now()->format('Y');
+        $tahunAjarans = [
+            ($currentYear - 1) . '/' . $currentYear,
+            $currentYear . '/' . ($currentYear + 1),
+            ($currentYear + 1) . '/' . ($currentYear + 2),
+        ];
+        
+        // Auto-detect current semester
+        // Semester Ganjil: Juli-Desember (bulan 7-12)
+        // Semester Genap: Januari-Juni (bulan 1-6)
+        $currentSemester = now()->month >= 7 ? 'Ganjil' : 'Genap';
+        
+        return view('banksoal::gpm.periode-rps.index', compact('periodes', 'tahunAjarans', 'currentSemester'));
     }
 
     public function store(Request $request)
@@ -97,6 +111,48 @@ class PeriodeRpsController extends Controller
             return redirect()->route('banksoal.rps.gpm.validasi-rps')->with('success', 'Berhasil menghapus periode unggah RPS.');
         } catch (\Exception $e) {
             return back()->with('error', 'Terjadi kesalahan sistem saat menghapus data.');
+        }
+    }
+
+    public function openSession(Request $request)
+    {
+        $request->validate([
+            'periode_id' => 'required|exists:bs_periode_rps,id',
+        ]);
+
+        DB::beginTransaction();
+        try {
+            $periode = PeriodeRps::findOrFail($request->periode_id);
+
+            // Cek apakah periode valid berdasarkan tanggal/jam saat ini
+            $now = now('Asia/Jakarta');
+            $start = $periode->tanggal_mulai->timezone('Asia/Jakarta')->startOfDay();
+            $end = $periode->tanggal_selesai->timezone('Asia/Jakarta')->endOfDay();
+
+            // Validasi periode
+            if ($now->isBefore($start)) {
+                DB::rollBack();
+                return back()->with('error', 'Sesi belum dimulai. Periode pengajuan dimulai pada ' . $periode->tanggal_mulai->translatedFormat('d M Y H:i') . '.');
+            }
+
+            if ($now->isAfter($end)) {
+                DB::rollBack();
+                return back()->with('error', 'Sesi telah berakhir. Periode pengajuan ditutup pada ' . $periode->tanggal_selesai->translatedFormat('d M Y H:i') . '.');
+            }
+
+            // Matikan periode aktif lainnya
+            PeriodeRps::where('id', '!=', $periode->id)
+                ->where('is_active', 'true')
+                ->update(['is_active' => 'false']);
+
+            // Aktifkan periode ini
+            $periode->update(['is_active' => 'true']);
+
+            DB::commit();
+            return redirect()->route('banksoal.rps.gpm.validasi-rps')->with('success', 'Berhasil mengaktifkan sesi pengajuan RPS: ' . $periode->judul);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            return back()->with('error', 'Terjadi kesalahan sistem saat mengaktifkan sesi.');
         }
     }
 

@@ -15,11 +15,13 @@ class Alumni extends Model
 
     protected $fillable = [
         'user_id',
+        'nim',
         'angkatan',
+        'program_studi',
         'tahun_lulus',
-        'status_posisi_pekerjaan',
-        'profesi',
-        'kontak_alumni',
+        'perusahaan',
+        'jabatan',
+        'linkedin',
     ];
 
     protected $casts = [
@@ -68,12 +70,18 @@ class Alumni extends Model
 
     public function scopeByStatus(Builder $query, string $status): Builder
     {
-        return $query->where('status_posisi_pekerjaan', $status);
+        if ($status === self::STATUS_BEKERJA) {
+            return $query->whereNotNull('perusahaan');
+        } elseif ($status === self::STATUS_BELUM_BEKERJA) {
+            return $query->whereNull('perusahaan');
+        }
+        return $query;
     }
 
     public function scopeSearch(Builder $query, string $keyword): Builder
     {
         return $query->whereHas('user', fn($q) => $q->where('name', 'like', "%{$keyword}%"))
-                     ->orWhere('profesi', 'like', "%{$keyword}%");
+                     ->orWhere('perusahaan', 'like', "%{$keyword}%")
+                     ->orWhere('jabatan', 'like', "%{$keyword}%");
     }
 }

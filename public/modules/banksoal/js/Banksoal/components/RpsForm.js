@@ -3,9 +3,11 @@ class RpsFormComponent {
         // Konfigurasi default untuk elemen form RPS.
         this.config = {
             mkSelectId: "mkSelect",
-            dosenMsId: "dosenMs",
-            cplMsId: "cplMs",
-            cpmkMsId: "cpmkMs",
+            semesterSelectId: "semester",
+            tahunAjaranSelectId: "tahun_ajaran",
+            dosenSelectId: "dosenSelect",
+            cplSelectId: "cplSelect",
+            cpmkSelectId: "cpmkSelect",
             fileInputId: "fileInput",
             uploadZoneId: "uploadZone",
             formSelector: "form",
@@ -14,6 +16,15 @@ class RpsFormComponent {
         };
 
         this.mkSelect = document.getElementById(this.config.mkSelectId);
+        this.semesterSelect = document.getElementById(
+            this.config.semesterSelectId,
+        );
+        this.tahunAjaranSelect = document.getElementById(
+            this.config.tahunAjaranSelectId,
+        );
+        this.dosenSelect = document.getElementById(this.config.dosenSelectId);
+        this.cplSelect = document.getElementById(this.config.cplSelectId);
+        this.cpmkSelect = document.getElementById(this.config.cpmkSelectId);
         this.fileInput = document.getElementById(this.config.fileInputId);
         this.uploadZone = document.getElementById(this.config.uploadZoneId);
         this.form = document.querySelector(this.config.formSelector);
@@ -21,19 +32,10 @@ class RpsFormComponent {
         this.defaultUploadText =
             this.uploadText?.textContent?.trim() ||
             "Klik untuk unggah atau seret file ke sini";
-
-        // Instance MultiSelect akan diisi saat init dipanggil.
-        this.dosenMs = null;
-        this.cplMs = null;
-        this.cpmkMs = null;
     }
 
-    // Menyambungkan instance MultiSelect dan menyiapkan semua perilaku form.
-    init(multiSelectInstances) {
-        this.dosenMs = multiSelectInstances.dosenMs;
-        this.cplMs = multiSelectInstances.cplMs;
-        this.cpmkMs = multiSelectInstances.cpmkMs;
-
+    // Menyiapkan semua perilaku form.
+    init() {
         this._setupCascading();
         this._setupFileUpload();
         this._setupFormValidation();
@@ -45,11 +47,9 @@ class RpsFormComponent {
             this._onMataKuliahChange();
         });
 
-        document
-            .getElementById(this.config.cplMsId)
-            ?.addEventListener("ms:change", (e) => {
-                this._onCplChange(e.detail);
-            });
+        this.cplSelect?.addEventListener("change", (e) => {
+            this._onCplChange();
+        });
     }
 
     // Menangani perubahan mata kuliah dan memuat data dosen serta CPL terkait.
@@ -57,24 +57,24 @@ class RpsFormComponent {
         const mkId = this.mkSelect.value;
 
         if (!mkId) {
-            this.dosenMs.setDisabled("Pilih mata kuliah terlebih dahulu");
-            this.cplMs.setDisabled("Pilih mata kuliah terlebih dahulu");
-            this.cpmkMs.setDisabled("Pilih CPL terlebih dahulu");
+            this.dosenSelect.disabled = true;
+            this.dosenSelect.innerHTML = '<option value="">Pilih mata kuliah terlebih dahulu</option>';
+            this.cplSelect.disabled = true;
+            this.cplSelect.innerHTML = '<option value="">Pilih mata kuliah terlebih dahulu</option>';
+            this.cpmkSelect.disabled = true;
+            this.cpmkSelect.innerHTML = '<option value="">Pilih CPL terlebih dahulu</option>';
             return;
         }
 
-        this.dosenMs.setLoading("Memuat dosen…");
-        this.cplMs.setLoading("Memuat CPL…");
-        this.cpmkMs.setDisabled("Pilih CPL terlebih dahulu");
-
-        // Arsip logika lama:
-        // this._fetchDosen();
-
-        // Ambil data dosen berdasarkan assignment pada mata kuliah terpilih.
+        // Load dosen
         this._fetchDosenByMk(mkId);
 
-        // Ambil data CPL sesuai mata kuliah yang dipilih.
+        // Load CPL
         this._fetchCpl(mkId);
+
+        // Disable CPMK
+        this.cpmkSelect.disabled = true;
+        this.cpmkSelect.innerHTML = '<option value="">Pilih CPL terlebih dahulu</option>';
     }
 
     // Mengambil daftar dosen berdasarkan assignment di mata kuliah terpilih.
@@ -82,28 +82,6 @@ class RpsFormComponent {
         const url =
             document.querySelector("[data-route-dosen]")?.dataset.routeDosen ||
             "/bank-soal/rps/dosen/dosen";
-
-        // Arsip logika lama:
-        // fetch(url)
-        //     .then((r) => {
-        //         if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        //         return r.json();
-        //     })
-        //     .then((data) => {
-        //         if (data?.length) {
-        //             this.dosenMs.setItems(
-        //                 data.map((d) => ({ id: d.id, label: d.name })),
-        //                 "Pilih dosen",
-        //             );
-        //         } else {
-        //             this.dosenMs.setDisabled("Tidak ada dosen terdaftar");
-        //         }
-        //     })
-        //     .catch((err) => {
-        //         console.error("Error fetching dosen:", err);
-        //         this.dosenMs.setDisabled("Error loading dosen");
-        //         Snackbar?.show?.("Gagal memuat dosen", "error");
-        //     });
 
         const fetchUrl = `${url}?mk_id=${encodeURIComponent(String(mkId))}`;
 
@@ -113,24 +91,24 @@ class RpsFormComponent {
                 return r.json();
             })
             .then((data) => {
+                this.dosenSelect.innerHTML = '<option value="">Pilih dosen pengampu tambahan</option>';
                 if (data?.length) {
-                    this.dosenMs.setItems(
-                        data.map((d) => ({
-                            id: d.id,
-                            label: d.name,
-                            selected: Boolean(d.selected),
-                        })),
-                        "Pilih dosen",
-                    );
+                    data.forEach(d => {
+                        const option = document.createElement('option');
+                        option.value = d.id;
+                        option.textContent = d.name;
+                        this.dosenSelect.appendChild(option);
+                    });
+                    this.dosenSelect.disabled = false;
                 } else {
-                    this.dosenMs.setDisabled(
-                        "Tidak ada dosen pengampu lain ter-assign",
-                    );
+                    this.dosenSelect.innerHTML = '<option value="">Tidak ada dosen pengampu lain ter-assign</option>';
+                    this.dosenSelect.disabled = true;
                 }
             })
             .catch((err) => {
                 console.error("Error fetching dosen:", err);
-                this.dosenMs.setDisabled("Error loading dosen");
+                this.dosenSelect.disabled = true;
+                this.dosenSelect.innerHTML = '<option value="">Error loading dosen</option>';
                 Snackbar?.show?.("Gagal memuat dosen", "error");
             });
     }
@@ -140,7 +118,7 @@ class RpsFormComponent {
         const baseUrl =
             document.querySelector("[data-route-cpl]")?.dataset.routeCpl ||
             "/bank-soal/rps/dosen/cpl";
-        const url = `${baseUrl}/${mkId}`;
+        const url = baseUrl;
 
         fetch(url)
             .then((r) => {
@@ -148,38 +126,42 @@ class RpsFormComponent {
                 return r.json();
             })
             .then((data) => {
+                this.cplSelect.innerHTML = '<option value="">Pilih CPL</option>';
                 if (data?.length) {
-                    this.cplMs.setItems(
-                        data.map((c) => ({ id: c.id, label: c.kode })),
-                        "Pilih CPL",
-                    );
+                    data.forEach(c => {
+                        const option = document.createElement('option');
+                        option.value = c.id;
+                        option.textContent = c.kode;
+                        this.cplSelect.appendChild(option);
+                    });
+                    this.cplSelect.disabled = false;
                 } else {
-                    this.cplMs.setDisabled(
-                        "Tidak ada CPL untuk mata kuliah ini",
-                    );
+                    this.cplSelect.innerHTML = '<option value="">Tidak ada CPL tersedia</option>';
+                    this.cplSelect.disabled = true;
                 }
             })
             .catch((err) => {
                 console.error("Error fetching CPL:", err);
-                this.cplMs.setDisabled("Error loading CPL");
+                this.cplSelect.disabled = true;
+                this.cplSelect.innerHTML = '<option value="">Error loading CPL</option>';
                 Snackbar?.show?.("Gagal memuat CPL", "error");
             });
     }
 
     // Mengambil daftar CPMK berdasarkan CPL yang dipilih.
-    _onCplChange(cplIds) {
-        if (!cplIds.length) {
-            this.cpmkMs.setDisabled("Pilih CPL terlebih dahulu");
+    _onCplChange() {
+        const cplId = this.cplSelect.value;
+
+        if (!cplId) {
+            this.cpmkSelect.disabled = true;
+            this.cpmkSelect.innerHTML = '<option value="">Pilih CPL terlebih dahulu</option>';
             return;
         }
-
-        this.cpmkMs.setLoading("Memuat CPMK…");
 
         const baseUrl =
             document.querySelector("[data-route-cpmk]")?.dataset.routeCpmk ||
             "/bank-soal/rps/dosen/cpmk";
-        const queryString = cplIds.map((id) => `cpl_ids[]=${id}`).join("&");
-        const url = `${baseUrl}?${queryString}`;
+        const url = `${baseUrl}?cpl_id=${cplId}`;
 
         fetch(url)
             .then((r) => {
@@ -187,10 +169,27 @@ class RpsFormComponent {
                 return r.json();
             })
             .then((data) => {
+                this.cpmkSelect.innerHTML = '<option value="">Pilih CPMK</option>';
                 if (data?.length) {
-                    this.cpmkMs.setItems(
-                        data.map((c) => ({ id: c.id, label: c.kode })),
-                        "Pilih CPMK",
+                    data.forEach(c => {
+                        const option = document.createElement('option');
+                        option.value = c.id;
+                        option.textContent = c.kode;
+                        this.cpmkSelect.appendChild(option);
+                    });
+                    this.cpmkSelect.disabled = false;
+                } else {
+                    this.cpmkSelect.innerHTML = '<option value="">Tidak ada CPMK tersedia</option>';
+                    this.cpmkSelect.disabled = true;
+                }
+            })
+            .catch((err) => {
+                console.error("Error fetching CPMK:", err);
+                this.cpmkSelect.disabled = true;
+                this.cpmkSelect.innerHTML = '<option value="">Error loading CPMK</option>';
+                Snackbar?.show?.("Gagal memuat CPMK", "error");
+            });
+    }
                     );
                 } else {
                     this.cpmkMs.setDisabled(
@@ -211,19 +210,19 @@ class RpsFormComponent {
 
         this.uploadZone.addEventListener("dragover", (e) => {
             e.preventDefault();
-            this.uploadZone.style.borderColor = "#3b82f6";
-            this.uploadZone.style.backgroundColor = "rgba(59, 130, 246, 0.05)";
+            this.uploadZone.style.borderColor = "#6B4FF4";
+            this.uploadZone.style.backgroundColor = "rgba(107, 79, 244, 0.05)";
         });
 
         this.uploadZone.addEventListener("dragleave", () => {
-            this.uploadZone.style.borderColor = "#d1d5db";
-            this.uploadZone.style.backgroundColor = "#fff";
+            this.uploadZone.style.borderColor = "#cbd5e1";
+            this.uploadZone.style.backgroundColor = "#f9fafb";
         });
 
         this.uploadZone.addEventListener("drop", (e) => {
             e.preventDefault();
-            this.uploadZone.style.borderColor = "#d1d5db";
-            this.uploadZone.style.backgroundColor = "#fff";
+            this.uploadZone.style.borderColor = "#cbd5e1";
+            this.uploadZone.style.backgroundColor = "#f9fafb";
             this.fileInput.files = e.dataTransfer.files;
             this._handleSelectedFile();
         });
@@ -316,10 +315,10 @@ class RpsFormComponent {
         if (!this.mkSelect.value) {
             errors.push("Mata Kuliah harus dipilih");
         }
-        if (!this.cplMs.getSelected().length) {
+        if (!this.cplSelect.value) {
             errors.push("Minimal satu CPL harus dipilih");
         }
-        if (!this.cpmkMs.getSelected().length) {
+        if (!this.cpmkSelect.value) {
             errors.push("Minimal satu CPMK harus dipilih");
         }
         if (!this.fileInput?.files?.length) {
