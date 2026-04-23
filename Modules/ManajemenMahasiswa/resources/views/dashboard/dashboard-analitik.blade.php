@@ -103,6 +103,35 @@
             gap: 16px;
             margin-bottom: 20px;
         }
+
+        /* ── Donut chart container — fixed size to prevent resize on hover ── */
+        .donut-canvas-wrapper {
+            position: relative;
+            width: 200px;
+            height: 200px;
+            margin: 0 auto;
+        }
+
+        /* ── Responsive breakpoints ─────────────────────────────────────── */
+        @media (max-width: 1024px) {
+            .chart-row {
+                grid-template-columns: 1fr;
+            }
+        }
+        @media (max-width: 768px) {
+            .stat-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        @media (max-width: 480px) {
+            .stat-grid {
+                grid-template-columns: 1fr;
+            }
+            .donut-canvas-wrapper {
+                width: 160px;
+                height: 160px;
+            }
+        }
         .chart-card {
             background: #fff;
             border-radius: 12px;
@@ -424,9 +453,9 @@
                 <span class="chart-title">Status Mahasiswa</span>
                 <button class="info-icon-btn" title="Info">i</button>
             </div>
-            <div style="position:relative; max-width: 200px; margin: 0 auto;">
+            <div class="donut-canvas-wrapper">
                 <canvas id="statusChart"></canvas>
-                <div class="donut-total" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;">
+                <div class="donut-total" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;">
                     <span class="total-num">{{ number_format($statusMahasiswa['aktif'] + $statusMahasiswa['cuti'] + $statusMahasiswa['do'] + $statusMahasiswa['lulus']) }}</span>
                     <span class="total-label" style="font-size:11px;color:#9ca3af;display:block;">Total Employees</span>
                 </div>
@@ -649,6 +678,7 @@
             },
             options: {
                 responsive: true,
+                maintainAspectRatio: false,
                 cutout: '68%',
                 plugins: {
                     legend: { display: false },
@@ -666,6 +696,11 @@
                 },
                 animation: {
                     duration: 800
+                },
+                onResize: function(chart, size) {
+                    // Prevent chart from shrinking below minimum size
+                    chart.canvas.parentNode.style.minWidth = '160px';
+                    chart.canvas.parentNode.style.minHeight = '160px';
                 }
             }
         });
