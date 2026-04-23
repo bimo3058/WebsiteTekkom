@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Http\Controllers\BS\DashboardController;
+use Modules\BankSoal\Http\Controllers\BS\Admin\MataKuliahController;
 use Modules\BankSoal\Http\Controllers\RPS\Dosen\RpsController as DosenRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\RpsController as GpmRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Admin\RpsController as AdminRpsController;
@@ -27,7 +28,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
 
         # Admin Routes - Kontrol Umum
         Route::middleware('role:admin_banksoal')->prefix('admin/kontrol-umum')->name('banksoal.admin.kontrol-umum.')->group(function () {
-            Route::get('/mata-kuliah', fn() => view('banksoal::pages.admin.kontrol-umum.mata-kuliah'))->name('mata-kuliah');
+            Route::get('/mata-kuliah', [MataKuliahController::class, 'index'])->name('mata-kuliah');
             Route::get('/cpl-cpmk', fn() => view('banksoal::pages.admin.kontrol-umum.cpl-cpmk'))->name('cpl-cpmk');
             Route::get('/pemetaan', fn() => view('banksoal::pages.admin.kontrol-umum.pemetaan'))->name('pemetaan');
         });
@@ -116,6 +117,14 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
     // -------------------------------------------------------------------------
     Route::middleware(['permission:banksoal.edit'])->group(function () {
         
+        // 0. Admin Mata Kuliah CRUD Routes
+        Route::middleware('role:admin_banksoal')->prefix('admin/api/mata-kuliah')->name('banksoal.api.v1.admin.mata-kuliah.')->group(function () {
+            Route::get('/', [MataKuliahController::class, 'index'])->name('index');
+            Route::post('/', [MataKuliahController::class, 'store'])->name('store');
+            Route::get('/{id}', [MataKuliahController::class, 'show'])->name('show');
+            Route::put('/{id}', [MataKuliahController::class, 'update'])->name('update');
+        });
+
         // 1. Blok RPS
         Route::prefix('rps')->name('banksoal.rps.')->group(function () {
             // RPS - Dosen
@@ -148,6 +157,12 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
     // -------------------------------------------------------------------------
     Route::middleware(['permission:banksoal.delete'])->group(function () {
         Route::delete('/destroy/{id}', [BankSoalController::class, 'destroy'])->name('banksoal.destroy');
+        
+        // Admin Mata Kuliah Delete Routes
+        Route::middleware('role:admin_banksoal')->prefix('admin/api/mata-kuliah')->name('banksoal.api.v1.admin.mata-kuliah.')->group(function () {
+            Route::delete('/{id}', [MataKuliahController::class, 'destroy'])->name('destroy');
+            Route::post('/bulk-delete', [MataKuliahController::class, 'bulkDelete'])->name('bulk-delete');
+        });
         
         // RPS Dosen Delete
         Route::prefix('rps')->name('banksoal.rps.')->group(function () {
