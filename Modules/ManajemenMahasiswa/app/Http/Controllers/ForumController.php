@@ -10,6 +10,8 @@ use Modules\ManajemenMahasiswa\Models\Thread;
 use Modules\ManajemenMahasiswa\Services\ThreadService;
 use Modules\ManajemenMahasiswa\Services\CommentService;
 use Modules\ManajemenMahasiswa\Services\GamificationService;
+use App\Services\SupabaseStorage;
+use Modules\ManajemenMahasiswa\Models\RepoMulmed;
 
 class ForumController extends Controller
 {
@@ -17,6 +19,7 @@ class ForumController extends Controller
         private ThreadService $threadService,
         private CommentService $commentService,
         private GamificationService $gamificationService,
+        private SupabaseStorage $supabaseStorage,
     ) {
     }
 
@@ -68,54 +71,78 @@ class ForumController extends Controller
     }
 
     /**
-     * Simpan thread baru.
+     * Simpan thread baru — Unified Post (teks + media + link dalam 1 request).
      */
     public function store(Request $request)
     {
-        $format = $request->input('format', 'text');
-
-        // Base validation
         $rules = [
-            'judul' => 'required|string|max:255',
-            'kategori' => 'required|string|in:' . implode(',', Thread::KATEGORI_LIST),
+            'judul'         => 'required|string|max:255',
+            'kategori'      => 'required|string|in:' . implode(',', Thread::KATEGORI_LIST),
+            'konten'        => 'nullable|string',
+            'media_files'   => 'nullable|array|max:5',
+            'media_files.*' => 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:10240',
+            'link_url'      => 'nullable|url|max:2000',
         ];
-
-        // Format-specific validation
-        if ($format === 'media') {
-            $rules['media_files'] = 'required|array|min:1|max:5';
-            $rules['media_files.*'] = 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:10240';
-            $rules['media_caption'] = 'nullable|string';
-        } else {
-            $rules['konten'] = 'required|string|min:10';
-        }
 
         $validated = $request->validate($rules);
 
-        // Build konten based on format
-        $konten = $validated['konten'] ?? '';
+        // Bangun konten HTML dari komponen unified
+        $konten = '';
 
-        if ($format === 'media' && $request->hasFile('media_files')) {
-            $mediaHtml = '';
-
+        // 1) Media files — upload & generate HTML via Supabase
+        if ($request->hasFile('media_files')) {
             foreach ($request->file('media_files') as $file) {
-                $path = $file->store('forum/media', 'public');
-                $url = Storage::url($path);
                 $mime = $file->getMimeType();
+                $isImage = str_starts_with($mime, 'image/');
+                $folder = $isImage ? 'mk_mulmed/image' : 'mk_mulmed/video';
+                
+                // Gunakan bucket default dari config (storage_web)
+                $path = $this->supabaseStorage->upload($file, $folder);
+                
+                if ($path) {
+                    $url  = $this->supabaseStorage->getPublicUrl($path);
+                    
+                    // Simpan data file ke tabel mk_repo_mulmed
+                    RepoMulmed::create([
+                        'nama_file'         => $file->getClientOriginalName(),
+                        'path_file'         => $path,
+                        'tipe_file'         => $isImage ? RepoMulmed::TIPE_IMAGE : RepoMulmed::TIPE_VIDEO,
+                        'judul_file'        => 'Forum Media: ' . $validated['judul'],
+                        'deskripsi_meta'    => 'Diunggah pada forum mahasiswa',
+                        'visibility_status' => RepoMulmed::VISIBILITY_PUBLIC,
+                        'status_arsip'      => RepoMulmed::ARSIP_AKTIF,
+                    ]);
 
-                if (str_starts_with($mime, 'image/')) {
-                    $mediaHtml .= '<img src="' . $url . '" alt="Media Post" style="max-width: 100%; border-radius: 8px; margin-bottom: 15px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">';
-                } elseif (str_starts_with($mime, 'video/')) {
-                    $mediaHtml .= '<video width="100%" controls style="border-radius: 8px; margin-bottom: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);"><source src="' . $url . '" type="' . $mime . '"></video>';
+                    if ($isImage) {
+                        $konten .= '<img src="' . $url . '" alt="Media Post" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">';
+                    } else {
+                        $konten .= '<video width="100%" controls style="border-radius: 8px; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);"><source src="' . $url . '" type="' . $mime . '"></video>';
+                    }
+                } else {
+                    return back()->withErrors(['media_files' => 'Gagal mengupload gambar ke Supabase. Pastikan konfigurasi benar.'])->withInput();
                 }
             }
+        }
 
-            $caption = $request->input('media_caption', '');
-            $konten = $mediaHtml . ($caption ? '<br>' . e($caption) : '');
+        // 2) Link — render sebagai card
+        if (!empty($validated['link_url'])) {
+            $linkUrl = e($validated['link_url']);
+            $konten .= '<a href="' . $linkUrl . '" target="_blank" rel="noopener noreferrer" class="d-inline-flex p-3 rounded bg-light border border-primary-subtle text-primary fw-bold text-decoration-none mb-3" style="word-break: break-all;">🔗 ' . $linkUrl . '</a><br>';
+        }
+
+        // 3) Teks konten
+        if (!empty($validated['konten'])) {
+            $konten .= e($validated['konten']);
+        }
+
+        // Validasi: minimal harus ada konten (teks, media, atau link)
+        if (empty(trim($konten))) {
+            return back()->withErrors(['konten' => 'Post harus memiliki konten (teks, gambar/video, atau link).'])->withInput();
         }
 
         $this->threadService->createThread(Auth::id(), [
-            'judul' => $validated['judul'],
-            'konten' => $konten,
+            'judul'    => $validated['judul'],
+            'konten'   => $konten,
             'kategori' => $validated['kategori'],
         ]);
 
@@ -142,6 +169,139 @@ class ForumController extends Controller
             });
 
         return view('manajemenmahasiswa::forum.show', compact('thread', 'comments', 'userVotes', 'user'));
+    }
+
+    /**
+     * Form edit thread.
+     */
+    public function edit(int $id)
+    {
+        $user   = Auth::user();
+        $thread = $this->threadService->findThread($id);
+        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+
+        if (!$isAdmin && $thread->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses untuk mengedit thread ini.');
+        }
+
+        $categories = Thread::KATEGORI_LABELS;
+
+        return view('manajemenmahasiswa::forum.edit', compact('thread', 'categories', 'user'));
+    }
+
+    /**
+     * Update thread — Unified Post.
+     */
+    public function update(int $id, Request $request)
+    {
+        $user    = Auth::user();
+        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+        $thread  = $this->threadService->findThread($id);
+
+        // Hitung media existing yang dipertahankan
+        $removeMedia   = $request->input('remove_media', []);
+        $existingMedia = $thread->extractMediaUrls();
+        $keptCount     = 0;
+        foreach ($existingMedia as $media) {
+            if (!in_array($media['url'], $removeMedia)) {
+                $keptCount++;
+            }
+        }
+
+        // Hitung total media (kept + new uploads)
+        $newFileCount = $request->hasFile('media_files') ? count($request->file('media_files')) : 0;
+        $totalMedia   = $keptCount + $newFileCount;
+
+        if ($totalMedia > 5) {
+            return back()->withErrors(['media_files' => 'Maksimal 5 gambar/video per post. Saat ini: ' . $keptCount . ' existing + ' . $newFileCount . ' baru.'])->withInput();
+        }
+
+        $validated = $request->validate([
+            'judul'         => 'required|string|max:255',
+            'kategori'      => 'required|string|in:' . implode(',', Thread::KATEGORI_LIST),
+            'konten'        => 'nullable|string',
+            'media_files'   => 'nullable|array|max:5',
+            'media_files.*' => 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:10240',
+            'link_url'      => 'nullable|url|max:2000',
+            'remove_media'  => 'nullable|array',
+            'remove_media.*'=> 'string',
+        ]);
+
+        // Rebuild konten HTML
+        $konten = '';
+
+        // 1) Pertahankan media existing yang tidak dihapus
+        foreach ($existingMedia as $media) {
+            if (in_array($media['url'], $removeMedia)) {
+                continue;
+            }
+            if ($media['type'] === 'image') {
+                $konten .= '<img src="' . $media['url'] . '" alt="Media Post" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">';
+            } elseif ($media['type'] === 'video') {
+                $konten .= '<video width="100%" controls style="border-radius: 8px; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);"><source src="' . $media['url'] . '" type="video/mp4"></video>';
+            }
+        }
+
+        // 2) Upload media baru ke Supabase
+        if ($request->hasFile('media_files')) {
+            foreach ($request->file('media_files') as $file) {
+                $mime = $file->getMimeType();
+                $isImage = str_starts_with($mime, 'image/');
+                $folder = $isImage ? 'mk_mulmed/image' : 'mk_mulmed/video';
+                
+                // Gunakan bucket default dari config
+                $path = $this->supabaseStorage->upload($file, $folder);
+                
+                if ($path) {
+                    $url  = $this->supabaseStorage->getPublicUrl($path);
+                    
+                    // Simpan data file ke tabel mk_repo_mulmed
+                    RepoMulmed::create([
+                        'nama_file'         => $file->getClientOriginalName(),
+                        'path_file'         => $path,
+                        'tipe_file'         => $isImage ? RepoMulmed::TIPE_IMAGE : RepoMulmed::TIPE_VIDEO,
+                        'judul_file'        => 'Forum Media: ' . $validated['judul'],
+                        'deskripsi_meta'    => 'Diunggah pada edit forum mahasiswa',
+                        'visibility_status' => RepoMulmed::VISIBILITY_PUBLIC,
+                        'status_arsip'      => RepoMulmed::ARSIP_AKTIF,
+                    ]);
+
+                    if ($isImage) {
+                        $konten .= '<img src="' . $url . '" alt="Media Post" style="max-width: 100%; border-radius: 8px; margin-bottom: 12px; border: 1px solid #e5e7eb; box-shadow: 0 4px 6px rgba(0,0,0,0.05);">';
+                    } else {
+                        $konten .= '<video width="100%" controls style="border-radius: 8px; margin-bottom: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05);"><source src="' . $url . '" type="' . $mime . '"></video>';
+                    }
+                } else {
+                    return back()->withErrors(['media_files' => 'Gagal mengupload gambar baru ke Supabase. Pastikan konfigurasi benar.'])->withInput();
+                }
+            }
+        }
+
+        // 3) Link
+        if (!empty($validated['link_url'])) {
+            $linkUrl = e($validated['link_url']);
+            $konten .= '<a href="' . $linkUrl . '" target="_blank" rel="noopener noreferrer" class="d-inline-flex p-3 rounded bg-light border border-primary-subtle text-primary fw-bold text-decoration-none mb-3" style="word-break: break-all;">🔗 ' . $linkUrl . '</a><br>';
+        }
+
+        // 4) Teks
+        if (!empty($validated['konten'])) {
+            $konten .= e($validated['konten']);
+        }
+
+        if (empty(trim($konten))) {
+            return back()->withErrors(['konten' => 'Post harus memiliki konten (teks, gambar/video, atau link).'])->withInput();
+        }
+
+        $this->threadService->updateThread($id, $user->id, [
+            'judul'        => $validated['judul'],
+            'konten'       => $konten,
+            'kategori'     => $validated['kategori'],
+            'remove_media' => $removeMedia,
+        ], $isAdmin);
+
+        return redirect()
+            ->route('manajemenmahasiswa.forum.show', $id)
+            ->with('success', 'Thread berhasil diperbarui! ✏️');
     }
 
     /**

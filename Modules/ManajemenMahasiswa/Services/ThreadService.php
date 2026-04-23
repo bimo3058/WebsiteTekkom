@@ -77,6 +77,65 @@ class ThreadService
         DB::transaction(fn() => $thread->delete());
     }
 
+    /**
+     * Update thread yang sudah ada.
+     * User hanya bisa edit thread sendiri, admin bisa edit semua.
+     */
+    public function updateThread(int $id, int $userId, array $data, bool $isAdmin = false): Thread
+    {
+        $thread = Thread::findOrFail($id);
+
+        if (!$isAdmin && $thread->user_id !== $userId) {
+            throw new \RuntimeException('Tidak memiliki akses untuk mengedit thread ini.');
+        }
+
+        return DB::transaction(function () use ($thread, $data) {
+            // Hapus media lama dari storage jika diminta
+            if (!empty($data['remove_media'])) {
+                $supabaseStorage = app(\App\Services\SupabaseStorage::class);
+                
+                foreach ($data['remove_media'] as $mediaUrl) {
+                    if (str_contains($mediaUrl, 'supabase.co')) {
+                        // Extract bucket and path dari public URL Supabase
+                        // Format: https://{project}.supabase.co/storage/v1/object/public/{bucket}/{path}
+                        $parsedUrl = parse_url($mediaUrl, PHP_URL_PATH);
+                        $parts = explode('/storage/v1/object/public/', $parsedUrl);
+                        if (count($parts) === 2) {
+                            $bucketAndPath = explode('/', $parts[1], 2);
+                            if (count($bucketAndPath) === 2) {
+                                $bucket = $bucketAndPath[0];
+                                $path   = $bucketAndPath[1];
+                                try {
+                                    $supabaseStorage->delete($path, $bucket);
+                                    // Hapus juga record di mk_repo_mulmed
+                                    \Modules\ManajemenMahasiswa\Models\RepoMulmed::where('path_file', $path)->delete();
+                                } catch (\Exception $e) {
+                                    \Log::error('Failed to delete old Supabase media', ['path' => $path, 'error' => $e->getMessage()]);
+                                }
+                            }
+                        }
+                    } else {
+                        // Fallback: hapus dari local storage (gambar lama)
+                        $path = str_replace('/storage/', '', parse_url($mediaUrl, PHP_URL_PATH));
+                        if ($path && \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($path);
+                            // Hapus juga record di mk_repo_mulmed jika ada yang menggunakan local path
+                            \Modules\ManajemenMahasiswa\Models\RepoMulmed::where('path_file', $path)->delete();
+                        }
+                    }
+                }
+            }
+
+            $thread->update([
+                'judul'    => $data['judul'],
+                'konten'   => $data['konten'],
+                'kategori' => $data['kategori'],
+            ]);
+
+            return $thread->fresh();
+        });
+    }
+
     // =========================================================================
     // Voting
     // =========================================================================
