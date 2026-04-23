@@ -644,7 +644,7 @@
                     ],
                     backgroundColor: ['#4f46e5', '#f59e0b', '#ef4444', '#10b981'],
                     borderWidth: 0,
-                    hoverOffset: 6,
+                    hoverOffset: 0,
                 }]
             },
             options: {
@@ -659,6 +659,13 @@
                         padding: 10,
                         cornerRadius: 8,
                     }
+                },
+                hover: {
+                    mode: 'nearest',
+                    animationDuration: 0
+                },
+                animation: {
+                    duration: 800
                 }
             }
         });
