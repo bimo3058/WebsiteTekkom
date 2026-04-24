@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Modules\ManajemenMahasiswa\Services\PengumumanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
+use Modules\ManajemenMahasiswa\Models\PengumumanDraft;
 
 class PengumumanController extends Controller
 {
@@ -53,7 +54,79 @@ class PengumumanController extends Controller
     //Akses: Admin, Dosen Koordinator, Pengurus Himpunan, GPM
     public function create()
     {
-        return view('manajemenmahasiswa::pengumuman.pengumuman-create');
+        $user = Auth::user();
+        $drafts = PengumumanDraft::where('user_id', $user->id)->latest()->get();
+        return view('manajemenmahasiswa::pengumuman.pengumuman-create', compact('drafts'));
+    }
+
+    /**
+     * Simpan / Update Draft (AJAX)
+     */
+    public function saveDraft(Request $request)
+    {
+        try {
+            $request->validate([
+                'draft_id' => 'nullable|integer',
+                'judul'    => 'nullable|string|max:255',
+                'kategori' => 'nullable|string|max:100',
+                'target_audience' => 'nullable|in:all,mahasiswa,alumni,dosen,pengurus',
+                'konten'   => 'nullable|string',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Illuminate\Support\Facades\Log::error('Draft validation failed: ', $e->errors());
+            throw $e;
+        }
+
+        $draftId = $request->input('draft_id');
+        
+        if ($draftId) {
+            $draft = PengumumanDraft::where('id', $draftId)
+                ->where('user_id', Auth::id())
+                ->first();
+                
+            if ($draft) {
+                $draft->update([
+                    'judul'    => $request->input('judul'),
+                    'kategori' => $request->input('kategori'),
+                    'target_audience' => $request->input('target_audience'),
+                    'konten'   => $request->input('konten'),
+                ]);
+            } else {
+                $draft = PengumumanDraft::create([
+                    'user_id'  => Auth::id(),
+                    'judul'    => $request->input('judul'),
+                    'kategori' => $request->input('kategori'),
+                    'target_audience' => $request->input('target_audience'),
+                    'konten'   => $request->input('konten'),
+                ]);
+            }
+        } else {
+            $draft = PengumumanDraft::create([
+                'user_id'  => Auth::id(),
+                'judul'    => $request->input('judul'),
+                'kategori' => $request->input('kategori'),
+                'target_audience' => $request->input('target_audience'),
+                'konten'   => $request->input('konten'),
+            ]);
+        }
+
+        return response()->json([
+            'success'  => true,
+            'draft_id' => $draft->id,
+            'message'  => 'Draf berhasil disimpan.'
+        ]);
+    }
+
+    /**
+     * Hapus Draft
+     */
+    public function deleteDraft($id)
+    {
+        PengumumanDraft::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->delete();
+
+        return redirect()->back()->with('success', 'Draf berhasil dihapus.');
     }
 
     //Simpan pengumuman baru.
@@ -98,6 +171,13 @@ class PengumumanController extends Controller
         // Publish langsung jika diminta
         if ($validated['status_publish'] === 'published') {
             $this->pengumumanService->publish($pengumuman->id);
+        }
+
+        // Hapus draf jika post dikirim dari draf
+        if ($request->filled('draft_id')) {
+            PengumumanDraft::where('id', $request->input('draft_id'))
+                ->where('user_id', Auth::id())
+                ->delete();
         }
 
         return redirect()
