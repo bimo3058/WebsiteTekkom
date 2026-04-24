@@ -44,19 +44,25 @@ class ForumController extends Controller
                 return $v->voteable_type . '_' . $v->voteable_id;
             });
 
-        $viewData = compact('threads', 'leaderboard', 'userStats', 'categories', 'user', 'userVotes');
-
-        // Admin, GPM, Pengurus, Dosen Koordinator: admin layout
-        if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'pengurus_himpunan', 'gpm', 'admin_kemahasiswaan'])->isNotEmpty()) {
-            return view('manajemenmahasiswa::forum.admin', $viewData);
+        // Preload tier info per thread author
+        $authorTiers = [];
+        foreach ($threads as $thread) {
+            $authorId = $thread->user_id;
+            if (!isset($authorTiers[$authorId])) {
+                $totalXp = $this->gamificationService->getTotalXp($authorId);
+                $level   = $this->gamificationService->calculateLevel($totalXp);
+                $tier    = $this->gamificationService->getTierInfo($level);
+                $authorTiers[$authorId] = [
+                    'level'     => $level,
+                    'tier_name' => $tier['name'],
+                    'tier_icon' => $tier['icon'],
+                ];
+            }
         }
 
-        // Dosen: dosen layout
-        if ($roles->intersect(['dosen'])->isNotEmpty()) {
-            return view('manajemenmahasiswa::forum.dosen', $viewData);
-        }
+        $viewData = compact('threads', 'leaderboard', 'userStats', 'categories', 'user', 'userVotes', 'authorTiers');
 
-        return view('manajemenmahasiswa::forum.mahasiswa', $viewData);
+        return view('manajemenmahasiswa::forum.index', $viewData);
     }
 
     /**
@@ -66,8 +72,71 @@ class ForumController extends Controller
     {
         $user = Auth::user();
         $categories = Thread::KATEGORI_LABELS;
+        $drafts = \Modules\ManajemenMahasiswa\Models\ThreadDraft::where('user_id', $user->id)->latest()->get();
 
-        return view('manajemenmahasiswa::forum.create', compact('categories', 'user'));
+        return view('manajemenmahasiswa::forum.create', compact('categories', 'user', 'drafts'));
+    }
+
+    /**
+     * Simpan / Update Draft (AJAX)
+     */
+    public function saveDraft(Request $request)
+    {
+        $request->validate([
+            'draft_id' => 'nullable|integer',
+            'judul'    => 'nullable|string|max:255',
+            'kategori' => 'nullable|array',
+            'kategori.*' => 'string',
+            'konten'   => 'nullable|string',
+        ]);
+
+        $draftId = $request->input('draft_id');
+        
+        if ($draftId) {
+            $draft = \Modules\ManajemenMahasiswa\Models\ThreadDraft::where('id', $draftId)
+                ->where('user_id', Auth::id())
+                ->first();
+                
+            if ($draft) {
+                $draft->update([
+                    'judul'    => $request->input('judul'),
+                    'kategori' => $request->input('kategori'),
+                    'konten'   => $request->input('konten'),
+                ]);
+            } else {
+                $draft = \Modules\ManajemenMahasiswa\Models\ThreadDraft::create([
+                    'user_id'  => Auth::id(),
+                    'judul'    => $request->input('judul'),
+                    'kategori' => $request->input('kategori'),
+                    'konten'   => $request->input('konten'),
+                ]);
+            }
+        } else {
+            $draft = \Modules\ManajemenMahasiswa\Models\ThreadDraft::create([
+                'user_id'  => Auth::id(),
+                'judul'    => $request->input('judul'),
+                'kategori' => $request->input('kategori'),
+                'konten'   => $request->input('konten'),
+            ]);
+        }
+
+        return response()->json([
+            'success'  => true,
+            'draft_id' => $draft->id,
+            'message'  => 'Draf berhasil disimpan.'
+        ]);
+    }
+
+    /**
+     * Hapus Draft
+     */
+    public function deleteDraft($id)
+    {
+        \Modules\ManajemenMahasiswa\Models\ThreadDraft::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->delete();
+
+        return redirect()->back()->with('success', 'Draf berhasil dihapus.');
     }
 
     /**
@@ -77,7 +146,8 @@ class ForumController extends Controller
     {
         $rules = [
             'judul'         => 'required|string|max:255',
-            'kategori'      => 'required|string|in:' . implode(',', Thread::KATEGORI_LIST),
+            'kategori'      => 'required|array|min:1',
+            'kategori.*'    => 'string|in:' . implode(',', Thread::KATEGORI_LIST),
             'konten'        => 'nullable|string',
             'media_files'   => 'nullable|array|max:5',
             'media_files.*' => 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:10240',
@@ -140,15 +210,43 @@ class ForumController extends Controller
             return back()->withErrors(['konten' => 'Post harus memiliki konten (teks, gambar/video, atau link).'])->withInput();
         }
 
+        // Check level before creating thread
+        $oldLevel = $this->gamificationService->calculateLevel(
+            $this->gamificationService->getTotalXp(Auth::id())
+        );
+
         $this->threadService->createThread(Auth::id(), [
             'judul'    => $validated['judul'],
             'konten'   => $konten,
             'kategori' => $validated['kategori'],
         ]);
 
-        return redirect()
-            ->route('manajemenmahasiswa.forum.index')
+        // Check level after
+        $newLevel = $this->gamificationService->calculateLevel(
+            $this->gamificationService->getTotalXp(Auth::id())
+        );
+
+        // Hapus draf jika post dikirim dari draf
+        if ($request->filled('draft_id')) {
+            \Modules\ManajemenMahasiswa\Models\ThreadDraft::where('id', $request->input('draft_id'))
+                ->where('user_id', Auth::id())
+                ->delete();
+        }
+
+        $redirect = redirect()->route('manajemenmahasiswa.forum.index')
             ->with('success', 'Thread berhasil dibuat! +10 XP 🎉');
+
+        if ($newLevel > $oldLevel) {
+            $tier = $this->gamificationService->getTierInfo($newLevel);
+            $redirect = $redirect->with('level_up', [
+                'old_level' => $oldLevel,
+                'new_level' => $newLevel,
+                'tier_name' => $tier['name'],
+                'tier_icon' => $tier['icon'],
+            ]);
+        }
+
+        return $redirect;
     }
 
     /**
@@ -161,14 +259,42 @@ class ForumController extends Controller
         $thread = $this->threadService->findThread($id);
         $comments = $this->commentService->listComments($id);
         
-        // Dapatkan data vote dari user untuk highlight upvote/downvote button
         $userVotes = \Modules\ManajemenMahasiswa\Models\Vote::where('user_id', $user->id)
             ->get()
             ->keyBy(function($v) {
                 return $v->voteable_type . '_' . $v->voteable_id;
             });
 
-        return view('manajemenmahasiswa::forum.show', compact('thread', 'comments', 'userVotes', 'user'));
+        $isPersonalPinned = \Modules\ManajemenMahasiswa\Models\ThreadPersonalPin::where('user_id', $user->id)
+            ->where('thread_id', $id)
+            ->exists();
+
+        // Preload tier info for thread author + all commenters
+        $authorTiers = [];
+        $allUserIds = collect([$thread->user_id]);
+        foreach ($comments as $comment) {
+            $allUserIds->push($comment->user_id);
+            if ($comment->allReplies) {
+                foreach ($comment->allReplies as $reply) {
+                    $allUserIds->push($reply->user_id);
+                }
+            }
+        }
+        foreach ($allUserIds->unique() as $authorId) {
+            $totalXp = $this->gamificationService->getTotalXp($authorId);
+            $level   = $this->gamificationService->calculateLevel($totalXp);
+            $tier    = $this->gamificationService->getTierInfo($level);
+            $authorTiers[$authorId] = [
+                'level'     => $level,
+                'tier_name' => $tier['name'],
+                'tier_icon' => $tier['icon'],
+            ];
+        }
+
+        // Record streak (user visited a thread detail page)
+        $this->gamificationService->recordStreak($user->id);
+
+        return view('manajemenmahasiswa::forum.show', compact('thread', 'comments', 'userVotes', 'user', 'isPersonalPinned', 'authorTiers'));
     }
 
     /**
@@ -218,7 +344,8 @@ class ForumController extends Controller
 
         $validated = $request->validate([
             'judul'         => 'required|string|max:255',
-            'kategori'      => 'required|string|in:' . implode(',', Thread::KATEGORI_LIST),
+            'kategori'      => 'required|array|min:1',
+            'kategori.*'    => 'string|in:' . implode(',', Thread::KATEGORI_LIST),
             'konten'        => 'nullable|string',
             'media_files'   => 'nullable|array|max:5',
             'media_files.*' => 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:10240',
@@ -344,14 +471,66 @@ class ForumController extends Controller
     }
 
     /**
+     * Pin / Unpin pribadi thread.
+     */
+    public function personalPin(int $id)
+    {
+        $userId = Auth::id();
+        $thread = $this->threadService->findThread($id); // ensure thread exists
+
+        $existingPin = \Modules\ManajemenMahasiswa\Models\ThreadPersonalPin::where('user_id', $userId)
+            ->where('thread_id', $id)
+            ->first();
+
+        if ($existingPin) {
+            $existingPin->delete();
+            $isPinned = false;
+        } else {
+            \Modules\ManajemenMahasiswa\Models\ThreadPersonalPin::create([
+                'user_id' => $userId,
+                'thread_id' => $id,
+            ]);
+            $isPinned = true;
+        }
+
+        if (request()->ajax()) {
+            return response()->json(['is_pinned' => $isPinned]);
+        }
+
+        $status = $isPinned ? 'dipin secara pribadi' : 'di-unpin dari pin pribadi';
+        return back()->with('success', "Thread berhasil {$status}.");
+    }
+
+    /**
      * Tambah komentar.
      */
     public function storeComment(int $threadId, Request $request)
     {
         $request->validate(['konten' => 'required|string|min:3']);
+
+        $oldLevel = $this->gamificationService->calculateLevel(
+            $this->gamificationService->getTotalXp(Auth::id())
+        );
+
         $this->commentService->addComment(Auth::id(), $threadId, $request->konten, $request->parent_id);
 
-        return back()->with('success', 'Komentar berhasil ditambahkan!');
+        $newLevel = $this->gamificationService->calculateLevel(
+            $this->gamificationService->getTotalXp(Auth::id())
+        );
+
+        $redirect = back()->with('success', 'Komentar berhasil ditambahkan! +5 XP');
+
+        if ($newLevel > $oldLevel) {
+            $tier = $this->gamificationService->getTierInfo($newLevel);
+            $redirect = $redirect->with('level_up', [
+                'old_level' => $oldLevel,
+                'new_level' => $newLevel,
+                'tier_name' => $tier['name'],
+                'tier_icon' => $tier['icon'],
+            ]);
+        }
+
+        return $redirect;
     }
 
     /**
@@ -407,5 +586,21 @@ class ForumController extends Controller
         ]);
 
         return back()->with('success', 'Laporan berhasil dikirim dan akan segera diproses oleh admin.');
+    }
+
+    /**
+     * Tandai komentar sebagai Best Answer.
+     */
+    public function markBestAnswer(int $threadId, int $commentId)
+    {
+        $user = Auth::user();
+        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+
+        try {
+            $this->threadService->markBestAnswer($threadId, $commentId, $user->id);
+            return back()->with('success', 'Komentar ditandai sebagai Jawaban Terbaik! ✅ Penulis mendapat +15 XP 🎉');
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['best_answer' => $e->getMessage()]);
+        }
     }
 }

@@ -10,8 +10,13 @@
             {{ strtoupper(substr($comment->author->name ?? '?', 0, 2)) }}
         </div>
         <div class="flex-grow-1 min-w-0">
-            <div class="d-flex align-items-center gap-2 mb-1">
+            <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                 <span class="fw-bold text-dark" style="font-size: {{ $depth === 0 ? '14px' : '13px' }};">{{ $comment->author->name ?? 'Unknown' }}</span>
+                @if(isset($authorTiers[$comment->user_id]))
+                    <span class="badge rounded-pill" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-size: 9px; font-weight: 600; padding: 2px 6px;" title="{{ $authorTiers[$comment->user_id]['tier_name'] }}">
+                        {{ $authorTiers[$comment->user_id]['tier_icon'] }} Lv.{{ $authorTiers[$comment->user_id]['level'] }}
+                    </span>
+                @endif
                 <span class="text-muted" style="font-size: {{ $depth === 0 ? '12px' : '11px' }};">• {{ $comment->created_at->diffForHumans() }}</span>
                 @if($comment->is_best_answer)
                     <span class="best-answer-badge">⭐ Jawaban Terbaik</span>
@@ -46,6 +51,15 @@
                     <form method="POST" action="{{ route('manajemenmahasiswa.forum.comments.destroy', $comment->id) }}" style="display:inline;" onsubmit="return confirm('Hapus komentar ini?')">
                         @csrf @method('DELETE')
                         <button type="submit" class="c-action-btn" style="color:#ef4444;">Hapus</button>
+                    </form>
+                @endif
+                {{-- Best Answer Button (hanya terlihat oleh OP, untuk komentar top-level yang belum ditandai) --}}
+                @if($thread->user_id === $user->id && !$comment->is_best_answer && $depth === 0 && $comment->user_id !== $user->id)
+                    <form method="POST" action="{{ route('manajemenmahasiswa.forum.best_answer', [$thread->id, $comment->id]) }}" style="display:inline;" onsubmit="return confirm('Tandai komentar ini sebagai Jawaban Terbaik?')">
+                        @csrf
+                        <button type="submit" class="c-action-btn" style="color:#16a34a; font-weight:600;">
+                            ✅ Best Answer
+                        </button>
                     </form>
                 @endif
             </div>

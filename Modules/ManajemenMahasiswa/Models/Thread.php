@@ -30,6 +30,7 @@ class Thread extends Model
     protected function casts(): array
     {
         return [
+            'kategori' => 'array',
             'is_pinned' => 'boolean',
             'is_locked' => 'boolean',
         ];
@@ -108,14 +109,15 @@ class Thread extends Model
 
     public function scopeByKategori(Builder $query, string $kategori): Builder
     {
-        return $query->where('kategori', $kategori);
+        return $query->whereJsonContains('kategori', $kategori);
     }
 
     public function scopeSearch(Builder $query, string $keyword): Builder
     {
+        $keyword = strtolower($keyword);
         return $query->where(function ($q) use ($keyword) {
-            $q->where('judul', 'like', "%{$keyword}%")
-              ->orWhere('konten', 'like', "%{$keyword}%");
+            $q->whereRaw('LOWER(mk_threads.judul) LIKE ?', ["%{$keyword}%"])
+              ->orWhereRaw('LOWER(mk_threads.konten) LIKE ?', ["%{$keyword}%"]);
         });
     }
 
@@ -123,14 +125,22 @@ class Thread extends Model
     // Helpers
     // -------------------------------------------------------------------------
 
-    public function kategoriLabel(): string
+    /**
+     * @return array<string>
+     */
+    public function getKategoriLabels(): array
     {
-        return self::KATEGORI_LABELS[$this->kategori] ?? $this->kategori;
+        if (!is_array($this->kategori)) return [];
+        return array_map(fn($k) => self::KATEGORI_LABELS[$k] ?? $k, $this->kategori);
     }
 
-    public function kategoriColor(): string
+    /**
+     * @return array<string>
+     */
+    public function getKategoriColors(): array
     {
-        return self::KATEGORI_COLORS[$this->kategori] ?? 'tag-gray';
+        if (!is_array($this->kategori)) return [];
+        return array_map(fn($k) => self::KATEGORI_COLORS[$k] ?? 'tag-gray', $this->kategori);
     }
 
     /**

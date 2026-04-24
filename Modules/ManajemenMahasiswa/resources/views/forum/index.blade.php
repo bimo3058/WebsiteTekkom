@@ -1,23 +1,33 @@
-<x-manajemenmahasiswa::layouts.dosen>
+<x-manajemenmahasiswa::layouts.forum-layout>
 
     @push('styles')
         <style>
-            .bg-gradient-purple {
-                background: #4D4DFF;
+            /* ── Page Title ──────────────────────────────────────────────────── */
+            .page-title { margin-bottom: 22px; }
+            .page-title h1 { font-size: 26px; font-weight: 700; color: #111827; margin: 0 0 2px; letter-spacing: -0.02em; }
+            .page-title p { font-size: 14px; color: #6b7280; margin: 0; }
+
+            /* ── Cards ───────────────────────────────────────────────────────── */
+            .dashboard-card {
+                background: #fff;
+                border-radius: 12px;
+                border: 1px solid #e5e7eb;
+                padding: 20px;
+                margin-bottom: 20px;
             }
 
             .forum-card {
-                background: #ffffff;
+                background: #fff;
                 border-radius: 12px;
+                border: 1px solid #e5e7eb;
                 padding: 20px;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
                 margin-bottom: 20px;
                 transition: transform 0.15s ease, box-shadow 0.15s ease;
             }
 
             .forum-card:hover {
                 transform: translateY(-2px);
-                box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.08), 0 4px 8px -2px rgba(0, 0, 0, 0.04);
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
             }
 
             .avatar-placeholder {
@@ -34,7 +44,7 @@
             }
 
             .btn-join {
-                background-color: #818cf8;
+                background-color: #4f46e5;
                 color: white;
                 border: none;
                 border-radius: 6px;
@@ -45,11 +55,11 @@
             }
 
             .btn-join:hover {
-                background-color: #6366f1;
+                background-color: #4338ca;
             }
 
             .btn-post {
-                background-color: #818cf8;
+                background-color: #4f46e5;
                 color: white;
                 border: none;
                 border-radius: 8px;
@@ -60,10 +70,11 @@
                 align-items: center;
                 gap: 8px;
                 white-space: nowrap;
+                transition: background-color 0.2s;
             }
 
             .btn-post:hover {
-                background-color: #6366f1;
+                background-color: #4338ca;
                 color: white;
             }
 
@@ -127,16 +138,19 @@
             }
 
             .search-input {
-                background-color: #f3f4f6;
-                border: none;
+                border: 1px solid #e5e7eb;
                 border-radius: 8px;
+                padding: 7px 12px 7px 32px;
+                font-size: 13px;
+                color: #374151;
+                outline: none;
+                background: #f9fafb;
                 height: 42px;
-                padding-left: 36px;
             }
 
             .search-input:focus {
-                background-color: #ffffff;
-                box-shadow: 0 0 0 2px #e0e7ff;
+                border-color: #4f46e5;
+                background: #ffffff;
             }
 
             .search-wrapper {
@@ -154,27 +168,30 @@
             }
 
             .leaderboard-table th {
-                font-weight: 500;
-                font-size: 13px;
-                color: rgba(255, 255, 255, 0.8);
-                border: none;
-                padding-bottom: 15px;
-                background-color: #4D4DFF;
+                font-weight: 600;
+                font-size: 12px;
+                color: #6b7280;
+                border-bottom: 1px solid #f3f4f6;
+                padding: 10px 14px;
+                background-color: #f9fafb;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
             }
 
             .leaderboard-table td {
-                border: none;
-                color: #ffffff;
-                font-size: 14px;
-                padding: 6px 0;
-                background-color: #4D4DFF;
+                border-bottom: 1px solid #f3f4f6;
+                color: #374151;
+                font-size: 13px;
+                padding: 12px 14px;
+                background-color: transparent;
             }
 
             .tag-label {
                 font-size: 11px;
                 font-weight: 600;
-                padding: 2px 8px;
-                border-radius: 4px;
+                padding: 4px 12px;
+                border-radius: 20px;
+                display: inline-block;
             }
 
             .tag-green {
@@ -240,25 +257,6 @@
                 margin-bottom: 16px;
             }
 
-            .thumbnail-wrapper {
-                width: 140px;
-                height: 100px;
-                border-radius: 8px;
-                overflow: hidden;
-                background: #f8fafc;
-                border: 1px solid #e2e8f0;
-                flex-shrink: 0;
-            }
-            .thread-thumbnail {
-                width: 100%;
-                height: 100%;
-                object-fit: cover;
-                transition: transform 0.2s;
-            }
-            .forum-card:hover .thread-thumbnail {
-                transform: scale(1.05);
-            }
-
             .edited-badge {
                 font-size: 11px;
                 color: #9ca3af;
@@ -279,9 +277,9 @@
         </style>
     @endpush
 
-    <div class="mb-5">
-        <h3 class="fw-bold mb-1 text-dark">Forum Diskusi</h3>
-        <p class="text-dark fw-bold" style="font-size: 14px;">Wadah komunikasi mahasiswa & alumni</p>
+    <div class="page-title">
+        <h1>Forum Diskusi</h1>
+        <p>Wadah komunikasi mahasiswa & alumni</p>
     </div>
 
     {{-- Flash Message --}}
@@ -297,8 +295,8 @@
     <div class="row mb-4">
         <!-- Leaderboard -->
         <div class="col-md-7 mb-3 mb-md-0">
-            <div class="bg-gradient-purple rounded-4 p-4 h-100 text-white shadow-sm">
-                <h6 class="fw-bold mb-3 d-flex align-items-center gap-2">
+            <div class="dashboard-card h-100">
+                <h6 class="fw-bold mb-3 d-flex align-items-center gap-2" style="color:#111827; font-size:15px;">
                     Leaderboard
                 </h6>
                 <div class="table-responsive">
@@ -314,9 +312,18 @@
                         <tbody>
                             @forelse($leaderboard as $index => $entry)
                                 <tr>
-                                    <td>{{ $index + 1 }}.</td>
+                                    <td>
+                                        @if($index === 0) 🥇
+                                        @elseif($index === 1) 🥈
+                                        @elseif($index === 2) 🥉
+                                        @else {{ $index + 1 }}.
+                                        @endif
+                                    </td>
                                     <td>{{ $entry->name }}</td>
-                                    <td>Lvl {{ $entry->level }}</td>
+                                    <td>
+                                        <span title="{{ $entry->tier_name }}">{{ $entry->tier_icon }}</span>
+                                        Lv.{{ $entry->level }}
+                                    </td>
                                     <td>
                                         @foreach($entry->badges->take(3) as $badge)
                                             <span title="{{ $badge->name }}">{{ $badge->icon }}</span>
@@ -341,26 +348,24 @@
 
         <!-- Streak -->
         <div class="col-md-5">
-            <div
-                class="bg-gradient-purple rounded-4 p-4 h-100 text-white shadow-sm d-flex flex-column justify-content-center">
-                <h6 class="fw-bold mb-4 d-flex align-items-center gap-2">
-                    Streak Kamu Hari Ini : {{ $userStats['current_streak'] }} Hari
+            <div class="dashboard-card h-100 d-flex flex-column justify-content-center">
+                <h6 class="fw-bold mb-4 d-flex align-items-center gap-2" style="color:#111827; font-size:15px;">
+                    🔥 Streak Kamu : {{ $userStats['current_streak'] }} Hari
                 </h6>
-                <div class="mb-3 ps-4">
+                <div class="mb-3 ps-4" style="color:#374151;">
                     <span style="font-size: 14px; font-weight: 500;">Rank : #{{ $userStats['rank'] }}</span>
                 </div>
-                <div class="mb-3 ps-4 d-flex align-items-center gap-2">
-                    <span></span> <span style="font-size: 14px; font-weight: 500;">Level Kamu :
-                        {{ $userStats['level'] }}</span>
+                <div class="mb-3 ps-4 d-flex align-items-center gap-2" style="color:#374151;">
+                    <span style="font-size: 14px; font-weight: 500;">{{ $userStats['tier_icon'] }} Level {{ $userStats['level'] }} — {{ $userStats['tier_name'] }}</span>
                 </div>
                 <div class="ps-4">
-                    <div class="d-flex align-items-center gap-2">
+                    <div class="d-flex align-items-center gap-2" style="color:#374151;">
                         <span></span>
                         <span style="font-size: 14px; font-weight: 500;">
                             Exp : {{ $userStats['total_xp'] }}/{{ $userStats['xp_for_next'] }}
                         </span>
                     </div>
-                    <div class="xp-progress-bar mt-2" style="width: 80%;">
+                    <div class="xp-progress-bar mt-2" style="width: 80%; background:#f3f4f6;">
                         @php
                             $progressPct = $userStats['xp_needed'] > 0
                                 ? min(100, round(($userStats['xp_current'] / $userStats['xp_needed']) * 100))
@@ -385,7 +390,7 @@
 
     <!-- Search & Filter Area -->
     <form method="GET" action="{{ route('manajemenmahasiswa.forum.index') }}" id="forumFilterForm">
-        <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-4">
+        <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-3">
             <div class="search-wrapper w-100 me-0 me-md-2">
                 <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -418,6 +423,24 @@
                 </a>
             </div>
         </div>
+
+        {{-- Sort Tabs --}}
+        <input type="hidden" name="sort" id="sortInput" value="{{ request('sort', 'terbaru') }}">
+        <div class="d-flex gap-2 mb-4">
+            @php $currentSort = request('sort', 'terbaru'); @endphp
+            <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 {{ $currentSort === 'terbaru' ? 'btn-dark' : 'btn-outline-secondary' }}"
+                onclick="document.getElementById('sortInput').value='terbaru'; document.getElementById('forumFilterForm').submit();">
+                🕐 Terbaru
+            </button>
+            <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 {{ $currentSort === 'hot' ? 'btn-dark' : 'btn-outline-secondary' }}"
+                onclick="document.getElementById('sortInput').value='hot'; document.getElementById('forumFilterForm').submit();">
+                🔥 Hot
+            </button>
+            <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 {{ $currentSort === 'top' ? 'btn-dark' : 'btn-outline-secondary' }}"
+                onclick="document.getElementById('sortInput').value='top'; document.getElementById('forumFilterForm').submit();">
+                ⬆️ Top
+            </button>
+        </div>
     </form>
 
     <!-- Forum Posts -->
@@ -432,15 +455,25 @@
                         <div>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                 <h6 class="fw-bold text-dark mb-0">{{ $thread->author->name ?? 'Unknown' }}</h6>
+                                @if(isset($authorTiers[$thread->user_id]))
+                                    <span class="badge rounded-pill" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-size: 10px; font-weight: 600; padding: 3px 8px;" title="{{ $authorTiers[$thread->user_id]['tier_name'] }}">
+                                        {{ $authorTiers[$thread->user_id]['tier_icon'] }} Lv.{{ $authorTiers[$thread->user_id]['level'] }}
+                                    </span>
+                                @endif
                                 <span class="text-primary fw-medium" style="font-size: 12px;">•
                                     {{ $thread->created_at->diffForHumans() }}</span>
                                 @if($thread->isEdited())
                                     <span class="edited-badge">(diedit)</span>
                                 @endif
                                 @if($thread->is_pinned)
-                                    <span class="pinned-badge">📌 Pinned</span>
+                                    <span class="pinned-badge">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+                                            <path d="M14 2l8 8-2 2-3-3-4 4v7h-2v-7l-4-4-3 3-2-2 8-8z" />
+                                        </svg>
+                                        Pinned
+                                    </span>
                                 @endif
-                                <span class="personal-pin-badge" data-personal-pin="{{ $thread->id }}" style="display: none;">📌 Pin Pribadi</span>
+                                <span class="personal-pin-badge" data-personal-pin="{{ $thread->id }}" style="display: {{ $thread->is_personal_pinned ? 'inline-flex' : 'none' }};">📌 Pin Pribadi</span>
                             </div>
                         </div>
                     </div>
@@ -466,9 +499,12 @@
                             @endif
                             {{-- Pin Pribadi (semua role) --}}
                             <li>
-                                <button type="button" class="dropdown-item personal-pin-toggle" data-thread-id="{{ $thread->id }}">
-                                    📌 <span class="personal-pin-label" data-thread-id="{{ $thread->id }}">Pin Pribadi</span>
-                                </button>
+                                <form method="POST" action="{{ route('manajemenmahasiswa.forum.personal_pin', $thread->id) }}">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item">
+                                        @if($thread->is_personal_pinned) 📌 Unpin Pribadi @else 📌 Pin Pribadi @endif
+                                    </button>
+                                </form>
                             </li>
                             <li><hr class="dropdown-divider"></li>
                             {{-- Delete --}}
@@ -509,16 +545,20 @@
                             {{ Str::limit($thread->getTextContent() ?: strip_tags($thread->konten), 200) }}
                         </p>
                     </div>
-                    @if($thread->getFirstImageUrl())
-                        <div class="thumbnail-wrapper">
-                            <img src="{{ $thread->getFirstImageUrl() }}" alt="Thumbnail" class="thread-thumbnail">
-                        </div>
-                    @endif
                 </div>
+                
+                @if($thread->getFirstImageUrl())
+                    <div class="mt-2 mb-3" style="width: 100%; max-height: 512px; overflow: hidden; border-radius: 12px; border: 1px solid #e5e7eb; background: #f8fafc; display: flex; justify-content: center; align-items: center;">
+                        <img src="{{ $thread->getFirstImageUrl() }}" alt="Thumbnail" style="width: 100%; max-height: 512px; object-fit: contain;">
+                    </div>
+                @endif
 
                 <!-- Labels -->
-                <div class="d-flex gap-2 mb-3">
-                    <span class="tag-label {{ $thread->kategoriColor() }}">{{ $thread->kategoriLabel() }}</span>
+                <div class="d-flex gap-2 mb-3 flex-wrap">
+                    @foreach($thread->getKategoriLabels() as $idx => $lbl)
+                        @php $colorClass = $thread->getKategoriColors()[$idx] ?? 'tag-gray'; @endphp
+                        <span class="tag-label {{ $colorClass }}">{{ $lbl }}</span>
+                    @endforeach
                     @if($thread->is_locked)
                         <span class="tag-label tag-red">🔒 Dikunci</span>
                     @endif
@@ -551,11 +591,21 @@
             </div>
     @empty
         <div class="empty-state">
-            <div class="icon">💬</div>
+            <div class="icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
+            </div>
             <h5 class="fw-bold text-dark">Belum ada diskusi</h5>
             <p>Jadilah yang pertama memulai diskusi!</p>
             <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post text-decoration-none">
-                Buat Post Pertama ⊕
+                Buat Post Pertama
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    class="ms-1">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="16"></line>
+                    <line x1="8" y1="12" x2="16" y2="12"></line>
+                </svg>
             </a>
         </div>
     @endforelse
@@ -583,7 +633,12 @@
                 <form id="reportForm" method="POST" action="">
                     @csrf
                     <div class="modal-header border-0 pb-0">
-                        <h5 class="modal-title fw-bold text-dark" id="reportModalLabel">🚩 Laporkan Thread</h5>
+                        <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                <path d="M4 2v20h2v-7h10l-2-4 2-4H6V2H4z" />
+                            </svg>
+                            Laporkan Thread
+                        </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
@@ -612,34 +667,7 @@
         <script>
             const csrfToken = '{{ csrf_token() }}';
 
-            // ---- Personal Pin (localStorage) ----
-            const PERSONAL_PINS_KEY = 'forum_personal_pins';
-            function getPersonalPins() { try { return JSON.parse(localStorage.getItem(PERSONAL_PINS_KEY)) || []; } catch { return []; } }
-            function togglePersonalPin(threadId) {
-                let pins = getPersonalPins();
-                const idx = pins.indexOf(threadId);
-                if (idx > -1) pins.splice(idx, 1); else pins.push(threadId);
-                localStorage.setItem(PERSONAL_PINS_KEY, JSON.stringify(pins));
-                refreshPersonalPinUI();
-            }
-            function refreshPersonalPinUI() {
-                const pins = getPersonalPins();
-                document.querySelectorAll('[data-personal-pin]').forEach(b => { b.style.display = pins.includes(parseInt(b.dataset.personalPin)) ? 'inline-flex' : 'none'; });
-                document.querySelectorAll('.personal-pin-label').forEach(l => { l.textContent = pins.includes(parseInt(l.dataset.threadId)) ? 'Unpin Pribadi' : 'Pin Pribadi'; });
-                
-                // Sort: move personal-pinned cards to top
-                const container = document.querySelector('.forum-cards-container');
-                if (!container) return;
-                const cards = [...container.querySelectorAll('.forum-card')];
-                cards.sort((a, b) => {
-                    const aPin = pins.includes(parseInt(a.dataset.threadId)) ? 1 : 0;
-                    const bPin = pins.includes(parseInt(b.dataset.threadId)) ? 1 : 0;
-                    return bPin - aPin;
-                });
-                cards.forEach(card => container.appendChild(card));
-            }
-            document.querySelectorAll('.personal-pin-toggle').forEach(btn => btn.addEventListener('click', function(e) { e.preventDefault(); togglePersonalPin(parseInt(this.dataset.threadId)); }));
-            refreshPersonalPinUI();
+
 
             // ---- Vote Thread (AJAX) ----
             document.querySelectorAll('.vote-thread-btn').forEach(btn => {
@@ -699,4 +727,4 @@
         </script>
     @endpush
 
-</x-manajemenmahasiswa::layouts.dosen>
+</x-manajemenmahasiswa::layouts.forum-layout>
