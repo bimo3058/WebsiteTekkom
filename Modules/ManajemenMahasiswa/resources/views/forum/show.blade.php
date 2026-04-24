@@ -1,12 +1,19 @@
-<x-manajemenmahasiswa::layouts.mahasiswa>
+<x-manajemenmahasiswa::layouts.forum-layout>
 
 @push('styles')
 <style>
+    /* ── Page Title ──────────────────────────────────────────────────── */
+    .page-title { margin-bottom: 22px; display: flex; align-items: center; gap: 16px; }
+    .page-title .back-btn { background: #fff; border: 1px solid #e5e7eb; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: #4b5563; text-decoration: none; transition: background 0.2s; }
+    .page-title .back-btn:hover { background: #f3f4f6; }
+    .page-title h1 { font-size: 26px; font-weight: 700; color: #111827; margin: 0 0 2px; letter-spacing: -0.02em; }
+    .page-title p { font-size: 14px; color: #6b7280; margin: 0; }
+
     .forum-card {
         background: #ffffff;
         border-radius: 12px;
         padding: 24px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+        border: 1px solid #e5e7eb;
         margin-bottom: 20px;
     }
     .avatar-placeholder {
@@ -27,7 +34,7 @@
         font-size: 14px;
     }
     .btn-join {
-        background-color: #818cf8;
+        background-color: #4f46e5;
         color: white;
         border: none;
         border-radius: 6px;
@@ -37,7 +44,7 @@
         transition: background-color 0.2s;
     }
     .btn-join:hover {
-        background-color: #6366f1;
+        background-color: #4338ca;
     }
     .post-actions .vote-pill {
         background: #f1f5f9;
@@ -98,10 +105,11 @@
         background: #e2e8f0;
     }
     .tag-label {
-        font-size: 12px;
+        font-size: 11px;
         font-weight: 600;
-        padding: 4px 10px;
-        border-radius: 6px;
+        padding: 4px 12px;
+        border-radius: 20px;
+        display: inline-block;
     }
     .tag-green { background: #dcfce7; color: #16a34a; }
     .tag-red { background: #fee2e2; color: #dc2626; }
@@ -136,7 +144,7 @@
         border-color: #6366f1;
     }
     .btn-post {
-        background-color: #818cf8;
+        background-color: #4f46e5;
         color: white;
         border: none;
         border-radius: 8px;
@@ -148,7 +156,7 @@
         transition: background 0.2s, opacity 0.2s;
     }
     .btn-post:hover {
-        background-color: #6366f1;
+        background-color: #4338ca;
         color: white;
     }
     .btn-post:disabled {
@@ -298,24 +306,7 @@
         font-style: italic;
     }
 
-    .media-gallery {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 12px;
-        margin-bottom: 16px;
-    }
 
-    .media-gallery img {
-        width: 100%;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        cursor: pointer;
-        transition: transform 0.15s;
-    }
-
-    .media-gallery img:hover {
-        transform: scale(1.02);
-    }
 
     .personal-pin-badge-show {
         background: #dbeafe;
@@ -336,13 +327,13 @@
     </div>
 @endif
 
-<div class="mb-4 d-flex align-items-center gap-3">
-    <a href="{{ route('manajemenmahasiswa.forum.index') }}" class="btn btn-light rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 40px; height: 40px;">
-        <span aria-hidden="true">&larr;</span>
+<div class="page-title">
+    <a href="{{ route('manajemenmahasiswa.forum.index') }}" class="back-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
     </a>
     <div>
-        <h3 class="fw-bold mb-0 text-dark">Detail Diskusi</h3>
-        <p class="text-muted text-sm fw-medium mb-0">Baca postingan dan ikuti diskusinya</p>
+        <h1>Detail Diskusi</h1>
+        <p>Baca postingan dan ikuti diskusinya</p>
     </div>
 </div>
 
@@ -353,7 +344,14 @@
                 {{ strtoupper(substr($thread->author->name ?? '?', 0, 2)) }}
             </div>
             <div>
-                <h5 class="fw-bold text-dark mb-0">{{ $thread->author->name ?? 'Unknown' }}</h5>
+                <div class="d-flex align-items-center gap-2 flex-wrap">
+                    <h5 class="fw-bold text-dark mb-0">{{ $thread->author->name ?? 'Unknown' }}</h5>
+                    @if(isset($authorTiers[$thread->user_id]))
+                        <span class="badge rounded-pill" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-size: 10px; font-weight: 600; padding: 3px 8px;" title="{{ $authorTiers[$thread->user_id]['tier_name'] }}">
+                            {{ $authorTiers[$thread->user_id]['tier_icon'] }} Lv.{{ $authorTiers[$thread->user_id]['level'] }} — {{ $authorTiers[$thread->user_id]['tier_name'] }}
+                        </span>
+                    @endif
+                </div>
                 <span class="text-primary fw-medium" style="font-size: 13px;">• {{ $thread->created_at->diffForHumans() }}</span>
                 @if($thread->isEdited())
                     <span class="edited-badge">(diedit {{ $thread->updated_at->diffForHumans() }})</span>
@@ -383,9 +381,12 @@
                     @endif
                     {{-- Pin Pribadi --}}
                     <li>
-                        <button type="button" class="dropdown-item" id="personalPinToggle">
-                            📌 <span id="personalPinLabel">Pin Pribadi</span>
-                        </button>
+                        <form method="POST" action="{{ route('manajemenmahasiswa.forum.personal_pin', $thread->id) }}">
+                            @csrf
+                            <button type="submit" class="dropdown-item">
+                                @if($isPersonalPinned) 📌 Unpin Pribadi @else 📌 Pin Pribadi @endif
+                            </button>
+                        </form>
                     </li>
                     <li><hr class="dropdown-divider"></li>
                     {{-- Delete --}}
@@ -424,12 +425,60 @@
     <h4 class="fw-bold text-dark mb-3">{{ $thread->judul }}</h4>
 
     <div class="text-dark" style="font-size: 15px; margin-bottom: 24px; line-height: 1.6; overflow-wrap: break-word;">
-        {!! nl2br(strip_tags($thread->konten, '<img><video><source><a><br>')) !!}
+        {!! nl2br(strip_tags($thread->konten, '<a><br>')) !!}
     </div>
 
+    @php
+        $mediaUrls = $thread->extractMediaUrls();
+    @endphp
+    @if(count($mediaUrls) > 0)
+        @if(count($mediaUrls) == 1)
+            {{-- Single media: show full width --}}
+            <div class="mt-3 mb-4" style="width: 100%; border-radius: 12px; border: 1px solid #e5e7eb; background: #f8fafc; overflow: hidden; display: flex; justify-content: center; align-items: center;">
+                @if($mediaUrls[0]['type'] === 'image')
+                    <img src="{{ $mediaUrls[0]['url'] }}" alt="Media" style="width: 100%; max-height: 600px; object-fit: contain;">
+                @else
+                    <video src="{{ $mediaUrls[0]['url'] }}" controls style="width: 100%; max-height: 600px; object-fit: contain;"></video>
+                @endif
+            </div>
+        @else
+            {{-- Multiple media: carousel --}}
+            <div id="threadMediaCarousel" class="carousel slide mt-3 mb-4" data-bs-ride="carousel" style="border-radius: 12px; border: 1px solid #e5e7eb; overflow: hidden; background: #f8fafc;">
+                <div class="carousel-inner">
+                    @foreach($mediaUrls as $idx => $media)
+                        <div class="carousel-item {{ $idx === 0 ? 'active' : '' }}" style="height: 500px;">
+                            @if($media['type'] === 'image')
+                                <img src="{{ $media['url'] }}" class="d-block w-100 h-100" style="object-fit: contain;" alt="Media {{ $idx + 1 }}">
+                            @else
+                                <video src="{{ $media['url'] }}" controls class="d-block w-100 h-100" style="object-fit: contain;"></video>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#threadMediaCarousel" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true" style="filter: invert(1) grayscale(100); background-color: rgba(255,255,255,0.5); border-radius: 50%; padding: 20px;"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#threadMediaCarousel" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true" style="filter: invert(1) grayscale(100); background-color: rgba(255,255,255,0.5); border-radius: 50%; padding: 20px;"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+                
+                <div class="carousel-indicators mb-2">
+                    @foreach($mediaUrls as $idx => $media)
+                        <button type="button" data-bs-target="#threadMediaCarousel" data-bs-slide-to="{{ $idx }}" class="{{ $idx === 0 ? 'active' : '' }}" aria-current="{{ $idx === 0 ? 'true' : 'false' }}" aria-label="Slide {{ $idx + 1 }}" style="background-color: #4f46e5;"></button>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+    @endif
+
     <!-- Labels -->
-    <div class="d-flex gap-2 mb-4">
-        <span class="tag-label {{ $thread->kategoriColor() }}">{{ $thread->kategoriLabel() }}</span>
+    <div class="d-flex gap-2 mb-4 flex-wrap">
+        @foreach($thread->getKategoriLabels() as $idx => $lbl)
+            @php $colorClass = $thread->getKategoriColors()[$idx] ?? 'tag-gray'; @endphp
+            <span class="tag-label {{ $colorClass }}">{{ $lbl }}</span>
+        @endforeach
         @if($thread->is_pinned)
             <span class="tag-label" style="background: #fef3c7; color: #d97706;">📌 Pinned</span>
         @endif
@@ -655,26 +704,7 @@
         });
     }
 
-    // ---- Personal Pin (localStorage) ----
-    const PERSONAL_PINS_KEY = 'forum_personal_pins';
-    const threadId = {{ $thread->id }};
-    function getPersonalPins() { try { return JSON.parse(localStorage.getItem(PERSONAL_PINS_KEY)) || []; } catch { return []; } }
-    function updatePinLabel() {
-        const pins = getPersonalPins();
-        const label = document.getElementById('personalPinLabel');
-        if (label) label.textContent = pins.includes(threadId) ? 'Unpin Pribadi' : 'Pin Pribadi';
-    }
-    const pinToggle = document.getElementById('personalPinToggle');
-    if (pinToggle) {
-        pinToggle.addEventListener('click', function() {
-            let pins = getPersonalPins();
-            const idx = pins.indexOf(threadId);
-            if (idx > -1) pins.splice(idx, 1); else pins.push(threadId);
-            localStorage.setItem(PERSONAL_PINS_KEY, JSON.stringify(pins));
-            updatePinLabel();
-        });
-    }
-    updatePinLabel();
+
 
     // ---- Toggle Reply Forms (Reddit style) ----
     document.querySelectorAll('.toggle-reply-btn').forEach(btn => {
@@ -725,4 +755,4 @@
 </script>
 @endpush
 
-</x-manajemenmahasiswa::layouts.mahasiswa>
+</x-manajemenmahasiswa::layouts.forum-layout>

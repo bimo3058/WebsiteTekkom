@@ -124,6 +124,11 @@ class CommentService
                         $comment
                     );
                 }
+
+                // Penalti -1 XP untuk pemberi downvote
+                if ($value === -1) {
+                    $this->gamificationService->penalizeDownvote($userId, $comment);
+                }
             }
 
             $comment->syncVoteCount();
