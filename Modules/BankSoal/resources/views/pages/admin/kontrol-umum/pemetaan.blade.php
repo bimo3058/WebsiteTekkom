@@ -540,8 +540,8 @@
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 180px;">CPL</th>
-                        <th>Mata Kuliah</th>
+                        <th style="width: 240px;">Mata Kuliah</th>
+                        <th>CPL</th>
                     </tr>
                 </thead>
                 <tbody id="mkCplTableBody"></tbody>
@@ -635,14 +635,14 @@
             <form onsubmit="submitMkCpl(event)">
                 <div class="modal-body">
                     <div class="form-group">
-                        <label for="mapCplIdForMk">CPL *</label>
-                        <select id="mapCplIdForMk" required></select>
-                        <div class="form-error" id="error-mapCplIdForMk"></div>
+                        <label for="mapMkIdForCpl">Mata Kuliah *</label>
+                        <select id="mapMkIdForCpl" required></select>
+                        <div class="form-error" id="error-mapMkIdForCpl"></div>
                     </div>
                     <div class="form-group">
-                        <label for="mapMkIdsForCpl">Mata Kuliah * (boleh pilih banyak)</label>
-                        <select id="mapMkIdsForCpl" multiple required></select>
-                        <div class="form-error" id="error-mapMkIdsForCpl"></div>
+                        <label for="mapCplIdsForMk">CPL * (boleh pilih banyak)</label>
+                        <select id="mapCplIdsForMk" multiple required></select>
+                        <div class="form-error" id="error-mapCplIdsForMk"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -662,14 +662,14 @@
             <form onsubmit="submitDosenMk(event)">
                 <div class="modal-body">
                     <div class="form-group">
-                        <label for="mapDosenId">Dosen *</label>
-                        <select id="mapDosenId" required></select>
-                        <div class="form-error" id="error-mapDosenId"></div>
+                        <label for="mapMkIdForDosen">Mata Kuliah *</label>
+                        <select id="mapMkIdForDosen" required></select>
+                        <div class="form-error" id="error-mapMkIdForDosen"></div>
                     </div>
                     <div class="form-group">
-                        <label for="mapMkIdsForDosen">Mata Kuliah * (boleh pilih banyak)</label>
-                        <select id="mapMkIdsForDosen" multiple required></select>
-                        <div class="form-error" id="error-mapMkIdsForDosen"></div>
+                        <label for="mapDosenIdsForMk">Dosen * (boleh pilih banyak)</label>
+                        <select id="mapDosenIdsForMk" multiple required></select>
+                        <div class="form-error" id="error-mapDosenIdsForMk"></div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -711,8 +711,8 @@
                 emptyId: 'mkCplEmptyState',
                 paginationId: 'mkCplPagination',
                 paginationListId: 'mkCplPaginationList',
-                sortText: (item) => `${item.cpl_kode} ${(item.mk_names || []).join(' ')}`,
-                filterText: (item) => `${item.cpl_kode} ${(item.mk_names || []).join(' ')}`,
+                sortText: (item) => `${item.mk_nama} ${item.mk_kode} ${(item.cpl_codes || []).join(' ')}`,
+                filterText: (item) => `${item.mk_nama} ${item.mk_kode} ${(item.cpl_codes || []).join(' ')}`,
             },
             dosenMk: {
                 listApi: `${BASE_API}/dosen-mk`,
@@ -762,7 +762,7 @@
         }
 
         function initMkCplMultiselect() {
-            const selectEl = document.getElementById('mapMkIdsForCpl');
+            const selectEl = document.getElementById('mapCplIdsForMk');
             if (!selectEl || typeof TomSelect === 'undefined') return;
 
             if (mkCplTomSelect) {
@@ -771,17 +771,17 @@
             }
 
             mkCplTomSelect = new TomSelect(selectEl, {
-                plugins: { remove_button: { title: 'Hapus mata kuliah ini' } },
+                plugins: { remove_button: { title: 'Hapus CPL ini' } },
                 create: false,
                 maxOptions: 300,
-                placeholder: 'Pilih satu atau lebih mata kuliah',
+                placeholder: 'Pilih satu atau lebih CPL',
                 searchField: ['text'],
                 hideSelected: true,
             });
         }
 
         function initDosenMkMultiselect() {
-            const selectEl = document.getElementById('mapMkIdsForDosen');
+            const selectEl = document.getElementById('mapDosenIdsForMk');
             if (!selectEl || typeof TomSelect === 'undefined') return;
 
             if (dosenMkTomSelect) {
@@ -792,12 +792,12 @@
             dosenMkTomSelect = new TomSelect(selectEl, {
                 plugins: {
                     remove_button: {
-                        title: 'Hapus mata kuliah ini',
+                        title: 'Hapus dosen ini',
                     },
                 },
                 create: false,
                 maxOptions: 300,
-                placeholder: 'Pilih satu atau lebih mata kuliah',
+                placeholder: 'Pilih satu atau lebih dosen',
                 searchField: ['text'],
                 hideSelected: true,
             });
@@ -857,10 +857,10 @@
         function fillSelectOptions() {
             fillSelect('mapCpmkIdsForCpl', state.options.cpmk, (row) => `${row.kode}`);
             fillSelect('mapCplIdForCpmk', state.options.cpl, (row) => `${row.kode}`);
-            fillSelect('mapMkIdsForCpl', state.options.mata_kuliah, (row) => `${row.kode}`);
-            fillSelect('mapCplIdForMk', state.options.cpl, (row) => `${row.kode}`);
-            fillSelect('mapDosenId', state.options.dosen, (row) => `${row.name}${row.employee_number ? ` (${row.employee_number})` : ''}`);
-            fillSelect('mapMkIdsForDosen', state.options.mata_kuliah, (row) => `${row.kode} - ${row.nama}`);
+            fillSelect('mapMkIdForCpl', state.options.mata_kuliah, (row) => `${row.kode} - ${row.nama}`);
+            fillSelect('mapCplIdsForMk', state.options.cpl, (row) => `${row.kode}`);
+            fillSelect('mapMkIdForDosen', state.options.mata_kuliah, (row) => `${row.kode} - ${row.nama}`);
+            fillSelect('mapDosenIdsForMk', state.options.dosen, (row) => `${row.name}`);
         }
 
         function fillSelect(id, list, labelResolver) {
@@ -869,8 +869,8 @@
 
             const tomSelectMap = {
                 mapCpmkIdsForCpl: cpmkCplTomSelect,
-                mapMkIdsForCpl: mkCplTomSelect,
-                mapMkIdsForDosen: dosenMkTomSelect,
+                mapCplIdsForMk: mkCplTomSelect,
+                mapDosenIdsForMk: dosenMkTomSelect,
             };
             const currentTomSelect = tomSelectMap[id] || null;
 
@@ -994,9 +994,9 @@
             if (key === 'mkCpl') {
                 return pageItems.map((item) => `
                     <tr>
-                        <td><span class="mapping-pill">${escapeHtml(item.cpl_kode)}</span></td>
+                        <td class="desc-cell">${escapeHtml(item.mk_nama)}</td>
                         <td class="desc-cell">
-                            ${(item.mk_items || []).map((mk) => `<span class="kode-badge" style="margin-right:6px;margin-bottom:6px;display:inline-flex;align-items:center;gap:6px;">${escapeHtml(mk.mk_nama)} <button type="button" class="btn-icon btn-icon-delete" style="width:20px;height:20px;border-radius:999px;padding:0;" title="Hapus MK dari CPL" onclick="deleteMkCpl(${mk.mk_id}, ${item.cpl_id})"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:12px;height:12px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></span>`).join('')}
+                            ${(item.cpl_items || []).map((cpl) => `<span class="kode-badge" style="margin-right:6px;margin-bottom:6px;display:inline-flex;align-items:center;gap:6px;">${escapeHtml(cpl.cpl_kode)} <button type="button" class="btn-icon btn-icon-delete" style="width:20px;height:20px;border-radius:999px;padding:0;" title="Hapus CPL dari MK" onclick="deleteMkCpl(${item.mk_id}, ${cpl.cpl_id})"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:12px;height:12px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></span>`).join('')}
                         </td>
                     </tr>
                 `).join('');
@@ -1039,7 +1039,7 @@
                 return;
             }
             if (type === 'mkCpl') {
-                document.getElementById('mapCplIdForMk').value = '';
+                document.getElementById('mapMkIdForCpl').value = '';
                 if (mkCplTomSelect) {
                     mkCplTomSelect.clear(true);
                 }
@@ -1047,12 +1047,12 @@
                 return;
             }
 
-            document.getElementById('mapDosenId').value = '';
+            document.getElementById('mapMkIdForDosen').value = '';
             if (dosenMkTomSelect) {
                 dosenMkTomSelect.clear(true);
             } else {
-                const mkSelect = document.getElementById('mapMkIdsForDosen');
-                Array.from(mkSelect.options).forEach((option) => {
+                const dosenSelect = document.getElementById('mapDosenIdsForMk');
+                Array.from(dosenSelect.options).forEach((option) => {
                     option.selected = false;
                 });
             }
@@ -1104,18 +1104,18 @@
             event.preventDefault();
             clearErrors();
 
-            const mkIds = Array.from(document.getElementById('mapMkIdsForCpl').selectedOptions)
+            const cplIds = Array.from(document.getElementById('mapCplIdsForMk').selectedOptions)
                 .map((option) => Number(option.value))
                 .filter((value) => Number.isInteger(value) && value > 0);
             const payload = {
-                cpl_id: Number(document.getElementById('mapCplIdForMk').value),
-                mk_ids: mkIds,
+                mk_id: Number(document.getElementById('mapMkIdForCpl').value),
+                cpl_ids: cplIds,
             };
 
             await createMapping(`${BASE_API}/mk-cpl`, payload, 'modalMkCpl', 'mkCpl', {
-                cpl_id: 'mapCplIdForMk',
-                mk_ids: 'mapMkIdsForCpl',
-                'mk_ids.0': 'mapMkIdsForCpl',
+                mk_id: 'mapMkIdForCpl',
+                cpl_ids: 'mapCplIdsForMk',
+                'cpl_ids.0': 'mapCplIdsForMk',
             });
         }
 
@@ -1123,18 +1123,18 @@
             event.preventDefault();
             clearErrors();
 
-            const mkIds = Array.from(document.getElementById('mapMkIdsForDosen').selectedOptions)
+            const userIds = Array.from(document.getElementById('mapDosenIdsForMk').selectedOptions)
                 .map((option) => Number(option.value))
                 .filter((value) => Number.isInteger(value) && value > 0);
             const payload = {
-                user_id: Number(document.getElementById('mapDosenId').value),
-                mk_ids: mkIds,
+                mk_id: Number(document.getElementById('mapMkIdForDosen').value),
+                user_ids: userIds,
             };
 
             await createMapping(`${BASE_API}/dosen-mk`, payload, 'modalDosenMk', 'dosenMk', {
-                user_id: 'mapDosenId',
-                mk_ids: 'mapMkIdsForDosen',
-                'mk_ids.0': 'mapMkIdsForDosen',
+                mk_id: 'mapMkIdForDosen',
+                user_ids: 'mapDosenIdsForMk',
+                'user_ids.0': 'mapDosenIdsForMk',
             });
         }
 
