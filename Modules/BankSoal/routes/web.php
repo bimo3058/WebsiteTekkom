@@ -40,8 +40,6 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::get('/cpl/next-code', [CplCpmkController::class, 'nextCplCode'])->name('cpl.next-code');
             Route::get('/cpl/{id}', [CplCpmkController::class, 'showCpl'])->name('cpl.show');
 
-            Route::get('/rps/approved', [AdminRpsController::class, 'listApproved'])->name('rps.approved.index');
-
             Route::get('/cpmk', [CplCpmkController::class, 'listCpmk'])->name('cpmk.index');
             Route::get('/cpmk/next-code', [CplCpmkController::class, 'nextCpmkCode'])->name('cpmk.next-code');
             Route::get('/cpmk/{id}', [CplCpmkController::class, 'showCpmk'])->name('cpmk.show');
@@ -54,9 +52,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
 
         # Admin Routes - Kontrol BankSoal
         Route::middleware('role:admin_banksoal')->prefix('admin/kontrol-banksoal')->name('banksoal.admin.kontrol-banksoal.')->group(function () {
-            Route::get('/rps', [AdminRpsController::class, 'index'])->name('rps');
-            Route::get('/rps/{rpsId}/preview', [AdminRpsController::class, 'previewDokumen'])->name('rps.preview');
-            Route::get('/rps/{rpsId}/download', [AdminRpsController::class, 'downloadDokumen'])->name('rps.download');
+            Route::get('/rps', fn() => view('banksoal::pages.admin.kontrol-banksoal.rps'))->name('rps');
             Route::get('/soal', fn() => view('banksoal::pages.admin.kontrol-banksoal.soal'))->name('soal');
         });
 
@@ -66,7 +62,6 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::get('/', [DosenRpsController::class, 'index'])->name('index');
                 Route::get('/preview/{rpsId}', [DosenRpsController::class, 'previewDokumen'])->name('preview');
-                Route::get('/download/{rpsId}', [DosenRpsController::class, 'downloadDokumen'])->name('download');
                 Route::get('/{rpsId}/edit', [DosenRpsController::class, 'edit'])->name('edit');
                 Route::get('/mk', [DosenRpsController::class, 'getMkByDosen'])->name('mk');
                 Route::get('/cpl/{mkId?}', [DosenRpsController::class, 'getCplByMk'])->name('cpl');
