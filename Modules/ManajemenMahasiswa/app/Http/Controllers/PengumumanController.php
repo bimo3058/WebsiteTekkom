@@ -27,7 +27,7 @@ class PengumumanController extends Controller
         $filterKategori = $request->query('kategori');
 
         // Admin, Dosen Koordinator, Pengurus Himpunan, GPM, Admin Kemahasiswaan: lihat semua
-        if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'pengurus_himpunan', 'gpm', 'admin_kemahasiswaan'])->isNotEmpty()) {
+        if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'dosen', 'pengurus_himpunan', 'gpm', 'admin_kemahasiswaan'])->isNotEmpty()) {
             $filters = $request->only(['status', 'search', 'audience']);
             if ($filterKategori && $filterKategori !== 'semua') {
                 $filters['kategori'] = $filterKategori;
@@ -144,13 +144,13 @@ class PengumumanController extends Controller
         $this->authorizeOwnerOrAdmin($pengumuman->user_id);
 
         $validated = $request->validate([
-            'judul'           => 'required|string|max:255',
-            'konten'          => 'required|string|min:50',
-            'kategori'        => 'nullable|string|max:100',
+            'judul' => 'required|string|max:255',
+            'konten' => 'required|string|min:50',
+            'kategori' => 'nullable|string|max:100',
             'target_audience' => 'required|in:all,mahasiswa,alumni,dosen,pengurus',
-            'status_publish'  => 'required|in:draft,published,archived',
-            'poster'          => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
-            'lampiran.*'      => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:10240',
+            'status_publish' => 'required|in:draft,published,archived',
+            'poster' => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
+            'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:10240',
         ]);
 
         $posterFile = $request->file('poster');
@@ -161,9 +161,9 @@ class PengumumanController extends Controller
         // Ganti poster jika ada upload baru
         if ($posterFile) {
             $this->repoMulmedService->upload($posterFile, [
-                'judul_file'        => 'Poster: ' . $validated['judul'],
+                'judul_file' => 'Poster: ' . $validated['judul'],
                 'visibility_status' => 'public',
-                'pengumuman_id'     => $id,
+                'pengumuman_id' => $id,
             ]);
         }
 
@@ -171,9 +171,9 @@ class PengumumanController extends Controller
         if ($request->hasFile('lampiran')) {
             foreach ($request->file('lampiran') as $file) {
                 $this->repoMulmedService->upload($file, [
-                    'judul_file'        => $file->getClientOriginalName(),
+                    'judul_file' => $file->getClientOriginalName(),
                     'visibility_status' => 'public',
-                    'pengumuman_id'     => $id,
+                    'pengumuman_id' => $id,
                 ]);
             }
         }
@@ -276,7 +276,7 @@ class PengumumanController extends Controller
     public function downloadLampiran(int $lampiran)
     {
         $file = \Modules\ManajemenMahasiswa\Models\RepoMulmed::findOrFail($lampiran);
-        $url  = $this->supabase->getPublicUrl($file->path_file);
+        $url = $this->supabase->getPublicUrl($file->path_file);
 
         // Fetch file content from Supabase and stream it as a download
         $response = \Illuminate\Support\Facades\Http::timeout(30)->get($url);
@@ -289,9 +289,9 @@ class PengumumanController extends Controller
         $mimeType = $response->header('Content-Type') ?? 'application/octet-stream';
 
         return response($response->body(), 200, [
-            'Content-Type'        => $mimeType,
+            'Content-Type' => $mimeType,
             'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
-            'Content-Length'      => strlen($response->body()),
+            'Content-Length' => strlen($response->body()),
         ]);
     }
 }
