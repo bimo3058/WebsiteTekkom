@@ -12,11 +12,12 @@ class DashboardController extends Controller
 {
     public function __construct(
         private DashboardAnalitikService $analitikService
-    ) {}
+    ) {
+    }
 
     public function index()
     {
-        $user  = Auth::user();
+        $user = Auth::user();
         $roles = $user->roles->pluck('name')->toArray();
 
         if (
@@ -31,8 +32,8 @@ class DashboardController extends Controller
             // Status breakdown untuk donut chart
             $statusMahasiswa = [
                 'aktif' => Kemahasiswaan::where('status', Kemahasiswaan::STATUS_AKTIF)->count(),
-                'cuti'  => Kemahasiswaan::where('status', Kemahasiswaan::STATUS_CUTI)->count(),
-                'do'    => Kemahasiswaan::where('status', Kemahasiswaan::STATUS_DO)->count(),
+                'cuti' => Kemahasiswaan::where('status', Kemahasiswaan::STATUS_CUTI)->count(),
+                'do' => Kemahasiswaan::where('status', Kemahasiswaan::STATUS_DO)->count(),
                 'lulus' => Kemahasiswaan::where('status', Kemahasiswaan::STATUS_ALUMNI)->count(),
             ];
 
@@ -44,8 +45,8 @@ class DashboardController extends Controller
 
             // Data analytics alumni baru
             $alumniService = app(\Modules\ManajemenMahasiswa\Services\AlumniService::class);
-            $serapanPerAngkatan  = $alumniService->getSerapanPerAngkatan();
-            $distribusiIndustri  = $alumniService->getDistribusiIndustri();
+            $serapanPerAngkatan = $alumniService->getSerapanPerAngkatan();
+            $distribusiIndustri = $alumniService->getDistribusiIndustri();
 
             return view('manajemenmahasiswa::dashboard.dashboard-analitik', compact(
                 'snapshot',
@@ -57,7 +58,7 @@ class DashboardController extends Controller
         }
 
         if (\in_array('dosen', $roles)) {
-            return view('manajemenmahasiswa::dashboard.dosen');
+            return redirect()->route('manajemenmahasiswa.pengumuman.index');
         }
 
         if (\in_array('mahasiswa', $roles)) {

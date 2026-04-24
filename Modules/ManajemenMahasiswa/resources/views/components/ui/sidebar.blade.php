@@ -1,9 +1,11 @@
 <div class="sidebar">
     @php
         $sidebarRoles = auth()->user()->roles->pluck('name')->toArray();
+        $showDashboardAnalitik = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan'])) > 0;
+        
         if (array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan'])) {
             $portalLabel = 'Portal Admin';
-        } elseif (in_array('gpm', $sidebarRoles)) {
+        } elseif (array_intersect($sidebarRoles, ['gpm', 'dosen_koordinator', 'dosen'])) {
             $portalLabel = 'Portal Dosen';
         } elseif (in_array('pengurus_himpunan', $sidebarRoles)) {
             $portalLabel = 'Portal Pengurus';
@@ -29,18 +31,22 @@
     <div class="menu-title mb-2" style="font-size: 13px; font-weight: 500; color: #9ca3af;">Main Menu</div>
 
     <nav class="sidebar-nav d-flex flex-column gap-1">
-        <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.dashboard') }}"
-            routeName="manajemenmahasiswa.dashboard" label="Dashboard Analitik">
-            <x-slot:iconSlot>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M3 3v18h18"></path>
-                    <path d="M18 17V9"></path>
-                    <path d="M13 17V5"></path>
-                    <path d="M8 17v-3"></path>
-                </svg>
-            </x-slot:iconSlot>
-        </x-manajemenmahasiswa::ui.sidebar-item>
+        @if($showDashboardAnalitik)
+            <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.dashboard') }}"
+                routeName="manajemenmahasiswa.dashboard" label="Dashboard Analitik">
+                <x-slot:iconSlot>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M3 3v18h18"></path>
+                        <path d="M18 17V9"></path>
+                        <path d="M13 17V5"></path>
+                        <path d="M8 17v-3"></path>
+                    </svg>
+                </x-slot:iconSlot>
+            </x-manajemenmahasiswa::ui.sidebar-item>
+        @endif
+
+
 
         <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengumuman.index') }}"
             routeName="manajemenmahasiswa.pengumuman" label="Pengumuman">
@@ -54,8 +60,9 @@
         </x-manajemenmahasiswa::ui.sidebar-item>
 
         <div class="sidebar-dropdown {{ request()->routeIs('manajemenmahasiswa.direktori.*') ? 'open' : '' }}">
-            <a href="javascript:void(0)" class="nav-link-item sidebar-dropdown-toggle {{ request()->routeIs('manajemenmahasiswa.direktori.*') ? 'active' : '' }}"
-               onclick="event.stopPropagation(); this.closest('.sidebar-dropdown').classList.toggle('open')">
+            <a href="javascript:void(0)"
+                class="nav-link-item sidebar-dropdown-toggle {{ request()->routeIs('manajemenmahasiswa.direktori.*') ? 'active' : '' }}"
+                onclick="event.stopPropagation(); this.closest('.sidebar-dropdown').classList.toggle('open')">
                 <span class="nav-icon d-inline-flex">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -66,8 +73,8 @@
                     </svg>
                 </span>
                 <span class="nav-label" style="flex-grow: 1;">Direktori Mahasiswa</span>
-                <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
+                <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
                     <path d="m6 9 6 6 6-6" />
                 </svg>
             </a>
@@ -80,10 +87,10 @@
                         : route('manajemenmahasiswa.direktori.mahasiswa.profil');
                 @endphp
                 <a href="{{ $mahasiswaRoute }}"
-                   class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.direktori.mahasiswa.*') ? 'active' : '' }}">
+                    class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.direktori.mahasiswa.*') ? 'active' : '' }}">
                     <span class="nav-icon d-inline-flex">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>
@@ -91,10 +98,10 @@
                     <span class="nav-label">Mahasiswa</span>
                 </a>
                 <a href="{{ route('manajemenmahasiswa.direktori.alumni.index') }}"
-                   class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.direktori.alumni.*') ? 'active' : '' }}">
+                    class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.direktori.alumni.*') ? 'active' : '' }}">
                     <span class="nav-icon d-inline-flex">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
                             <path d="M6 12v5c3 3 9 3 12 0v-5" />
                         </svg>
@@ -127,17 +134,19 @@
             </x-slot:iconSlot>
         </x-manajemenmahasiswa::ui.sidebar-item>
 
-        <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengaduan.index') }}"
-            routeName="manajemenmahasiswa.pengaduan" label="Layanan Pengaduan">
-            <x-slot:iconSlot>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path
-                        d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
-                    </path>
-                </svg>
-            </x-slot:iconSlot>
-        </x-manajemenmahasiswa::ui.sidebar-item>
+        @if(!array_intersect($sidebarRoles, ['gpm', 'dosen_koordinator', 'dosen']))
+            <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengaduan.index') }}"
+                routeName="manajemenmahasiswa.pengaduan" label="Layanan Pengaduan">
+                <x-slot:iconSlot>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path
+                            d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z">
+                        </path>
+                    </svg>
+                </x-slot:iconSlot>
+            </x-manajemenmahasiswa::ui.sidebar-item>
+        @endif
     </nav>
 
     <div class="bottom-menu pe-4">
