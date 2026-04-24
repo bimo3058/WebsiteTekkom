@@ -39,10 +39,51 @@
     .btn-join:hover {
         background-color: #6366f1;
     }
-    .post-actions button {
-        background: #f3f4f6;
+    .post-actions .vote-pill {
+        background: #f1f5f9;
+        border-radius: 20px;
+        display: inline-flex;
+        align-items: center;
+        padding: 2px;
+        margin-right: 12px;
+    }
+    .post-actions .vote-pill button {
+        background: transparent;
         border: none;
-        padding: 8px 16px;
+        padding: 6px 8px;
+        border-radius: 20px;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s, color 0.2s;
+    }
+    .post-actions .vote-pill button:hover {
+        background: #e2e8f0;
+    }
+    .post-actions .vote-pill button.vote-active-up {
+        color: #ff4500;
+    }
+    .post-actions .vote-pill button.vote-active-up:hover {
+        background: rgba(255, 69, 0, 0.1);
+    }
+    .post-actions .vote-pill button.vote-active-down {
+        color: #7193ff;
+    }
+    .post-actions .vote-pill button.vote-active-down:hover {
+        background: rgba(113, 147, 255, 0.1);
+    }
+    .post-actions .vote-pill span {
+        font-weight: 700;
+        font-size: 14px;
+        min-width: 18px;
+        text-align: center;
+        color: #1e293b;
+    }
+    .post-actions .action-btn {
+        background: #f1f5f9;
+        border: none;
+        padding: 6px 14px;
         border-radius: 20px;
         color: #4b5563;
         font-size: 14px;
@@ -51,19 +92,10 @@
         align-items: center;
         gap: 6px;
         margin-right: 12px;
-        transition: all 0.15s;
-        cursor: pointer;
+        transition: background 0.15s;
     }
-    .post-actions button:hover {
-        background: #e5e7eb;
-    }
-    .post-actions button.vote-active-up {
-        background: #dcfce7;
-        color: #16a34a;
-    }
-    .post-actions button.vote-active-down {
-        background: #fee2e2;
-        color: #dc2626;
+    .post-actions .action-btn:hover {
+        background: #e2e8f0;
     }
     .tag-label {
         font-size: 12px;
@@ -84,8 +116,8 @@
     }
 
     .comment-item {
-        margin-bottom: 20px;
-        padding-bottom: 20px;
+        margin-bottom: 16px;
+        padding-bottom: 16px;
         border-bottom: 1px solid #f3f4f6;
     }
     .comment-item:last-child {
@@ -113,11 +145,24 @@
         display: inline-flex;
         align-items: center;
         gap: 8px;
+        transition: background 0.2s, opacity 0.2s;
     }
     .btn-post:hover {
         background-color: #6366f1;
         color: white;
     }
+    .btn-post:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+    }
+    .btn-post .spinner {
+        width: 16px; height: 16px;
+        border: 2px solid rgba(255,255,255,0.4);
+        border-top-color: #fff;
+        border-radius: 50%;
+        animation: spin 0.6s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
     .best-answer-badge {
         background: #dcfce7;
@@ -129,24 +174,123 @@
     }
 
     .reply-item {
-        margin-left: 48px;
+        margin-left: 24px;
         padding-left: 16px;
         border-left: 2px solid #e5e7eb;
         margin-top: 12px;
     }
 
-    .vote-btn {
-        background: none;
-        border: none;
-        padding: 2px 6px;
-        cursor: pointer;
-        font-size: 16px;
-        color: #9ca3af;
-        transition: all 0.15s;
+    /* Comment action bar (Reddit style) */
+    .comment-actions {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin-top: 6px;
     }
-    .vote-btn:hover { color: #4f46e5; }
-    .vote-btn.active-up { color: #16a34a; }
-    .vote-btn.active-down { color: #dc2626; }
+    .comment-actions .c-vote-pill {
+        background: #f1f5f9;
+        border-radius: 16px;
+        display: inline-flex;
+        align-items: center;
+        padding: 1px;
+    }
+    .comment-actions .c-vote-pill button {
+        background: transparent;
+        border: none;
+        padding: 4px 6px;
+        border-radius: 16px;
+        color: #64748b;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: background 0.2s, color 0.2s;
+        cursor: pointer;
+        font-size: 13px;
+    }
+    .comment-actions .c-vote-pill button:hover { background: #e2e8f0; }
+    .comment-actions .c-vote-pill button.active-up { color: #ff4500; }
+    .comment-actions .c-vote-pill button.active-down { color: #7193ff; }
+    .comment-actions .c-vote-pill .c-vote-count {
+        font-weight: 700;
+        font-size: 12px;
+        min-width: 14px;
+        text-align: center;
+        color: #1e293b;
+        padding: 0 2px;
+    }
+    .comment-actions .c-action-btn {
+        background: transparent;
+        border: none;
+        padding: 4px 10px;
+        border-radius: 16px;
+        color: #64748b;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        cursor: pointer;
+        transition: background 0.15s;
+    }
+    .comment-actions .c-action-btn:hover {
+        background: #f1f5f9;
+    }
+
+    /* Inline reply form */
+    .inline-reply-form {
+        margin-top: 10px;
+        padding: 12px;
+        background: #f8fafc;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        display: none;
+    }
+    .inline-reply-form.show { display: block; }
+    .inline-reply-form textarea {
+        width: 100%;
+        border: 1px solid #e2e8f0;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 13px;
+        resize: none;
+        background: #fff;
+        min-height: 60px;
+    }
+    .inline-reply-form textarea:focus {
+        outline: none;
+        border-color: #818cf8;
+        box-shadow: 0 0 0 2px #e0e7ff;
+    }
+    .inline-reply-form .reply-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+        margin-top: 8px;
+    }
+    .inline-reply-form .btn-cancel {
+        background: transparent;
+        border: 1px solid #e2e8f0;
+        padding: 4px 14px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #64748b;
+        cursor: pointer;
+    }
+    .inline-reply-form .btn-cancel:hover { background: #f1f5f9; }
+    .inline-reply-form .btn-reply-submit {
+        background: #818cf8;
+        border: none;
+        padding: 4px 16px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        color: #fff;
+        cursor: pointer;
+        transition: background 0.2s, opacity 0.2s;
+    }
+    .inline-reply-form .btn-reply-submit:hover { background: #6366f1; }
+    .inline-reply-form .btn-reply-submit:disabled { opacity: 0.6; cursor: not-allowed; }
 
     .edited-badge {
         font-size: 12px;
@@ -300,20 +444,22 @@
         $threadUserVote = $userVotes[$threadVoteKey] ?? null;
     @endphp
     <div class="post-actions d-flex align-items-center mb-4" id="thread-vote-area">
-        <button class="shadow-sm vote-thread-btn {{ $threadUserVote && $threadUserVote->value === 1 ? 'vote-active-up' : '' }}"
-                data-thread-id="{{ $thread->id }}" data-value="1">
-            <span class="me-1" style="font-size: 16px;">↑</span>
+        <div class="vote-pill shadow-sm">
+            <button class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === 1 ? 'vote-active-up' : '' }}" data-thread-id="{{ $thread->id }}" data-value="1">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+            </button>
+            <span id="thread-vote-count">{{ max(0, $thread->vote_count) }}</span>
+            <button class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === -1 ? 'vote-active-down' : '' }}" data-thread-id="{{ $thread->id }}" data-value="-1">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+            </button>
+        </div>
+        <button class="action-btn shadow-sm" style="cursor: default;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            {{ $thread->comments_count ?? $thread->comment_count }} Komentar
         </button>
-        <span class="fw-bold text-dark mx-1" id="thread-vote-count" style="font-size: 15px;">{{ $thread->vote_count }}</span>
-        <button class="shadow-sm vote-thread-btn {{ $threadUserVote && $threadUserVote->value === -1 ? 'vote-active-down' : '' }}"
-                data-thread-id="{{ $thread->id }}" data-value="-1">
-            <span style="font-size: 16px;">↓</span>
-        </button>
-        <button class="shadow-sm ms-2" style="cursor: default;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg> {{ $thread->comments_count ?? $thread->comment_count }} Komentar
-        </button>
-        <button class="shadow-sm ms-2 share-btn" data-url="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+        <button class="action-btn shadow-sm share-btn" data-url="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+            Bagikan
         </button>
     </div>
 
@@ -350,72 +496,7 @@
         <h6 class="fw-bold text-dark mb-4">{{ $thread->comments_count ?? $thread->comment_count }} Komentar</h6>
 
         @forelse($comments as $comment)
-        <div class="comment-item">
-            <div class="d-flex gap-3">
-                <div class="avatar-placeholder avatar-sm flex-shrink-0"
-                     style="background-color: {{ $comment->is_best_answer ? '#dcfce7' : '#fce7f3' }};
-                            color: {{ $comment->is_best_answer ? '#16a34a' : '#db2777' }};">
-                    {{ strtoupper(substr($comment->author->name ?? '?', 0, 2)) }}
-                </div>
-                <div class="flex-grow-1">
-                    <div class="d-flex align-items-center gap-2 mb-1">
-                        <span class="fw-bold text-dark" style="font-size: 14px;">{{ $comment->author->name ?? 'Unknown' }}</span>
-                        <span class="text-muted" style="font-size: 12px;">• {{ $comment->created_at->diffForHumans() }}</span>
-                        @if($comment->is_best_answer)
-                            <span class="best-answer-badge">⭐ Jawaban Terbaik</span>
-                        @endif
-                    </div>
-                    <p class="text-dark mb-2" style="font-size: 14px; line-height: 1.5;">
-                        {!! nl2br(e($comment->konten)) !!}
-                    </p>
-                    <div class="d-flex align-items-center gap-3">
-                        @php
-                            $commentVoteKey = \Modules\ManajemenMahasiswa\Models\Comment::class . '_' . $comment->id;
-                            $commentUserVote = $userVotes[$commentVoteKey] ?? null;
-                        @endphp
-                        <button class="vote-btn vote-comment-btn {{ $commentUserVote && $commentUserVote->value === 1 ? 'active-up' : '' }}"
-                                data-comment-id="{{ $comment->id }}" data-value="1">
-                            ↑ <span class="comment-vote-count-{{ $comment->id }}">{{ $comment->vote_count }}</span>
-                        </button>
-                        <button class="vote-btn vote-comment-btn {{ $commentUserVote && $commentUserVote->value === -1 ? 'active-down' : '' }}"
-                                data-comment-id="{{ $comment->id }}" data-value="-1">
-                            ↓
-                        </button>
-                        @if($comment->user_id === $user->id || $thread->user_id === $user->id)
-                            <form method="POST" action="{{ route('manajemenmahasiswa.forum.comments.destroy', $comment->id) }}"
-                                  style="display: inline;" onsubmit="return confirm('Hapus komentar ini?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="btn btn-link p-0 text-muted fw-bold text-decoration-none" style="font-size: 13px;">
-                                    Hapus
-                                </button>
-                            </form>
-                        @endif
-                    </div>
-
-                    {{-- Nested Replies --}}
-                    @if($comment->replies->isNotEmpty())
-                        @foreach($comment->replies as $reply)
-                            <div class="reply-item mt-3">
-                                <div class="d-flex gap-3">
-                                    <div class="avatar-placeholder avatar-sm flex-shrink-0" style="background-color: #f3f4f6; color: #6b7280; width: 28px; height: 28px; font-size: 11px;">
-                                        {{ strtoupper(substr($reply->author->name ?? '?', 0, 2)) }}
-                                    </div>
-                                    <div class="flex-grow-1">
-                                        <div class="d-flex align-items-center gap-2 mb-1">
-                                            <span class="fw-bold text-dark" style="font-size: 13px;">{{ $reply->author->name ?? 'Unknown' }}</span>
-                                            <span class="text-muted" style="font-size: 11px;">• {{ $reply->created_at->diffForHumans() }}</span>
-                                        </div>
-                                        <p class="text-dark mb-1" style="font-size: 13px; line-height: 1.4;">
-                                            {!! nl2br(e($reply->konten)) !!}
-                                        </p>
-                                    </div>
-                                </div>
-                            </div>
-                        @endforeach
-                    @endif
-                </div>
-            </div>
-        </div>
+            @include('manajemenmahasiswa::forum.partials.comment-thread', ['comment' => $comment, 'depth' => 0])
         @empty
             <div class="text-center py-4" style="color: #9ca3af;">
                 <p class="mb-0">Belum ada komentar.</p>
@@ -466,7 +547,7 @@
     </div>
 
 @push('scripts')
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
 <script>
     // CSRF token
     const csrfToken = '{{ csrf_token() }}';
@@ -510,12 +591,13 @@
         });
     });
 
-    // Vote Comment (AJAX)
+    // Vote Comment (AJAX) — updated for c-vote-pill
     document.querySelectorAll('.vote-comment-btn').forEach(btn => {
         btn.addEventListener('click', async function(e) {
             e.preventDefault();
             const commentId = this.dataset.commentId;
             const value = parseInt(this.dataset.value);
+            const pill = this.closest('.c-vote-pill');
 
             try {
                 const res = await fetch(`{{ url('manajemen-mahasiswa/forum/comments') }}/${commentId}/vote`, {
@@ -530,19 +612,14 @@
 
                 const data = await res.json();
 
-                // Update count
                 document.querySelectorAll(`.comment-vote-count-${commentId}`).forEach(el => {
                     el.textContent = data.vote_count;
                 });
 
-                // Update button states for this comment
-                const buttons = this.parentElement.querySelectorAll('.vote-comment-btn');
-                buttons.forEach(b => b.classList.remove('active-up', 'active-down'));
-
-                if (data.user_vote === 1) {
-                    this.parentElement.querySelector('[data-value="1"]').classList.add('active-up');
-                } else if (data.user_vote === -1) {
-                    this.parentElement.querySelector('[data-value="-1"]').classList.add('active-down');
+                if (pill) {
+                    pill.querySelectorAll('.vote-comment-btn').forEach(b => b.classList.remove('active-up', 'active-down'));
+                    if (data.user_vote === 1) pill.querySelector('[data-value="1"]').classList.add('active-up');
+                    else if (data.user_vote === -1) pill.querySelector('[data-value="-1"]').classList.add('active-down');
                 }
             } catch (err) {
                 console.error('Vote error:', err);
@@ -598,6 +675,52 @@
         });
     }
     updatePinLabel();
+
+    // ---- Toggle Reply Forms (Reddit style) ----
+    document.querySelectorAll('.toggle-reply-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const commentId = this.dataset.commentId;
+            const form = document.getElementById(`reply-form-${commentId}`);
+            if (!form) return;
+            // Close all other open reply forms
+            document.querySelectorAll('.inline-reply-form.show').forEach(f => {
+                if (f !== form) f.classList.remove('show');
+            });
+            form.classList.toggle('show');
+            if (form.classList.contains('show')) {
+                form.querySelector('textarea').focus();
+            }
+        });
+    });
+
+    document.querySelectorAll('.cancel-reply-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const commentId = this.dataset.commentId;
+            const form = document.getElementById(`reply-form-${commentId}`);
+            if (form) {
+                form.classList.remove('show');
+                form.querySelector('textarea').value = '';
+            }
+        });
+    });
+
+    // ---- Double-Post Prevention ----
+    document.querySelectorAll('form').forEach(form => {
+        form.addEventListener('submit', function() {
+            const submitBtn = this.querySelector('button[type="submit"]');
+            if (!submitBtn || submitBtn.disabled) {
+                if (submitBtn && submitBtn.disabled) { event.preventDefault(); return; }
+                return;
+            }
+            submitBtn.disabled = true;
+            // Add spinner for btn-post or btn-reply-submit
+            if (submitBtn.classList.contains('btn-post') || submitBtn.classList.contains('btn-reply-submit')) {
+                const origText = submitBtn.textContent;
+                submitBtn.dataset.origText = origText;
+                submitBtn.innerHTML = '<span class="spinner"></span> Mengirim...';
+            }
+        });
+    });
 
 </script>
 @endpush

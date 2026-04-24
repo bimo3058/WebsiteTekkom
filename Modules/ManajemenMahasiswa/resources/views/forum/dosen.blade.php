@@ -67,8 +67,49 @@
                 color: white;
             }
 
-            .post-actions button {
-                background: #f3f4f6;
+            .post-actions .vote-pill {
+                background: #f1f5f9;
+                border-radius: 20px;
+                display: inline-flex;
+                align-items: center;
+                padding: 2px;
+                margin-right: 8px;
+            }
+            .post-actions .vote-pill button {
+                background: transparent;
+                border: none;
+                padding: 6px 8px;
+                border-radius: 20px;
+                color: #64748b;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: background 0.2s, color 0.2s;
+            }
+            .post-actions .vote-pill button:hover {
+                background: #e2e8f0;
+            }
+            .post-actions .vote-pill button.vote-active-up {
+                color: #ff4500;
+            }
+            .post-actions .vote-pill button.vote-active-up:hover {
+                background: rgba(255, 69, 0, 0.1);
+            }
+            .post-actions .vote-pill button.vote-active-down {
+                color: #7193ff;
+            }
+            .post-actions .vote-pill button.vote-active-down:hover {
+                background: rgba(113, 147, 255, 0.1);
+            }
+            .post-actions .vote-pill span {
+                font-weight: 700;
+                font-size: 13px;
+                min-width: 18px;
+                text-align: center;
+                color: #1e293b;
+            }
+            .post-actions .action-btn {
+                background: #f1f5f9;
                 border: none;
                 padding: 6px 14px;
                 border-radius: 20px;
@@ -81,19 +122,8 @@
                 margin-right: 8px;
                 transition: background 0.15s;
             }
-
-            .post-actions button:hover {
-                background: #e5e7eb;
-            }
-
-            .post-actions button.vote-active-up {
-                background: #dcfce7;
-                color: #16a34a;
-            }
-
-            .post-actions button.vote-active-down {
-                background: #fee2e2;
-                color: #dc2626;
+            .post-actions .action-btn:hover {
+                background: #e2e8f0;
             }
 
             .search-input {
@@ -210,13 +240,23 @@
                 margin-bottom: 16px;
             }
 
+            .thumbnail-wrapper {
+                width: 140px;
+                height: 100px;
+                border-radius: 8px;
+                overflow: hidden;
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                flex-shrink: 0;
+            }
             .thread-thumbnail {
                 width: 100%;
-                max-height: 200px;
+                height: 100%;
                 object-fit: cover;
-                border-radius: 8px;
-                border: 1px solid #e5e7eb;
-                margin-bottom: 12px;
+                transition: transform 0.2s;
+            }
+            .forum-card:hover .thread-thumbnail {
+                transform: scale(1.05);
             }
 
             .edited-badge {
@@ -381,6 +421,7 @@
     </form>
 
     <!-- Forum Posts -->
+    <div class="forum-cards-container">
     @forelse($threads as $thread)
         <div class="forum-card" data-thread-id="{{ $thread->id }}" style="cursor: pointer;">
                 <div class="d-flex justify-content-between align-items-start mb-3">
@@ -461,16 +502,19 @@
                     </div>
                 </div>
 
-                <h6 class="fw-bold text-dark mb-2">{{ $thread->judul }}</h6>
-
-                {{-- Image thumbnail --}}
-                @if($thread->getFirstImageUrl())
-                    <img src="{{ $thread->getFirstImageUrl() }}" alt="Thumbnail" class="thread-thumbnail">
-                @endif
-
-                <p class="text-dark" style="font-size: 14px; margin-bottom: 12px; line-height: 1.5;">
-                    {{ Str::limit($thread->getTextContent() ?: strip_tags($thread->konten), 200) }}
-                </p>
+                <div class="d-flex gap-3 mb-3">
+                    <div class="flex-grow-1 min-w-0">
+                        <h6 class="fw-bold text-dark mb-2">{{ $thread->judul }}</h6>
+                        <p class="text-dark mb-0" style="font-size: 14px; line-height: 1.5;">
+                            {{ Str::limit($thread->getTextContent() ?: strip_tags($thread->konten), 200) }}
+                        </p>
+                    </div>
+                    @if($thread->getFirstImageUrl())
+                        <div class="thumbnail-wrapper">
+                            <img src="{{ $thread->getFirstImageUrl() }}" alt="Thumbnail" class="thread-thumbnail">
+                        </div>
+                    @endif
+                </div>
 
                 <!-- Labels -->
                 <div class="d-flex gap-2 mb-3">
@@ -485,33 +529,23 @@
                     $threadVoteKey = \Modules\ManajemenMahasiswa\Models\Thread::class . '_' . $thread->id;
                     $threadUserVote = $userVotes[$threadVoteKey] ?? null;
                 @endphp
-                <div class="post-actions d-flex align-items-center">
-                    <button
-                        class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === 1 ? 'vote-active-up' : '' }}"
-                        data-thread-id="{{ $thread->id }}" data-value="1">
-                        <span class="me-1" style="font-size: 14px;">↑</span>
-                    </button>
-                    <span class="fw-bold text-dark mx-1 thread-vote-count-{{ $thread->id }}"
-                        style="font-size: 14px; min-width: 15px; text-align: center;">{{ $thread->vote_count }}</span>
-                    <button
-                        class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === -1 ? 'vote-active-down' : '' }}"
-                        data-thread-id="{{ $thread->id }}" data-value="-1">
-                        <span style="font-size: 14px;">↓</span>
-                    </button>
-                    <button class="ms-2"
-                        onclick="window.location.href='{{ route('manajemenmahasiswa.forum.show', $thread->id) }}'">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round" class="me-1">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                        </svg>
+                <div class="post-actions d-flex align-items-center mt-2">
+                    <div class="vote-pill">
+                        <button class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === 1 ? 'vote-active-up' : '' }}" data-thread-id="{{ $thread->id }}" data-value="1">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                        </button>
+                        <span class="thread-vote-count-{{ $thread->id }}">{{ max(0, $thread->vote_count) }}</span>
+                        <button class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === -1 ? 'vote-active-down' : '' }}" data-thread-id="{{ $thread->id }}" data-value="-1">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                        </button>
+                    </div>
+                    <button class="action-btn ms-2" onclick="window.location.href='{{ route('manajemenmahasiswa.forum.show', $thread->id) }}'">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                         {{ $thread->comments_count ?? $thread->comment_count }}
                     </button>
-                    <button class="share-btn ms-1" data-url="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                        </svg>
+                    <button class="action-btn share-btn ms-1" data-url="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                        Bagikan
                     </button>
                 </div>
             </div>
@@ -525,6 +559,7 @@
             </a>
         </div>
     @endforelse
+    </div>
 
     <!-- Pagination -->
     @if($threads->hasPages())
@@ -573,7 +608,7 @@
     </div>
 
     @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
         <script>
             const csrfToken = '{{ csrf_token() }}';
 
@@ -591,6 +626,17 @@
                 const pins = getPersonalPins();
                 document.querySelectorAll('[data-personal-pin]').forEach(b => { b.style.display = pins.includes(parseInt(b.dataset.personalPin)) ? 'inline-flex' : 'none'; });
                 document.querySelectorAll('.personal-pin-label').forEach(l => { l.textContent = pins.includes(parseInt(l.dataset.threadId)) ? 'Unpin Pribadi' : 'Pin Pribadi'; });
+                
+                // Sort: move personal-pinned cards to top
+                const container = document.querySelector('.forum-cards-container');
+                if (!container) return;
+                const cards = [...container.querySelectorAll('.forum-card')];
+                cards.sort((a, b) => {
+                    const aPin = pins.includes(parseInt(a.dataset.threadId)) ? 1 : 0;
+                    const bPin = pins.includes(parseInt(b.dataset.threadId)) ? 1 : 0;
+                    return bPin - aPin;
+                });
+                cards.forEach(card => container.appendChild(card));
             }
             document.querySelectorAll('.personal-pin-toggle').forEach(btn => btn.addEventListener('click', function(e) { e.preventDefault(); togglePersonalPin(parseInt(this.dataset.threadId)); }));
             refreshPersonalPinUI();
