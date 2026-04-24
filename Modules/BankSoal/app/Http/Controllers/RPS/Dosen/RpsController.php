@@ -527,6 +527,28 @@ class RpsController extends Controller
         }
     }
 
+    public function downloadDokumen(int $rpsId)
+    {
+        try {
+            $rps = RpsDetail::with('mataKuliah')->findOrFail($rpsId);
+
+            if (!$rps->dokumen) {
+                abort(404, 'Dokumen tidak ditemukan');
+            }
+
+            $supabaseStorage = new SupabaseStorage();
+            $publicUrl = $supabaseStorage->getPublicUrl($rps->dokumen, 'rps');
+
+            $downloadName = basename((string) $rps->dokumen);
+            $separator = str_contains($publicUrl, '?') ? '&' : '?';
+
+            return redirect($publicUrl . $separator . 'download=' . urlencode($downloadName));
+        } catch (\Exception $e) {
+            \Log::error('downloadDokumen Error', ['rps_id' => $rpsId, 'error' => $e->getMessage()]);
+            abort(404, 'Dokumen tidak ditemukan');
+        }
+    }
+
     /**
      * Tampilkan form edit RPS
      */
