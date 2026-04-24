@@ -138,7 +138,7 @@
 <body>
 
     <!-- Sidebar Dosen -->
-    <x-manajemenmahasiswa::ui.sidebar-dosen />
+    <x-manajemenmahasiswa::ui.sidebar />
 
     <!-- Navbar -->
     <x-manajemenmahasiswa::ui.navbar-admin />

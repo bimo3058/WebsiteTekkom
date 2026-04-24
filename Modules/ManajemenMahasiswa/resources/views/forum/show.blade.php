@@ -218,8 +218,7 @@
         </div>
         <div class="d-flex align-items-center gap-3">
             <div class="dropdown">
-                <span class="text-muted" style="cursor: pointer; font-size: 24px; line-height: 1;"
-                      data-bs-toggle="dropdown">⋯</span>
+                <button type="button" class="btn btn-link p-0 text-muted text-decoration-none shadow-none" style="font-size: 24px; line-height: 1;" data-bs-toggle="dropdown">⋯</button>
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 8px;">
                     {{-- Edit (owner + admin) --}}
                     @if($thread->user_id === $user->id || $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
