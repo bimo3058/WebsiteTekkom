@@ -252,9 +252,24 @@ class DirektoriMahasiswaController extends Controller
         ]);
 
         $mhs = Kemahasiswaan::findOrFail($id);
+        $oldStatus = $mhs->status;
+
         $mhs->update($request->only([
             'nama', 'nim', 'angkatan', 'status', 'tahun_lulus', 'profesi', 'kontak',
         ]));
+
+        // Sinkronisasi: jika status baru = alumni, otomatis buat record di mk_alumni
+        if ($mhs->status === Kemahasiswaan::STATUS_ALUMNI && $oldStatus !== Kemahasiswaan::STATUS_ALUMNI) {
+            \Modules\ManajemenMahasiswa\Models\Alumni::firstOrCreate(
+                ['user_id' => $mhs->user_id],
+                [
+                    'nim'          => $mhs->nim,
+                    'angkatan'     => $mhs->angkatan,
+                    'tahun_lulus'  => $mhs->tahun_lulus ?? (int) date('Y'),
+                    'program_studi' => 'Teknik Komputer',
+                ]
+            );
+        }
 
         return redirect()
             ->route('manajemenmahasiswa.direktori.mahasiswa.show', $id)

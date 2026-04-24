@@ -42,10 +42,17 @@ class DashboardController extends Controller
                 ->limit(10)
                 ->get();
 
+            // Data analytics alumni baru
+            $alumniService = app(\Modules\ManajemenMahasiswa\Services\AlumniService::class);
+            $serapanPerAngkatan  = $alumniService->getSerapanPerAngkatan();
+            $distribusiIndustri  = $alumniService->getDistribusiIndustri();
+
             return view('manajemenmahasiswa::dashboard.dashboard-analitik', compact(
                 'snapshot',
                 'statusMahasiswa',
                 'serapanAlumni',
+                'serapanPerAngkatan',
+                'distribusiIndustri',
             ));
         }
 
