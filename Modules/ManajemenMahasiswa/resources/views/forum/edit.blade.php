@@ -1,12 +1,19 @@
-<x-manajemenmahasiswa::layouts.mahasiswa>
+<x-manajemenmahasiswa::layouts.forum-layout>
 
     @push('styles')
         <style>
+            /* ── Page Title ──────────────────────────────────────────────────── */
+            .page-title { margin-bottom: 22px; display: flex; align-items: center; gap: 16px; }
+            .page-title .back-btn { background: #fff; border: 1px solid #e5e7eb; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: #4b5563; text-decoration: none; transition: background 0.2s; }
+            .page-title .back-btn:hover { background: #f3f4f6; }
+            .page-title h1 { font-size: 26px; font-weight: 700; color: #111827; margin: 0 0 2px; letter-spacing: -0.02em; }
+            .page-title p { font-size: 14px; color: #6b7280; margin: 0; }
+
             .create-post-card {
                 background: #ffffff;
                 border-radius: 12px;
                 padding: 30px;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+                border: 1px solid #e5e7eb;
                 margin-bottom: 20px;
             }
 
@@ -62,8 +69,8 @@
                 transition: all 0.2s;
             }
 
-            .btn-post { background-color: #818cf8; color: white; }
-            .btn-post:hover { background-color: #6366f1; }
+            .btn-post { background-color: #4f46e5; color: white; }
+            .btn-post:hover { background-color: #4338ca; }
             .btn-cancel { background-color: #ef4444; color: white; }
             .btn-cancel:hover { background-color: #dc2626; }
 
@@ -84,8 +91,8 @@
                 text-align: left;
             }
 
-            .section-toggle:hover { background: #eef2ff; border-color: #818cf8; color: #4f46e5; }
-            .section-toggle.active { background: #eef2ff; border-color: #818cf8; color: #4f46e5; }
+            .section-toggle:hover { background: #eef2ff; border-color: #4f46e5; color: #4338ca; }
+            .section-toggle.active { background: #eef2ff; border-color: #4f46e5; color: #4338ca; }
 
             .section-content {
                 max-height: 0;
@@ -110,7 +117,7 @@
             }
 
             .media-dropzone:hover, .media-dropzone.dragover {
-                border-color: #818cf8;
+                border-color: #4f46e5;
                 background: #eef2ff;
             }
 
@@ -171,18 +178,17 @@
             .media-counter.ok { background: #dcfce7; color: #16a34a; }
             .media-counter.warn { background: #fef3c7; color: #d97706; }
             .media-counter.full { background: #fee2e2; color: #dc2626; }
+
         </style>
     @endpush
 
-    <div class="mb-4 d-flex align-items-center gap-3">
-        <a href="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}"
-            class="btn btn-light rounded-circle shadow-sm d-flex align-items-center justify-content-center"
-            style="width: 40px; height: 40px;">
-            <span aria-hidden="true">&larr;</span>
+    <div class="page-title">
+        <a href="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
         </a>
         <div>
-            <h3 class="fw-bold mb-0 text-dark">Edit Thread</h3>
-            <p class="text-muted text-sm fw-medium mb-0">Perbarui konten postingan Anda</p>
+            <h1>Edit Thread</h1>
+            <p>Perbarui konten postingan Anda</p>
         </div>
     </div>
 
@@ -227,12 +233,17 @@
             {{-- Kategori --}}
             <div class="mb-4">
                 <label class="form-label">Kategori Postingan <span class="text-danger">*</span></label>
-                <select name="kategori" id="inputKategori"
-                    class="custom-select form-select @error('kategori') border-danger @enderror" required>
+                <div class="d-flex flex-wrap gap-3 mt-2 @error('kategori') is-invalid @enderror">
+                    @php
+                        $selectedKategori = old('kategori', is_array($thread->kategori) ? $thread->kategori : [$thread->kategori]);
+                    @endphp
                     @foreach($categories as $key => $label)
-                        <option value="{{ $key }}" {{ old('kategori', $thread->kategori) === $key ? 'selected' : '' }}>{{ $label }}</option>
+                        <div class="form-check form-check-inline m-0">
+                            <input class="form-check-input shadow-none" style="cursor: pointer;" type="checkbox" name="kategori[]" id="kategori_{{ $key }}" value="{{ $key }}" {{ in_array($key, $selectedKategori) ? 'checked' : '' }}>
+                            <label class="form-check-label text-dark" style="cursor: pointer; font-size: 14px;" for="kategori_{{ $key }}">{{ $label }}</label>
+                        </div>
                     @endforeach
-                </select>
+                </div>
             </div>
 
             {{-- Konten Teks --}}
@@ -449,7 +460,14 @@
 
             // Init counter
             updateCounter();
+            // ---- Prevent Double Submit ----
+            const form = document.getElementById('editPostForm');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            form.addEventListener('submit', function() {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Loading...';
+            });
         </script>
     @endpush
 
-</x-manajemenmahasiswa::layouts.mahasiswa>
+</x-manajemenmahasiswa::layouts.forum-layout>

@@ -113,14 +113,20 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
         Route::prefix('forum')->name('forum.')->group(function () {
             Route::get('/', [ForumController::class, 'index'])->name('index');
             Route::get('/create', [ForumController::class, 'create'])->name('create');
+            Route::post('/drafts', [ForumController::class, 'saveDraft'])->name('drafts.store');
+            Route::delete('/drafts/{id}', [ForumController::class, 'deleteDraft'])->name('drafts.destroy');
             Route::post('/', [ForumController::class, 'store'])->name('store');
             Route::get('/{id}', [ForumController::class, 'show'])->name('show');
             Route::post('/{id}/vote', [ForumController::class, 'vote'])->name('vote');
             Route::post('/{id}/report', [ForumController::class, 'reportThread'])->name('report');
             Route::patch('/{id}/pin', [ForumController::class, 'pin'])->name('pin');
+            Route::post('/{id}/personal-pin', [ForumController::class, 'personalPin'])->name('personal_pin');
             Route::get('/{id}/edit', [ForumController::class, 'edit'])->name('edit');
             Route::put('/{id}', [ForumController::class, 'update'])->name('update');
             Route::delete('/{id}', [ForumController::class, 'destroy'])->name('destroy');
+
+            // Best Answer
+            Route::post('/{threadId}/best-answer/{commentId}', [ForumController::class, 'markBestAnswer'])->name('best_answer');
 
             // Comments
             Route::post('/{threadId}/comments', [ForumController::class, 'storeComment'])->name('comments.store');
