@@ -4,6 +4,7 @@ namespace App\Services;
 
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class SupabaseStorage
@@ -33,7 +34,7 @@ class SupabaseStorage
         $path      = $folder . '/' . $filename;
         $mimeType  = $file->getMimeType();
         
-        \Log::info('Supabase Upload Started', [
+        Log::info('Supabase Upload Started', [
             'url' => $this->url,
             'bucket' => $targetBucket,
             'path' => $path,
@@ -54,17 +55,17 @@ class SupabaseStorage
                 )
                 ->post($this->url . '/storage/v1/object/' . $targetBucket . '/' . $path);
 
-            \Log::info('Supabase Response', [
+            Log::info('Supabase Response', [
                 'status' => $response->status(),
                 'body' => $response->body(),
             ]);
 
             if ($response->successful()) {
-                \Log::info('Supabase upload successful', ['path' => $path]);
+                Log::info('Supabase upload successful', ['path' => $path]);
                 return $path;
             }
 
-            \Log::error('Supabase upload failed', [
+            Log::error('Supabase upload failed', [
                 'status' => $response->status(),
                 'bucket' => $targetBucket,
                 'path' => $path,
@@ -75,7 +76,7 @@ class SupabaseStorage
             return null;
 
         } catch (\Exception $e) {
-            \Log::error('Supabase upload exception', [
+            Log::error('Supabase upload exception', [
                 'bucket' => $targetBucket,
                 'path' => $path,
                 'error' => $e->getMessage(),
@@ -108,6 +109,35 @@ class SupabaseStorage
         ])->delete($this->url . '/storage/v1/object/' . $targetBucket, [
             'prefixes' => [$path],
         ]);
+
+        return $response->successful();
+    }
+
+    /**
+     * Pindahkan object di dalam bucket yang sama (rename path/file).
+     */
+    public function move(string $fromPath, string $toPath, ?string $bucket = null): bool
+    {
+        $targetBucket = $bucket ?? $this->bucket;
+
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->key,
+            'Content-Type'  => 'application/json',
+        ])->post($this->url . '/storage/v1/object/move', [
+            'bucketId' => $targetBucket,
+            'sourceKey' => $fromPath,
+            'destinationKey' => $toPath,
+        ]);
+
+        if (!$response->successful()) {
+            Log::error('Supabase move failed', [
+                'bucket' => $targetBucket,
+                'from' => $fromPath,
+                'to' => $toPath,
+                'status' => $response->status(),
+                'response' => $response->body(),
+            ]);
+        }
 
         return $response->successful();
     }
