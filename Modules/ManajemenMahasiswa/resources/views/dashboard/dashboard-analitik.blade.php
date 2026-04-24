@@ -523,10 +523,6 @@
         <div class="chart-card">
             <div class="chart-header">
                 <span class="chart-title">Tren Mahasiswa / Semester</span>
-                <select class="period-select" id="periodSelect" onchange="updateChart(this.value)">
-                    <option value="monthly">Monthly</option>
-                    <option value="yearly">Yearly</option>
-                </select>
             </div>
             <canvas id="trenChart" height="100"></canvas>
         </div>
