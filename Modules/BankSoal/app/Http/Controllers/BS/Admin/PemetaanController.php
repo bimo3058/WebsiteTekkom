@@ -104,42 +104,44 @@ class PemetaanController extends Controller
     {
         $this->authorize('banksoal.view');
 
-        $allCpl = Cpl::query()
-            ->orderBy('kode')
-            ->get(['id', 'kode']);
+        $allMk = MataKuliah::query()
+            ->orderBy('nama')
+            ->get(['id', 'kode', 'nama']);
 
-        $rawRows = DB::table('bs_cpl as cpl')
-            ->leftJoin('bs_mata_kuliah_cpl as map', 'cpl.id', '=', 'map.cpl_id')
-            ->leftJoin('bs_mata_kuliah as mk', 'mk.id', '=', 'map.mk_id')
+        $rawRows = DB::table('bs_mata_kuliah as mk')
+            ->leftJoin('bs_mata_kuliah_cpl as map', 'mk.id', '=', 'map.mk_id')
+            ->leftJoin('bs_cpl as cpl', 'cpl.id', '=', 'map.cpl_id')
             ->select(
-                'map.mk_id',
-                'cpl.id as cpl_id',
+                'mk.id as mk_id',
+                'mk.kode as mk_kode',
                 'mk.nama as mk_nama',
+                'cpl.id as cpl_id',
                 'cpl.kode as cpl_kode'
             )
-            ->orderBy('cpl.kode')
             ->orderBy('mk.nama')
+            ->orderBy('cpl.kode')
             ->get();
 
-        $groupedRows = $rawRows->groupBy('cpl_id');
+        $groupedRows = $rawRows->groupBy('mk_id');
 
-        $rows = $allCpl
-            ->map(function ($cpl) use ($groupedRows) {
-                $group = $groupedRows->get($cpl->id, collect());
+        $rows = $allMk
+            ->map(function ($mk) use ($groupedRows) {
+                $group = $groupedRows->get($mk->id, collect());
 
                 return [
-                    'cpl_id' => $cpl->id,
-                    'cpl_kode' => $cpl->kode,
-                    'mk_names' => $group
-                        ->filter(fn ($row) => !is_null($row->mk_id))
-                        ->pluck('mk_nama')
+                    'mk_id' => $mk->id,
+                    'mk_kode' => $mk->kode,
+                    'mk_nama' => $mk->nama,
+                    'cpl_codes' => $group
+                        ->filter(fn ($row) => !is_null($row->cpl_id))
+                        ->pluck('cpl_kode')
                         ->values()
                         ->all(),
-                    'mk_items' => $group
-                        ->filter(fn ($row) => !is_null($row->mk_id))
+                    'cpl_items' => $group
+                        ->filter(fn ($row) => !is_null($row->cpl_id))
                         ->map(fn ($row) => [
-                            'mk_id' => $row->mk_id,
-                            'mk_nama' => $row->mk_nama,
+                            'cpl_id' => $row->cpl_id,
+                            'cpl_kode' => $row->cpl_kode,
                         ])
                         ->values()
                         ->all(),
@@ -260,26 +262,26 @@ class PemetaanController extends Controller
         $this->authorize('banksoal.edit');
 
         $validated = $request->validate([
-            'cpl_id' => ['required', 'integer', 'exists:bs_cpl,id'],
-            'mk_ids' => ['required', 'array', 'min:1'],
-            'mk_ids.*' => ['required', 'integer', 'exists:bs_mata_kuliah,id'],
+            'mk_id' => ['required', 'integer', 'exists:bs_mata_kuliah,id'],
+            'cpl_ids' => ['required', 'array', 'min:1'],
+            'cpl_ids.*' => ['required', 'integer', 'exists:bs_cpl,id'],
         ]);
 
         try {
-            $mkIds = collect($validated['mk_ids'])->map(fn ($id) => (int) $id)->unique()->values();
+            $cplIds = collect($validated['cpl_ids'])->map(fn ($id) => (int) $id)->unique()->values();
 
-            $existingMkIds = DB::table('bs_mata_kuliah_cpl')
-                ->where('cpl_id', $validated['cpl_id'])
-                ->whereIn('mk_id', $mkIds)
-                ->pluck('mk_id')
+            $existingCplIds = DB::table('bs_mata_kuliah_cpl')
+                ->where('mk_id', $validated['mk_id'])
+                ->whereIn('cpl_id', $cplIds)
+                ->pluck('cpl_id')
                 ->map(fn ($id) => (int) $id)
                 ->all();
 
-            $newRows = $mkIds
-                ->reject(fn ($mkId) => in_array((int) $mkId, $existingMkIds, true))
-                ->map(fn ($mkId) => [
-                    'mk_id' => (int) $mkId,
-                    'cpl_id' => $validated['cpl_id'],
+            $newRows = $cplIds
+                ->reject(fn ($cplId) => in_array((int) $cplId, $existingCplIds, true))
+                ->map(fn ($cplId) => [
+                    'mk_id' => $validated['mk_id'],
+                    'cpl_id' => (int) $cplId,
                 ])
                 ->values()
                 ->all();
@@ -287,7 +289,7 @@ class PemetaanController extends Controller
             if (empty($newRows)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Semua mata kuliah yang dipilih sudah terpetakan',
+                    'message' => 'Semua CPL yang dipilih sudah terpetakan untuk mata kuliah ini',
                 ], 422);
             }
 
@@ -298,7 +300,7 @@ class PemetaanController extends Controller
                 'message' => 'Pemetaan MK ke CPL berhasil ditambahkan',
                 'meta' => [
                     'added' => count($newRows),
-                    'skipped' => count($mkIds) - count($newRows),
+                    'skipped' => count($cplIds) - count($newRows),
                 ],
             ], 201);
         } catch (\Throwable $e) {
@@ -311,31 +313,31 @@ class PemetaanController extends Controller
         $this->authorize('banksoal.edit');
 
         $validated = $request->validate([
-            'user_id' => [
+            'mk_id' => ['required', 'integer', 'exists:bs_mata_kuliah,id'],
+            'user_ids' => ['required', 'array', 'min:1'],
+            'user_ids.*' => [
                 'required',
                 'integer',
                 'exists:users,id',
                 Rule::exists('lecturers', 'user_id'),
             ],
-            'mk_ids' => ['required', 'array', 'min:1'],
-            'mk_ids.*' => ['required', 'integer', 'exists:bs_mata_kuliah,id'],
         ]);
 
         try {
-            $mkIds = collect($validated['mk_ids'])->map(fn ($id) => (int) $id)->unique()->values();
+            $userIds = collect($validated['user_ids'])->map(fn ($id) => (int) $id)->unique()->values();
 
-            $existingMkIds = DosenPengampuMk::query()
-                ->where('user_id', $validated['user_id'])
-                ->whereIn('mk_id', $mkIds)
-                ->pluck('mk_id')
+            $existingUserIds = DosenPengampuMk::query()
+                ->where('mk_id', $validated['mk_id'])
+                ->whereIn('user_id', $userIds)
+                ->pluck('user_id')
                 ->map(fn ($id) => (int) $id)
                 ->all();
 
-            $newRows = $mkIds
-                ->reject(fn ($mkId) => in_array((int) $mkId, $existingMkIds, true))
-                ->map(fn ($mkId) => [
-                    'user_id' => $validated['user_id'],
-                    'mk_id' => (int) $mkId,
+            $newRows = $userIds
+                ->reject(fn ($userId) => in_array((int) $userId, $existingUserIds, true))
+                ->map(fn ($userId) => [
+                    'user_id' => (int) $userId,
+                    'mk_id' => $validated['mk_id'],
                     'is_rps' => false,
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -346,7 +348,7 @@ class PemetaanController extends Controller
             if (empty($newRows)) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Semua mata kuliah yang dipilih sudah terpetakan untuk dosen ini',
+                    'message' => 'Semua dosen yang dipilih sudah terpetakan untuk mata kuliah ini',
                 ], 422);
             }
 
@@ -357,7 +359,7 @@ class PemetaanController extends Controller
                 'message' => 'Pemetaan dosen ke MK berhasil ditambahkan',
                 'meta' => [
                     'added' => count($newRows),
-                    'skipped' => count($mkIds) - count($newRows),
+                    'skipped' => count($userIds) - count($newRows),
                 ],
             ], 201);
         } catch (\Throwable $e) {
