@@ -269,6 +269,14 @@ class DirektoriMahasiswaController extends Controller
                     'program_studi' => 'Teknik Komputer',
                 ]
             );
+            \Illuminate\Support\Facades\Cache::forget('mk.alumni.summary');
+            \Illuminate\Support\Facades\Cache::forget('mk.dashboard.snapshot');
+        }
+        // Sinkronisasi balik: jika status berubah DARI alumni ke status lain, hapus dari mk_alumni
+        elseif ($oldStatus === Kemahasiswaan::STATUS_ALUMNI && $mhs->status !== Kemahasiswaan::STATUS_ALUMNI) {
+            \Modules\ManajemenMahasiswa\Models\Alumni::where('user_id', $mhs->user_id)->delete();
+            \Illuminate\Support\Facades\Cache::forget('mk.alumni.summary');
+            \Illuminate\Support\Facades\Cache::forget('mk.dashboard.snapshot');
         }
 
         return redirect()

@@ -61,11 +61,15 @@ class DirektoriAlumniController extends Controller
     // -------------------------------------------------------------------------
 
     /**
-     * Sinkronisasi mahasiswa dengan status 'alumni' di mk_kemahasiswaan
-     * ke tabel mk_alumni (jika belum ada).
+     * Sinkronisasi dua arah antara mk_kemahasiswaan dan mk_alumni:
+     * 1. Buat record mk_alumni untuk mahasiswa berstatus 'alumni' yang belum ada
+     * 2. Hapus record mk_alumni jika statusnya sudah bukan 'alumni' lagi
      */
     private function syncFromKemahasiswaan(): void
     {
+        $changed = false;
+
+        // 1. Tambah: mahasiswa status=alumni yang belum ada di mk_alumni
         $existingUserIds = Alumni::pluck('user_id')->toArray();
 
         $alumniMahasiswa = Kemahasiswaan::where('status', Kemahasiswaan::STATUS_ALUMNI)
@@ -80,10 +84,25 @@ class DirektoriAlumniController extends Controller
                 'tahun_lulus'   => $mhs->tahun_lulus ?? (int) date('Y'),
                 'program_studi' => 'Teknik Komputer',
             ]);
+            $changed = true;
         }
 
-        // Flush cache jika ada data baru yang di-sync
-        if ($alumniMahasiswa->isNotEmpty()) {
+        // 2. Hapus: alumni di mk_alumni yang statusnya sudah bukan 'alumni' di mk_kemahasiswaan
+        $alumniUserIds = Alumni::pluck('user_id')->toArray();
+        if (!empty($alumniUserIds)) {
+            $noLongerAlumni = Kemahasiswaan::whereIn('user_id', $alumniUserIds)
+                ->where('status', '!=', Kemahasiswaan::STATUS_ALUMNI)
+                ->pluck('user_id')
+                ->toArray();
+
+            if (!empty($noLongerAlumni)) {
+                Alumni::whereIn('user_id', $noLongerAlumni)->delete();
+                $changed = true;
+            }
+        }
+
+        // Flush cache jika ada perubahan
+        if ($changed) {
             \Illuminate\Support\Facades\Cache::forget('mk.alumni.summary');
             \Illuminate\Support\Facades\Cache::forget('mk.dashboard.snapshot');
         }

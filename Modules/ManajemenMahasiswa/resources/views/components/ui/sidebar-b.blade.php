@@ -29,6 +29,7 @@
     <div class="menu-title mb-2" style="font-size: 13px; font-weight: 500; color: #9ca3af;">Main Menu</div>
 
     <nav class="sidebar-nav d-flex flex-column gap-1">
+        @if(array_intersect($sidebarRoles ?? auth()->user()->roles->pluck('name')->toArray(), ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan']))
         <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.dashboard') }}"
             routeName="manajemenmahasiswa.dashboard" label="Dashboard Analitik">
             <x-slot:iconSlot>
@@ -41,6 +42,7 @@
                 </svg>
             </x-slot:iconSlot>
         </x-manajemenmahasiswa::ui.sidebar-item>
+        @endif
 
         <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengumuman.index') }}"
             routeName="manajemenmahasiswa.pengumuman" label="Pengumuman">
