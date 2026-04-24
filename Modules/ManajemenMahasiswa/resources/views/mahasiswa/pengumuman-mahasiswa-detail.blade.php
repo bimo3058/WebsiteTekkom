@@ -8,206 +8,242 @@
             padding: 0 !important;
         }
 
+        .page-header {
+            margin-bottom: 30px;
+        }
         .page-header h4 {
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: #1e1b4b;
-            margin-bottom: 4px;
+            font-size: 1.75rem;
+            font-weight: 800;
+            color: #1f2937;
+            margin-bottom: 6px;
+            letter-spacing: -0.025em;
         }
         .page-header p {
-            font-size: 0.95rem;
+            font-size: 1rem;
             color: #6b7280;
             margin-bottom: 0;
         }
 
         .detail-card {
-            background: #fff;
-            border: 1px solid #111827;
-            border-radius: 14px;
-            padding: 32px;
-            margin: 24px auto 0;
+            background: #ffffff;
+            border-radius: 20px;
+            padding: 40px;
+            margin: 0 auto;
             max-width: 900px;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.03);
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05), 0 8px 10px -6px rgba(0,0,0,0.01);
+            border: 1px solid #f3f4f6;
         }
 
         .detail-title {
-            display: flex;
-            align-items: center;
-            gap: 12px;
             margin-bottom: 24px;
+            text-align: center;
         }
         .detail-title h5 {
-            font-size: 1.25rem;
-            font-weight: 700;
+            font-size: 2rem;
+            font-weight: 800;
             color: #111827;
             margin: 0;
+            line-height: 1.3;
+            letter-spacing: -0.025em;
+        }
+
+        .meta-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 36px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+            color: #4b5563;
+            background: #f9fafb;
+            padding: 8px 16px;
+            border-radius: 50px;
+            border: 1px solid #f3f4f6;
+        }
+        .meta-item svg {
+            color: #6366f1;
         }
 
         .detail-image-wrapper {
-            background: #e5e7eb;
-            border-radius: 10px;
-            border: 1px solid #111827;
+            background: #f9fafb;
+            border-radius: 16px;
             width: 100%;
-            min-height: 200px;
+            max-width: 420px; /* Lebar maksimal agar tidak terlalu besar */
+            aspect-ratio: 42 / 59.4; /* Ukuran poster standar 42 x 59.4 cm */
+            margin: 0 auto 40px auto;
+            overflow: hidden;
+            position: relative;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid #e5e7eb;
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-bottom: 24px;
-            overflow: hidden;
-            text-align: center;
         }
         .detail-image-wrapper img {
-            max-width: 100%;
             width: 100%;
-            height: auto;
-            max-height: 500px;
-            object-fit: contain;
-            border-radius: 10px;
-            background: #e5e7eb;
+            height: 100%;
+            object-fit: cover;
             display: block;
         }
-        .detail-image-placeholder h3 {
-            font-size: 1.8rem;
-            font-weight: 700;
-            color: #111827;
-            text-align: center;
-            margin: 0;
-        }
 
-        .meta-box {
-            border: 1px solid #111827;
-            border-radius: 10px;
-            padding: 16px 20px;
-            margin-bottom: 24px;
-            background: #fff;
-        }
-
-        .meta-table {
-            width: 100%;
-            max-width: 400px;
-            font-size: 0.9rem;
-            color: #111827;
-        }
-        .meta-table td {
-            padding: 4px 8px 4px 0;
-        }
-        .meta-table td:first-child {
-            width: 80px;
-            color: #6b7280;
-            font-weight: 500;
-        }
-
-        .section-container {
-            display: flex;
-            align-items: center;
-            margin-bottom: 16px;
-        }
-        .section-title-left {
-            font-size: 0.95rem;
-            font-weight: 700;
-            color: #111827;
-            position: relative;
-            padding-right: 15px;
-            display: inline-block;
-            white-space: nowrap;
-        }
-        .section-container hr {
-            flex-grow: 1;
-            border-top: 1px solid #111827;
-            margin: 0;
-            opacity: 1;
-        }
-
-        .content-box {
-            border: 1px solid #111827;
-            border-radius: 10px;
-            padding: 24px;
-            font-size: 0.95rem;
-            color: #111827;
-            line-height: 1.7;
-            margin-bottom: 30px;
+        .content-section {
+            font-size: 1.05rem;
+            color: #374151;
+            line-height: 1.8;
+            margin-bottom: 40px;
             word-wrap: break-word;
             overflow-wrap: break-word;
-            overflow: hidden;
-            background: #fff;
         }
-        .content-box img {
+        .content-section img {
             max-width: 100%;
             height: auto;
             display: block;
-            border-radius: 6px;
+            border-radius: 12px;
+            margin: 20px 0;
         }
-        .content-box table {
-            max-width: 100%;
-            overflow-x: auto;
-            display: block;
+        .content-section p {
+            margin-bottom: 1.2em;
         }
-        .content-box * {
-            max-width: 100%;
+        .content-section a {
+            color: #4f46e5;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+        }
+        .content-section a:hover {
+            color: #4338ca;
+        }
+
+        .section-heading {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #111827;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
         .lampiran-list {
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
         }
 
         .lampiran-item {
             display: flex;
-            justify-content: space-between;
             align-items: center;
-            border: 1px solid #111827;
-            border-radius: 10px;
-            padding: 14px 20px;
+            padding: 16px 20px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
             text-decoration: none;
-            color: #111827;
-            transition: all 0.2s;
-            background: #fff;
+            color: #1e293b;
+            transition: all 0.2s ease;
         }
         .lampiran-item:hover {
-            background: #f9fafb;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-            color: #111827;
+            background: #f1f5f9;
+            border-color: #cbd5e1;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
-
-        .lampiran-left {
+        .lampiran-icon {
+            width: 40px;
+            height: 40px;
+            background: #e0e7ff;
+            color: #4f46e5;
+            border-radius: 10px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            font-weight: 500;
-            font-size: 0.95rem;
+            justify-content: center;
+            margin-right: 16px;
+            flex-shrink: 0;
         }
-        .lampiran-right {
-            display: flex;
-            align-items: center;
-            gap: 20px;
-            font-size: 0.85rem;
-            color: #111827;
+        .lampiran-info {
+            flex-grow: 1;
+            overflow: hidden;
+        }
+        .lampiran-name {
             font-weight: 600;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #0f172a;
+        }
+        .lampiran-action {
+            color: #64748b;
+            font-size: 0.85rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: color 0.2s;
+        }
+        .lampiran-item:hover .lampiran-action {
+            color: #4f46e5;
         }
 
-        .btn-kembali-wrapper {
-            text-align: center;
-            margin-top: 10px;
+        .actions-container {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+            align-items: center;
+            padding-top: 30px;
+            border-top: 1px solid #f3f4f6;
         }
-        .btn-kembali {
-            background: #818cf8;
-            color: #fff;
-            border: none;
-            border-radius: 8px;
-            padding: 10px 40px;
+        
+        .btn-action {
+            padding: 12px 28px;
+            border-radius: 10px;
             font-weight: 600;
             font-size: 0.95rem;
             text-decoration: none;
-            display: inline-block;
-            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            border: none;
         }
-        .btn-kembali:hover {
-            background: #6366f1;
-            color: #fff;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        .btn-back {
+            background: #f3f4f6;
+            color: #374151;
+        }
+        .btn-back:hover {
+            background: #e5e7eb;
+            color: #1f2937;
+        }
+
+        @media (max-width: 640px) {
+            .detail-card {
+                padding: 24px 20px;
+            }
+            .detail-title h5 {
+                font-size: 1.5rem;
+            }
+            .meta-container {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .meta-item {
+                justify-content: center;
+            }
+            .actions-container {
+                flex-direction: column;
+                width: 100%;
+            }
+            .btn-action {
+                width: 100%;
+            }
         }
     </style>
     @endpush
@@ -224,7 +260,7 @@
         $images = $lampiran->filter(function($file) {
             return in_array(strtolower(pathinfo($file->nama_file ?? '', PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
         });
-        $posterUrl = $images->first() ? asset('storage/' . $images->first()->path_file) : null;
+        $posterUrl = $images->first() ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($images->first()->path_file) : null;
 
         $targetAudienceStr = $pengumuman->target_audience;
         if($targetAudienceStr == 'all') {
@@ -239,11 +275,27 @@
     <div class="detail-card">
         <!-- Title -->
         <div class="detail-title">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="#111827" stroke="#111827" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="m3 11 18-5v12L3 14v-3z"></path>
-                <path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"></path>
-            </svg>
             <h5>{{ $pengumuman->judul }}</h5>
+        </div>
+
+        <!-- Meta Container -->
+        <div class="meta-container">
+            <div class="meta-item" title="Target Audience">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                {{ $targetAudienceStr }}
+            </div>
+            <div class="meta-item" title="Tanggal">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+                {{ ($pengumuman->published_at ?? $pengumuman->created_at)->translatedFormat('d F Y') }}
+            </div>
+            <div class="meta-item" title="Waktu">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                {{ ($pengumuman->published_at ?? $pengumuman->created_at)->format('H:i') }} WIB
+            </div>
+            <div class="meta-item" title="Pembuat">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                {{ $pengumuman->author->name ?? 'Admin' }}
+            </div>
         </div>
 
         <!-- Image Poster -->
@@ -253,74 +305,40 @@
         </div>
         @endif
 
-        <!-- Meta Box -->
-        <div class="meta-box">
-            <table class="meta-table">
-                <tr>
-                    <td>Target</td>
-                    <td>: {{ $targetAudienceStr }}</td>
-                </tr>
-                <tr>
-                    <td>Tanggal</td>
-                    <td>: {{ ($pengumuman->published_at ?? $pengumuman->created_at)->translatedFormat('d F Y') }}</td>
-                </tr>
-                <tr>
-                    <td>Pembuat</td>
-                    <td>: {{ $pengumuman->author->name ?? 'Admin' }}</td>
-                </tr>
-                <tr>
-                    <td>Waktu</td>
-                    <td>: {{ ($pengumuman->published_at ?? $pengumuman->created_at)->format('H:i') }} WIB</td>
-                </tr>
-            </table>
-        </div>
-
-        <!-- Content & Divider -->
-        <div class="section-container">
-            <div class="section-title-left">Isi Pengumuman</div>
-            <hr>
-        </div>
-
-        <div class="content-box">
+        <!-- Content -->
+        <div class="content-section">
             {!! $pengumuman->konten !!}
         </div>
 
-        <!-- Lampiran & Divider -->
-        <div class="section-container">
-            <div class="section-title-left">Lampiran</div>
-            <hr>
+        <!-- Lampiran -->
+        @if($lampiran->count() > 0)
+        <div class="section-heading">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg>
+            Lampiran File
         </div>
-
         <div class="lampiran-list">
-            @forelse($lampiran as $item)
-            <a href="{{ route('manajemenmahasiswa.pengumuman.lampiran.download', $item->id) }}" class="lampiran-item">
-                <div class="lampiran-left">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                        <polyline points="14 2 14 8 20 8"></polyline>
-                    </svg>
-                    <span>{{ $item->judul_file ?? 'Lampiran' }}</span>
+            @foreach($lampiran as $item)
+            <a href="{{ route('manajemenmahasiswa.pengumuman.lampiran.download', $item->id) }}" class="lampiran-item" download>
+                <div class="lampiran-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                 </div>
-                <div class="lampiran-right">
-                    <span style="display:flex; align-items:center; gap:5px;">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                            <polyline points="7 10 12 15 17 10"></polyline>
-                            <line x1="12" y1="15" x2="12" y2="3"></line>
-                        </svg>
+                <div class="lampiran-info">
+                    <div class="lampiran-name">{{ $item->judul_file ?? 'Lampiran' }}</div>
+                    <div class="lampiran-action">
                         Unduh
-                    </span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                    </div>
                 </div>
             </a>
-            @empty
-            <div class="lampiran-item" style="justify-content:center; color:#6b7280; font-size: 0.95rem;">
-                Tidak ada lampiran
-            </div>
-            @endforelse
+            @endforeach
         </div>
+        @endif
 
-        <div class="btn-kembali-wrapper">
-            <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="btn-kembali">Kembali</a>
+        <div class="actions-container">
+            <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="btn-action btn-back">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Kembali
+            </a>
         </div>
     </div>
 
