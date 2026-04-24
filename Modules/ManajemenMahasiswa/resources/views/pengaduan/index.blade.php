@@ -46,31 +46,32 @@
 
             /* ── Stats Strip ───────────────────────────────────────── */
             .stats-strip {
-                display: flex;
-                gap: 16px;
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 14px;
                 margin-bottom: 20px;
-                flex-wrap: wrap;
             }
+            @media (max-width: 768px) { .stats-strip { grid-template-columns: 1fr; } }
             .stat-chip {
                 background: #ffffff;
                 border: 1px solid #e2e8f0;
                 border-radius: 10px;
-                padding: 12px 20px;
+                padding: 16px 20px;
                 display: flex;
                 align-items: center;
-                gap: 10px;
+                gap: 12px;
                 box-shadow: 0 1px 4px rgba(0,0,0,0.04);
             }
             .stat-chip-icon {
-                width: 36px; height: 36px;
-                border-radius: 8px;
+                width: 40px; height: 40px;
+                border-radius: 10px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 font-size: 16px;
             }
             .stat-chip-value {
-                font-size: 18px;
+                font-size: 20px;
                 font-weight: 800;
                 color: #111827;
                 line-height: 1;
@@ -81,6 +82,7 @@
                 color: #9ca3af;
                 text-transform: uppercase;
                 letter-spacing: 0.3px;
+                margin-top: 2px;
             }
 
             /* ── Filters ───────────────────────────────────────────── */
@@ -217,15 +219,15 @@
     </div>
 
     {{-- ── Filters ─────────────────────────────────────────────── --}}
-    <form method="GET" action="{{ route('manajemenmahasiswa.pengaduan.index') }}">
+    <form method="GET" action="{{ route('manajemenmahasiswa.pengaduan.index') }}" id="filterForm">
         <div class="filter-bar">
             <div class="row g-3 align-items-center">
-                <div class="col-lg-5">
+                <div class="col-lg-6">
                     <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" class="filter-input"
                         placeholder="🔍 Cari judul, kronologi, atau ID pengaduan…">
                 </div>
                 <div class="col-lg-3">
-                    <select name="kategori" class="filter-select" onchange="this.form.submit()">
+                    <select name="kategori" class="filter-select" onchange="document.getElementById('filterForm').submit()">
                         <option value="">Semua Kategori</option>
                         @foreach($kategoriOptions as $value => $meta)
                             <option value="{{ $value }}" {{ ($filters['kategori'] ?? '') === $value ? 'selected' : '' }}>
@@ -235,7 +237,7 @@
                     </select>
                 </div>
                 <div class="col-lg-3">
-                    <select name="status" class="filter-select" onchange="this.form.submit()">
+                    <select name="status" class="filter-select" onchange="document.getElementById('filterForm').submit()">
                         <option value="">Semua Status</option>
                         @foreach($statusOptions as $value => $label)
                             <option value="{{ $value }}" {{ ($filters['status'] ?? '') === $value ? 'selected' : '' }}>
@@ -243,11 +245,6 @@
                             </option>
                         @endforeach
                     </select>
-                </div>
-                <div class="col-lg-1">
-                    <button type="submit" class="btn w-100" style="background: #4D4DFF; color: white; border-radius: 10px; font-weight: 600; padding: 10px;">
-                        Cari
-                    </button>
                 </div>
             </div>
         </div>

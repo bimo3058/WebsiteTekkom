@@ -192,6 +192,34 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                             ->name('cv')->where('id', '[0-9]+');
                     });
             });
+
+            // Subbab: Alumni
+            Route::prefix('alumni')->name('alumni.')->group(function () {
+                // Profil karir sendiri (role mahasiswa)
+                Route::middleware('role:mahasiswa')->group(function () {
+                    Route::get('/profil', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'profil'])
+                        ->name('profil');
+                    Route::put('/profil', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'updateProfil'])
+                        ->name('profil.update');
+                });
+
+                // Daftar semua alumni — admin, gpm, pengurus, dosen
+                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,pengurus_himpunan')
+                    ->group(function () {
+                        Route::get('/', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'index'])
+                            ->name('index');
+                        Route::get('/{id}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'show'])
+                            ->name('show')->where('id', '[0-9]+');
+                    });
+
+                // Edit data alumni — admin only
+                Route::middleware('role:superadmin,admin,admin_kemahasiswaan')->group(function () {
+                    Route::get('/{id}/edit', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'edit'])
+                        ->name('edit')->where('id', '[0-9]+');
+                    Route::put('/{id}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'update'])
+                        ->name('update')->where('id', '[0-9]+');
+                });
+            });
         });
 
     });

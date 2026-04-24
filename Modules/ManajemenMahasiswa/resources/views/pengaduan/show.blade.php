@@ -2,13 +2,50 @@
 
     @push('styles')
         <style>
+            .main-wrapper {
+                background: transparent !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+            }
+
+            /* ── Back Bar ─────────────────────────────────────────── */
+            .back-bar {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            .back-bar a, .back-bar button {
+                font-weight: 600;
+                font-size: 13px;
+                text-decoration: none;
+                border-radius: 8px;
+                padding: 8px 16px;
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                transition: all 0.2s;
+            }
+            .btn-back {
+                background: #fff;
+                border: 1px solid #e5e7eb;
+                color: #374151;
+            }
+            .btn-back:hover { background: #f9fafb; color: #111827; }
+            .btn-del {
+                background: #fef2f2;
+                border: 1.5px solid #fecaca;
+                color: #dc2626;
+                cursor: pointer;
+            }
+            .btn-del:hover { background: #fee2e2; color: #b91c1c; }
+
             /* ── Base Card ─────────────────────────────────────────── */
             .pgd-card {
                 background: #ffffff;
                 border-radius: 14px;
                 padding: 32px;
-                box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
-                border: none;
+                border: 1px solid #e5e7eb;
                 position: relative;
                 overflow: hidden;
             }
@@ -20,57 +57,11 @@
                 background: linear-gradient(135deg, #4D4DFF 0%, #7c7cff 50%, #4D4DFF 100%);
             }
 
-            /* ── Section Informasi Lanjut ───────────────────────────── */
-            .info-grid {
-                background: #f8fafc;
-                border-radius: 14px;
-                padding: 28px 32px;
-                border: 1px solid #e2e8f0;
-            }
-            .info-grid-title {
-                font-size: 13px;
-                font-weight: 800;
-                color: #475569;
-                text-transform: uppercase;
-                letter-spacing: 1px;
-                margin-bottom: 24px;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-            .info-grid-title::after {
-                content: '';
-                flex: 1;
-                height: 1px;
-                background: #cbd5e1;
-            }
-            .info-item {
-                min-width: 0;
-            }
-            .info-item-label {
-                font-size: 11px;
-                font-weight: 700;
-                color: #94a3b8;
-                text-transform: uppercase;
-                letter-spacing: 0.8px;
-                margin-bottom: 6px;
-            }
-            .info-item-value {
-                font-size: 14px;
-                font-weight: 700;
-                color: #1e293b;
-                word-break: break-word;
-            }
-            .info-item-value.empty {
-                color: #94a3b8;
-                font-weight: 500;
-            }
-
-            /* ── Badges ────────────────────────────────────────────── */
+            /* ── Header Badge Row ─────────────────────────────────── */
             .pgd-badge {
-                font-size: 13px;
-                font-weight: 600;
-                padding: 6px 16px;
+                font-size: 12px;
+                font-weight: 700;
+                padding: 5px 14px;
                 border-radius: 20px;
                 display: inline-flex;
                 align-items: center;
@@ -79,11 +70,11 @@
 
             /* ── Section Labels ────────────────────────────────────── */
             .section-label {
-                font-size: 12px;
+                font-size: 11px;
                 font-weight: 700;
                 color: #94a3b8;
                 text-transform: uppercase;
-                letter-spacing: 0.5px;
+                letter-spacing: 0.6px;
                 margin-bottom: 8px;
             }
             .section-value {
@@ -104,7 +95,72 @@
                 white-space: pre-wrap;
             }
 
-            /* ── Answer / Reply ────────────────────────────────────── */
+            /* ── Info Grid ────────────────────────────────────────── */
+            .info-grid {
+                background: #fff;
+                border-radius: 14px;
+                padding: 28px 32px;
+                border: 1px solid #e5e7eb;
+            }
+            .info-grid-title {
+                font-size: 13px;
+                font-weight: 800;
+                color: #475569;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                margin-bottom: 24px;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .info-grid-title::after {
+                content: '';
+                flex: 1;
+                height: 1px;
+                background: #e2e8f0;
+            }
+            .info-item-label {
+                font-size: 11px;
+                font-weight: 700;
+                color: #94a3b8;
+                text-transform: uppercase;
+                letter-spacing: 0.8px;
+                margin-bottom: 6px;
+            }
+            .info-item-value {
+                font-size: 14px;
+                font-weight: 700;
+                color: #1e293b;
+                word-break: break-word;
+            }
+            .info-item-value.empty {
+                color: #94a3b8;
+                font-weight: 500;
+            }
+
+            /* ── Pelapor Box ───────────────────────────────────────── */
+            .pelapor-box {
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+                padding: 16px 20px;
+                display: flex;
+                align-items: center;
+                gap: 14px;
+            }
+            .pelapor-avatar {
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 20px;
+                flex-shrink: 0;
+            }
+
+            /* ── Answer ────────────────────────────────────────────── */
             .answer-card {
                 background: #f0fdf4;
                 border: 1px solid #bbf7d0;
@@ -139,58 +195,16 @@
                 border-radius: 14px;
                 background: #f8fafc;
                 text-align: center;
-                padding: 40px 24px;
+                padding: 48px 24px;
             }
 
-            /* ── Buttons ───────────────────────────────────────────── */
-            .btn-custom {
-                background-color: #4D4DFF;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 10px 24px;
-                font-weight: 600;
-                transition: all 0.2s;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                gap: 8px;
-            }
-            .btn-custom:hover {
-                background-color: #3b3be5;
-                color: white;
-                transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(77, 77, 255, 0.3);
-            }
-            .btn-outline-custom {
-                background-color: transparent;
-                color: #6b7280;
-                border: 2px solid #e5e7eb;
-                border-radius: 8px;
-                padding: 8px 20px;
-                font-weight: 600;
-                transition: all 0.2s;
-            }
-            .btn-outline-custom:hover {
-                background-color: #f3f4f6;
-                color: #374151;
-            }
-            .btn-danger-soft {
-                background-color: #fef2f2;
-                color: #dc2626;
-                border: 1.5px solid #fecaca;
-                border-radius: 8px;
-                padding: 8px 18px;
-                font-weight: 600;
-                font-size: 14px;
-                transition: all 0.2s;
-                display: inline-flex;
-                align-items: center;
-                gap: 6px;
-            }
-            .btn-danger-soft:hover {
-                background-color: #fee2e2;
-                color: #b91c1c;
+            /* ── Reply Form ───────────────────────────────────────── */
+            .reply-card {
+                background: #fff;
+                border-radius: 14px;
+                border: 1px solid #e5e7eb;
+                padding: 28px 32px;
+                border-top: 3px solid #4D4DFF;
             }
             .form-control-custom {
                 background-color: #f9fafb;
@@ -206,30 +220,26 @@
                 box-shadow: 0 0 0 4px rgba(77, 77, 255, 0.1);
                 outline: none;
             }
-
-            /* ── Pelapor Box ───────────────────────────────────────── */
-            .pelapor-box {
-                background: #ffffff;
-                border: 1px solid #e2e8f0;
-                border-radius: 10px;
-                padding: 16px 20px;
-                display: flex;
+            .btn-submit {
+                background: linear-gradient(135deg, #4D4DFF, #6b6bff);
+                color: white;
+                border: none;
+                border-radius: 8px;
+                padding: 10px 24px;
+                font-weight: 600;
+                transition: all 0.2s;
+                display: inline-flex;
                 align-items: center;
-                gap: 14px;
+                gap: 8px;
+                cursor: pointer;
             }
-            .pelapor-avatar {
-                width: 44px;
-                height: 44px;
-                border-radius: 50%;
-                background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 20px;
-                flex-shrink: 0;
+            .btn-submit:hover {
+                background: linear-gradient(135deg, #3b3be5, #4D4DFF);
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(77, 77, 255, 0.3);
             }
 
-            /* ── Delete Modal ──────────────────────────────────────── */
+            /* ── Modal ──────────────────────────────────────────────── */
             .modal-custom .modal-content {
                 border-radius: 16px;
                 border: none;
@@ -238,44 +248,37 @@
         </style>
     @endpush
 
-    {{-- ── Header ──────────────────────────────────────────────── --}}
-    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
-        <div>
-            <div class="d-flex align-items-center gap-3 mb-1">
-                <h3 class="fw-bold mb-0 text-dark">Detail Pengaduan</h3>
-                <span class="badge bg-light text-dark border fw-bold" style="font-family: monospace; font-size: 13px;">
-                    #{{ $pengaduan->id }}
-                </span>
-            </div>
-            <p class="text-muted fw-medium mb-0">
-                🕑 Dibuat pada {{ optional($pengaduan->created_at)->translatedFormat('d F Y, H:i') }} WIB
-            </p>
-        </div>
-
+    {{-- ── Back Bar ──────────────────────────────────────────── --}}
+    <div class="back-bar">
+        <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="btn-back">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            Kembali
+        </a>
         <div class="d-flex align-items-center gap-2">
+            <span class="badge bg-light text-dark border fw-bold" style="font-family: monospace; font-size: 13px; padding: 6px 12px; border-radius: 8px;">
+                #{{ $pengaduan->id }}
+            </span>
             @if($canDelete)
-                <button type="button" class="btn-danger-soft" data-bs-toggle="modal" data-bs-target="#deleteShowModal">
-                    🗑️ Hapus
+                <button type="button" class="btn-del" data-bs-toggle="modal" data-bs-target="#deleteShowModal">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/></svg>
+                    Hapus
                 </button>
             @endif
-            <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="btn-outline-custom text-decoration-none">
-                ← Kembali
-            </a>
         </div>
     </div>
 
     @if (session('success'))
-        <div class="alert alert-success border-0 shadow-sm mb-4" style="background-color: #dcfce7; color: #16a34a; border-radius: 12px;">
-            <div class="d-flex align-items-center gap-2 fw-medium">
-                <span>✓</span> {{ session('success') }}
+        <div class="alert alert-success border-0 mb-4" style="background-color: #dcfce7; color: #16a34a; border-radius: 12px; font-weight: 500; font-size: 14px;">
+            <div class="d-flex align-items-center gap-2">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                {{ session('success') }}
             </div>
         </div>
     @endif
 
-    {{-- ── Main Card: Judul + Badges + Hal Aduan + Kronologi ─── --}}
+    {{-- ── Main Card ─────────────────────────────────────────── --}}
     <div class="pgd-card mb-4">
-
-        <h4 class="fw-bold text-dark mb-3" style="font-size: 22px;">
+        <h4 class="fw-bold text-dark mb-3" style="font-size: 20px; line-height: 1.4;">
             {{ data_get($pengaduan, 'data_template.judul', '-') }}
         </h4>
 
@@ -298,23 +301,24 @@
                     🔒 Anonim
                 </span>
             @endif
+            <span class="pgd-badge" style="background: #f8fafc; color: #6b7280; border: 1px solid #e5e7eb;">
+                🕑 {{ optional($pengaduan->created_at)->translatedFormat('d F Y, H:i') }} WIB
+            </span>
         </div>
 
-        <hr style="border-color: #f3f4f6; margin: 0 0 28px 0;">
+        <hr style="border-color: #f3f4f6; margin: 0 0 24px 0;">
 
-        <div class="row g-4">
-            <div class="col-lg-4">
-                <div class="section-label">Hal Aduan</div>
-                <div class="section-value" style="white-space: pre-wrap; line-height: 1.7;">{{ data_get($pengaduan, 'data_template.hal_aduan', '—') ?: '—' }}</div>
-            </div>
-            <div class="col-lg-8">
-                <div class="section-label">Kronologi / Isi Pengaduan</div>
-                <div class="chronology-box">{{ data_get($pengaduan, 'data_template.kronologi', '-') }}</div>
-            </div>
+        <div class="mb-4">
+            <div class="section-label">Hal Aduan</div>
+            <div class="section-value" style="white-space: pre-wrap; line-height: 1.7;">{{ data_get($pengaduan, 'data_template.hal_aduan', '—') ?: '—' }}</div>
+        </div>
+        <div>
+            <div class="section-label">Kronologi / Isi Pengaduan</div>
+            <div class="chronology-box">{{ data_get($pengaduan, 'data_template.kronologi', '-') }}</div>
         </div>
     </div>
 
-    {{-- ── Informasi Lanjut ─────────────────────────────────────── --}}
+    {{-- ── Informasi Lanjut ──────────────────────────────────── --}}
     @php
         $waktuKejadian = data_get($pengaduan, 'data_template.waktu_kejadian')
             ?? data_get($pengaduan, 'data_template.tanggal_kejadian');
@@ -326,84 +330,68 @@
 
         <div class="row g-4 mb-4">
             <div class="col-md-3 col-sm-6">
-                <div class="info-item">
-                    <div class="info-item-label">Lokasi Kejadian</div>
-                    <div class="info-item-value {{ !data_get($pengaduan, 'data_template.lokasi') ? 'empty' : '' }}">
-                        {{ data_get($pengaduan, 'data_template.lokasi', '—') ?: '—' }}
-                    </div>
+                <div class="info-item-label">Lokasi Kejadian</div>
+                <div class="info-item-value {{ !data_get($pengaduan, 'data_template.lokasi') ? 'empty' : '' }}">
+                    {{ data_get($pengaduan, 'data_template.lokasi', '—') ?: '—' }}
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
-                <div class="info-item">
-                    <div class="info-item-label">Waktu Kejadian</div>
-                    <div class="info-item-value {{ !$waktuKejadian ? 'empty' : '' }}">
-                        @if($waktuKejadian)
-                            {{ \Carbon\Carbon::parse($waktuKejadian)->translatedFormat('d F Y, H:i') }}
-                        @else
-                            —
-                        @endif
-                    </div>
+                <div class="info-item-label">Waktu Kejadian</div>
+                <div class="info-item-value {{ !$waktuKejadian ? 'empty' : '' }}">
+                    @if($waktuKejadian)
+                        {{ \Carbon\Carbon::parse($waktuKejadian)->translatedFormat('d F Y, H:i') }}
+                    @else
+                        —
+                    @endif
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
-                <div class="info-item">
-                    <div class="info-item-label">Angkatan</div>
-                    <div class="info-item-value {{ !data_get($pengaduan, 'data_template.angkatan') ? 'empty' : '' }}">
-                        {{ data_get($pengaduan, 'data_template.angkatan', '—') ?: '—' }}
-                    </div>
+                <div class="info-item-label">Angkatan</div>
+                <div class="info-item-value {{ !data_get($pengaduan, 'data_template.angkatan') ? 'empty' : '' }}">
+                    {{ data_get($pengaduan, 'data_template.angkatan', '—') ?: '—' }}
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
-                <div class="info-item">
-                    <div class="info-item-label">Mata Kuliah</div>
-                    <div class="info-item-value {{ !data_get($pengaduan, 'data_template.mata_kuliah') ? 'empty' : '' }}">
-                        {{ data_get($pengaduan, 'data_template.mata_kuliah', '—') ?: '—' }}
-                    </div>
+                <div class="info-item-label">Mata Kuliah</div>
+                <div class="info-item-value {{ !data_get($pengaduan, 'data_template.mata_kuliah') ? 'empty' : '' }}">
+                    {{ data_get($pengaduan, 'data_template.mata_kuliah', '—') ?: '—' }}
                 </div>
             </div>
         </div>
 
         <div class="row g-4 mb-4">
             <div class="col-md-3 col-sm-6">
-                <div class="info-item">
-                    <div class="info-item-label">Dosen Terkait</div>
-                    <div class="info-item-value {{ !data_get($pengaduan, 'data_template.nama_dosen') ? 'empty' : '' }}">
-                        {{ data_get($pengaduan, 'data_template.nama_dosen', '—') ?: '—' }}
-                    </div>
+                <div class="info-item-label">Dosen Terkait</div>
+                <div class="info-item-value {{ !data_get($pengaduan, 'data_template.nama_dosen') ? 'empty' : '' }}">
+                    {{ data_get($pengaduan, 'data_template.nama_dosen', '—') ?: '—' }}
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
-                <div class="info-item">
-                    <div class="info-item-label">Tendik Terkait</div>
-                    <div class="info-item-value {{ !data_get($pengaduan, 'data_template.nama_tendik') ? 'empty' : '' }}">
-                        {{ data_get($pengaduan, 'data_template.nama_tendik', '—') ?: '—' }}
-                    </div>
+                <div class="info-item-label">Tendik Terkait</div>
+                <div class="info-item-value {{ !data_get($pengaduan, 'data_template.nama_tendik') ? 'empty' : '' }}">
+                    {{ data_get($pengaduan, 'data_template.nama_tendik', '—') ?: '—' }}
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
-                <div class="info-item">
-                    <div class="info-item-label">Seberapa Sering Terjadi</div>
-                    <div class="info-item-value {{ !data_get($pengaduan, 'data_template.frekuensi') ? 'empty' : '' }}">
-                        {{ data_get($pengaduan, 'data_template.frekuensi', '—') ?: '—' }}
-                    </div>
+                <div class="info-item-label">Frekuensi Kejadian</div>
+                <div class="info-item-value {{ !data_get($pengaduan, 'data_template.frekuensi') ? 'empty' : '' }}">
+                    {{ data_get($pengaduan, 'data_template.frekuensi', '—') ?: '—' }}
                 </div>
             </div>
             <div class="col-md-3 col-sm-6">
-                <div class="info-item">
-                    <div class="info-item-label">Link Bukti Dukung</div>
-                    @if($linkBukti)
-                        <a class="info-item-value d-block text-decoration-none" href="{{ $linkBukti }}" target="_blank" rel="noopener noreferrer" style="color: #4D4DFF;">
-                            {{ Str::limit($linkBukti, 40) }} ↗
-                        </a>
-                    @else
-                        <div class="info-item-value empty">—</div>
-                    @endif
-                </div>
+                <div class="info-item-label">Link Bukti Dukung</div>
+                @if($linkBukti)
+                    <a class="info-item-value d-block text-decoration-none" href="{{ $linkBukti }}" target="_blank" rel="noopener noreferrer" style="color: #4D4DFF;">
+                        {{ Str::limit($linkBukti, 40) }} ↗
+                    </a>
+                @else
+                    <div class="info-item-value empty">—</div>
+                @endif
             </div>
         </div>
 
         {{-- Pelapor --}}
-        <hr style="border-color: #cbd5e1; margin: 8px 0 20px 0;">
+        <hr style="border-color: #e2e8f0; margin: 8px 0 20px 0;">
         <div class="info-item-label mb-2">Pelapor</div>
         <div class="pelapor-box" style="max-width: 360px;">
             <div class="pelapor-avatar">👤</div>
@@ -421,9 +409,9 @@
         </div>
     </div>
 
-    {{-- ── Tanggapan Admin ─────────────────────────────────────── --}}
+    {{-- ── Tanggapan ─────────────────────────────────────────── --}}
     <div class="mb-4">
-        <h5 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+        <h5 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2" style="font-size: 16px;">
             <span style="color: #4D4DFF;">💬</span> Tanggapan Admin
         </h5>
 
@@ -451,9 +439,9 @@
         @endif
     </div>
 
-    {{-- ── Form Reply (Staff only) ─────────────────────────────── --}}
+    {{-- ── Form Reply ────────────────────────────────────────── --}}
     @if($canReply)
-        <div class="pgd-card" style="border-top: 3px solid #4D4DFF;">
+        <div class="reply-card">
             <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
                 ✏️ <span>{{ $pengaduan->jawaban ? 'Perbarui Jawaban' : 'Tulis Jawaban' }}</span>
             </h6>
@@ -464,7 +452,7 @@
                         placeholder="Tulis jawaban atau tindakan yang telah diambil…">{{ old('jawaban', $pengaduan->jawaban) }}</textarea>
                 </div>
                 <div class="d-flex justify-content-end">
-                    <button type="submit" class="btn-custom">
+                    <button type="submit" class="btn-submit">
                         {{ $pengaduan->jawaban ? '🔄 Perbarui Jawaban' : '📤 Kirim Jawaban' }}
                     </button>
                 </div>
@@ -472,7 +460,7 @@
         </div>
     @endif
 
-    {{-- ── Delete Modal ─────────────────────────────────────────── --}}
+    {{-- ── Delete Modal ──────────────────────────────────────── --}}
     @if($canDelete)
         <div class="modal fade modal-custom" id="deleteShowModal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">

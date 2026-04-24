@@ -90,8 +90,8 @@
                     </span>
                     <span class="nav-label">Mahasiswa</span>
                 </a>
-                <a href="#"
-                   class="nav-link-item sub-item" style="opacity: 0.5; pointer-events: none;">
+                <a href="{{ route('manajemenmahasiswa.direktori.alumni.index') }}"
+                   class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.direktori.alumni.*') ? 'active' : '' }}">
                     <span class="nav-icon d-inline-flex">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                             stroke-linecap="round" stroke-linejoin="round">
@@ -100,7 +100,6 @@
                         </svg>
                     </span>
                     <span class="nav-label">Alumni</span>
-                    <span style="font-size: 10px; background: #e5e7eb; color: #6b7280; padding: 1px 6px; border-radius: 8px; margin-left: auto; font-weight: 600;">Soon</span>
                 </a>
             </div>
         </div>
