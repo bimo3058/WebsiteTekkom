@@ -229,9 +229,20 @@
                 margin-top: 8px;
             }
 
-            .media-counter.ok { background: #dcfce7; color: #16a34a; }
-            .media-counter.warn { background: #fef3c7; color: #d97706; }
-            .media-counter.full { background: #fee2e2; color: #dc2626; }
+            .media-counter.ok {
+                background: #dcfce7;
+                color: #16a34a;
+            }
+
+            .media-counter.warn {
+                background: #fef3c7;
+                color: #d97706;
+            }
+
+            .media-counter.full {
+                background: #fee2e2;
+                color: #dc2626;
+            }
         </style>
     @endpush
 
@@ -265,9 +276,9 @@
                 <div class="input-wrapper">
                     <input type="text" name="judul" id="inputJudul"
                         class="custom-input @error('judul') border-danger @enderror"
-                        placeholder="Tuliskan judul yang menarik dan deskriptif..." maxlength="200" required
+                        placeholder="Tuliskan judul yang menarik dan deskriptif..." maxlength="100" required
                         value="{{ old('judul') }}">
-                    <span class="char-count"><span id="judulCount">0</span>/200</span>
+                    <span class="char-count"><span id="judulCount">0</span>/100</span>
                 </div>
             </div>
 
@@ -301,7 +312,8 @@
                         <input type="file" name="media_files[]" id="mediaFileInput" multiple
                             accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm">
                         <div class="dropzone-text">Click atau drag file ke sini</div>
-                        <div class="dropzone-hint">JPG, PNG, GIF, WEBP, MP4, WEBM • Maks 10MB per file • Maks 5 file</div>
+                        <div class="dropzone-hint">JPG, PNG, GIF, WEBP, MP4, WEBM • Maks 10MB per file • Maks 5 file
+                        </div>
                     </div>
                     <div id="mediaCounter"></div>
                     <div class="media-preview-grid" id="mediaPreviewGrid"></div>
@@ -347,7 +359,7 @@
             const judulInput = document.getElementById('inputJudul');
             const judulCount = document.getElementById('judulCount');
             if (judulInput.value) judulCount.textContent = judulInput.value.length;
-            judulInput.addEventListener('input', function() {
+            judulInput.addEventListener('input', function () {
                 judulCount.textContent = this.value.length;
             });
 
@@ -364,7 +376,7 @@
             mediaDropzone.addEventListener('dragleave', () => mediaDropzone.classList.remove('dragover'));
             mediaDropzone.addEventListener('drop', () => mediaDropzone.classList.remove('dragover'));
 
-            mediaFileInput.addEventListener('change', function() {
+            mediaFileInput.addEventListener('change', function () {
                 addMediaFiles(this.files);
             });
 
