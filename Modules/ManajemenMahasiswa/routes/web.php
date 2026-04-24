@@ -62,6 +62,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             // Create/Edit/Delete — hanya pengurus + admin
             Route::middleware('role:pengurus_himpunan,gpm,admin,admin_kemahasiswaan,superadmin')->group(function () {
                 Route::get('/create', [PengumumanController::class, 'create'])->name('create');
+                Route::post('/drafts', [PengumumanController::class, 'saveDraft'])->name('drafts.store');
+                Route::delete('/drafts/{id}', [PengumumanController::class, 'deleteDraft'])->name('drafts.destroy');
                 Route::post('/inline-image', [PengumumanController::class, 'uploadInlineImage'])->name('inline.image');
                 Route::post('/', [PengumumanController::class, 'store'])->name('store');
                 Route::get('/{pengumuman}/edit', [PengumumanController::class, 'edit'])->name('edit');
