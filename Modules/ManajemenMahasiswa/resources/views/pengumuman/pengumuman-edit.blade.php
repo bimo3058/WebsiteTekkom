@@ -76,9 +76,9 @@
             .form-input:focus,
             .form-select-custom:focus,
             .form-textarea:focus {
-                border-color: #818cf8;
+                border-color: #6B4FF4;
                 background: #fff;
-                box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.12);
+                box-shadow: 0 0 0 3px rgba(107, 79, 244, 0.12);
             }
 
             .form-input::placeholder,
@@ -120,20 +120,20 @@
 
             .file-upload-zone:hover,
             .file-upload-zone.drag-over {
-                border-color: #818cf8;
-                background: #f5f3ff;
+                border-color: #6B4FF4;
+                background: #F5F3FF;
             }
 
             .file-upload-zone .upload-icon {
                 width: 56px;
                 height: 56px;
-                background: #ede9fe;
+                background: #F5F3FF;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 margin: 0 auto 14px;
-                color: #4f46e5;
+                color: #6B4FF4;
             }
 
             .file-upload-zone h6 {
@@ -252,7 +252,7 @@
                 padding: 12px 28px;
                 border: none;
                 border-radius: 12px;
-                background: #4f46e5;
+                background: #6B4FF4;
                 color: #fff;
                 font-size: 0.9rem;
                 font-weight: 600;
@@ -261,9 +261,9 @@
             }
 
             .btn-update:hover {
-                background: #4338ca;
+                background: #8266F5;
                 transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+                box-shadow: 0 4px 12px rgba(107, 79, 244, 0.3);
             }
 
             .rich-editor-wrapper {
@@ -275,9 +275,9 @@
             }
 
             .rich-editor-wrapper:focus-within {
-                border-color: #818cf8;
+                border-color: #6B4FF4;
                 background: #fff;
-                box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.12);
+                box-shadow: 0 0 0 3px rgba(107, 79, 244, 0.12);
             }
 
             .editor-toolbar {
@@ -331,9 +331,9 @@
             }
 
             .toolbar-btn.active {
-                background: #ede9fe;
-                border-color: #818cf8;
-                color: #4f46e5;
+                background: #F5F3FF;
+                border-color: #6B4FF4;
+                color: #6B4FF4;
             }
 
             .toolbar-btn-bold {
@@ -400,7 +400,7 @@
             }
 
             .editor-content a {
-                color: #4f46e5;
+                color: #6B4FF4;
                 text-decoration: underline;
             }
 
