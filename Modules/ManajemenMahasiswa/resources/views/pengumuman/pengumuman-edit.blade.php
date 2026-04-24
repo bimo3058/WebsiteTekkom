@@ -8,7 +8,6 @@
                 padding: 0 !important;
             }
 
-            /* ── Page Header ────────────────────────────────────────────── */
             .create-header {
                 margin-bottom: 28px;
             }
@@ -26,7 +25,6 @@
                 margin-bottom: 0;
             }
 
-            /* ── Form Card ──────────────────────────────────────────────── */
             .form-card {
                 background: #fff;
                 border-radius: 16px;
@@ -43,7 +41,6 @@
                 border-bottom: 1px solid #f3f4f6;
             }
 
-            /* ── Form Controls ──────────────────────────────────────────── */
             .form-group {
                 margin-bottom: 22px;
             }
@@ -89,12 +86,6 @@
                 color: #9ca3af;
             }
 
-            .form-textarea {
-                min-height: 200px;
-                resize: vertical;
-                line-height: 1.6;
-            }
-
             .form-select-custom {
                 appearance: none;
                 background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
@@ -104,7 +95,6 @@
                 cursor: pointer;
             }
 
-            /* ── Two Column Row ─────────────────────────────────────────── */
             .form-row {
                 display: grid;
                 grid-template-columns: 1fr 1fr;
@@ -117,7 +107,6 @@
                 }
             }
 
-            /* ── File Upload ────────────────────────────────────────────── */
             .file-upload-zone {
                 border: 2px dashed #d1d5db;
                 border-radius: 14px;
@@ -201,13 +190,15 @@
                 padding: 2px 6px;
                 border-radius: 6px;
                 transition: background 0.15s;
+                font-size: 0.8rem;
+                font-weight: 600;
+                text-decoration: none;
             }
 
             .file-item .file-remove:hover {
                 background: #fee2e2;
             }
 
-            /* ── Poster Preview ─────────────────────────────────────────── */
             .poster-preview {
                 margin-top: 12px;
                 max-width: 300px;
@@ -221,7 +212,12 @@
                 display: block;
             }
 
-            /* ── Buttons ────────────────────────────────────────────────── */
+            .poster-label {
+                font-size: 0.78rem;
+                color: #6b7280;
+                margin-top: 6px;
+            }
+
             .form-actions {
                 display: flex;
                 justify-content: flex-end;
@@ -252,24 +248,7 @@
                 color: #374151;
             }
 
-            .btn-draft {
-                padding: 12px 28px;
-                border: 1px solid #e5e7eb;
-                border-radius: 12px;
-                background: #fff;
-                color: #4f46e5;
-                font-size: 0.9rem;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s ease;
-            }
-
-            .btn-draft:hover {
-                background: #f5f3ff;
-                border-color: #818cf8;
-            }
-
-            .btn-publish {
+            .btn-update {
                 padding: 12px 28px;
                 border: none;
                 border-radius: 12px;
@@ -281,13 +260,12 @@
                 transition: all 0.2s ease;
             }
 
-            .btn-publish:hover {
+            .btn-update:hover {
                 background: #4338ca;
                 transform: translateY(-1px);
                 box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
             }
 
-            /* ── Rich Text Editor ──────────────────────────────────────── */
             .rich-editor-wrapper {
                 border: 1px solid #e5e7eb;
                 border-radius: 12px;
@@ -358,11 +336,27 @@
                 color: #4f46e5;
             }
 
-            .toolbar-btn-bold { font-weight: 900; }
-            .toolbar-btn-italic { font-style: italic; }
-            .toolbar-btn-underline { text-decoration: underline; }
-            .toolbar-btn-h1 { font-size: 0.78rem; letter-spacing: -0.3px; }
-            .toolbar-btn-h2 { font-size: 0.78rem; letter-spacing: -0.3px; }
+            .toolbar-btn-bold {
+                font-weight: 900;
+            }
+
+            .toolbar-btn-italic {
+                font-style: italic;
+            }
+
+            .toolbar-btn-underline {
+                text-decoration: underline;
+            }
+
+            .toolbar-btn-h1 {
+                font-size: 0.78rem;
+                letter-spacing: -0.3px;
+            }
+
+            .toolbar-btn-h2 {
+                font-size: 0.78rem;
+                letter-spacing: -0.3px;
+            }
 
             .editor-content {
                 min-height: 220px;
@@ -401,7 +395,9 @@
                 margin: 8px 0;
             }
 
-            .editor-content li { margin-bottom: 4px; }
+            .editor-content li {
+                margin-bottom: 4px;
+            }
 
             .editor-content a {
                 color: #4f46e5;
@@ -441,7 +437,6 @@
                 display: block;
             }
 
-            /* ── Error Messages ─────────────────────────────────────────── */
             .form-error {
                 font-size: 0.82rem;
                 color: #ef4444;
@@ -472,13 +467,22 @@
         </style>
     @endpush
 
+    @php
+        $existingLampiran = collect($pengumuman->repoMulmed ?? []);
+        $existingPoster = $existingLampiran->first(function ($f) {
+            return in_array(strtolower(pathinfo($f->nama_file ?? '', PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+        });
+        $posterUrl = $existingPoster
+            ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($existingPoster->path_file)
+            : null;
+    @endphp
+
     <!-- Header -->
     <div class="create-header">
-        <h4>Buat Pengumuman Baru</h4>
-        <p>Buat dan publikasikan pengumuman untuk mahasiswa dan alumni</p>
+        <h4>Edit Pengumuman</h4>
+        <p>Perbarui isi pengumuman yang telah dibuat</p>
     </div>
 
-    <!-- Flash Messages -->
     @if(session('success'))
         <div class="alert-success">{{ session('success') }}</div>
     @endif
@@ -495,9 +499,10 @@
     @endif
 
     <!-- Form -->
-    <form action="{{ route('manajemenmahasiswa.pengumuman.store') }}" method="POST" enctype="multipart/form-data"
-        id="createForm">
+    <form action="{{ route('manajemenmahasiswa.pengumuman.update', $pengumuman->id) }}" method="POST"
+        enctype="multipart/form-data" id="editForm">
         @csrf
+        @method('PUT')
 
         <div class="form-card">
             <div class="form-section-title">Informasi Pengumuman</div>
@@ -506,7 +511,7 @@
             <div class="form-group">
                 <label>Judul Pengumuman <span class="required">*</span></label>
                 <input type="text" name="judul" class="form-input" placeholder="Masukkan judul pengumuman"
-                    value="{{ old('judul') }}" required>
+                    value="{{ old('judul', $pengumuman->judul) }}" required>
                 @error('judul') <span class="form-error">{{ $message }}</span> @enderror
             </div>
 
@@ -516,11 +521,10 @@
                     <label>Kategori</label>
                     <select name="kategori" class="form-select-custom">
                         <option value="">Pilih Kategori</option>
-                        <option value="akademik" {{ old('kategori') === 'akademik' ? 'selected' : '' }}>Akademik</option>
-                        <option value="himpunan" {{ old('kategori') === 'himpunan' ? 'selected' : '' }}>Himpunan</option>
-                        <option value="lowongan" {{ old('kategori') === 'lowongan' ? 'selected' : '' }}>Lowongan</option>
-                        <option value="event_prodi" {{ old('kategori') === 'event_prodi' ? 'selected' : '' }}>Event Prodi
-                        </option>
+                        <option value="akademik" {{ old('kategori', $pengumuman->kategori) === 'akademik' ? 'selected' : '' }}>Akademik</option>
+                        <option value="himpunan" {{ old('kategori', $pengumuman->kategori) === 'himpunan' ? 'selected' : '' }}>Himpunan</option>
+                        <option value="lowongan" {{ old('kategori', $pengumuman->kategori) === 'lowongan' ? 'selected' : '' }}>Lowongan</option>
+                        <option value="event_prodi" {{ old('kategori', $pengumuman->kategori) === 'event_prodi' ? 'selected' : '' }}>Event Prodi</option>
                     </select>
                     @error('kategori') <span class="form-error">{{ $message }}</span> @enderror
                 </div>
@@ -528,10 +532,11 @@
                 <div class="form-group">
                     <label>Target Audiens <span class="required">*</span></label>
                     <select name="target_audience" class="form-select-custom" required>
-                        <option value="all" {{ old('target_audience') === 'all' ? 'selected' : '' }}>Semua</option>
-                        <option value="mahasiswa" {{ old('target_audience') === 'mahasiswa' ? 'selected' : '' }}>Mahasiswa
-                        </option>
-                        <option value="alumni" {{ old('target_audience') === 'alumni' ? 'selected' : '' }}>Alumni</option>
+                        <option value="all" {{ old('target_audience', $pengumuman->target_audience) === 'all' ? 'selected' : '' }}>Semua</option>
+                        <option value="mahasiswa" {{ old('target_audience', $pengumuman->target_audience) === 'mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
+                        <option value="alumni" {{ old('target_audience', $pengumuman->target_audience) === 'alumni' ? 'selected' : '' }}>Alumni</option>
+                        <option value="dosen" {{ old('target_audience', $pengumuman->target_audience) === 'dosen' ? 'selected' : '' }}>Dosen</option>
+                        <option value="pengurus" {{ old('target_audience', $pengumuman->target_audience) === 'pengurus' ? 'selected' : '' }}>Pengurus</option>
                     </select>
                     @error('target_audience') <span class="form-error">{{ $message }}</span> @enderror
                 </div>
@@ -541,7 +546,6 @@
             <div class="form-group">
                 <label>Konten Pengumuman <span class="required">*</span></label>
                 <div class="rich-editor-wrapper" id="editorWrapper">
-                    <!-- Toolbar -->
                     <div class="editor-toolbar">
                         <div class="toolbar-group">
                             <button type="button" class="toolbar-btn toolbar-btn-bold" data-cmd="bold"
@@ -550,48 +554,78 @@
                                 onclick="execCmd('italic')" title="Italic">I</button>
                             <button type="button" class="toolbar-btn toolbar-btn-underline" data-cmd="underline"
                                 onclick="execCmd('underline')" title="Underline">U</button>
-                            <button type="button" class="toolbar-btn toolbar-btn-h1"
-                                onclick="execFormatBlock('H1')" title="Heading 1">H1</button>
-                            <button type="button" class="toolbar-btn toolbar-btn-h2"
-                                onclick="execFormatBlock('H2')" title="Heading 2">H2</button>
+                            <button type="button" class="toolbar-btn toolbar-btn-h1" onclick="execFormatBlock('H1')"
+                                title="Heading 1">H1</button>
+                            <button type="button" class="toolbar-btn toolbar-btn-h2" onclick="execFormatBlock('H2')"
+                                title="Heading 2">H2</button>
                             <button type="button" class="toolbar-btn" data-cmd="insertUnorderedList"
                                 onclick="execCmd('insertUnorderedList')" title="Bullet List">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="9" y1="6" x2="20" y2="6"/><line x1="9" y1="12" x2="20" y2="12"/><line x1="9" y1="18" x2="20" y2="18"/><circle cx="4" cy="6" r="1.5" fill="currentColor"/><circle cx="4" cy="12" r="1.5" fill="currentColor"/><circle cx="4" cy="18" r="1.5" fill="currentColor"/></svg>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5">
+                                    <line x1="9" y1="6" x2="20" y2="6" />
+                                    <line x1="9" y1="12" x2="20" y2="12" />
+                                    <line x1="9" y1="18" x2="20" y2="18" />
+                                    <circle cx="4" cy="6" r="1.5" fill="currentColor" />
+                                    <circle cx="4" cy="12" r="1.5" fill="currentColor" />
+                                    <circle cx="4" cy="18" r="1.5" fill="currentColor" />
+                                </svg>
                                 List
                             </button>
                             <button type="button" class="toolbar-btn" data-cmd="insertOrderedList"
                                 onclick="execCmd('insertOrderedList')" title="Numbered List">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="10" y1="6" x2="21" y2="6"/><line x1="10" y1="12" x2="21" y2="12"/><line x1="10" y1="18" x2="21" y2="18"/><text x="2" y="9" font-size="8" fill="currentColor" stroke="none" font-weight="bold">1.</text></svg>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5">
+                                    <line x1="10" y1="6" x2="21" y2="6" />
+                                    <line x1="10" y1="12" x2="21" y2="12" />
+                                    <line x1="10" y1="18" x2="21" y2="18" /><text x="2" y="9" font-size="8"
+                                        fill="currentColor" stroke="none" font-weight="bold">1.</text>
+                                </svg>
                                 List
                             </button>
                         </div>
                         <div class="toolbar-divider"></div>
                         <div class="toolbar-group">
                             <button type="button" class="toolbar-btn" onclick="insertLink()" title="Hyperlink">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+                                    <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+                                </svg>
                                 Link
                             </button>
-                            <button type="button" class="toolbar-btn" onclick="triggerImageInsert()" title="Sisipkan Gambar">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+                            <button type="button" class="toolbar-btn" onclick="triggerImageInsert()"
+                                title="Sisipkan Gambar">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="18" height="18" x="3" y="3" rx="2" />
+                                    <circle cx="9" cy="9" r="2" />
+                                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                                </svg>
                                 Gambar
                             </button>
                             <button type="button" class="toolbar-btn" onclick="insertTable()" title="Sisipkan Tabel">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2"/><path d="M3 9h18M3 15h18M9 3v18M15 3v18"/></svg>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="18" height="18" x="3" y="3" rx="2" />
+                                    <path d="M3 9h18M3 15h18M9 3v18M15 3v18" />
+                                </svg>
                                 Tabel
                             </button>
                             <button type="button" class="toolbar-btn" onclick="insertSeparator()" title="Garis Pemisah">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="12" x2="21" y2="12"/></svg>
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2.5" stroke-linecap="round">
+                                    <line x1="3" y1="12" x2="21" y2="12" />
+                                </svg>
                                 Separator
                             </button>
                         </div>
                         <input type="file" id="inlineImageInput" accept="image/jpeg,image/png,image/gif,image/webp"
                             style="display:none;">
                     </div>
-                    <!-- Editor Area -->
-                    <div class="editor-content" id="editorContent" contenteditable="true">{!! old('konten') !!}</div>
+                    <div class="editor-content" id="editorContent" contenteditable="true"></div>
                 </div>
-                <!-- Hidden textarea untuk form submission -->
-                <textarea name="konten" id="kontenHidden" style="display:none;">{{ old('konten') }}</textarea>
+                <textarea name="konten" id="kontenHidden"
+                    style="display:none;">{{ old('konten', $pengumuman->konten) }}</textarea>
                 @error('konten') <span class="form-error">{{ $message }}</span> @enderror
             </div>
 
@@ -600,6 +634,30 @@
             <!-- Poster -->
             <div class="form-group">
                 <label>Poster / Gambar (opsional)</label>
+
+                @if($posterUrl)
+                    <div style="margin-bottom: 12px;">
+                        <div class="file-item" style="max-width: 380px;">
+                            <span class="file-name">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect width="18" height="18" x="3" y="3" rx="2" />
+                                    <circle cx="9" cy="9" r="2" />
+                                    <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+                                </svg>
+                                {{ $existingPoster->nama_file }}
+                            </span>
+                            <button type="button" class="file-remove" onclick="deleteLampiran('{{ route('manajemenmahasiswa.pengumuman.lampiran.remove', [$pengumuman->id, $existingPoster->id]) }}', this, 'Hapus poster ini?')">
+                                Hapus
+                            </button>
+                        </div>
+                        <div class="poster-preview" style="margin-top: 8px;">
+                            <img src="{{ $posterUrl }}" alt="Poster saat ini">
+                        </div>
+                        <p class="poster-label">Upload gambar baru di bawah untuk mengganti poster</p>
+                    </div>
+                @endif
+
                 <div class="file-upload-zone" id="posterZone">
                     <div class="upload-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -609,18 +667,47 @@
                             <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
                         </svg>
                     </div>
-                    <h6>Klik atau seret gambar ke sini</h6>
+                    <h6>{{ $posterUrl ? 'Klik untuk mengganti poster' : 'Klik atau seret gambar ke sini' }}</h6>
                     <p>JPG, PNG — Maks. 10MB</p>
                     <input type="file" name="poster" accept="image/jpeg,image/png" id="posterInput">
                 </div>
-                <div class="poster-preview" id="posterPreview" style="display: none;">
-                    <img id="posterImg" src="" alt="Preview Poster">
+                <div class="poster-preview" id="posterPreview" style="display: none; margin-top: 12px;">
+                    <img id="posterImg" src="" alt="Preview Poster Baru">
                 </div>
             </div>
 
-            <!-- Lampiran -->
+            <!-- Lampiran yang sudah ada -->
+            @php
+                $existingDokumen = $existingLampiran->filter(function ($f) {
+                    return !in_array(strtolower(pathinfo($f->nama_file ?? '', PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                });
+            @endphp
+            @if($existingDokumen->isNotEmpty())
+                <div class="form-group">
+                    <label>Lampiran Saat Ini</label>
+                    <div class="file-list">
+                        @foreach($existingDokumen as $dok)
+                            <div class="file-item">
+                                <span class="file-name">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                                        <polyline points="14 2 14 8 20 8" />
+                                    </svg>
+                                    {{ $dok->judul_file ?? $dok->nama_file }}
+                                </span>
+                                <button type="button" class="file-remove" onclick="deleteLampiran('{{ route('manajemenmahasiswa.pengumuman.lampiran.remove', [$pengumuman->id, $dok->id]) }}', this, 'Hapus lampiran ini?')">
+                                    Hapus
+                                </button>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            @endif
+
+            <!-- Upload lampiran baru -->
             <div class="form-group">
-                <label>Lampiran / Dokumen (opsional)</label>
+                <label>Tambah Lampiran / Dokumen (opsional)</label>
                 <div class="file-upload-zone" id="lampiranZone">
                     <div class="upload-icon">
                         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -639,28 +726,21 @@
                 <div class="file-list" id="lampiranList"></div>
             </div>
 
-            <!-- Hidden status field -->
-            <input type="hidden" name="status_publish" id="statusPublish" value="published">
+            <!-- Pertahankan status_publish yang sudah ada -->
+            <input type="hidden" name="status_publish" value="{{ $pengumuman->status_publish }}">
 
             <!-- Actions -->
             <div class="form-actions">
-                <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="btn-cancel">Batal</a>
-                <button type="button" class="btn-draft" onclick="submitAsDraft()">
+                <a href="{{ route('manajemenmahasiswa.pengumuman.show', $pengumuman->id) }}"
+                    class="btn-cancel">Batal</a>
+                <button type="submit" class="btn-update">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;">
                         <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
                         <polyline points="17 21 17 13 7 13 7 21" />
                         <polyline points="7 3 7 8 15 8" />
                     </svg>
-                    Simpan Draft
-                </button>
-                <button type="submit" class="btn-publish">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;">
-                        <line x1="22" x2="11" y1="2" y2="13" />
-                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
-                    </svg>
-                    Publikasikan
+                    Simpan Perubahan
                 </button>
             </div>
         </div>
@@ -668,65 +748,40 @@
 
     @push('scripts')
         <script>
-            // Poster preview
-            document.getElementById('posterInput').addEventListener('change', function (e) {
-                const file = e.target.files[0];
-                const preview = document.getElementById('posterPreview');
-                const img = document.getElementById('posterImg');
+            // Hapus lampiran via fetch (menghindari nested form)
+            function deleteLampiran(url, btn, confirmMsg) {
+                if (!confirm(confirmMsg)) return;
 
-                if (file && file.type.startsWith('image/')) {
-                    const reader = new FileReader();
-                    reader.onload = function (ev) {
-                        img.src = ev.target.result;
-                        preview.style.display = 'block';
-                    };
-                    reader.readAsDataURL(file);
-                } else {
-                    preview.style.display = 'none';
-                    img.src = '';
-                }
-            });
+                btn.disabled = true;
+                btn.textContent = 'Menghapus...';
 
-            // Lampiran file list
-            document.getElementById('lampiranInput').addEventListener('change', function (e) {
-                const list = document.getElementById('lampiranList');
-                list.innerHTML = '';
-                Array.from(e.target.files).forEach((file, i) => {
-                    const item = document.createElement('div');
-                    item.className = 'file-item';
-                    item.innerHTML = `
-                        <span class="file-name">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280"
-                                stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-                                <polyline points="14 2 14 8 20 8"/>
-                            </svg>
-                            ${file.name}
-                        </span>
-                        <span style="color: #9ca3af; font-size: 0.8rem;">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                    `;
-                    list.appendChild(item);
+                fetch(url, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json',
+                    },
+                })
+                .then(response => {
+                    if (response.ok || response.status === 302 || response.status === 303) {
+                        // Reload halaman untuk menampilkan perubahan
+                        window.location.reload();
+                    } else {
+                        throw new Error('Gagal menghapus lampiran (status: ' + response.status + ')');
+                    }
+                })
+                .catch(error => {
+                    alert(error.message);
+                    btn.disabled = false;
+                    btn.textContent = 'Hapus';
                 });
-            });
-
-            // Drag-over styling
-            ['posterZone', 'lampiranZone'].forEach(id => {
-                const zone = document.getElementById(id);
-                zone.addEventListener('dragover', (e) => { e.preventDefault(); zone.classList.add('drag-over'); });
-                zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
-                zone.addEventListener('drop', () => zone.classList.remove('drag-over'));
-            });
-
-            // Submit as draft
-            function submitAsDraft() {
-                syncEditorContent();
-                document.getElementById('statusPublish').value = 'draft';
-                document.getElementById('createForm').submit();
             }
 
-            // ── Rich Text Editor ──────────────────────────────────────────
+            // Pre-fill editor dengan konten yang sudah ada
             const editor = document.getElementById('editorContent');
             const kontenHidden = document.getElementById('kontenHidden');
+
+            editor.innerHTML = kontenHidden.value;
 
             function syncEditorContent() {
                 kontenHidden.value = editor.innerHTML.replace(/<br\s*\/?>/gi, '\n').trim() === '' ? '' : editor.innerHTML;
@@ -741,7 +796,6 @@
 
             function execFormatBlock(tag) {
                 editor.focus();
-                // toggle: if already in same block, switch back to p
                 const sel = window.getSelection();
                 if (sel.rangeCount) {
                     const block = sel.getRangeAt(0).startContainer;
@@ -758,9 +812,7 @@
 
             function updateToolbarState() {
                 document.querySelectorAll('.toolbar-btn[data-cmd]').forEach(btn => {
-                    try {
-                        btn.classList.toggle('active', document.queryCommandState(btn.dataset.cmd));
-                    } catch (e) {}
+                    try { btn.classList.toggle('active', document.queryCommandState(btn.dataset.cmd)); } catch (e) { }
                 });
             }
 
@@ -849,13 +901,58 @@
                 syncEditorContent();
             }
 
-            // Sync on every input/selection change
+            // Poster preview (gambar baru)
+            document.getElementById('posterInput').addEventListener('change', function (e) {
+                const file = e.target.files[0];
+                const preview = document.getElementById('posterPreview');
+                const img = document.getElementById('posterImg');
+                if (file && file.type.startsWith('image/')) {
+                    const reader = new FileReader();
+                    reader.onload = ev => { img.src = ev.target.result; preview.style.display = 'block'; };
+                    reader.readAsDataURL(file);
+                } else {
+                    preview.style.display = 'none';
+                    img.src = '';
+                }
+            });
+
+            // Lampiran baru - tampilkan nama file
+            document.getElementById('lampiranInput').addEventListener('change', function (e) {
+                const list = document.getElementById('lampiranList');
+                list.innerHTML = '';
+                Array.from(e.target.files).forEach(file => {
+                    const item = document.createElement('div');
+                    item.className = 'file-item';
+                    item.innerHTML = `
+                            <span class="file-name">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                                    <polyline points="14 2 14 8 20 8"/>
+                                </svg>
+                                ${file.name}
+                            </span>
+                            <span style="color:#9ca3af;font-size:0.8rem;">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                        `;
+                    list.appendChild(item);
+                });
+            });
+
+            // Drag-over styling
+            ['posterZone', 'lampiranZone'].forEach(id => {
+                const zone = document.getElementById(id);
+                zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+                zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+                zone.addEventListener('drop', () => zone.classList.remove('drag-over'));
+            });
+
+            // Sync on input & toolbar state
             editor.addEventListener('input', syncEditorContent);
             editor.addEventListener('keyup', updateToolbarState);
             editor.addEventListener('mouseup', updateToolbarState);
 
-            // Sync before submit
-            document.getElementById('createForm').addEventListener('submit', function (e) {
+            // Validate before submit
+            document.getElementById('editForm').addEventListener('submit', function (e) {
                 syncEditorContent();
                 const content = kontenHidden.value.replace(/<[^>]*>/g, '').trim();
                 if (content.length < 10) {
@@ -869,7 +966,6 @@
                 document.getElementById('editorWrapper').style.boxShadow = '';
             });
 
-            // Initial state
             syncEditorContent();
             updateToolbarState();
         </script>
