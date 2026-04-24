@@ -19,8 +19,8 @@ enum RpsStatus: string
     public function label(): string
     {
         return match ($this) {
-            self::DIAJUKAN => 'Menunggu Review',
-            self::REVISI => 'Perlu Revisi',
+            self::DIAJUKAN => 'Diajukan',
+            self::REVISI => 'Revisi',
             self::DISETUJUI => 'Disetujui',
         };
     }

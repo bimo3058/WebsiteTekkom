@@ -19,15 +19,41 @@
         .animate-popup {
             animation: modalPopUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
+
+        .gpm-rps-action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-radius: 0.75rem;
+            border: 1px solid #93c5fd;
+            background: #eff6ff;
+            padding: 0.5rem 0.75rem;
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: #1d4ed8;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .gpm-rps-action-btn:hover {
+            background: #1d4ed8;
+            border-color: #1d4ed8;
+            color: #ffffff;
+        }
+
+        .gpm-rps-action-btn-lg {
+            padding: 0.625rem 1rem;
+            font-size: 0.875rem;
+        }
     </style>
 
     <x-banksoal::notification.alerts />
     <x-banksoal::ui.page-header title="Validasi RPS" subtitle="Pantau riwayat dokumen RPS yang telah direview">
         <x-slot:actions>
-            <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50" data-modal-open="modalUploadTemplate">
+            <button type="button" class="gpm-rps-action-btn gpm-rps-action-btn-lg" data-modal-open="modalUploadTemplate">
                 <i class="fas fa-file-upload"></i> Upload Template
             </button>
-            <button type="button" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700" data-modal-open="modalTambah">
+            <button type="button" class="gpm-rps-action-btn gpm-rps-action-btn-lg" data-modal-open="modalTambah">
                 <i class="fas fa-calendar-plus"></i> Buat Periode
             </button>
         </x-slot:actions>
@@ -189,7 +215,7 @@
                                     <td class="px-6 py-4 text-sm text-slate-600">{{ $rps->created_at->format('d M Y') }}</td>
                                     <td class="px-6 py-4"><span class="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 border border-amber-200">Menunggu</span></td>
                                     <td class="px-6 py-4 text-right">
-                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700">
+                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="gpm-rps-action-btn">
                                             <i class="fas fa-comment-dots"></i> Review Sekarang
                                         </a>
                                     </td>
@@ -266,9 +292,9 @@
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 text-sm text-slate-600">{{ $rps->updated_at->format('d M Y') }}</td>
-                                    <td class="px-6 py-4"><span class="inline-flex rounded-full bg-amber-50 px-2.5 py-1 text-[11px] font-semibold text-amber-700 border border-amber-200">Revisi</span></td>
+                                    <td class="px-6 py-4"><span class="inline-flex rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 border border-red-200">Revisi</span></td>
                                     <td class="px-6 py-4 text-right">
-                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700">
+                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="gpm-rps-action-btn">
                                             <i class="fas fa-edit"></i> Lihat Catatan
                                         </a>
                                     </td>
@@ -347,7 +373,7 @@
                                     <td class="px-6 py-4 text-sm text-slate-600">{{ $rps->updated_at->format('d M Y') }}</td>
                                     <td class="px-6 py-4"><span class="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 border border-emerald-200">Disetujui</span></td>
                                     <td class="px-6 py-4 text-right">
-                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700">
+                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="gpm-rps-action-btn">
                                             <i class="fas fa-eye"></i> Lihat Detail
                                         </a>
                                     </td>
