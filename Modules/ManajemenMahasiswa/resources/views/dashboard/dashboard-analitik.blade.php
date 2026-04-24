@@ -1,325 +1,409 @@
 <x-manajemenmahasiswa::layouts.admin>
 
     @push('styles')
-    <style>
-        /* Override main-wrapper to be transparent so cards sit on the gray bg */
-        .main-wrapper {
-            background: transparent !important;
-            box-shadow: none !important;
-            padding: 0 !important;
-        }
+        <style>
+            /* Override main-wrapper to be transparent so cards sit on the gray bg */
+            .main-wrapper {
+                background: transparent !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+            }
 
-        /* ── Breadcrumb ──────────────────────────────────────────────────── */
-        .breadcrumb-bar {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-        }
-        .breadcrumb-bar .bc-path {
-            font-size: 13px;
-            color: #9ca3af;
-        }
-        .breadcrumb-bar .bc-path span {
-            color: #374151;
-            font-weight: 500;
-        }
-        .breadcrumb-bar .bc-actions {
-            display: flex;
-            gap: 8px;
-        }
+            /* ── Breadcrumb ──────────────────────────────────────────────────── */
+            .breadcrumb-bar {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 20px;
+            }
 
-        /* ── Page Title ──────────────────────────────────────────────────── */
-        .page-title {
-            margin-bottom: 22px;
-        }
-        .page-title h1 {
-            font-size: 26px;
-            font-weight: 700;
-            color: #111827;
-            margin: 0 0 2px;
-            letter-spacing: -0.02em;
-        }
-        .page-title p {
-            font-size: 14px;
-            color: #6b7280;
-            margin: 0;
-        }
+            .breadcrumb-bar .bc-path {
+                font-size: 13px;
+                color: #9ca3af;
+            }
 
-        /* ── Stat Cards ──────────────────────────────────────────────────── */
-        .stat-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-            margin-bottom: 20px;
-        }
-        .stat-card {
-            background: #fff;
-            border-radius: 12px;
-            padding: 18px 20px;
-            border: 1px solid #e5e7eb;
-        }
-        .stat-card .stat-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 10px;
-        }
-        .stat-card .stat-label {
-            font-size: 13px;
-            color: #6b7280;
-            font-weight: 500;
-        }
-        .stat-card .stat-icon {
-            width: 32px;
-            height: 32px;
-            border-radius: 8px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .stat-card .stat-value {
-            font-size: 28px;
-            font-weight: 700;
-            color: #111827;
-            letter-spacing: -0.02em;
-            line-height: 1;
-            margin-bottom: 8px;
-        }
-        .stat-card .stat-trend {
-            font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        .stat-card .stat-trend.up   { color: #10b981; }
-        .stat-card .stat-trend.down { color: #ef4444; }
-        .stat-card .stat-trend .trend-label { color: #9ca3af; }
+            .breadcrumb-bar .bc-path span {
+                color: #374151;
+                font-weight: 500;
+            }
 
-        /* ── Chart Row ───────────────────────────────────────────────────── */
-        .chart-row {
-            display: grid;
-            grid-template-columns: 1fr 340px;
-            gap: 16px;
-            margin-bottom: 20px;
-        }
+            .breadcrumb-bar .bc-actions {
+                display: flex;
+                gap: 8px;
+            }
 
-        /* ── Donut chart container — fixed size to prevent resize on hover ── */
-        .donut-canvas-wrapper {
-            position: relative;
-            width: 200px;
-            height: 200px;
-            margin: 0 auto;
-        }
+            /* ── Page Title ──────────────────────────────────────────────────── */
+            .page-title {
+                margin-bottom: 22px;
+            }
 
-        /* ── Responsive breakpoints ─────────────────────────────────────── */
-        @media (max-width: 1024px) {
+            .page-title h1 {
+                font-size: 26px;
+                font-weight: 700;
+                color: #111827;
+                margin: 0 0 2px;
+                letter-spacing: -0.02em;
+            }
+
+            .page-title p {
+                font-size: 14px;
+                color: #6b7280;
+                margin: 0;
+            }
+
+            /* ── Stat Cards ──────────────────────────────────────────────────── */
+            .stat-grid {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 16px;
+                margin-bottom: 20px;
+            }
+
+            .stat-card {
+                background: #fff;
+                border-radius: 12px;
+                padding: 18px 20px;
+                border: 1px solid #e5e7eb;
+            }
+
+            .stat-card .stat-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 10px;
+            }
+
+            .stat-card .stat-label {
+                font-size: 13px;
+                color: #6b7280;
+                font-weight: 500;
+            }
+
+            .stat-card .stat-icon {
+                width: 32px;
+                height: 32px;
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .stat-card .stat-value {
+                font-size: 28px;
+                font-weight: 700;
+                color: #111827;
+                letter-spacing: -0.02em;
+                line-height: 1;
+                margin-bottom: 8px;
+            }
+
+            .stat-card .stat-trend {
+                font-size: 12px;
+                display: flex;
+                align-items: center;
+                gap: 4px;
+            }
+
+            .stat-card .stat-trend.up {
+                color: #10b981;
+            }
+
+            .stat-card .stat-trend.down {
+                color: #ef4444;
+            }
+
+            .stat-card .stat-trend .trend-label {
+                color: #9ca3af;
+            }
+
+            /* ── Chart Row ───────────────────────────────────────────────────── */
             .chart-row {
-                grid-template-columns: 1fr;
+                display: grid;
+                grid-template-columns: 1fr 340px;
+                gap: 16px;
+                margin-bottom: 20px;
             }
-        }
-        @media (max-width: 768px) {
-            .stat-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-        }
-        @media (max-width: 480px) {
-            .stat-grid {
-                grid-template-columns: 1fr;
-            }
+
+            /* ── Donut chart container — fixed size to prevent resize on hover ── */
             .donut-canvas-wrapper {
-                width: 160px;
-                height: 160px;
+                position: relative;
+                width: 200px;
+                height: 200px;
+                margin: 0 auto;
             }
-        }
-        .chart-card {
-            background: #fff;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
-            padding: 20px;
-        }
-        .chart-card .chart-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-        }
-        .chart-card .chart-title {
-            font-size: 15px;
-            font-weight: 600;
-            color: #111827;
-        }
 
-        /* donut legend */
-        .donut-legend {
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            margin-top: 16px;
-        }
-        .donut-legend-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            font-size: 13px;
-            color: #374151;
-        }
-        .donut-legend-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 8px;
-            flex-shrink: 0;
-        }
-        .donut-total {
-            text-align: center;
-            margin-top: 8px;
-        }
-        .donut-total .total-num {
-            font-size: 26px;
-            font-weight: 700;
-            color: #111827;
-            letter-spacing: -0.02em;
-            display: block;
-        }
-        .donut-total .total-label {
-            font-size: 12px;
-            color: #9ca3af;
-        }
+            /* ── Responsive breakpoints ─────────────────────────────────────── */
+            @media (max-width: 1024px) {
+                .chart-row {
+                    grid-template-columns: 1fr;
+                }
+            }
 
-        /* ── Table Card ──────────────────────────────────────────────────── */
-        .table-card {
-            background: #fff;
-            border-radius: 12px;
-            border: 1px solid #e5e7eb;
-            padding: 20px;
-        }
-        .table-card .table-header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 16px;
-            flex-wrap: wrap;
-            gap: 10px;
-        }
-        .table-card .table-title {
-            font-size: 15px;
-            font-weight: 600;
-            color: #111827;
-        }
-        .table-card .table-actions {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-        .search-input {
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 7px 12px 7px 32px;
-            font-size: 13px;
-            color: #374151;
-            outline: none;
-            width: 200px;
-            background: #f9fafb url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center;
-        }
-        .search-input:focus { border-color: #4f46e5; }
-        .btn-outline-sm {
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 7px 14px;
-            font-size: 13px;
-            color: #374151;
-            background: #fff;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            text-decoration: none;
-            transition: border-color 0.2s;
-        }
-        .btn-outline-sm:hover { border-color: #9ca3af; }
-        .alumni-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 13px;
-        }
-        .alumni-table th {
-            text-align: left;
-            font-weight: 600;
-            color: #6b7280;
-            padding: 10px 14px;
-            border-bottom: 1px solid #f3f4f6;
-            background: #f9fafb;
-            font-size: 12px;
-            text-transform: uppercase;
-            letter-spacing: 0.04em;
-        }
-        .alumni-table th:first-child { border-radius: 8px 0 0 0; }
-        .alumni-table th:last-child  { border-radius: 0 8px 0 0; }
-        .alumni-table td {
-            padding: 12px 14px;
-            border-bottom: 1px solid #f3f4f6;
-            color: #374151;
-            vertical-align: middle;
-        }
-        .alumni-table tr:last-child td { border-bottom: none; }
-        .alumni-table tr:hover td { background: #fafafa; }
-        .alumni-avatar {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            background: #e0e7ff;
-            color: #4f46e5;
-            font-weight: 700;
-            font-size: 13px;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            flex-shrink: 0;
-        }
-        .alumni-name { font-weight: 600; color: #111827; font-size: 13px; }
-        .alumni-nim  { font-size: 11px; color: #9ca3af; }
-        .level-badge {
-            display: inline-block;
-            padding: 3px 10px;
-            border-radius: 20px;
-            font-size: 11px;
-            font-weight: 600;
-        }
-        .level-full-time  { background: #dbeafe; color: #1d4ed8; }
-        .level-internship { background: #fef3c7; color: #92400e; }
-        .level-part-time  { background: #d1fae5; color: #065f46; }
-        .level-freelance  { background: #ede9fe; color: #5b21b6; }
+            @media (max-width: 768px) {
+                .stat-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
 
-    
+            @media (max-width: 480px) {
+                .stat-grid {
+                    grid-template-columns: 1fr;
+                }
 
-        /* ── Period select ───────────────────────────────────────────────── */
-        .period-select {
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            padding: 5px 10px;
-            font-size: 12px;
-            color: #374151;
-            background: #fff;
-            cursor: pointer;
-        }
+                .donut-canvas-wrapper {
+                    width: 160px;
+                    height: 160px;
+                }
+            }
 
-        .info-icon-btn {
-            width: 24px;
-            height: 24px;
-            border-radius: 50%;
-            border: 1px solid #e5e7eb;
-            background: #fff;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            color: #9ca3af;
-            font-size: 11px;
-            font-weight: 700;
-        }
-    </style>
+            .chart-card {
+                background: #fff;
+                border-radius: 12px;
+                border: 1px solid #e5e7eb;
+                padding: 20px;
+            }
+
+            .chart-card .chart-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 16px;
+            }
+
+            .chart-card .chart-title {
+                font-size: 15px;
+                font-weight: 600;
+                color: #111827;
+            }
+
+            /* donut legend */
+            .donut-legend {
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                margin-top: 16px;
+            }
+
+            .donut-legend-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                font-size: 13px;
+                color: #374151;
+            }
+
+            .donut-legend-dot {
+                width: 10px;
+                height: 10px;
+                border-radius: 50%;
+                display: inline-block;
+                margin-right: 8px;
+                flex-shrink: 0;
+            }
+
+            .donut-total {
+                text-align: center;
+                margin-top: 8px;
+            }
+
+            .donut-total .total-num {
+                font-size: 26px;
+                font-weight: 700;
+                color: #111827;
+                letter-spacing: -0.02em;
+                display: block;
+            }
+
+            .donut-total .total-label {
+                font-size: 12px;
+                color: #9ca3af;
+            }
+
+            /* ── Table Card ──────────────────────────────────────────────────── */
+            .table-card {
+                background: #fff;
+                border-radius: 12px;
+                border: 1px solid #e5e7eb;
+                padding: 20px;
+            }
+
+            .table-card .table-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                margin-bottom: 16px;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+
+            .table-card .table-title {
+                font-size: 15px;
+                font-weight: 600;
+                color: #111827;
+            }
+
+            .table-card .table-actions {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .search-input {
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                padding: 7px 12px 7px 32px;
+                font-size: 13px;
+                color: #374151;
+                outline: none;
+                width: 200px;
+                background: #f9fafb url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center;
+            }
+
+            .search-input:focus {
+                border-color: #4f46e5;
+            }
+
+            .btn-outline-sm {
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                padding: 7px 14px;
+                font-size: 13px;
+                color: #374151;
+                background: #fff;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                text-decoration: none;
+                transition: border-color 0.2s;
+            }
+
+            .btn-outline-sm:hover {
+                border-color: #9ca3af;
+            }
+
+            .alumni-table {
+                width: 100%;
+                border-collapse: collapse;
+                font-size: 13px;
+            }
+
+            .alumni-table th {
+                text-align: left;
+                font-weight: 600;
+                color: #6b7280;
+                padding: 10px 14px;
+                border-bottom: 1px solid #f3f4f6;
+                background: #f9fafb;
+                font-size: 12px;
+                text-transform: uppercase;
+                letter-spacing: 0.04em;
+            }
+
+            .alumni-table th:first-child {
+                border-radius: 8px 0 0 0;
+            }
+
+            .alumni-table th:last-child {
+                border-radius: 0 8px 0 0;
+            }
+
+            .alumni-table td {
+                padding: 12px 14px;
+                border-bottom: 1px solid #f3f4f6;
+                color: #374151;
+                vertical-align: middle;
+            }
+
+            .alumni-table tr:last-child td {
+                border-bottom: none;
+            }
+
+            .alumni-table tr:hover td {
+                background: #fafafa;
+            }
+
+            .alumni-avatar {
+                width: 34px;
+                height: 34px;
+                border-radius: 50%;
+                background: #e0e7ff;
+                color: #4f46e5;
+                font-weight: 700;
+                font-size: 13px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                flex-shrink: 0;
+            }
+
+            .alumni-name {
+                font-weight: 600;
+                color: #111827;
+                font-size: 13px;
+            }
+
+            .alumni-nim {
+                font-size: 11px;
+                color: #9ca3af;
+            }
+
+            .level-badge {
+                display: inline-block;
+                padding: 3px 10px;
+                border-radius: 20px;
+                font-size: 11px;
+                font-weight: 600;
+            }
+
+            .level-full-time {
+                background: #dbeafe;
+                color: #1d4ed8;
+            }
+
+            .level-internship {
+                background: #fef3c7;
+                color: #92400e;
+            }
+
+            .level-part-time {
+                background: #d1fae5;
+                color: #065f46;
+            }
+
+            .level-freelance {
+                background: #ede9fe;
+                color: #5b21b6;
+            }
+
+
+
+            /* ── Period select ───────────────────────────────────────────────── */
+            .period-select {
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                padding: 5px 10px;
+                font-size: 12px;
+                color: #374151;
+                background: #fff;
+                cursor: pointer;
+            }
+
+            .info-icon-btn {
+                width: 24px;
+                height: 24px;
+                border-radius: 50%;
+                border: 1px solid #e5e7eb;
+                background: #fff;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                cursor: pointer;
+                color: #9ca3af;
+                font-size: 11px;
+                font-weight: 700;
+            }
+        </style>
     @endpush
 
     {{-- ── Page Title ─────────────────────────────────────────────────── --}}
@@ -338,10 +422,10 @@
                 <div class="stat-icon" style="background:#ede9fe;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                        <circle cx="9" cy="7" r="4"/>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                        <circle cx="9" cy="7" r="4" />
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
                     </svg>
                 </div>
             </div>
@@ -349,7 +433,7 @@
             <div class="stat-trend up">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                     stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="18 15 12 9 6 15"/>
+                    <polyline points="18 15 12 9 6 15" />
                 </svg>
                 <span>+8.2%</span>
                 <span class="trend-label">vs last year</span>
@@ -363,20 +447,20 @@
                 <div class="stat-icon" style="background:#fef3c7;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2"/>
-                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/>
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
                     </svg>
                 </div>
             </div>
             @php
                 $bekerja = ($snapshot['alumni_per_status']['bekerja'] ?? 0)
-                         + ($snapshot['alumni_per_status']['wirausaha'] ?? 0);
+                    + ($snapshot['alumni_per_status']['wirausaha'] ?? 0);
             @endphp
             <div class="stat-value">{{ number_format($bekerja) }}</div>
             <div class="stat-trend down">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                     stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9"/>
+                    <polyline points="6 9 12 15 18 9" />
                 </svg>
                 <span>-8.5%</span>
                 <span class="trend-label">vs last year</span>
@@ -390,10 +474,10 @@
                 <div class="stat-icon" style="background:#d1fae5;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
-                        <rect width="18" height="18" x="3" y="4" rx="2" ry="2"/>
-                        <line x1="16" x2="16" y1="2" y2="6"/>
-                        <line x1="8" x2="8" y1="2" y2="6"/>
-                        <line x1="3" x2="21" y1="10" y2="10"/>
+                        <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
+                        <line x1="16" x2="16" y1="2" y2="6" />
+                        <line x1="8" x2="8" y1="2" y2="6" />
+                        <line x1="3" x2="21" y1="10" y2="10" />
                     </svg>
                 </div>
             </div>
@@ -401,7 +485,7 @@
             <div class="stat-trend up">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                     stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="18 15 12 9 6 15"/>
+                    <polyline points="18 15 12 9 6 15" />
                 </svg>
                 <span>+4.5%</span>
                 <span class="trend-label">vs last year</span>
@@ -415,8 +499,8 @@
                 <div class="stat-icon" style="background:#fee2e2;">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/>
-                        <circle cx="12" cy="12" r="3"/>
+                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                        <circle cx="12" cy="12" r="3" />
                     </svg>
                 </div>
             </div>
@@ -424,7 +508,7 @@
             <div class="stat-trend up">
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
                     stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="18 15 12 9 6 15"/>
+                    <polyline points="18 15 12 9 6 15" />
                 </svg>
                 <span>+3.9%</span>
                 <span class="trend-label">vs last year</span>
@@ -455,9 +539,11 @@
             </div>
             <div class="donut-canvas-wrapper">
                 <canvas id="statusChart"></canvas>
-                <div class="donut-total" style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;">
-                    <span class="total-num">{{ number_format($statusMahasiswa['aktif'] + $statusMahasiswa['cuti'] + $statusMahasiswa['do'] + $statusMahasiswa['lulus']) }}</span>
-                    <span class="total-label" style="font-size:11px;color:#9ca3af;display:block;">Total Employees</span>
+                <div class="donut-total"
+                    style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;">
+                    <span
+                        class="total-num">{{ number_format($statusMahasiswa['aktif'] + $statusMahasiswa['cuti'] + $statusMahasiswa['do'] + $statusMahasiswa['lulus']) }}</span>
+                    <span class="total-label" style="font-size:11px;color:#9ca3af;display:block;">Total Mahasiswa</span>
                 </div>
             </div>
             <div class="donut-legend">
@@ -499,7 +585,8 @@
         <div class="chart-card">
             <div class="chart-header">
                 <span class="chart-title">Serapan Kerja per Angkatan (%)</span>
-                <button class="info-icon-btn" title="Persentase alumni yang sudah bekerja/wirausaha per angkatan">i</button>
+                <button class="info-icon-btn"
+                    title="Persentase alumni yang sudah bekerja/wirausaha per angkatan">i</button>
             </div>
             <canvas id="serapanChart" height="100"></canvas>
         </div>
@@ -528,9 +615,9 @@
                 <a href="{{ route('manajemenmahasiswa.direktori.alumni.index') }}" class="btn-outline-sm">
                     <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-                        <polyline points="15 3 21 3 21 9"/>
-                        <line x1="10" y1="14" x2="21" y2="3"/>
+                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                        <polyline points="15 3 21 3 21 9" />
+                        <line x1="10" y1="14" x2="21" y2="3" />
                     </svg>
                     Lihat Semua
                 </a>
@@ -552,249 +639,149 @@
             </thead>
             <tbody>
                 @forelse($serapanAlumni as $i => $alumni)
-                @php
-                    $name    = $alumni->user->name ?? 'Unknown';
-                    $initials = strtoupper(substr($name, 0, 2));
-                    $status  = $alumni->status_karir ?? 'belum_terdata';
-                    $statusLabels = [
-                        'bekerja'       => ['label' => 'Bekerja',       'class' => 'level-full-time'],
-                        'wirausaha'     => ['label' => 'Wirausaha',     'class' => 'level-freelance'],
-                        'studi_lanjut'  => ['label' => 'Studi Lanjut',  'class' => 'level-internship'],
-                        'belum_bekerja' => ['label' => 'Belum Bekerja', 'class' => 'level-part-time'],
-                    ];
-                    $level = $statusLabels[$status] ?? ['label' => 'Belum Terdata', 'class' => 'level-part-time'];
-                @endphp
-                <tr>
-                    <td>
-                        <div class="alumni-avatar">{{ $initials }}</div>
-                    </td>
-                    <td>
-                        <div class="alumni-name">{{ $name }}</div>
-                        <div class="alumni-nim">{{ $alumni->nim ?? ($alumni->user->email ?? '-') }}</div>
-                    </td>
-                    <td>{{ $alumni->perusahaan ?? '-' }}</td>
-                    <td>{{ $alumni->jabatan ?? '-' }}</td>
-                    <td>{{ $alumni->angkatan ?? '-' }}</td>
-                    <td>{{ $alumni->tahun_lulus ?? '-' }}</td>
-                    <td>
-                        <span class="level-badge {{ $level['class'] }}">{{ $level['label'] }}</span>
-                    </td>
-                    <td>
-                        <a href="{{ route('manajemenmahasiswa.direktori.alumni.show', $alumni->id) }}" class="btn-outline-sm" style="padding:4px 8px; text-decoration: none;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                <circle cx="12" cy="12" r="3"></circle>
-                            </svg>
-                        </a>
-                    </td>
-                </tr>
+                    @php
+                        $name = $alumni->user->name ?? 'Unknown';
+                        $initials = strtoupper(substr($name, 0, 2));
+                        $status = $alumni->status_karir ?? 'belum_terdata';
+                        $statusLabels = [
+                            'bekerja' => ['label' => 'Bekerja', 'class' => 'level-full-time'],
+                            'wirausaha' => ['label' => 'Wirausaha', 'class' => 'level-freelance'],
+                            'studi_lanjut' => ['label' => 'Studi Lanjut', 'class' => 'level-internship'],
+                            'belum_bekerja' => ['label' => 'Belum Bekerja', 'class' => 'level-part-time'],
+                        ];
+                        $level = $statusLabels[$status] ?? ['label' => 'Belum Terdata', 'class' => 'level-part-time'];
+                    @endphp
+                    <tr>
+                        <td>
+                            <div class="alumni-avatar">{{ $initials }}</div>
+                        </td>
+                        <td>
+                            <div class="alumni-name">{{ $name }}</div>
+                            <div class="alumni-nim">{{ $alumni->nim ?? ($alumni->user->email ?? '-') }}</div>
+                        </td>
+                        <td>{{ $alumni->perusahaan ?? '-' }}</td>
+                        <td>{{ $alumni->jabatan ?? '-' }}</td>
+                        <td>{{ $alumni->angkatan ?? '-' }}</td>
+                        <td>{{ $alumni->tahun_lulus ?? '-' }}</td>
+                        <td>
+                            <span class="level-badge {{ $level['class'] }}">{{ $level['label'] }}</span>
+                        </td>
+                        <td>
+                            <a href="{{ route('manajemenmahasiswa.direktori.alumni.show', $alumni->id) }}"
+                                class="btn-outline-sm" style="padding:4px 8px; text-decoration: none;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                </svg>
+                            </a>
+                        </td>
+                    </tr>
                 @empty
-                <tr>
-                    <td colspan="8" style="text-align:center;padding:32px;color:#9ca3af;">
-                        Belum ada data alumni.
-                    </td>
-                </tr>
+                    <tr>
+                        <td colspan="8" style="text-align:center;padding:32px;color:#9ca3af;">
+                            Belum ada data alumni.
+                        </td>
+                    </tr>
                 @endforelse
             </tbody>
         </table>
     </div>
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script>
-        // ── Data dari server ──────────────────────────────────────────────
-        const angkatanLabels = @json(array_keys($snapshot['mahasiswa_per_angkatan']->toArray()));
-        const angkatanData   = @json(array_values($snapshot['mahasiswa_per_angkatan']->toArray()));
-        const kegiatanLabels = @json(array_keys($snapshot['kegiatan_per_bulan']->toArray()));
-        const kegiatanData   = @json(array_values($snapshot['kegiatan_per_bulan']->toArray()));
+        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+        <script>
+            // ── Data dari server ──────────────────────────────────────────────
+            const angkatanLabels = @json(array_keys($snapshot['mahasiswa_per_angkatan']->toArray()));
+            const angkatanData = @json(array_values($snapshot['mahasiswa_per_angkatan']->toArray()));
+            const kegiatanLabels = @json(array_keys($snapshot['kegiatan_per_bulan']->toArray()));
+            const kegiatanData = @json(array_values($snapshot['kegiatan_per_bulan']->toArray()));
 
-        // ── Tren Chart (line) ─────────────────────────────────────────────
-        const trenCtx = document.getElementById('trenChart').getContext('2d');
-        const trenChart = new Chart(trenCtx, {
-            type: 'line',
-            data: {
-                labels: angkatanLabels.length ? angkatanLabels : ['2019','2020','2021','2022','2023','2024'],
-                datasets: [
-                    {
-                        label: 'Mahasiswa',
-                        data: angkatanData.length ? angkatanData : [120,180,200,230,260,210],
-                        borderColor: '#4f46e5',
-                        backgroundColor: 'rgba(79,70,229,0.08)',
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#4f46e5',
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        borderWidth: 2,
-                    },
-                    {
-                        label: 'Kegiatan',
-                        data: kegiatanData.length ? kegiatanData : [60,90,85,110,100,95],
-                        borderColor: '#a5b4fc',
-                        backgroundColor: 'transparent',
-                        tension: 0.4,
-                        fill: false,
-                        borderDash: [5, 4],
-                        pointRadius: 3,
-                        pointHoverRadius: 5,
-                        borderWidth: 2,
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        mode: 'index',
-                        intersect: false,
-                        backgroundColor: '#1f2937',
-                        titleColor: '#f9fafb',
-                        bodyColor: '#d1d5db',
-                        padding: 10,
-                        cornerRadius: 8,
-                    }
-                },
-                scales: {
-                    x: {
-                        grid: { display: false },
-                        ticks: { color: '#9ca3af', font: { size: 11 } }
-                    },
-                    y: {
-                        grid: { color: '#f3f4f6' },
-                        ticks: { color: '#9ca3af', font: { size: 11 } }
-                    }
-                }
-            }
-        });
-
-        function updateChart(period) {
-            if (period === 'yearly') {
-                trenChart.data.labels = angkatanLabels.length ? angkatanLabels : ['2019','2020','2021','2022','2023','2024'];
-                trenChart.data.datasets[0].data = angkatanData.length ? angkatanData : [120,180,200,230,260,210];
-            } else {
-                trenChart.data.labels = kegiatanLabels.length ? kegiatanLabels : ['Jan','Feb','Mar','Apr','May','Jun'];
-                trenChart.data.datasets[0].data = kegiatanData.length ? kegiatanData : [60,90,85,110,100,95];
-            }
-            trenChart.update();
-        }
-
-        // ── Status Donut Chart ────────────────────────────────────────────
-        const statusCtx = document.getElementById('statusChart').getContext('2d');
-        new Chart(statusCtx, {
-            type: 'doughnut',
-            data: {
-                labels: ['Aktif', 'Cuti', 'DO', 'Lulus'],
-                datasets: [{
-                    data: [
-                        {{ $statusMahasiswa['aktif'] }},
-                        {{ $statusMahasiswa['cuti'] }},
-                        {{ $statusMahasiswa['do'] }},
-                        {{ $statusMahasiswa['lulus'] }},
-                    ],
-                    backgroundColor: ['#4f46e5', '#f59e0b', '#ef4444', '#10b981'],
-                    borderWidth: 0,
-                    hoverOffset: 0,
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '68%',
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        backgroundColor: '#1f2937',
-                        titleColor: '#f9fafb',
-                        bodyColor: '#d1d5db',
-                        padding: 10,
-                        cornerRadius: 8,
-                    }
-                },
-                hover: {
-                    mode: 'nearest',
-                    animationDuration: 0
-                },
-                animation: {
-                    duration: 800
-                },
-                onResize: function(chart, size) {
-                    // Prevent chart from shrinking below minimum size
-                    chart.canvas.parentNode.style.minWidth = '160px';
-                    chart.canvas.parentNode.style.minHeight = '160px';
-                }
-            }
-        });
-
-        // ── Live search tabel ─────────────────────────────────────────────
-        function filterTable() {
-            const q   = document.getElementById('alumniSearch').value.toLowerCase();
-            const rows = document.querySelectorAll('#alumniTable tbody tr');
-            rows.forEach(row => {
-                row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
-            });
-        }
-
-        // ── Serapan Kerja per Angkatan (Bar Chart) ───────────────────────
-        const serapanLabels = @json(array_keys($serapanPerAngkatan));
-        const serapanData   = @json(array_values($serapanPerAngkatan));
-
-        if (document.getElementById('serapanChart')) {
-            new Chart(document.getElementById('serapanChart').getContext('2d'), {
-                type: 'bar',
+            // ── Tren Chart (line) ─────────────────────────────────────────────
+            const trenCtx = document.getElementById('trenChart').getContext('2d');
+            const trenChart = new Chart(trenCtx, {
+                type: 'line',
                 data: {
-                    labels: serapanLabels.length ? serapanLabels : ['2020', '2021', '2022', '2023'],
-                    datasets: [{
-                        label: 'Serapan (%)',
-                        data: serapanData.length ? serapanData : [0, 0, 0, 0],
-                        backgroundColor: serapanData.map(v => v >= 75 ? '#10b981' : v >= 50 ? '#f59e0b' : '#ef4444'),
-                        borderRadius: 6,
-                        barPercentage: 0.6,
-                    }]
+                    labels: angkatanLabels.length ? angkatanLabels : ['2019', '2020', '2021', '2022', '2023', '2024'],
+                    datasets: [
+                        {
+                            label: 'Mahasiswa',
+                            data: angkatanData.length ? angkatanData : [120, 180, 200, 230, 260, 210],
+                            borderColor: '#4f46e5',
+                            backgroundColor: 'rgba(79,70,229,0.08)',
+                            tension: 0.4,
+                            fill: true,
+                            pointBackgroundColor: '#4f46e5',
+                            pointRadius: 4,
+                            pointHoverRadius: 6,
+                            borderWidth: 2,
+                        },
+                        {
+                            label: 'Kegiatan',
+                            data: kegiatanData.length ? kegiatanData : [60, 90, 85, 110, 100, 95],
+                            borderColor: '#a5b4fc',
+                            backgroundColor: 'transparent',
+                            tension: 0.4,
+                            fill: false,
+                            borderDash: [5, 4],
+                            pointRadius: 3,
+                            pointHoverRadius: 5,
+                            borderWidth: 2,
+                        }
+                    ]
                 },
                 options: {
                     responsive: true,
                     plugins: {
                         legend: { display: false },
                         tooltip: {
+                            mode: 'index',
+                            intersect: false,
                             backgroundColor: '#1f2937',
                             titleColor: '#f9fafb',
                             bodyColor: '#d1d5db',
                             padding: 10,
                             cornerRadius: 8,
-                            callbacks: {
-                                label: ctx => ctx.parsed.y + '%'
-                            }
                         }
                     },
                     scales: {
-                        x: { grid: { display: false }, ticks: { color: '#9ca3af', font: { size: 11 } } },
+                        x: {
+                            grid: { display: false },
+                            ticks: { color: '#9ca3af', font: { size: 11 } }
+                        },
                         y: {
                             grid: { color: '#f3f4f6' },
-                            ticks: { color: '#9ca3af', font: { size: 11 }, callback: v => v + '%' },
-                            max: 100,
-                            beginAtZero: true
+                            ticks: { color: '#9ca3af', font: { size: 11 } }
                         }
                     }
                 }
             });
-        }
 
-        // ── Distribusi Industri (Doughnut Chart) ─────────────────────────
-        const industriLabels = @json(array_keys($distribusiIndustri));
-        const industriData   = @json(array_values($distribusiIndustri));
-        const industriColors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316', '#14b8a6', '#6366f1', '#a855f7'];
-        const industriLabelMap = @json(\Modules\ManajemenMahasiswa\Models\Alumni::BIDANG_INDUSTRI_LIST);
+            function updateChart(period) {
+                if (period === 'yearly') {
+                    trenChart.data.labels = angkatanLabels.length ? angkatanLabels : ['2019', '2020', '2021', '2022', '2023', '2024'];
+                    trenChart.data.datasets[0].data = angkatanData.length ? angkatanData : [120, 180, 200, 230, 260, 210];
+                } else {
+                    trenChart.data.labels = kegiatanLabels.length ? kegiatanLabels : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+                    trenChart.data.datasets[0].data = kegiatanData.length ? kegiatanData : [60, 90, 85, 110, 100, 95];
+                }
+                trenChart.update();
+            }
 
-        if (document.getElementById('industriChart') && industriData.length) {
-            new Chart(document.getElementById('industriChart').getContext('2d'), {
+            // ── Status Donut Chart ────────────────────────────────────────────
+            const statusCtx = document.getElementById('statusChart').getContext('2d');
+            new Chart(statusCtx, {
                 type: 'doughnut',
                 data: {
-                    labels: industriLabels.map(k => industriLabelMap[k] || k),
+                    labels: ['Aktif', 'Cuti', 'DO', 'Lulus'],
                     datasets: [{
-                        data: industriData,
-                        backgroundColor: industriColors.slice(0, industriData.length),
+                        data: [
+                            {{ $statusMahasiswa['aktif'] }},
+                            {{ $statusMahasiswa['cuti'] }},
+                            {{ $statusMahasiswa['do'] }},
+                            {{ $statusMahasiswa['lulus'] }},
+                        ],
+                        backgroundColor: ['#4f46e5', '#f59e0b', '#ef4444', '#10b981'],
                         borderWidth: 0,
                         hoverOffset: 0,
                     }]
@@ -813,28 +800,129 @@
                             cornerRadius: 8,
                         }
                     },
-                    animation: { duration: 800 }
+                    hover: {
+                        mode: 'nearest',
+                        animationDuration: 0
+                    },
+                    animation: {
+                        duration: 800
+                    },
+                    onResize: function (chart, size) {
+                        // Prevent chart from shrinking below minimum size
+                        chart.canvas.parentNode.style.minWidth = '160px';
+                        chart.canvas.parentNode.style.minHeight = '160px';
+                    }
                 }
             });
 
-            // Build legend
-            const legendEl = document.getElementById('industriLegend');
-            if (legendEl) {
-                industriLabels.forEach((key, i) => {
-                    const label = industriLabelMap[key] || key;
-                    const item = document.createElement('div');
-                    item.className = 'donut-legend-item';
-                    item.innerHTML = `
-                        <div style="display:flex;align-items:center;">
-                            <span class="donut-legend-dot" style="background:${industriColors[i % industriColors.length]};"></span>
-                            ${label}
-                        </div>
-                        <span style="font-weight:600;">${industriData[i]}</span>`;
-                    legendEl.appendChild(item);
+            // ── Live search tabel ─────────────────────────────────────────────
+            function filterTable() {
+                const q = document.getElementById('alumniSearch').value.toLowerCase();
+                const rows = document.querySelectorAll('#alumniTable tbody tr');
+                rows.forEach(row => {
+                    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
                 });
             }
-        }
-    </script>
+
+            // ── Serapan Kerja per Angkatan (Bar Chart) ───────────────────────
+            const serapanLabels = @json(array_keys($serapanPerAngkatan));
+            const serapanData = @json(array_values($serapanPerAngkatan));
+
+            if (document.getElementById('serapanChart')) {
+                new Chart(document.getElementById('serapanChart').getContext('2d'), {
+                    type: 'bar',
+                    data: {
+                        labels: serapanLabels.length ? serapanLabels : ['2020', '2021', '2022', '2023'],
+                        datasets: [{
+                            label: 'Serapan (%)',
+                            data: serapanData.length ? serapanData : [0, 0, 0, 0],
+                            backgroundColor: serapanData.map(v => v >= 75 ? '#10b981' : v >= 50 ? '#f59e0b' : '#ef4444'),
+                            borderRadius: 6,
+                            barPercentage: 0.6,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#1f2937',
+                                titleColor: '#f9fafb',
+                                bodyColor: '#d1d5db',
+                                padding: 10,
+                                cornerRadius: 8,
+                                callbacks: {
+                                    label: ctx => ctx.parsed.y + '%'
+                                }
+                            }
+                        },
+                        scales: {
+                            x: { grid: { display: false }, ticks: { color: '#9ca3af', font: { size: 11 } } },
+                            y: {
+                                grid: { color: '#f3f4f6' },
+                                ticks: { color: '#9ca3af', font: { size: 11 }, callback: v => v + '%' },
+                                max: 100,
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+
+            // ── Distribusi Industri (Doughnut Chart) ─────────────────────────
+            const industriLabels = @json(array_keys($distribusiIndustri));
+            const industriData = @json(array_values($distribusiIndustri));
+            const industriColors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316', '#14b8a6', '#6366f1', '#a855f7'];
+            const industriLabelMap = @json(\Modules\ManajemenMahasiswa\Models\Alumni::BIDANG_INDUSTRI_LIST);
+
+            if (document.getElementById('industriChart') && industriData.length) {
+                new Chart(document.getElementById('industriChart').getContext('2d'), {
+                    type: 'doughnut',
+                    data: {
+                        labels: industriLabels.map(k => industriLabelMap[k] || k),
+                        datasets: [{
+                            data: industriData,
+                            backgroundColor: industriColors.slice(0, industriData.length),
+                            borderWidth: 0,
+                            hoverOffset: 0,
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        cutout: '68%',
+                        plugins: {
+                            legend: { display: false },
+                            tooltip: {
+                                backgroundColor: '#1f2937',
+                                titleColor: '#f9fafb',
+                                bodyColor: '#d1d5db',
+                                padding: 10,
+                                cornerRadius: 8,
+                            }
+                        },
+                        animation: { duration: 800 }
+                    }
+                });
+
+                // Build legend
+                const legendEl = document.getElementById('industriLegend');
+                if (legendEl) {
+                    industriLabels.forEach((key, i) => {
+                        const label = industriLabelMap[key] || key;
+                        const item = document.createElement('div');
+                        item.className = 'donut-legend-item';
+                        item.innerHTML = `
+                            <div style="display:flex;align-items:center;">
+                                <span class="donut-legend-dot" style="background:${industriColors[i % industriColors.length]};"></span>
+                                ${label}
+                            </div>
+                            <span style="font-weight:600;">${industriData[i]}</span>`;
+                        legendEl.appendChild(item);
+                    });
+                }
+            }
+        </script>
     @endpush
 
 </x-manajemenmahasiswa::layouts.admin>

@@ -381,8 +381,7 @@
 
     <!-- Forum Posts -->
     @forelse($threads as $thread)
-        <a href="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}" class="text-decoration-none">
-            <div class="forum-card" data-thread-id="{{ $thread->id }}">
+        <div class="forum-card" data-thread-id="{{ $thread->id }}" style="cursor: pointer;">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div class="d-flex align-items-center gap-3">
                         <div class="avatar-placeholder">
@@ -403,9 +402,8 @@
                             </div>
                         </div>
                     </div>
-                    <div class="dropdown" onclick="event.preventDefault(); event.stopPropagation();">
-                        <span class="text-muted fw-bold" style="cursor: pointer; font-size: 20px; line-height: 1;"
-                            data-bs-toggle="dropdown">⋯</span>
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-link p-0 text-muted fw-bold text-decoration-none shadow-none" style="font-size: 20px; line-height: 1;" data-bs-toggle="dropdown">⋯</button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 8px;">
                             {{-- Edit (owner + admin) --}}
                             @if($thread->user_id === $user->id || $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
@@ -486,8 +484,7 @@
                     $threadVoteKey = \Modules\ManajemenMahasiswa\Models\Thread::class . '_' . $thread->id;
                     $threadUserVote = $userVotes[$threadVoteKey] ?? null;
                 @endphp
-                <div class="post-actions d-flex align-items-center"
-                    onclick="event.preventDefault(); event.stopPropagation();">
+                <div class="post-actions d-flex align-items-center">
                     <button
                         class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === 1 ? 'vote-active-up' : '' }}"
                         data-thread-id="{{ $thread->id }}" data-value="1">
@@ -517,7 +514,6 @@
                     </button>
                 </div>
             </div>
-        </a>
     @empty
         <div class="empty-state">
             <div class="icon">💬</div>
@@ -680,6 +676,16 @@
                     reportModal.querySelector('#reportForm').action = `{{ url('manajemen-mahasiswa/forum') }}/${btn.dataset.threadId}/report`;
                 });
             }
+            // ---- Forum Card Click Handler ----
+            document.querySelectorAll('.forum-card').forEach(card => {
+                card.addEventListener('click', function(e) {
+                    if (e.target.closest('.dropdown') || e.target.closest('.post-actions')) {
+                        return;
+                    }
+                    const threadId = this.dataset.threadId;
+                    window.location.href = `{{ url('manajemen-mahasiswa/forum') }}/${threadId}`;
+                });
+            });
         </script>
     @endpush
 

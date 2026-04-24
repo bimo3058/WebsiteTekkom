@@ -138,7 +138,7 @@
 <body>
 
     <!-- Sidebar Mahasiswa -->
-    <x-manajemenmahasiswa::ui.sidebar-b />
+    <x-manajemenmahasiswa::ui.sidebar />
 
     <!-- Navbar (reuse admin) -->
     <x-manajemenmahasiswa::ui.navbar-admin />

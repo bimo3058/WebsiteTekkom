@@ -49,7 +49,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             ->name('dosen.')
             ->group(function () {
             Route::get('/dashboard', function () {
-                return view('manajemenmahasiswa::dashboard.dosen');
+                return redirect()->route('manajemenmahasiswa.pengumuman.index');
             })->name('dashboard');
         });
 
