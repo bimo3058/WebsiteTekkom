@@ -1,4 +1,14 @@
 <div class="sidebar">
+    {{-- Sidebar Toggle Button --}}
+    <button @click="sidebarOpen = !sidebarOpen" class="sidebar-toggle">
+        <svg x-show="sidebarOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+        </svg>
+        <svg x-show="!sidebarOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+        </svg>
+    </button>
+
     @php
         $sidebarRoles = auth()->user()->roles->pluck('name')->toArray();
         $showDashboardAnalitik = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan'])) > 0;
@@ -13,22 +23,23 @@
             $portalLabel = 'Portal Mahasiswa';
         }
     @endphp
-    <div class="d-flex align-items-center gap-3 mb-4">
-        <div class="d-flex align-items-center justify-content-center rounded"
-            style="width: 44px; height: 44px; background: #4f46e5; flex-shrink: 0;">
+    
+    <div class="d-flex align-items-center gap-3 mb-4" :class="{ 'justify-content-center': !sidebarOpen }">
+        <div class="d-flex align-items-center justify-content-center rounded flex-shrink-0"
+            style="width: 44px; height: 44px; background: #4f46e5;">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2"
                 stroke-linecap="round" stroke-linejoin="round">
                 <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
                 <path d="M6 12v5c3 3 9 3 12 0v-5" />
             </svg>
         </div>
-        <div>
+        <div class="portal-info" x-show="sidebarOpen" x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-x-2" x-transition:enter-end="opacity-100 translate-x-0">
             <h5 class="fw-bold mb-0 text-dark" style="font-size: 15px; letter-spacing: -0.01em;">{{ $portalLabel }}</h5>
             <small class="text-muted" style="font-size: 12px; line-height: 1;">Manajemen Kemahasiswaan</small>
         </div>
     </div>
 
-    <div class="menu-title mb-2" style="font-size: 13px; font-weight: 500; color: #9ca3af;">Main Menu</div>
+    <div class="menu-title mb-2" x-show="sidebarOpen">Main Menu</div>
 
     <nav class="sidebar-nav d-flex flex-column gap-1">
         @if($showDashboardAnalitik)
@@ -46,8 +57,6 @@
             </x-manajemenmahasiswa::ui.sidebar-item>
         @endif
 
-
-
         <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengumuman.index') }}"
             routeName="manajemenmahasiswa.pengumuman" label="Pengumuman">
             <x-slot:iconSlot>
@@ -62,7 +71,8 @@
         <div class="sidebar-dropdown {{ request()->routeIs('manajemenmahasiswa.direktori.*') ? 'open' : '' }}">
             <a href="javascript:void(0)"
                 class="nav-link-item sidebar-dropdown-toggle {{ request()->routeIs('manajemenmahasiswa.direktori.*') ? 'active' : '' }}"
-                onclick="event.stopPropagation(); this.closest('.sidebar-dropdown').classList.toggle('open')">
+                onclick="event.stopPropagation(); this.closest('.sidebar-dropdown').classList.toggle('open')"
+                :class="{ 'justify-content-center': !sidebarOpen }">
                 <span class="nav-icon d-inline-flex">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -72,13 +82,13 @@
                         <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
                     </svg>
                 </span>
-                <span class="nav-label" style="flex-grow: 1;">Direktori Mahasiswa</span>
+                <span class="nav-label" style="flex-grow: 1;" x-show="sidebarOpen">Direktori Mahasiswa</span>
                 <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;" x-show="sidebarOpen">
                     <path d="m6 9 6 6 6-6" />
                 </svg>
             </a>
-            <div class="sidebar-dropdown-menu">
+            <div class="sidebar-dropdown-menu" x-show="sidebarOpen">
                 @php
                     $userRoles = auth()->user()->roles->pluck('name')->toArray();
                     $canViewAll = array_intersect($userRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan']);
@@ -150,17 +160,42 @@
     </nav>
 
     <div class="bottom-menu pe-4">
+        <!-- User Profile Card -->
+        @php
+            $currentUser = auth()->user();
+            $currentName = $currentUser->name ?? 'User';
+            $currentInitials = strtoupper(substr($currentName, 0, 1));
+            $spIdx = strpos($currentName, ' ');
+            if ($spIdx !== false) {
+                $currentInitials .= strtoupper(substr($currentName, $spIdx + 1, 1));
+            }
+        @endphp
+        <div class="d-flex align-items-center gap-3 px-3 py-2 mb-2 rounded" style="background: #f8fafc; border: 1px solid #e5e7eb;" :class="{ 'justify-content-center px-2': !sidebarOpen }">
+            <div class="d-flex align-items-center justify-content-center rounded-circle border border-2 border-white shadow-sm flex-shrink-0" style="width: 36px; height: 36px; background: #e0e7ff; color: #4f46e5; font-weight: 600; font-size: 13px; overflow: hidden;">
+                @if(isset($currentUser->avatar_url) && $currentUser->avatar_url)
+                    <img src="{{ $currentUser->avatar_url }}" alt="Avatar" style="width: 100%; height: 100%; object-fit: cover;">
+                @else
+                    {{ $currentInitials }}
+                @endif
+            </div>
+            <div class="user-info" style="min-width: 0; flex: 1;" x-show="sidebarOpen">
+                <p class="mb-0 text-dark fw-bold text-truncate" style="font-size: 13px; letter-spacing: -0.01em;">{{ $currentName }}</p>
+                <p class="mb-0 text-muted text-uppercase text-truncate" style="font-size: 10px; font-weight: 700; letter-spacing: 0.05em; line-height: 1.2;">
+                    {{ implode(' / ', array_map('ucfirst', $currentUser->roles->pluck('name')->toArray())) }}
+                </p>
+            </div>
+        </div>
+
         <form action="{{ route('logout') }}" method="POST">
             @csrf
-            <button class="btn btn-link p-0 mt-1 d-flex align-items-center gap-3 w-100 text-decoration-none"
-                style="padding: 12px 16px !important; color: #ef4444; font-weight: 500; font-size: 15px;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round" style="margin-left: 2px;">
+            <button class="btn-logout" type="submit" :class="{ 'justify-content-center': !sidebarOpen }">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round" :style="!sidebarOpen ? 'margin-left: 0' : 'margin-left: 2px;'">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
                     <polyline points="16 17 21 12 16 7"></polyline>
                     <line x1="21" y1="12" x2="9" y2="12"></line>
                 </svg>
-                Logout
+                <span x-show="sidebarOpen">Logout</span>
             </button>
         </form>
     </div>
