@@ -24,7 +24,7 @@ class CommentService
      */
     public function listComments(int $threadId, int $perPage = 20): LengthAwarePaginator
     {
-        return Comment::with(['author', 'replies.author'])
+        return Comment::with(['author', 'allReplies.author'])
             ->where('thread_id', $threadId)
             ->whereNull('parent_id')
             ->orderByDesc('is_best_answer')
@@ -123,6 +123,11 @@ class CommentService
                         XpLog::ACTION_RECEIVE_UPVOTE,
                         $comment
                     );
+                }
+
+                // Penalti -1 XP untuk pemberi downvote
+                if ($value === -1) {
+                    $this->gamificationService->penalizeDownvote($userId, $comment);
                 }
             }
 

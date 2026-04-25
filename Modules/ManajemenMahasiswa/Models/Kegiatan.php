@@ -4,6 +4,7 @@ namespace Modules\ManajemenMahasiswa\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
@@ -17,7 +18,7 @@ class Kegiatan extends Model
         'user_id',
         'kategori_kegiatan_id',
         'bidang_id',
-        'kepengurusan_id',
+        'tahun',
         'judul',
         'deskripsi',
         'tanggal_mulai',
@@ -82,9 +83,20 @@ class Kegiatan extends Model
         return $this->belongsTo(Bidang::class, 'bidang_id');
     }
 
-    public function kepengurusan(): BelongsTo
+    /**
+     * Many-to-many: Kegiatan can have multiple Kategori (max 2).
+     */
+    public function kategoris(): BelongsToMany
     {
-        return $this->belongsTo(Kepengurusan::class, 'kepengurusan_id');
+        return $this->belongsToMany(KategoriKegiatan::class, 'mk_kegiatan_kategori', 'kegiatan_id', 'kategori_kegiatan_id')->withTimestamps();
+    }
+
+    /**
+     * Many-to-many: Kegiatan can have multiple Bidang.
+     */
+    public function bidangs(): BelongsToMany
+    {
+        return $this->belongsToMany(Bidang::class, 'mk_kegiatan_bidang', 'kegiatan_id', 'bidang_id')->withTimestamps();
     }
 
     public function creator(): BelongsTo
@@ -123,12 +135,12 @@ class Kegiatan extends Model
 
     public function scopeByBidang($query, int $bidangId)
     {
-        return $query->where('bidang_id', $bidangId);
+        return $query->whereHas('bidangs', fn($q) => $q->where('mk_bidang.id', $bidangId));
     }
 
     public function scopeByKategori($query, int $kategoriId)
     {
-        return $query->where('kategori_kegiatan_id', $kategoriId);
+        return $query->whereHas('kategoris', fn($q) => $q->where('mk_kategori_kegiatan.id', $kategoriId));
     }
 
     // -------------------------------------------------------------------------
@@ -139,6 +151,7 @@ class Kegiatan extends Model
     {
         return $this->banner ? \Storage::url($this->banner) : null;
     }
+
 
     public function getStatusLabelAttribute(): string
     {

@@ -25,12 +25,15 @@ class Badge extends Model
     // Constants
     // -------------------------------------------------------------------------
 
-    const CRITERIA_THREAD_COUNT      = 'thread_count';
-    const CRITERIA_UPVOTE_COUNT      = 'upvote_count';
-    const CRITERIA_BEST_ANSWER_COUNT = 'best_answer_count';
-    const CRITERIA_STREAK            = 'streak';
-    const CRITERIA_TOTAL_XP          = 'total_xp';
-    const CRITERIA_COMMENT_COUNT     = 'comment_count';
+    const CRITERIA_THREAD_COUNT        = 'thread_count';
+    const CRITERIA_UPVOTE_COUNT        = 'upvote_count';
+    const CRITERIA_BEST_ANSWER_COUNT   = 'best_answer_count';
+    const CRITERIA_STREAK              = 'streak';
+    const CRITERIA_TOTAL_XP            = 'total_xp';
+    const CRITERIA_COMMENT_COUNT       = 'comment_count';
+    const CRITERIA_FIRST_ANSWER_COUNT  = 'first_answer_count';
+    const CRITERIA_ALUMNI_COMMENT_COUNT = 'alumni_comment_count';
+    const CRITERIA_DOSEN_COMMENT_COUNT  = 'dosen_comment_count';
 
     // -------------------------------------------------------------------------
     // Relations

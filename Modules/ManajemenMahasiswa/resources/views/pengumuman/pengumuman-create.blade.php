@@ -79,9 +79,9 @@
             .form-input:focus,
             .form-select-custom:focus,
             .form-textarea:focus {
-                border-color: #818cf8;
+                border-color: #6B4FF4;
                 background: #fff;
-                box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.12);
+                box-shadow: 0 0 0 3px rgba(107, 79, 244, 0.12);
             }
 
             .form-input::placeholder,
@@ -131,20 +131,20 @@
 
             .file-upload-zone:hover,
             .file-upload-zone.drag-over {
-                border-color: #818cf8;
-                background: #f5f3ff;
+                border-color: #6B4FF4;
+                background: #F5F3FF;
             }
 
             .file-upload-zone .upload-icon {
                 width: 56px;
                 height: 56px;
-                background: #ede9fe;
+                background: #F5F3FF;
                 border-radius: 50%;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 margin: 0 auto 14px;
-                color: #4f46e5;
+                color: #6B4FF4;
             }
 
             .file-upload-zone h6 {
@@ -257,7 +257,7 @@
                 border: 1px solid #e5e7eb;
                 border-radius: 12px;
                 background: #fff;
-                color: #4f46e5;
+                color: #6B4FF4;
                 font-size: 0.9rem;
                 font-weight: 600;
                 cursor: pointer;
@@ -265,15 +265,15 @@
             }
 
             .btn-draft:hover {
-                background: #f5f3ff;
-                border-color: #818cf8;
+                background: #F5F3FF;
+                border-color: #6B4FF4;
             }
 
             .btn-publish {
                 padding: 12px 28px;
                 border: none;
                 border-radius: 12px;
-                background: #4f46e5;
+                background: #6B4FF4;
                 color: #fff;
                 font-size: 0.9rem;
                 font-weight: 600;
@@ -282,9 +282,9 @@
             }
 
             .btn-publish:hover {
-                background: #4338ca;
+                background: #8266F5;
                 transform: translateY(-1px);
-                box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+                box-shadow: 0 4px 12px rgba(107, 79, 244, 0.3);
             }
 
             /* ── Rich Text Editor ──────────────────────────────────────── */
@@ -297,9 +297,9 @@
             }
 
             .rich-editor-wrapper:focus-within {
-                border-color: #818cf8;
+                border-color: #6B4FF4;
                 background: #fff;
-                box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.12);
+                box-shadow: 0 0 0 3px rgba(107, 79, 244, 0.12);
             }
 
             .editor-toolbar {
@@ -353,9 +353,9 @@
             }
 
             .toolbar-btn.active {
-                background: #ede9fe;
-                border-color: #818cf8;
-                color: #4f46e5;
+                background: #F5F3FF;
+                border-color: #6B4FF4;
+                color: #6B4FF4;
             }
 
             .toolbar-btn-bold { font-weight: 900; }
@@ -404,7 +404,7 @@
             .editor-content li { margin-bottom: 4px; }
 
             .editor-content a {
-                color: #4f46e5;
+                color: #6B4FF4;
                 text-decoration: underline;
             }
 
@@ -498,9 +498,24 @@
     <form action="{{ route('manajemenmahasiswa.pengumuman.store') }}" method="POST" enctype="multipart/form-data"
         id="createForm">
         @csrf
+        <input type="hidden" name="draft_id" id="draft_id" value="">
 
         <div class="form-card">
-            <div class="form-section-title">Informasi Pengumuman</div>
+            <div class="d-flex justify-content-between align-items-center form-section-title">
+                <span>Informasi Pengumuman</span>
+                @if(isset($drafts) && $drafts->count() > 0)
+                    <button type="button" class="btn btn-sm rounded-pill fw-bold px-4 text-white shadow-sm"
+                        style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); border: none; transition: transform 0.2s ease, box-shadow 0.2s ease;"
+                        onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(234, 88, 12, 0.3)';"
+                        onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)';"
+                        data-bs-toggle="modal" data-bs-target="#draftsModal">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align: -2px; margin-right: 4px;">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                        </svg>
+                        Load Draft ({{ $drafts->count() }})
+                    </button>
+                @endif
+            </div>
 
             <!-- Judul -->
             <div class="form-group">
@@ -644,16 +659,20 @@
 
             <!-- Actions -->
             <div class="form-actions">
+
                 <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}" class="btn-cancel">Batal</a>
-                <button type="button" class="btn-draft" onclick="submitAsDraft()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;">
-                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
-                        <polyline points="17 21 17 13 7 13 7 21" />
-                        <polyline points="7 3 7 8 15 8" />
-                    </svg>
-                    Simpan Draft
-                </button>
+                <div class="d-flex align-items-center gap-3">
+                    <span id="draftStatus" class="text-muted" style="font-size: 13px; font-style: italic; display: none;">Menyimpan draf...</span>
+                    <button type="button" class="btn-draft" onclick="saveDraftManual()">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" />
+                            <polyline points="17 21 17 13 7 13 7 21" />
+                            <polyline points="7 3 7 8 15 8" />
+                        </svg>
+                        Simpan Draft
+                    </button>
+                </div>
                 <button type="submit" class="btn-publish">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;">
@@ -665,6 +684,54 @@
             </div>
         </div>
     </form>
+
+    {{-- Modal Drafts --}}
+    @if(isset($drafts) && $drafts->count() > 0)
+        <div class="modal fade" id="draftsModal" tabindex="-1" aria-labelledby="draftsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow" style="border-radius: 16px;">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold" id="draftsModalLabel">Draf Anda</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="list-group list-group-flush">
+                            @foreach($drafts as $draft)
+                                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3"
+                                    style="border-radius: 12px; margin-bottom: 8px; border: 1px solid #e5e7eb; cursor: pointer;">
+                                    <div class="flex-grow-1 pe-3"
+                                        onclick="loadDraft({{ $draft->id }}, {{ json_encode($draft->judul) }}, {{ json_encode($draft->kategori) }}, {{ json_encode($draft->target_audience) }}, {{ json_encode($draft->konten) }})">
+                                        <h6 class="mb-1 fw-bold text-dark" style="font-size: 15px;">
+                                            {{ $draft->judul ?: '(Tanpa Judul)' }}</h6>
+                                        <p class="mb-1 text-muted"
+                                            style="font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                            {{ strip_tags($draft->konten) ?: '(Tidak ada konten teks)' }}
+                                        </p>
+                                        <small class="text-muted" style="font-size: 11px;">
+                                            Diperbarui: {{ $draft->updated_at->diffForHumans() }}
+                                        </small>
+                                    </div>
+                                    <div class="ms-1">
+                                        <form action="{{ route('manajemenmahasiswa.pengumuman.drafts.destroy', $draft->id) }}"
+                                            method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="btn btn-sm btn-light text-danger rounded-circle shadow-sm border border-danger-subtle"
+                                                style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
+                                                title="Hapus draf ini">
+                                                ✕
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
     @push('scripts')
         <script>
@@ -717,11 +784,102 @@
                 zone.addEventListener('drop', () => zone.classList.remove('drag-over'));
             });
 
-            // Submit as draft
-            function submitAsDraft() {
+            // ---- Draft Auto-Save Logic ----
+            let draftTimer;
+            const DRAFT_DELAY = 60000; // 1 menit
+
+            const formInputs = document.querySelectorAll('input[name="judul"], select[name="kategori"], select[name="target_audience"]');
+            
+            formInputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    clearTimeout(draftTimer);
+                    document.getElementById('draftStatus').style.display = 'none';
+                    draftTimer = setTimeout(saveDraftAJAX, DRAFT_DELAY);
+                });
+            });
+
+            // For rich text editor
+            document.getElementById('editorContent').addEventListener('input', () => {
                 syncEditorContent();
-                document.getElementById('statusPublish').value = 'draft';
-                document.getElementById('createForm').submit();
+                clearTimeout(draftTimer);
+                document.getElementById('draftStatus').style.display = 'none';
+                draftTimer = setTimeout(saveDraftAJAX, DRAFT_DELAY);
+            });
+
+            function saveDraftManual() {
+                saveDraftAJAX(true);
+            }
+
+            function saveDraftAJAX(isManual = false) {
+                const draftStatus = document.getElementById('draftStatus');
+                draftStatus.style.display = 'inline';
+                draftStatus.textContent = 'Menyimpan draf...';
+
+                // Ensure hidden content is synced
+                syncEditorContent();
+
+                const formData = new FormData(document.getElementById('createForm'));
+
+                fetch('{{ route("manajemenmahasiswa.pengumuman.drafts.store") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('draft_id').value = data.draft_id;
+                        draftStatus.textContent = 'Draf tersimpan.';
+                        setTimeout(() => { draftStatus.style.display = 'none'; }, 3000);
+                        if (isManual) {
+                            alert('Draf berhasil disimpan!');
+                        }
+                    } else {
+                        draftStatus.textContent = 'Gagal menyimpan draf.';
+                        if (isManual) {
+                            alert('Terjadi kesalahan saat menyimpan draf: ' + (data.message || 'Data tidak valid.'));
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('Error saving draft:', error);
+                    draftStatus.textContent = 'Gagal menyimpan draf.';
+                    if (isManual) {
+                        alert('Terjadi kesalahan saat menyimpan draf.');
+                    }
+                });
+            }
+
+            function loadDraft(id, judul, kategori, target_audience, konten) {
+                document.getElementById('draft_id').value = id;
+                document.querySelector('input[name="judul"]').value = judul || '';
+                
+                const selectKategori = document.querySelector('select[name="kategori"]');
+                if (kategori) {
+                    selectKategori.value = kategori;
+                } else {
+                    selectKategori.value = '';
+                }
+
+                const selectAudience = document.querySelector('select[name="target_audience"]');
+                if (target_audience) {
+                    selectAudience.value = target_audience;
+                } else {
+                    selectAudience.value = 'all'; // default
+                }
+
+                document.getElementById('editorContent').innerHTML = konten || '';
+                syncEditorContent();
+
+                // Hide modal via Bootstrap API if available
+                if (typeof bootstrap !== 'undefined') {
+                    const modalEl = document.getElementById('draftsModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                }
             }
 
             // ── Rich Text Editor ──────────────────────────────────────────
@@ -784,17 +942,44 @@
                 document.getElementById('inlineImageInput').click();
             }
 
-            document.getElementById('inlineImageInput').addEventListener('change', function (e) {
+            document.getElementById('inlineImageInput').addEventListener('change', async function (e) {
                 const file = e.target.files[0];
                 if (!file) return;
-                const reader = new FileReader();
-                reader.onload = function (ev) {
-                    editor.focus();
-                    document.execCommand('insertHTML', false,
-                        `<img src="${ev.target.result}" alt="${file.name}" style="max-width:100%;border-radius:8px;margin:8px 0;">`);
-                    syncEditorContent();
-                };
-                reader.readAsDataURL(file);
+
+                const placeholderId = 'img-uploading-' + Date.now();
+                editor.focus();
+                document.execCommand('insertHTML', false,
+                    `<span id="${placeholderId}" style="color:#6b7280;font-style:italic;font-size:0.9em;">[Mengupload gambar...]</span>`);
+                syncEditorContent();
+
+                const formData = new FormData();
+                formData.append('image', file);
+                formData.append('_token', '{{ csrf_token() }}');
+
+                try {
+                    const res = await fetch('{{ route("manajemenmahasiswa.pengumuman.inline.image") }}', {
+                        method: 'POST',
+                        body: formData,
+                    });
+                    const data = await res.json();
+
+                    const placeholder = document.getElementById(placeholderId);
+                    if (placeholder) placeholder.remove();
+
+                    if (data.url) {
+                        editor.focus();
+                        document.execCommand('insertHTML', false,
+                            `<img src="${data.url}" alt="${file.name}" style="max-width:100%;border-radius:8px;margin:8px 0;">`);
+                        syncEditorContent();
+                    } else {
+                        alert('Gagal mengupload gambar. Silakan coba lagi.');
+                    }
+                } catch (err) {
+                    const placeholder = document.getElementById(placeholderId);
+                    if (placeholder) placeholder.remove();
+                    alert('Gagal mengupload gambar. Periksa koneksi internet Anda.');
+                }
+
                 this.value = '';
             });
 

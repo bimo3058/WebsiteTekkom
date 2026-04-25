@@ -54,6 +54,14 @@ class Comment extends Model
         return $this->hasMany(self::class, 'parent_id');
     }
 
+    /**
+     * Recursive: all nested replies (for Reddit-style threading).
+     */
+    public function allReplies(): HasMany
+    {
+        return $this->hasMany(self::class, 'parent_id')->with('allReplies.author');
+    }
+
     public function votes(): MorphMany
     {
         return $this->morphMany(Vote::class, 'voteable');

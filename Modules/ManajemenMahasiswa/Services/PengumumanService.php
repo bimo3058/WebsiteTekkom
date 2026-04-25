@@ -14,11 +14,17 @@ class PengumumanService
      */
     public function listAll(array $filters = [], int $perPage = 20): LengthAwarePaginator
     {
-        return Pengumuman::with('author')
+        return Pengumuman::with(['author', 'repoMulmed'])
             ->when(isset($filters['status']), fn($q) => $q->where('status_publish', $filters['status']))
             ->when(isset($filters['audience']), fn($q) => $q->forAudience($filters['audience']))
             ->when(isset($filters['kategori']), fn($q) => $q->where('kategori', $filters['kategori']))
-            ->when(isset($filters['search']), fn($q) => $q->where('judul', 'like', "%{$filters['search']}%"))
+            ->when(isset($filters['search']), function ($q) use ($filters) {
+                $search = $filters['search'];
+                return $q->where(function ($sub) use ($search) {
+                    $sub->where('judul', 'like', "%{$search}%")
+                        ->orWhere('konten', 'like', "%{$search}%");
+                });
+            })
             ->orderByDesc('created_at')
             ->paginate($perPage);
     }
@@ -29,14 +35,17 @@ class PengumumanService
      */
     public function listPublished(string $userRoleAudience, ?string $filterKategori = null, ?string $search = null, int $perPage = 10): LengthAwarePaginator
     {
-        return Pengumuman::with('author')
+        return Pengumuman::with(['author', 'repoMulmed'])
             ->published()
             ->forAudience($userRoleAudience)
             ->when($filterKategori, function ($query, $filter) {
                 return $query->where('kategori', $filter);
             })
             ->when($search, function ($query, $search) {
-                return $query->where('judul', 'like', "%{$search}%");
+                return $query->where(function ($sub) use ($search) {
+                    $sub->where('judul', 'like', "%{$search}%")
+                        ->orWhere('konten', 'like', "%{$search}%");
+                });
             })
             ->orderByDesc('created_at')
             ->paginate($perPage);

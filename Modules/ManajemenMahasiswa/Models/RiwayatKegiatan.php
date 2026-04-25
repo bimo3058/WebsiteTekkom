@@ -16,6 +16,13 @@ class RiwayatKegiatan extends Model
         'student_id',
         'kegiatan_id',
         'peran',
+        'nama_kegiatan_manual',
+        'peran_manual',
+        'tanggal_kegiatan',
+    ];
+
+    protected $casts = [
+        'tanggal_kegiatan' => 'date',
     ];
 
     // -------------------------------------------------------------------------
@@ -46,6 +53,51 @@ class RiwayatKegiatan extends Model
     public function kegiatan(): BelongsTo
     {
         return $this->belongsTo(Kegiatan::class, 'kegiatan_id');
+    }
+
+    // -------------------------------------------------------------------------
+    // Accessors — unified nama & peran (auto-resolve manual vs linked)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Nama kegiatan: prioritas dari relasi mk_kegiatan, fallback ke manual.
+     */
+    public function getNamaKegiatanAttribute(): string
+    {
+        if ($this->kegiatan) {
+            return $this->kegiatan->judul;
+        }
+        return $this->nama_kegiatan_manual ?? 'Kegiatan tidak ditemukan';
+    }
+
+    /**
+     * Peran: prioritas dari peran_manual jika ada, lalu peran bawaan.
+     */
+    public function getPeranLabelAttribute(): string
+    {
+        if ($this->peran_manual) {
+            return $this->peran_manual;
+        }
+        return ucfirst($this->peran ?? '');
+    }
+
+    /**
+     * Apakah ini entri manual (bukan dari list kegiatan)?
+     */
+    public function getIsManualAttribute(): bool
+    {
+        return is_null($this->kegiatan_id);
+    }
+
+    /**
+     * Tanggal untuk ditampilkan: dari kegiatan (jika ada) atau tanggal_kegiatan manual.
+     */
+    public function getTanggalDisplayAttribute()
+    {
+        if ($this->kegiatan && $this->kegiatan->tanggal_mulai) {
+            return $this->kegiatan->tanggal_mulai;
+        }
+        return $this->tanggal_kegiatan;
     }
 
     // -------------------------------------------------------------------------

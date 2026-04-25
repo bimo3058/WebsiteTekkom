@@ -44,8 +44,8 @@
         }
 
         .search-input-wrapper input:focus {
-            border-color: #818cf8;
-            box-shadow: 0 0 0 3px rgba(129, 140, 248, 0.15);
+            border-color: #6B4FF4;
+            box-shadow: 0 0 0 3px rgba(107, 79, 244, 0.12);
             background: #fff;
         }
 
@@ -81,13 +81,13 @@
         }
 
         .filter-btn:hover {
-            border-color: #818cf8;
-            background: #faf9ff;
+            border-color: #6B4FF4;
+            background: #F5F3FF;
         }
 
         .filter-btn.active {
-            border-color: #818cf8;
-            color: #4f46e5;
+            border-color: #6B4FF4;
+            color: #6B4FF4;
         }
 
         .filter-btn .chevron-icon {
@@ -145,14 +145,14 @@
         }
 
         .filter-menu-item.selected {
-            background: #ede9fe;
-            color: #4f46e5;
+            background: #F5F3FF;
+            color: #6B4FF4;
             font-weight: 600;
         }
 
         .filter-menu-item .check-icon {
             width: 18px;
-            color: #4f46e5;
+            color: #6B4FF4;
             opacity: 0;
             transition: opacity 0.15s ease;
         }
@@ -170,32 +170,63 @@
 
         .pengumuman-card {
             background: #fff;
-            border: 1px solid #e5e7eb;
-            border-left: 4px solid #818cf8;
-            border-radius: 14px;
+            border: 1px solid #DDE1E8;
+            border-radius: 12px;
             padding: 22px 26px;
             transition: all 0.25s ease;
             cursor: pointer;
             text-decoration: none;
             display: block;
+            box-shadow: 0 1px 3px rgba(22, 22, 43, 0.06), 0 1px 2px rgba(22, 22, 43, 0.04);
         }
 
         .pengumuman-card:hover {
-            border-left-color: #4f46e5;
-            box-shadow: 0 6px 20px rgba(79, 70, 229, 0.08);
-            transform: translateY(-2px);
+            border-color: #C6CBD2;
+            box-shadow: 0 4px 8px -2px rgba(22, 22, 43, 0.06), 0 2px 4px -2px rgba(22, 22, 43, 0.04);
+            transform: translateY(-1px);
         }
 
         .pengumuman-card-body {
             display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+            align-items: stretch;
             gap: 20px;
+        }
+
+        .pengumuman-thumbnail {
+            width: 100px;
+            aspect-ratio: 1080 / 1320;
+            border-radius: 10px;
+            overflow: hidden;
+            flex-shrink: 0;
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .pengumuman-thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .pengumuman-thumbnail .no-image {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d1d5db;
         }
 
         .pengumuman-card-content {
             flex: 1;
             min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .pengumuman-card-title {
@@ -207,11 +238,11 @@
 
         .pengumuman-card-title .megaphone-icon {
             flex-shrink: 0;
-            color: #4f46e5;
+            color: #6B4FF4;
         }
 
         .pengumuman-card-title h6 {
-            font-size: 1rem;
+            font-size: 1.05rem;
             font-weight: 700;
             color: #1e1b4b;
             margin: 0;
@@ -220,13 +251,20 @@
 
         .pengumuman-card-desc {
             font-size: 0.88rem;
-            color: #6b7280;
+            color: #788297;
             line-height: 1.6;
-            margin-bottom: 10px;
+            margin-bottom: 12px;
             display: -webkit-box;
             -webkit-line-clamp: 2;
             -webkit-box-orient: vertical;
             overflow: hidden;
+        }
+
+        .pengumuman-card-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 12px;
         }
 
         .pengumuman-card-meta {
@@ -237,7 +275,7 @@
 
         .pengumuman-card-date {
             font-size: 0.82rem;
-            color: #9ca3af;
+            color: #A1ADB8;
             font-weight: 500;
         }
 
@@ -252,43 +290,49 @@
         }
 
         .badge-akademik {
-            background: #dbeafe;
-            color: #1d4ed8;
+            background: #E8F4FF;
+            color: #1A8CD8;
         }
 
         .badge-himpunan {
-            background: #ede9fe;
-            color: #6d28d9;
+            background: #F5F3FF;
+            color: #6B4FF4;
         }
 
         .badge-lowongan {
-            background: #d1fae5;
-            color: #059669;
+            background: #E6FBF0;
+            color: #0D9F5F;
         }
 
         .badge-event_prodi {
-            background: #fef3c7;
-            color: #d97706;
+            background: #FFF9E6;
+            color: #C6930A;
         }
 
         .badge-umum {
-            background: #f3f4f6;
-            color: #4b5563;
+            background: #EEF0F5;
+            color: #606B80;
+        }
+
+        .pengumuman-card-action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding-left: 10px;
         }
 
         .pengumuman-read-more {
             flex-shrink: 0;
-            align-self: flex-end;
             font-size: 0.85rem;
             font-weight: 600;
-            color: #4f46e5;
+            color: #6B4FF4;
             text-decoration: none;
             transition: color 0.2s ease;
             white-space: nowrap;
         }
 
         .pengumuman-read-more:hover {
-            color: #3730a3;
+            color: #8266F5;
         }
 
         /* Pagination */
@@ -317,9 +361,9 @@
         }
 
         .pagination-btn:hover:not(.disabled) {
-            border-color: #818cf8;
-            color: #4f46e5;
-            background: #f5f3ff;
+            border-color: #6B4FF4;
+            color: #6B4FF4;
+            background: #F5F3FF;
         }
 
         .pagination-btn.disabled {
@@ -356,7 +400,7 @@
         }
 
         .pengumuman-empty .empty-icon svg {
-            color: #818cf8;
+            color: #6B4FF4;
         }
 
         .pengumuman-empty h5 {
@@ -441,8 +485,24 @@
     <!-- List Pengumuman -->
     <div class="pengumuman-list">
         @forelse($pengumuman as $item)
+            @php
+                $lampiran = collect($item->repoMulmed ?? []);
+                $images = $lampiran->filter(function ($file) {
+                    return in_array(strtolower(pathinfo($file->nama_file ?? '', PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                });
+                $thumbnailUrl = $images->first() ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($images->first()->path_file) : null;
+            @endphp
             <a href="{{ route('manajemenmahasiswa.pengumuman.show', $item->id) }}" class="pengumuman-card">
                 <div class="pengumuman-card-body">
+                    <div class="pengumuman-thumbnail">
+                        @if($thumbnailUrl)
+                            <img src="{{ $thumbnailUrl }}" alt="Thumbnail">
+                        @else
+                            <div class="no-image">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+                            </div>
+                        @endif
+                    </div>
                     <div class="pengumuman-card-content">
                         <div class="pengumuman-card-title">
                             <svg class="megaphone-icon" width="20" height="20" viewBox="0 0 24 24" fill="none"
@@ -456,18 +516,22 @@
                         <p class="pengumuman-card-desc">
                             {{ Str::limit(strip_tags($item->konten), 150) }}
                         </p>
-                        <div class="pengumuman-card-meta">
-                            <span class="pengumuman-card-date">
-                                {{ $item->created_at->translatedFormat('d F Y') }}
-                            </span>
+                        <div class="pengumuman-card-tags">
                             @if($item->kategori)
                                 <span class="pengumuman-card-badge badge-{{ $item->kategori }}">
                                     {{ ucfirst(str_replace('_', ' ', $item->kategori)) }}
                                 </span>
                             @endif
                         </div>
+                        <div class="pengumuman-card-meta">
+                            <span class="pengumuman-card-date">
+                                {{ $item->created_at->translatedFormat('d F Y') }}
+                            </span>
+                        </div>
                     </div>
-                    <span class="pengumuman-read-more">Baca Selengkapnya</span>
+                    <div class="pengumuman-card-action">
+                        <span class="pengumuman-read-more">Baca Selengkapnya</span>
+                    </div>
                 </div>
             </a>
         @empty
