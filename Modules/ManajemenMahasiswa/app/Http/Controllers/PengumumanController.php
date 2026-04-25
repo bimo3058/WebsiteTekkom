@@ -3,19 +3,19 @@
 namespace Modules\ManajemenMahasiswa\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Services\SupabaseStorage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Modules\ManajemenMahasiswa\Services\PengumumanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
+use Modules\ManajemenMahasiswa\Models\PengumumanDraft;
 
 class PengumumanController extends Controller
 {
     public function __construct(
-        private
-        PengumumanService $pengumumanService,
-        private
-        RepoMulmedService $repoMulmedService,
+        private PengumumanService $pengumumanService,
+        private RepoMulmedService $repoMulmedService,
+        private SupabaseStorage $supabase,
     ) {
     }
 
@@ -28,7 +28,7 @@ class PengumumanController extends Controller
         $filterKategori = $request->query('kategori');
 
         // Admin, Dosen Koordinator, Pengurus Himpunan, GPM, Admin Kemahasiswaan: lihat semua
-        if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'pengurus_himpunan', 'gpm', 'admin_kemahasiswaan'])->isNotEmpty()) {
+        if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'dosen', 'pengurus_himpunan', 'gpm', 'admin_kemahasiswaan'])->isNotEmpty()) {
             $filters = $request->only(['status', 'search', 'audience']);
             if ($filterKategori && $filterKategori !== 'semua') {
                 $filters['kategori'] = $filterKategori;
@@ -54,7 +54,79 @@ class PengumumanController extends Controller
     //Akses: Admin, Dosen Koordinator, Pengurus Himpunan, GPM
     public function create()
     {
-        return view('manajemenmahasiswa::pengumuman.pengumuman-create');
+        $user = Auth::user();
+        $drafts = PengumumanDraft::where('user_id', $user->id)->latest()->get();
+        return view('manajemenmahasiswa::pengumuman.pengumuman-create', compact('drafts'));
+    }
+
+    /**
+     * Simpan / Update Draft (AJAX)
+     */
+    public function saveDraft(Request $request)
+    {
+        try {
+            $request->validate([
+                'draft_id' => 'nullable|integer',
+                'judul'    => 'nullable|string|max:255',
+                'kategori' => 'nullable|string|max:100',
+                'target_audience' => 'nullable|in:all,mahasiswa,alumni,dosen,pengurus',
+                'konten'   => 'nullable|string',
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            \Illuminate\Support\Facades\Log::error('Draft validation failed: ', $e->errors());
+            throw $e;
+        }
+
+        $draftId = $request->input('draft_id');
+        
+        if ($draftId) {
+            $draft = PengumumanDraft::where('id', $draftId)
+                ->where('user_id', Auth::id())
+                ->first();
+                
+            if ($draft) {
+                $draft->update([
+                    'judul'    => $request->input('judul'),
+                    'kategori' => $request->input('kategori'),
+                    'target_audience' => $request->input('target_audience'),
+                    'konten'   => $request->input('konten'),
+                ]);
+            } else {
+                $draft = PengumumanDraft::create([
+                    'user_id'  => Auth::id(),
+                    'judul'    => $request->input('judul'),
+                    'kategori' => $request->input('kategori'),
+                    'target_audience' => $request->input('target_audience'),
+                    'konten'   => $request->input('konten'),
+                ]);
+            }
+        } else {
+            $draft = PengumumanDraft::create([
+                'user_id'  => Auth::id(),
+                'judul'    => $request->input('judul'),
+                'kategori' => $request->input('kategori'),
+                'target_audience' => $request->input('target_audience'),
+                'konten'   => $request->input('konten'),
+            ]);
+        }
+
+        return response()->json([
+            'success'  => true,
+            'draft_id' => $draft->id,
+            'message'  => 'Draf berhasil disimpan.'
+        ]);
+    }
+
+    /**
+     * Hapus Draft
+     */
+    public function deleteDraft($id)
+    {
+        PengumumanDraft::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->delete();
+
+        return redirect()->back()->with('success', 'Draf berhasil dihapus.');
     }
 
     //Simpan pengumuman baru.
@@ -101,6 +173,13 @@ class PengumumanController extends Controller
             $this->pengumumanService->publish($pengumuman->id);
         }
 
+        // Hapus draf jika post dikirim dari draf
+        if ($request->filled('draft_id')) {
+            PengumumanDraft::where('id', $request->input('draft_id'))
+                ->where('user_id', Auth::id())
+                ->delete();
+        }
+
         return redirect()
             ->route('manajemenmahasiswa.pengumuman.index')
             ->with('success', 'Pengumuman berhasil dibuat.');
@@ -133,7 +212,7 @@ class PengumumanController extends Controller
         // Hanya pembuat atau admin yang boleh edit
         $this->authorizeOwnerOrAdmin($pengumuman->user_id);
 
-        return view('manajemenmahasiswa::pengumuman.edit', compact('pengumuman'));
+        return view('manajemenmahasiswa::pengumuman.pengumuman-edit', compact('pengumuman'));
     }
 
     /**
@@ -150,10 +229,23 @@ class PengumumanController extends Controller
             'kategori' => 'nullable|string|max:100',
             'target_audience' => 'required|in:all,mahasiswa,alumni,dosen,pengurus',
             'status_publish' => 'required|in:draft,published,archived',
+            'poster' => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
             'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:10240',
         ]);
 
+        $posterFile = $request->file('poster');
+        unset($validated['poster'], $validated['lampiran']);
+
         $this->pengumumanService->update($id, $validated);
+
+        // Ganti poster jika ada upload baru
+        if ($posterFile) {
+            $this->repoMulmedService->upload($posterFile, [
+                'judul_file' => 'Poster: ' . $validated['judul'],
+                'visibility_status' => 'public',
+                'pengumuman_id' => $id,
+            ]);
+        }
 
         // Handle lampiran baru
         if ($request->hasFile('lampiran')) {
@@ -161,7 +253,7 @@ class PengumumanController extends Controller
                 $this->repoMulmedService->upload($file, [
                     'judul_file' => $file->getClientOriginalName(),
                     'visibility_status' => 'public',
-                    'pengumuman_id' => $id
+                    'pengumuman_id' => $id,
                 ]);
             }
         }
@@ -202,12 +294,16 @@ class PengumumanController extends Controller
     /**
      * Hapus lampiran tertentu.
      */
-    public function removeLampiran(int $pengumumanId, int $lampiranId)
+    public function removeLampiran(Request $request, int $pengumumanId, int $lampiranId)
     {
         $pengumuman = $this->pengumumanService->findById($pengumumanId);
         $this->authorizeOwnerOrAdmin($pengumuman->user_id);
 
         $this->repoMulmedService->deletePermanent($lampiranId);
+
+        if ($request->expectsJson() || $request->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Lampiran berhasil dihapus.']);
+        }
 
         return back()->with('success', 'Lampiran berhasil dihapus.');
     }
@@ -236,12 +332,46 @@ class PengumumanController extends Controller
     }
 
     /**
-     * Download lampiran file.
+     * Upload gambar inline dari editor konten ke Supabase.
+     * Mengembalikan JSON { url: "..." } untuk disisipkan ke editor.
+     */
+    public function uploadInlineImage(Request $request)
+    {
+        $request->validate([
+            'image' => 'required|image|mimes:jpg,jpeg,png,gif,webp|max:5120',
+        ]);
+
+        $path = $this->supabase->upload($request->file('image'), 'mk_mulmed/image');
+
+        if (!$path) {
+            return response()->json(['error' => 'Gagal mengupload gambar.'], 500);
+        }
+
+        return response()->json(['url' => $this->supabase->getPublicUrl($path)]);
+    }
+
+    /**
+     * Download / redirect ke lampiran file di Supabase.
      */
     public function downloadLampiran(int $lampiran)
     {
         $file = \Modules\ManajemenMahasiswa\Models\RepoMulmed::findOrFail($lampiran);
+        $url = $this->supabase->getPublicUrl($file->path_file);
 
-        return Storage::disk('public')->download($file->path_file, $file->nama_file);
+        // Fetch file content from Supabase and stream it as a download
+        $response = \Illuminate\Support\Facades\Http::timeout(30)->get($url);
+
+        if (!$response->successful()) {
+            abort(404, 'File tidak ditemukan.');
+        }
+
+        $fileName = $file->nama_file ?? basename($file->path_file);
+        $mimeType = $response->header('Content-Type') ?? 'application/octet-stream';
+
+        return response($response->body(), 200, [
+            'Content-Type' => $mimeType,
+            'Content-Disposition' => 'attachment; filename="' . $fileName . '"',
+            'Content-Length' => strlen($response->body()),
+        ]);
     }
 }
