@@ -91,7 +91,7 @@
             <div class="sidebar-dropdown-menu" x-show="sidebarOpen">
                 @php
                     $userRoles = auth()->user()->roles->pluck('name')->toArray();
-                    $canViewAll = array_intersect($userRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan']);
+                    $canViewAll = array_intersect($userRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan', 'mahasiswa']);
                     $mahasiswaRoute = $canViewAll
                         ? route('manajemenmahasiswa.direktori.mahasiswa.index')
                         : route('manajemenmahasiswa.direktori.mahasiswa.profil');

@@ -166,8 +166,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('profil.cv');
                 });
 
-                // Daftar semua mahasiswa — admin, gpm, pengurus
-                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,pengurus_himpunan')
+                // Daftar semua mahasiswa — admin, gpm, pengurus, mahasiswa
+                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,pengurus_himpunan,mahasiswa')
                     ->group(function () {
                         Route::get('/', [DirektoriMahasiswaController::class, 'index'])
                             ->name('index');
@@ -212,8 +212,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('profil.update');
                 });
 
-                // Daftar semua alumni — admin, gpm, pengurus, dosen
-                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,pengurus_himpunan')
+                // Daftar semua alumni — admin, gpm, pengurus, dosen, mahasiswa
+                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,pengurus_himpunan,mahasiswa')
                     ->group(function () {
                         Route::get('/', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'index'])
                             ->name('index');
