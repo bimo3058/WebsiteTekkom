@@ -131,6 +131,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::post('/{id}/vote', [ForumController::class, 'vote'])->name('vote');
             Route::post('/{id}/report', [ForumController::class, 'reportThread'])->name('report');
             Route::patch('/{id}/pin', [ForumController::class, 'pin'])->name('pin');
+            Route::patch('/{id}/lock', [ForumController::class, 'lockThread'])->name('lock');
             Route::post('/{id}/personal-pin', [ForumController::class, 'personalPin'])->name('personal_pin');
             Route::get('/{id}/edit', [ForumController::class, 'edit'])->name('edit');
             Route::put('/{id}', [ForumController::class, 'update'])->name('update');
