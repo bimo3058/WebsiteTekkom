@@ -19,7 +19,7 @@
                 Pengalaman dari Sistem (Alumni)
             </h4>
             <div class="space-y-3">
-                <template x-for="exp in data.pengalaman_sync" :key="exp.perusahaan">
+                <template x-for="(exp, index) in data.pengalaman_sync" :key="index">
                     <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 flex justify-between items-start">
                         <div>
                             <h5 class="font-bold text-slate-800 text-sm" x-text="exp.posisi"></h5>
@@ -42,7 +42,7 @@
                 Kegiatan Mahasiswa (Auto)
             </h4>
             <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
-                <template x-for="keg in data.kegiatan_sync" :key="keg.nama">
+                <template x-for="(keg, index) in data.kegiatan_sync" :key="index">
                     <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 flex justify-between items-start">
                         <div>
                             <h5 class="font-bold text-slate-800 text-sm" x-text="keg.nama"></h5>
@@ -58,7 +58,7 @@
     </div>
 
     <div class="border-t border-slate-100 pt-6">
-        <h4 class="text-sm font-bold text-slate-800 mb-4">Tambah Pengalaman Lain (Opsional)</h4>
+        <h4 class="text-sm font-bold text-slate-800 mb-4">Tambah Pengalaman Kerja / Magang (Opsional)</h4>
         
         <!-- Manual Exp List -->
         <div class="space-y-3 mb-4">
@@ -108,7 +108,7 @@
     </div>
 
     <div class="border-t border-slate-100 pt-6 mt-6">
-        <h4 class="text-sm font-bold text-slate-800 mb-4">Tambah Organisasi / Kepanitiaan Lain (Opsional)</h4>
+        <h4 class="text-sm font-bold text-slate-800 mb-4">Tambah Pengalaman Organisasi / Kepanitiaan Lain (Opsional)</h4>
         
         <!-- Manual Org List -->
         <div class="space-y-3 mb-4">

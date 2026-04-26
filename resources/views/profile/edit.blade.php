@@ -128,6 +128,29 @@
                         </div>
                         <div class="p-6 flex-1 flex flex-col">
                             @include('profile.partials.update-profile-information-form')
+
+                            {{-- Shortcut CV Builder Terintegrasi --}}
+                            @if(auth()->user()->hasAnyRole(['mahasiswa', 'alumni']))
+                            <div class="mt-12 pt-8 border-t border-slate-100 mt-auto">
+                                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-4 shadow-md text-white relative overflow-hidden">
+                                    <div class="absolute -right-5 -top-5 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
+                                    <div class="relative z-10">
+                                        <h4 class="text-[14px] font-bold mb-1 flex items-center gap-2">
+                                            <span class="material-symbols-outlined !text-[18px]">description</span>
+                                            CV Builder Cerdas
+                                        </h4>
+                                        <p class="text-[11px] opacity-90 mb-3 leading-relaxed">
+                                            Buat CV profesional semi-otomatis menggunakan data profil, akademik, dan kegiatan Anda.
+                                        </p>
+                                        <a href="{{ route('profile.cv.index') }}" 
+                                           class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-indigo-700 text-[11px] font-bold uppercase tracking-wide rounded-lg hover:bg-slate-50 transition-colors shadow-sm w-full">
+                                            Mulai Buat CV
+                                            <span class="material-symbols-outlined !text-[14px]">arrow_forward</span>
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                            @endif
                         </div>
                     </div>
 
@@ -143,27 +166,7 @@
                     </div>
                 </div>
 
-                {{-- CV Builder Section (Mahasiswa & Alumni Only) --}}
-                @if(auth()->user()->hasAnyRole(['mahasiswa', 'alumni']))
-                <div class="mt-4 mb-6">
-                    <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 shadow-md text-white flex flex-col md:flex-row items-center justify-between gap-6 relative overflow-hidden">
-                        <div class="absolute -right-10 -top-10 w-40 h-40 bg-white opacity-10 rounded-full blur-2xl"></div>
-                        <div class="relative z-10">
-                            <h3 class="text-xl font-bold mb-1 flex items-center gap-2">
-                                <span class="material-symbols-outlined">description</span>
-                                CV Builder Cerdas
-                            </h3>
-                            <p class="text-sm opacity-90">Buat CV profesional semi-otomatis menggunakan data profil, riwayat akademik, dan kegiatan Anda.</p>
-                        </div>
-                        <div class="relative z-10 shrink-0">
-                            <a href="{{ route('profile.cv.index') }}" class="inline-flex items-center gap-2 px-6 py-3 bg-white text-indigo-600 font-bold text-sm rounded-xl hover:bg-slate-50 transition-colors shadow-sm">
-                                Mulai Buat CV
-                                <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
-                            </a>
-                        </div>
-                    </div>
-                </div>
-                @endif
+
             </div>
         </div>
     </div>

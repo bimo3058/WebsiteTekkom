@@ -17,7 +17,7 @@
             Prestasi dari Sistem Kemahasiswaan
         </h4>
         <div class="space-y-3">
-            <template x-for="p in data.prestasi_sync" :key="p.nama">
+            <template x-for="(p, index) in data.prestasi_sync" :key="index">
                 <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 flex justify-between items-start">
                     <div>
                         <h5 class="font-bold text-slate-800 text-sm" x-text="p.nama"></h5>
