@@ -70,12 +70,12 @@
 <div class="user-card"
      data-user-id="{{ $user->id }}"
      data-name="{{ strtolower($user->name) }}"
-     style="background:#fff;border:1px solid #DEE2E6;border-radius:10px;overflow:hidden;margin-bottom:2px;box-shadow:0 1px 3px rgba(0,0,0,.04);{{ $cardBorder }}">
+     style="background:#fff;border:1px solid #e5e7eb;border-radius:12px;overflow:hidden;margin-bottom:2px;box-shadow:0 1px 3px rgba(0,0,0,.04);{{ $cardBorder }}">
 
     {{-- Header / Toggle --}}
     <button type="button" onclick="mkToggleCard({{ $user->id }})"
-        style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:none;border:none;cursor:pointer;text-align:left;transition:background .15s;"
-        onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='none'">
+        style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;background:none;border:none;cursor:pointer;text-align:left;transition:background .15s;"
+        onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='none'">
 
         <div style="display:flex;align-items:center;gap:12px;flex:1;min-width:0;">
             {{-- Avatar --}}
@@ -132,7 +132,7 @@
 
     {{-- Body --}}
     @if($canEdit)
-    <div id="card-body-{{ $user->id }}" style="display:none;border-top:1px solid #DEE2E6;background:#FAFAFA;padding:20px 20px 16px;">
+    <div id="card-body-{{ $user->id }}" style="display:none;border-top:1px solid #e5e7eb;background:#f9fafb;padding:20px 20px 16px;">
 
         <form method="POST"
               action="{{ route('manajemenmahasiswa.pengguna.update-role', $user->id) }}"
@@ -213,10 +213,10 @@
             </div>
 
             {{-- Save Button --}}
-            <div style="display:flex;justify-content:flex-end;padding-top:12px;border-top:1px solid #DEE2E6;">
+            <div style="display:flex;justify-content:flex-end;padding-top:12px;border-top:1px solid #e5e7eb;">
                 <button type="submit"
-                    style="background:#1A1C1E;color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.15em;padding:10px 24px;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s;"
-                    onmouseover="this.style.background='#5E53F4'" onmouseout="this.style.background='#1A1C1E'">
+                    style="background:#4f46e5;color:#fff;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;padding:10px 24px;border:none;border-radius:10px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .2s;"
+                    onmouseover="this.style.background='#4338ca'" onmouseout="this.style.background='#4f46e5'">
                     <span class="material-symbols-outlined" style="font-size:16px;">save</span>
                     Simpan Perubahan
                 </button>

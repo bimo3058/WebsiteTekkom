@@ -16,6 +16,11 @@
         $showDashboardAnalitik = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm'])) > 0;
         $showManajemenPengguna = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit'])) > 0;
 
+        // Tentukan URL dashboard utama sesuai role
+        $mainDashboardUrl = in_array('superadmin', $sidebarRoles)
+            ? route('superadmin.dashboard')
+            : route('dashboard');
+
         if (array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan'])) {
             $portalLabel = 'Portal Admin';
         } elseif (array_intersect($sidebarRoles, ['gpm', 'dosen_koordinator', 'dosen'])) {
@@ -46,6 +51,22 @@
     <div class="menu-title mb-2" x-show="sidebarOpen">Main Menu</div>
 
     <nav class="sidebar-nav d-flex flex-column gap-1">
+        {{-- Dashboard Utama — selalu tampil, link sesuai role --}}
+        <a href="{{ $mainDashboardUrl }}"
+           class="nav-link-item"
+           :class="{ 'justify-content-center': !sidebarOpen }"
+           style="border-bottom: 1px solid #e5e7eb; margin-bottom: 4px; padding-bottom: 10px;">
+            <span class="nav-icon d-inline-flex">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </span>
+            <span class="nav-label" x-show="sidebarOpen" style="flex-grow:1;">Dashboard Utama</span>
+            <svg x-show="sidebarOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.4; flex-shrink:0;"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+
         @if($showDashboardAnalitik)
             <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.dashboard') }}"
                 routeName="manajemenmahasiswa.dashboard" label="Dashboard Analitik">
@@ -56,6 +77,24 @@
                         <path d="M18 17V9"></path>
                         <path d="M13 17V5"></path>
                         <path d="M8 17v-3"></path>
+                    </svg>
+                </x-slot:iconSlot>
+            </x-manajemenmahasiswa::ui.sidebar-item>
+        @endif
+
+
+        @if($showManajemenPengguna)
+            <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengguna.index') }}"
+                routeName="manajemenmahasiswa.pengguna" label="Manajemen Pengguna">
+                <x-slot:iconSlot>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        <line x1="19" y1="8" x2="23" y2="12"></line>
+                        <line x1="23" y1="8" x2="19" y2="12"></line>
                     </svg>
                 </x-slot:iconSlot>
             </x-manajemenmahasiswa::ui.sidebar-item>
@@ -177,24 +216,7 @@
             </x-slot:iconSlot>
         </x-manajemenmahasiswa::ui.sidebar-item>
 
-        @if($showManajemenPengguna)
-            <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengguna.index') }}"
-                routeName="manajemenmahasiswa.pengguna" label="Manajemen Pengguna">
-                <x-slot:iconSlot>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                        <line x1="19" y1="8" x2="23" y2="12"></line>
-                        <line x1="23" y1="8" x2="19" y2="12"></line>
-                    </svg>
-                </x-slot:iconSlot>
-            </x-manajemenmahasiswa::ui.sidebar-item>
-        @endif
-
-        @if(!array_intersect($sidebarRoles, ['gpm', 'dosen_koordinator', 'dosen']))
+        @if(!array_intersect($sidebarRoles, ['gpm', 'dosen_koordinator', 'dosen', 'alumni']))
             <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengaduan.index') }}"
                 routeName="manajemenmahasiswa.pengaduan" label="Layanan Pengaduan">
                 <x-slot:iconSlot>

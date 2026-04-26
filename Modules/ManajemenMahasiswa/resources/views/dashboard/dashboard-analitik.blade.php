@@ -119,23 +119,60 @@
             /* ── Chart Row ───────────────────────────────────────────────────── */
             .chart-row {
                 display: grid;
-                grid-template-columns: 1fr 340px;
+                grid-template-columns: 1fr 270px;
                 gap: 16px;
                 margin-bottom: 20px;
             }
 
-            /* ── Donut chart container — fixed size to prevent resize on hover ── */
+            /* Sidebar collapsed → lebih banyak ruang */
+            body.sidebar-collapsed .chart-row {
+                grid-template-columns: 1fr 340px;
+            }
+
+            /* Prevent grid children from overflowing their cells */
+            .chart-row > * {
+                min-width: 0;
+            }
+
+            /* ── Donut chart container ───────────────────────────────────────── */
             .donut-canvas-wrapper {
                 position: relative;
-                width: 200px;
-                height: 200px;
+                width: 160px;
+                height: 160px;
                 margin: 0 auto;
             }
 
+            body.sidebar-collapsed .donut-canvas-wrapper {
+                width: 200px;
+                height: 200px;
+            }
+
+            /* Donut total label font size adjustments */
+            .donut-total .total-num {
+                font-size: 20px;
+            }
+
+            body.sidebar-collapsed .donut-total .total-num {
+                font-size: 26px;
+            }
+
             /* ── Responsive breakpoints ─────────────────────────────────────── */
+            @media (max-width: 1280px) {
+                body.sidebar-collapsed .chart-row {
+                    grid-template-columns: 1fr 300px;
+                }
+                body.sidebar-collapsed .donut-canvas-wrapper {
+                    width: 170px;
+                    height: 170px;
+                }
+                body.sidebar-collapsed .donut-total .total-num {
+                    font-size: 22px;
+                }
+            }
+
             @media (max-width: 1024px) {
                 .chart-row {
-                    grid-template-columns: 1fr;
+                    grid-template-columns: 1fr !important;
                 }
             }
 
@@ -148,11 +185,6 @@
             @media (max-width: 480px) {
                 .stat-grid {
                     grid-template-columns: 1fr;
-                }
-
-                .donut-canvas-wrapper {
-                    width: 160px;
-                    height: 160px;
                 }
             }
 
@@ -388,21 +420,6 @@
                 background: #fff;
                 cursor: pointer;
             }
-
-            .info-icon-btn {
-                width: 24px;
-                height: 24px;
-                border-radius: 50%;
-                border: 1px solid #e5e7eb;
-                background: #fff;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                cursor: pointer;
-                color: #9ca3af;
-                font-size: 11px;
-                font-weight: 700;
-            }
         </style>
     @endpush
 
@@ -522,7 +539,7 @@
         {{-- Tren Mahasiswa / Semester --}}
         <div class="chart-card">
             <div class="chart-header">
-                <span class="chart-title">Tren Mahasiswa / Semester</span>
+                <span class="chart-title">Tren Mahasiswa per Angkatan</span>
             </div>
             <canvas id="trenChart" height="100"></canvas>
         </div>
@@ -531,7 +548,6 @@
         <div class="chart-card">
             <div class="chart-header">
                 <span class="chart-title">Status Mahasiswa</span>
-                <button class="info-icon-btn" title="Info">i</button>
             </div>
             <div class="donut-canvas-wrapper">
                 <canvas id="statusChart"></canvas>
@@ -581,8 +597,6 @@
         <div class="chart-card">
             <div class="chart-header">
                 <span class="chart-title">Serapan Kerja per Angkatan (%)</span>
-                <button class="info-icon-btn"
-                    title="Persentase alumni yang sudah bekerja/wirausaha per angkatan">i</button>
             </div>
             <canvas id="serapanChart" height="100"></canvas>
         </div>
@@ -591,7 +605,6 @@
         <div class="chart-card">
             <div class="chart-header">
                 <span class="chart-title">Distribusi Industri</span>
-                <button class="info-icon-btn" title="Sebaran bidang industri tempat alumni bekerja">i</button>
             </div>
             <div class="donut-canvas-wrapper">
                 <canvas id="industriChart"></canvas>
@@ -699,32 +712,18 @@
                 type: 'line',
                 data: {
                     labels: angkatanLabels.length ? angkatanLabels : ['2019', '2020', '2021', '2022', '2023', '2024'],
-                    datasets: [
-                        {
-                            label: 'Mahasiswa',
-                            data: angkatanData.length ? angkatanData : [120, 180, 200, 230, 260, 210],
-                            borderColor: '#4f46e5',
-                            backgroundColor: 'rgba(79,70,229,0.08)',
-                            tension: 0.4,
-                            fill: true,
-                            pointBackgroundColor: '#4f46e5',
-                            pointRadius: 4,
-                            pointHoverRadius: 6,
-                            borderWidth: 2,
-                        },
-                        {
-                            label: 'Kegiatan',
-                            data: kegiatanData.length ? kegiatanData : [60, 90, 85, 110, 100, 95],
-                            borderColor: '#a5b4fc',
-                            backgroundColor: 'transparent',
-                            tension: 0.4,
-                            fill: false,
-                            borderDash: [5, 4],
-                            pointRadius: 3,
-                            pointHoverRadius: 5,
-                            borderWidth: 2,
-                        }
-                    ]
+                    datasets: [{
+                        label: 'Mahasiswa',
+                        data: angkatanData.length ? angkatanData : [120, 180, 200, 230, 260, 210],
+                        borderColor: '#4f46e5',
+                        backgroundColor: 'rgba(79,70,229,0.08)',
+                        tension: 0.4,
+                        fill: true,
+                        pointBackgroundColor: '#4f46e5',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        borderWidth: 2,
+                    }]
                 },
                 options: {
                     responsive: true,
@@ -746,23 +745,18 @@
                             ticks: { color: '#9ca3af', font: { size: 11 } }
                         },
                         y: {
+                            beginAtZero: true,
                             grid: { color: '#f3f4f6' },
-                            ticks: { color: '#9ca3af', font: { size: 11 } }
+                            ticks: {
+                                color: '#9ca3af',
+                                font: { size: 11 },
+                                precision: 0,
+                            }
                         }
                     }
                 }
             });
 
-            function updateChart(period) {
-                if (period === 'yearly') {
-                    trenChart.data.labels = angkatanLabels.length ? angkatanLabels : ['2019', '2020', '2021', '2022', '2023', '2024'];
-                    trenChart.data.datasets[0].data = angkatanData.length ? angkatanData : [120, 180, 200, 230, 260, 210];
-                } else {
-                    trenChart.data.labels = kegiatanLabels.length ? kegiatanLabels : ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
-                    trenChart.data.datasets[0].data = kegiatanData.length ? kegiatanData : [60, 90, 85, 110, 100, 95];
-                }
-                trenChart.update();
-            }
 
             // ── Status Donut Chart ────────────────────────────────────────────
             const statusCtx = document.getElementById('statusChart').getContext('2d');
@@ -917,6 +911,16 @@
                         legendEl.appendChild(item);
                     });
                 }
+            }
+
+            // ── Resize charts saat sidebar toggle ────────────────────────────
+            const sidebarToggleBtn = document.querySelector('.sidebar-toggle');
+            if (sidebarToggleBtn) {
+                sidebarToggleBtn.addEventListener('click', () => {
+                    setTimeout(() => {
+                        Object.values(Chart.instances).forEach(c => c.resize());
+                    }, 320); // setelah CSS transition selesai (0.3s)
+                });
             }
         </script>
     @endpush
