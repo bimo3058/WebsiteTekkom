@@ -326,7 +326,12 @@
                                     </td>
                                     <td>
                                         @foreach($entry->badges->take(3) as $badge)
-                                            <span title="{{ $badge->name }}">{{ $badge->icon }}</span>
+                                            @if($badge->image)
+                                                <img src="{{ asset($badge->image) }}?v={{ time() }}" title="{{ $badge->name }}" style="width: 22px; height: 22px; object-fit: contain; margin-right: 2px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                                <span style="display:none;">{{ $badge->icon }}</span>
+                                            @else
+                                                <span title="{{ $badge->name }}">{{ $badge->icon }}</span>
+                                            @endif
                                         @endforeach
                                         @if($entry->badges->count() > 3)
                                             <span
@@ -379,8 +384,13 @@
                 @if($userStats['badges']->isNotEmpty())
                     <div class="mt-3 ps-4 d-flex align-items-center gap-1 flex-wrap">
                         @foreach($userStats['badges'] as $badge)
-                            <span title="{{ $badge->name }}: {{ $badge->description }}"
-                                style="font-size: 18px; cursor: help;">{{ $badge->icon }}</span>
+                            @if($badge->image)
+                                <img src="{{ asset($badge->image) }}?v={{ time() }}" title="{{ $badge->name }}: {{ $badge->description }}" style="width: 24px; height: 24px; object-fit: contain; cursor: help;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                <span style="display:none; font-size: 18px; cursor: help;" title="{{ $badge->name }}: {{ $badge->description }}">{{ $badge->icon }}</span>
+                            @else
+                                <span title="{{ $badge->name }}: {{ $badge->description }}"
+                                    style="font-size: 18px; cursor: help;">{{ $badge->icon }}</span>
+                            @endif
                         @endforeach
                     </div>
                 @endif

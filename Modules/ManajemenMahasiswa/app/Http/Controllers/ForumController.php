@@ -545,6 +545,21 @@ class ForumController extends Controller
     }
 
     /**
+     * Update komentar.
+     */
+    public function updateComment(int $commentId, Request $request)
+    {
+        $request->validate(['konten' => 'required|string|min:3']);
+
+        try {
+            $this->commentService->updateComment($commentId, Auth::id(), $request->konten);
+            return back()->with('success', 'Komentar berhasil diperbarui.');
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['konten' => $e->getMessage()]);
+        }
+    }
+
+    /**
      * Hapus komentar.
      */
     public function destroyComment(int $commentId)

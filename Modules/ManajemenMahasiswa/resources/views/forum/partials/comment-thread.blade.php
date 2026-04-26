@@ -1,6 +1,10 @@
-{{-- Recursive comment thread partial (Reddit-style nesting) --}}
-@php $depth = $depth ?? 0; @endphp
-<div class="comment-item" style="{{ $depth > 0 ? 'margin-left:'.min($depth * 20, 80).'px; padding-left:14px; border-left:2px solid ' . ($depth === 1 ? '#e2e8f0' : ($depth === 2 ? '#f1f5f9' : '#f8fafc')) . '; margin-bottom:12px; padding-bottom:12px;' : '' }}">
+{{-- YouTube-style comment thread partial --}}
+@php 
+    $depth = $depth ?? 0; 
+    $repliedUser = $comment->getRepliedToUsername();
+@endphp
+
+<div class="comment-item" style="{{ $depth > 0 ? 'margin-bottom:12px; padding-bottom:12px; border-bottom: 1px solid #f8fafc;' : '' }}">
     <div class="d-flex gap-2">
         <div class="avatar-placeholder avatar-sm flex-shrink-0"
              style="background-color: {{ $comment->is_best_answer ? '#dcfce7' : ($depth === 0 ? '#fce7f3' : '#f3f4f6') }};
@@ -22,7 +26,11 @@
                     <span class="best-answer-badge">⭐ Jawaban Terbaik</span>
                 @endif
             </div>
+            
             <p class="text-dark mb-1" style="font-size: {{ $depth === 0 ? '14px' : '13px' }}; line-height: 1.5;">
+                @if($repliedUser)
+                    <span class="reply-mention">{{ '@' . $repliedUser }}</span>
+                @endif
                 {!! nl2br(e($comment->konten)) !!}
             </p>
 
@@ -30,6 +38,7 @@
             @php
                 $commentVoteKey = \Modules\ManajemenMahasiswa\Models\Comment::class . '_' . $comment->id;
                 $commentUserVote = $userVotes[$commentVoteKey] ?? null;
+                $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
             @endphp
             <div class="comment-actions">
                 <div class="c-vote-pill">
@@ -47,7 +56,14 @@
                     Balas
                 </button>
                 @endunless
-                @if($comment->user_id === $user->id || $thread->user_id === $user->id)
+                
+                @if($comment->user_id === $user->id)
+                    <button type="button" class="c-action-btn toggle-edit-btn" data-comment-id="{{ $comment->id }}">
+                        ✏️ Edit
+                    </button>
+                @endif
+                
+                @if($comment->user_id === $user->id || $isAdmin)
                     <form method="POST" action="{{ route('manajemenmahasiswa.forum.comments.destroy', $comment->id) }}" style="display:inline;" onsubmit="return confirm('Hapus komentar ini?')">
                         @csrf @method('DELETE')
                         <button type="submit" class="c-action-btn" style="color:#ef4444;">Hapus</button>
@@ -79,11 +95,38 @@
             </div>
             @endunless
 
-            {{-- Recursive Nested Replies --}}
-            @if($comment->allReplies && $comment->allReplies->isNotEmpty())
-                @foreach($comment->allReplies as $childComment)
-                    @include('manajemenmahasiswa::forum.partials.comment-thread', ['comment' => $childComment, 'depth' => $depth + 1])
-                @endforeach
+            {{-- Inline Edit Form --}}
+            @if($comment->user_id === $user->id)
+            <div class="inline-reply-form inline-edit-form" id="edit-form-{{ $comment->id }}">
+                <form method="POST" action="{{ route('manajemenmahasiswa.forum.comments.update', $comment->id) }}" class="edit-submit-form">
+                    @csrf
+                    @method('PUT')
+                    <textarea name="konten" rows="2" placeholder="Edit komentar..." required minlength="3">{{ $comment->konten }}</textarea>
+                    <div class="reply-actions">
+                        <button type="button" class="btn-cancel cancel-edit-btn" data-comment-id="{{ $comment->id }}">Batal</button>
+                        <button type="submit" class="btn-reply-submit">Simpan Edit</button>
+                    </div>
+                </form>
+            </div>
+            @endif
+
+            {{-- YouTube Style Flat Replies --}}
+            @if($depth === 0)
+                @php
+                    $flatReplies = $comment->getFlattenedReplies();
+                @endphp
+                @if($flatReplies->isNotEmpty())
+                    <button type="button" class="toggle-replies-btn" data-target="replies-container-{{ $comment->id }}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                        <span class="toggle-text">{{ $flatReplies->count() }} balasan</span>
+                    </button>
+
+                    <div class="replies-container" id="replies-container-{{ $comment->id }}" style="margin-left: 18px; border-left: 2px solid #e5e7eb; padding-left: 20px;">
+                        @foreach($flatReplies as $replyComment)
+                            @include('manajemenmahasiswa::forum.partials.comment-thread', ['comment' => $replyComment, 'depth' => 1])
+                        @endforeach
+                    </div>
+                @endif
             @endif
         </div>
     </div>
