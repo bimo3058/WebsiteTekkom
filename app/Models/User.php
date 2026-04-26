@@ -39,12 +39,12 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            'email_verified_at'    => 'datetime',
-            'sso_data'             => 'json',
-            'last_login'           => 'datetime',
+            'email_verified_at' => 'datetime',
+            'sso_data' => 'json',
+            'last_login' => 'datetime',
             'last_synced_from_sso' => 'datetime',
-            'suspended_at'         => 'datetime',
-            'is_online'            => 'boolean',
+            'suspended_at' => 'datetime',
+            'is_online' => 'boolean',
         ];
     }
 
@@ -84,7 +84,8 @@ class User extends Authenticatable
     {
         return \Illuminate\Database\Eloquent\Casts\Attribute::make(
             get: function ($value) {
-                if (!$value) return null;
+                if (!$value)
+                    return null;
 
                 return cache()->remember(
                     "user_avatar_{$this->id}_" . md5($value),
@@ -124,7 +125,7 @@ class User extends Authenticatable
     public function directPermissions()
     {
         return $this->belongsToMany(Permission::class, 'user_permissions', 'user_id', 'permission_id')
-                    ->withTimestamps();
+            ->withTimestamps();
     }
 
     /*
@@ -184,16 +185,16 @@ class User extends Authenticatable
      */
     public function syncPermissions($permissions): array
     {
-        $input   = collect($permissions);
+        $input = collect($permissions);
         $numeric = $input->filter(fn($p) => is_numeric($p))->map(fn($p) => (int) $p);
-        $names   = $input->reject(fn($p) => is_numeric($p));
+        $names = $input->reject(fn($p) => is_numeric($p));
 
-        $resolved   = Permission::whereIn('name', $names)->pluck('id', 'name');
-        $notFound   = $names->diff($resolved->keys());
+        $resolved = Permission::whereIn('name', $names)->pluck('id', 'name');
+        $notFound = $names->diff($resolved->keys());
 
         if ($notFound->isNotEmpty()) {
             Log::warning("Permissions not found during sync", [
-                'user_id'   => $this->id,
+                'user_id' => $this->id,
                 'not_found' => $notFound->values(),
             ]);
         }
@@ -216,7 +217,8 @@ class User extends Authenticatable
 
     public function hasPermissionTo(string $permissionName): bool
     {
-        if ($this->hasRole('superadmin')) return true;
+        if ($this->hasRole('superadmin'))
+            return true;
 
         return $this->getAllPermissions()->contains(strtolower(trim($permissionName)));
     }
@@ -236,7 +238,7 @@ class User extends Authenticatable
     public function getAllPermissions(): \Illuminate\Support\Collection
     {
         return Cache::remember("user:{$this->id}:all_permissions_final", 3600, function () {
-            $roles  = $this->roles()->with('permissions')->get();
+            $roles = $this->roles()->with('permissions')->get();
             $direct = $this->directPermissions()->pluck('name');
 
             return $roles
@@ -266,16 +268,17 @@ class User extends Authenticatable
         }
 
         $cached = Cache::get("user:{$this->id}:roles");
-        if ($cached) return collect($cached);
+        if ($cached)
+            return collect($cached);
 
         $roles = $this->roles()->get();
 
         Cache::put(
             "user:{$this->id}:roles",
             $roles->map(fn($r) => [
-                'id'          => $r->id,
-                'name'        => $r->name,
-                'module'      => $r->module,
+                'id' => $r->id,
+                'name' => $r->name,
+                'module' => $r->module,
                 'is_academic' => (bool) $r->is_academic,
             ])->toArray(),
             now()->addHours(8)
@@ -316,7 +319,7 @@ class User extends Authenticatable
     public function suspend(string $reason = ''): void
     {
         $this->update([
-            'suspended_at'      => now(),
+            'suspended_at' => now(),
             'suspension_reason' => $reason,
         ]);
         $this->forceLogout();
@@ -325,7 +328,7 @@ class User extends Authenticatable
     public function unsuspend(): void
     {
         $this->update([
-            'suspended_at'      => null,
+            'suspended_at' => null,
             'suspension_reason' => null,
         ]);
     }
@@ -346,7 +349,7 @@ class User extends Authenticatable
     {
         static::where('id', $this->id)->update([
             'last_login' => now(),
-            'is_online'  => DB::raw('true'),
+            'is_online' => DB::raw('true'),
         ]);
     }
 }

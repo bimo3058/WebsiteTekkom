@@ -45,7 +45,7 @@
             @php
                 $commentVoteKey = \Modules\ManajemenMahasiswa\Models\Comment::class . '_' . $comment->id;
                 $commentUserVote = $userVotes[$commentVoteKey] ?? null;
-                $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+                $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
             @endphp
             <div class="comment-actions">
                 <div class="c-vote-pill">

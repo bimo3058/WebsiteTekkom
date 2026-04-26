@@ -402,16 +402,31 @@
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 8px;">
-                    {{-- Edit (owner + admin) --}}
-                    @if($thread->user_id === $user->id || $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
+                    {{-- Edit (owner only) --}}
+                    @if($thread->user_id === $user->id)
                         <li>
                             <a href="{{ route('manajemenmahasiswa.forum.edit', $thread->id) }}" class="dropdown-item d-flex align-items-center gap-2">
                                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit Thread
                             </a>
                         </li>
                     @endif
+                    {{-- Lock / Unlock (admin only) --}}
+                    @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']))
+                        <li>
+                            <form method="POST" action="{{ route('manajemenmahasiswa.forum.lock', $thread->id) }}">
+                                @csrf @method('PATCH')
+                                <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
+                                    @if($thread->is_locked)
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Unlock Thread
+                                    @else
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Kunci Thread
+                                    @endif
+                                </button>
+                            </form>
+                        </li>
+                    @endif
                     {{-- Pin Global (admin only) --}}
-                    @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
+                    @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']))
                         <li>
                             <form method="POST" action="{{ route('manajemenmahasiswa.forum.pin', $thread->id) }}">
                                 @csrf @method('PATCH')
@@ -447,7 +462,7 @@
                                 </button>
                             </form>
                         </li>
-                    @elseif($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
+                    @elseif($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']))
                         <li>
                             <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
                                   onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
@@ -458,7 +473,7 @@
                             </form>
                         </li>
                     @endif
-                    @if($thread->user_id !== $user->id)
+                    @if($thread->user_id !== $user->id && !$user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']))
                         <li>
                             <button type="button" class="dropdown-item text-danger"
                                     data-bs-toggle="modal" data-bs-target="#reportModal"
@@ -550,7 +565,7 @@
             <button class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === 1 ? 'vote-active-up' : '' }}" data-thread-id="{{ $thread->id }}" data-value="1">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
             </button>
-            <span id="thread-vote-count">{{ max(0, $thread->vote_count) }}</span>
+            <span id="thread-vote-count">{{ $thread->vote_count }}</span>
             <button class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === -1 ? 'vote-active-down' : '' }}" data-thread-id="{{ $thread->id }}" data-value="-1">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
             </button>

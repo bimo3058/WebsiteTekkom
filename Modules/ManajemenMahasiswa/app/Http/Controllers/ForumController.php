@@ -61,7 +61,7 @@ class ForumController extends Controller
         }
 
         // Load reports for admin
-        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
         $forumReports = $isAdmin
             ? \Modules\ManajemenMahasiswa\Models\ForumReport::with(['reporter', 'thread.author'])->latest()->get()
             : collect();
@@ -308,11 +308,11 @@ class ForumController extends Controller
      */
     public function edit(int $id)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
         $thread = $this->threadService->findThread($id);
-        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
 
-        if (!$isAdmin && $thread->user_id !== $user->id) {
+        if ($thread->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit thread ini.');
         }
 
@@ -326,9 +326,13 @@ class ForumController extends Controller
      */
     public function update(int $id, Request $request)
     {
+        /** @var \App\Models\User $user */
         $user = Auth::user();
-        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
         $thread = $this->threadService->findThread($id);
+
+        if ($thread->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses untuk mengedit thread ini.');
+        }
 
         // Hitung media existing yang dipertahankan
         $removeMedia = $request->input('remove_media', []);
@@ -430,7 +434,7 @@ class ForumController extends Controller
             'konten' => $konten,
             'kategori' => $validated['kategori'],
             'remove_media' => $removeMedia,
-        ], $isAdmin);
+        ]);
 
         return redirect()
             ->route('manajemenmahasiswa.forum.show', $id)
@@ -453,7 +457,7 @@ class ForumController extends Controller
      */
     public function destroy(int $id)
     {
-        $isAdmin = Auth::user()->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+        $isAdmin = Auth::user()->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
         $this->threadService->deleteThread($id, Auth::id(), $isAdmin);
 
         return redirect()->route('manajemenmahasiswa.forum.index')
@@ -465,7 +469,7 @@ class ForumController extends Controller
      */
     public function pin(int $id)
     {
-        $isAdmin = Auth::user()->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+        $isAdmin = Auth::user()->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
         if (!$isAdmin) {
             abort(403, 'Akses ditolak.');
         }
@@ -473,6 +477,25 @@ class ForumController extends Controller
         $thread = $this->threadService->pinThread($id);
 
         $status = $thread->is_pinned ? 'dipin' : 'di-unpin';
+        return back()->with('success', "Thread berhasil {$status}.");
+    }
+
+    /**
+     * Lock / Unlock thread (admin only).
+     */
+    public function lockThread(int $id)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan'])) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $thread = Thread::findOrFail($id);
+        $thread->is_locked = !$thread->is_locked;
+        $thread->save();
+
+        $status = $thread->is_locked ? 'dikunci' : 'dibuka kuncinya';
         return back()->with('success', "Thread berhasil {$status}.");
     }
 
@@ -570,7 +593,7 @@ class ForumController extends Controller
      */
     public function destroyComment(int $commentId)
     {
-        $isAdmin = Auth::user()->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+        $isAdmin = Auth::user()->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
         $this->commentService->deleteComment($commentId, Auth::id(), $isAdmin);
 
         return back()->with('success', 'Komentar berhasil dihapus.');
@@ -615,7 +638,7 @@ class ForumController extends Controller
     public function markBestAnswer(int $threadId, int $commentId)
     {
         $user = Auth::user();
-        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
 
         try {
             $this->threadService->markBestAnswer($threadId, $commentId, $user->id);

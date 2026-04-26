@@ -49,19 +49,19 @@ class Thread extends Model
     ];
 
     const KATEGORI_LABELS = [
-        'loker_karir'    => 'Loker & Karir',
-        'tanya_tugas'    => 'Tanya Tugas',
-        'info_skripsi'   => 'Info Skripsi',
+        'loker_karir' => 'Loker & Karir',
+        'tanya_tugas' => 'Tanya Tugas',
+        'info_skripsi' => 'Info Skripsi',
         'sharing_alumni' => 'Sharing Alumni',
-        'umum'           => 'Umum',
+        'umum' => 'Umum',
     ];
 
     const KATEGORI_COLORS = [
-        'loker_karir'    => 'tag-green',
-        'tanya_tugas'    => 'tag-red',
-        'info_skripsi'   => 'tag-blue',
+        'loker_karir' => 'tag-green',
+        'tanya_tugas' => 'tag-red',
+        'info_skripsi' => 'tag-blue',
         'sharing_alumni' => 'tag-purple',
-        'umum'           => 'tag-gray',
+        'umum' => 'tag-gray',
     ];
 
     // -------------------------------------------------------------------------
@@ -117,7 +117,10 @@ class Thread extends Model
         $keyword = strtolower($keyword);
         return $query->where(function ($q) use ($keyword) {
             $q->whereRaw('LOWER(mk_threads.judul) LIKE ?', ["%{$keyword}%"])
-              ->orWhereRaw('LOWER(mk_threads.konten) LIKE ?', ["%{$keyword}%"]);
+                ->orWhereRaw('LOWER(mk_threads.konten) LIKE ?', ["%{$keyword}%"])
+                ->orWhereHas('author', function ($uq) use ($keyword) {
+                    $uq->whereRaw('LOWER(name) LIKE ?', ["%{$keyword}%"]);
+                });
         });
     }
 
@@ -130,7 +133,8 @@ class Thread extends Model
      */
     public function getKategoriLabels(): array
     {
-        if (!is_array($this->kategori)) return [];
+        if (!is_array($this->kategori))
+            return [];
         return array_map(fn($k) => self::KATEGORI_LABELS[$k] ?? $k, $this->kategori);
     }
 
@@ -139,7 +143,8 @@ class Thread extends Model
      */
     public function getKategoriColors(): array
     {
-        if (!is_array($this->kategori)) return [];
+        if (!is_array($this->kategori))
+            return [];
         return array_map(fn($k) => self::KATEGORI_COLORS[$k] ?? 'tag-gray', $this->kategori);
     }
 
@@ -224,7 +229,7 @@ class Thread extends Model
     public function syncVoteCount(): void
     {
         $this->update([
-            'vote_count' => max(0, $this->votes()->sum('value')),
+            'vote_count' => $this->votes()->where('value', 1)->count(),
         ]);
     }
 
