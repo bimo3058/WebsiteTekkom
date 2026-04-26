@@ -274,6 +274,113 @@
                 align-items: center;
                 gap: 4px;
             }
+
+            /* ── Admin Report Panel ──────────────────────────────────────────── */
+            .report-panel {
+                background: #fff;
+                border: 1px solid #fecaca;
+                border-radius: 12px;
+                margin-bottom: 20px;
+                overflow: hidden;
+            }
+            .report-panel-header {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 14px 20px;
+                background: #fef2f2;
+                cursor: pointer;
+                transition: background 0.2s;
+            }
+            .report-panel-header:hover { background: #fee2e2; }
+            .report-panel-header .chevron-icon { transition: transform 0.3s; }
+            .report-panel-header .chevron-icon.rotated { transform: rotate(180deg); }
+            .report-panel-header h6 {
+                font-size: 14px;
+                font-weight: 700;
+                color: #991b1b;
+                margin: 0;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+            .report-panel-header .report-badge {
+                background: #ef4444;
+                color: #fff;
+                font-size: 11px;
+                font-weight: 700;
+                padding: 2px 8px;
+                border-radius: 20px;
+            }
+            .report-panel-body {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease;
+            }
+            .report-panel-body.open { max-height: 2000px; }
+            .report-item {
+                padding: 14px 20px;
+                border-top: 1px solid #fecaca;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+            }
+            .report-item:first-child { border-top: none; }
+            .report-item-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                gap: 12px;
+            }
+            .report-thread-title {
+                font-size: 14px;
+                font-weight: 700;
+                color: #111827;
+                text-decoration: none;
+                transition: color 0.2s;
+            }
+            .report-thread-title:hover { color: #6366f1; }
+            .report-reason-text {
+                background: #fef2f2;
+                border: 1px solid #fecaca;
+                border-radius: 6px;
+                padding: 8px 12px;
+                font-size: 12px;
+                color: #991b1b;
+                line-height: 1.4;
+            }
+            .report-meta-line {
+                font-size: 11px;
+                color: #6b7280;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+            }
+            .report-actions-row {
+                display: flex;
+                gap: 6px;
+                flex-wrap: wrap;
+            }
+            .report-action-btn {
+                padding: 5px 12px;
+                border-radius: 6px;
+                font-size: 11px;
+                font-weight: 600;
+                border: 1px solid #e5e7eb;
+                background: #fff;
+                color: #374151;
+                cursor: pointer;
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                transition: all 0.15s;
+                text-decoration: none;
+            }
+            .report-action-btn:hover { border-color: #6366f1; color: #6366f1; }
+            .report-action-btn.danger { border-color: #fecaca; color: #dc2626; }
+            .report-action-btn.danger:hover { background: #fef2f2; }
+            .report-action-btn.warning { border-color: #fde68a; color: #d97706; }
+            .report-action-btn.warning:hover { background: #fffbeb; }
         </style>
     @endpush
 
@@ -452,6 +559,63 @@
             </button>
         </div>
     </form>
+
+    {{-- Admin Report Panel --}}
+    @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']) && $forumReports->isNotEmpty())
+        <div class="report-panel">
+            <div class="report-panel-header" onclick="this.nextElementSibling.classList.toggle('open'); this.querySelector('.chevron-icon').classList.toggle('rotated')">
+                <h6>
+                    🚩 Laporan Masuk
+                    <span class="report-badge">{{ $forumReports->count() }}</span>
+                </h6>
+                <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#991b1b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.3s;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </div>
+            <div class="report-panel-body">
+                @foreach($forumReports as $report)
+                    <div class="report-item">
+                        <div class="report-item-header">
+                            <div>
+                                @if($report->thread)
+                                    <a href="{{ route('manajemenmahasiswa.forum.show', $report->thread_id) }}" class="report-thread-title">
+                                        {{ $report->thread->judul }}
+                                    </a>
+                                @else
+                                    <span class="report-thread-title" style="color:#9ca3af;text-decoration:line-through;">Thread telah dihapus</span>
+                                @endif
+                            </div>
+                            <span style="font-size:11px; color:#9ca3af; white-space:nowrap;">{{ $report->created_at->diffForHumans() }}</span>
+                        </div>
+                        <div class="report-meta-line">
+                            Dilaporkan oleh <strong>{{ $report->reporter->name ?? 'Unknown' }}</strong>
+                            @if($report->thread && $report->thread->author)
+                                &nbsp;• Thread oleh <strong>{{ $report->thread->author->name }}</strong>
+                            @endif
+                        </div>
+                        <div class="report-reason-text">🚩 {{ $report->alasan }}</div>
+                        <div class="report-actions-row">
+                            @if($report->thread)
+                                <a href="{{ route('manajemenmahasiswa.forum.show', $report->thread_id) }}" class="report-action-btn">👁️ Lihat</a>
+                                @if(!($report->thread->is_locked ?? false))
+                                    <form method="POST" action="{{ route('manajemenmahasiswa.forum.reports.lock_thread', $report->id) }}" style="display:inline;" onsubmit="return confirm('Kunci thread ini?')">
+                                        @csrf @method('PATCH')
+                                        <button type="submit" class="report-action-btn warning">🔒 Kunci</button>
+                                    </form>
+                                @endif
+                                <form method="POST" action="{{ route('manajemenmahasiswa.forum.reports.delete_thread', $report->id) }}" style="display:inline;" onsubmit="return confirm('HAPUS thread ini secara permanen?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="report-action-btn danger">🗑️ Hapus Thread</button>
+                                </form>
+                            @endif
+                            <form method="POST" action="{{ route('manajemenmahasiswa.forum.reports.dismiss', $report->id) }}" style="display:inline;" onsubmit="return confirm('Abaikan laporan ini?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="report-action-btn">✕ Abaikan</button>
+                            </form>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
 
     <!-- Forum Posts -->
     <div class="forum-cards-container">

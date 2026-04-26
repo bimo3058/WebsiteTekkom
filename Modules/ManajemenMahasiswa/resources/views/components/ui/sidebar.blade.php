@@ -61,6 +61,24 @@
             </x-manajemenmahasiswa::ui.sidebar-item>
         @endif
 
+
+        @if($showManajemenPengguna)
+            <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengguna.index') }}"
+                routeName="manajemenmahasiswa.pengguna" label="Manajemen Pengguna">
+                <x-slot:iconSlot>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        <line x1="19" y1="8" x2="23" y2="12"></line>
+                        <line x1="23" y1="8" x2="19" y2="12"></line>
+                    </svg>
+                </x-slot:iconSlot>
+            </x-manajemenmahasiswa::ui.sidebar-item>
+        @endif
+
         <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengumuman.index') }}"
             routeName="manajemenmahasiswa.pengumuman" label="Pengumuman">
             <x-slot:iconSlot>
@@ -153,24 +171,7 @@
             </x-slot:iconSlot>
         </x-manajemenmahasiswa::ui.sidebar-item>
 
-        @if($showManajemenPengguna)
-            <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengguna.index') }}"
-                routeName="manajemenmahasiswa.pengguna" label="Manajemen Pengguna">
-                <x-slot:iconSlot>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                        <line x1="19" y1="8" x2="23" y2="12"></line>
-                        <line x1="23" y1="8" x2="19" y2="12"></line>
-                    </svg>
-                </x-slot:iconSlot>
-            </x-manajemenmahasiswa::ui.sidebar-item>
-        @endif
-
-        @if(!array_intersect($sidebarRoles, ['gpm', 'dosen_koordinator', 'dosen']))
+        @if(!array_intersect($sidebarRoles, ['gpm', 'dosen_koordinator', 'dosen', 'alumni']))
             <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengaduan.index') }}"
                 routeName="manajemenmahasiswa.pengaduan" label="Layanan Pengaduan">
                 <x-slot:iconSlot>
