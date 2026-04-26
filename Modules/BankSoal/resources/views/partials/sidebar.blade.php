@@ -20,26 +20,89 @@
     <nav class="flex-1 px-4 py-4 space-y-2 overflow-y-auto">
         @php
             $currentRoute = request()->route() ? request()->route()->getName() : '';
+            $isAdmin = request()->is('bank-soal/admin*');
         @endphp
 
-        <!-- Beranda -->
-        <a href="{{ route('komprehensif.mahasiswa.dashboard') }}" 
-           class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors {{ $currentRoute === 'komprehensif.mahasiswa.dashboard' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50' }}">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-            </svg>
-            <span class="text-sm">Beranda</span>
-        </a>
+        @if($isAdmin)
+            <!-- ADMIN MENU -->
+            <!-- Dashboard -->
+            <a href="{{ route('banksoal.dashboard') }}" 
+               class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors {{ $currentRoute === 'banksoal.dashboard' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                <span class="text-sm">Dashboard</span>
+            </a>
 
+            <!-- Kontrol Umum -->
+            <div x-data="{ open: true }" class="space-y-2">
+                <button @click="open = !open" class="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl font-medium transition-colors text-slate-600 hover:bg-slate-50">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                        </svg>
+                        <span class="text-sm">Kontrol Umum</span>
+                    </div>
+                    <svg :class="open && 'rotate-180'" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                    </svg>
+                </button>
+                <div x-show="open" class="pl-4 space-y-1">
+                    <a href="{{ route('banksoal.admin.kontrol-umum.mata-kuliah') }}" class="block px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-50 {{ $currentRoute === 'banksoal.admin.kontrol-umum.mata-kuliah' ? 'bg-blue-100 text-blue-600' : '' }}">Manajemen Mata Kuliah</a>
+                    <a href="{{ route('banksoal.admin.kontrol-umum.cpl-cpmk') }}" class="block px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-50 {{ $currentRoute === 'banksoal.admin.kontrol-umum.cpl-cpmk' ? 'bg-blue-100 text-blue-600' : '' }}">Manajemen CPL & CPMK</a>
+                    <a href="{{ route('banksoal.admin.kontrol-umum.pemetaan') }}" class="block px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-50 {{ $currentRoute === 'banksoal.admin.kontrol-umum.pemetaan' ? 'bg-blue-100 text-blue-600' : '' }}">Pemetaan</a>
+                </div>
+            </div>
 
-        <!-- Riwayat Ujian -->
-        <a href="{{ route('komprehensif.mahasiswa.riwayat') }}" 
-           class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors {{ $currentRoute === 'komprehensif.mahasiswa.riwayat' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50' }}">
-            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-            <span class="text-sm">Riwayat Ujian</span>
-        </a>
+            <!-- Kontrol BankSoal -->
+            <div x-data="{ open: false }" class="space-y-2">
+                <button @click="open = !open" class="w-full flex items-center justify-between gap-3 px-4 py-3 rounded-xl font-medium transition-colors text-slate-600 hover:bg-slate-50">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C6.5 6.253 2 10.998 2 17s4.5 10.747 10 10.747c5.5 0 10-4.998 10-10.747S17.5 6.253 12 6.253z"></path>
+                        </svg>
+                        <span class="text-sm">Kontrol BankSoal</span>
+                    </div>
+                    <svg :class="open && 'rotate-180'" class="w-4 h-4 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                    </svg>
+                </button>
+                <div x-show="open" class="pl-4 space-y-1">
+                    <a href="#" class="block px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-50">Manajemen RPS</a>
+                    <a href="#" class="block px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-50">Manajemen Soal</a>
+                </div>
+            </div>
+
+        @else
+            <!-- STUDENT MENU -->
+            <!-- Beranda -->
+            <a href="{{ route('komprehensif.mahasiswa.dashboard') }}" 
+               class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors {{ $currentRoute === 'komprehensif.mahasiswa.dashboard' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                </svg>
+                <span class="text-sm">Beranda</span>
+            </a>
+
+            <!-- Pengajuan Pendaftaran -->
+            <a href="{{ route('komprehensif.mahasiswa.pendaftaran') }}" 
+               class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors {{ $currentRoute === 'komprehensif.mahasiswa.pendaftaran' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                </svg>
+                <span class="text-sm">Pengajuan Pendaftaran</span>
+            </a>
+
+            <!-- Riwayat Ujian -->
+            <a href="{{ route('komprehensif.mahasiswa.riwayat') }}" 
+               class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors {{ $currentRoute === 'komprehensif.mahasiswa.riwayat' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50' }}">
+                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <span class="text-sm">Riwayat Ujian</span>
+            </a>
+        @endif
     </nav>
 
     <!-- Bottom Profile Area -->
