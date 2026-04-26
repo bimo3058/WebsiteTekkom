@@ -764,6 +764,7 @@
     /* TomSelect Wrapper Container */
     .ts-wrapper {
         width: 100%;
+        position: relative;
     }
 
     /* TomSelect Control (the main input field) */
@@ -830,7 +831,10 @@
 
     /* TomSelect Dropdown Menu */
     .ts-dropdown {
-        @apply absolute top-full left-0 right-0 mt-1 bg-white border border-slate-200 rounded-lg shadow-lg z-50;
+        @apply bg-white border border-slate-200 rounded-lg shadow-lg;
+        position: absolute;
+        margin-top: 0.25rem;
+        z-index: 9999;
         max-height: 300px;
         overflow-y: auto;
         font-family: "Inter Tight", sans-serif;
@@ -879,9 +883,9 @@
         @apply px-4 py-2 bg-slate-100 text-slate-600 font-semibold text-xs uppercase tracking-wider;
     }
 
-    /* TomSelect Dropdown Hidden */
+    /* Keep empty dropdown visible so no-results state is still shown */
     .ts-dropdown.empty {
-        display: none;
+        display: block;
     }
 
     /* TomSelect Multiple Item with Remove Button */

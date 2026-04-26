@@ -10,20 +10,69 @@ class RpsMultiselectHandler {
             cplSelectId: "cplSelect",
             cpmkSelectId: "cpmkSelect",
             mkSelectId: "mkSelect",
+            rootElement: document,
+            routeSourceElement: null,
             isEditForm: false,
             rpsId: null,
             ...config,
         };
 
-        this.dosenSelect = document.getElementById(this.config.dosenSelectId);
-        this.cplSelect = document.getElementById(this.config.cplSelectId);
-        this.cpmkSelect = document.getElementById(this.config.cpmkSelectId);
-        this.mkSelect = document.getElementById(this.config.mkSelectId);
+        this.rootElement = this.config.rootElement || document;
+        this.routeSourceElement =
+            this.config.routeSourceElement || this.rootElement;
+        this.formElement =
+            this.rootElement instanceof HTMLFormElement
+                ? this.rootElement
+                : this.rootElement.querySelector?.("form") ||
+                  this.rootElement.closest?.("form") ||
+                  document.querySelector("form");
+
+        this.dosenSelect = this._findFieldById(this.config.dosenSelectId);
+        this.cplSelect = this._findFieldById(this.config.cplSelectId);
+        this.cpmkSelect = this._findFieldById(this.config.cpmkSelectId);
+        this.mkSelect = this._findFieldById(this.config.mkSelectId);
 
         // TomSelect instances
         this.dosenTs = null;
         this.cplTs = null;
         this.cpmkTs = null;
+    }
+
+    _findFieldById(id) {
+        if (!id) return null;
+
+        if (
+            this.rootElement &&
+            typeof this.rootElement.querySelector === "function"
+        ) {
+            const scoped = this.rootElement.querySelector(`#${id}`);
+            if (scoped) return scoped;
+        }
+
+        return document.getElementById(id);
+    }
+
+    _resolveRoute(dataKey, fallback) {
+        if (
+            this.routeSourceElement &&
+            this.routeSourceElement.dataset &&
+            this.routeSourceElement.dataset[dataKey]
+        ) {
+            return this.routeSourceElement.dataset[dataKey];
+        }
+
+        return (
+            document.querySelector(
+                `[data-${dataKey.replace(/([A-Z])/g, "-$1").toLowerCase()}]`,
+            )?.dataset?.[dataKey] || fallback
+        );
+    }
+
+    _normalizeSelectedIds(values) {
+        if (!values) return [];
+        return Array.isArray(values)
+            ? values.map((id) => id.toString())
+            : [values.toString()];
     }
 
     /**
@@ -216,10 +265,21 @@ class RpsMultiselectHandler {
     _setupEventListeners() {
         if (this.mkSelect) {
             console.log("Setting up MK change listener");
-            this.mkSelect.addEventListener("change", (e) => {
+            this.mkSelect.addEventListener("change", () => {
                 console.log("MK changed:", this.mkSelect.value);
                 this._onMataKuliahChange();
             });
+
+            const mkTomSelect = this.mkSelect.tomselect;
+            if (mkTomSelect && typeof mkTomSelect.on === "function") {
+                mkTomSelect.on("change", () => {
+                    console.log(
+                        "MK changed via TomSelect:",
+                        this.mkSelect.value,
+                    );
+                    this._onMataKuliahChange();
+                });
+            }
         } else {
             console.warn("MK Select element not found!");
         }
@@ -337,9 +397,10 @@ class RpsMultiselectHandler {
      * If mkId is null/undefined, fetch all CPL
      */
     _fetchAndPopulateCpl(mkId) {
-        const routeCpl =
-            document.querySelector("[data-route-cpl]")?.dataset.routeCpl ||
-            `/bank-soal/rps/dosen/cpl`;
+        const routeCpl = this._resolveRoute(
+            "routeCpl",
+            "/bank-soal/rps/dosen/cpl",
+        );
 
         // Build the URL based on whether mkId is provided
         let url = routeCpl;
@@ -368,6 +429,18 @@ class RpsMultiselectHandler {
                         this.cplTs.addOptions(data);
                         this.cplTs.enable();
                         this._setPlaceholder(this.cplTs, "");
+
+                        if (
+                            this.config.isEditForm &&
+                            this.config.selectedCplIds?.length
+                        ) {
+                            this.cplTs.setValue(
+                                this._normalizeSelectedIds(
+                                    this.config.selectedCplIds,
+                                ),
+                            );
+                            this._onCplChange();
+                        }
                     } else {
                         this.cplTs.disable();
                         this._setPlaceholder(
@@ -399,9 +472,10 @@ class RpsMultiselectHandler {
      * Always fetch all dosen regardless of MK selection
      */
     _fetchAndPopulateDosen(mkId) {
-        const routeDosen =
-            document.querySelector("[data-route-dosen]")?.dataset.routeDosen ||
-            "/bank-soal/rps/dosen/dosen";
+        const routeDosen = this._resolveRoute(
+            "routeDosen",
+            "/bank-soal/rps/dosen/dosen",
+        );
 
         // Always fetch without parameters - get all dosen users
         const url = routeDosen;
@@ -426,6 +500,17 @@ class RpsMultiselectHandler {
                         this.dosenTs.addOptions(data);
                         this.dosenTs.enable();
                         this._setPlaceholder(this.dosenTs, "");
+
+                        if (
+                            this.config.isEditForm &&
+                            this.config.selectedDosenIds?.length
+                        ) {
+                            this.dosenTs.setValue(
+                                this._normalizeSelectedIds(
+                                    this.config.selectedDosenIds,
+                                ),
+                            );
+                        }
                     } else {
                         // Even if no data, keep enabled (don't disable)
                         this.dosenTs.enable();
@@ -455,9 +540,10 @@ class RpsMultiselectHandler {
      * Fetch and populate CPMK dropdown - for CREATE form (show all CPMK)
      */
     _fetchAndPopulateCpmk() {
-        const routeCpmk =
-            document.querySelector("[data-route-cpmk]")?.dataset.routeCpmk ||
-            "/bank-soal/rps/dosen/cpmk";
+        const routeCpmk = this._resolveRoute(
+            "routeCpmk",
+            "/bank-soal/rps/dosen/cpmk",
+        );
 
         fetch(routeCpmk)
             .then((r) => {
@@ -502,9 +588,10 @@ class RpsMultiselectHandler {
         const queryParams = ids
             .map((id) => `cpl_id[]=${encodeURIComponent(id)}`)
             .join("&");
-        const routeCpmk =
-            document.querySelector("[data-route-cpmk]")?.dataset.routeCpmk ||
-            "/bank-soal/rps/dosen/cpmk";
+        const routeCpmk = this._resolveRoute(
+            "routeCpmk",
+            "/bank-soal/rps/dosen/cpmk",
+        );
 
         const url = `${routeCpmk}?${queryParams}`;
 
@@ -528,6 +615,17 @@ class RpsMultiselectHandler {
                         this.cpmkTs.addOptions(data);
                         this.cpmkTs.enable();
                         this._setPlaceholder(this.cpmkTs, "");
+
+                        if (
+                            this.config.isEditForm &&
+                            this.config.selectedCpmkIds?.length
+                        ) {
+                            this.cpmkTs.setValue(
+                                this._normalizeSelectedIds(
+                                    this.config.selectedCpmkIds,
+                                ),
+                            );
+                        }
                     } else {
                         this.cpmkTs.disable();
                         this._setPlaceholder(
@@ -558,9 +656,10 @@ class RpsMultiselectHandler {
     populateCpmkForEdit(rpsId) {
         if (!rpsId || !this.cpmkTs) return;
 
-        const routeCpmkByRps =
-            document.querySelector("[data-route-cpmk-by-rps]")?.dataset
-                .routeCpmkByRps || `/bank-soal/rps/dosen/cpmk-by-rps/${rpsId}`;
+        const routeCpmkByRps = this._resolveRoute(
+            "routeCpmkByRps",
+            `/bank-soal/rps/dosen/cpmk-by-rps/${rpsId}`,
+        );
 
         fetch(routeCpmkByRps)
             .then((r) => {
@@ -672,7 +771,7 @@ class RpsMultiselectHandler {
      * Setup form validation on submit
      */
     _setupFormValidation() {
-        const form = document.querySelector("form");
+        const form = this.formElement || document.querySelector("form");
         if (!form) return;
 
         form.addEventListener("submit", (e) => {

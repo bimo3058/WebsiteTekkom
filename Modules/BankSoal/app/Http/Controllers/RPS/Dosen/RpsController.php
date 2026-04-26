@@ -65,6 +65,7 @@ class RpsController extends Controller
         // Fetch riwayat RPS — hanya tampilkan RPS dimana dosen ini terdaftar
         // (baik sebagai pembuat maupun dosen pengampu tambahan via pivot bs_rps_dosen)
         // Eager load mataKuliah dan dosens untuk menghindari N+1 queries
+        // Riwayat Pengajuan RPS - fetch all untuk klien-side pagination
         $riwayat = RpsDetail::with('mataKuliah', 'dosens')
             ->whereHas('dosens', function ($query) use ($user) {
                 $query->where('users.id', $user->id);
@@ -77,8 +78,37 @@ class RpsController extends Controller
                 ELSE 4
             END ASC", [RpsStatus::REVISI->value, RpsStatus::DISETUJUI->value, RpsStatus::DIAJUKAN->value])
             ->orderBy('created_at', 'desc')
-            ->paginate(4)
-            ->withQueryString();
+            ->get();
+
+        // Riwayat RPS per mata kuliah yang SUDAH disetujui - fetch all untuk klien-side
+        // Grouped by MK untuk dosen pengampu saat ini
+        $riwayatMkDisetujui = DB::table('bs_rps_detail as rps')
+            ->join('bs_mata_kuliah as mk', 'mk.id', '=', 'rps.mk_id')
+            ->join('bs_dosen_pengampu_mk as dpm', function ($join) use ($user) {
+                $join->on('dpm.mk_id', '=', 'rps.mk_id')
+                    ->where('dpm.user_id', '=', $user->id);
+            })
+            ->leftJoin('bs_rps_review as review', function ($join) {
+                $join->on('review.rps_id', '=', 'rps.id')
+                    ->where('review.status_review', '=', RpsStatus::DISETUJUI->value);
+            })
+            ->where('rps.status', RpsStatus::DISETUJUI->value)
+            ->select(
+                'rps.id',
+                'rps.mk_id',
+                'rps.tahun_ajaran',
+                'rps.semester',
+                'rps.dokumen',
+                'mk.kode as mk_kode',
+                'mk.nama as mk_nama',
+                'mk.id as mk_id_unique',
+                DB::raw('COALESCE(MAX(review.updated_at), rps.updated_at) as tanggal_disetujui')
+            )
+            ->groupBy('rps.id', 'rps.mk_id', 'rps.tahun_ajaran', 'rps.semester', 'rps.dokumen', 'mk.kode', 'mk.nama', 'mk.id', 'rps.updated_at')
+            ->orderBy('mk.nama')
+            ->orderByDesc('tanggal_disetujui')
+            ->get()
+            ->groupBy('mk_id');
 
         // Fetch Active Periode
         $activePeriode = PeriodeRps::where('is_active', 'true')->first();
@@ -138,11 +168,12 @@ class RpsController extends Controller
             }
         }
 
-        $rpsUploaded = $riwayat->total() > 0;
+        $rpsUploaded = $riwayat->isNotEmpty();
 
         return view('banksoal::pages.rps.dosen.index', compact(
             'mataKuliahs',
             'riwayat',
+            'riwayatMkDisetujui',
             'tahunAjarans',
             'semester',
             'academicYear',
@@ -623,6 +654,10 @@ class RpsController extends Controller
                             $status = $newData['status'] ?? null;
                             $item->processed_description = 'Status RPS diubah ke: ' . ucfirst($status ?? 'tidak diketahui');
                         }
+
+                        if (!empty($newData['catatan'])) {
+                            $item->processed_description .= ' Catatan: ' . $newData['catatan'];
+                        }
                     }
                 } elseif ($item->action === 'disetujui') {
                     // Cek di new_data terlebih dahulu
@@ -670,6 +705,7 @@ class RpsController extends Controller
     {
         $user = Auth::user()->load('lecturer');
         $rps = RpsDetail::with('dosens')->findOrFail($rpsId);
+        $isRevisionResubmit = $rps->status->value === RpsStatus::REVISI->value;
 
         // Cek autorisasi
         $isAuthorized = $rps->dosens->contains('id', $user->id);
@@ -690,10 +726,13 @@ class RpsController extends Controller
             'cpl_id.*'       => ['exists:bs_cpl,id'],
             'cpmk_id'        => ['required', 'array'],
             'cpmk_id.*'      => ['exists:bs_cpmk,id'],
-            'dokumen'        => ['nullable', 'file', 'mimes:pdf', 'max:1024'],
+            'catatan'        => [$isRevisionResubmit ? 'required' : 'nullable', 'string', 'max:1000'],
+            'dokumen'        => [$isRevisionResubmit ? 'required' : 'nullable', 'file', 'mimes:pdf', 'max:1024'],
         ], [
             'dokumen.max' => 'Ukuran file maksimal 1MB',
             'dokumen.mimes' => 'Hanya menerima File berformat PDF',
+            'dokumen.required' => 'File RPS baru wajib diunggah saat revisi',
+            'catatan.required' => 'Catatan revisi wajib diisi',
         ]);
 
         // Cek apakah Periode RPS Aktif
@@ -713,7 +752,17 @@ class RpsController extends Controller
         DB::beginTransaction();
 
         try {
-            $oldData = $rps->toArray(); // Simpan data lama untuk audit
+            $oldData = [
+                'mk_id' => $rps->mk_id,
+                'semester' => $rps->semester,
+                'tahun_ajaran' => $rps->tahun_ajaran,
+                'status' => $rps->status->value,
+                'dokumen' => $rps->dokumen,
+                'catatan' => $rps->catatan,
+                'cpl_ids' => $rps->cpls()->pluck('id')->toArray(),
+                'cpmk_ids' => $rps->cpmks()->pluck('id')->toArray(),
+                'dosen_ids' => $rps->dosens()->pluck('id')->toArray(),
+            ];
 
             // Update dokumen jika ada file baru
             if ($request->hasFile('dokumen')) {
@@ -743,9 +792,10 @@ class RpsController extends Controller
             $rps->mk_id = $validated['mata_kuliah_id'];
             $rps->semester = $validated['semester'];
             $rps->tahun_ajaran = $validated['tahun_ajaran'];
+            $rps->catatan = $validated['catatan'];
             
             // Jika status saat ini 'revisi', ubah menjadi 'diajukan' (re-submission setelah revisi)
-            if ($rps->status->value === RpsStatus::REVISI->value) {
+            if ($isRevisionResubmit) {
                 $rps->status = RpsStatus::DIAJUKAN;
             }
             
@@ -767,19 +817,23 @@ class RpsController extends Controller
                 ->update(['is_rps' => 'TRUE']);
 
             // Log audit
-            DB::table('bs_audit_logs')->insert([
+            BsAuditLog::create([
                 'user_id' => Auth::id(),
                 'action' => 'updated',
                 'subject_type' => 'rps',
                 'subject_id' => $rpsId,
-                'description' => 'RPS telah diperbarui oleh dosen',
-                'old_data' => null,
-                'new_data' => json_encode([
+                'description' => 'RPS telah diperbarui oleh dosen' . (!empty(trim((string) $validated['catatan'])) ? '. Catatan: ' . trim((string) $validated['catatan']) : ''),
+                'old_data' => $oldData,
+                'new_data' => [
                     'mk_id' => $rps->mk_id,
                     'semester' => $rps->semester,
                     'tahun_ajaran' => $rps->tahun_ajaran,
                     'status' => $rps->status->value,
-                ]),
+                    'catatan' => $rps->catatan,
+                    'cpl_ids' => $rps->cpls()->pluck('id')->toArray(),
+                    'cpmk_ids' => $rps->cpmks()->pluck('id')->toArray(),
+                    'dosen_ids' => $rps->dosens()->pluck('id')->toArray(),
+                ],
                 'created_at' => now(),
             ]);
 
@@ -880,5 +934,60 @@ class RpsController extends Controller
             
             return back()->with('error', 'Terjadi kesalahan saat menghapus RPS: ' . $e->getMessage());
         }
+    }
+
+    /**
+     * Return form edit RPS untuk modal (partial view)
+     */
+    public function editModal(int $rpsId): \Illuminate\View\View
+    {
+        $user = Auth::user()->load('lecturer');
+        $rps = RpsDetail::with(['mataKuliah', 'cpls', 'cpmks', 'dosens'])->findOrFail($rpsId);
+
+        // Cek autorisasi
+        $isAuthorized = $rps->dosens->contains('id', $user->id);
+        abort_if(!$isAuthorized, 403, 'Anda tidak memiliki akses untuk mengedit RPS ini.');
+
+        // Cek status
+        $editableStatuses = [RpsStatus::DIAJUKAN->value, RpsStatus::REVISI->value];
+        abort_if(!in_array($rps->status->value, $editableStatuses), 403, 'RPS dengan status ' . $rps->status->label() . ' tidak dapat diedit.');
+
+        // Fetch data yang sama dengan edit method
+        $semesterParity = now()->month >= 7 ? 1 : 0;
+        $mataKuliahs = MataKuliah::whereRaw('semester % 2 = ?', [$semesterParity])->orderBy('nama')->get();
+
+        $selectedCplIds = $rps->cpls->pluck('id')->toArray();
+        $selectedCpmkIds = $rps->cpmks->pluck('id')->toArray();
+        $selectedDosenIds = $rps->dosens->pluck('id')->toArray();
+
+        $currentYear = (int) now()->format('Y');
+        $tahunAjarans = [
+            ($currentYear - 1) . '/' . $currentYear,
+            $currentYear . '/' . ($currentYear + 1),
+            ($currentYear + 1) . '/' . ($currentYear + 2),
+        ];
+
+        $activePeriode = PeriodeRps::where('is_active', 'true')->first();
+        $isUploadOpen = true;
+        
+        if ($activePeriode) {
+            $now = \Carbon\Carbon::now('Asia/Jakarta');
+            $deadline = $activePeriode->tanggal_selesai->timezone('Asia/Jakarta');
+            $start = $activePeriode->tanggal_mulai->timezone('Asia/Jakarta')->startOfDay();
+            $end = $deadline->endOfDay();
+
+            $isUploadOpen = $now->between($start, $end);
+        }
+
+        return view('banksoal::partials.dosen.rps-edit-modal-form', compact(
+            'rps',
+            'mataKuliahs',
+            'tahunAjarans',
+            'selectedCplIds',
+            'selectedCpmkIds',
+            'selectedDosenIds',
+            'isUploadOpen',
+            'rpsId'
+        ));
     }
 }
