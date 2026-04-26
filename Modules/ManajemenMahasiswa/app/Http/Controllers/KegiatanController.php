@@ -8,14 +8,21 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Student;
 use App\Models\Lecturer;
+use App\Services\SupabaseStorage;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\Bidang;
 use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
 use Modules\ManajemenMahasiswa\Models\KegiatanPeserta;
 use Modules\ManajemenMahasiswa\Models\RepoMulmed;
+use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
 
 class KegiatanController extends Controller
 {
+    public function __construct(
+        private RepoMulmedService $repoMulmedService,
+        private SupabaseStorage $supabase
+    ) {}
+
     /**
      * Halaman utama daftar kegiatan — mahasiswa & alumni.
      */
@@ -77,6 +84,7 @@ class KegiatanController extends Controller
             'repoMulmed',
             'ketuaPelaksana.user',
             'dosenPendamping.user',
+            'panitia.user',
         ])->findOrFail($id);
 
         // Cek apakah user adalah admin/pengurus (untuk tombol Edit/Hapus)
@@ -130,6 +138,8 @@ class KegiatanController extends Controller
             'anggaran'            => 'nullable|numeric|min:0|max:9999999999999',
             'ketua_pelaksana_id'  => 'nullable|exists:students,id',
             'dosen_pendamping_id' => 'nullable|exists:lecturers,id',
+            'panitia_ids'         => 'nullable|array',
+            'panitia_ids.*'       => 'exists:students,id',
             'target_peserta'      => 'nullable|integer|min:1',
             'status'              => 'required|in:akan_datang,berlangsung,selesai',
             'foto_kegiatan'       => 'nullable|array|max:10',
@@ -140,7 +150,7 @@ class KegiatanController extends Controller
 
         // Handle banner upload
         if ($request->hasFile('banner')) {
-            $validated['banner'] = $request->file('banner')->store('kegiatan/banners', 'public');
+            $validated['banner'] = $this->supabase->upload($request->file('banner'), 'mk_mulmed/image');
         }
 
         $validated['user_id'] = Auth::id();
@@ -154,17 +164,19 @@ class KegiatanController extends Controller
         // Set backward-compat FK columns (first item)
         $kategoriIds = $validated['kategori_kegiatan_id'];
         $bidangIds = $validated['bidang_id'] ?? [];
+        $panitiaIds = $validated['panitia_ids'] ?? [];
         $validated['kategori_kegiatan_id'] = $kategoriIds[0] ?? null;
         $validated['bidang_id'] = $bidangIds[0] ?? null;
 
         // Remove non-kegiatan fields before creating
-        unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan']);
+        unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan'], $validated['panitia_ids']);
 
         $kegiatan = Kegiatan::create($validated);
 
         // Sync pivot tables
         $kegiatan->kategoris()->sync($kategoriIds);
         $kegiatan->bidangs()->sync($bidangIds);
+        $kegiatan->panitia()->sync($panitiaIds);
 
         // Handle foto uploads
         $this->handleFileUploads($request, $kegiatan);
@@ -179,7 +191,7 @@ class KegiatanController extends Controller
      */
     public function edit($id)
     {
-        $kegiatan         = Kegiatan::with(['repoMulmed', 'kategoris', 'bidangs'])->findOrFail($id);
+        $kegiatan         = Kegiatan::with(['repoMulmed', 'kategoris', 'bidangs', 'panitia'])->findOrFail($id);
         $bidangList       = Bidang::orderBy('nama_bidang')->get();
         $kategoriList     = KategoriKegiatan::orderBy('nama_kategori')->get();
         $tahunList        = range(date('Y') + 1, 2008);
@@ -221,6 +233,8 @@ class KegiatanController extends Controller
             'anggaran'            => 'nullable|numeric|min:0|max:9999999999999',
             'ketua_pelaksana_id'  => 'nullable|exists:students,id',
             'dosen_pendamping_id' => 'nullable|exists:lecturers,id',
+            'panitia_ids'         => 'nullable|array',
+            'panitia_ids.*'       => 'exists:students,id',
             'target_peserta'      => 'nullable|integer|min:1',
             'status'              => 'required|in:akan_datang,berlangsung,selesai',
             'foto_kegiatan'       => 'nullable|array|max:10',
@@ -234,9 +248,9 @@ class KegiatanController extends Controller
         // Handle banner upload
         if ($request->hasFile('banner')) {
             if ($kegiatan->banner) {
-                Storage::disk('public')->delete($kegiatan->banner);
+                $this->supabase->delete($kegiatan->banner);
             }
-            $validated['banner'] = $request->file('banner')->store('kegiatan/banners', 'public');
+            $validated['banner'] = $this->supabase->upload($request->file('banner'), 'mk_mulmed/image');
         }
 
         // Set penanggung_jawab from ketua pelaksana name for backward compatibility
@@ -252,8 +266,7 @@ class KegiatanController extends Controller
             foreach ($request->hapus_file as $fileId) {
                 $file = RepoMulmed::where('kegiatan_id', $kegiatan->id)->find($fileId);
                 if ($file) {
-                    Storage::disk('public')->delete($file->path_file);
-                    $file->delete();
+                    $this->repoMulmedService->deletePermanent($file->id);
                 }
             }
         }
@@ -261,17 +274,19 @@ class KegiatanController extends Controller
         // Set backward-compat FK columns (first item)
         $kategoriIds = $validated['kategori_kegiatan_id'];
         $bidangIds = $validated['bidang_id'] ?? [];
+        $panitiaIds = $validated['panitia_ids'] ?? [];
         $validated['kategori_kegiatan_id'] = $kategoriIds[0] ?? null;
         $validated['bidang_id'] = $bidangIds[0] ?? null;
 
         // Remove non-kegiatan fields before updating
-        unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan'], $validated['hapus_file']);
+        unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan'], $validated['hapus_file'], $validated['panitia_ids']);
 
         $kegiatan->update($validated);
 
         // Sync pivot tables
         $kegiatan->kategoris()->sync($kategoriIds);
         $kegiatan->bidangs()->sync($bidangIds);
+        $kegiatan->panitia()->sync($panitiaIds);
 
         // Handle new file uploads
         $this->handleFileUploads($request, $kegiatan);
@@ -289,12 +304,12 @@ class KegiatanController extends Controller
         $kegiatan = Kegiatan::with('repoMulmed')->findOrFail($id);
 
         if ($kegiatan->banner) {
-            Storage::disk('public')->delete($kegiatan->banner);
+            $this->supabase->delete($kegiatan->banner);
         }
 
         // Delete all associated files
         foreach ($kegiatan->repoMulmed as $file) {
-            Storage::disk('public')->delete($file->path_file);
+            $this->repoMulmedService->deletePermanent($file->id);
         }
 
         $kegiatan->delete();
@@ -312,16 +327,10 @@ class KegiatanController extends Controller
         // Upload foto kegiatan
         if ($request->hasFile('foto_kegiatan')) {
             foreach ($request->file('foto_kegiatan') as $foto) {
-                $path = $foto->store('kegiatan/foto', 'public');
-                RepoMulmed::create([
+                $this->repoMulmedService->upload($foto, [
                     'kegiatan_id'       => $kegiatan->id,
-                    'nama_file'         => $foto->getClientOriginalName(),
-                    'path_file'         => $path,
-                    'tipe_file'         => 'image',
                     'judul_file'        => pathinfo($foto->getClientOriginalName(), PATHINFO_FILENAME),
-                    'deskripsi_meta'    => null,
                     'visibility_status' => 'public',
-                    'status_arsip'      => 'aktif',
                 ]);
             }
         }
@@ -329,16 +338,10 @@ class KegiatanController extends Controller
         // Upload dokumen kegiatan
         if ($request->hasFile('dokumen_kegiatan')) {
             foreach ($request->file('dokumen_kegiatan') as $doc) {
-                $path = $doc->store('kegiatan/dokumen', 'public');
-                RepoMulmed::create([
+                $this->repoMulmedService->upload($doc, [
                     'kegiatan_id'       => $kegiatan->id,
-                    'nama_file'         => $doc->getClientOriginalName(),
-                    'path_file'         => $path,
-                    'tipe_file'         => 'document',
                     'judul_file'        => pathinfo($doc->getClientOriginalName(), PATHINFO_FILENAME),
-                    'deskripsi_meta'    => null,
                     'visibility_status' => 'public',
-                    'status_arsip'      => 'aktif',
                 ]);
             }
         }

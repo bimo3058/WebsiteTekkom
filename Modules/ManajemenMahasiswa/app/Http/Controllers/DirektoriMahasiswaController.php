@@ -83,7 +83,9 @@ class DirektoriMahasiswaController extends Controller
 
     /**
      * Gabungkan riwayat kegiatan manual (mk_riwayat_kegiatan)
-     * dengan data otomatis dari mk_kegiatan (ketua_pelaksana_id).
+     * dengan data otomatis dari mk_kegiatan:
+     *   - sebagai ketua pelaksana (ketua_pelaksana_id)
+     *   - sebagai panitia (pivot mk_kegiatan_panitia)
      * Hasilnya: satu collection unified tanpa duplikasi.
      */
     private function buildMergedRiwayat(int $userId): Collection
@@ -105,14 +107,16 @@ class DirektoriMahasiswaController extends Controller
         // 3. Ambil semua kegiatan di mana mahasiswa ini adalah ketua pelaksana
         $kegiatanAsKetua = Kegiatan::where('ketua_pelaksana_id', $studentId)->get();
 
-        // 4. Kegiatan_id yang sudah ada di riwayat manual (untuk hindari duplikat)
+        // 4. Ambil semua kegiatan di mana mahasiswa ini adalah panitia (via pivot)
+        $kegiatanAsPanitia = Kegiatan::whereHas('panitia', fn($q) => $q->where('students.id', $studentId))->get();
+
+        // 5. Kegiatan_id yang sudah ada di riwayat manual (untuk hindari duplikat)
         $existingKegiatanIds = $riwayatManual->pluck('kegiatan_id')->filter()->toArray();
 
-        // 5. Buat pseudo-riwayat dari data ketua pelaksana yang belum ada di manual
+        // 6. Buat pseudo-riwayat dari data ketua pelaksana yang belum ada di manual
         $autoRiwayat = $kegiatanAsKetua
             ->filter(fn($kg) => !in_array($kg->id, $existingKegiatanIds))
             ->map(function ($kg) use ($studentId) {
-                // Buat object stdClass yang mirip RiwayatKegiatan
                 $item = new \stdClass();
                 $item->id                   = null;
                 $item->student_id           = $studentId;
@@ -128,22 +132,48 @@ class DirektoriMahasiswaController extends Controller
                 return $item;
             });
 
-        // 6. Tandai riwayat manual agar bisa dibedakan di view
+        // 7. Kegiatan_id yang sudah dicakup oleh riwayat manual + ketua
+        $coveredByKetua = $autoRiwayat->pluck('kegiatan_id')->toArray();
+        $allCoveredIds  = array_merge($existingKegiatanIds, $coveredByKetua);
+
+        // 8. Buat pseudo-riwayat dari data panitia yang belum ada di sumber lain
+        $autoPanitia = $kegiatanAsPanitia
+            ->filter(fn($kg) => !in_array($kg->id, $allCoveredIds))
+            ->map(function ($kg) use ($studentId) {
+                $item = new \stdClass();
+                $item->id                   = null;
+                $item->student_id           = $studentId;
+                $item->kegiatan_id          = $kg->id;
+                $item->peran                = 'panitia';
+                $item->peran_manual         = null;
+                $item->nama_kegiatan_manual = null;
+                $item->tanggal_kegiatan     = null;
+                $item->kegiatan             = $kg;
+                $item->is_auto              = true;
+                $item->created_at           = $kg->created_at;
+                $item->updated_at           = $kg->updated_at;
+                return $item;
+            });
+
+        // 9. Tandai riwayat manual agar bisa dibedakan di view
         $riwayatManual->each(function ($r) {
             $r->is_auto = false;
         });
 
-        // 7. Gabungkan dan urutkan berdasarkan tanggal kegiatan (terbaru dulu)
-        return $riwayatManual->concat($autoRiwayat)->sortByDesc(function ($item) {
-            $kegiatan = is_object($item->kegiatan ?? null) ? $item->kegiatan : null;
-            if ($kegiatan && $kegiatan->tanggal_mulai) {
-                return $kegiatan->tanggal_mulai;
-            }
-            if (isset($item->tanggal_kegiatan) && $item->tanggal_kegiatan) {
-                return $item->tanggal_kegiatan;
-            }
-            return $item->created_at;
-        })->values();
+        // 10. Gabungkan semua sumber dan urutkan berdasarkan tanggal kegiatan (terbaru dulu)
+        return $riwayatManual
+            ->concat($autoRiwayat)
+            ->concat($autoPanitia)
+            ->sortByDesc(function ($item) {
+                $kegiatan = is_object($item->kegiatan ?? null) ? $item->kegiatan : null;
+                if ($kegiatan && $kegiatan->tanggal_mulai) {
+                    return $kegiatan->tanggal_mulai;
+                }
+                if (isset($item->tanggal_kegiatan) && $item->tanggal_kegiatan) {
+                    return $item->tanggal_kegiatan;
+                }
+                return $item->created_at;
+            })->values();
     }
 
     // -------------------------------------------------------------------------
@@ -182,9 +212,10 @@ class DirektoriMahasiswaController extends Controller
             ->orderBy('angkatan', 'desc')
             ->pluck('angkatan');
 
-        $isAdmin    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
-        $isGpm      = $this->hasRole('gpm');
-        $isPengurus = $this->hasRole('pengurus_himpunan');
+        $isAdmin      = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+        $isGpm        = $this->hasRole('gpm');
+        $isPengurus   = $this->hasRole('pengurus_himpunan');
+        $isMahasiswa  = $this->hasRole('mahasiswa') && !$isAdmin && !$isGpm && !$isPengurus;
 
         return view('manajemenmahasiswa::direktori.mahasiswa-index', compact(
             'mahasiswa',
@@ -192,6 +223,7 @@ class DirektoriMahasiswaController extends Controller
             'isAdmin',
             'isGpm',
             'isPengurus',
+            'isMahasiswa',
         ))->with('layout', $this->resolveLayout());
     }
 
@@ -209,9 +241,10 @@ class DirektoriMahasiswaController extends Controller
         // Semua kegiatan for dropdown (untuk tambah riwayat)
         $semuaKegiatan = Kegiatan::orderBy('judul')->get();
 
-        $isAdmin    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
-        $isPengurus = $this->hasRole('pengurus_himpunan');
-        $isGpm      = $this->hasRole('gpm');
+        $isAdmin      = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+        $isPengurus   = $this->hasRole('pengurus_himpunan');
+        $isGpm        = $this->hasRole('gpm');
+        $isMahasiswa  = $this->hasRole('mahasiswa') && !$isAdmin && !$isGpm && !$isPengurus;
 
         return view('manajemenmahasiswa::direktori.mahasiswa-show', compact(
             'mhs',
@@ -220,6 +253,7 @@ class DirektoriMahasiswaController extends Controller
             'isAdmin',
             'isPengurus',
             'isGpm',
+            'isMahasiswa',
         ))->with('layout', $this->resolveLayout());
     }
 

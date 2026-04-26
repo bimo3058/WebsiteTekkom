@@ -527,7 +527,7 @@
 <!-- Banner -->
 <div class="detail-banner">
     @if($kegiatan->banner)
-        <img src="{{ asset('storage/' . $kegiatan->banner) }}" alt="{{ $kegiatan->judul }}">
+        <img src="{{ $kegiatan->banner_url }}" alt="{{ $kegiatan->judul }}">
     @else
         <span class="placeholder-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></span>
     @endif
@@ -630,6 +630,27 @@
         </div>
         @endif
     </div>
+
+    {{-- Panitia Kegiatan --}}
+    @if($kegiatan->panitia && $kegiatan->panitia->count() > 0)
+    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6;">
+        <div class="meta-item-label" style="margin-bottom: 10px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            PANITIA KEGIATAN
+            <span style="font-size: 10px; font-weight: 600; background: #eef2ff; color: #4f46e5; padding: 1px 7px; border-radius: 20px; margin-left: 4px;">{{ $kegiatan->panitia->count() }} orang</span>
+        </div>
+        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+            @foreach($kegiatan->panitia as $p)
+                <span style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: #eef2ff; color: #4338ca; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #c7d2fe;">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                    {{ $p->user->name ?? '-' }}
+                    <span style="font-size: 10px; color: #818cf8; font-weight: 400;">({{ $p->student_number }})</span>
+                </span>
+            @endforeach
+        </div>
+    </div>
+    @endif
+</div>
 </div>
 
 <!-- Deskripsi -->
@@ -660,7 +681,7 @@
         <div class="photo-gallery-grid">
             @foreach($images->values() as $idx => $img)
                 <div class="photo-gallery-item" onclick="openLightbox({{ $idx }})">
-                    <img src="{{ asset('storage/' . $img->path_file) }}" alt="{{ $img->judul_file }}" loading="lazy">
+                    <img src="{{ $img->url }}" alt="{{ $img->judul_file }}" loading="lazy">
                     <div class="photo-overlay">
                         <span class="photo-zoom">
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -705,7 +726,7 @@
             @foreach($videos as $vid)
                 <div class="video-card">
                     <video controls preload="metadata">
-                        <source src="{{ asset('storage/' . $vid->path_file) }}" type="video/mp4">
+                        <source src="{{ $vid->url }}" type="video/mp4">
                         Browser Anda tidak mendukung pemutar video.
                     </video>
                     <div class="video-info">
@@ -740,7 +761,7 @@
                     ];
                     $iconInfo = $iconMap[$ext] ?? ['FILE', 'doc-icon-other', 'ext-default'];
                 @endphp
-                <a href="{{ asset('storage/' . $doc->path_file) }}" target="_blank" class="document-card" download>
+                <a href="{{ $doc->url }}" target="_blank" class="document-card" download>
                     <div class="doc-icon-wrapper {{ $iconInfo[1] }}">
                         {{ $iconInfo[0] }}
                     </div>
@@ -818,7 +839,7 @@ const galleryImages = [
     @if(isset($images) && $images->count() > 0)
         @foreach($images->values() as $img)
         {
-            src: "{{ asset('storage/' . $img->path_file) }}",
+            src: "{{ $img->url }}",
             title: "{{ addslashes($img->judul_file ?: $img->nama_file) }}"
         },
         @endforeach

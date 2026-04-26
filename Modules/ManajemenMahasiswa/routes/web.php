@@ -9,6 +9,7 @@ use Modules\ManajemenMahasiswa\Http\Controllers\GamificationController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PengaduanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\DirektoriMahasiswaController;
+use Modules\ManajemenMahasiswa\Http\Controllers\ManajemenPenggunaController;
 
 Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
     ->prefix('manajemen-mahasiswa')
@@ -82,16 +83,16 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
         // ── Layanan Pengaduan ─────────────────────────────────────────────
         Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
-            // Mahasiswa membuat pengaduan (dengan step konfirmasi)
+            // Mahasiswa & pengurus himpunan membuat pengaduan
             // NOTE: HARUS didefinisikan sebelum /{pengaduan} agar tidak konflik dengan path seperti /create
-            Route::middleware('role:mahasiswa')->group(function () {
+            Route::middleware('role:mahasiswa,pengurus_himpunan,ketua_himpunan,wakil_ketua_himpunan,ketua_bidang,ketua_unit,staff_himpunan')->group(function () {
                 Route::get('/create', [PengaduanController::class, 'create'])->name('create');
                 Route::post('/confirm', [PengaduanController::class, 'confirm'])->name('confirm');
                 Route::post('/', [PengaduanController::class, 'store'])->name('store');
             });
 
-            // Akses pengaduan: hanya mahasiswa + staff (dosen/gpm/admin)
-            Route::middleware('role:mahasiswa,dosen,gpm,admin,superadmin,admin_kemahasiswaan')->group(function () {
+            // Akses pengaduan: mahasiswa, pengurus himpunan, dan staff (dosen/gpm/admin)
+            Route::middleware('role:mahasiswa,pengurus_himpunan,ketua_himpunan,wakil_ketua_himpunan,ketua_bidang,ketua_unit,staff_himpunan,dosen,gpm,admin,superadmin,admin_kemahasiswaan')->group(function () {
                 Route::get('/', [PengaduanController::class, 'index'])->name('index');
                 Route::get('/{pengaduan}', [PengaduanController::class, 'show'])
                     ->whereNumber('pengaduan')
@@ -118,6 +119,14 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::post('/drafts', [ForumController::class, 'saveDraft'])->name('drafts.store');
             Route::delete('/drafts/{id}', [ForumController::class, 'deleteDraft'])->name('drafts.destroy');
             Route::post('/', [ForumController::class, 'store'])->name('store');
+
+            // Report Management (admin only) — MUST be before /{id} wildcard
+            Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm')->group(function () {
+                Route::delete('/reports/{reportId}/dismiss', [ForumController::class, 'dismissReport'])->name('reports.dismiss');
+                Route::delete('/reports/{reportId}/delete-thread', [ForumController::class, 'deleteReportedThread'])->name('reports.delete_thread');
+                Route::patch('/reports/{reportId}/lock-thread', [ForumController::class, 'lockReportedThread'])->name('reports.lock_thread');
+            });
+
             Route::get('/{id}', [ForumController::class, 'show'])->name('show');
             Route::post('/{id}/vote', [ForumController::class, 'vote'])->name('vote');
             Route::post('/{id}/report', [ForumController::class, 'reportThread'])->name('report');
@@ -133,6 +142,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             // Comments
             Route::post('/{threadId}/comments', [ForumController::class, 'storeComment'])->name('comments.store');
             Route::post('/comments/{commentId}/vote', [ForumController::class, 'voteComment'])->name('comments.vote');
+            Route::put('/comments/{commentId}', [ForumController::class, 'updateComment'])->name('comments.update');
             Route::delete('/comments/{commentId}', [ForumController::class, 'destroyComment'])->name('comments.destroy');
         });
 
@@ -152,6 +162,19 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             });
         });
 
+        // ── Manajemen Pengguna (Role Assignment) ─────────────────────────
+        Route::middleware('role:admin_kemahasiswaan,admin,superadmin,ketua_himpunan,wakil_ketua_himpunan,ketua_bidang,ketua_unit')
+            ->prefix('pengguna')
+            ->name('pengguna.')
+            ->group(function () {
+            Route::get('/', [ManajemenPenggunaController::class, 'index'])->name('index');
+            Route::get('/kategori/{category}', [ManajemenPenggunaController::class, 'category'])->name('category');
+            Route::post('/users/{user}/update-role', [ManajemenPenggunaController::class, 'updateRole'])->name('update-role');
+            Route::post('/check-alumni', [ManajemenPenggunaController::class, 'checkAlumni'])
+                ->name('check-alumni')
+                ->middleware('role:admin_kemahasiswaan,admin,superadmin');
+        });
+
         // ── Direktori Mahasiswa ───────────────────────────────────────────
         Route::prefix('direktori')->name('direktori.')->group(function () {
 
@@ -166,14 +189,14 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('profil.cv');
                 });
 
-                // Daftar semua mahasiswa — admin, gpm, pengurus
-                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,pengurus_himpunan')
+                // Daftar semua mahasiswa — admin, gpm, pengurus, mahasiswa
+                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,pengurus_himpunan,mahasiswa')
                     ->group(function () {
-                        Route::get('/', [DirektoriMahasiswaController::class, 'index'])
-                            ->name('index');
-                        Route::get('/{id}', [DirektoriMahasiswaController::class, 'show'])
-                            ->name('show')->where('id', '[0-9]+');
-                    });
+                    Route::get('/', [DirektoriMahasiswaController::class, 'index'])
+                        ->name('index');
+                    Route::get('/{id}', [DirektoriMahasiswaController::class, 'show'])
+                        ->name('show')->where('id', '[0-9]+');
+                });
 
                 // Edit biodata — admin only
                 Route::middleware('role:superadmin,admin,admin_kemahasiswaan')->group(function () {
@@ -186,20 +209,20 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 // Riwayat kegiatan — pengurus + admin
                 Route::middleware('role:pengurus_himpunan,superadmin,admin,admin_kemahasiswaan')
                     ->group(function () {
-                        Route::post('/{id}/riwayat', [DirektoriMahasiswaController::class, 'storeRiwayat'])
-                            ->name('riwayat.store')->where('id', '[0-9]+');
-                        Route::put('/riwayat/{riwayatId}', [DirektoriMahasiswaController::class, 'updateRiwayat'])
-                            ->name('riwayat.update')->where('riwayatId', '[0-9]+');
-                        Route::delete('/riwayat/{riwayatId}', [DirektoriMahasiswaController::class, 'destroyRiwayat'])
-                            ->name('riwayat.destroy')->where('riwayatId', '[0-9]+');
-                    });
+                    Route::post('/{id}/riwayat', [DirektoriMahasiswaController::class, 'storeRiwayat'])
+                        ->name('riwayat.store')->where('id', '[0-9]+');
+                    Route::put('/riwayat/{riwayatId}', [DirektoriMahasiswaController::class, 'updateRiwayat'])
+                        ->name('riwayat.update')->where('riwayatId', '[0-9]+');
+                    Route::delete('/riwayat/{riwayatId}', [DirektoriMahasiswaController::class, 'destroyRiwayat'])
+                        ->name('riwayat.destroy')->where('riwayatId', '[0-9]+');
+                });
 
                 // Generate CV — pengurus + admin
                 Route::middleware('role:pengurus_himpunan,superadmin,admin,admin_kemahasiswaan,gpm')
                     ->group(function () {
-                        Route::get('/{id}/cv', [DirektoriMahasiswaController::class, 'generateCv'])
-                            ->name('cv')->where('id', '[0-9]+');
-                    });
+                    Route::get('/{id}/cv', [DirektoriMahasiswaController::class, 'generateCv'])
+                        ->name('cv')->where('id', '[0-9]+');
+                });
             });
 
             // Subbab: Alumni
@@ -212,14 +235,14 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('profil.update');
                 });
 
-                // Daftar semua alumni — admin, gpm, pengurus, dosen
-                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,pengurus_himpunan')
+                // Daftar semua alumni — admin, gpm, pengurus, dosen, mahasiswa
+                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,pengurus_himpunan,mahasiswa')
                     ->group(function () {
-                        Route::get('/', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'index'])
-                            ->name('index');
-                        Route::get('/{id}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'show'])
-                            ->name('show')->where('id', '[0-9]+');
-                    });
+                    Route::get('/', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'index'])
+                        ->name('index');
+                    Route::get('/{id}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'show'])
+                        ->name('show')->where('id', '[0-9]+');
+                });
 
                 // Edit data alumni — admin only
                 Route::middleware('role:superadmin,admin,admin_kemahasiswaan')->group(function () {
