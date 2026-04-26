@@ -54,7 +54,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                 d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
                             </path>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
                             </path>
                         </svg>
                         <span
@@ -128,7 +129,8 @@
                             </path>
                         </svg>
                         <span
-                            class="text-[13px] text-left {{ $isKontrolUjianActive ? 'text-blue-600 font-semibold' : 'text-slate-600' }}">Kontrol Ujian<br>Komprehensif</span>
+                            class="text-[13px] text-left {{ $isKontrolUjianActive ? 'text-blue-600 font-semibold' : 'text-slate-600' }}">Kontrol
+                            Ujian<br>Komprehensif</span>
                     </div>
                     <svg class="w-4 h-4 transition-transform duration-200 {{ $isKontrolUjianActive ? 'text-blue-600' : 'text-slate-400' }}"
                         :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"
@@ -144,65 +146,78 @@
                     <div x-data="{ open: {{ $isPeriodeActive ? 'true' : 'false' }} }" class="space-y-1">
                         <button @click="open = !open"
                             class="w-full flex items-center justify-between py-1.5 px-3 rounded-lg text-slate-600 hover:bg-slate-100/50 font-medium transition-all group text-[12px]">
-                            <span class="text-left {{ $isPeriodeActive ? 'text-blue-600 font-semibold' : 'text-slate-600' }}">Manajemen Ujian & Peserta</span>
+                            <span
+                                class="text-left {{ $isPeriodeActive ? 'text-blue-600 font-semibold' : 'text-slate-600' }}">Manajemen
+                                Ujian & Peserta</span>
                             <svg class="w-3.5 h-3.5 transition-transform duration-200 {{ $isPeriodeActive ? 'text-blue-600' : 'text-slate-400' }}"
                                 :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
                         <div x-show="open" class="pl-7 pr-2 py-1 space-y-1">
                             <a href="{{ route('banksoal.periode.setup') }}"
-                                class="block text-[11px] {{ request()->routeIs('banksoal.periode.setup') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Setup Periode</a>
+                                class="block text-[11px] {{ request()->routeIs('banksoal.periode.setup') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Setup
+                                Periode</a>
                             <a href="{{ route('banksoal.pendaftaran.alokasi-sesi.index') }}"
-                                class="block text-[11px] {{ request()->routeIs('banksoal.pendaftaran.alokasi-sesi.*') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Jadwal & Sesi</a>
+                                class="block text-[11px] {{ request()->routeIs('banksoal.pendaftaran.alokasi-sesi.*') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Jadwal
+                                & Sesi</a>
                             <a href="{{ route('banksoal.pendaftaran.index') }}"
-                                class="block text-[11px] {{ request()->routeIs('banksoal.pendaftaran.index') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Daftar Pendaftar</a>
+                                class="block text-[11px] {{ request()->routeIs('banksoal.pendaftaran.index') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Daftar
+                                Peserta</a>
                         </div>
                     </div>
 
-                    <!-- Manajemen CBT & Soal -->
-                    <a href="#"
-                        class="block text-[12px] text-slate-600 hover:text-slate-800 py-1.5 px-3 rounded-lg transition-colors font-medium hover:bg-slate-100/50">Manajemen CBT & Soal</a>
+
 
                     @php
-                        $isMonitoringActive = request()->routeIs('banksoal.aktivasi.*');
+                        $isMonitoringActive = request()->routeIs('banksoal.aktivasi.*') || request()->routeIs('banksoal.admin.cbt.live-proctoring');
                     @endphp
                     <!-- Monitoring Ujian (Sub-Akordion) -->
                     <div x-data="{ open: {{ $isMonitoringActive ? 'true' : 'false' }} }" class="space-y-1">
                         <button @click="open = !open"
                             class="w-full flex items-center justify-between py-1.5 px-3 rounded-lg text-slate-600 hover:bg-slate-100/50 font-medium transition-all group text-[12px]">
-                            <span class="text-left {{ $isMonitoringActive ? 'text-blue-600 font-semibold' : 'text-slate-600' }}">Monitoring Ujian</span>
+                            <span
+                                class="text-left {{ $isMonitoringActive ? 'text-blue-600 font-semibold' : 'text-slate-600' }}">Monitoring
+                                Ujian</span>
                             <svg class="w-3.5 h-3.5 transition-transform duration-200 {{ $isMonitoringActive ? 'text-blue-600' : 'text-slate-400' }}"
                                 :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
                         <div x-show="open" class="pl-7 pr-2 py-1 space-y-1">
                             <a href="{{ route('banksoal.aktivasi.index') }}"
-                                class="block text-[11px] {{ request()->routeIs('banksoal.aktivasi.index') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Aktivasi Sesi</a>
-                            <a href="#"
-                                class="block text-[11px] text-slate-500 hover:text-slate-800 py-1 transition-colors">Pantau Status</a>
+                                class="block text-[11px] {{ request()->routeIs('banksoal.aktivasi.index') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Aktivasi
+                                Sesi</a>
+                            <a href="{{ route('banksoal.admin.cbt.live-proctoring') }}"
+                                class="block text-[11px] {{ request()->routeIs('banksoal.admin.cbt.live-proctoring') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Live Proctoring</a>
                         </div>
                     </div>
 
+                    @php
+                        $isHasilActive = request()->routeIs('banksoal.admin.cbt.riwayat') || request()->routeIs('banksoal.admin.cbt.detail');
+                    @endphp
                     <!-- Hasil & Analitik (Sub-Akordion) -->
-                    <div x-data="{ open: false }" class="space-y-1">
+                    <div x-data="{ open: {{ $isHasilActive ? 'true' : 'false' }} }" class="space-y-1">
                         <button @click="open = !open"
                             class="w-full flex items-center justify-between py-1.5 px-3 rounded-lg text-slate-600 hover:bg-slate-100/50 font-medium transition-all group text-[12px]">
-                            <span class="text-left">Hasil & Analitik</span>
-                            <svg class="w-3.5 h-3.5 transition-transform duration-200 text-slate-400"
+                            <span class="text-left {{ $isHasilActive ? 'text-blue-600 font-semibold' : 'text-slate-600' }}">Hasil & Analitik</span>
+                            <svg class="w-3.5 h-3.5 transition-transform duration-200 {{ $isHasilActive ? 'text-blue-600' : 'text-slate-400' }}"
                                 :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
                         <div x-show="open" class="pl-7 pr-2 py-1 space-y-1">
+                            <a href="{{ route('banksoal.admin.cbt.riwayat') }}"
+                                class="block text-[11px] {{ request()->routeIs('banksoal.admin.cbt.riwayat') || request()->routeIs('banksoal.admin.cbt.detail') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Riwayat Ujian</a>
                             <a href="#"
-                                class="block text-[11px] text-slate-500 hover:text-slate-800 py-1 transition-colors">Data Kelulusan</a>
-                            <a href="#"
-                                class="block text-[11px] text-slate-500 hover:text-slate-800 py-1 transition-colors">Laporan CPL</a>
+                                class="block text-[11px] text-slate-500 hover:text-slate-800 py-1 transition-colors">Laporan
+                                CPL</a>
                         </div>
                     </div>
                 </div>

@@ -1,4 +1,5 @@
 <x-banksoal::layouts.admin>
+    @section('hide_global_errors', true)
     <div x-data="alokasiSesiApp()" class="w-full relative">
         
         <!-- Page Header -->
@@ -6,7 +7,7 @@
             <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-4">
                 <div>
                     <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Manajemen Jadwal & Sesi</h1>
-                    <p class="text-sm text-slate-500 mt-1">Sistem satu atap untuk mengatur ruang sesi ujian dan membagi jadwal peserta.</p>
+                    <p class="text-sm text-slate-500 mt-1">Mengatur sesi ujian dan membagi jadwal peserta ujian komprehensif.</p>
                 </div>
 
                 <!-- ============================================================= -->
@@ -124,7 +125,7 @@
             <span class="text-[13px] text-slate-500 font-medium">Rentang Ujian:</span>
             @if($selectedPeriode->tanggal_mulai_ujian && $selectedPeriode->tanggal_selesai_ujian)
                 <span class="px-3 py-1 bg-blue-50 text-blue-700 text-[13px] font-semibold border border-blue-200 rounded-lg">
-                    {{ \Carbon\Carbon::parse($selectedPeriode->tanggal_mulai_ujian)->format('d M') }} &ndash; {{ \Carbon\Carbon::parse($selectedPeriode->tanggal_selesai_ujian)->format('d M Y') }}
+                    {{ \Carbon\Carbon::parse($selectedPeriode->tanggal_mulai_ujian)->translatedFormat('d M Y') }} &ndash; {{ \Carbon\Carbon::parse($selectedPeriode->tanggal_selesai_ujian)->translatedFormat('d M Y') }}
                 </span>
             @else
                 <span class="text-[13px] text-slate-400 italic">Tanggal Ujian belum diatur di Setup Periode.</span>
@@ -143,16 +144,19 @@
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <!-- Header Table Actions -->
             <div class="px-6 py-4 flex items-center justify-between border-b border-slate-200 bg-slate-50">
-                <h2 class="font-bold text-slate-800">Daftar Sesi Ujian</h2>
-                <button @click="openModal = true" @if(!$selectedPeriode) disabled @endif class="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-xl px-4 py-2 text-slate-800 font-semibold text-[13px] border border-[#CBD5E1] shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-400/20">
-                    <span class="font-bold text-lg leading-none mt-[0.5px]">+</span>
+                <div class="flex items-center gap-5">
+                    <h2 class="font-bold text-slate-800">Daftar Sesi Ujian</h2>
+
+                </div>
+                <button @click="openModal = true" @if(!$selectedPeriode) disabled @endif class="inline-flex items-center justify-center gap-2 bg-primary-500 hover:bg-primary-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-xl px-4 py-2 text-white font-semibold text-[13px] shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                     Tambah Sesi
                 </button>
             </div>
 
             <div class="overflow-x-auto w-full">
                 <table class="w-full text-left text-sm text-slate-600">
-                    <thead class="bg-white border-b border-slate-200 text-xs font-bold text-slate-800 uppercase tracking-wider">
+                    <thead class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
                         <tr>
                             <th scope="col" class="px-6 py-4 whitespace-nowrap w-3/12">Nama Sesi</th>
                             <th scope="col" class="px-6 py-4 whitespace-nowrap w-3/12">Waktu</th>
@@ -164,11 +168,11 @@
                         @forelse($jadwals as $jadwal)
                         <tr class="hover:bg-slate-50/70 transition-colors cursor-pointer group" @click="openJadwalDrawer({{ $jadwal->id }})">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">{{ $jadwal->nama_sesi }}</span>
+                                <span class="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">{{ is_numeric($jadwal->nama_sesi) ? 'Sesi ' . $jadwal->nama_sesi : $jadwal->nama_sesi }}</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-slate-600 font-medium">
                                 <div class="flex flex-col gap-1">
-                                    <span>{{ $jadwal->tanggal_ujian ? \Carbon\Carbon::parse($jadwal->tanggal_ujian)->format('d M Y') . ' • ' : '' }} {{ \Carbon\Carbon::parse($jadwal->waktu_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwal->waktu_selesai)->format('H:i') }} WIB</span>
+                                    <span>{{ $jadwal->tanggal_ujian ? \Carbon\Carbon::parse($jadwal->tanggal_ujian)->translatedFormat('d M Y') . ' • ' : '' }}{{ \Carbon\Carbon::parse($jadwal->waktu_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwal->waktu_selesai)->format('H:i') }} WIB</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -201,13 +205,17 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" class="px-6 py-16 text-center border-b border-transparent bg-white">
+                            <td colspan="4" class="px-6 py-16 text-center bg-white">
                                 <div class="flex flex-col items-center justify-center">
-                                    <div class="w-12 h-12 bg-slate-50 flex items-center justify-center rounded-full mb-3">
+                                    <div class="w-12 h-12 bg-slate-50 border border-slate-100 flex items-center justify-center rounded-full mb-3">
                                         <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </div>
-                                    <h3 class="text-[13px] font-medium text-slate-700">Jadwal Sesi Kosong</h3>
-                                    <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed">Belum ada sesi ujian yang dibuat pada periode ini. Silakan klik "Tambah Sesi" di bagian atas untuk memulai pengaturan.</p>
+                                    <h3 class="text-[13px] font-semibold text-slate-700">Belum Ada Sesi Ujian</h3>
+                                    <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">Buat sesi pertama untuk mulai mengalokasikan jadwal peserta.</p>
+                                    <button @click="openModal = true" class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-primary-500 hover:bg-primary-400 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
+                                        Tambah Sesi Pertama
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -229,7 +237,7 @@
             <!-- Table Peserta Terjadwal -->
             <div class="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="px-6 py-5 flex items-center justify-between border-b border-slate-200 bg-slate-50">
-                    <h2 class="font-bold text-slate-800">Daftar Peserta Ujian Komprehensif ({{ \Carbon\Carbon::parse($activePeriode->tanggal_mulai)->translatedFormat('F Y') }})</h2>
+                    <h2 class="font-bold text-slate-800">Daftar Peserta Ujian Komprehensif ({{ $activePeriode->tanggal_mulai_ujian ? \Carbon\Carbon::parse($activePeriode->tanggal_mulai_ujian)->translatedFormat('F Y') : 'Jadwal Belum Diatur' }})</h2>
                 </div>
                 <div class="p-6 space-y-8">
                     @foreach($allocatedGroups as $jadwalId => $pesertas)
@@ -277,77 +285,70 @@
             @endif
         @endif
 
-        <!-- Drawer Panel -->
-        <div x-show="openDrawer" tabindex="-1" class="fixed inset-0 z-[60] overflow-hidden" style="display: none;" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
-            <div class="absolute inset-0 overflow-hidden">
+        <!-- Modal Kelola Peserta -->
+        <div x-show="openDrawer" tabindex="-1" class="fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6" style="display: none;" aria-labelledby="slide-over-title" role="dialog" aria-modal="true">
                 <!-- Dimmed background -->
                 <div x-show="openDrawer" 
-                     x-transition:enter="ease-in-out duration-300" 
+                     x-transition:enter="ease-out duration-300" 
                      x-transition:enter-start="opacity-0" 
                      x-transition:enter-end="opacity-100" 
-                     x-transition:leave="ease-in-out duration-300" 
+                     x-transition:leave="ease-in duration-200" 
                      x-transition:leave-start="opacity-100" 
                      x-transition:leave-end="opacity-0" 
-                     class="absolute inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
+                     class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity" 
                      @click="closeDrawer()" aria-hidden="true"></div>
 
-                <div class="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
-                    <div x-show="openDrawer" 
-                         x-transition:enter="transform transition ease-out duration-300 sm:duration-400" 
-                         x-transition:enter-start="translate-x-full" 
-                         x-transition:enter-end="translate-x-0" 
-                         x-transition:leave="transform transition ease-in duration-300 sm:duration-400" 
-                         x-transition:leave-start="translate-x-0" 
-                         x-transition:leave-end="translate-x-full" 
-                         class="pointer-events-auto w-screen max-w-xl">
-                         
-                        <div class="flex h-full flex-col bg-white shadow-2xl">
+                <div x-show="openDrawer" 
+                     x-transition:enter="ease-out duration-300" 
+                     x-transition:enter-start="opacity-0 translate-y-4 sm:scale-95" 
+                     x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+                     x-transition:leave="ease-in duration-200" 
+                     x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+                     x-transition:leave-end="opacity-0 translate-y-4 sm:scale-95" 
+                     class="relative w-full max-w-2xl max-h-[85vh] flex flex-col bg-white rounded-2xl shadow-xl overflow-hidden">
                             <!-- Drawer Header -->
-                            <div class="bg-white px-6 py-5 border-b border-slate-200">
+                            <div class="bg-slate-50 px-6 py-5 border-b border-slate-200 rounded-t-2xl flex-shrink-0">
                                 <div class="flex items-start justify-between">
                                     <div>
-                                        <h2 class="text-xl font-bold text-slate-800" id="slide-over-title"><span x-text="selectedJadwal?.nama_sesi"></span></h2>
-                                        <p class="text-[13px] text-slate-500 mt-1.5 flex items-center gap-2">
-                                            <span x-text="formatTime(selectedJadwal?.waktu_mulai)"></span> - <span x-text="formatTime(selectedJadwal?.waktu_selesai)"></span> WIB
+                                        <p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Kelola Peserta</p>
+                                        <h2 class="text-lg font-bold text-slate-800 leading-snug" id="slide-over-title"><span x-text="!isNaN(selectedJadwal?.nama_sesi) ? 'Sesi ' + selectedJadwal?.nama_sesi : selectedJadwal?.nama_sesi"></span></h2>
+                                        <p class="text-[13px] text-slate-500 mt-1 flex items-center gap-1.5">
+                                            <svg class="w-3.5 h-3.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                            <span x-text="formatTime(selectedJadwal?.waktu_mulai)"></span> – <span x-text="formatTime(selectedJadwal?.waktu_selesai)"></span> WIB
                                         </p>
                                     </div>
-                                    <div class="ml-3 flex h-7 items-center">
-                                        <button type="button" class="rounded-lg bg-slate-50 p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500" @click="closeDrawer()">
-                                            <span class="sr-only">Close panel</span>
-                                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" aria-hidden="true">
-                                                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                                            </svg>
-                                        </button>
-                                    </div>
+                                    <button type="button" class="rounded-lg p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200/60 transition-colors focus:outline-none" @click="closeDrawer()">
+                                        <span class="sr-only">Close panel</span>
+                                        <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                                    </button>
                                 </div>
                                 
-                                <!-- Quota Info -->
-                                <div class="mt-5 flex items-center gap-4 bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <!-- Quota Bar — compact inline -->
+                                <div class="mt-4 flex items-center gap-3">
                                     <div class="flex-1">
-                                        <div class="flex justify-between mb-1.5">
-                                            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Kapasitas Sesi</span>
-                                            <span class="text-[11px] font-bold text-slate-700"><span x-text="selectedJadwal?.terisi"></span> / <span x-text="selectedJadwal?.kuota"></span></span>
+                                        <div class="w-full bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                                            <div class="h-1.5 rounded-full transition-all duration-500" :class="(selectedJadwal?.terisi >= selectedJadwal?.kuota) ? 'bg-red-500' : 'bg-primary-500'" :style="`width: ${Math.min(((selectedJadwal?.terisi || 0) / (selectedJadwal?.kuota || 1)) * 100, 100)}%`"></div>
                                         </div>
-                                        <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
-                                            <div class="h-2 rounded-full transition-all duration-500" :class="(selectedJadwal?.terisi >= selectedJadwal?.kuota) ? 'bg-red-500' : 'bg-blue-600'" :style="`width: ${Math.min(((selectedJadwal?.terisi || 0) / (selectedJadwal?.kuota || 1)) * 100, 100)}%`"></div>
-                                        </div>
-                                        <p x-show="(selectedJadwal?.terisi >= selectedJadwal?.kuota)" class="text-[11px] font-bold text-red-500 mt-2">Sesi ini sudah penuh.</p>
                                     </div>
+                                    <span class="text-[12px] font-bold tabular-nums" :class="(selectedJadwal?.terisi >= selectedJadwal?.kuota) ? 'text-red-600' : 'text-slate-600'">
+                                        <span x-text="selectedJadwal?.terisi"></span>/<span x-text="selectedJadwal?.kuota"></span>
+                                    </span>
+                                    <span x-show="(selectedJadwal?.terisi >= selectedJadwal?.kuota)" class="text-[10px] font-bold text-red-500 bg-red-50 px-2 py-0.5 rounded-full border border-red-100">PENUH</span>
                                 </div>
                             </div>
 
                             <!-- Drawer Body -->
                             <div class="relative flex-1 overflow-y-auto bg-white p-6">
                                 
-                                <!-- TAB PANEL DI DALAM DRAWER -->
-                                <div class="flex space-x-1 bg-slate-100 p-1.5 rounded-xl mb-6 w-full">
-                                    <button type="button" @click="drawerTab = 'unassigned'" :class="{'bg-white shadow-sm text-blue-600': drawerTab === 'unassigned', 'text-slate-600 hover:text-slate-800 hover:bg-slate-50': drawerTab !== 'unassigned'}" class="flex-1 py-2.5 rounded-lg text-[13px] font-bold transition-all flex justify-center items-center gap-2">
+                                <!-- TAB PANEL -->
+                                <div class="flex bg-slate-100 p-1 rounded-lg mb-5 w-full">
+                                    <button type="button" @click="drawerTab = 'unassigned'" :class="{'bg-white shadow-sm text-primary-600': drawerTab === 'unassigned', 'text-slate-500 hover:text-slate-700': drawerTab !== 'unassigned'}" class="flex-1 py-2 rounded-md text-[13px] font-bold transition-all flex justify-center items-center gap-1.5">
                                         Belum Dialokasi
-                                        <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[10px]" :class="{'bg-blue-50 text-blue-600': drawerTab === 'unassigned'}" x-text="unassignedStudents.length"></span>
+                                        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold" :class="{'bg-primary-50 text-primary-600': drawerTab === 'unassigned', 'bg-slate-200/80 text-slate-500': drawerTab !== 'unassigned'}" x-text="unassignedStudents.length"></span>
                                     </button>
-                                    <button type="button" @click="drawerTab = 'assigned'" :class="{'bg-white shadow-sm text-blue-600': drawerTab === 'assigned', 'text-slate-600 hover:text-slate-800 hover:bg-slate-50': drawerTab !== 'assigned'}" class="flex-1 py-2.5 rounded-lg text-[13px] font-bold transition-all flex justify-center items-center gap-2">
+                                    <button type="button" @click="drawerTab = 'assigned'" :class="{'bg-white shadow-sm text-primary-600': drawerTab === 'assigned', 'text-slate-500 hover:text-slate-700': drawerTab !== 'assigned'}" class="flex-1 py-2 rounded-md text-[13px] font-bold transition-all flex justify-center items-center gap-1.5">
                                         Dalam Sesi Ini
-                                        <span class="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full text-[10px]" :class="{'bg-blue-50 text-blue-600': drawerTab === 'assigned'}" x-text="assignedStudents.length"></span>
+                                        <span class="px-1.5 py-0.5 rounded-md text-[10px] font-bold" :class="{'bg-primary-50 text-primary-600': drawerTab === 'assigned', 'bg-slate-200/80 text-slate-500': drawerTab !== 'assigned'}" x-text="assignedStudents.length"></span>
                                     </button>
                                 </div>
 
@@ -357,14 +358,20 @@
                                         @csrf
                                         <input type="hidden" name="jadwal_id" :value="selectedJadwal?.id">
                                         
-                                        <div class="flex justify-between items-center mb-4">
-                                            <h3 class="font-bold text-slate-700 text-[13px]">Pilih mahasiswa untuk dimasukkan:</h3>
+                                        <div class="flex justify-between items-center mb-3">
+                                            <h3 class="font-bold text-slate-700 text-[13px]">Tambahkan ke sesi ini:</h3>
                                             <button type="button" @click="document.getElementById('formAssign').submit()" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors flex items-center gap-2" :disabled="selectedUnassignedIds.length === 0 || (selectedJadwal?.terisi + selectedUnassignedIds.length) > selectedJadwal?.kuota">
                                                 Tambahkan (<span x-text="selectedUnassignedIds.length"></span>)
                                             </button>
                                         </div>
+
+                                        <!-- Search filter -->
+                                        <div class="relative mb-3">
+                                            <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                                            <input x-model="drawerSearch" type="text" placeholder="Cari nama atau NIM..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400">
+                                        </div>
                                         
-                                        <div x-show="selectedJadwal && (selectedJadwal.terisi + selectedUnassignedIds.length) > selectedJadwal.kuota" class="mb-4 text-[12px] font-bold text-red-600 bg-red-50 px-4 py-3 rounded-xl border border-red-100 flex items-center gap-2">
+                                        <div x-show="selectedJadwal && (selectedJadwal.terisi + selectedUnassignedIds.length) > selectedJadwal.kuota" class="mb-3 text-[12px] font-bold text-red-600 bg-red-50 px-4 py-3 rounded-xl border border-red-100 flex items-center gap-2">
                                             <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
                                             Jumlah pilihan melebih sisa kuota sesi ini!
                                         </div>
@@ -380,7 +387,7 @@
                                                     </tr>
                                                 </thead>
                                                 <tbody class="divide-y divide-slate-100">
-                                                    <template x-for="p in unassignedStudents" :key="p.id">
+                                                    <template x-for="p in filteredUnassignedStudents" :key="p.id">
                                                         <tr class="hover:bg-slate-50/70 transition-colors">
                                                             <td class="px-5 py-3 text-center border-r border-slate-100">
                                                                 <input type="checkbox" name="pendaftar_ids[]" :value="p.id" x-model="selectedUnassignedIds" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
@@ -391,11 +398,11 @@
                                                             </td>
                                                         </tr>
                                                     </template>
-                                                    <template x-if="unassignedStudents.length === 0">
+                                                    <template x-if="filteredUnassignedStudents.length === 0">
                                                         <tr>
-                                                            <td colspan="2" class="px-5 py-12 text-center">
-                                                                <svg class="w-10 h-10 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                                                                <p class="text-slate-500 text-[13px] font-medium">Semua pendaftar sudah dialokasikan.</p>
+                                                            <td colspan="2" class="px-5 py-10 text-center">
+                                                                <svg class="w-8 h-8 text-slate-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                                                                <p class="text-slate-500 text-[13px] font-medium" x-text="drawerSearch ? 'Tidak ditemukan.' : 'Semua pendaftar sudah dialokasikan.'"></p>
                                                             </td>
                                                         </tr>
                                                     </template>
@@ -441,9 +448,10 @@
                                                     </template>
                                                     <template x-if="assignedStudents.length === 0">
                                                         <tr>
-                                                            <td colspan="2" class="px-5 py-12 text-center">
-                                                                <svg class="w-10 h-10 text-slate-300 mx-auto mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                                                                <p class="text-slate-500 text-[13px] font-medium">Belum ada peserta di sesi ini.</p>
+                                                            <td colspan="2" class="px-5 py-10 text-center">
+                                                                <svg class="w-8 h-8 text-slate-300 mx-auto mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                                                                <p class="text-slate-400 text-[13px] font-medium">Belum ada peserta di sesi ini.</p>
+                                                                <p class="text-slate-400 text-[11px] mt-1">Buka tab "Belum Dialokasi" untuk menambahkan.</p>
                                                             </td>
                                                         </tr>
                                                     </template>
@@ -454,10 +462,7 @@
                                 </div>
 
                             </div>
-                        </div>
-                    </div>
                 </div>
-            </div>
         </div>
 
         <!-- Modal Popup: Tambah/Edit Sesi Baru -->
@@ -482,7 +487,7 @@
                  x-transition:leave="ease-in duration-200" 
                  x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
                  x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
-                 class="relative w-full max-w-xl bg-white rounded-2xl shadow-xl flex flex-col overflow-hidden max-h-full">
+                 class="relative w-full max-w-md bg-white rounded-2xl shadow-xl flex flex-col overflow-hidden max-h-full">
                 
                 <!-- Modal Header -->
                 <div class="px-6 py-5 flex items-center justify-between border-b border-transparent">
@@ -503,29 +508,32 @@
                         
                         <!-- Box 1: Nama Sesi -->
                         <div>
-                            <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Nama Sesi</label>
-                            <input type="text" name="nama_sesi" placeholder="Sesi 1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-shadow">
+                            <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Sesi Ke-</label>
+                            <input type="number" name="nama_sesi" value="{{ old('nama_sesi') }}" placeholder="1" min="1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-shadow @error('nama_sesi') border-red-500 ring-red-500/20 @enderror">
+                            @error('nama_sesi')
+                                <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    {{ $message }}
+                                </p>
+                            @enderror
                         </div>
 
                         <!-- Dropdown Tanggal Ujian -->
                         <div>
                             <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Tanggal Ujian (Berdasarkan Rentang Periode)</label>
                             <div class="relative">
-                                <select name="tanggal_ujian" required class="w-full appearance-none px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow cursor-pointer">
+                                <select name="tanggal_ujian" required class="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow cursor-pointer">
                                     <option value="">Pilih Tanggal Ujian...</option>
                                     @if($selectedPeriode && $selectedPeriode->tanggal_mulai_ujian && $selectedPeriode->tanggal_selesai_ujian)
                                         @php
                                             $startDate = \Carbon\Carbon::parse($selectedPeriode->tanggal_mulai_ujian);
                                             $endDate = \Carbon\Carbon::parse($selectedPeriode->tanggal_selesai_ujian);
                                             for($d = $startDate; $d->lte($endDate); $d->addDay()) {
-                                                echo '<option value="' . $d->format('Y-m-d') . '">' . $d->format('d F Y') . '</option>';
+                                                echo '<option value="' . $d->format('Y-m-d') . '"' . (old('tanggal_ujian') == $d->format('Y-m-d') ? ' selected' : '') . '>' . $d->format('d F Y') . '</option>';
                                             }
                                         @endphp
                                     @endif
                                 </select>
-                                <div class="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                                    <svg class="w-4 h-4 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                                </div>
                             </div>
                         </div>
 
@@ -533,25 +541,25 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Waktu Mulai</label>
-                                <input type="time" name="waktu_mulai" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
+                                <input type="time" name="waktu_mulai" value="{{ old('waktu_mulai') }}" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
                             </div>
                             <div>
                                 <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Waktu Selesai</label>
-                                <input type="time" name="waktu_selesai" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
+                                <input type="time" name="waktu_selesai" value="{{ old('waktu_selesai') }}" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
                             </div>
                         </div>
 
                         <!-- Box 4: Kapasitas -->
                         <div>
                             <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Kapasitas Maksimal</label>
-                            <input type="number" name="kuota" placeholder="50" min="1" step="1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-shadow">
+                            <input type="number" name="kuota" value="{{ old('kuota') }}" placeholder="50" min="1" step="1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-shadow">
                         </div>
                     </form>
                 </div>
 
                 <!-- Modal Footer -->
-                <div class="px-6 py-4 flex flex-col sm:flex-row items-center justify-end gap-3 rounded-b-2xl bg-slate-50 border-t border-slate-100">
-                    <button @click="openModal = false" type="button" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-300 rounded-xl hover:bg-slate-50 focus:outline-none transition-colors">
+                <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex flex-col sm:flex-row justify-end gap-2">
+                    <button type="button" @click="openModal = false" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 hover:text-slate-800 shadow-sm rounded-xl focus:outline-none transition-colors">
                         Batal
                     </button>
                     <button type="button" onclick="document.getElementById('formTambahSesi').submit()" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm rounded-xl focus:outline-none transition-colors">
@@ -566,7 +574,7 @@
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('alokasiSesiApp', () => ({
-                openModal: false,
+                openModal: {{ $errors->any() ? 'true' : 'false' }},
                 openDrawer: false,
                 drawerTab: 'unassigned', // unassigned | assigned
                 selectedJadwal: null,
@@ -577,6 +585,7 @@
                 checkAllAssigned: false,
                 selectedUnassignedIds: [],
                 selectedAssignedIds: [],
+                drawerSearch: '',
                 
                 init() {
                     // console.log("Alpine init", this.jadwals, this.pendaftars);
@@ -584,6 +593,17 @@
 
                 get unassignedStudents() {
                     return this.pendaftars.filter(p => !p.jadwal_ujian_id);
+                },
+
+                get filteredUnassignedStudents() {
+                    const q = this.drawerSearch.trim().toLowerCase();
+                    const unassigned = this.pendaftars.filter(p => !p.jadwal_ujian_id);
+                    if (!q) return unassigned;
+                    return unassigned.filter(p => {
+                        const nama = (p.mahasiswa?.nama || p.nama_lengkap || '').toLowerCase();
+                        const nim = (p.mahasiswa?.nim || p.nim || '').toLowerCase();
+                        return nama.includes(q) || nim.includes(q);
+                    });
                 },
                 
                 get assignedStudents() {
@@ -598,13 +618,14 @@
                     this.selectedAssignedIds = [];
                     this.checkAllUnassigned = false;
                     this.checkAllAssigned = false;
+                    this.drawerSearch = '';
                     this.openDrawer = true;
-                    // Mencegah scroll pada body saat drawer terbuka
                     document.body.style.overflow = 'hidden';
                 },
 
                 closeDrawer() {
                     this.openDrawer = false;
+                    this.drawerSearch = '';
                     setTimeout(() => {
                         this.selectedJadwal = null;
                         document.body.style.overflow = '';
