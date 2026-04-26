@@ -85,6 +85,6 @@ class RepoMulmed extends Model
 
     public function getUrlAttribute(): string
     {
-        return \Storage::url($this->path_file);
+        return app(\App\Services\SupabaseStorage::class)->getPublicUrl($this->path_file);
     }
 }

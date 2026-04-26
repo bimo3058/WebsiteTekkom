@@ -1,9 +1,13 @@
-{{-- Recursive comment thread partial (Reddit-style nesting) --}}
-@php $depth = $depth ?? 0; @endphp
-<div class="comment-item" style="{{ $depth > 0 ? 'margin-left:'.min($depth * 20, 80).'px; padding-left:14px; border-left:2px solid ' . ($depth === 1 ? '#e2e8f0' : ($depth === 2 ? '#f1f5f9' : '#f8fafc')) . '; margin-bottom:12px; padding-bottom:12px;' : '' }}">
+{{-- YouTube-style comment thread partial --}}
+@php 
+        $depth = $depth ?? 0;
+    $repliedUser = $comment->getRepliedToUsername();
+@endphp
+
+<div class="comment-item"
+    style="{{ $depth > 0 ? 'margin-bottom:12px; padding-bottom:12px; border-bottom: 1px solid #f8fafc;' : '' }}">
     <div class="d-flex gap-2">
-        <div class="avatar-placeholder avatar-sm flex-shrink-0"
-             style="background-color: {{ $comment->is_best_answer ? '#dcfce7' : ($depth === 0 ? '#fce7f3' : '#f3f4f6') }};
+        <div class="avatar-placeholder avatar-sm flex-shrink-0" style="background-color: {{ $comment->is_best_answer ? '#dcfce7' : ($depth === 0 ? '#fce7f3' : '#f3f4f6') }};
                     color: {{ $comment->is_best_answer ? '#16a34a' : ($depth === 0 ? '#db2777' : '#6b7280') }};
                     width: {{ $depth === 0 ? '36px' : '28px' }}; height: {{ $depth === 0 ? '36px' : '28px' }};
                     font-size: {{ $depth === 0 ? '14px' : '11px' }};">
@@ -11,18 +15,29 @@
         </div>
         <div class="flex-grow-1 min-w-0">
             <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
-                <span class="fw-bold text-dark" style="font-size: {{ $depth === 0 ? '14px' : '13px' }};">{{ $comment->author->name ?? 'Unknown' }}</span>
+                <span class="fw-bold text-dark"
+                    style="font-size: {{ $depth === 0 ? '14px' : '13px' }};">{{ $comment->author->name ?? 'Unknown' }}</span>
                 @if(isset($authorTiers[$comment->user_id]))
-                    <span class="badge rounded-pill" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-size: 9px; font-weight: 600; padding: 2px 6px;" title="{{ $authorTiers[$comment->user_id]['tier_name'] }}">
-                        {{ $authorTiers[$comment->user_id]['tier_icon'] }} Lv.{{ $authorTiers[$comment->user_id]['level'] }}
+                    <span class="badge rounded-pill"
+                        style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-size: 9px; font-weight: 600; padding: 2px 6px;"
+                        title="{{ $authorTiers[$comment->user_id]['tier_name'] }}">
+                        {!! $authorTiers[$comment->user_id]['tier_icon'] !!} Lv.{{ $authorTiers[$comment->user_id]['level'] }}
                     </span>
                 @endif
-                <span class="text-muted" style="font-size: {{ $depth === 0 ? '12px' : '11px' }};">• {{ $comment->created_at->diffForHumans() }}</span>
+                <span class="text-muted" style="font-size: {{ $depth === 0 ? '12px' : '11px' }};">•
+                    {{ $comment->created_at->diffForHumans() }}</span>
                 @if($comment->is_best_answer)
-                    <span class="best-answer-badge">⭐ Jawaban Terbaik</span>
+                    <span class="best-answer-badge d-flex align-items-center gap-1">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        Jawaban Terbaik
+                    </span>
                 @endif
             </div>
+
             <p class="text-dark mb-1" style="font-size: {{ $depth === 0 ? '14px' : '13px' }}; line-height: 1.5;">
+                @if($repliedUser)
+                    <span class="reply-mention">{{ '@' . $repliedUser }}</span>
+                @endif
                 {!! nl2br(e($comment->konten)) !!}
             </p>
 
@@ -30,35 +45,62 @@
             @php
                 $commentVoteKey = \Modules\ManajemenMahasiswa\Models\Comment::class . '_' . $comment->id;
                 $commentUserVote = $userVotes[$commentVoteKey] ?? null;
+                $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
             @endphp
             <div class="comment-actions">
                 <div class="c-vote-pill">
-                    <button class="vote-comment-btn {{ $commentUserVote && $commentUserVote->value === 1 ? 'active-up' : '' }}" data-comment-id="{{ $comment->id }}" data-value="1">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                    <button
+                        class="vote-comment-btn {{ $commentUserVote && $commentUserVote->value === 1 ? 'active-up' : '' }}"
+                        data-comment-id="{{ $comment->id }}" data-value="1">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <line x1="12" y1="19" x2="12" y2="5"></line>
+                            <polyline points="5 12 12 5 19 12"></polyline>
+                        </svg>
                     </button>
                     <span class="c-vote-count comment-vote-count-{{ $comment->id }}">{{ $comment->vote_count }}</span>
-                    <button class="vote-comment-btn {{ $commentUserVote && $commentUserVote->value === -1 ? 'active-down' : '' }}" data-comment-id="{{ $comment->id }}" data-value="-1">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                    <button
+                        class="vote-comment-btn {{ $commentUserVote && $commentUserVote->value === -1 ? 'active-down' : '' }}"
+                        data-comment-id="{{ $comment->id }}" data-value="-1">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2.5">
+                            <line x1="12" y1="5" x2="12" y2="19"></line>
+                            <polyline points="19 12 12 19 5 12"></polyline>
+                        </svg>
                     </button>
                 </div>
                 @unless($thread->is_locked)
-                <button type="button" class="c-action-btn toggle-reply-btn" data-comment-id="{{ $comment->id }}">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    Balas
-                </button>
+                    <button type="button" class="c-action-btn toggle-reply-btn" data-comment-id="{{ $comment->id }}">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
+                        Balas
+                    </button>
                 @endunless
-                @if($comment->user_id === $user->id || $thread->user_id === $user->id)
-                    <form method="POST" action="{{ route('manajemenmahasiswa.forum.comments.destroy', $comment->id) }}" style="display:inline;" onsubmit="return confirm('Hapus komentar ini?')">
+
+                @if($comment->user_id === $user->id)
+                    <button type="button" class="c-action-btn toggle-edit-btn d-flex align-items-center gap-1" data-comment-id="{{ $comment->id }}">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit
+                    </button>
+                @endif
+
+                @if($comment->user_id === $user->id || $isAdmin)
+                    <form method="POST" action="{{ route('manajemenmahasiswa.forum.comments.destroy', $comment->id) }}"
+                        style="display:inline;" onsubmit="return confirm('Hapus komentar ini?')">
                         @csrf @method('DELETE')
-                        <button type="submit" class="c-action-btn" style="color:#ef4444;">Hapus</button>
+                        <button type="submit" class="c-action-btn d-flex align-items-center gap-1" style="color:#ef4444;">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg> Hapus
+                        </button>
                     </form>
                 @endif
                 {{-- Best Answer Button (hanya terlihat oleh OP, untuk komentar top-level yang belum ditandai) --}}
                 @if($thread->user_id === $user->id && !$comment->is_best_answer && $depth === 0 && $comment->user_id !== $user->id)
-                    <form method="POST" action="{{ route('manajemenmahasiswa.forum.best_answer', [$thread->id, $comment->id]) }}" style="display:inline;" onsubmit="return confirm('Tandai komentar ini sebagai Jawaban Terbaik?')">
+                    <form method="POST"
+                        action="{{ route('manajemenmahasiswa.forum.best_answer', [$thread->id, $comment->id]) }}"
+                        style="display:inline;" onsubmit="return confirm('Tandai komentar ini sebagai Jawaban Terbaik?')">
                         @csrf
-                        <button type="submit" class="c-action-btn" style="color:#16a34a; font-weight:600;">
-                            ✅ Best Answer
+                        <button type="submit" class="c-action-btn d-flex align-items-center gap-1" style="color:#16a34a; font-weight:600;">
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Best Answer
                         </button>
                     </form>
                 @endif
@@ -66,24 +108,60 @@
 
             {{-- Inline Reply Form --}}
             @unless($thread->is_locked)
-            <div class="inline-reply-form" id="reply-form-{{ $comment->id }}">
-                <form method="POST" action="{{ route('manajemenmahasiswa.forum.comments.store', $thread->id) }}" class="reply-submit-form">
-                    @csrf
-                    <input type="hidden" name="parent_id" value="{{ $comment->id }}">
-                    <textarea name="konten" rows="2" placeholder="Tulis balasan..." required minlength="3"></textarea>
-                    <div class="reply-actions">
-                        <button type="button" class="btn-cancel cancel-reply-btn" data-comment-id="{{ $comment->id }}">Batal</button>
-                        <button type="submit" class="btn-reply-submit">Balas</button>
-                    </div>
-                </form>
-            </div>
+                <div class="inline-reply-form" id="reply-form-{{ $comment->id }}">
+                    <form method="POST" action="{{ route('manajemenmahasiswa.forum.comments.store', $thread->id) }}"
+                        class="reply-submit-form">
+                        @csrf
+                        <input type="hidden" name="parent_id" value="{{ $comment->id }}">
+                        <textarea name="konten" rows="2" placeholder="Tulis balasan..." required minlength="3"></textarea>
+                        <div class="reply-actions">
+                            <button type="button" class="btn-cancel cancel-reply-btn"
+                                data-comment-id="{{ $comment->id }}">Batal</button>
+                            <button type="submit" class="btn-reply-submit">Balas</button>
+                        </div>
+                    </form>
+                </div>
             @endunless
 
-            {{-- Recursive Nested Replies --}}
-            @if($comment->allReplies && $comment->allReplies->isNotEmpty())
-                @foreach($comment->allReplies as $childComment)
-                    @include('manajemenmahasiswa::forum.partials.comment-thread', ['comment' => $childComment, 'depth' => $depth + 1])
-                @endforeach
+            {{-- Inline Edit Form --}}
+            @if($comment->user_id === $user->id)
+                <div class="inline-reply-form inline-edit-form" id="edit-form-{{ $comment->id }}">
+                    <form method="POST" action="{{ route('manajemenmahasiswa.forum.comments.update', $comment->id) }}"
+                        class="edit-submit-form">
+                        @csrf
+                        @method('PUT')
+                        <textarea name="konten" rows="2" placeholder="Edit komentar..." required
+                            minlength="3">{{ $comment->konten }}</textarea>
+                        <div class="reply-actions">
+                            <button type="button" class="btn-cancel cancel-edit-btn"
+                                data-comment-id="{{ $comment->id }}">Batal</button>
+                            <button type="submit" class="btn-reply-submit">Simpan Edit</button>
+                        </div>
+                    </form>
+                </div>
+            @endif
+
+            {{-- YouTube Style Flat Replies --}}
+            @if($depth === 0)
+                @php
+                    $flatReplies = $comment->getFlattenedReplies();
+                @endphp
+                @if($flatReplies->isNotEmpty())
+                    <button type="button" class="toggle-replies-btn" data-target="replies-container-{{ $comment->id }}">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                        <span class="toggle-text">{{ $flatReplies->count() }} balasan</span>
+                    </button>
+
+                    <div class="replies-container" id="replies-container-{{ $comment->id }}"
+                        style="margin-left: 18px; border-left: 2px solid #e5e7eb; padding-left: 20px;">
+                        @foreach($flatReplies as $replyComment)
+                            @include('manajemenmahasiswa::forum.partials.comment-thread', ['comment' => $replyComment, 'depth' => 1])
+                        @endforeach
+                    </div>
+                @endif
             @endif
         </div>
     </div>

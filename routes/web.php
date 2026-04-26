@@ -140,6 +140,18 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // CV Builder — hanya mahasiswa & alumni
+    Route::middleware('role:mahasiswa,alumni')
+        ->prefix('profile/cv')
+        ->name('profile.cv.')
+        ->group(function () {
+            Route::get('/', [\App\Http\Controllers\CvBuilderController::class, 'index'])->name('index');
+            Route::get('/step/{step}', [\App\Http\Controllers\CvBuilderController::class, 'loadStep'])->name('step');
+            Route::post('/step/{step}', [\App\Http\Controllers\CvBuilderController::class, 'saveStep'])->name('step.save');
+            Route::get('/preview', [\App\Http\Controllers\CvBuilderController::class, 'preview'])->name('preview');
+            Route::get('/generate', [\App\Http\Controllers\CvBuilderController::class, 'generate'])->name('generate');
+        });
+
     Route::get('/users/online', [\App\Http\Controllers\SuperAdminController::class, 'onlineUsers'])->name('superadmin.users.online');
     Route::get('/users/suspended', [\App\Http\Controllers\SuperAdminController::class, 'suspendedUsers'])->name('superadmin.users.suspended');
 
