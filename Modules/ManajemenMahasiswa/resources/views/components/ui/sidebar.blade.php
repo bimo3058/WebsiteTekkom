@@ -16,6 +16,11 @@
         $showDashboardAnalitik = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm'])) > 0;
         $showManajemenPengguna = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit'])) > 0;
 
+        // Tentukan URL dashboard utama sesuai role
+        $mainDashboardUrl = in_array('superadmin', $sidebarRoles)
+            ? route('superadmin.dashboard')
+            : route('dashboard');
+
         if (array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan'])) {
             $portalLabel = 'Portal Admin';
         } elseif (array_intersect($sidebarRoles, ['gpm', 'dosen_koordinator', 'dosen'])) {
@@ -46,6 +51,22 @@
     <div class="menu-title mb-2" x-show="sidebarOpen">Main Menu</div>
 
     <nav class="sidebar-nav d-flex flex-column gap-1">
+        {{-- Dashboard Utama — selalu tampil, link sesuai role --}}
+        <a href="{{ $mainDashboardUrl }}"
+           class="nav-link-item"
+           :class="{ 'justify-content-center': !sidebarOpen }"
+           style="border-bottom: 1px solid #e5e7eb; margin-bottom: 4px; padding-bottom: 10px;">
+            <span class="nav-icon d-inline-flex">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </span>
+            <span class="nav-label" x-show="sidebarOpen" style="flex-grow:1;">Dashboard Utama</span>
+            <svg x-show="sidebarOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.4; flex-shrink:0;"><path d="m9 18 6-6-6-6"/></svg>
+        </a>
+
         @if($showDashboardAnalitik)
             <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.dashboard') }}"
                 routeName="manajemenmahasiswa.dashboard" label="Dashboard Analitik">
