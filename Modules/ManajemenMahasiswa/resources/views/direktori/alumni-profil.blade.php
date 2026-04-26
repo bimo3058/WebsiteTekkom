@@ -174,7 +174,7 @@
 @endif
 
 <div class="page-header-profil">
-    <h3>📝 Profil Karir Alumni</h3>
+    <h3><span class="material-symbols-outlined" style="vertical-align: text-bottom; margin-right: 6px;">edit_document</span> Profil Karir Alumni</h3>
     <p>Perbarui data pekerjaan dan karir Anda. Data ini digunakan untuk akreditasi dan jejaring alumni.</p>
 </div>
 

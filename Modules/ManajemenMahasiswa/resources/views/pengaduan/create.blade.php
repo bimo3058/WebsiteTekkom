@@ -156,7 +156,7 @@
 
         <div class="mt-5">
             <h6 class="section-title">
-                📝 Detail Pengaduan
+                <span class="material-symbols-outlined" style="vertical-align: text-bottom; margin-right: 6px;">edit_document</span> Detail Pengaduan
             </h6>
 
             <div class="mb-4">

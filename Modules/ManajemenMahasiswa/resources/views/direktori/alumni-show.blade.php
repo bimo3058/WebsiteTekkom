@@ -213,9 +213,9 @@
                 </div>
             </div>
             <span class="status-badge-lg {{ $alumni->status_karir ?? 'belum_terdata' }}">
-                @if(in_array($alumni->status_karir, ['bekerja', 'wirausaha'])) 💼
-                @elseif($alumni->status_karir == 'studi_lanjut') 🎓
-                @else ⏳
+                @if(in_array($alumni->status_karir, ['bekerja', 'wirausaha'])) <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">work</span>
+                @elseif($alumni->status_karir == 'studi_lanjut') <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">school</span>
+                @else <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">hourglass_empty</span>
                 @endif
                 {{ $alumni->status_karir_label }}
             </span>

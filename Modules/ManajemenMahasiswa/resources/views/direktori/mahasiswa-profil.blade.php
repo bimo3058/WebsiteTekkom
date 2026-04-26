@@ -303,7 +303,18 @@
                         <div style="font-weight: 600; font-size: 14px; color: #1f2937;">{{ $p->nama_prestasi }}</div>
                         <div style="font-size: 12px; color: #9ca3af;">Tahun {{ $p->tahun }}</div>
                     </div>
-                    <span class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span>
+                    <div class="d-flex align-items-center gap-2">
+                        <span class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span>
+                        @if(isset($p->verification_status))
+                            @if($p->verification_status === 'pending')
+                                <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #fef3c7; color: #d97706;">● Pending</span>
+                            @elseif($p->verification_status === 'approved')
+                                <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #dcfce7; color: #166534;">✓ Verified</span>
+                            @elseif($p->verification_status === 'rejected')
+                                <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #fef2f2; color: #dc2626;" title="{{ $p->verification_note }}">✗ Ditolak</span>
+                            @endif
+                        @endif
+                    </div>
                 </div>
             @endforeach
         </div>
@@ -329,6 +340,7 @@
                         <th>Peran</th>
                         <th>Sumber</th>
                         <th>Tanggal</th>
+                        <th>Verifikasi</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -383,6 +395,21 @@
                                     {{ \Carbon\Carbon::parse($tanggalDisplay)->translatedFormat('d M Y') }}
                                 @else
                                     -
+                                @endif
+                            </td>
+                            <td>
+                                @if($isAutoEntry)
+                                    <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #dcfce7; color: #166534;">✓ Auto</span>
+                                @elseif(isset($rw->verification_status))
+                                    @if($rw->verification_status === 'pending')
+                                        <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #fef3c7; color: #d97706;">● Pending</span>
+                                    @elseif($rw->verification_status === 'approved')
+                                        <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #dcfce7; color: #166534;">✓ Verified</span>
+                                    @elseif($rw->verification_status === 'rejected')
+                                        <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #fef2f2; color: #dc2626;" title="{{ $rw->verification_note ?? '' }}">✗ Ditolak</span>
+                                    @endif
+                                @else
+                                    <span style="font-size: 10px; color: #9ca3af;">—</span>
                                 @endif
                             </td>
                         </tr>
