@@ -316,7 +316,7 @@
 
                         <!-- Description -->
                         <div class="kegiatan-card-desc">
-                            {{ Str::limit(strip_tags($item->deskripsi), 100) }}
+                            {{ Str::limit(html_entity_decode(strip_tags($item->deskripsi)), 100) }}
                         </div>
 
                         <!-- Meta -->
