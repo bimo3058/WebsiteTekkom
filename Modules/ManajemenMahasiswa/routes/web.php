@@ -10,6 +10,7 @@ use Modules\ManajemenMahasiswa\Http\Controllers\PengaduanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\DirektoriMahasiswaController;
 use Modules\ManajemenMahasiswa\Http\Controllers\ManajemenPenggunaController;
+use Modules\ManajemenMahasiswa\Http\Controllers\VerifikasiController;
 
 Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
     ->prefix('manajemen-mahasiswa')
@@ -253,6 +254,33 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('update')->where('id', '[0-9]+');
                 });
             });
+        });
+
+        // ── Verifikasi Data ─────────────────────────────────────────────
+        Route::prefix('verifikasi')->name('verifikasi.')->group(function () {
+
+            // Index — semua role boleh akses (view berbeda per role)
+            Route::get('/', [VerifikasiController::class, 'index'])->name('index');
+
+            // Submit pengajuan — mahasiswa, alumni, pengurus himpunan
+            Route::middleware('role:mahasiswa,alumni,pengurus_himpunan,superadmin,admin,admin_kemahasiswaan')
+                ->group(function () {
+                    Route::post('/riwayat', [VerifikasiController::class, 'storeRiwayat'])->name('riwayat.store');
+                    Route::post('/prestasi', [VerifikasiController::class, 'storePrestasi'])->name('prestasi.store');
+                });
+
+            // Approve/Reject — admin & GPM only
+            Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm')
+                ->group(function () {
+                    Route::patch('/riwayat/{id}/approve', [VerifikasiController::class, 'approveRiwayat'])
+                        ->name('riwayat.approve')->where('id', '[0-9]+');
+                    Route::patch('/riwayat/{id}/reject', [VerifikasiController::class, 'rejectRiwayat'])
+                        ->name('riwayat.reject')->where('id', '[0-9]+');
+                    Route::patch('/prestasi/{id}/approve', [VerifikasiController::class, 'approvePrestasi'])
+                        ->name('prestasi.approve')->where('id', '[0-9]+');
+                    Route::patch('/prestasi/{id}/reject', [VerifikasiController::class, 'rejectPrestasi'])
+                        ->name('prestasi.reject')->where('id', '[0-9]+');
+                });
         });
 
     });

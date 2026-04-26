@@ -298,7 +298,7 @@
             </span>
             @if($pengaduan->is_anonim)
                 <span class="pgd-badge" style="background: #111827; color: white;">
-                    🔒 Anonim
+                    <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">lock</span> Anonim
                 </span>
             @endif
             <span class="pgd-badge" style="background: #f8fafc; color: #6b7280; border: 1px solid #e5e7eb;">
@@ -394,7 +394,7 @@
         <hr style="border-color: #e2e8f0; margin: 8px 0 20px 0;">
         <div class="info-item-label mb-2">Pelapor</div>
         <div class="pelapor-box" style="max-width: 360px;">
-            <div class="pelapor-avatar">👤</div>
+            <div class="pelapor-avatar"><span class="material-symbols-outlined" style="font-size: 18px;">person</span></div>
             <div>
                 @if($pengaduan->is_anonim)
                     <div class="fw-bold text-dark" style="font-size: 15px;">Anonim</div>
@@ -412,13 +412,13 @@
     {{-- ── Tanggapan ─────────────────────────────────────────── --}}
     <div class="mb-4">
         <h5 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2" style="font-size: 16px;">
-            <span style="color: #4D4DFF;">💬</span> Tanggapan Admin
+            <span class="material-symbols-outlined" style="color: #4D4DFF; font-size: 20px; vertical-align: text-bottom;">chat</span> Tanggapan Admin
         </h5>
 
         @if($pengaduan->jawaban)
             <div class="answer-card">
                 <div class="d-flex align-items-start gap-3">
-                    <div class="answer-icon-badge">✓</div>
+                    <div class="answer-icon-badge"><span class="material-symbols-outlined" style="font-size: 12px; font-weight: bold;">check</span></div>
                     <div style="flex: 1; min-width: 0;">
                         <div style="white-space: pre-wrap; color: #166534; font-size: 14px; line-height: 1.8;">{{ $pengaduan->jawaban }}</div>
                         <div class="mt-3 text-muted fw-medium" style="font-size: 12px;">
@@ -432,7 +432,7 @@
             </div>
         @else
             <div class="empty-answer">
-                <div style="font-size: 40px; color: #94a3b8; margin-bottom: 12px;">⏳</div>
+                <div style="color: #94a3b8; margin-bottom: 12px;"><span class="material-symbols-outlined" style="font-size: 40px;">hourglass_empty</span></div>
                 <div class="fw-bold text-dark mb-1" style="font-size: 16px;">Belum ada tanggapan</div>
                 <div class="text-muted" style="font-size: 13px;">Admin belum memberikan balasan untuk pengaduan ini.</div>
             </div>
@@ -466,7 +466,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <div class="modal-body text-center p-4 p-md-5">
-                        <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                        <div style="margin-bottom: 16px;"><span class="material-symbols-outlined" style="font-size: 48px; color: #f59e0b;">warning</span></div>
                         <h4 class="fw-bold text-dark mb-2">Hapus Pengaduan?</h4>
                         <p class="text-muted mb-4" style="font-size: 14px;">
                             Pengaduan <strong>"{{ data_get($pengaduan, 'data_template.judul', '-') }}"</strong> akan dihapus permanen.

@@ -623,7 +623,11 @@
         </div>
         @endif
 
-        @if($kegiatan->anggaran)
+        @php
+            $userRoles = auth()->user()->roles->pluck('name');
+            $canViewRestricted = $userRoles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dosen_koordinator', 'dosen', 'pengurus_himpunan'])->isNotEmpty();
+        @endphp
+        @if($kegiatan->anggaran && $canViewRestricted)
         <div class="meta-item">
             <div class="meta-item-label">Anggaran</div>
             <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Rp {{ number_format($kegiatan->anggaran, 0, ',', '.') }}</div>
@@ -740,7 +744,7 @@
     @endif
 
     {{-- ─── Document Download Section ────────────────────────────────── --}}
-    @if($documents->count() > 0)
+    @if($documents->count() > 0 && isset($canViewRestricted) && $canViewRestricted)
     <div class="detail-card">
         <div class="gallery-header">
             <div class="detail-card-title" style="margin-bottom: 0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen & Laporan</div>
