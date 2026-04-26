@@ -300,32 +300,17 @@
             <div class="info-item-label">NIM <span class="sso-tag">SSO</span></div>
             <div class="info-item-value" style="font-family: monospace; color: #4f46e5;">{{ $mhs->nim }}</div>
         </div>
-        <div>
-            <div class="info-item-label">Angkatan <span class="sso-tag">SSO</span></div>
-            <div class="info-item-value">{{ $mhs->angkatan }}</div>
-        </div>
-        <div>
-            <div class="info-item-label">Status</div>
-            <div><span class="status-badge {{ $mhs->status }}">
-                @switch($mhs->status)
-                    @case('aktif') Aktif @break
-                    @case('alumni') Lulus @break
-                    @case('cuti') Cuti @break
-                    @case('drop_out') Drop Out @break
-                    @default {{ ucfirst($mhs->status) }}
-                @endswitch
-            </span></div>
-        </div>
+
         @if($mhs->user && $mhs->user->email)
         <div>
             <div class="info-item-label">Email UNDIP <span class="sso-tag">SSO</span></div>
-            <div class="info-item-value">{{ $mhs->user->email }}</div>
+            <div class="info-item-value" style="word-break: break-all;">{{ $mhs->user->email }}</div>
         </div>
         @endif
         @if($mhs->user && $mhs->user->personal_email)
         <div>
             <div class="info-item-label">Email Pribadi</div>
-            <div class="info-item-value">{{ $mhs->user->personal_email }}</div>
+            <div class="info-item-value" style="word-break: break-all;">{{ $mhs->user->personal_email }}</div>
         </div>
         @endif
 
@@ -335,12 +320,7 @@
             <div class="info-item-value">{{ $mhs->kontak }}</div>
         </div>
         @endif
-        @if($mhs->tahun_lulus)
-        <div>
-            <div class="info-item-label">Tahun Lulus</div>
-            <div class="info-item-value">{{ $mhs->tahun_lulus }}</div>
-        </div>
-        @endif
+
         @if($mhs->profesi)
         <div>
             <div class="info-item-label">Profesi</div>
@@ -364,7 +344,7 @@
     </div>
     <div class="info-grid">
         <div>
-            <div class="info-item-label">Angkatan Masuk</div>
+            <div class="info-item-label">Angkatan Masuk <span class="sso-tag">SSO</span></div>
             <div class="info-item-value">{{ $mhs->angkatan }}</div>
         </div>
         <div>
@@ -389,6 +369,7 @@
 </div>
 
 <!-- Prestasi -->
+@if(!$isMahasiswa)
 <div class="section-card">
     <div class="section-title">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
@@ -410,7 +391,9 @@
         <p style="color: #9ca3af; font-size: 14px; text-align: center; padding: 20px 0;">Belum ada data prestasi.</p>
     @endif
 </div>
+@endif
 
+@if(!$isMahasiswa)
 <!-- Riwayat Kegiatan -->
 <div class="section-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -525,6 +508,7 @@
         <p style="color: #9ca3af; font-size: 14px; text-align: center; padding: 20px 0;">Belum ada riwayat kegiatan.</p>
     @endif
 </div>
+@endif
 
 <!-- Modal Tambah Riwayat -->
 @if($isPengurus || $isAdmin)

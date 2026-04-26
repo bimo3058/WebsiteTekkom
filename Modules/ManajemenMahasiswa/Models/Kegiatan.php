@@ -114,6 +114,14 @@ class Kegiatan extends Model
         return $this->belongsTo(\App\Models\Lecturer::class, 'dosen_pendamping_id');
     }
 
+    /**
+     * Many-to-many: Kegiatan dapat memiliki banyak panitia (mahasiswa).
+     */
+    public function panitia(): BelongsToMany
+    {
+        return $this->belongsToMany(\App\Models\Student::class, 'mk_kegiatan_panitia', 'kegiatan_id', 'student_id')->withTimestamps();
+    }
+
     public function riwayatKegiatan(): HasMany
     {
         return $this->hasMany(RiwayatKegiatan::class, 'kegiatan_id');
@@ -149,7 +157,7 @@ class Kegiatan extends Model
 
     public function getBannerUrlAttribute(): ?string
     {
-        return $this->banner ? \Storage::url($this->banner) : null;
+        return $this->banner ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($this->banner) : null;
     }
 
 
