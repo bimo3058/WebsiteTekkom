@@ -68,6 +68,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::get('/preview/{rpsId}', [DosenRpsController::class, 'previewDokumen'])->name('preview');
                 Route::get('/download/{rpsId}', [DosenRpsController::class, 'downloadDokumen'])->name('download');
                 Route::get('/{rpsId}/edit', [DosenRpsController::class, 'edit'])->name('edit');
+                Route::get('/{rpsId}/edit-modal', [DosenRpsController::class, 'editModal'])->name('edit-modal');
                 Route::get('/mk', [DosenRpsController::class, 'getMkByDosen'])->name('mk');
                 Route::get('/cpl/{mkId?}', [DosenRpsController::class, 'getCplByMk'])->name('cpl');
                 Route::get('/cpmk', [DosenRpsController::class, 'getCpmkByCpl'])->name('cpmk');

@@ -5,28 +5,36 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     try {
-        const dropdownManager = new Dropdown();
-        dropdownManager.initAll({
-            '#mkSelect': 'Pilih Mata Kuliah',
-            '#semester': 'Pilih Semester',
-            '#tahun_ajaran': 'Pilih Tahun Ajaran',
-        });
+        const uploadForm = document.querySelector('#rpsUploadModal form[data-route-cpl]');
+        if (!uploadForm) return;
+
+        const safeInitDropdown = (selector, placeholder) => {
+            const element = uploadForm.querySelector(selector);
+            if (!element || element.tomselect) return;
+
+            new TomSelect(element, {
+                maxItems: 1,
+                placeholder,
+                allowEmptyOption: false,
+                create: false,
+            });
+        };
+
+        safeInitDropdown('#mkSelect', 'Pilih Mata Kuliah');
+        safeInitDropdown('#semester', 'Pilih Semester');
+        safeInitDropdown('#tahun_ajaran', 'Pilih Tahun Ajaran');
 
         // Initialize multiselect handler
-        const rpsMultiselect = new RpsMultiselectHandler();
+        const rpsMultiselect = new RpsMultiselectHandler({
+            rootElement: uploadForm,
+            routeSourceElement: uploadForm,
+        });
         rpsMultiselect.init();
 
-        // For edit form, populate pre-selected data
-        const rpsId = document.querySelector('form')?.dataset.rpsId;
-        if (rpsId) {
-            // Pre-populate CPMK from RPS ID
-            rpsMultiselect.populateCpmkForEdit(rpsId);
-
-            // Trigger MK change to load CPL and Dosen
-            const mkSelect = document.getElementById('mkSelect');
-            if (mkSelect && mkSelect.value) {
-                mkSelect.dispatchEvent(new Event('change'));
-            }
+        // Restore dependent fields if MK already selected due to old input.
+        const mkSelect = uploadForm.querySelector('#mkSelect');
+        if (mkSelect && mkSelect.value) {
+            mkSelect.dispatchEvent(new Event('change', { bubbles: true }));
         }
 
         console.log('RPS Form initialized successfully');

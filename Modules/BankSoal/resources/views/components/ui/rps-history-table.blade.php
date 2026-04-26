@@ -1,7 +1,36 @@
 <!-- RPS History Table Component -->
 <div class="card overflow-hidden">
     <div class="card-header">
-        <h2 class="text-lg font-semibold text-slate-900">Riwayat Pengunggahan</h2>
+        <h2 class="text-lg font-semibold text-slate-900">Riwayat Pengajuan RPS</h2>
+    </div>
+
+    <div class="controls-section mx-4 mt-4">
+        <div class="search-box">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input
+                id="riwayatSearchInput"
+                type="text"
+                placeholder="Cari nama mata kuliah atau tahun ajaran..."
+                autocomplete="off"
+                onkeyup="handleRiwayatSearch()"
+            >
+        </div>
+
+            <div class="filter-group">
+                <label for="riwayatStatusSelect">Status:</label>
+                <select id="riwayatStatusSelect" onchange="handleRiwayatFilterChange()">
+                    <option value="">Semua</option>
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="riwayatMkSelect">Mata Kuliah:</label>
+                <select id="riwayatMkSelect" onchange="handleRiwayatFilterChange()">
+                    <option value="">Semua</option>
+                </select>
+            </div>
     </div>
 
     <div class="table-wrapper">
@@ -17,7 +46,7 @@
             </thead>
             <tbody class="table-body">
                 @forelse ($riwayat as $item)
-                    <tr class="table-row">
+                        <tr class="table-row" data-mk="{{ $item->mataKuliah?->nama ?? '' }} {{ $item->mataKuliah?->kode ?? '' }}" data-status="{{ $item->status->value }}" data-year="{{ $item->tahun_ajaran }}">
                         <td class="table-cell-strong">{{ $item->tahun_ajaran }} - {{ $item->semester }}</td>
                         <td class="table-cell">{{ $item->mataKuliah?->nama ?? 'N/A' }} <span class="text-xs text-slate-500">({{ $item->mataKuliah?->kode ?? 'N/A' }})</span></td>
                         <td class="table-cell">{{ $item->created_at->format('d M Y') }}</td>
@@ -53,11 +82,12 @@
                                 @endphp
                                 
                                 @if($canEdit)
-                                    <a href="{{ route('banksoal.rps.dosen.edit', $item->id) }}"
-                                       class="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100"
-                                       title="Edit RPS">
+                                    <button type="button"
+                                            class="edit-rps-btn inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100"
+                                            data-rpsid="{{ $item->id }}"
+                                            title="Edit RPS">
                                         Edit
-                                    </a>
+                                    </button>
                                 @else
                                     <button type="button"
                                             class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-400 cursor-not-allowed"
@@ -88,7 +118,7 @@
                         </td>
                     </tr>
                 @empty
-                    <tr>
+                    <tr data-empty-state="1">
                         <td colspan="5" class="px-6 py-12 text-center text-slate-600">
                             <div class="flex flex-col items-center justify-center">
                                 <i class="fas fa-inbox text-4xl text-slate-300 mb-3"></i>

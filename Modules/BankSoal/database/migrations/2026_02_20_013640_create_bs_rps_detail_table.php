@@ -18,6 +18,7 @@ return new class extends Migration
             $table->string('tahun_ajaran');
             $table->text('dokumen');
             $table->enum('status', ['draft', 'diajukan', 'revisi', 'disetujui'])->default('diajukan');
+            $table->text('catatan')->nullable();
             $table->timestamps();
         });
     }
