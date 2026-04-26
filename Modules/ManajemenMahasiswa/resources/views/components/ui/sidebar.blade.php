@@ -143,6 +143,30 @@
             </x-slot:iconSlot>
         </x-manajemenmahasiswa::ui.sidebar-item>
 
+        @php
+            $showVerifBadge = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm'])) > 0;
+            $verifPendingCount = 0;
+            if ($showVerifBadge) {
+                $verifPendingCount = \Modules\ManajemenMahasiswa\Models\RiwayatKegiatan::manualOnly()->pending()->count()
+                    + \Modules\ManajemenMahasiswa\Models\Prestasi::pending()->count();
+            }
+        @endphp
+        <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}"
+           class="nav-link-item {{ request()->routeIs('manajemenmahasiswa.verifikasi.*') ? 'active' : '' }}"
+           :class="{ 'justify-content-center': !sidebarOpen }">
+            <span class="nav-icon d-inline-flex">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M9 11l3 3L22 4"></path>
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+                </svg>
+            </span>
+            <span class="nav-label" x-show="sidebarOpen" style="flex-grow: 1;">Verifikasi Data</span>
+            @if($showVerifBadge && $verifPendingCount > 0)
+                <span x-show="sidebarOpen" style="font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; background: #fef2f2; color: #dc2626; min-width: 20px; text-align: center;">{{ $verifPendingCount }}</span>
+            @endif
+        </a>
+
         <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.forum.index') }}"
             routeName="manajemenmahasiswa.forum" label="Forum Diskusi">
             <x-slot:iconSlot>

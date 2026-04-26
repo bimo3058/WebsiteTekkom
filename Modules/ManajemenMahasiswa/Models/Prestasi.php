@@ -18,10 +18,15 @@ class Prestasi extends Model
         'nama_prestasi',
         'tingkat',
         'tahun',
+        'verification_status',
+        'verified_by',
+        'verified_at',
+        'verification_note',
     ];
 
     protected $casts = [
-        'tahun' => 'integer',
+        'tahun'       => 'integer',
+        'verified_at' => 'datetime',
     ];
 
     // -------------------------------------------------------------------------
@@ -42,6 +47,17 @@ class Prestasi extends Model
         self::TINGKAT_PRODI,
     ];
 
+    // Verification statuses
+    const VERIF_PENDING  = 'pending';
+    const VERIF_APPROVED = 'approved';
+    const VERIF_REJECTED = 'rejected';
+
+    const VERIF_LIST = [
+        self::VERIF_PENDING,
+        self::VERIF_APPROVED,
+        self::VERIF_REJECTED,
+    ];
+
     // -------------------------------------------------------------------------
     // Relations
     // -------------------------------------------------------------------------
@@ -49,6 +65,17 @@ class Prestasi extends Model
     public function kemahasiswaan(): BelongsTo
     {
         return $this->belongsTo(Kemahasiswaan::class, 'kemahasiswaan_id');
+    }
+
+    public function verifiedBy(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'verified_by');
+    }
+
+    public function buktiFiles()
+    {
+        return $this->hasMany(VerifikasiBukti::class, 'bukti_id')
+            ->where('bukti_type', VerifikasiBukti::TYPE_PRESTASI);
     }
 
     // -------------------------------------------------------------------------
@@ -63,5 +90,20 @@ class Prestasi extends Model
     public function scopeByTahun(Builder $query, int $tahun): Builder
     {
         return $query->where('tahun', $tahun);
+    }
+
+    public function scopePending(Builder $query): Builder
+    {
+        return $query->where('verification_status', self::VERIF_PENDING);
+    }
+
+    public function scopeApproved(Builder $query): Builder
+    {
+        return $query->where('verification_status', self::VERIF_APPROVED);
+    }
+
+    public function scopeRejected(Builder $query): Builder
+    {
+        return $query->where('verification_status', self::VERIF_REJECTED);
     }
 }
