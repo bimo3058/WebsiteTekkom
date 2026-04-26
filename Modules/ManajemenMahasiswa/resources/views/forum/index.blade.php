@@ -3,9 +3,23 @@
     @push('styles')
         <style>
             /* ── Page Title ──────────────────────────────────────────────────── */
-            .page-title { margin-bottom: 22px; }
-            .page-title h1 { font-size: 26px; font-weight: 700; color: #111827; margin: 0 0 2px; letter-spacing: -0.02em; }
-            .page-title p { font-size: 14px; color: #6b7280; margin: 0; }
+            .page-title {
+                margin-bottom: 22px;
+            }
+
+            .page-title h1 {
+                font-size: 26px;
+                font-weight: 700;
+                color: #111827;
+                margin: 0 0 2px;
+                letter-spacing: -0.02em;
+            }
+
+            .page-title p {
+                font-size: 14px;
+                color: #6b7280;
+                margin: 0;
+            }
 
             /* ── Cards ───────────────────────────────────────────────────────── */
             .dashboard-card {
@@ -86,6 +100,7 @@
                 padding: 2px;
                 margin-right: 8px;
             }
+
             .post-actions .vote-pill button {
                 background: transparent;
                 border: none;
@@ -97,21 +112,27 @@
                 justify-content: center;
                 transition: background 0.2s, color 0.2s;
             }
+
             .post-actions .vote-pill button:hover {
                 background: #e2e8f0;
             }
+
             .post-actions .vote-pill button.vote-active-up {
                 color: #ff4500;
             }
+
             .post-actions .vote-pill button.vote-active-up:hover {
                 background: rgba(255, 69, 0, 0.1);
             }
+
             .post-actions .vote-pill button.vote-active-down {
                 color: #7193ff;
             }
+
             .post-actions .vote-pill button.vote-active-down:hover {
                 background: rgba(113, 147, 255, 0.1);
             }
+
             .post-actions .vote-pill span {
                 font-weight: 700;
                 font-size: 13px;
@@ -119,6 +140,7 @@
                 text-align: center;
                 color: #1e293b;
             }
+
             .post-actions .action-btn {
                 background: #f1f5f9;
                 border: none;
@@ -133,6 +155,7 @@
                 margin-right: 8px;
                 transition: background 0.15s;
             }
+
             .post-actions .action-btn:hover {
                 background: #e2e8f0;
             }
@@ -283,6 +306,7 @@
                 margin-bottom: 20px;
                 overflow: hidden;
             }
+
             .report-panel-header {
                 display: flex;
                 align-items: center;
@@ -292,9 +316,19 @@
                 cursor: pointer;
                 transition: background 0.2s;
             }
-            .report-panel-header:hover { background: #fee2e2; }
-            .report-panel-header .chevron-icon { transition: transform 0.3s; }
-            .report-panel-header .chevron-icon.rotated { transform: rotate(180deg); }
+
+            .report-panel-header:hover {
+                background: #fee2e2;
+            }
+
+            .report-panel-header .chevron-icon {
+                transition: transform 0.3s;
+            }
+
+            .report-panel-header .chevron-icon.rotated {
+                transform: rotate(180deg);
+            }
+
             .report-panel-header h6 {
                 font-size: 14px;
                 font-weight: 700;
@@ -304,6 +338,7 @@
                 align-items: center;
                 gap: 8px;
             }
+
             .report-panel-header .report-badge {
                 background: #ef4444;
                 color: #fff;
@@ -312,12 +347,17 @@
                 padding: 2px 8px;
                 border-radius: 20px;
             }
+
             .report-panel-body {
                 max-height: 0;
                 overflow: hidden;
                 transition: max-height 0.3s ease;
             }
-            .report-panel-body.open { max-height: 2000px; }
+
+            .report-panel-body.open {
+                max-height: 2000px;
+            }
+
             .report-item {
                 padding: 14px 20px;
                 border-top: 1px solid #fecaca;
@@ -325,13 +365,18 @@
                 flex-direction: column;
                 gap: 8px;
             }
-            .report-item:first-child { border-top: none; }
+
+            .report-item:first-child {
+                border-top: none;
+            }
+
             .report-item-header {
                 display: flex;
                 justify-content: space-between;
                 align-items: flex-start;
                 gap: 12px;
             }
+
             .report-thread-title {
                 font-size: 14px;
                 font-weight: 700;
@@ -339,7 +384,11 @@
                 text-decoration: none;
                 transition: color 0.2s;
             }
-            .report-thread-title:hover { color: #6366f1; }
+
+            .report-thread-title:hover {
+                color: #6366f1;
+            }
+
             .report-reason-text {
                 background: #fef2f2;
                 border: 1px solid #fecaca;
@@ -349,6 +398,7 @@
                 color: #991b1b;
                 line-height: 1.4;
             }
+
             .report-meta-line {
                 font-size: 11px;
                 color: #6b7280;
@@ -356,11 +406,13 @@
                 align-items: center;
                 gap: 6px;
             }
+
             .report-actions-row {
                 display: flex;
                 gap: 6px;
                 flex-wrap: wrap;
             }
+
             .report-action-btn {
                 padding: 5px 12px;
                 border-radius: 6px;
@@ -376,11 +428,42 @@
                 transition: all 0.15s;
                 text-decoration: none;
             }
-            .report-action-btn:hover { border-color: #6366f1; color: #6366f1; }
-            .report-action-btn.danger { border-color: #fecaca; color: #dc2626; }
-            .report-action-btn.danger:hover { background: #fef2f2; }
-            .report-action-btn.warning { border-color: #fde68a; color: #d97706; }
-            .report-action-btn.warning:hover { background: #fffbeb; }
+
+            .report-action-btn:hover {
+                border-color: #6366f1;
+                color: #6366f1;
+            }
+
+            .report-action-btn.danger {
+                border-color: #fecaca;
+                color: #dc2626;
+            }
+
+            .report-action-btn.danger:hover {
+                background: #fef2f2;
+            }
+
+            .report-action-btn.warning {
+                border-color: #fde68a;
+                color: #d97706;
+            }
+
+            .report-action-btn.warning:hover {
+                background: #fffbeb;
+            }
+
+            /* Pagination Custom Layout */
+            .pagination-container nav > .d-sm-flex {
+                flex-direction: column-reverse;
+                align-items: center !important;
+                gap: 0.75rem;
+            }
+            .pagination-container nav > .d-sm-flex > div:last-child {
+                margin-bottom: 0.25rem;
+            }
+            .pagination-container .pagination {
+                margin-bottom: 0;
+            }
         </style>
     @endpush
 
@@ -428,24 +511,24 @@
                                     </td>
                                     <td>{{ $entry->name }}</td>
                                     <td>
-                                        <span title="{{ $entry->tier_name }}">{{ $entry->tier_icon }}</span>
-                                        Lv.{{ $entry->level }}
-                                    </td>
-                                    <td>
-                                        @foreach($entry->badges->take(3) as $badge)
-                                            @if($badge->image)
-                                                <img src="{{ asset($badge->image) }}?v={{ time() }}" title="{{ $badge->name }}" style="width: 22px; height: 22px; object-fit: contain; margin-right: 2px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                                                <span style="display:none;">{{ $badge->icon }}</span>
-                                            @else
-                                                <span title="{{ $badge->name }}">{{ $badge->icon }}</span>
+                                        <span title="{{ $entry->tier_name }}">{!! $entry->tier_icon !!}</span>
+                                            Lv.{{ $entry->level }}
+                                        </td>
+                                        <td>
+                                            @foreach($entry->badges->take(3) as $badge)
+                                                @if($badge->image)
+                                                    <img src="{{ asset($badge->image) }}?v={{ time() }}" title="{{ $badge->name }}" style="width: 22px; height: 22px; object-fit: contain; margin-right: 2px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                                    <span style="display:none;">{{ $badge->icon }}</span>
+                                                @else
+                                                    <span title="{{ $badge->name }}">{{ $badge->icon }}</span>
+                                                @endif
+                                            @endforeach
+                                            @if($entry->badges->count() > 3)
+                                                <span
+                                                    style="font-size: 11px; opacity: 0.7;">+{{ $entry->badges->count() - 3 }}</span>
                                             @endif
-                                        @endforeach
-                                        @if($entry->badges->count() > 3)
-                                            <span
-                                                style="font-size: 11px; opacity: 0.7;">+{{ $entry->badges->count() - 3 }}</span>
-                                        @endif
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
                             @empty
                                 <tr>
                                     <td colspan="4" class="text-center" style="opacity: 0.7;">Belum ada data leaderboard
@@ -462,13 +545,13 @@
         <div class="col-md-5">
             <div class="dashboard-card h-100 d-flex flex-column justify-content-center">
                 <h6 class="fw-bold mb-4 d-flex align-items-center gap-2" style="color:#111827; font-size:15px;">
-                    🔥 Streak Kamu : {{ $userStats['current_streak'] }} Hari
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Streak Kamu : {{ $userStats['current_streak'] }} Hari
                 </h6>
                 <div class="mb-3 ps-4" style="color:#374151;">
                     <span style="font-size: 14px; font-weight: 500;">Rank : #{{ $userStats['rank'] }}</span>
                 </div>
                 <div class="mb-3 ps-4 d-flex align-items-center gap-2" style="color:#374151;">
-                    <span style="font-size: 14px; font-weight: 500;">{{ $userStats['tier_icon'] }} Level {{ $userStats['level'] }} — {{ $userStats['tier_name'] }}</span>
+                    <span style="font-size: 14px; font-weight: 500;">{!! $userStats['tier_icon'] !!} Level {{ $userStats['level'] }} — {{ $userStats['tier_name'] }}</span>
                 </div>
                 <div class="ps-4">
                     <div class="d-flex align-items-center gap-2" style="color:#374151;">
@@ -547,15 +630,15 @@
             @php $currentSort = request('sort', 'terbaru'); @endphp
             <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 {{ $currentSort === 'terbaru' ? 'btn-dark' : 'btn-outline-secondary' }}"
                 onclick="document.getElementById('sortInput').value='terbaru'; document.getElementById('forumFilterForm').submit();">
-                🕐 Terbaru
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Terbaru
             </button>
             <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 {{ $currentSort === 'hot' ? 'btn-dark' : 'btn-outline-secondary' }}"
                 onclick="document.getElementById('sortInput').value='hot'; document.getElementById('forumFilterForm').submit();">
-                🔥 Hot
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Hot
             </button>
             <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 {{ $currentSort === 'top' ? 'btn-dark' : 'btn-outline-secondary' }}"
                 onclick="document.getElementById('sortInput').value='top'; document.getElementById('forumFilterForm').submit();">
-                ⬆️ Top
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><polyline points="18 15 12 9 6 15"/></svg> Top
             </button>
         </div>
     </form>
@@ -565,7 +648,7 @@
         <div class="report-panel">
             <div class="report-panel-header" onclick="this.nextElementSibling.classList.toggle('open'); this.querySelector('.chevron-icon').classList.toggle('rotated')">
                 <h6>
-                    🚩 Laporan Masuk
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#991b1b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg> Laporan Masuk
                     <span class="report-badge">{{ $forumReports->count() }}</span>
                 </h6>
                 <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#991b1b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.3s;"><polyline points="6 9 12 15 18 9"></polyline></svg>
@@ -591,24 +674,24 @@
                                 &nbsp;• Thread oleh <strong>{{ $report->thread->author->name }}</strong>
                             @endif
                         </div>
-                        <div class="report-reason-text">🚩 {{ $report->alasan }}</div>
+                        <div class="report-reason-text"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg> {{ $report->alasan }}</div>
                         <div class="report-actions-row">
                             @if($report->thread)
-                                <a href="{{ route('manajemenmahasiswa.forum.show', $report->thread_id) }}" class="report-action-btn">👁️ Lihat</a>
+                                <a href="{{ route('manajemenmahasiswa.forum.show', $report->thread_id) }}" class="report-action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg> Lihat</a>
                                 @if(!($report->thread->is_locked ?? false))
                                     <form method="POST" action="{{ route('manajemenmahasiswa.forum.reports.lock_thread', $report->id) }}" style="display:inline;" onsubmit="return confirm('Kunci thread ini?')">
                                         @csrf @method('PATCH')
-                                        <button type="submit" class="report-action-btn warning">🔒 Kunci</button>
+                                        <button type="submit" class="report-action-btn warning"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Kunci</button>
                                     </form>
                                 @endif
                                 <form method="POST" action="{{ route('manajemenmahasiswa.forum.reports.delete_thread', $report->id) }}" style="display:inline;" onsubmit="return confirm('HAPUS thread ini secara permanen?')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="report-action-btn danger">🗑️ Hapus Thread</button>
+                                    <button type="submit" class="report-action-btn danger"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg> Hapus Thread</button>
                                 </form>
                             @endif
                             <form method="POST" action="{{ route('manajemenmahasiswa.forum.reports.dismiss', $report->id) }}" style="display:inline;" onsubmit="return confirm('Abaikan laporan ini?')">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="report-action-btn">✕ Abaikan</button>
+                                <button type="submit" class="report-action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Abaikan</button>
                             </form>
                         </div>
                     </div>
@@ -631,7 +714,7 @@
                                 <h6 class="fw-bold text-dark mb-0">{{ $thread->author->name ?? 'Unknown' }}</h6>
                                 @if(isset($authorTiers[$thread->user_id]))
                                     <span class="badge rounded-pill" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-size: 10px; font-weight: 600; padding: 3px 8px;" title="{{ $authorTiers[$thread->user_id]['tier_name'] }}">
-                                        {{ $authorTiers[$thread->user_id]['tier_icon'] }} Lv.{{ $authorTiers[$thread->user_id]['level'] }}
+                                        {!! $authorTiers[$thread->user_id]['tier_icon'] !!} Lv.{{ $authorTiers[$thread->user_id]['level'] }}
                                     </span>
                                 @endif
                                 <span class="text-primary fw-medium" style="font-size: 12px;">•
@@ -647,17 +730,23 @@
                                         Pinned
                                     </span>
                                 @endif
-                                <span class="personal-pin-badge" data-personal-pin="{{ $thread->id }}" style="display: {{ $thread->is_personal_pinned ? 'inline-flex' : 'none' }};">📌 Pin Pribadi</span>
+                                <span class="personal-pin-badge" data-personal-pin="{{ $thread->id }}" style="display: {{ $thread->is_personal_pinned ? 'inline-flex' : 'none' }};">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a3 3 0 0 0-6 0v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg> Pin Pribadi
+                                </span>
                             </div>
                         </div>
                     </div>
                     <div class="dropdown">
-                        <button type="button" class="btn btn-link p-0 text-muted fw-bold text-decoration-none shadow-none" style="font-size: 20px; line-height: 1;" data-bs-toggle="dropdown">⋯</button>
+                        <button type="button" class="btn btn-link p-0 text-muted fw-bold text-decoration-none shadow-none d-flex align-items-center" data-bs-toggle="dropdown">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                        </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 8px;">
                             {{-- Edit (owner + admin) --}}
                             @if($thread->user_id === $user->id || $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
                                 <li>
-                                    <a href="{{ route('manajemenmahasiswa.forum.edit', $thread->id) }}" class="dropdown-item">✏️ Edit</a>
+                                    <a href="{{ route('manajemenmahasiswa.forum.edit', $thread->id) }}" class="dropdown-item d-flex align-items-center gap-2">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit
+                                    </a>
                                 </li>
                             @endif
                             {{-- Pin Global (admin only) --}}
@@ -665,8 +754,12 @@
                                 <li>
                                     <form method="POST" action="{{ route('manajemenmahasiswa.forum.pin', $thread->id) }}">
                                         @csrf @method('PATCH')
-                                        <button type="submit" class="dropdown-item">
-                                            @if($thread->is_pinned) 🔓 Unpin Global @else 📌 Pin Global @endif
+                                        <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
+                                            @if($thread->is_pinned)
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Unpin Global
+                                            @else
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a3 3 0 0 0-6 0v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg> Pin Global
+                                            @endif
                                         </button>
                                     </form>
                                 </li>
@@ -675,8 +768,9 @@
                             <li>
                                 <form method="POST" action="{{ route('manajemenmahasiswa.forum.personal_pin', $thread->id) }}">
                                     @csrf
-                                    <button type="submit" class="dropdown-item">
-                                        @if($thread->is_personal_pinned) 📌 Unpin Pribadi @else 📌 Pin Pribadi @endif
+                                    <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a3 3 0 0 0-6 0v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
+                                        @if($thread->is_personal_pinned) Unpin Pribadi @else Pin Pribadi @endif
                                     </button>
                                 </form>
                             </li>
@@ -687,7 +781,9 @@
                                     <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
                                         onsubmit="return confirm('Yakin ingin menghapus thread ini?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="dropdown-item text-danger">🗑️ Hapus</button>
+                                        <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg> Hapus
+                                        </button>
                                     </form>
                                 </li>
                             @elseif($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
@@ -695,16 +791,18 @@
                                     <form method="POST" action="{{ route('manajemenmahasiswa.forum.destroy', $thread->id) }}"
                                         onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
                                         @csrf @method('DELETE')
-                                        <button type="submit" class="dropdown-item text-danger">🗑️ Hapus (Admin)</button>
+                                        <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2">
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg> Hapus (Admin)
+                                        </button>
                                     </form>
                                 </li>
                             @endif
                             @if($thread->user_id !== $user->id)
                                 <li>
-                                    <button type="button" class="dropdown-item text-danger" data-bs-toggle="modal"
+                                    <button type="button" class="dropdown-item text-danger d-flex align-items-center gap-2" data-bs-toggle="modal"
                                         data-bs-target="#reportModal" data-thread-id="{{ $thread->id }}"
                                         data-thread-title="{{ $thread->judul }}">
-                                        🚩 Laporkan Thread
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg> Laporkan Thread
                                     </button>
                                 </li>
                             @endif
@@ -720,7 +818,7 @@
                         </p>
                     </div>
                 </div>
-                
+
                 @if($thread->getFirstImageUrl())
                     <div class="mt-2 mb-3" style="width: 100%; max-height: 512px; overflow: hidden; border-radius: 12px; border: 1px solid #e5e7eb; background: #f8fafc; display: flex; justify-content: center; align-items: center;">
                         <img src="{{ $thread->getFirstImageUrl() }}" alt="Thumbnail" style="width: 100%; max-height: 512px; object-fit: contain;">
@@ -787,8 +885,8 @@
 
     <!-- Pagination -->
     @if($threads->hasPages())
-        <div class="d-flex justify-content-center mt-4">
-            {{ $threads->appends(request()->query())->links() }}
+        <div class="d-flex justify-content-center mt-4 mb-4 pagination-container">
+            {{ $threads->appends(request()->query())->links('pagination::bootstrap-5') }}
         </div>
     @endif
 

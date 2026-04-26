@@ -240,7 +240,7 @@ class ForumController extends Controller
         }
 
         $redirect = redirect()->route('manajemenmahasiswa.forum.index')
-            ->with('success', 'Thread berhasil dibuat! +10 XP 🎉');
+            ->with('success', 'Thread berhasil dibuat! +10 XP');
 
         if ($newLevel > $oldLevel) {
             $tier = $this->gamificationService->getTierInfo($newLevel);
@@ -434,7 +434,7 @@ class ForumController extends Controller
 
         return redirect()
             ->route('manajemenmahasiswa.forum.show', $id)
-            ->with('success', 'Thread berhasil diperbarui! ✏️');
+            ->with('success', 'Thread berhasil diperbarui!');
     }
 
     /**
@@ -619,7 +619,7 @@ class ForumController extends Controller
 
         try {
             $this->threadService->markBestAnswer($threadId, $commentId, $user->id);
-            return back()->with('success', 'Komentar ditandai sebagai Jawaban Terbaik! ✅ Penulis mendapat +15 XP 🎉');
+            return back()->with('success', 'Komentar ditandai sebagai Jawaban Terbaik! Penulis mendapat +15 XP');
         } catch (\RuntimeException $e) {
             return back()->withErrors(['best_answer' => $e->getMessage()]);
         }
