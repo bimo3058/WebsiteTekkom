@@ -22,13 +22,13 @@ class GamificationService
      * Daftar tier reputasi berdasarkan level.
      */
     const TIERS = [
-        ['min_level' => 1,  'max_level' => 2,  'name' => 'Pendatang Baru',  'icon' => '🌱'],
-        ['min_level' => 3,  'max_level' => 4,  'name' => 'Kontributor',     'icon' => '📝'],
-        ['min_level' => 5,  'max_level' => 6,  'name' => 'Penjelajah',      'icon' => '🧭'],
-        ['min_level' => 7,  'max_level' => 8,  'name' => 'Ahli',            'icon' => '🎯'],
-        ['min_level' => 9,  'max_level' => 10, 'name' => 'Pakar',           'icon' => '⭐'],
-        ['min_level' => 11, 'max_level' => 12, 'name' => 'Mentor',          'icon' => '🏅'],
-        ['min_level' => 13, 'max_level' => 99, 'name' => 'Legenda Kampus',  'icon' => '👑'],
+        ['min_level' => 1,  'max_level' => 2,  'name' => 'Pendatang Baru',  'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 20h10"/><path d="M10 20c5.5-3.5 8-8 8-8"/><path d="M14 20c-5.5-3.5-8-8-8-8"/><path d="M12 20V8"/><path d="M12 8a4 4 0 0 1 8-4"/><path d="M12 8a4 4 0 0 0-8-4"/></svg>'],
+        ['min_level' => 3,  'max_level' => 4,  'name' => 'Kontributor',     'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 1 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>'],
+        ['min_level' => 5,  'max_level' => 6,  'name' => 'Penjelajah',      'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg>'],
+        ['min_level' => 7,  'max_level' => 8,  'name' => 'Ahli',            'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>'],
+        ['min_level' => 9,  'max_level' => 10, 'name' => 'Pakar',           'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>'],
+        ['min_level' => 11, 'max_level' => 12, 'name' => 'Mentor',          'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/><circle cx="12" cy="8" r="7"/></svg>'],
+        ['min_level' => 13, 'max_level' => 99, 'name' => 'Legenda Kampus',  'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>'],
     ];
 
     /**
@@ -61,14 +61,14 @@ class GamificationService
 
         // Hitung level SEBELUM award
         $oldTotalXp = $this->getTotalXp($userId);
-        $oldLevel   = $this->calculateLevel($oldTotalXp);
+        $oldLevel = $this->calculateLevel($oldTotalXp);
 
         $log = XpLog::create([
-            'user_id'        => $userId,
-            'action'         => $action,
-            'xp_amount'      => $xpAmount,
+            'user_id' => $userId,
+            'action' => $action,
+            'xp_amount' => $xpAmount,
             'reference_type' => $reference ? get_class($reference) : null,
-            'reference_id'   => $reference?->id,
+            'reference_id' => $reference?->id,
         ]);
 
         // Hitung level SESUDAH award
@@ -77,17 +77,17 @@ class GamificationService
         if ($newTotalXp < 0) {
             $newTotalXp = 0;
         }
-        $newLevel   = $this->calculateLevel($newTotalXp);
-        $leveledUp  = $newLevel > $oldLevel;
+        $newLevel = $this->calculateLevel($newTotalXp);
+        $leveledUp = $newLevel > $oldLevel;
 
         // Setelah memberi XP, cek apakah ada badge baru yang bisa diraih
         $this->checkAndAwardBadges($userId);
 
         return [
-            'log'        => $log,
+            'log' => $log,
             'leveled_up' => $leveledUp,
-            'old_level'  => $oldLevel,
-            'new_level'  => $newLevel,
+            'old_level' => $oldLevel,
+            'new_level' => $newLevel,
         ];
     }
 
@@ -118,7 +118,8 @@ class GamificationService
      */
     public function calculateLevel(int $totalXp): int
     {
-        if ($totalXp <= 0) return 1;
+        if ($totalXp <= 0)
+            return 1;
         return (int) floor(sqrt($totalXp / 100)) + 1;
     }
 
@@ -127,7 +128,8 @@ class GamificationService
      */
     public function getXpForLevel(int $level): int
     {
-        if ($level <= 1) return 0;
+        if ($level <= 1)
+            return 0;
         return (int) pow($level - 1, 2) * 100;
     }
 
@@ -148,30 +150,30 @@ class GamificationService
      */
     public function getUserStats(int $userId): array
     {
-        $totalXp      = $this->getTotalXp($userId);
-        $level        = $this->calculateLevel($totalXp);
+        $totalXp = $this->getTotalXp($userId);
+        $level = $this->calculateLevel($totalXp);
         $xpForCurrent = $this->getXpForLevel($level);
-        $xpForNext    = $this->getXpForNextLevel($level);
-        $rank         = $this->getUserRank($userId);
-        $tier         = $this->getTierInfo($level);
-        $streak       = Streak::where('user_id', $userId)->first();
-        $badges       = UserBadge::with('badge')
-                            ->where('user_id', $userId)
-                            ->get()
-                            ->pluck('badge');
+        $xpForNext = $this->getXpForNextLevel($level);
+        $rank = $this->getUserRank($userId);
+        $tier = $this->getTierInfo($level);
+        $streak = Streak::where('user_id', $userId)->first();
+        $badges = UserBadge::with('badge')
+            ->where('user_id', $userId)
+            ->get()
+            ->pluck('badge');
 
         return [
-            'total_xp'       => $totalXp,
-            'level'          => $level,
-            'tier_name'      => $tier['name'],
-            'tier_icon'      => $tier['icon'],
-            'xp_current'     => $totalXp - $xpForCurrent,
-            'xp_needed'      => $xpForNext - $xpForCurrent,
-            'xp_for_next'    => $xpForNext,
-            'rank'           => $rank,
+            'total_xp' => $totalXp,
+            'level' => $level,
+            'tier_name' => $tier['name'],
+            'tier_icon' => $tier['icon'],
+            'xp_current' => $totalXp - $xpForCurrent,
+            'xp_needed' => $xpForNext - $xpForCurrent,
+            'xp_for_next' => $xpForNext,
+            'rank' => $rank,
             'current_streak' => $streak?->current_streak ?? 0,
             'longest_streak' => $streak?->longest_streak ?? 0,
-            'badges'         => $badges,
+            'badges' => $badges,
         ];
     }
 
@@ -205,22 +207,22 @@ class GamificationService
             ->limit($limit)
             ->get()
             ->map(function ($row) {
-                $user   = \App\Models\User::find($row->user_id);
-                $level  = $this->calculateLevel($row->total_xp);
-                $tier   = $this->getTierInfo($level);
+                $user = \App\Models\User::find($row->user_id);
+                $level = $this->calculateLevel($row->total_xp);
+                $tier = $this->getTierInfo($level);
                 $badges = UserBadge::with('badge')
                     ->where('user_id', $row->user_id)
                     ->get()
                     ->pluck('badge');
 
                 return (object) [
-                    'user_id'   => $row->user_id,
-                    'name'      => $user?->name ?? 'Unknown',
-                    'total_xp'  => (int) $row->total_xp,
-                    'level'     => $level,
+                    'user_id' => $row->user_id,
+                    'name' => $user?->name ?? 'Unknown',
+                    'total_xp' => (int) $row->total_xp,
+                    'level' => $level,
                     'tier_name' => $tier['name'],
                     'tier_icon' => $tier['icon'],
-                    'badges'    => $badges,
+                    'badges' => $badges,
                 ];
             });
     }
@@ -281,7 +283,7 @@ class GamificationService
 
             if ($currentValue >= $badge->criteria_value) {
                 UserBadge::create([
-                    'user_id'  => $userId,
+                    'user_id' => $userId,
                     'badge_id' => $badge->id,
                     'earned_at' => now(),
                 ]);
@@ -298,8 +300,8 @@ class GamificationService
             Badge::CRITERIA_THREAD_COUNT => Thread::where('user_id', $userId)->count(),
             Badge::CRITERIA_COMMENT_COUNT => Comment::where('user_id', $userId)->count(),
             Badge::CRITERIA_UPVOTE_COUNT => Vote::whereHas('voteable', function ($q) use ($userId) {
-                $q->where('user_id', $userId);
-            })->where('value', 1)->count(),
+                    $q->where('user_id', $userId);
+                })->where('value', 1)->count(),
             Badge::CRITERIA_BEST_ANSWER_COUNT => Comment::where('user_id', $userId)->where('is_best_answer', true)->count(),
             Badge::CRITERIA_STREAK => Streak::where('user_id', $userId)->value('longest_streak') ?? 0,
             Badge::CRITERIA_TOTAL_XP => $this->getTotalXp($userId),
@@ -352,7 +354,7 @@ class GamificationService
             ->whereHas('thread', function ($q) {
                 $q->where(function ($q2) {
                     $q2->whereJsonContains('kategori', 'tanya_tugas')
-                       ->orWhereJsonContains('kategori', 'info_skripsi');
+                        ->orWhereJsonContains('kategori', 'info_skripsi');
                 });
             })
             ->count();
