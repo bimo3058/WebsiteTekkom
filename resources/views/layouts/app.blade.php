@@ -45,7 +45,11 @@
 
     @if($hasSidebar)
         <body class="font-sans antialiased h-full">
-            {{ $slot }}
+            @isset($slot)
+                {{ $slot }}
+            @else
+                @yield('content')
+            @endisset
         </body>
     @else
         <body class="font-sans antialiased">
@@ -61,7 +65,11 @@
                 @endisset
 
                 <main class="w-full">
-                    {{ $slot }}
+                    @isset($slot)
+                        {{ $slot }}
+                    @else
+                        @yield('content')
+                    @endisset
                 </main>
             </div>
         </body>

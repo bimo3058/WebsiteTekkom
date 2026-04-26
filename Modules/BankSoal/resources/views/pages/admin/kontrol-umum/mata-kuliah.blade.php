@@ -47,28 +47,30 @@
         .btn-add {
             display: inline-flex;
             align-items: center;
-            gap: 8px;
-            background: var(--primary-blue);
-            color: #fff;
-            padding: 10px 18px;
-            border-radius: 8px;
-            border: none;
-            font-weight: 600;
+            gap: 10px;
+            background: #f8fafc;
+            color: #1e293b;
+            padding: 12px 22px;
+            border-radius: 16px;
+            border: 1px solid #cbd5e1;
+            font-weight: 700;
             font-size: 14px;
             cursor: pointer;
             transition: all 0.2s;
             white-space: nowrap;
+            box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
         }
 
         .btn-add:hover {
-            background: var(--primary-hover);
-            transform: translateY(-1px);
-            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+            background: #f1f5f9;
+            border-color: #94a3b8;
+            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.1);
         }
 
         .btn-add svg {
             width: 18px;
             height: 18px;
+            color: #1e293b;
         }
 
         .bulk-delete-bar {
@@ -282,27 +284,31 @@
             justify-content: center;
             width: 32px;
             height: 32px;
-            border: none;
+            border: 1px solid currentColor;
             border-radius: 6px;
             cursor: pointer;
             transition: all 0.2s;
-            color: #fff;
+            background: transparent;
         }
 
         .btn-icon-edit {
-            background: var(--primary-blue);
+            color: var(--primary-blue);
         }
 
         .btn-icon-edit:hover {
-            background: var(--primary-hover);
+            background: var(--primary-blue);
+            border-color: var(--primary-blue);
+            color: #fff;
         }
 
         .btn-icon-delete {
-            background: var(--danger-red);
+            color: var(--danger-red);
         }
 
         .btn-icon-delete:hover {
-            background: var(--danger-hover);
+            background: var(--danger-red);
+            border-color: var(--danger-red);
+            color: #fff;
         }
 
         .empty-state {
@@ -607,7 +613,7 @@
         </div>
 
         <div class="filter-group">
-            <label for="sortField">Sortir:</label>
+            <label for="sortField">Sort By:</label>
             <select id="sortField" onchange="handleSort()">
                 <option value="kode">Kode</option>
                 <option value="nama">Nama</option>
@@ -617,7 +623,7 @@
         </div>
 
         <div class="filter-group">
-            <label for="sortDirection">Urutan:</label>
+            <label for="sortDirection">Order By:</label>
             <select id="sortDirection" onchange="handleSort()">
                 <option value="asc">Ascending</option>
                 <option value="desc">Descending</option>

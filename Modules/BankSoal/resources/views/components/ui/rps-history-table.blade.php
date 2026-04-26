@@ -12,7 +12,7 @@
                     <th class="table-header-cell">Mata Kuliah</th>
                     <th class="table-header-cell">Tanggal Upload</th>
                     <th class="table-header-cell">Status</th>
-                    <th class="table-header-cell">Aksi</th>
+                    <th class="table-header-cell w-[280px]">Aksi</th>
                 </tr>
             </thead>
             <tbody class="table-body">
@@ -33,11 +33,15 @@
                             @endphp
                             <span class="badge {{ $statusClass }}">{{ $status }}</span>
                         </td>
-                        <td class="table-cell">
-                            <div class="flex items-center gap-2">
+                        <td class="table-cell align-top">
+                            <div class="flex flex-wrap items-center gap-2 max-w-full">
                                 @if ($item->dokumen)
-                                    <button type="button" class="preview-dokumen-btn text-blue-600 hover:text-blue-700 font-medium text-sm" data-id="{{ $item->id }}" data-title="{{ e($item->mataKuliah?->nama ?? 'Dokumen') }}" title="Preview dokumen">
-                                        <i class="fas fa-eye"></i> Lihat
+                                    <button type="button"
+                                            class="preview-dokumen-btn inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                                            data-id="{{ $item->id }}"
+                                            data-title="{{ e($item->mataKuliah?->nama ?? 'Dokumen') }}"
+                                            title="Preview dokumen">
+                                        Preview
                                     </button>
                                 @else
                                     <span class="text-slate-400 text-sm">-</span>
@@ -49,22 +53,35 @@
                                 @endphp
                                 
                                 @if($canEdit)
-                                    <a href="{{ route('banksoal.rps.dosen.edit', $item->id) }}" class="text-amber-600 hover:text-amber-700 font-medium text-sm" title="Edit RPS">
-                                        <i class="fas fa-pen"></i> Edit
+                                    <a href="{{ route('banksoal.rps.dosen.edit', $item->id) }}"
+                                       class="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100"
+                                       title="Edit RPS">
+                                        Edit
                                     </a>
                                 @else
-                                    <button type="button" class="text-slate-300 cursor-not-allowed font-medium text-sm" disabled title="RPS tidak dapat diedit dengan status {{ $item->status->label() }}">
-                                        <i class="fas fa-pen"></i> Edit
+                                    <button type="button"
+                                            class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-400 cursor-not-allowed"
+                                            disabled
+                                            title="RPS tidak dapat diedit dengan status {{ $item->status->label() }}">
+                                        Edit
                                     </button>
                                 @endif
-                                
+
                                 @if($canDelete)
-                                    <button type="button" class="delete-rps-btn text-red-600 hover:text-red-700 font-medium text-sm" data-id="{{ $item->id }}" data-mk="{{ e($item->mataKuliah?->nama ?? 'RPS') }}" data-destroy-url="{{ route('banksoal.rps.dosen.destroy', $item->id) }}" title="Hapus RPS">
-                                        <i class="fas fa-trash"></i> Hapus
+                                    <button type="button"
+                                            class="delete-rps-btn inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
+                                            data-id="{{ $item->id }}"
+                                            data-mk="{{ e($item->mataKuliah?->nama ?? 'RPS') }}"
+                                            data-destroy-url="{{ route('banksoal.rps.dosen.destroy', $item->id) }}"
+                                            title="Hapus RPS">
+                                        Hapus
                                     </button>
                                 @else
-                                    <button type="button" class="text-slate-300 cursor-not-allowed font-medium text-sm" disabled title="RPS tidak dapat dihapus dengan status {{ $item->status->label() }}">
-                                        <i class="fas fa-trash"></i> Hapus
+                                    <button type="button"
+                                            class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-400 cursor-not-allowed"
+                                            disabled
+                                            title="RPS tidak dapat dihapus dengan status {{ $item->status->label() }}">
+                                        Hapus
                                     </button>
                                 @endif
                             </div>
