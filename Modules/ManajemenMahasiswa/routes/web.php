@@ -133,6 +133,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             // Comments
             Route::post('/{threadId}/comments', [ForumController::class, 'storeComment'])->name('comments.store');
             Route::post('/comments/{commentId}/vote', [ForumController::class, 'voteComment'])->name('comments.vote');
+            Route::put('/comments/{commentId}', [ForumController::class, 'updateComment'])->name('comments.update');
             Route::delete('/comments/{commentId}', [ForumController::class, 'destroyComment'])->name('comments.destroy');
         });
 

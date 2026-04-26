@@ -316,6 +316,44 @@
         padding: 2px 8px;
         border-radius: 4px;
     }
+
+    /* YouTube style replies */
+    .toggle-replies-btn {
+        background: transparent;
+        border: none;
+        color: #3b82f6;
+        font-weight: 600;
+        font-size: 13px;
+        padding: 6px 12px;
+        border-radius: 20px;
+        margin-top: 8px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: background 0.2s;
+    }
+    .toggle-replies-btn:hover {
+        background: #eff6ff;
+    }
+    .toggle-replies-btn svg {
+        transition: transform 0.2s;
+    }
+    .toggle-replies-btn.open svg {
+        transform: rotate(180deg);
+    }
+    .replies-container {
+        display: none;
+        margin-top: 12px;
+    }
+    .replies-container.show {
+        display: block;
+    }
+    .reply-mention {
+        color: #3b82f6;
+        font-weight: 600;
+        margin-right: 4px;
+    }
 </style>
 @endpush
 
@@ -734,9 +772,56 @@
         });
     });
 
+    // ---- Toggle Edit Forms ----
+    document.querySelectorAll('.toggle-edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const commentId = this.dataset.commentId;
+            const form = document.getElementById(`edit-form-${commentId}`);
+            if (!form) return;
+            // Close all other open inline forms (reply or edit)
+            document.querySelectorAll('.inline-reply-form.show').forEach(f => {
+                if (f !== form) f.classList.remove('show');
+            });
+            form.classList.toggle('show');
+            if (form.classList.contains('show')) {
+                form.querySelector('textarea').focus();
+            }
+        });
+    });
+
+    document.querySelectorAll('.cancel-edit-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const commentId = this.dataset.commentId;
+            const form = document.getElementById(`edit-form-${commentId}`);
+            if (form) {
+                form.classList.remove('show');
+            }
+        });
+    });
+
+    // ---- Toggle Replies Visibility (YouTube style) ----
+    document.querySelectorAll('.toggle-replies-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            const targetId = this.dataset.target;
+            const container = document.getElementById(targetId);
+            const textSpan = this.querySelector('.toggle-text');
+            
+            if (container) {
+                const isOpen = container.classList.contains('show');
+                if (isOpen) {
+                    container.classList.remove('show');
+                    this.classList.remove('open');
+                } else {
+                    container.classList.add('show');
+                    this.classList.add('open');
+                }
+            }
+        });
+    });
+
     // ---- Double-Post Prevention ----
     document.querySelectorAll('form').forEach(form => {
-        form.addEventListener('submit', function() {
+        form.addEventListener('submit', function(event) {
             const submitBtn = this.querySelector('button[type="submit"]');
             if (!submitBtn || submitBtn.disabled) {
                 if (submitBtn && submitBtn.disabled) { event.preventDefault(); return; }
@@ -748,6 +833,25 @@
                 const origText = submitBtn.textContent;
                 submitBtn.dataset.origText = origText;
                 submitBtn.innerHTML = '<span class="spinner"></span> Mengirim...';
+            }
+        });
+    });
+
+    // ---- Enter to Submit ----
+    document.querySelectorAll('textarea').forEach(textarea => {
+        textarea.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                const form = this.closest('form');
+                if (form) {
+                    // Trigger submit event
+                    const submitEvent = new Event('submit', { cancelable: true, bubbles: true });
+                    form.dispatchEvent(submitEvent);
+                    
+                    if (!submitEvent.defaultPrevented) {
+                        form.submit();
+                    }
+                }
             }
         });
     });

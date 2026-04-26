@@ -66,6 +66,21 @@ class CommentService
         });
     }
 
+    public function updateComment(int $commentId, int $userId, string $konten): Comment
+    {
+        $comment = Comment::findOrFail($commentId);
+
+        if ($comment->user_id !== $userId) {
+            throw new \RuntimeException('Tidak memiliki akses untuk mengedit komentar ini.');
+        }
+
+        $comment->update([
+            'konten' => $konten,
+        ]);
+
+        return $comment;
+    }
+
     public function deleteComment(int $commentId, int $userId, bool $isAdmin = false): void
     {
         $comment = Comment::findOrFail($commentId);

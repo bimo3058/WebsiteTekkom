@@ -16,6 +16,7 @@ class Badge extends Model
         'name',
         'slug',
         'icon',
+        'image',
         'description',
         'criteria_type',
         'criteria_value',
