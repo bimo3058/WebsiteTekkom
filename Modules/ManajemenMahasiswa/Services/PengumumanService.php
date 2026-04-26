@@ -17,7 +17,7 @@ class PengumumanService
         return Pengumuman::with(['author', 'repoMulmed'])
             ->when(isset($filters['status']), fn($q) => $q->where('status_publish', $filters['status']))
             ->when(isset($filters['audience']), fn($q) => $q->forAudience($filters['audience']))
-            ->when(isset($filters['kategori']), fn($q) => $q->where('kategori', $filters['kategori']))
+            ->when(isset($filters['kategori']), fn($q) => $q->whereJsonContains('kategori', $filters['kategori']))
             ->when(isset($filters['search']), function ($q) use ($filters) {
                 $search = $filters['search'];
                 return $q->where(function ($sub) use ($search) {
@@ -39,7 +39,7 @@ class PengumumanService
             ->published()
             ->forAudience($userRoleAudience)
             ->when($filterKategori, function ($query, $filter) {
-                return $query->where('kategori', $filter);
+                return $query->whereJsonContains('kategori', $filter);
             })
             ->when($search, function ($query, $search) {
                 return $query->where(function ($sub) use ($search) {

@@ -256,7 +256,7 @@
             {{-- Media Upload (Collapsible) --}}
             <div class="mb-4">
                 <button type="button" class="section-toggle {{ count($existingMedia) > 0 ? 'active' : '' }}" id="toggleMedia" onclick="toggleSection('media')">
-                    📷 Gambar / Video
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Gambar / Video
                     @if(count($existingMedia) > 0)
                         <span style="background: #818cf8; color: white; font-size: 11px; padding: 1px 8px; border-radius: 10px; margin-left: 4px;">{{ count($existingMedia) }} file</span>
                     @endif
@@ -299,7 +299,7 @@
             {{-- Link (Collapsible) --}}
             <div class="mb-5">
                 <button type="button" class="section-toggle {{ $existingLink ? 'active' : '' }}" id="toggleLink" onclick="toggleSection('link')">
-                    🔗 Link
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Link
                     <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
                 </button>
                 <div class="section-content {{ $existingLink ? 'open' : '' }}" id="sectionLink">
@@ -312,10 +312,10 @@
             <div class="d-flex justify-content-end gap-3 align-items-center pb-2">
                 <a href="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}"
                     class="btn-action btn-cancel text-decoration-none shadow-sm">
-                    <span>✕</span> Batal
+                    <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span> Batal
                 </a>
                 <button type="submit" class="btn-action btn-post shadow-sm px-4">
-                    💾 Simpan Perubahan
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Simpan Perubahan
                 </button>
             </div>
         </form>

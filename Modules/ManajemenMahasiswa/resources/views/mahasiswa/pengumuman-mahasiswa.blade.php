@@ -336,43 +336,36 @@
         }
 
         /* Pagination */
-        .pengumuman-pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            margin-top: 32px;
-        }
-
-        .pagination-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 42px;
-            height: 42px;
-            border: 1px solid #e5e7eb;
-            border-radius: 50%;
-            background: #fff;
-            color: #6b7280;
-            font-size: 1.1rem;
-            cursor: pointer;
+        .pagination .page-link {
+            color: #6B4FF4;
+            border-color: #e5e7eb;
+            border-radius: 8px;
+            margin: 0 2px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 8px 14px;
             transition: all 0.2s ease;
-            text-decoration: none;
         }
 
-        .pagination-btn:hover:not(.disabled) {
+        .pagination .page-link:hover {
+            background-color: #F5F3FF;
             border-color: #6B4FF4;
             color: #6B4FF4;
-            background: #F5F3FF;
         }
 
-        .pagination-btn.disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            pointer-events: none;
+        .pagination .page-item.active .page-link {
+            background-color: #6B4FF4;
+            border-color: #6B4FF4;
+            color: #fff;
         }
 
-        .pagination-info {
+        .pagination .page-item.disabled .page-link {
+            color: #d1d5db;
+            border-color: #e5e7eb;
+            background: #fff;
+        }
+
+        .pagination-info-text {
             font-size: 0.82rem;
             color: #9ca3af;
             font-weight: 500;
@@ -514,7 +507,7 @@
                             <h6>{{ $item->judul }}</h6>
                         </div>
                         <p class="pengumuman-card-desc">
-                            {{ Str::limit(strip_tags($item->konten), 150) }}
+                            {{ Str::limit(html_entity_decode(strip_tags($item->konten)), 150) }}
                         </p>
                         <div class="pengumuman-card-tags">
                             @if($item->kategori)
@@ -551,42 +544,16 @@
 
     <!-- Pagination -->
     @if($pengumuman->hasPages())
-        <div class="pengumuman-pagination">
-            @if($pengumuman->onFirstPage())
-                <span class="pagination-btn disabled">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m15 18-6-6 6-6" />
-                    </svg>
+        <div class="mt-4">
+            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
+                <span class="pagination-info-text">
+                    Menampilkan {{ $pengumuman->firstItem() }}–{{ $pengumuman->lastItem() }}
+                    dari {{ $pengumuman->total() }} pengumuman
                 </span>
-            @else
-                <a href="{{ $pengumuman->previousPageUrl() }}" class="pagination-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m15 18-6-6 6-6" />
-                    </svg>
-                </a>
-            @endif
-
-            <span class="pagination-info">
-                Halaman {{ $pengumuman->currentPage() }} dari {{ $pengumuman->lastPage() }}
-            </span>
-
-            @if($pengumuman->hasMorePages())
-                <a href="{{ $pengumuman->nextPageUrl() }}" class="pagination-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m9 18 6-6-6-6" />
-                    </svg>
-                </a>
-            @else
-                <span class="pagination-btn disabled">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m9 18 6-6-6-6" />
-                    </svg>
-                </span>
-            @endif
+                <div>
+                    {{ $pengumuman->appends(request()->query())->links() }}
+                </div>
+            </div>
         </div>
     @endif
 

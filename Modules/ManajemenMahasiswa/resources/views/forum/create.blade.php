@@ -3,11 +3,44 @@
     @push('styles')
         <style>
             /* ── Page Title ──────────────────────────────────────────────────── */
-            .page-title { margin-bottom: 22px; display: flex; align-items: center; gap: 16px; }
-            .page-title .back-btn { background: #fff; border: 1px solid #e5e7eb; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: #4b5563; text-decoration: none; transition: background 0.2s; }
-            .page-title .back-btn:hover { background: #f3f4f6; }
-            .page-title h1 { font-size: 26px; font-weight: 700; color: #111827; margin: 0 0 2px; letter-spacing: -0.02em; }
-            .page-title p { font-size: 14px; color: #6b7280; margin: 0; }
+            .page-title {
+                margin-bottom: 22px;
+                display: flex;
+                align-items: center;
+                gap: 16px;
+            }
+
+            .page-title .back-btn {
+                background: #fff;
+                border: 1px solid #e5e7eb;
+                border-radius: 50%;
+                width: 40px;
+                height: 40px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: #4b5563;
+                text-decoration: none;
+                transition: background 0.2s;
+            }
+
+            .page-title .back-btn:hover {
+                background: #f3f4f6;
+            }
+
+            .page-title h1 {
+                font-size: 26px;
+                font-weight: 700;
+                color: #111827;
+                margin: 0 0 2px;
+                letter-spacing: -0.02em;
+            }
+
+            .page-title p {
+                font-size: 14px;
+                color: #6b7280;
+                margin: 0;
+            }
 
             .create-post-card {
                 background: #ffffff;
@@ -245,7 +278,11 @@
 
     <div class="page-title">
         <a href="{{ route('manajemenmahasiswa.forum.index') }}" class="back-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
         </a>
         <div>
             <h1>Forum Diskusi</h1>
@@ -319,7 +356,7 @@
             {{-- Media Upload (Collapsible) --}}
             <div class="mb-4">
                 <button type="button" class="section-toggle" id="toggleMedia" onclick="toggleSection('media')">
-                    📷 Tambah Gambar / Video
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Tambah Gambar / Video
                     <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
                 </button>
                 <div class="section-content" id="sectionMedia">
@@ -338,7 +375,7 @@
             {{-- Link (Collapsible) --}}
             <div class="mb-5">
                 <button type="button" class="section-toggle" id="toggleLink" onclick="toggleSection('link')">
-                    🔗 Tambah Link
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Tambah Link
                     <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
                 </button>
                 <div class="section-content" id="sectionLink">
@@ -360,7 +397,7 @@
                     </button>
                     <a href="{{ route('manajemenmahasiswa.forum.index') }}"
                         class="btn-action btn-cancel text-decoration-none shadow-sm text-center">
-                        <span>✕</span> Batal
+                        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span> Batal
                     </a>
                     <button type="submit" class="btn-action btn-post shadow-sm px-4">
                         Terbitkan
@@ -387,7 +424,8 @@
                                     <div class="flex-grow-1 pe-3"
                                         onclick="loadDraft({{ $draft->id }}, {{ json_encode($draft->judul) }}, {{ json_encode($draft->kategori) }}, {{ json_encode($draft->konten) }})">
                                         <h6 class="mb-1 fw-bold text-dark" style="font-size: 15px;">
-                                            {{ $draft->judul ?: '(Tanpa Judul)' }}</h6>
+                                            {{ $draft->judul ?: '(Tanpa Judul)' }}
+                                        </h6>
                                         <p class="mb-1 text-muted"
                                             style="font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
                                             {{ $draft->konten ?: '(Tidak ada konten teks)' }}
@@ -405,7 +443,7 @@
                                                 class="btn btn-sm btn-light text-danger rounded-circle shadow-sm border border-danger-subtle"
                                                 style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
                                                 title="Hapus draf ini">
-                                                ✕
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                             </button>
                                         </form>
                                     </div>
