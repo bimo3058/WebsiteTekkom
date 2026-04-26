@@ -234,26 +234,11 @@
             <div class="info-item-label">NIM <span class="sso-tag">SSO</span></div>
             <div class="info-item-value" style="font-family: monospace; color: #4f46e5;">{{ $mhs->nim }}</div>
         </div>
-        <div>
-            <div class="info-item-label">Angkatan <span class="sso-tag">SSO</span></div>
-            <div class="info-item-value">{{ $mhs->angkatan }}</div>
-        </div>
-        <div>
-            <div class="info-item-label">Status</div>
-            <div><span class="status-badge {{ $mhs->status }}">
-                @switch($mhs->status)
-                    @case('aktif') Aktif @break
-                    @case('alumni') Lulus @break
-                    @case('cuti') Cuti @break
-                    @case('drop_out') Drop Out @break
-                    @default {{ ucfirst($mhs->status) }}
-                @endswitch
-            </span></div>
-        </div>
+
         @if($mhs->user && $mhs->user->email)
         <div>
             <div class="info-item-label">Email UNDIP <span class="sso-tag">SSO</span></div>
-            <div class="info-item-value">{{ $mhs->user->email }}</div>
+            <div class="info-item-value" style="word-break: break-all;">{{ $mhs->user->email }}</div>
         </div>
         @endif
 
@@ -280,7 +265,7 @@
     </div>
     <div class="info-grid">
         <div>
-            <div class="info-item-label">Angkatan Masuk</div>
+            <div class="info-item-label">Angkatan Masuk <span class="sso-tag">SSO</span></div>
             <div class="info-item-value">{{ $mhs->angkatan }}</div>
         </div>
         <div>

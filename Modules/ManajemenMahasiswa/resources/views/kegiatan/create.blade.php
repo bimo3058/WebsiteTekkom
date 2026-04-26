@@ -455,6 +455,151 @@
         background: #e5e7eb;
         color: #1f2937;
     }
+
+    /* ── Multi-Select Panitia ── */
+    .panitia-select-wrapper {
+        position: relative;
+    }
+    .panitia-chips-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-height: 44px;
+        padding: 8px 12px;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        background: #fff;
+        cursor: text;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        align-items: center;
+    }
+    .panitia-chips-container:focus-within {
+        border-color: #818cf8;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    .panitia-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: #eef2ff;
+        color: #4338ca;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid #c7d2fe;
+        transition: all 0.15s;
+        white-space: nowrap;
+    }
+    .panitia-chip:hover {
+        background: #e0e7ff;
+    }
+    .panitia-chip-remove {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #c7d2fe;
+        color: #4338ca;
+        border: none;
+        font-size: 11px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        padding: 0;
+        transition: all 0.15s;
+        flex-shrink: 0;
+    }
+    .panitia-chip-remove:hover {
+        background: #dc2626;
+        color: #fff;
+    }
+    .panitia-search-input {
+        border: none;
+        outline: none;
+        font-size: 13px;
+        font-weight: 500;
+        color: #1f2937;
+        flex: 1;
+        min-width: 120px;
+        background: transparent;
+        padding: 2px 0;
+    }
+    .panitia-search-input::placeholder {
+        color: #9ca3af;
+        font-weight: 400;
+    }
+    .panitia-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1.5px solid #e5e7eb;
+        border-top: none;
+        border-radius: 0 0 10px 10px;
+        max-height: 220px;
+        overflow-y: auto;
+        z-index: 200;
+        display: none;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    .panitia-dropdown.show {
+        display: block;
+    }
+    .panitia-option {
+        padding: 10px 14px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        color: #374151;
+        transition: background 0.15s;
+        border-bottom: 1px solid #f9fafb;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .panitia-option:hover {
+        background: #eef2ff;
+        color: #4f46e5;
+    }
+    .panitia-option.selected {
+        background: #f0fdf4;
+        color: #16a34a;
+        pointer-events: none;
+        opacity: 0.6;
+    }
+    .panitia-option .sub-text {
+        font-size: 11px;
+        color: #9ca3af;
+        font-weight: 400;
+    }
+    .panitia-option .check-icon {
+        margin-left: auto;
+        color: #16a34a;
+        font-size: 13px;
+        display: none;
+    }
+    .panitia-option.selected .check-icon {
+        display: inline;
+    }
+    .panitia-empty {
+        padding: 14px;
+        text-align: center;
+        font-size: 13px;
+        color: #9ca3af;
+        font-weight: 400;
+    }
+    .panitia-count-badge {
+        font-size: 11px;
+        font-weight: 600;
+        color: #6b7280;
+        background: #f3f4f6;
+        padding: 2px 8px;
+        border-radius: 20px;
+        margin-left: 6px;
+    }
 </style>
 
 <!-- Header -->
@@ -637,6 +782,45 @@
                     </div>
                 </div>
             </div>
+        </div>
+
+        {{-- ── Panitia Kegiatan (Multi-Select) ── --}}
+        <div class="mb-1">
+            <label class="form-label-custom">
+                Panitia Kegiatan
+                <span style="color: #9ca3af; font-weight: 400;">(opsional)</span>
+                <span class="panitia-count-badge" id="panitiaCountBadge" style="display:none;">0 dipilih</span>
+            </label>
+            <div class="panitia-select-wrapper" id="panitiaSelectWrapper">
+                <div class="panitia-chips-container" id="panitiaChipsContainer" onclick="focusPanitiaSearch()">
+                    <input type="text" class="panitia-search-input" id="panitiaSearchInput"
+                           placeholder="Cari dan tambah panitia..."
+                           autocomplete="off"
+                           oninput="filterPanitiaOptions(this.value)"
+                           onfocus="showPanitiaDropdown()">
+                </div>
+                <div class="panitia-dropdown" id="panitiaDropdown">
+                    @foreach($mahasiswaList as $mhs)
+                        <div class="panitia-option"
+                             data-id="{{ $mhs->id }}"
+                             data-name="{{ $mhs->user->name ?? 'N/A' }}"
+                             data-name-lower="{{ strtolower($mhs->user->name ?? '') }}"
+                             data-nim="{{ $mhs->student_number }}"
+                             data-angkatan="{{ $mhs->cohort_year }}"
+                             onclick="togglePanitia(this)">
+                            <div>
+                                {{ $mhs->user->name ?? 'N/A' }}
+                                <div class="sub-text">NIM: {{ $mhs->student_number }} • Angkatan {{ $mhs->cohort_year }}</div>
+                            </div>
+                            <span class="check-icon">✓</span>
+                        </div>
+                    @endforeach
+                    <div class="panitia-empty" id="panitiaEmpty" style="display:none;">Tidak ada mahasiswa yang cocok</div>
+                </div>
+                {{-- Hidden inputs di-generate JS --}}
+                <div id="panitiaHiddenInputs"></div>
+            </div>
+            <div class="checkbox-hint">Pilih satu atau lebih mahasiswa sebagai panitia. Ketik nama untuk mencari.</div>
         </div>
     </div>
 
@@ -906,6 +1090,117 @@ function formatFileSize(bytes) {
             syncDokumenInput();
         }
     });
+});
+
+// ── Panitia Multi-Select ──
+let selectedPanitia = {}; // { id: name }
+
+function focusPanitiaSearch() {
+    document.getElementById('panitiaSearchInput').focus();
+}
+
+function showPanitiaDropdown() {
+    const dropdown = document.getElementById('panitiaDropdown');
+    dropdown.classList.add('show');
+    filterPanitiaOptions(document.getElementById('panitiaSearchInput').value);
+}
+
+function filterPanitiaOptions(query) {
+    const q = query.toLowerCase().trim();
+    const options = document.querySelectorAll('#panitiaDropdown .panitia-option');
+    const empty = document.getElementById('panitiaEmpty');
+    let visibleCount = 0;
+
+    options.forEach(opt => {
+        const name = opt.getAttribute('data-name-lower') || '';
+        const nim  = opt.getAttribute('data-nim') || '';
+        const match = !q || name.includes(q) || nim.includes(q);
+        opt.style.display = match ? 'flex' : 'none';
+        if (match) visibleCount++;
+    });
+
+    empty.style.display = visibleCount === 0 ? 'block' : 'none';
+    document.getElementById('panitiaDropdown').classList.add('show');
+}
+
+function togglePanitia(optEl) {
+    const id   = optEl.getAttribute('data-id');
+    const name = optEl.getAttribute('data-name');
+
+    if (selectedPanitia[id]) {
+        // Sudah dipilih → hapus
+        removePanitia(id);
+    } else {
+        // Tambah
+        selectedPanitia[id] = name;
+        optEl.classList.add('selected');
+        renderPanitiaChips();
+        updatePanitiaHiddenInputs();
+    }
+
+    // Reset search
+    document.getElementById('panitiaSearchInput').value = '';
+    filterPanitiaOptions('');
+    document.getElementById('panitiaSearchInput').focus();
+}
+
+function removePanitia(id) {
+    delete selectedPanitia[id];
+    const opt = document.querySelector(`#panitiaDropdown .panitia-option[data-id="${id}"]`);
+    if (opt) opt.classList.remove('selected');
+    renderPanitiaChips();
+    updatePanitiaHiddenInputs();
+}
+
+function renderPanitiaChips() {
+    const container = document.getElementById('panitiaChipsContainer');
+    const searchInput = document.getElementById('panitiaSearchInput');
+
+    // Hapus chips yang lama (bukan input)
+    container.querySelectorAll('.panitia-chip').forEach(c => c.remove());
+
+    // Tambah chips baru sebelum input
+    Object.entries(selectedPanitia).forEach(([id, name]) => {
+        const chip = document.createElement('span');
+        chip.className = 'panitia-chip';
+        chip.innerHTML = `
+            ${name}
+            <button type="button" class="panitia-chip-remove" onclick="removePanitia('${id}')" title="Hapus">✕</button>
+        `;
+        container.insertBefore(chip, searchInput);
+    });
+
+    // Update badge count
+    const count = Object.keys(selectedPanitia).length;
+    const badge = document.getElementById('panitiaCountBadge');
+    if (count > 0) {
+        badge.textContent = count + ' dipilih';
+        badge.style.display = 'inline';
+        document.getElementById('panitiaSearchInput').placeholder = 'Tambah lebih banyak...';
+    } else {
+        badge.style.display = 'none';
+        document.getElementById('panitiaSearchInput').placeholder = 'Cari dan tambah panitia...';
+    }
+}
+
+function updatePanitiaHiddenInputs() {
+    const container = document.getElementById('panitiaHiddenInputs');
+    container.innerHTML = '';
+    Object.keys(selectedPanitia).forEach(id => {
+        const input = document.createElement('input');
+        input.type  = 'hidden';
+        input.name  = 'panitia_ids[]';
+        input.value = id;
+        container.appendChild(input);
+    });
+}
+
+// Tutup dropdown panitia saat klik di luar
+document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('panitiaSelectWrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        document.getElementById('panitiaDropdown').classList.remove('show');
+    }
 });
 
 // ── Toggle Bidang Field based on Kategori (checkbox version) ──

@@ -14,13 +14,14 @@
     @php
         $sidebarRoles = auth()->user()->roles->pluck('name')->toArray();
         $showDashboardAnalitik = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm'])) > 0;
+        $showManajemenPengguna = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit'])) > 0;
 
         if (array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan'])) {
             $portalLabel = 'Portal Admin';
         } elseif (array_intersect($sidebarRoles, ['gpm', 'dosen_koordinator', 'dosen'])) {
             $portalLabel = 'Portal Dosen';
         } elseif (in_array('pengurus_himpunan', $sidebarRoles)) {
-            $portalLabel = 'Portal Pengurus';
+            $portalLabel = 'Portal Mahasiswa';
         } else {
             $portalLabel = 'Portal Mahasiswa';
         }
@@ -95,10 +96,14 @@
             <div class="sidebar-dropdown-menu" x-show="sidebarOpen">
                 @php
                     $userRoles = auth()->user()->roles->pluck('name')->toArray();
-                    $canViewAll = array_intersect($userRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan']);
+                    // Pengurus himpunan dan mahasiswa bisa lihat list tapi tidak bisa edit (dikontrol di routes)
+                    $canViewAll = (bool) array_intersect($userRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa']);
                     $mahasiswaRoute = $canViewAll
                         ? route('manajemenmahasiswa.direktori.mahasiswa.index')
                         : route('manajemenmahasiswa.direktori.mahasiswa.profil');
+                    $alumniRoute = $canViewAll
+                        ? route('manajemenmahasiswa.direktori.alumni.index')
+                        : route('manajemenmahasiswa.direktori.alumni.profil');
                 @endphp
                 <a href="{{ $mahasiswaRoute }}"
                     class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.direktori.mahasiswa.*') ? 'active' : '' }}">
@@ -111,7 +116,7 @@
                     </span>
                     <span class="nav-label">Mahasiswa</span>
                 </a>
-                <a href="{{ route('manajemenmahasiswa.direktori.alumni.index') }}"
+                <a href="{{ $alumniRoute }}"
                     class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.direktori.alumni.*') ? 'active' : '' }}">
                     <span class="nav-icon d-inline-flex">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -147,6 +152,23 @@
                 </svg>
             </x-slot:iconSlot>
         </x-manajemenmahasiswa::ui.sidebar-item>
+
+        @if($showManajemenPengguna)
+            <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengguna.index') }}"
+                routeName="manajemenmahasiswa.pengguna" label="Manajemen Pengguna">
+                <x-slot:iconSlot>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        <line x1="19" y1="8" x2="23" y2="12"></line>
+                        <line x1="23" y1="8" x2="19" y2="12"></line>
+                    </svg>
+                </x-slot:iconSlot>
+            </x-manajemenmahasiswa::ui.sidebar-item>
+        @endif
 
         @if(!array_intersect($sidebarRoles, ['gpm', 'dosen_koordinator', 'dosen']))
             <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengaduan.index') }}"
