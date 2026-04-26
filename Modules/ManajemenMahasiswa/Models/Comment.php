@@ -74,7 +74,7 @@ class Comment extends Model
     public function syncVoteCount(): void
     {
         $this->update([
-            'vote_count' => $this->votes()->sum('value'),
+            'vote_count' => $this->votes()->where('value', 1)->count(),
         ]);
     }
 
