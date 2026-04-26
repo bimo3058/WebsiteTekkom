@@ -148,7 +148,7 @@
     </div>
 
     <div id="riwayatPengajuanContainer">
-        <x-banksoal::ui.rps-history-table :riwayat="$riwayat" />
+        <x-banksoal::ui.riwayat-rps :riwayat="$riwayat" />
     </div>
 
     <div id="rpsRiwayatEmptyState" class="empty-state" style="display:none;">
@@ -160,7 +160,7 @@
     </div>
 
     <div class="mt-8">
-        <x-banksoal::ui.rps-approved-courses-grouped-table :riwayatMkDisetujui="$riwayatMkDisetujui" />
+        <x-banksoal::ui.riwayat-rps-disetujui :riwayatMkDisetujui="$riwayatMkDisetujui" />
     </div>
 
     <!-- Modal Ajukan RPS Baru -->
@@ -190,11 +190,11 @@
         </div>
     </div>
 
-    <x-banksoal::ui.rps-document-modal />
+    <x-banksoal::ui.dokumen-rps-modal />
 
-    <x-banksoal::ui.rps-delete-confirmation-modal />
+    <x-banksoal::ui.hapus-rps-modal />
 
-    <x-banksoal::ui.rps-scripts />
+    <x-banksoal::ui.rps-script />
 
     <script>
         (function() {

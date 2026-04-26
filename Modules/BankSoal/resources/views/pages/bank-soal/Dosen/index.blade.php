@@ -172,7 +172,7 @@
                             @endif
                         </td>
                         <td class="px-6 py-4">
-                            @include('banksoal::partials.dosen._soal-actions', ['soal' => $soal])
+                            @include('banksoal::partials.dosen.soal-actions', ['soal' => $soal])
                         </td>
                     </tr>
                 @empty
@@ -970,6 +970,6 @@
     }
 </script>
 
-@include('banksoal::pages.bank-soal.Dosen._review-modal')
+@include('banksoal::pages.bank-soal.Dosen.review-modal')
 
 </x-banksoal::layouts.dosen-admin>
