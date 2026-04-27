@@ -123,7 +123,7 @@ class CvBuilderController extends Controller
                     $prestasiSync[] = [
                         'nama' => $p->nama_prestasi,
                         'tingkat' => $p->tingkat,
-                        'tahun' => $p->tahun,
+                        'tahun' => $p->tanggal ? \Carbon\Carbon::parse($p->tanggal)->format('Y') : '-',
                         'is_sync' => true
                     ];
                 }
@@ -222,7 +222,7 @@ class CvBuilderController extends Controller
         return view('profile.cv.template-ats', $data);
     }
     
-    private function getAllCvData($user, $cvProfile)
+    public function getAllCvData($user, $cvProfile)
     {
         $data = [
             'user' => [
@@ -291,7 +291,7 @@ class CvBuilderController extends Controller
                     $data['prestasi'][] = [
                         'nama' => $p->nama_prestasi,
                         'tingkat' => $p->tingkat,
-                        'tahun' => $p->tahun,
+                        'tahun' => $p->tanggal ? \Carbon\Carbon::parse($p->tanggal)->format('Y') : '-',
                     ];
                 }
             }

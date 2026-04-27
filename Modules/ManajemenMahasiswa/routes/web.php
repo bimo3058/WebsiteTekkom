@@ -244,6 +244,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('index');
                     Route::get('/{id}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'show'])
                         ->name('show')->where('id', '[0-9]+');
+                    Route::get('/{id}/cv', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'generateCv'])
+                        ->name('cv')->where('id', '[0-9]+');
                 });
 
                 // Edit data alumni — admin only
