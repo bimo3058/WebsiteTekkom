@@ -28,26 +28,11 @@ class ProfileController extends Controller
         $canEditName = $user->hasRole('superadmin')
             || $user->hasAnyRole(['admin_banksoal', 'admin_capstone', 'admin_eoffice', 'admin_kemahasiswaan']);
 
-        // Proses nomor WhatsApp
-        $whatsapp = null;
-        if ($request->filled('whatsapp')) {
-            $phoneCode = $request->input('phone_code', '+62');
-
-            if (! str_starts_with($phoneCode, '+')) {
-                $phoneCode = '+62';
-            }
-
-            $number = ltrim(preg_replace('/[^0-9]/', '', $request->input('whatsapp')), '0');
-
-            $whatsapp = $number ? $phoneCode . $number : null;
-        }
-
         // updateQuietly agar tidak trigger observers yang tidak relevan
-        // (perubahan nama/email/whatsapp tidak ada hubungannya dengan roles/permissions)
+        // (perubahan nama/email tidak ada hubungannya dengan roles/permissions)
         $user->updateQuietly([
             'name'           => $canEditName ? $validated['name'] : $user->name,
             'personal_email' => $validated['personal_email'] ?? null,
-            'whatsapp'       => $whatsapp,
         ]);
 
         $user->clearUserCache();

@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Modules\ManajemenMahasiswa\Models\PengurusHimaskom;
+use Modules\ManajemenMahasiswa\Models\Alumni;
+use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 
 class ManajemenPenggunaController extends Controller
 {
@@ -170,6 +172,26 @@ class ManajemenPenggunaController extends Controller
 
             $newRoleIds = $this->resolveMultipleRoleIds($selectedRoles);
             $user->roles()->sync($newRoleIds);
+            
+            // Auto-create Alumni record jika diubah menjadi alumni
+            if (in_array('alumni', $selectedRoles) && !in_array('alumni', $oldRoleNames)) {
+                if (!Alumni::where('user_id', $user->id)->exists()) {
+                    $student = $user->student;
+                    Alumni::create([
+                        'user_id' => $user->id,
+                        'nim' => $student ? $student->student_number : '-',
+                        'angkatan' => $student ? $student->cohort_year : date('Y'),
+                        'tahun_lulus' => date('Y'),
+                        'program_studi' => 'S1 Teknik Komputer',
+                    ]);
+                }
+                
+                // Update juga status di mk_kemahasiswaan agar tidak dihapus oleh auto-sync Direktori Alumni
+                Kemahasiswaan::where('user_id', $user->id)->update([
+                    'status' => Kemahasiswaan::STATUS_ALUMNI,
+                    'tahun_lulus' => date('Y')
+                ]);
+            }
 
             $user->load('roles');
             $user->syncPermissionsFromRoles();
@@ -242,6 +264,23 @@ class ManajemenPenggunaController extends Controller
                 $newRoleIds = array_unique([...$keptRoles, $alumniRole->id]);
 
                 $user->roles()->sync($newRoleIds);
+                
+                // Auto-create Alumni record
+                if (!Alumni::where('user_id', $user->id)->exists()) {
+                    Alumni::create([
+                        'user_id' => $user->id,
+                        'nim' => $student->student_number,
+                        'angkatan' => $student->cohort_year,
+                        'tahun_lulus' => date('Y'),
+                        'program_studi' => 'S1 Teknik Komputer',
+                    ]);
+                }
+                
+                // Update status kemahasiswaan
+                Kemahasiswaan::where('user_id', $user->id)->update([
+                    'status' => Kemahasiswaan::STATUS_ALUMNI,
+                    'tahun_lulus' => date('Y')
+                ]);
                 $user->load('roles');
                 $user->syncPermissionsFromRoles();
                 $user->clearUserCache();

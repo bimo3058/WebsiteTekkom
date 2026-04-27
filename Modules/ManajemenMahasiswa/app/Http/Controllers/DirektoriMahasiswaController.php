@@ -4,6 +4,7 @@ namespace Modules\ManajemenMahasiswa\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Student;
+use App\Models\CvProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Collection;
@@ -11,6 +12,7 @@ use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
 use Modules\ManajemenMahasiswa\Models\Prestasi;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
+use Modules\ManajemenMahasiswa\Models\Alumni;
 
 class DirektoriMahasiswaController extends Controller
 {
@@ -99,16 +101,19 @@ class DirektoriMahasiswaController extends Controller
 
         $studentId = $student->id;
 
-        // 2. Ambil riwayat manual (menggunakan students.id)
+        // 2. Ambil riwayat manual (menggunakan students.id) yang sudah disetujui
         $riwayatManual = RiwayatKegiatan::with('kegiatan')
             ->where('student_id', $studentId)
+            ->where('verification_status', 'approved')
             ->get();
 
         // 3. Ambil semua kegiatan di mana mahasiswa ini adalah ketua pelaksana
         $kegiatanAsKetua = Kegiatan::where('ketua_pelaksana_id', $studentId)->get();
 
         // 4. Ambil semua kegiatan di mana mahasiswa ini adalah panitia (via pivot)
-        $kegiatanAsPanitia = Kegiatan::whereHas('panitia', fn($q) => $q->where('students.id', $studentId))->get();
+        $kegiatanAsPanitia = Kegiatan::whereHas('panitia', fn($q) => $q->where('students.id', $studentId))
+            ->with(['panitia' => fn($q) => $q->where('students.id', $studentId)])
+            ->get();
 
         // 5. Kegiatan_id yang sudah ada di riwayat manual (untuk hindari duplikat)
         $existingKegiatanIds = $riwayatManual->pluck('kegiatan_id')->filter()->toArray();
@@ -144,7 +149,13 @@ class DirektoriMahasiswaController extends Controller
                 $item->id                   = null;
                 $item->student_id           = $studentId;
                 $item->kegiatan_id          = $kg->id;
-                $item->peran                = 'panitia';
+                
+                $peran = 'panitia';
+                $panitiaCurrent = $kg->panitia->first();
+                if ($panitiaCurrent && $panitiaCurrent->pivot->peran) {
+                    $peran = $panitiaCurrent->pivot->peran;
+                }
+                $item->peran                = $peran;
                 $item->peran_manual         = null;
                 $item->nama_kegiatan_manual = null;
                 $item->tanggal_kegiatan     = null;
@@ -215,7 +226,7 @@ class DirektoriMahasiswaController extends Controller
         $isAdmin      = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
         $isGpm        = $this->hasRole('gpm');
         $isPengurus   = $this->hasRole('pengurus_himpunan');
-        $isMahasiswa  = $this->hasRole('mahasiswa') && !$isAdmin && !$isGpm && !$isPengurus;
+        $isMahasiswa  = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
 
         return view('manajemenmahasiswa::direktori.mahasiswa-index', compact(
             'mahasiswa',
@@ -233,7 +244,9 @@ class DirektoriMahasiswaController extends Controller
 
     public function show(int $id)
     {
-        $mhs = Kemahasiswaan::with(['user', 'user.student', 'prestasi'])->findOrFail($id);
+        $mhs = Kemahasiswaan::with(['user', 'user.student', 'prestasi' => function($q) {
+            $q->where('verification_status', 'approved');
+        }])->findOrFail($id);
 
         // Ambil riwayat kegiatan: manual + otomatis dari ketua pelaksana
         $riwayatKegiatan = $this->buildMergedRiwayat($mhs->user_id);
@@ -241,10 +254,13 @@ class DirektoriMahasiswaController extends Controller
         // Semua kegiatan for dropdown (untuk tambah riwayat)
         $semuaKegiatan = Kegiatan::orderBy('judul')->get();
 
+        // Ambil CV Profile mahasiswa (jika sudah pernah membuat CV via CV Builder)
+        $cvProfile = CvProfile::where('user_id', $mhs->user_id)->first();
+
         $isAdmin      = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
         $isPengurus   = $this->hasRole('pengurus_himpunan');
         $isGpm        = $this->hasRole('gpm');
-        $isMahasiswa  = $this->hasRole('mahasiswa') && !$isAdmin && !$isGpm && !$isPengurus;
+        $isMahasiswa  = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
 
         return view('manajemenmahasiswa::direktori.mahasiswa-show', compact(
             'mhs',
@@ -254,6 +270,7 @@ class DirektoriMahasiswaController extends Controller
             'isPengurus',
             'isGpm',
             'isMahasiswa',
+            'cvProfile',
         ))->with('layout', $this->resolveLayout());
     }
 
@@ -325,7 +342,9 @@ class DirektoriMahasiswaController extends Controller
     public function profil()
     {
         $user = Auth::user();
-        $mhs  = Kemahasiswaan::with(['prestasi', 'user', 'user.student'])->where('user_id', $user->id)->first();
+        $mhs  = Kemahasiswaan::with(['prestasi' => function($q) {
+            $q->where('verification_status', 'approved');
+        }, 'user', 'user.student'])->where('user_id', $user->id)->first();
 
         if (!$mhs) {
             return back()->with('error', 'Data kemahasiswaan Anda belum terdaftar dalam sistem.');
@@ -433,7 +452,9 @@ class DirektoriMahasiswaController extends Controller
 
     public function generateCv(int $id)
     {
-        $mhs = Kemahasiswaan::with(['user', 'user.student', 'prestasi'])->findOrFail($id);
+        $mhs = Kemahasiswaan::with(['user', 'user.student', 'prestasi' => function($q) {
+            $q->where('verification_status', 'approved');
+        }])->findOrFail($id);
         $user = $mhs->user;
 
         // Ambil CV Profile jika ada, atau buat instance kosong tanpa disimpan
@@ -454,6 +475,9 @@ class DirektoriMahasiswaController extends Controller
     public function generateCvSelf()
     {
         $user = Auth::user();
+        $mhs  = Kemahasiswaan::with(['prestasi' => function($q) {
+            $q->where('verification_status', 'approved');
+        }, 'user', 'user.student'])->where('user_id', $user->id)->firstOrFail();
 
         // Ambil CV Profile jika ada, atau buat instance kosong tanpa disimpan
         $cvProfile = \App\Models\CvProfile::where('user_id', $user->id)->first() ?? new \App\Models\CvProfile([
@@ -466,4 +490,6 @@ class DirektoriMahasiswaController extends Controller
 
         return view('profile.cv.template-ats', $data);
     }
+
+
 }
