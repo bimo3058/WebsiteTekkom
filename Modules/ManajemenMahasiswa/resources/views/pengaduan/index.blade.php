@@ -184,7 +184,7 @@
     @if (session('success'))
         <div class="alert alert-success border-0 shadow-sm" style="background-color: #dcfce7; color: #16a34a; border-radius: 12px;">
             <div class="d-flex align-items-center gap-2 fw-medium">
-                <span>✓</span> {{ session('success') }}
+                <span class="material-symbols-outlined" style="font-size: 16px;">check</span> {{ session('success') }}
             </div>
         </div>
     @endif
@@ -196,21 +196,21 @@
     @endphp
     <div class="stats-strip">
         <div class="stat-chip">
-            <div class="stat-chip-icon" style="background: #eef2ff; color: #4f46e5;">📋</div>
+            <div class="stat-chip-icon" style="background: #eef2ff; color: #4f46e5;"><span class="material-symbols-outlined">assignment</span></div>
             <div>
                 <div class="stat-chip-value">{{ $totalPengaduan }}</div>
                 <div class="stat-chip-label">Total</div>
             </div>
         </div>
         <div class="stat-chip">
-            <div class="stat-chip-icon" style="background: #fef3c7; color: #d97706;">⏳</div>
+            <div class="stat-chip-icon" style="background: #fef3c7; color: #d97706;"><span class="material-symbols-outlined">hourglass_empty</span></div>
             <div>
                 <div class="stat-chip-value">{{ $belumDijawabCount }}</div>
                 <div class="stat-chip-label">Belum Dijawab</div>
             </div>
         </div>
         <div class="stat-chip">
-            <div class="stat-chip-icon" style="background: #dcfce7; color: #16a34a;">✅</div>
+            <div class="stat-chip-icon" style="background: #dcfce7; color: #16a34a;"><span class="material-symbols-outlined">check_circle</span></div>
             <div>
                 <div class="stat-chip-value">{{ $dijawabCount }}</div>
                 <div class="stat-chip-label">Dijawab</div>
@@ -224,7 +224,7 @@
             <div class="row g-3 align-items-center">
                 <div class="col-lg-6">
                     <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" class="filter-input"
-                        placeholder="🔍 Cari judul, kronologi, atau ID pengaduan…">
+                        placeholder="Cari judul, kronologi, atau ID pengaduan…">
                 </div>
                 <div class="col-lg-3">
                     <select name="kategori" class="filter-select" onchange="document.getElementById('filterForm').submit()">
@@ -308,7 +308,7 @@
                             <td>
                                 <div class="d-flex align-items-center gap-2">
                                     <div style="width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg, #e0e7ff, #c7d2fe); display: flex; align-items: center; justify-content: center; font-size: 12px;">
-                                        👤
+                                        <span class="material-symbols-outlined" style="font-size: 16px;">person</span>
                                     </div>
                                     <span class="text-dark fw-medium">{{ $pelaporLabel }}</span>
                                 </div>
@@ -325,7 +325,7 @@
                                     <button type="button" class="btn p-0" style="color: #ef4444;" aria-label="Hapus"
                                         data-bs-toggle="modal" data-bs-target="#deleteModal"
                                         onclick="document.getElementById('deleteForm').action = '{{ route('manajemenmahasiswa.pengaduan.destroy', $item->id) }}'; document.getElementById('deleteModalText').innerText = '{{ addslashes($judul) }}';">
-                                        🗑️
+                                        <span class="material-symbols-outlined" style="font-size: 18px;">delete</span>
                                     </button>
                                 </td>
                             @endif
@@ -333,7 +333,7 @@
                     @empty
                         <tr>
                             <td colspan="{{ $canDelete ? 7 : 6 }}" class="text-center text-muted py-5">
-                                <div style="font-size: 48px; margin-bottom: 12px;">📭</div>
+                                <div style="margin-bottom: 12px;"><span class="material-symbols-outlined" style="font-size: 48px; color: #cbd5e1;">inbox</span></div>
                                 <div class="fw-bold text-dark mb-1" style="font-size: 16px;">Belum ada pengaduan</div>
                                 <div class="text-muted" style="font-size: 13px;">Data pengaduan akan muncul di sini.</div>
                             </td>
@@ -361,7 +361,7 @@
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content" style="border-radius: 16px; border: none; box-shadow: 0 20px 60px rgba(0,0,0,0.15);">
                     <div class="modal-body text-center p-4 p-md-5">
-                        <div style="font-size: 48px; margin-bottom: 16px;">⚠️</div>
+                        <div style="margin-bottom: 16px;"><span class="material-symbols-outlined" style="font-size: 48px; color: #f59e0b;">warning</span></div>
                         <h4 class="fw-bold text-dark mb-3">Hapus Pengaduan?</h4>
                         <p class="text-muted mb-4" id="deleteModalText" style="font-size: 14px;"></p>
                         <form id="deleteForm" method="POST" action="">

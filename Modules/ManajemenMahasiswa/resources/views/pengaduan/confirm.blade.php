@@ -70,7 +70,7 @@
     </div>
 
     <div class="alert alert-warning border-0 shadow-sm" style="background-color: #fef3c7; color: #92400e; border-radius: 12px;">
-        <div class="fw-medium">Pastikan data sudah benar. Setelah dikirim, pengaduan akan masuk ke daftar Admin/Dosen/GPM.</div>
+        <div class="fw-medium">Pastikan data sudah benar. Setelah dikirim, pengaduan tidak akan bisa diedit lagi.</div>
     </div>
 
     <div class="custom-card">
