@@ -7,6 +7,7 @@ use App\Models\CvProfile;
 use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Models\Alumni;
 use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
+use Modules\ManajemenMahasiswa\Models\Kegiatan;
 
 class CvBuilderController extends Controller
 {
@@ -91,6 +92,13 @@ class CvBuilderController extends Controller
                     ->where('student_id', $user->student->id)
                     ->where('verification_status', 'approved')
                     ->get();
+                $kegiatanAsKetua = Kegiatan::where('ketua_pelaksana_id', $user->student->id)->get();
+                $kegiatanAsPanitia = Kegiatan::whereHas('panitia', fn($q) => $q->where('students.id', $user->student->id))
+                    ->with(['panitia' => fn($q) => $q->where('students.id', $user->student->id)])
+                    ->get();
+                
+                $existingKegiatanIds = $riwayat->pluck('kegiatan_id')->filter()->toArray();
+
                 foreach ($riwayat as $rw) {
                     $kegiatanSync[] = [
                         'nama' => $rw->nama_kegiatan,
@@ -98,6 +106,35 @@ class CvBuilderController extends Controller
                         'tanggal' => $rw->tanggal_display,
                         'is_sync' => true
                     ];
+                }
+                
+                foreach ($kegiatanAsKetua as $kg) {
+                    if (!in_array($kg->id, $existingKegiatanIds)) {
+                        $kegiatanSync[] = [
+                            'nama' => $kg->judul,
+                            'peran' => 'Ketua Pelaksana',
+                            'tanggal' => $kg->tanggal_mulai,
+                            'is_sync' => true
+                        ];
+                        $existingKegiatanIds[] = $kg->id;
+                    }
+                }
+                
+                foreach ($kegiatanAsPanitia as $kg) {
+                    if (!in_array($kg->id, $existingKegiatanIds)) {
+                        $peran = 'Panitia';
+                        $panitiaCurrent = $kg->panitia->first();
+                        if ($panitiaCurrent && $panitiaCurrent->pivot->peran) {
+                            $peran = ucfirst($panitiaCurrent->pivot->peran);
+                        }
+                        $kegiatanSync[] = [
+                            'nama' => $kg->judul,
+                            'peran' => $peran,
+                            'tanggal' => $kg->tanggal_mulai,
+                            'is_sync' => true
+                        ];
+                        $existingKegiatanIds[] = $kg->id;
+                    }
                 }
             }
             
@@ -260,12 +297,46 @@ class CvBuilderController extends Controller
                 ->where('student_id', $user->student->id)
                 ->where('verification_status', 'approved')
                 ->get();
+            $kegiatanAsKetua = Kegiatan::where('ketua_pelaksana_id', $user->student->id)->get();
+            $kegiatanAsPanitia = Kegiatan::whereHas('panitia', fn($q) => $q->where('students.id', $user->student->id))
+                ->with(['panitia' => fn($q) => $q->where('students.id', $user->student->id)])
+                ->get();
+                
+            $existingKegiatanIds = $riwayat->pluck('kegiatan_id')->filter()->toArray();
+
             foreach ($riwayat as $rw) {
                 $data['kegiatan'][] = [
                     'nama' => $rw->nama_kegiatan,
                     'peran' => $rw->peran_label,
                     'tanggal' => $rw->tanggal_display,
                 ];
+            }
+            
+            foreach ($kegiatanAsKetua as $kg) {
+                if (!in_array($kg->id, $existingKegiatanIds)) {
+                    $data['kegiatan'][] = [
+                        'nama' => $kg->judul,
+                        'peran' => 'Ketua Pelaksana',
+                        'tanggal' => $kg->tanggal_mulai,
+                    ];
+                    $existingKegiatanIds[] = $kg->id;
+                }
+            }
+            
+            foreach ($kegiatanAsPanitia as $kg) {
+                if (!in_array($kg->id, $existingKegiatanIds)) {
+                    $peran = 'Panitia';
+                    $panitiaCurrent = $kg->panitia->first();
+                    if ($panitiaCurrent && $panitiaCurrent->pivot->peran) {
+                        $peran = ucfirst($panitiaCurrent->pivot->peran);
+                    }
+                    $data['kegiatan'][] = [
+                        'nama' => $kg->judul,
+                        'peran' => $peran,
+                        'tanggal' => $kg->tanggal_mulai,
+                    ];
+                    $existingKegiatanIds[] = $kg->id;
+                }
             }
         }
         
