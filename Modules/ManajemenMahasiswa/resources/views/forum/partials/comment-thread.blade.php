@@ -17,6 +17,7 @@
             <div class="d-flex align-items-center gap-2 mb-1 flex-wrap">
                 <span class="fw-bold text-dark"
                     style="font-size: {{ $depth === 0 ? '14px' : '13px' }};">{{ $comment->author->name ?? 'Unknown' }}</span>
+                @include('manajemenmahasiswa::forum.partials.role-badge', ['roleUser' => $comment->author, 'badgeSize' => $depth === 0 ? '10px' : '9px'])
                 @if(isset($authorTiers[$comment->user_id]))
                     <span class="badge rounded-pill"
                         style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-size: 9px; font-weight: 600; padding: 2px 6px;"
@@ -48,21 +49,22 @@
                 $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
             @endphp
             <div class="comment-actions">
-                <div class="c-vote-pill">
+                <div class="c-vote-pill shadow-sm">
                     <button
                         class="vote-comment-btn {{ $commentUserVote && $commentUserVote->value === 1 ? 'active-up' : '' }}"
                         data-comment-id="{{ $comment->id }}" data-value="1">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="{{ $commentUserVote && $commentUserVote->value === 1 ? 'currentColor' : 'none' }}" stroke="currentColor"
                             stroke-width="2.5">
                             <line x1="12" y1="19" x2="12" y2="5"></line>
                             <polyline points="5 12 12 5 19 12"></polyline>
                         </svg>
                     </button>
                     <span class="c-vote-count comment-vote-count-{{ $comment->id }}">{{ $comment->vote_count }}</span>
+                    <div class="cv-separator"></div>
                     <button
                         class="vote-comment-btn {{ $commentUserVote && $commentUserVote->value === -1 ? 'active-down' : '' }}"
                         data-comment-id="{{ $comment->id }}" data-value="-1">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="{{ $commentUserVote && $commentUserVote->value === -1 ? 'currentColor' : 'none' }}" stroke="currentColor"
                             stroke-width="2.5">
                             <line x1="12" y1="5" x2="12" y2="19"></line>
                             <polyline points="19 12 12 19 5 12"></polyline>

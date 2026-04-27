@@ -492,10 +492,11 @@ class ForumController extends Controller
         }
 
         $thread = Thread::findOrFail($id);
-        $thread->is_locked = !$thread->is_locked;
-        $thread->save();
+        $newLocked = !$thread->is_locked;
+        // Use query builder to avoid touching updated_at
+        Thread::where('id', $id)->update(['is_locked' => $newLocked]);
 
-        $status = $thread->is_locked ? 'dikunci' : 'dibuka kuncinya';
+        $status = $newLocked ? 'dikunci' : 'dibuka kuncinya';
         return back()->with('success', "Thread berhasil {$status}.");
     }
 
@@ -690,7 +691,8 @@ class ForumController extends Controller
         $thread = $report->thread;
 
         if ($thread) {
-            $thread->update(['is_locked' => true]);
+            // Use query builder to avoid touching updated_at
+            Thread::where('id', $thread->id)->update(['is_locked' => true]);
             \Modules\ManajemenMahasiswa\Models\ForumReport::where('thread_id', $thread->id)->delete();
         } else {
             $report->delete();

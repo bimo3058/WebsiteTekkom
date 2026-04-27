@@ -97,24 +97,26 @@
                 border-radius: 20px;
                 display: inline-flex;
                 align-items: center;
-                padding: 2px;
+                padding: 1px;
                 margin-right: 8px;
+                border: 1px solid #e2e8f0;
             }
 
             .post-actions .vote-pill button {
                 background: transparent;
                 border: none;
-                padding: 6px 8px;
+                padding: 5px 10px;
                 border-radius: 20px;
                 color: #64748b;
                 display: flex;
                 align-items: center;
                 justify-content: center;
-                transition: background 0.2s, color 0.2s;
+                transition: all 0.2s ease;
             }
 
             .post-actions .vote-pill button:hover {
                 background: #e2e8f0;
+                color: #1e293b;
             }
 
             .post-actions .vote-pill button.vote-active-up {
@@ -136,9 +138,16 @@
             .post-actions .vote-pill span {
                 font-weight: 700;
                 font-size: 13px;
-                min-width: 18px;
+                padding: 0 4px;
                 text-align: center;
                 color: #1e293b;
+            }
+
+            .post-actions .vote-pill .v-separator {
+                width: 1px;
+                height: 16px;
+                background-color: #cbd5e1;
+                margin: 0 2px;
             }
 
             .post-actions .action-btn {
@@ -803,6 +812,7 @@
                         <div>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                 <h6 class="fw-bold text-dark mb-0">{{ $thread->author->name ?? 'Unknown' }}</h6>
+                                @include('manajemenmahasiswa::forum.partials.role-badge', ['roleUser' => $thread->author])
                                 @if(isset($authorTiers[$thread->user_id]))
                                     <span class="badge rounded-pill" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-size: 10px; font-weight: 600; padding: 3px 8px;" title="{{ $authorTiers[$thread->user_id]['tier_name'] }}">
                                         {!! $authorTiers[$thread->user_id]['tier_icon'] !!} Lv.{{ $authorTiers[$thread->user_id]['level'] }}
@@ -948,13 +958,14 @@
                     $threadUserVote = $userVotes[$threadVoteKey] ?? null;
                 @endphp
                 <div class="post-actions d-flex align-items-center mt-2">
-                    <div class="vote-pill">
+                    <div class="vote-pill shadow-sm">
                         <button class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === 1 ? 'vote-active-up' : '' }}" data-thread-id="{{ $thread->id }}" data-value="1">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="{{ $threadUserVote && $threadUserVote->value === 1 ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
                         </button>
                         <span class="thread-vote-count-{{ $thread->id }}">{{ $thread->vote_count }}</span>
+                        <div class="v-separator"></div>
                         <button class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === -1 ? 'vote-active-down' : '' }}" data-thread-id="{{ $thread->id }}" data-value="-1">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                            <svg width="18" height="18" viewBox="0 0 24 24" fill="{{ $threadUserVote && $threadUserVote->value === -1 ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
                         </button>
                     </div>
                     <button class="action-btn ms-2" onclick="window.location.href='{{ route('manajemenmahasiswa.forum.show', $thread->id) }}'">
@@ -1064,8 +1075,21 @@
                         const parent = this.closest('.post-actions');
                         if (parent) {
                             parent.querySelectorAll('.vote-thread-btn').forEach(b => b.classList.remove('vote-active-up', 'vote-active-down'));
-                            if (data.user_vote === 1) parent.querySelector('.vote-thread-btn[data-value="1"]').classList.add('vote-active-up');
-                            else if (data.user_vote === -1) parent.querySelector('.vote-thread-btn[data-value="-1"]').classList.add('vote-active-down');
+                            const countEl = parent.querySelector(`.thread-vote-count-${threadId}`);
+                            countEl.textContent = data.vote_count;
+                            
+                            if (data.user_vote === 1) {
+                                parent.querySelector('.vote-thread-btn[data-value="1"]').classList.add('vote-active-up');
+                                parent.querySelector('.vote-thread-btn[data-value="1"] svg').setAttribute('fill', 'currentColor');
+                                parent.querySelector('.vote-thread-btn[data-value="-1"] svg').setAttribute('fill', 'none');
+                            } else if (data.user_vote === -1) {
+                                parent.querySelector('.vote-thread-btn[data-value="-1"]').classList.add('vote-active-down');
+                                parent.querySelector('.vote-thread-btn[data-value="-1"] svg').setAttribute('fill', 'currentColor');
+                                parent.querySelector('.vote-thread-btn[data-value="1"] svg').setAttribute('fill', 'none');
+                            } else {
+                                parent.querySelector('.vote-thread-btn[data-value="1"] svg').setAttribute('fill', 'none');
+                                parent.querySelector('.vote-thread-btn[data-value="-1"] svg').setAttribute('fill', 'none');
+                            }
                         }
                     } catch (err) { console.error('Vote error:', err); }
                 });

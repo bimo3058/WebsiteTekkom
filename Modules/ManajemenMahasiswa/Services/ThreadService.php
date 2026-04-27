@@ -26,7 +26,7 @@ class ThreadService
         $userId = \Illuminate\Support\Facades\Auth::id();
         $sort   = $filters['sort'] ?? 'terbaru';
 
-        $query = Thread::with(['author'])
+        $query = Thread::with(['author.roles'])
             ->withCount('comments')
             ->when(isset($filters['search']) && $filters['search'], fn($q) => $q->search($filters['search']))
             ->when(isset($filters['kategori']) && $filters['kategori'] && $filters['kategori'] !== 'semua',
@@ -65,7 +65,7 @@ class ThreadService
 
     public function findThread(int $id): Thread
     {
-        return Thread::with(['author', 'bestAnswer.author'])
+        return Thread::with(['author.roles', 'bestAnswer.author'])
             ->withCount('comments')
             ->findOrFail($id);
     }
@@ -237,14 +237,16 @@ class ThreadService
     public function pinThread(int $id): Thread
     {
         $thread = Thread::findOrFail($id);
-        $thread->update(['is_pinned' => !$thread->is_pinned]);
+        // Use query builder to avoid touching updated_at
+        Thread::where('id', $id)->update(['is_pinned' => !$thread->is_pinned]);
         return $thread->fresh();
     }
 
     public function lockThread(int $id): Thread
     {
         $thread = Thread::findOrFail($id);
-        $thread->update(['is_locked' => !$thread->is_locked]);
+        // Use query builder to avoid touching updated_at
+        Thread::where('id', $id)->update(['is_locked' => !$thread->is_locked]);
         return $thread->fresh();
     }
 
@@ -265,7 +267,8 @@ class ThreadService
 
             $comment = \Modules\ManajemenMahasiswa\Models\Comment::findOrFail($commentId);
             $comment->update(['is_best_answer' => true]);
-            $thread->update(['best_answer_id' => $commentId]);
+            // Use query builder to avoid touching updated_at
+            Thread::where('id', $thread->id)->update(['best_answer_id' => $commentId]);
 
             // Award XP ke commenter
             $this->gamificationService->awardXp(

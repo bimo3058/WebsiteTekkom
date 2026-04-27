@@ -24,7 +24,7 @@ class CommentService
      */
     public function listComments(int $threadId, int $perPage = 20): LengthAwarePaginator
     {
-        return Comment::with(['author', 'allReplies.author'])
+        return Comment::with(['author.roles', 'allReplies.author.roles'])
             ->where('thread_id', $threadId)
             ->whereNull('parent_id')
             ->orderByDesc('is_best_answer')
