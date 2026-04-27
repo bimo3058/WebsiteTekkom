@@ -17,7 +17,7 @@ class Prestasi extends Model
         'kemahasiswaan_id',
         'nama_prestasi',
         'tingkat',
-        'tahun',
+        'tanggal',
         'verification_status',
         'verified_by',
         'verified_at',
@@ -25,7 +25,7 @@ class Prestasi extends Model
     ];
 
     protected $casts = [
-        'tahun'       => 'integer',
+        'tanggal'     => 'date',
         'verified_at' => 'datetime',
     ];
 
@@ -89,7 +89,7 @@ class Prestasi extends Model
 
     public function scopeByTahun(Builder $query, int $tahun): Builder
     {
-        return $query->where('tahun', $tahun);
+        return $query->whereYear('tanggal', $tahun);
     }
 
     public function scopePending(Builder $query): Builder

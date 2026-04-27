@@ -99,9 +99,10 @@ class DirektoriMahasiswaController extends Controller
 
         $studentId = $student->id;
 
-        // 2. Ambil riwayat manual (menggunakan students.id)
+        // 2. Ambil riwayat manual (menggunakan students.id) yang sudah disetujui
         $riwayatManual = RiwayatKegiatan::with('kegiatan')
             ->where('student_id', $studentId)
+            ->where('verification_status', 'approved')
             ->get();
 
         // 3. Ambil semua kegiatan di mana mahasiswa ini adalah ketua pelaksana
@@ -233,7 +234,9 @@ class DirektoriMahasiswaController extends Controller
 
     public function show(int $id)
     {
-        $mhs = Kemahasiswaan::with(['user', 'user.student', 'prestasi'])->findOrFail($id);
+        $mhs = Kemahasiswaan::with(['user', 'user.student', 'prestasi' => function($q) {
+            $q->where('verification_status', 'approved');
+        }])->findOrFail($id);
 
         // Ambil riwayat kegiatan: manual + otomatis dari ketua pelaksana
         $riwayatKegiatan = $this->buildMergedRiwayat($mhs->user_id);
@@ -317,7 +320,9 @@ class DirektoriMahasiswaController extends Controller
     public function profil()
     {
         $user = Auth::user();
-        $mhs  = Kemahasiswaan::with(['prestasi', 'user', 'user.student'])->where('user_id', $user->id)->first();
+        $mhs  = Kemahasiswaan::with(['prestasi' => function($q) {
+            $q->where('verification_status', 'approved');
+        }, 'user', 'user.student'])->where('user_id', $user->id)->first();
 
         if (!$mhs) {
             return back()->with('error', 'Data kemahasiswaan Anda belum terdaftar dalam sistem.');
@@ -425,7 +430,9 @@ class DirektoriMahasiswaController extends Controller
 
     public function generateCv(int $id)
     {
-        $mhs = Kemahasiswaan::with(['user', 'user.student', 'prestasi'])->findOrFail($id);
+        $mhs = Kemahasiswaan::with(['user', 'user.student', 'prestasi' => function($q) {
+            $q->where('verification_status', 'approved');
+        }])->findOrFail($id);
 
         $riwayatKegiatan = $this->buildMergedRiwayat($mhs->user_id);
 
@@ -441,7 +448,9 @@ class DirektoriMahasiswaController extends Controller
     public function generateCvSelf()
     {
         $user = Auth::user();
-        $mhs  = Kemahasiswaan::with(['prestasi', 'user', 'user.student'])->where('user_id', $user->id)->firstOrFail();
+        $mhs  = Kemahasiswaan::with(['prestasi' => function($q) {
+            $q->where('verification_status', 'approved');
+        }, 'user', 'user.student'])->where('user_id', $user->id)->firstOrFail();
 
         $riwayatKegiatan = $this->buildMergedRiwayat($user->id);
 

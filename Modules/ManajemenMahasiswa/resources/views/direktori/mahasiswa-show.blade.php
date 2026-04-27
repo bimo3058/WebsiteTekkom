@@ -381,19 +381,12 @@
                 <div class="prestasi-item">
                     <div>
                         <div style="font-weight: 600; font-size: 14px; color: #1f2937;">{{ $p->nama_prestasi }}</div>
-                        <div style="font-size: 12px; color: #9ca3af;">Tahun {{ $p->tahun }}</div>
+                        <div style="font-size: 12px; color: #9ca3af;">
+                            {{ $p->tanggal ? \Carbon\Carbon::parse($p->tanggal)->translatedFormat('d M Y') : '' }}
+                        </div>
                     </div>
                     <div class="d-flex align-items-center gap-2">
                         <span class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span>
-                        @if(isset($p->verification_status))
-                            @if($p->verification_status === 'pending')
-                                <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #fef3c7; color: #d97706;">● Pending</span>
-                            @elseif($p->verification_status === 'approved')
-                                <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #dcfce7; color: #166534;">✓ Verified</span>
-                            @elseif($p->verification_status === 'rejected')
-                                <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #fef2f2; color: #dc2626;" title="{{ $p->verification_note }}">✗ Ditolak</span>
-                            @endif
-                        @endif
                     </div>
                 </div>
             @endforeach
@@ -412,12 +405,7 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
             Riwayat Keikutsertaan Kegiatan
         </div>
-        @if($isPengurus || $isAdmin)
-            <button class="btn-primary-custom" data-bs-toggle="modal" data-bs-target="#addRiwayatModal">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-                Tambah Riwayat
-            </button>
-        @endif
+
     </div>
 
     @if($riwayatKegiatan->count() > 0)
@@ -428,12 +416,8 @@
                         <th>#</th>
                         <th>Nama Kegiatan</th>
                         <th>Peran</th>
-                        <th>Sumber</th>
                         <th>Tanggal</th>
-                        <th>Verifikasi</th>
-                        @if($isPengurus || $isAdmin)
-                            <th style="width: 120px;">Aksi</th>
-                        @endif
+
                     </tr>
                 </thead>
                 <tbody>
@@ -471,21 +455,7 @@
                             <td>
                                 <span class="peran-badge {{ $rw->peran ?? '' }}">{{ $peranValue }}</span>
                             </td>
-                            <td>
-                                @if($isAutoEntry)
-                                    <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #dcfce7; color: #166534;">
-                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
-                                        Auto
-                                    </span>
-                                @elseif($isManualEntry)
-                                    <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #fef3c7; color: #d97706;">
-                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                        Input Manual
-                                    </span>
-                                @else
-                                    <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #eef2ff; color: #4f46e5;">Sistem</span>
-                                @endif
-                            </td>
+
                             <td style="font-size: 13px; color: #6b7280;">
                                 @if($tanggalDisplay)
                                     {{ \Carbon\Carbon::parse($tanggalDisplay)->translatedFormat('d M Y') }}
@@ -493,39 +463,7 @@
                                     -
                                 @endif
                             </td>
-                            <td>
-                                @if($isAutoEntry)
-                                    <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #dcfce7; color: #166534;">✓ Auto</span>
-                                @elseif(isset($rw->verification_status))
-                                    @if($rw->verification_status === 'pending')
-                                        <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #fef3c7; color: #d97706;">● Pending</span>
-                                    @elseif($rw->verification_status === 'approved')
-                                        <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #dcfce7; color: #166534;">✓ Verified</span>
-                                    @elseif($rw->verification_status === 'rejected')
-                                        <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #fef2f2; color: #dc2626;" title="{{ $rw->verification_note ?? '' }}">✗ Ditolak</span>
-                                    @endif
-                                @else
-                                    <span style="font-size: 10px; color: #9ca3af;">—</span>
-                                @endif
-                            </td>
-                            @if($isPengurus || $isAdmin)
-                                <td>
-                                    @if(!$isAutoEntry && $rw->id)
-                                        <div class="d-flex gap-1">
-                                            <button class="btn-danger-sm"
-                                                    onclick="if(confirm('Hapus riwayat ini?')) document.getElementById('deleteRiwayat{{ $rw->id }}').submit();">
-                                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                                            </button>
-                                            <form id="deleteRiwayat{{ $rw->id }}" method="POST"
-                                                  action="{{ route('manajemenmahasiswa.direktori.mahasiswa.riwayat.destroy', $rw->id) }}" style="display:none;">
-                                                @csrf @method('DELETE')
-                                            </form>
-                                        </div>
-                                    @else
-                                        <span style="font-size: 11px; color: #9ca3af;" title="Data otomatis dari Manajemen Kegiatan">—</span>
-                                    @endif
-                                </td>
-                            @endif
+
                         </tr>
                     @endforeach
                 </tbody>
@@ -537,152 +475,7 @@
 </div>
 @endif
 
-<!-- Modal Tambah Riwayat -->
-@if($isPengurus || $isAdmin)
-<div class="modal fade" id="addRiwayatModal" tabindex="-1">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <form method="POST" action="{{ route('manajemenmahasiswa.direktori.mahasiswa.riwayat.store', $mhs->id) }}">
-                @csrf
-                <input type="hidden" name="input_mode" id="inputMode" value="dropdown">
-                <div class="modal-header">
-                    <h5 class="modal-title fw-bold">Tambah Riwayat Kegiatan</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <!-- Mode Toggle -->
-                    <div class="d-flex gap-2 mb-4">
-                        <button type="button" id="btnModeDropdown" class="mode-toggle-btn active"
-                                onclick="switchMode('dropdown')">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                            Pilih dari Sistem
-                        </button>
-                        <button type="button" id="btnModeManual" class="mode-toggle-btn"
-                                onclick="switchMode('manual')">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                            Input Manual
-                        </button>
-                    </div>
 
-                    <!-- DROPDOWN MODE -->
-                    <div id="dropdownFields">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold" style="font-size: 13px;">Kegiatan</label>
-                            <select name="kegiatan_id" id="kegiatanSelect" class="form-select" style="border-radius: 10px;">
-                                <option value="">Pilih kegiatan...</option>
-                                @foreach($semuaKegiatan as $kg)
-                                    <option value="{{ $kg->id }}">{{ $kg->judul }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold" style="font-size: 13px;">Peran</label>
-                            <select name="peran" id="peranSelect" class="form-select" style="border-radius: 10px;">
-                                <option value="">Pilih peran...</option>
-                                <option value="ketua">Ketua</option>
-                                <option value="anggota">Anggota</option>
-                                <option value="panitia">Panitia</option>
-                                <option value="peserta">Peserta</option>
-                            </select>
-                        </div>
-                    </div>
-
-                    <!-- MANUAL MODE -->
-                    <div id="manualFields" style="display: none;">
-                        <div class="mb-3">
-                            <label class="form-label fw-bold" style="font-size: 13px;">Nama Kegiatan</label>
-                            <input type="text" name="nama_kegiatan_manual" id="namaManualInput"
-                                   class="form-control" placeholder="Contoh: Lomba Debat Nasional 2025"
-                                   style="border-radius: 10px;">
-                            <small class="text-muted" style="font-size: 11px;">Ketik nama kegiatan yang tidak ada di sistem</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold" style="font-size: 13px;">Peran</label>
-                            <input type="text" name="peran_manual" id="peranManualInput"
-                                   class="form-control" placeholder="Contoh: Delegasi, Juri, Koordinator Acara"
-                                   style="border-radius: 10px;">
-                            <small class="text-muted" style="font-size: 11px;">Ketik peran bebas sesuai konteks kegiatan</small>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-bold" style="font-size: 13px;">Tanggal Kegiatan <span style="color: #9ca3af; font-weight: 400;">(opsional)</span></label>
-                            <input type="date" name="tanggal_kegiatan" id="tanggalManualInput"
-                                   class="form-control" style="border-radius: 10px;">
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Batal</button>
-                    <button type="submit" class="btn-primary-custom">Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<style>
-    .mode-toggle-btn {
-        flex: 1;
-        padding: 10px 16px;
-        border: 2px solid #e5e7eb;
-        border-radius: 10px;
-        background: #fff;
-        color: #6b7280;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 6px;
-    }
-    .mode-toggle-btn:hover {
-        border-color: #c7d2fe;
-        color: #4f46e5;
-        background: #f5f3ff;
-    }
-    .mode-toggle-btn.active {
-        border-color: #4f46e5;
-        color: #4f46e5;
-        background: #eef2ff;
-    }
-</style>
-
-<script>
-    function switchMode(mode) {
-        document.getElementById('inputMode').value = mode;
-
-        const dropdownFields = document.getElementById('dropdownFields');
-        const manualFields   = document.getElementById('manualFields');
-        const btnDropdown    = document.getElementById('btnModeDropdown');
-        const btnManual      = document.getElementById('btnModeManual');
-
-        if (mode === 'manual') {
-            dropdownFields.style.display = 'none';
-            manualFields.style.display   = 'block';
-            btnDropdown.classList.remove('active');
-            btnManual.classList.add('active');
-
-            // Disable dropdown fields, enable manual
-            document.getElementById('kegiatanSelect').removeAttribute('required');
-            document.getElementById('peranSelect').removeAttribute('required');
-            document.getElementById('namaManualInput').setAttribute('required', 'required');
-            document.getElementById('peranManualInput').setAttribute('required', 'required');
-        } else {
-            dropdownFields.style.display = 'block';
-            manualFields.style.display   = 'none';
-            btnDropdown.classList.add('active');
-            btnManual.classList.remove('active');
-
-            // Enable dropdown fields, disable manual
-            document.getElementById('kegiatanSelect').setAttribute('required', 'required');
-            document.getElementById('peranSelect').setAttribute('required', 'required');
-            document.getElementById('namaManualInput').removeAttribute('required');
-            document.getElementById('peranManualInput').removeAttribute('required');
-        }
-    }
-</script>
-@endif
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 </x-dynamic-component>

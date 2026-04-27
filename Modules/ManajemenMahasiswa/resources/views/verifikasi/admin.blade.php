@@ -277,7 +277,7 @@
                         <th>NIM</th>
                         <th>Nama Prestasi</th>
                         <th>Tingkat</th>
-                        <th>Tahun</th>
+                        <th>Tanggal</th>
                         <th>Bukti</th>
                         <th>Status</th>
                         <th style="width: 140px;">Aksi</th>
@@ -291,7 +291,13 @@
                             <td style="font-family: monospace; font-size: 13px; color: #4f46e5;">{{ $p->kemahasiswaan->nim ?? '-' }}</td>
                             <td style="font-weight: 600;">{{ $p->nama_prestasi }}</td>
                             <td><span class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span></td>
-                            <td>{{ $p->tahun }}</td>
+                            <td style="font-size: 13px; color: #6b7280;">
+                                @if($p->tanggal)
+                                    {{ \Carbon\Carbon::parse($p->tanggal)->translatedFormat('d M Y') }}
+                                @else
+                                    -
+                                @endif
+                            </td>
                             <td>
                                 @if($p->buktiFiles && $p->buktiFiles->count() > 0)
                                     <div class="d-flex gap-1 flex-wrap">
