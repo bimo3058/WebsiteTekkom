@@ -48,9 +48,61 @@
         </div>
     </div>
 
-    <div class="menu-title mb-2" x-show="sidebarOpen">Main Menu</div>
+    <style>
+        .sidebar {
+            display: flex !important;
+            flex-direction: column !important;
+            height: 100vh !important;
+            padding-bottom: 24px !important; /* Spacing at the very bottom */
+        }
 
-    <nav class="sidebar-nav d-flex flex-column gap-1">
+        .sidebar-menu-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 4px;
+            margin-right: -10px;
+            padding-right: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Custom Scrollbar */
+        .sidebar-menu-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-menu-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-menu-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+            border: 1px solid transparent; /* Gives it a bit of breathing room */
+        }
+
+        .sidebar-menu-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Adjust bottom menu for flex layout */
+        .bottom-menu {
+            position: static !important;
+            margin-top: auto !important;
+            width: 100% !important;
+            left: 0 !important;
+            bottom: 0 !important;
+        }
+        
+        .sidebar-collapsed .bottom-menu {
+            padding-right: 0 !important;
+        }
+    </style>
+
+    <div class="sidebar-menu-container">
+        <div class="menu-title mb-2" x-show="sidebarOpen">Main Menu</div>
+
+        <nav class="sidebar-nav d-flex flex-column gap-1">
         {{-- Dashboard Utama — selalu tampil, link sesuai role --}}
         <a href="{{ $mainDashboardUrl }}"
            class="nav-link-item"
@@ -136,7 +188,7 @@
                 @php
                     $userRoles = auth()->user()->roles->pluck('name')->toArray();
                     // Pengurus himpunan dan mahasiswa bisa lihat list tapi tidak bisa edit (dikontrol di routes)
-                    $canViewAll = (bool) array_intersect($userRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa']);
+                    $canViewAll = (bool) array_intersect($userRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa', 'alumni']);
                     $mahasiswaRoute = $canViewAll
                         ? route('manajemenmahasiswa.direktori.mahasiswa.index')
                         : route('manajemenmahasiswa.direktori.mahasiswa.profil');
@@ -182,14 +234,6 @@
             </x-slot:iconSlot>
         </x-manajemenmahasiswa::ui.sidebar-item>
 
-        @php
-            $showVerifBadge = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm'])) > 0;
-            $verifPendingCount = 0;
-            if ($showVerifBadge) {
-                $verifPendingCount = \Modules\ManajemenMahasiswa\Models\RiwayatKegiatan::manualOnly()->pending()->count()
-                    + \Modules\ManajemenMahasiswa\Models\Prestasi::pending()->count();
-            }
-        @endphp
         <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}"
            class="nav-link-item {{ request()->routeIs('manajemenmahasiswa.verifikasi.*') ? 'active' : '' }}"
            :class="{ 'justify-content-center': !sidebarOpen }">
@@ -201,9 +245,6 @@
                 </svg>
             </span>
             <span class="nav-label" x-show="sidebarOpen" style="flex-grow: 1;">Verifikasi Data</span>
-            @if($showVerifBadge && $verifPendingCount > 0)
-                <span x-show="sidebarOpen" style="font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; background: #fef2f2; color: #dc2626; min-width: 20px; text-align: center;">{{ $verifPendingCount }}</span>
-            @endif
         </a>
 
         <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.forum.index') }}"
@@ -230,6 +271,7 @@
             </x-manajemenmahasiswa::ui.sidebar-item>
         @endif
     </nav>
+    </div>
 
     <div class="bottom-menu pe-4">
         <!-- User Profile Card -->

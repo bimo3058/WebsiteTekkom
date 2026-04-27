@@ -32,7 +32,7 @@ class ForumController extends Controller
         $roles = $user->roles->pluck('name');
 
         $threads = $this->threadService->listThreads($request->all(), 15);
-        $leaderboard = $this->gamificationService->getLeaderboard(10);
+        $leaderboard = $this->gamificationService->getLeaderboard(5);
         $userStats = $this->gamificationService->getUserStats($user->id);
         $categories = Thread::KATEGORI_LABELS;
 

@@ -292,7 +292,7 @@
                         <th>#</th>
                         <th>Nama Prestasi</th>
                         <th>Tingkat</th>
-                        <th>Tahun</th>
+                        <th>Tanggal</th>
                         <th>Bukti</th>
                         <th>Status</th>
                     </tr>
@@ -303,7 +303,13 @@
                             <td style="color: #9ca3af;">{{ $i + 1 }}</td>
                             <td style="font-weight: 600;">{{ $p->nama_prestasi }}</td>
                             <td><span class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span></td>
-                            <td>{{ $p->tahun }}</td>
+                            <td style="font-size: 13px; color: #6b7280;">
+                                @if($p->tanggal)
+                                    {{ \Carbon\Carbon::parse($p->tanggal)->translatedFormat('d M Y') }}
+                                @else
+                                    -
+                                @endif
+                            </td>
                             <td>
                                 @if($p->buktiFiles && $p->buktiFiles->count() > 0)
                                     <div class="d-flex gap-1 flex-wrap">
@@ -434,9 +440,9 @@
                         </select>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label-custom">Tahun <span style="color: #dc2626;">*</span></label>
-                        <input type="number" name="tahun" class="form-control form-control-custom" required
-                               min="2000" max="2099" value="{{ date('Y') }}">
+                        <label class="form-label-custom">Tanggal <span style="color: #dc2626;">*</span></label>
+                        <input type="date" name="tanggal" class="form-control form-control-custom" required
+                               value="{{ date('Y-m-d') }}">
                     </div>
                     <div class="mb-3">
                         <label class="form-label-custom">
