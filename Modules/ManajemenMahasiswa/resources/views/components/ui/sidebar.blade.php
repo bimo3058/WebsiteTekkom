@@ -231,28 +231,30 @@
                 $currentInitials .= strtoupper(substr($currentName, $spIdx + 1, 1));
             }
         @endphp
-        <div class="d-flex align-items-center gap-3 px-3 py-2 mb-2 rounded"
-            style="background: #f8fafc; border: 1px solid #e5e7eb;"
-            :class="{ 'justify-content-center px-2': !sidebarOpen }">
-            <div class="d-flex align-items-center justify-content-center rounded-circle border border-2 border-white shadow-sm flex-shrink-0"
-                style="width: 36px; height: 36px; background: #e0e7ff; color: #4f46e5; font-weight: 600; font-size: 13px; overflow: hidden;">
-                @if(isset($currentUser->avatar_url) && $currentUser->avatar_url)
-                    <img src="{{ $currentUser->avatar_url }}" alt="Avatar"
-                        style="width: 100%; height: 100%; object-fit: cover;">
-                @else
-                    {{ $currentInitials }}
-                @endif
+        <a href="{{ route('profile.edit') }}" class="text-decoration-none w-100" style="display: block; padding: 0; margin: 0;">
+            <div class="d-flex align-items-center gap-3 px-3 py-2 mb-2 rounded"
+                style="background: #f8fafc; border: 1px solid #e5e7eb; cursor: pointer;"
+                :class="{ 'justify-content-center px-2': !sidebarOpen }">
+                <div class="d-flex align-items-center justify-content-center rounded-circle border border-2 border-white shadow-sm flex-shrink-0"
+                    style="width: 36px; height: 36px; background: #e0e7ff; color: #4f46e5; font-weight: 600; font-size: 13px; overflow: hidden;">
+                    @if(isset($currentUser->avatar_url) && $currentUser->avatar_url)
+                        <img src="{{ $currentUser->avatar_url }}" alt="Avatar"
+                            style="width: 100%; height: 100%; object-fit: cover;">
+                    @else
+                        {{ $currentInitials }}
+                    @endif
+                </div>
+                <div class="user-info" style="min-width: 0; flex: 1;" x-show="sidebarOpen">
+                    <p class="mb-0 text-dark fw-bold text-truncate" style="font-size: 13px; letter-spacing: -0.01em;">
+                        {{ $currentName }}
+                    </p>
+                    <p class="mb-0 text-muted text-uppercase text-truncate"
+                        style="font-size: 10px; font-weight: 700; letter-spacing: 0.05em; line-height: 1.2;">
+                        {{ implode(' / ', array_map('ucfirst', $currentUser->roles->pluck('name')->toArray())) }}
+                    </p>
+                </div>
             </div>
-            <div class="user-info" style="min-width: 0; flex: 1;" x-show="sidebarOpen">
-                <p class="mb-0 text-dark fw-bold text-truncate" style="font-size: 13px; letter-spacing: -0.01em;">
-                    {{ $currentName }}
-                </p>
-                <p class="mb-0 text-muted text-uppercase text-truncate"
-                    style="font-size: 10px; font-weight: 700; letter-spacing: 0.05em; line-height: 1.2;">
-                    {{ implode(' / ', array_map('ucfirst', $currentUser->roles->pluck('name')->toArray())) }}
-                </p>
-            </div>
-        </div>
+        </a>
 
         <form action="{{ route('logout') }}" method="POST">
             @csrf

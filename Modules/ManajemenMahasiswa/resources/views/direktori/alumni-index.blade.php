@@ -281,7 +281,7 @@
 
 <!-- Page Header -->
 <div class="page-header-alumni">
-    <h3>🎓 Direktori Alumni</h3>
+    <h3><span class="material-symbols-outlined" style="vertical-align: text-bottom; margin-right: 6px;">school</span> Direktori Alumni</h3>
     <p>Daftar dan profil karir seluruh lulusan program studi.</p>
 </div>
 
