@@ -251,4 +251,25 @@ class DirektoriAlumniController extends Controller
             ->route('manajemenmahasiswa.direktori.alumni.show', $id)
             ->with('success', 'Data alumni berhasil diperbarui.');
     }
+
+    // -------------------------------------------------------------------------
+    // Generate CV — Halaman CV print-ready (Alumni)
+    // -------------------------------------------------------------------------
+
+    public function generateCv(int $id)
+    {
+        $alumni = $this->alumniService->findById($id);
+        $user = $alumni->user;
+
+        // Ambil CV Profile jika ada, atau buat instance kosong tanpa disimpan
+        $cvProfile = \App\Models\CvProfile::where('user_id', $user->id)->first() ?? new \App\Models\CvProfile([
+            'user_id' => $user->id,
+            'tentang_diri' => '', 'pendidikan' => [], 'pengalaman_kerja' => [], 'keahlian' => [], 'sertifikasi' => [], 'template' => 'modern'
+        ]);
+
+        $data = app(\App\Http\Controllers\CvBuilderController::class)->getAllCvData($user, $cvProfile);
+        $data['is_print'] = true;
+
+        return view('profile.cv.template-ats', $data);
+    }
 }

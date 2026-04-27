@@ -434,13 +434,18 @@ class DirektoriMahasiswaController extends Controller
     public function generateCv(int $id)
     {
         $mhs = Kemahasiswaan::with(['user', 'user.student', 'prestasi'])->findOrFail($id);
+        $user = $mhs->user;
 
-        $riwayatKegiatan = $this->buildMergedRiwayat($mhs->user_id);
+        // Ambil CV Profile jika ada, atau buat instance kosong tanpa disimpan
+        $cvProfile = \App\Models\CvProfile::where('user_id', $user->id)->first() ?? new \App\Models\CvProfile([
+            'user_id' => $user->id,
+            'tentang_diri' => '', 'pendidikan' => [], 'pengalaman_kerja' => [], 'keahlian' => [], 'sertifikasi' => [], 'template' => 'modern'
+        ]);
 
-        return view('manajemenmahasiswa::direktori.mahasiswa-cv', compact(
-            'mhs',
-            'riwayatKegiatan',
-        ));
+        $data = app(\App\Http\Controllers\CvBuilderController::class)->getAllCvData($user, $cvProfile);
+        $data['is_print'] = true;
+
+        return view('profile.cv.template-ats', $data);
     }
 
     /**
@@ -449,13 +454,16 @@ class DirektoriMahasiswaController extends Controller
     public function generateCvSelf()
     {
         $user = Auth::user();
-        $mhs  = Kemahasiswaan::with(['prestasi', 'user', 'user.student'])->where('user_id', $user->id)->firstOrFail();
 
-        $riwayatKegiatan = $this->buildMergedRiwayat($user->id);
+        // Ambil CV Profile jika ada, atau buat instance kosong tanpa disimpan
+        $cvProfile = \App\Models\CvProfile::where('user_id', $user->id)->first() ?? new \App\Models\CvProfile([
+            'user_id' => $user->id,
+            'tentang_diri' => '', 'pendidikan' => [], 'pengalaman_kerja' => [], 'keahlian' => [], 'sertifikasi' => [], 'template' => 'modern'
+        ]);
 
-        return view('manajemenmahasiswa::direktori.mahasiswa-cv', compact(
-            'mhs',
-            'riwayatKegiatan',
-        ));
+        $data = app(\App\Http\Controllers\CvBuilderController::class)->getAllCvData($user, $cvProfile);
+        $data['is_print'] = true;
+
+        return view('profile.cv.template-ats', $data);
     }
 }
