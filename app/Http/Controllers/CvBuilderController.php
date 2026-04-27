@@ -123,7 +123,7 @@ class CvBuilderController extends Controller
                     $prestasiSync[] = [
                         'nama' => $p->nama_prestasi,
                         'tingkat' => $p->tingkat,
-                        'tahun' => $p->tahun,
+                        'tahun' => $p->tanggal ? $p->tanggal->format('Y') : null,
                         'is_sync' => true
                     ];
                 }
@@ -291,7 +291,7 @@ class CvBuilderController extends Controller
                     $data['prestasi'][] = [
                         'nama' => $p->nama_prestasi,
                         'tingkat' => $p->tingkat,
-                        'tahun' => $p->tahun,
+                        'tahun' => $p->tanggal ? $p->tanggal->format('Y') : null,
                     ];
                 }
             }

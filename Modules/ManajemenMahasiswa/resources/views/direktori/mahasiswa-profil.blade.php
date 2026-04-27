@@ -301,7 +301,7 @@
                 <div class="prestasi-item">
                     <div>
                         <div style="font-weight: 600; font-size: 14px; color: #1f2937;">{{ $p->nama_prestasi }}</div>
-                        <div style="font-size: 12px; color: #9ca3af;">Tahun {{ $p->tahun }}</div>
+                        <div style="font-size: 12px; color: #9ca3af;">Tahun {{ $p->tanggal ? $p->tanggal->format('Y') : '-' }}</div>
                     </div>
                     <div class="d-flex align-items-center gap-2">
                         <span class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span>

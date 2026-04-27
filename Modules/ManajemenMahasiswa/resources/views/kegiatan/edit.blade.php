@@ -732,14 +732,6 @@
             <textarea name="deskripsi" class="form-control form-control-custom" required>{{ old('deskripsi', $kegiatan->deskripsi) }}</textarea>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label-custom">Status <span class="required">*</span></label>
-            <select name="status" class="form-select form-select-custom" required>
-                <option value="akan_datang" {{ old('status', $kegiatan->status) == 'akan_datang' ? 'selected' : '' }}>🟡 Akan Datang</option>
-                <option value="berlangsung" {{ old('status', $kegiatan->status) == 'berlangsung' ? 'selected' : '' }}>🔵 Berlangsung</option>
-                <option value="selesai" {{ old('status', $kegiatan->status) == 'selesai' ? 'selected' : '' }}>🟢 Selesai</option>
-            </select>
-        </div>
     </div>
 
     <!-- Waktu & Lokasi -->
@@ -869,6 +861,9 @@
                 <div id="panitiaHiddenInputs"></div>
             </div>
             <div class="checkbox-hint">Pilih satu atau lebih mahasiswa sebagai panitia. Ketik nama untuk mencari.</div>
+            
+            {{-- Container for Jabatan Inputs --}}
+            <div id="panitiaRolesContainer" class="mt-3 d-flex flex-column gap-2"></div>
         </div>
     </div>
 
@@ -1202,10 +1197,12 @@ function formatFileSize(bytes) {
 
 // ── Panitia Multi-Select ──
 let selectedPanitia = {}; // { id: name }
+let initialRoles = {}; // { id: role }
 
 // Pre-populate dari data yang ada di database
 @foreach($existingPanitia as $pan)
 selectedPanitia['{{ $pan->id }}'] = '{{ addslashes($pan->user->name ?? '') }}';
+initialRoles['{{ $pan->id }}'] = '{{ addslashes($pan->pivot->peran ?? '') }}';
 @endforeach
 
 function focusPanitiaSearch() {
@@ -1292,13 +1289,39 @@ function renderPanitiaChips() {
 
 function updatePanitiaHiddenInputs() {
     const container = document.getElementById('panitiaHiddenInputs');
+    const rolesContainer = document.getElementById('panitiaRolesContainer');
+    
     container.innerHTML = '';
+    
+    // Simpan nilai peran yang sudah diinput sebelum me-render ulang
+    const existingRoles = {};
+    rolesContainer.querySelectorAll('input[type="text"]').forEach(input => {
+        existingRoles[input.dataset.id] = input.value;
+    });
+    
+    rolesContainer.innerHTML = '';
+
     Object.keys(selectedPanitia).forEach(id => {
         const input = document.createElement('input');
         input.type  = 'hidden';
         input.name  = 'panitia_ids[]';
         input.value = id;
         container.appendChild(input);
+        
+        // Input untuk Jabatan/Peran
+        const name = selectedPanitia[id];
+        // Jika user belum pernah ngetik di UI, ambil dari initialRoles
+        const currentRole = existingRoles[id] !== undefined ? existingRoles[id] : (initialRoles[id] || '');
+        
+        const roleDiv = document.createElement('div');
+        roleDiv.className = 'd-flex align-items-center gap-3 p-2 border rounded bg-light';
+        roleDiv.innerHTML = `
+            <div style="flex: 1; font-size: 13px; font-weight: 600; color: #374151;">${name}</div>
+            <div style="flex: 2;">
+                <input type="text" name="panitia_peran[${id}]" data-id="${id}" class="form-control form-control-sm" placeholder="Masukkan Jabatan (misal: Sekretaris, Bendahara, dll)" value="${currentRole}">
+            </div>
+        `;
+        rolesContainer.appendChild(roleDiv);
     });
 }
 

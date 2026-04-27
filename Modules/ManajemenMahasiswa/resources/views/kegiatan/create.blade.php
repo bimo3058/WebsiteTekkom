@@ -688,14 +688,6 @@
                       placeholder="Jelaskan tujuan, sasaran, dan detail kegiatan secara lengkap..." required>{{ old('deskripsi') }}</textarea>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label-custom">Status <span class="required">*</span></label>
-            <select name="status" class="form-select form-select-custom" required>
-                <option value="akan_datang" {{ old('status') == 'akan_datang' ? 'selected' : '' }}>🟡 Akan Datang</option>
-                <option value="berlangsung" {{ old('status') == 'berlangsung' ? 'selected' : '' }}>🔵 Berlangsung</option>
-                <option value="selesai" {{ old('status') == 'selesai' ? 'selected' : '' }}>🟢 Selesai</option>
-            </select>
-        </div>
     </div>
 
     <!-- Waktu & Lokasi -->
@@ -821,6 +813,9 @@
                 <div id="panitiaHiddenInputs"></div>
             </div>
             <div class="checkbox-hint">Pilih satu atau lebih mahasiswa sebagai panitia. Ketik nama untuk mencari.</div>
+            
+            {{-- Container for Jabatan Inputs --}}
+            <div id="panitiaRolesContainer" class="mt-3 d-flex flex-column gap-2"></div>
         </div>
     </div>
 
@@ -1185,13 +1180,37 @@ function renderPanitiaChips() {
 
 function updatePanitiaHiddenInputs() {
     const container = document.getElementById('panitiaHiddenInputs');
+    const rolesContainer = document.getElementById('panitiaRolesContainer');
+    
     container.innerHTML = '';
+    
+    // Simpan nilai peran yang sudah diinput sebelum me-render ulang
+    const existingRoles = {};
+    rolesContainer.querySelectorAll('input[type="text"]').forEach(input => {
+        existingRoles[input.dataset.id] = input.value;
+    });
+    
+    rolesContainer.innerHTML = '';
+
     Object.keys(selectedPanitia).forEach(id => {
+        // Hidden input untuk ID panitia
         const input = document.createElement('input');
         input.type  = 'hidden';
         input.name  = 'panitia_ids[]';
         input.value = id;
         container.appendChild(input);
+        
+        // Input untuk Jabatan/Peran
+        const name = selectedPanitia[id];
+        const roleDiv = document.createElement('div');
+        roleDiv.className = 'd-flex align-items-center gap-3 p-2 border rounded bg-light';
+        roleDiv.innerHTML = `
+            <div style="flex: 1; font-size: 13px; font-weight: 600; color: #374151;">${name}</div>
+            <div style="flex: 2;">
+                <input type="text" name="panitia_peran[${id}]" data-id="${id}" class="form-control form-control-sm" placeholder="Masukkan Jabatan (misal: Sekretaris, Bendahara, dll)" value="${existingRoles[id] || ''}">
+            </div>
+        `;
+        rolesContainer.appendChild(roleDiv);
     });
 }
 

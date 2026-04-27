@@ -340,7 +340,7 @@
                             <td>{{ $i + 1 }}</td>
                             <td style="font-weight: 600;">{{ $p->nama_prestasi }}</td>
                             <td>{{ ucfirst($p->tingkat) }}</td>
-                            <td>{{ $p->tahun }}</td>
+                            <td>{{ $p->tanggal ? $p->tanggal->format('Y') : '-' }}</td>
                         </tr>
                     @endforeach
                 </tbody>

@@ -136,7 +136,7 @@
                 @php
                     $userRoles = auth()->user()->roles->pluck('name')->toArray();
                     // Pengurus himpunan dan mahasiswa bisa lihat list tapi tidak bisa edit (dikontrol di routes)
-                    $canViewAll = (bool) array_intersect($userRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa']);
+                    $canViewAll = (bool) array_intersect($userRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa', 'alumni']);
                     $mahasiswaRoute = $canViewAll
                         ? route('manajemenmahasiswa.direktori.mahasiswa.index')
                         : route('manajemenmahasiswa.direktori.mahasiswa.profil');

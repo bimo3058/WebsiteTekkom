@@ -4,6 +4,7 @@ namespace Modules\ManajemenMahasiswa\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\Student;
+use App\Models\CvProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Collection;
@@ -11,6 +12,7 @@ use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
 use Modules\ManajemenMahasiswa\Models\Prestasi;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
+use Modules\ManajemenMahasiswa\Models\Alumni;
 
 class DirektoriMahasiswaController extends Controller
 {
@@ -109,7 +111,9 @@ class DirektoriMahasiswaController extends Controller
         $kegiatanAsKetua = Kegiatan::where('ketua_pelaksana_id', $studentId)->get();
 
         // 4. Ambil semua kegiatan di mana mahasiswa ini adalah panitia (via pivot)
-        $kegiatanAsPanitia = Kegiatan::whereHas('panitia', fn($q) => $q->where('students.id', $studentId))->get();
+        $kegiatanAsPanitia = Kegiatan::whereHas('panitia', fn($q) => $q->where('students.id', $studentId))
+            ->with(['panitia' => fn($q) => $q->where('students.id', $studentId)])
+            ->get();
 
         // 5. Kegiatan_id yang sudah ada di riwayat manual (untuk hindari duplikat)
         $existingKegiatanIds = $riwayatManual->pluck('kegiatan_id')->filter()->toArray();
@@ -145,7 +149,13 @@ class DirektoriMahasiswaController extends Controller
                 $item->id                   = null;
                 $item->student_id           = $studentId;
                 $item->kegiatan_id          = $kg->id;
-                $item->peran                = 'panitia';
+                
+                $peran = 'panitia';
+                $panitiaCurrent = $kg->panitia->first();
+                if ($panitiaCurrent && $panitiaCurrent->pivot->peran) {
+                    $peran = $panitiaCurrent->pivot->peran;
+                }
+                $item->peran                = $peran;
                 $item->peran_manual         = null;
                 $item->nama_kegiatan_manual = null;
                 $item->tanggal_kegiatan     = null;
@@ -216,7 +226,7 @@ class DirektoriMahasiswaController extends Controller
         $isAdmin      = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
         $isGpm        = $this->hasRole('gpm');
         $isPengurus   = $this->hasRole('pengurus_himpunan');
-        $isMahasiswa  = $this->hasRole('mahasiswa') && !$isAdmin && !$isGpm && !$isPengurus;
+        $isMahasiswa  = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
 
         return view('manajemenmahasiswa::direktori.mahasiswa-index', compact(
             'mahasiswa',
@@ -244,10 +254,13 @@ class DirektoriMahasiswaController extends Controller
         // Semua kegiatan for dropdown (untuk tambah riwayat)
         $semuaKegiatan = Kegiatan::orderBy('judul')->get();
 
+        // Ambil CV Profile mahasiswa (jika sudah pernah membuat CV via CV Builder)
+        $cvProfile = CvProfile::where('user_id', $mhs->user_id)->first();
+
         $isAdmin      = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
         $isPengurus   = $this->hasRole('pengurus_himpunan');
         $isGpm        = $this->hasRole('gpm');
-        $isMahasiswa  = $this->hasRole('mahasiswa') && !$isAdmin && !$isGpm && !$isPengurus;
+        $isMahasiswa  = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
 
         return view('manajemenmahasiswa::direktori.mahasiswa-show', compact(
             'mhs',
@@ -257,6 +270,7 @@ class DirektoriMahasiswaController extends Controller
             'isPengurus',
             'isGpm',
             'isMahasiswa',
+            'cvProfile',
         ))->with('layout', $this->resolveLayout());
     }
 
@@ -466,5 +480,107 @@ class DirektoriMahasiswaController extends Controller
             'mhs',
             'riwayatKegiatan',
         ));
+    }
+
+    // -------------------------------------------------------------------------
+    // Preview CV Builder — Lihat hasil CV Builder mahasiswa (Admin/Pengurus)
+    // -------------------------------------------------------------------------
+
+    public function previewCvBuilder(int $id)
+    {
+        $mhs = Kemahasiswaan::with(['user', 'user.student', 'prestasi' => function($q) {
+            $q->where('verification_status', 'approved');
+        }])->findOrFail($id);
+
+        $user = $mhs->user;
+        abort_if(!$user, 404, 'User tidak ditemukan.');
+
+        $cvProfile = CvProfile::where('user_id', $user->id)->first();
+        abort_if(!$cvProfile, 404, 'Mahasiswa belum membuat CV melalui CV Builder.');
+
+        $data = $this->buildCvBuilderData($user, $cvProfile);
+
+        return view('profile.cv.template-ats', $data);
+    }
+
+    /**
+     * Build all CV data for the ATS template (mirrored from CvBuilderController).
+     */
+    private function buildCvBuilderData($user, CvProfile $cvProfile): array
+    {
+        $data = [
+            'user' => [
+                'name' => $user->name,
+                'email' => $user->email,
+                'personal_email' => $cvProfile->cv_email ?? $user->personal_email ?? null,
+                'whatsapp' => $cvProfile->cv_whatsapp ?? data_get($user, 'whatsapp'),
+                'avatar_url' => $user->avatar_url_format ?? $user->avatar_url ?? null,
+                'nim' => '-',
+                'angkatan' => '-'
+            ],
+            'cv' => $cvProfile,
+            'pendidikan' => $cvProfile->pendidikan ?? [],
+            'bahasa' => $cvProfile->bahasa ?? [],
+            'pengalaman' => $cvProfile->pengalaman_kerja ?? [],
+            'kegiatan_manual' => $cvProfile->kegiatan_organisasi ?? [],
+            'kegiatan' => [],
+            'proyek' => $cvProfile->proyek ?? [],
+            'prestasi' => [],
+            'keahlian' => $cvProfile->keahlian ?? [],
+            'sertifikasi' => $cvProfile->sertifikasi ?? [],
+        ];
+
+        // Populate sync data
+        if ($user->hasRole('mahasiswa') && $user->student) {
+            $data['user']['nim'] = $user->student->student_number;
+            $data['user']['angkatan'] = $user->student->cohort_year;
+
+            $riwayat = RiwayatKegiatan::with('kegiatan')->where('student_id', $user->student->id)->get();
+            foreach ($riwayat as $rw) {
+                $data['kegiatan'][] = [
+                    'nama' => $rw->nama_kegiatan,
+                    'peran' => $rw->peran_label,
+                    'tanggal' => $rw->tanggal_display,
+                ];
+            }
+        } elseif ($user->hasRole('alumni')) {
+            $alumni = Alumni::where('user_id', $user->id)->first();
+            if ($alumni) {
+                $data['user']['nim'] = $alumni->nim;
+                $data['user']['angkatan'] = $alumni->angkatan;
+
+                if ($alumni->perusahaan) {
+                    array_unshift($data['pengalaman'], [
+                        'perusahaan' => $alumni->perusahaan,
+                        'posisi' => $alumni->jabatan,
+                        'tahun_mulai' => $alumni->tahun_mulai_bekerja,
+                        'tahun_selesai' => 'Sekarang',
+                        'deskripsi' => 'Data tersinkronisasi dari direktori alumni.'
+                    ]);
+                }
+            }
+        }
+
+        $kemahasiswaan = Kemahasiswaan::with('prestasi')->where('user_id', $user->id)->first();
+        if ($kemahasiswaan) {
+            array_unshift($data['pendidikan'], [
+                'institusi' => 'Universitas Diponegoro',
+                'jurusan' => 'S1 Teknik Komputer',
+                'tahun_masuk' => $kemahasiswaan->angkatan,
+                'tahun_lulus' => $kemahasiswaan->tahun_lulus ?? 'Sekarang'
+            ]);
+
+            if ($kemahasiswaan->prestasi) {
+                foreach ($kemahasiswaan->prestasi as $p) {
+                    $data['prestasi'][] = [
+                        'nama' => $p->nama_prestasi,
+                        'tingkat' => $p->tingkat,
+                        'tahun' => $p->tanggal ? $p->tanggal->format('Y') : null,
+                    ];
+                }
+            }
+        }
+
+        return $data;
     }
 }
