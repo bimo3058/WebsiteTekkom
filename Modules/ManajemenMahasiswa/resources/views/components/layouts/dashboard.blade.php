@@ -12,6 +12,8 @@
             background: #ffffff;
             border-right: 1px solid #e5e7eb;
             padding: 20px;
+            display: flex;
+            flex-direction: column;
         }
 
         .menu-title {
@@ -38,9 +40,9 @@
         }
 
         .bottom-menu {
-            position: absolute;
-            bottom: 20px;
-            width: 85%;
+            margin-top: auto;
+            padding-top: 10px;
+            width: 100%;
         }
 
         .navbar-custom {
@@ -77,6 +79,26 @@
             padding: 25px;
             min-height: calc(100vh - 120px);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Global Scrollbar Customization */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+            border: 2px solid #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
     </style>
 @endpush

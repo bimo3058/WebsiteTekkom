@@ -48,9 +48,61 @@
         </div>
     </div>
 
-    <div class="menu-title mb-2" x-show="sidebarOpen">Main Menu</div>
+    <style>
+        .sidebar {
+            display: flex !important;
+            flex-direction: column !important;
+            height: 100vh !important;
+            padding-bottom: 24px !important; /* Spacing at the very bottom */
+        }
 
-    <nav class="sidebar-nav d-flex flex-column gap-1">
+        .sidebar-menu-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 4px;
+            margin-right: -10px;
+            padding-right: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Custom Scrollbar */
+        .sidebar-menu-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-menu-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-menu-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+            border: 1px solid transparent; /* Gives it a bit of breathing room */
+        }
+
+        .sidebar-menu-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Adjust bottom menu for flex layout */
+        .bottom-menu {
+            position: static !important;
+            margin-top: auto !important;
+            width: 100% !important;
+            left: 0 !important;
+            bottom: 0 !important;
+        }
+        
+        .sidebar-collapsed .bottom-menu {
+            padding-right: 0 !important;
+        }
+    </style>
+
+    <div class="sidebar-menu-container">
+        <div class="menu-title mb-2" x-show="sidebarOpen">Main Menu</div>
+
+        <nav class="sidebar-nav d-flex flex-column gap-1">
         {{-- Dashboard Utama — selalu tampil, link sesuai role --}}
         <a href="{{ $mainDashboardUrl }}"
            class="nav-link-item"
@@ -219,6 +271,7 @@
             </x-manajemenmahasiswa::ui.sidebar-item>
         @endif
     </nav>
+    </div>
 
     <div class="bottom-menu pe-4">
         <!-- User Profile Card -->
