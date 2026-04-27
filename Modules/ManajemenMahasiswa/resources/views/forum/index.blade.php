@@ -485,34 +485,51 @@
     <div class="row mb-4">
         <!-- Leaderboard -->
         <div class="col-md-7 mb-3 mb-md-0">
-            <div class="dashboard-card h-100">
-                <h6 class="fw-bold mb-3 d-flex align-items-center gap-2" style="color:#111827; font-size:15px;">
-                    Leaderboard
-                </h6>
-                <div class="table-responsive">
-                    <table class="table table-borderless table-sm mb-0 leaderboard-table">
-                        <thead>
-                            <tr>
-                                <th style="width: 10%">No.</th>
-                                <th style="width: 40%">User</th>
-                                <th style="width: 20%">Level</th>
-                                <th style="width: 30%">Badges</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($leaderboard as $index => $entry)
+            <div class="gamification-card h-100" style="overflow:hidden; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff;">
+                <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%); padding: 16px 20px; border-radius: 12px 12px 0 0;">
+                    <div class="d-flex align-items-center gap-2">
+                        <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0" style="color: #fff; font-size: 15px; letter-spacing: -0.01em;">Leaderboard</h6>
+                            <small style="color: rgba(255,255,255,0.7); font-size: 11px;">Top kontributor forum</small>
+                        </div>
+                    </div>
+                </div>
+                <div style="padding: 0;">
+                    <div class="table-responsive">
+                        <table class="table table-borderless table-sm mb-0 leaderboard-table">
+                            <thead>
                                 <tr>
-                                    <td>
-                                        @if($index === 0) 🥇
-                                        @elseif($index === 1) 🥈
-                                        @elseif($index === 2) 🥉
-                                        @else {{ $index + 1 }}.
-                                        @endif
-                                    </td>
-                                    <td>{{ $entry->name }}</td>
-                                    <td>
-                                        <span title="{{ $entry->tier_name }}">{!! $entry->tier_icon !!}</span>
-                                            Lv.{{ $entry->level }}
+                                    <th style="width: 10%; padding-left: 20px;">#</th>
+                                    <th style="width: 40%">User</th>
+                                    <th style="width: 20%">Level</th>
+                                    <th style="width: 30%">Badges</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($leaderboard as $index => $entry)
+                                    <tr style="{{ $index < 3 ? 'background:' . ['#fffbeb','#f8fafc','#fdf4f0'][$index] . ';' : '' }}">
+                                        <td style="padding-left: 20px;">
+                                            @if($index === 0)
+                                                <span style="font-size: 18px; filter: drop-shadow(0 1px 2px rgba(234,179,8,0.4));">🥇</span>
+                                            @elseif($index === 1)
+                                                <span style="font-size: 18px; filter: drop-shadow(0 1px 2px rgba(148,163,184,0.4));">🥈</span>
+                                            @elseif($index === 2)
+                                                <span style="font-size: 18px; filter: drop-shadow(0 1px 2px rgba(180,83,9,0.3));">🥉</span>
+                                            @else
+                                                <span style="color: #94a3b8; font-weight: 600;">{{ $index + 1 }}</span>
+                                            @endif
+                                        </td>
+                                        <td>
+                                            <span class="fw-semibold" style="color: #1e293b; font-size: 13px;">{{ $entry->name }}</span>
+                                        </td>
+                                        <td>
+                                            <span class="d-inline-flex align-items-center gap-1" style="font-size: 13px;">
+                                                <span title="{{ $entry->tier_name }}">{!! $entry->tier_icon !!}</span>
+                                                <span style="color: #6366f1; font-weight: 600;">Lv.{{ $entry->level }}</span>
+                                            </span>
                                         </td>
                                         <td>
                                             @foreach($entry->badges->take(3) as $badge)
@@ -524,66 +541,140 @@
                                                 @endif
                                             @endforeach
                                             @if($entry->badges->count() > 3)
-                                                <span
-                                                    style="font-size: 11px; opacity: 0.7;">+{{ $entry->badges->count() - 3 }}</span>
+                                                <span style="font-size: 11px; opacity: 0.7;">+{{ $entry->badges->count() - 3 }}</span>
                                             @endif
                                         </td>
                                     </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="text-center" style="opacity: 0.7;">Belum ada data leaderboard
+                                @empty
+                                    <tr>
+                                        <td colspan="4" class="text-center py-4" style="color: #94a3b8;">
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                                            <br>Belum ada data leaderboard
+                                        </td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                            <tfoot>
+                                <tr style="border-top: 2px dashed #e2e8f0; background: #f0f9ff;">
+                                    <td style="padding-left: 20px;">
+                                        <span style="background: #6366f1; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px;">#{{ $userStats['rank'] }}</span>
+                                    </td>
+                                    <td>
+                                        <span class="fw-semibold" style="color: #1e293b; font-size: 13px;">{{ $user->name }}</span>
+                                        <span style="font-size: 10px; color: #6366f1; font-weight: 600; margin-left: 4px; background: #eef2ff; padding: 1px 6px; border-radius: 4px;">Anda</span>
+                                    </td>
+                                    <td>
+                                        <span class="d-inline-flex align-items-center gap-1" style="font-size: 13px;">
+                                            <span>{!! $userStats['tier_icon'] !!}</span>
+                                            <span style="color: #6366f1; font-weight: 600;">Lv.{{ $userStats['level'] }}</span>
+                                        </span>
+                                    </td>
+                                    <td>
+                                        @foreach($userStats['badges']->take(3) as $badge)
+                                            @if($badge->image)
+                                                <img src="{{ asset($badge->image) }}?v={{ time() }}" title="{{ $badge->name }}" style="width: 22px; height: 22px; object-fit: contain; margin-right: 2px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                                <span style="display:none;">{{ $badge->icon }}</span>
+                                            @else
+                                                <span title="{{ $badge->name }}">{{ $badge->icon }}</span>
+                                            @endif
+                                        @endforeach
+                                        @if($userStats['badges']->count() > 3)
+                                            <span style="font-size: 11px; opacity: 0.7;">+{{ $userStats['badges']->count() - 3 }}</span>
+                                        @endif
                                     </td>
                                 </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
+                            </tfoot>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
 
-        <!-- Streak -->
+        <!-- User Stats Card -->
         <div class="col-md-5">
-            <div class="dashboard-card h-100 d-flex flex-column justify-content-center">
-                <h6 class="fw-bold mb-4 d-flex align-items-center gap-2" style="color:#111827; font-size:15px;">
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Streak Kamu : {{ $userStats['current_streak'] }} Hari
-                </h6>
-                <div class="mb-3 ps-4" style="color:#374151;">
-                    <span style="font-size: 14px; font-weight: 500;">Rank : #{{ $userStats['rank'] }}</span>
-                </div>
-                <div class="mb-3 ps-4 d-flex align-items-center gap-2" style="color:#374151;">
-                    <span style="font-size: 14px; font-weight: 500;">{!! $userStats['tier_icon'] !!} Level {{ $userStats['level'] }} — {{ $userStats['tier_name'] }}</span>
-                </div>
-                <div class="ps-4">
-                    <div class="d-flex align-items-center gap-2" style="color:#374151;">
-                        <span></span>
-                        <span style="font-size: 14px; font-weight: 500;">
-                            Exp : {{ $userStats['total_xp'] }}/{{ $userStats['xp_for_next'] }}
-                        </span>
+            <div class="gamification-card h-100" style="overflow:hidden; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff;">
+                {{-- Streak Banner --}}
+                <div style="background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #dc2626 100%); padding: 18px 20px; border-radius: 12px 12px 0 0; position: relative; overflow: hidden;">
+                    {{-- Decorative circles --}}
+                    <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
+                    <div style="position: absolute; bottom: -30px; right: 40px; width: 60px; height: 60px; background: rgba(255,255,255,0.06); border-radius: 50%;"></div>
+
+                    <div class="d-flex align-items-center gap-3">
+                        <div style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+                        </div>
+                        <div>
+                            <div style="color: rgba(255,255,255,0.8); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Streak Harian</div>
+                            <div style="color: #fff; font-size: 28px; font-weight: 800; line-height: 1; letter-spacing: -0.02em;">{{ $userStats['current_streak'] }} <span style="font-size: 14px; font-weight: 600; opacity: 0.8;">Hari</span></div>
+                        </div>
                     </div>
-                    <div class="xp-progress-bar mt-2" style="width: 80%; background:#f3f4f6;">
+                </div>
+
+                {{-- Stats Content --}}
+                <div style="padding: 16px 20px 20px;">
+                    {{-- Rank & Level Grid --}}
+                    <div class="d-flex gap-3 mb-3">
+                        {{-- Rank --}}
+                        <div style="flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; text-align: center;">
+                            <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">Rank</div>
+                            <div style="font-size: 22px; font-weight: 800; color: #1e293b; letter-spacing: -0.02em;">#{{ $userStats['rank'] }}</div>
+                        </div>
+                        {{-- Level --}}
+                        <div style="flex: 1; background: #f5f3ff; border: 1px solid #e9e5ff; border-radius: 10px; padding: 12px 14px; text-align: center;">
+                            <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">Level</div>
+                            <div style="font-size: 22px; font-weight: 800; color: #6366f1; letter-spacing: -0.02em;">
+                                <span>{!! $userStats['tier_icon'] !!}</span> {{ $userStats['level'] }}
+                            </div>
+                            <div style="font-size: 11px; color: #8b5cf6; font-weight: 600;">{{ $userStats['tier_name'] }}</div>
+                        </div>
+                    </div>
+
+                    {{-- XP Progress --}}
+                    <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span style="font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.03em;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: -2px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                                Experience
+                            </span>
+                            <span style="font-size: 12px; font-weight: 700; color: #6366f1;">{{ $userStats['total_xp'] }} / {{ $userStats['xp_for_next'] }} XP</span>
+                        </div>
                         @php
                             $progressPct = $userStats['xp_needed'] > 0
                                 ? min(100, round(($userStats['xp_current'] / $userStats['xp_needed']) * 100))
                                 : 100;
                         @endphp
-                        <div class="xp-progress-fill" style="width: {{ $progressPct }}%;"></div>
+                        <div style="height: 10px; background: #e2e8f0; border-radius: 6px; overflow: hidden;">
+                            <div style="height: 100%; width: {{ $progressPct }}%; background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7); border-radius: 6px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+                        </div>
+                        <div class="d-flex justify-content-between mt-1">
+                            <span style="font-size: 10px; color: #94a3b8; font-weight: 500;">Level {{ $userStats['level'] }}</span>
+                            <span style="font-size: 10px; color: #94a3b8; font-weight: 500;">Level {{ $userStats['level'] + 1 }}</span>
+                        </div>
                     </div>
-                </div>
 
-                {{-- Badges --}}
-                @if($userStats['badges']->isNotEmpty())
-                    <div class="mt-3 ps-4 d-flex align-items-center gap-1 flex-wrap">
-                        @foreach($userStats['badges'] as $badge)
-                            @if($badge->image)
-                                <img src="{{ asset($badge->image) }}?v={{ time() }}" title="{{ $badge->name }}: {{ $badge->description }}" style="width: 24px; height: 24px; object-fit: contain; cursor: help;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                                <span style="display:none; font-size: 18px; cursor: help;" title="{{ $badge->name }}: {{ $badge->description }}">{{ $badge->icon }}</span>
-                            @else
-                                <span title="{{ $badge->name }}: {{ $badge->description }}"
-                                    style="font-size: 18px; cursor: help;">{{ $badge->icon }}</span>
-                            @endif
-                        @endforeach
-                    </div>
-                @endif
+                    {{-- Badges --}}
+                    @if($userStats['badges']->isNotEmpty())
+                        <div class="mt-3">
+                            <div style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 3px; vertical-align: -2px;"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+                                Badges
+                            </div>
+                            <div class="d-flex align-items-center gap-2 flex-wrap">
+                                @foreach($userStats['badges'] as $badge)
+                                    <div style="background: #f5f3ff; border: 1px solid #e9e5ff; border-radius: 8px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;">
+                                        @if($badge->image)
+                                            <img src="{{ asset($badge->image) }}?v={{ time() }}" title="{{ $badge->name }}: {{ $badge->description }}" style="width: 20px; height: 20px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                            <span style="display:none; font-size: 16px;" title="{{ $badge->name }}: {{ $badge->description }}">{{ $badge->icon }}</span>
+                                        @else
+                                            <span title="{{ $badge->name }}: {{ $badge->description }}" style="font-size: 16px;">{{ $badge->icon }}</span>
+                                        @endif
+                                        <span style="font-size: 11px; font-weight: 600; color: #6366f1;">{{ $badge->name }}</span>
+                                    </div>
+                                @endforeach
+                            </div>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
