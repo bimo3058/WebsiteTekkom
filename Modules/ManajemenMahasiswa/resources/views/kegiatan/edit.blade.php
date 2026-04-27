@@ -873,7 +873,7 @@
 
         <div class="row g-3 mb-3">
             <div class="col-md-6">
-                <label class="form-label-custom">Target Peserta</label>
+                <label class="form-label-custom">Peserta</label>
                 <input type="number" name="target_peserta" class="form-control form-control-custom"
                        value="{{ old('target_peserta', $kegiatan->target_peserta) }}" min="1">
             </div>
