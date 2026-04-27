@@ -182,14 +182,6 @@
             </x-slot:iconSlot>
         </x-manajemenmahasiswa::ui.sidebar-item>
 
-        @php
-            $showVerifBadge = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm'])) > 0;
-            $verifPendingCount = 0;
-            if ($showVerifBadge) {
-                $verifPendingCount = \Modules\ManajemenMahasiswa\Models\RiwayatKegiatan::manualOnly()->pending()->count()
-                    + \Modules\ManajemenMahasiswa\Models\Prestasi::pending()->count();
-            }
-        @endphp
         <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}"
            class="nav-link-item {{ request()->routeIs('manajemenmahasiswa.verifikasi.*') ? 'active' : '' }}"
            :class="{ 'justify-content-center': !sidebarOpen }">
@@ -201,9 +193,6 @@
                 </svg>
             </span>
             <span class="nav-label" x-show="sidebarOpen" style="flex-grow: 1;">Verifikasi Data</span>
-            @if($showVerifBadge && $verifPendingCount > 0)
-                <span x-show="sidebarOpen" style="font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; background: #fef2f2; color: #dc2626; min-width: 20px; text-align: center;">{{ $verifPendingCount }}</span>
-            @endif
         </a>
 
         <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.forum.index') }}"

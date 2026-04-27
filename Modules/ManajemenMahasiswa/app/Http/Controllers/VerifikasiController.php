@@ -242,7 +242,7 @@ class VerifikasiController extends Controller
         $request->validate([
             'nama_prestasi' => 'required|string|max:255',
             'tingkat'       => 'required|in:' . implode(',', Prestasi::TINGKAT_LIST),
-            'tahun'         => 'required|integer|min:2000|max:2099',
+            'tanggal'       => 'required|date',
             'bukti_images'  => 'nullable|array|max:5',
             'bukti_images.*'=> 'file|mimes:jpg,jpeg,png,gif,webp|max:10240',
             'bukti_docs'    => 'nullable|array|max:5',
@@ -257,7 +257,7 @@ class VerifikasiController extends Controller
             'kemahasiswaan_id'    => $mhs->id,
             'nama_prestasi'       => $request->nama_prestasi,
             'tingkat'             => $request->tingkat,
-            'tahun'               => $request->tahun,
+            'tanggal'             => $request->tanggal,
             'verification_status' => 'pending',
         ]);
 
