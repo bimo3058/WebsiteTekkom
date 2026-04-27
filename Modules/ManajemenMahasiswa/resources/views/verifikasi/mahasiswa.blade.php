@@ -195,10 +195,12 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
             Riwayat Kegiatan
         </div>
-        <button class="btn-submit" data-bs-toggle="modal" data-bs-target="#addRiwayatModal">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Ajukan Riwayat
-        </button>
+        @if(auth()->user()->hasRole('mahasiswa'))
+            <button class="btn-submit" data-bs-toggle="modal" data-bs-target="#addRiwayatModal">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Ajukan Riwayat
+            </button>
+        @endif
     </div>
 
     @if($riwayatData->count() > 0)
@@ -278,10 +280,12 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
             Prestasi Lomba
         </div>
-        <button class="btn-submit" data-bs-toggle="modal" data-bs-target="#addPrestasiModal">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
-            Ajukan Prestasi
-        </button>
+        @if(auth()->user()->hasRole('mahasiswa'))
+            <button class="btn-submit" data-bs-toggle="modal" data-bs-target="#addPrestasiModal">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+                Ajukan Prestasi
+            </button>
+        @endif
     </div>
 
     @if($prestasiData->count() > 0)
