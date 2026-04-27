@@ -306,9 +306,6 @@
                                     <span class="badge-bidang" style="background: #fef3c7; color: #92400e;">{{ $kat->nama_kategori }}</span>
                                 @endforeach
                             @endif
-                            @if($item->status)
-                                <span class="badge-status {{ $item->status }}">{{ $item->status_label }}</span>
-                            @endif
                         </div>
 
                         <!-- Title -->

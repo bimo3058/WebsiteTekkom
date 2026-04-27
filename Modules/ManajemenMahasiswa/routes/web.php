@@ -183,16 +183,16 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             // Subbab: Mahasiswa
             Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
 
-                // Profil sendiri (role mahasiswa)
-                Route::middleware('role:mahasiswa')->group(function () {
+                // Profil sendiri (role mahasiswa dan alumni)
+                Route::middleware('role:mahasiswa,alumni')->group(function () {
                     Route::get('/profil', [DirektoriMahasiswaController::class, 'profil'])
                         ->name('profil');
                     Route::get('/profil/cv', [DirektoriMahasiswaController::class, 'generateCvSelf'])
                         ->name('profil.cv');
                 });
 
-                // Daftar semua mahasiswa — admin, gpm, pengurus, mahasiswa
-                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,pengurus_himpunan,mahasiswa')
+                // Daftar semua mahasiswa — admin, gpm, pengurus, mahasiswa, alumni
+                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,pengurus_himpunan,mahasiswa,alumni')
                     ->group(function () {
                     Route::get('/', [DirektoriMahasiswaController::class, 'index'])
                         ->name('index');
@@ -224,21 +224,23 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->group(function () {
                     Route::get('/{id}/cv', [DirektoriMahasiswaController::class, 'generateCv'])
                         ->name('cv')->where('id', '[0-9]+');
+                    Route::get('/{id}/cv-builder-preview', [DirektoriMahasiswaController::class, 'previewCvBuilder'])
+                        ->name('cv-builder-preview')->where('id', '[0-9]+');
                 });
             });
 
             // Subbab: Alumni
             Route::prefix('alumni')->name('alumni.')->group(function () {
-                // Profil karir sendiri (role mahasiswa)
-                Route::middleware('role:mahasiswa')->group(function () {
+                // Profil karir sendiri (role mahasiswa dan alumni)
+                Route::middleware('role:mahasiswa,alumni')->group(function () {
                     Route::get('/profil', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'profil'])
                         ->name('profil');
                     Route::put('/profil', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'updateProfil'])
                         ->name('profil.update');
                 });
 
-                // Daftar semua alumni — admin, gpm, pengurus, dosen, mahasiswa
-                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,pengurus_himpunan,mahasiswa')
+                // Daftar semua alumni — admin, gpm, pengurus, dosen, mahasiswa, alumni
+                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,pengurus_himpunan,mahasiswa,alumni')
                     ->group(function () {
                     Route::get('/', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'index'])
                         ->name('index');

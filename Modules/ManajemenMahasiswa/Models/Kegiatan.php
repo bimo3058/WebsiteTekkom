@@ -119,7 +119,9 @@ class Kegiatan extends Model
      */
     public function panitia(): BelongsToMany
     {
-        return $this->belongsToMany(\App\Models\Student::class, 'mk_kegiatan_panitia', 'kegiatan_id', 'student_id')->withTimestamps();
+        return $this->belongsToMany(\App\Models\Student::class, 'mk_kegiatan_panitia', 'kegiatan_id', 'student_id')
+                    ->withPivot('peran')
+                    ->withTimestamps();
     }
 
     public function riwayatKegiatan(): HasMany
