@@ -981,6 +981,15 @@
                     </div>
                 @endif
 
+                {{-- Poll preview --}}
+                @if($thread->poll)
+                    @php
+                        $poll     = $thread->poll;
+                        $threadId = $thread->id;
+                    @endphp
+                    @include('manajemenmahasiswa::forum._poll', ['poll' => $poll, 'threadId' => $threadId])
+                @endif
+
                 <!-- Labels -->
                 <div class="d-flex gap-2 mb-3 flex-wrap">
                     @foreach($thread->getKategoriLabels() as $idx => $lbl)
@@ -1008,13 +1017,6 @@
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="{{ $threadUserVote && $threadUserVote->value === -1 ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
                         </button>
                     </div>
-                    @if($thread->poll)
-                        <span class="action-btn ms-1" style="cursor:default;color:#4f46e5;background:#eef2ff;border-color:#c7d2fe;"
-                              title="Thread ini memiliki poll">
-                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
-                            Poll
-                        </span>
-                    @endif
                     <button class="action-btn ms-2" onclick="window.location.href='{{ route('manajemenmahasiswa.forum.show', $thread->id) }}'">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                         {{ $thread->comments_count ?? $thread->comment_count }}
@@ -1166,7 +1168,7 @@
             // ---- Forum Card Click Handler ----
             document.querySelectorAll('.forum-card').forEach(card => {
                 card.addEventListener('click', function(e) {
-                    if (e.target.closest('.dropdown') || e.target.closest('.post-actions')) {
+                    if (e.target.closest('.dropdown') || e.target.closest('.post-actions') || e.target.closest('.poll-container')) {
                         return;
                     }
                     const threadId = this.dataset.threadId;
