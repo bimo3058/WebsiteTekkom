@@ -396,8 +396,8 @@
                                placeholder="Contoh: Peserta, Delegasi, Koordinator">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label-custom">Tanggal Kegiatan <span style="color: #9ca3af; font-weight: 400;">(opsional)</span></label>
-                        <input type="date" name="tanggal_kegiatan" class="form-control form-control-custom">
+                        <label class="form-label-custom">Tanggal Kegiatan <span style="color: #dc2626;">*</span></label>
+                        <input type="date" name="tanggal_kegiatan" class="form-control form-control-custom" required>
                     </div>
                     <div class="mb-3">
                         <label class="form-label-custom">
@@ -424,7 +424,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px; font-weight: 600; padding: 10px 20px;">Batal</button>
-                    <button type="submit" class="btn-submit">Ajukan</button>
+                    <button type="submit" class="btn-submit" data-submit-once>Ajukan</button>
                 </div>
             </form>
         </div>
@@ -488,7 +488,7 @@
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px; font-weight: 600; padding: 10px 20px;">Batal</button>
-                    <button type="submit" class="btn-submit">Ajukan</button>
+                    <button type="submit" class="btn-submit" data-submit-once>Ajukan</button>
                 </div>
             </form>
         </div>
@@ -630,6 +630,63 @@ function closeLightbox() {
 }
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeLightbox();
+});
+
+// =========================================================================
+// Anti Double-Submit — cegah form di-submit lebih dari sekali
+// =========================================================================
+document.querySelectorAll('form').forEach(form => {
+    form.addEventListener('submit', function(e) {
+        const btn = this.querySelector('button[data-submit-once]');
+        if (!btn) return;
+
+        // Jika sudah pernah di-submit sebelumnya, tolak
+        if (this.dataset.submitted === 'true') {
+            e.preventDefault();
+            return;
+        }
+
+        // Tandai form sudah di-submit
+        this.dataset.submitted = 'true';
+
+        // Disable tombol dan tampilkan loading state
+        btn.disabled = true;
+        btn.style.opacity = '0.65';
+        btn.style.cursor = 'not-allowed';
+        btn.innerHTML = `
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                 style="animation: spin 1s linear infinite;">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+            </svg>
+            Mengajukan...
+        `;
+    });
+});
+
+// Tambahkan CSS animasi spin
+(function() {
+    const style = document.createElement('style');
+    style.textContent = '@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }';
+    document.head.appendChild(style);
+})();
+
+// Reset form state ketika modal ditutup (agar bisa digunakan lagi jika dibuka ulang)
+['addRiwayatModal', 'addPrestasiModal'].forEach(modalId => {
+    const el = document.getElementById(modalId);
+    if (el) el.addEventListener('hidden.bs.modal', () => {
+        const form = el.querySelector('form');
+        if (form) {
+            delete form.dataset.submitted;
+            const btn = form.querySelector('button[data-submit-once]');
+            if (btn) {
+                btn.disabled = false;
+                btn.style.opacity = '';
+                btn.style.cursor = '';
+                btn.innerHTML = 'Ajukan';
+            }
+        }
+    });
 });
 </script>
 </x-dynamic-component>
