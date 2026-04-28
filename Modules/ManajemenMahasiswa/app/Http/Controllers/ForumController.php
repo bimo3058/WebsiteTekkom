@@ -162,8 +162,8 @@ class ForumController extends Controller
             'media_files.*' => 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:10240',
             'link_url' => 'nullable|url|max:2000',
             'has_poll' => 'nullable|boolean',
-            'poll_options' => 'nullable|array|min:2|max:6',
-            'poll_options.*' => 'required_with:has_poll|string|max:150',
+            'poll_options' => 'nullable|array|max:6',
+            'poll_options.*' => 'nullable|string|max:150',
             'poll_expires_at' => 'nullable|date|after:now',
         ];
 
