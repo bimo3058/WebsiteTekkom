@@ -33,9 +33,10 @@ class DashboardAnalitikService
                     ->orderBy('bulan')
                     ->pluck('total', 'bulan'),
 
-                // Distribusi mahasiswa per angkatan
-                'mahasiswa_per_angkatan' => Kemahasiswaan::aktif()
-                    ->selectRaw('angkatan, count(*) as total')
+                // Distribusi mahasiswa per angkatan — semua status (aktif, alumni, cuti, do)
+                // Tujuan: menampilkan berapa total mahasiswa yang MASUK per angkatan
+                'mahasiswa_per_angkatan' => Kemahasiswaan::selectRaw('angkatan, count(*) as total')
+                    ->whereNotNull('angkatan')
                     ->groupBy('angkatan')
                     ->orderBy('angkatan')
                     ->pluck('total', 'angkatan'),
