@@ -163,6 +163,14 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert"
+         style="border-radius: 10px; border: none; background: #fef2f2; color: #dc2626; font-weight: 500; font-size: 14px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
 
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-start mb-4">
@@ -195,7 +203,14 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
             Riwayat Kegiatan
         </div>
-        @if(auth()->user()->hasRole('mahasiswa'))
+        @php
+            $canSubmit = auth()->user()->hasAnyRole([
+                'mahasiswa','alumni','pengurus_himpunan',
+                'ketua_himpunan','wakil_ketua_himpunan','ketua_bidang',
+                'ketua_unit','staff_himpunan','superadmin','admin','admin_kemahasiswaan'
+            ]);
+        @endphp
+        @if($canSubmit)
             <button class="btn-submit" data-bs-toggle="modal" data-bs-target="#addRiwayatModal">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 Ajukan Riwayat
@@ -280,7 +295,7 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
             Prestasi Lomba
         </div>
-        @if(auth()->user()->hasRole('mahasiswa'))
+        @if($canSubmit)
             <button class="btn-submit" data-bs-toggle="modal" data-bs-target="#addPrestasiModal">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
                 Ajukan Prestasi

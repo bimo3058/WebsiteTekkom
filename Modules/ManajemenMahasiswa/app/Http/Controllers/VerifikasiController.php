@@ -47,11 +47,46 @@ class VerifikasiController extends Controller
             return 'manajemenmahasiswa::layouts.dosen';
         }
 
-        if (\in_array('pengurus_himpunan', $roles)) {
-            return 'manajemenmahasiswa::layouts.admin';
+        // Semua jenis pengurus himpunan menggunakan layout admin
+        $pengurus = ['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
+        foreach ($pengurus as $role) {
+            if (\in_array($role, $roles)) {
+                return 'manajemenmahasiswa::layouts.admin';
+            }
         }
 
         return 'manajemenmahasiswa::layouts.mahasiswa';
+    }
+
+    // -------------------------------------------------------------------------
+    // Helper — Auto-provision student + kemahasiswaan record jika belum ada
+    // Digunakan agar pengurus (ketua_unit, dll) bisa langsung submit tanpa
+    // harus didaftarkan manual oleh admin terlebih dahulu.
+    // -------------------------------------------------------------------------
+
+    private function ensureStudentRecord(\App\Models\User $user): Student
+    {
+        // Cari atau buat record mk_kemahasiswaan terlebih dahulu
+        $mhs = Kemahasiswaan::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'nama'     => $user->name,
+                'nim'      => 'PENGURUS-' . $user->id,
+                'angkatan' => (int) date('Y'),
+                'status'   => Kemahasiswaan::STATUS_AKTIF,
+            ]
+        );
+
+        // Cari atau buat record students
+        $student = Student::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'student_number' => $mhs->nim,
+                'cohort_year'    => $mhs->angkatan ?? (int) date('Y'),
+            ]
+        );
+
+        return $student;
     }
 
     // -------------------------------------------------------------------------
@@ -211,9 +246,8 @@ class VerifikasiController extends Controller
             'bukti_docs.*'         => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
         ]);
 
-        $user = Auth::user();
-        $student = Student::where('user_id', $user->id)->first();
-        abort_if(!$student, 404, 'Data student tidak ditemukan.');
+        $user    = Auth::user();
+        $student = $this->ensureStudentRecord($user);
 
         $riwayat = RiwayatKegiatan::create([
             'student_id'           => $student->id,
@@ -250,8 +284,17 @@ class VerifikasiController extends Controller
         ]);
 
         $user = Auth::user();
-        $mhs = Kemahasiswaan::where('user_id', $user->id)->first();
-        abort_if(!$mhs, 404, 'Data kemahasiswaan tidak ditemukan.');
+
+        // Auto-provision mk_kemahasiswaan jika belum ada (untuk pengurus seperti ketua_unit)
+        $mhs = Kemahasiswaan::firstOrCreate(
+            ['user_id' => $user->id],
+            [
+                'nama'     => $user->name,
+                'nim'      => 'PENGURUS-' . $user->id,
+                'angkatan' => (int) date('Y'),
+                'status'   => Kemahasiswaan::STATUS_AKTIF,
+            ]
+        );
 
         $prestasi = Prestasi::create([
             'kemahasiswaan_id'    => $mhs->id,
