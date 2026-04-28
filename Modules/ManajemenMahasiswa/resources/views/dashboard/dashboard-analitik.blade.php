@@ -656,7 +656,7 @@
                             'bekerja' => ['label' => 'Bekerja', 'class' => 'level-full-time'],
                             'wirausaha' => ['label' => 'Wirausaha', 'class' => 'level-freelance'],
                             'studi_lanjut' => ['label' => 'Studi Lanjut', 'class' => 'level-internship'],
-                            'belum_bekerja' => ['label' => 'Belum Bekerja', 'class' => 'level-part-time'],
+                            'belum_bekerja' => ['label' => 'Belum Terdata', 'class' => 'level-part-time'],
                         ];
                         $level = $statusLabels[$status] ?? ['label' => 'Belum Terdata', 'class' => 'level-part-time'];
                     @endphp
