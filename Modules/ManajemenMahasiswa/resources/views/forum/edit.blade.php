@@ -297,7 +297,7 @@
             <div id="removeMediaInputs"></div>
 
             {{-- Link (Collapsible) --}}
-            <div class="mb-5">
+            <div class="mb-3">
                 <button type="button" class="section-toggle {{ $existingLink ? 'active' : '' }}" id="toggleLink" onclick="toggleSection('link')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Link
                     <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
@@ -305,6 +305,110 @@
                 <div class="section-content {{ $existingLink ? 'open' : '' }}" id="sectionLink">
                     <input type="url" name="link_url" id="inputLinkUrl" class="custom-input"
                         placeholder="https://contoh.com/artikel-menarik" value="{{ old('link_url', $existingLink) }}">
+                </div>
+            </div>
+
+            {{-- Poll (Collapsible) --}}
+            @php $poll = $thread->poll; @endphp
+            <div class="mb-5">
+                <button type="button" class="section-toggle {{ $poll ? 'active' : '' }}" id="togglePoll" onclick="togglePollSection()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+                    Poll
+                    @if($poll)
+                        <span style="background:#818cf8;color:#fff;font-size:11px;padding:1px 8px;border-radius:10px;margin-left:4px;">
+                            {{ $poll->options->count() }} opsi
+                        </span>
+                    @endif
+                    <span id="pollToggleChevron" style="margin-left:auto;font-size:12px;opacity:0.6;">{{ $poll ? '▲' : '▼' }}</span>
+                </button>
+
+                <div class="section-content {{ $poll ? 'open' : '' }}" id="sectionPoll">
+                    <style>
+                        .poll-edit-row { display:flex;align-items:center;gap:8px;margin-bottom:8px; }
+                        .poll-edit-input { flex:1;padding:9px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-weight:500;outline:none;transition:border-color 0.2s; }
+                        .poll-edit-input:focus { border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,0.1); }
+                        .poll-edit-remove { width:30px;height:30px;border-radius:50%;border:none;background:#fee2e2;color:#dc2626;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s; }
+                        .poll-edit-remove:hover { background:#fca5a5; }
+                        .poll-edit-remove:disabled { opacity:0.35;cursor:not-allowed; }
+                        .poll-votes-badge { font-size:11px;font-weight:700;color:#6b7280;background:#f3f4f6;padding:2px 8px;border-radius:20px;white-space:nowrap; }
+                        .poll-add-btn { font-size:13px;font-weight:600;color:#4f46e5;background:#eef2ff;border:1.5px dashed #a5b4fc;border-radius:10px;padding:8px 16px;cursor:pointer;width:100%;text-align:center;transition:all 0.2s;margin-top:4px; }
+                        .poll-add-btn:hover { background:#e0e7ff; }
+                        .poll-section-label { font-size:12px;font-weight:600;color:#6b7280;margin-bottom:6px;margin-top:14px;display:block; }
+                        .poll-close-toggle { display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:#374151;background:#fff;width:100%;margin-top:10px;transition:all 0.2s; }
+                        .poll-close-toggle:hover { border-color:#4f46e5;background:#f5f3ff; }
+                    </style>
+
+                    @if($poll)
+                        {{-- Edit existing poll --}}
+                        <span class="poll-section-label">Opsi Poll</span>
+                        <div id="pollExistingOptions">
+                            @foreach($poll->options as $opt)
+                                <div class="poll-edit-row" id="poll-opt-row-{{ $opt->id }}">
+                                    <input type="text" name="poll_option_text[{{ $opt->id }}]"
+                                           class="poll-edit-input"
+                                           value="{{ old('poll_option_text.'.$opt->id, $opt->text) }}"
+                                           maxlength="150"
+                                           placeholder="Teks opsi...">
+                                    <span class="poll-votes-badge" title="Jumlah suara">{{ $opt->votes_count }} suara</span>
+                                    <button type="button" class="poll-edit-remove"
+                                            onclick="markDeleteOption({{ $opt->id }}, this)"
+                                            {{ $opt->votes_count > 0 ? 'disabled title=Tidak bisa dihapus karena sudah ada suara' : '' }}>×</button>
+                                </div>
+                            @endforeach
+                        </div>
+                        <div id="pollDeleteInputs"></div>
+
+                        {{-- Tambah opsi baru --}}
+                        <div id="pollNewOptionsContainer"></div>
+                        <button type="button" class="poll-add-btn" id="btnAddNewOption" onclick="addNewPollOption()">
+                            + Tambah Opsi Baru
+                            <span id="pollNewCount" style="color:#9ca3af;"></span>
+                        </button>
+
+                        {{-- Expiry --}}
+                        <span class="poll-section-label">Batas Waktu Poll</span>
+                        <input type="datetime-local" name="poll_expires_at" class="poll-edit-input"
+                               style="width:auto;"
+                               value="{{ old('poll_expires_at', $poll->expires_at?->format('Y-m-d\TH:i')) }}"
+                               min="{{ now()->addHours(1)->format('Y-m-d\TH:i') }}">
+
+                        {{-- Tutup / buka poll --}}
+                        <button type="button" class="poll-close-toggle" id="btnClosePoll" onclick="toggleClosePoll()">
+                            <span id="closePollIcon">
+                                @if($poll->isClosed())
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                                @else
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                @endif
+                            </span>
+                            <span id="closePollLabel">
+                                {{ $poll->isClosed() ? 'Buka kembali poll' : 'Tutup poll sekarang' }}
+                            </span>
+                        </button>
+                        <input type="hidden" name="poll_is_closed" id="pollIsClosedInput"
+                               value="{{ old('poll_is_closed', $poll->isClosed() ? '1' : '0') }}">
+
+                    @else
+                        {{-- Thread belum punya poll — buat baru --}}
+                        <input type="hidden" name="has_poll" id="hasPollInput" value="0">
+                        <span class="poll-section-label">Opsi Poll (min. 2, maks. 6)</span>
+                        <div id="pollOptionsContainer">
+                            <div class="poll-edit-row">
+                                <input type="text" name="poll_options[]" class="poll-edit-input" placeholder="Opsi 1" maxlength="150">
+                                <button type="button" class="poll-edit-remove" onclick="removePollOption(this)" style="visibility:hidden;">×</button>
+                            </div>
+                            <div class="poll-edit-row">
+                                <input type="text" name="poll_options[]" class="poll-edit-input" placeholder="Opsi 2" maxlength="150">
+                                <button type="button" class="poll-edit-remove" onclick="removePollOption(this)" style="visibility:hidden;">×</button>
+                            </div>
+                        </div>
+                        <button type="button" class="poll-add-btn" id="btnAddPollOption" onclick="addPollOption()">
+                            + Tambah Opsi <span id="pollOptionCount" style="color:#9ca3af;">(2/6)</span>
+                        </button>
+                        <span class="poll-section-label">Batas Waktu (opsional)</span>
+                        <input type="datetime-local" name="poll_expires_at" class="poll-edit-input"
+                               style="width:auto;" min="{{ now()->addHours(1)->format('Y-m-d\TH:i') }}">
+                    @endif
                 </div>
             </div>
 
@@ -330,6 +434,122 @@
                 content.classList.toggle('open');
                 toggle.classList.toggle('active');
             }
+
+            // ---- Poll Section Toggle ----
+            let pollOpen = {{ $poll ? 'true' : 'false' }};
+            function togglePollSection() {
+                pollOpen = !pollOpen;
+                const content  = document.getElementById('sectionPoll');
+                const chevron  = document.getElementById('pollToggleChevron');
+                const btn      = document.getElementById('togglePoll');
+                content.classList.toggle('open', pollOpen);
+                btn.classList.toggle('active', pollOpen);
+                chevron.textContent = pollOpen ? '▲' : '▼';
+                // Aktifkan has_poll jika bukan edit poll yang sudah ada
+                const hasPoll = document.getElementById('hasPollInput');
+                if (hasPoll) hasPoll.value = pollOpen ? '1' : '0';
+            }
+
+            @if($poll)
+            // ---- Edit existing poll ----
+            const deletedOptions = new Set();
+
+            function markDeleteOption(optId, btn) {
+                const row = document.getElementById('poll-opt-row-' + optId);
+                if (deletedOptions.has(optId)) {
+                    // Undo delete
+                    deletedOptions.delete(optId);
+                    row.style.opacity = '1';
+                    row.querySelector('input').disabled = false;
+                    btn.title = '';
+                    btn.textContent = '×';
+                    const existing = document.getElementById('del-input-' + optId);
+                    if (existing) existing.remove();
+                } else {
+                    deletedOptions.add(optId);
+                    row.style.opacity = '0.4';
+                    row.querySelector('input').disabled = true;
+                    btn.title = 'Klik lagi untuk batal';
+                    btn.textContent = '↩';
+                    const inp = document.createElement('input');
+                    inp.type = 'hidden';
+                    inp.name = 'poll_delete_options[]';
+                    inp.value = optId;
+                    inp.id = 'del-input-' + optId;
+                    document.getElementById('pollDeleteInputs').appendChild(inp);
+                }
+            }
+
+            let newOptionCount = 0;
+            const MAX_NEW = 4;
+            function addNewPollOption() {
+                const existingCount = document.querySelectorAll('#pollExistingOptions .poll-edit-row').length - deletedOptions.size;
+                const total = existingCount + newOptionCount;
+                if (total >= 6) return;
+
+                newOptionCount++;
+                const container = document.getElementById('pollNewOptionsContainer');
+                const div = document.createElement('div');
+                div.className = 'poll-edit-row';
+                div.innerHTML = `
+                    <input type="text" name="poll_new_options[]" class="poll-edit-input"
+                           placeholder="Opsi baru ${newOptionCount}" maxlength="150">
+                    <button type="button" class="poll-edit-remove" onclick="this.closest('.poll-edit-row').remove(); newOptionCount--; updateNewCount();">×</button>`;
+                container.appendChild(div);
+                updateNewCount();
+                div.querySelector('input').focus();
+            }
+            function updateNewCount() {
+                const el = document.getElementById('pollNewCount');
+                if (el) el.textContent = newOptionCount > 0 ? `(+${newOptionCount})` : '';
+            }
+
+            // ---- Close/reopen poll toggle ----
+            let isClosed = {{ $poll->isClosed() ? 'true' : 'false' }};
+            function toggleClosePoll() {
+                isClosed = !isClosed;
+                document.getElementById('pollIsClosedInput').value = isClosed ? '1' : '0';
+                document.getElementById('closePollLabel').textContent = isClosed ? 'Buka kembali poll' : 'Tutup poll sekarang';
+                document.getElementById('closePollIcon').innerHTML = isClosed
+                    ? `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>`
+                    : `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>`;
+            }
+
+            @else
+            // ---- Create new poll (thread belum punya poll) ----
+            const MAX_OPTS = 6;
+            function addPollOption() {
+                const container = document.getElementById('pollOptionsContainer');
+                const count = container.querySelectorAll('.poll-edit-row').length;
+                if (count >= MAX_OPTS) return;
+                const row = document.createElement('div');
+                row.className = 'poll-edit-row';
+                row.innerHTML = `
+                    <input type="text" name="poll_options[]" class="poll-edit-input"
+                           placeholder="Opsi ${count + 1}" maxlength="150">
+                    <button type="button" class="poll-edit-remove" onclick="removePollOption(this)">×</button>`;
+                container.appendChild(row);
+                updatePollCount();
+                row.querySelector('input').focus();
+            }
+            function removePollOption(btn) {
+                const rows = document.querySelectorAll('#pollOptionsContainer .poll-edit-row');
+                if (rows.length <= 2) return;
+                btn.closest('.poll-edit-row').remove();
+                document.querySelectorAll('#pollOptionsContainer .poll-edit-input').forEach((inp, i) => {
+                    if (!inp.value) inp.placeholder = `Opsi ${i + 1}`;
+                });
+                updatePollCount();
+            }
+            function updatePollCount() {
+                const count = document.querySelectorAll('#pollOptionsContainer .poll-edit-row').length;
+                const el = document.getElementById('pollOptionCount');
+                if (el) el.textContent = `(${count}/${MAX_OPTS})`;
+                document.querySelectorAll('#pollOptionsContainer .poll-edit-remove').forEach((btn, _, all) => {
+                    btn.style.visibility = all.length > 2 ? 'visible' : 'hidden';
+                });
+            }
+            @endif
 
             // ---- Character Counter ----
             const judulInput = document.getElementById('inputJudul');
