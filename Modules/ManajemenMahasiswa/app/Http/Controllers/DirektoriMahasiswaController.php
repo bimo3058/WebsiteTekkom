@@ -7,6 +7,7 @@ use App\Models\Student;
 use App\Models\CvProfile;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Collection;
 use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
@@ -16,6 +17,75 @@ use Modules\ManajemenMahasiswa\Models\Alumni;
 
 class DirektoriMahasiswaController extends Controller
 {
+    /**
+     * Roles user yang sedang login — di-cache agar hanya ada 1 query per request.
+     * Menghindari multiple round-trip ke Supabase (penyebab QueryException pada koneksi yang tidak stabil).
+     */
+    private ?array $userRoles = null;
+
+    private function getUserRoles(): array
+    {
+        if ($this->userRoles !== null) {
+            return $this->userRoles;
+        }
+
+        try {
+            $this->userRoles = Auth::user()?->roles?->pluck('name')?->toArray() ?? [];
+        } catch (\Throwable) {
+            $this->userRoles = [];
+        }
+
+        return $this->userRoles;
+    }
+
+    /**
+     * Jalankan closure DB dengan retry otomatis jika koneksi Supabase terputus.
+     * pgBouncer (port 6543) kadang menutup koneksi idle → SQLSTATE 08006 / 08003.
+     * Solusi: force reconnect lalu coba lagi, maks $maxAttempts kali.
+     *
+     * @template T
+     * @param  callable(): T $callback
+     * @param  int           $maxAttempts
+     * @return T
+     */
+    private function withRetry(callable $callback, int $maxAttempts = 3): mixed
+    {
+        $attempt = 0;
+        while (true) {
+            try {
+                return $callback();
+            } catch (\Throwable $e) {
+                $attempt++;
+
+                $msg = $e->getMessage();
+                $code = (string) $e->getCode();
+
+                // Deteksi error koneksi Supabase/pgBouncer
+                $isConnectionError =
+                    in_array($code, ['08006', '08003', '57P01', '7'])
+                    || str_contains($msg, 'server closed the connection')
+                    || str_contains($msg, 'SSL negotiation')
+                    || str_contains($msg, 'could not connect')
+                    || str_contains($msg, 'connection unexpectedly')
+                    || str_contains($msg, 'pooler.supabase.com');
+
+                if ($isConnectionError && $attempt < $maxAttempts) {
+                    // Jeda sebelum retry: beri waktu pgBouncer memulihkan pool
+                    usleep(200_000 * $attempt); // 200ms, 400ms, ...
+                    try {
+                        DB::reconnect();
+                    } catch (\Throwable) {
+                        // reconnect juga bisa gagal, tetap lanjut retry
+                    }
+                    $this->userRoles = null;
+                    continue;
+                }
+
+                throw $e;
+            }
+        }
+    }
+
     // -------------------------------------------------------------------------
     // Helpers
     // -------------------------------------------------------------------------
@@ -26,23 +96,26 @@ class DirektoriMahasiswaController extends Controller
      */
     private function syncFromSSO(): void
     {
-        $existingUserIds = Kemahasiswaan::pluck('user_id')->toArray();
+        $this->withRetry(function () {
+            $existingUserIds = Kemahasiswaan::pluck('user_id')->toArray();
 
-        $studentsNotSynced = Student::with('user')
-            ->whereNotIn('user_id', $existingUserIds)
-            ->get();
+            $studentsNotSynced = Student::with('user')
+                ->whereNotIn('user_id', $existingUserIds)
+                ->get();
 
-        foreach ($studentsNotSynced as $student) {
-            if (!$student->user) continue;
+            foreach ($studentsNotSynced as $student) {
+                if (!$student->user)
+                    continue;
 
-            Kemahasiswaan::create([
-                'user_id'  => $student->user_id,
-                'nama'     => $student->user->name,
-                'nim'      => $student->student_number,
-                'angkatan' => $student->cohort_year,
-                'status'   => 'aktif',
-            ]);
-        }
+                Kemahasiswaan::create([
+                    'user_id' => $student->user_id,
+                    'nama' => $student->user->name,
+                    'nim' => $student->student_number,
+                    'angkatan' => $student->cohort_year,
+                    'status' => 'aktif',
+                ]);
+            }
+        });
     }
 
     /**
@@ -50,8 +123,7 @@ class DirektoriMahasiswaController extends Controller
      */
     private function resolveLayout(): string
     {
-        $user  = Auth::user();
-        $roles = $user->roles->pluck('name')->toArray();
+        $roles = $this->getUserRoles();
 
         if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles)) {
             return 'manajemenmahasiswa::layouts.admin';
@@ -65,7 +137,7 @@ class DirektoriMahasiswaController extends Controller
             return 'manajemenmahasiswa::layouts.admin';
         }
 
-        // Default: mahasiswa
+        // Default: mahasiswa / alumni
         return 'manajemenmahasiswa::layouts.mahasiswa';
     }
 
@@ -74,7 +146,7 @@ class DirektoriMahasiswaController extends Controller
      */
     private function hasRole(string ...$roles): bool
     {
-        $userRoles = Auth::user()->roles->pluck('name')->toArray();
+        $userRoles = $this->getUserRoles();
         foreach ($roles as $r) {
             if (\in_array($r, $userRoles)) {
                 return true;
@@ -123,46 +195,46 @@ class DirektoriMahasiswaController extends Controller
             ->filter(fn($kg) => !in_array($kg->id, $existingKegiatanIds))
             ->map(function ($kg) use ($studentId) {
                 $item = new \stdClass();
-                $item->id                   = null;
-                $item->student_id           = $studentId;
-                $item->kegiatan_id          = $kg->id;
-                $item->peran                = 'ketua';
-                $item->peran_manual         = null;
+                $item->id = null;
+                $item->student_id = $studentId;
+                $item->kegiatan_id = $kg->id;
+                $item->peran = 'ketua';
+                $item->peran_manual = null;
                 $item->nama_kegiatan_manual = null;
-                $item->tanggal_kegiatan     = null;
-                $item->kegiatan             = $kg;
-                $item->is_auto              = true;
-                $item->created_at           = $kg->created_at;
-                $item->updated_at           = $kg->updated_at;
+                $item->tanggal_kegiatan = null;
+                $item->kegiatan = $kg;
+                $item->is_auto = true;
+                $item->created_at = $kg->created_at;
+                $item->updated_at = $kg->updated_at;
                 return $item;
             });
 
         // 7. Kegiatan_id yang sudah dicakup oleh riwayat manual + ketua
         $coveredByKetua = $autoRiwayat->pluck('kegiatan_id')->toArray();
-        $allCoveredIds  = array_merge($existingKegiatanIds, $coveredByKetua);
+        $allCoveredIds = array_merge($existingKegiatanIds, $coveredByKetua);
 
         // 8. Buat pseudo-riwayat dari data panitia yang belum ada di sumber lain
         $autoPanitia = $kegiatanAsPanitia
             ->filter(fn($kg) => !in_array($kg->id, $allCoveredIds))
             ->map(function ($kg) use ($studentId) {
                 $item = new \stdClass();
-                $item->id                   = null;
-                $item->student_id           = $studentId;
-                $item->kegiatan_id          = $kg->id;
-                
+                $item->id = null;
+                $item->student_id = $studentId;
+                $item->kegiatan_id = $kg->id;
+
                 $peran = 'panitia';
                 $panitiaCurrent = $kg->panitia->first();
                 if ($panitiaCurrent && $panitiaCurrent->pivot->peran) {
                     $peran = $panitiaCurrent->pivot->peran;
                 }
-                $item->peran                = $peran;
-                $item->peran_manual         = null;
+                $item->peran = $peran;
+                $item->peran_manual = null;
                 $item->nama_kegiatan_manual = null;
-                $item->tanggal_kegiatan     = null;
-                $item->kegiatan             = $kg;
-                $item->is_auto              = true;
-                $item->created_at           = $kg->created_at;
-                $item->updated_at           = $kg->updated_at;
+                $item->tanggal_kegiatan = null;
+                $item->kegiatan = $kg;
+                $item->is_auto = true;
+                $item->created_at = $kg->created_at;
+                $item->updated_at = $kg->updated_at;
                 return $item;
             });
 
@@ -193,40 +265,54 @@ class DirektoriMahasiswaController extends Controller
 
     public function index(Request $request)
     {
-        // Auto-sync data SSO → mk_kemahasiswaan
-        $this->syncFromSSO();
-
-        $query = Kemahasiswaan::with(['user', 'user.student']);
-
-        // Filter angkatan
-        if ($request->filled('angkatan') && $request->angkatan !== 'semua') {
-            $query->byAngkatan((int) $request->angkatan);
+        // Auto-sync data SSO → mk_kemahasiswaan (silent fail agar halaman tidak crash)
+        try {
+            $this->syncFromSSO();
+        } catch (\Throwable) {
+            // Sync gagal — lanjutkan, tampilkan data yang sudah ada
         }
 
-        // Filter status
-        if ($request->filled('status') && $request->status !== 'semua') {
-            $query->where('status', $request->status);
+        try {
+            $query = Kemahasiswaan::with(['user', 'user.student']);
+
+            // Filter angkatan
+            if ($request->filled('angkatan') && $request->angkatan !== 'semua') {
+                $query->byAngkatan((int) $request->angkatan);
+            }
+
+            // Filter status
+            if ($request->filled('status') && $request->status !== 'semua') {
+                $query->where('status', $request->status);
+            }
+
+            // Search nama / NIM
+            if ($request->filled('search')) {
+                $query->search($request->search);
+            }
+
+            [$mahasiswa, $angkatanList] = $this->withRetry(function () use ($query) {
+                $mahasiswa = $query->orderBy('angkatan', 'desc')
+                    ->orderBy('nama', 'asc')
+                    ->paginate(15);
+
+                $angkatanList = Kemahasiswaan::select('angkatan')
+                    ->distinct()
+                    ->orderBy('angkatan', 'desc')
+                    ->pluck('angkatan');
+
+                return [$mahasiswa, $angkatanList];
+            });
+
+        } catch (\Throwable) {
+            // Koneksi DB benar-benar tidak stabil — tampilkan state kosong dengan pesan error
+            $mahasiswa = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
+            $angkatanList = collect();
         }
 
-        // Search nama / NIM
-        if ($request->filled('search')) {
-            $query->search($request->search);
-        }
-
-        $mahasiswa = $query->orderBy('angkatan', 'desc')
-                           ->orderBy('nama', 'asc')
-                           ->paginate(15);
-
-        // Daftar angkatan unik untuk dropdown filter
-        $angkatanList = Kemahasiswaan::select('angkatan')
-            ->distinct()
-            ->orderBy('angkatan', 'desc')
-            ->pluck('angkatan');
-
-        $isAdmin      = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
-        $isGpm        = $this->hasRole('gpm');
-        $isPengurus   = $this->hasRole('pengurus_himpunan');
-        $isMahasiswa  = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
+        $isAdmin = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+        $isGpm = $this->hasRole('gpm');
+        $isPengurus = $this->hasRole('pengurus_himpunan');
+        $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
 
         return view('manajemenmahasiswa::direktori.mahasiswa-index', compact(
             'mahasiswa',
@@ -235,7 +321,10 @@ class DirektoriMahasiswaController extends Controller
             'isGpm',
             'isPengurus',
             'isMahasiswa',
-        ))->with('layout', $this->resolveLayout());
+        ))->with('layout', $this->resolveLayout())
+            ->with('error', isset($mahasiswa) && $mahasiswa->isEmpty() && !$request->hasAny(['search', 'angkatan', 'status'])
+                ? 'Koneksi database sedang tidak stabil. Silakan muat ulang halaman.'
+                : null);
     }
 
     // -------------------------------------------------------------------------
@@ -244,34 +333,46 @@ class DirektoriMahasiswaController extends Controller
 
     public function show(int $id)
     {
-        $mhs = Kemahasiswaan::with(['user', 'user.student', 'prestasi' => function($q) {
-            $q->where('verification_status', 'approved');
-        }])->findOrFail($id);
+        try {
+            [$mhs, $semuaKegiatan, $cvProfile] = $this->withRetry(function () use ($id) {
+                $mhs = Kemahasiswaan::with([
+                    'user',
+                    'user.student',
+                    'prestasi' => function ($q) {
+                        $q->where('verification_status', 'approved');
+                    }
+                ])->findOrFail($id);
 
-        // Ambil riwayat kegiatan: manual + otomatis dari ketua pelaksana
-        $riwayatKegiatan = $this->buildMergedRiwayat($mhs->user_id);
+                $semuaKegiatan = Kegiatan::orderBy('judul')->get();
+                $cvProfile = CvProfile::where('user_id', $mhs->user_id)->first();
 
-        // Semua kegiatan for dropdown (untuk tambah riwayat)
-        $semuaKegiatan = Kegiatan::orderBy('judul')->get();
+                return [$mhs, $semuaKegiatan, $cvProfile];
+            });
 
-        // Ambil CV Profile mahasiswa (jika sudah pernah membuat CV via CV Builder)
-        $cvProfile = CvProfile::where('user_id', $mhs->user_id)->first();
+            // Ambil riwayat kegiatan: manual + otomatis dari ketua pelaksana
+            $riwayatKegiatan = $this->withRetry(fn() => $this->buildMergedRiwayat($mhs->user_id));
 
-        $isAdmin      = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
-        $isPengurus   = $this->hasRole('pengurus_himpunan');
-        $isGpm        = $this->hasRole('gpm');
-        $isMahasiswa  = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
+            $isAdmin = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+            $isPengurus = $this->hasRole('pengurus_himpunan');
+            $isGpm = $this->hasRole('gpm');
+            $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
 
-        return view('manajemenmahasiswa::direktori.mahasiswa-show', compact(
-            'mhs',
-            'riwayatKegiatan',
-            'semuaKegiatan',
-            'isAdmin',
-            'isPengurus',
-            'isGpm',
-            'isMahasiswa',
-            'cvProfile',
-        ))->with('layout', $this->resolveLayout());
+            return view('manajemenmahasiswa::direktori.mahasiswa-show', compact(
+                'mhs',
+                'riwayatKegiatan',
+                'semuaKegiatan',
+                'isAdmin',
+                'isPengurus',
+                'isGpm',
+                'isMahasiswa',
+                'cvProfile',
+            ))->with('layout', $this->resolveLayout());
+
+        } catch (\Throwable) {
+            return redirect()
+                ->route('manajemenmahasiswa.direktori.mahasiswa.index')
+                ->with('error', 'Koneksi database sedang tidak stabil. Silakan coba lagi dalam beberapa saat.');
+        }
     }
 
     // -------------------------------------------------------------------------
@@ -293,20 +394,26 @@ class DirektoriMahasiswaController extends Controller
     public function update(Request $request, int $id)
     {
         $request->validate([
-            'nama'        => 'required|string|max:255',
-            'nim'         => 'required|string|max:30',
-            'angkatan'    => 'required|integer|min:2000|max:2099',
-            'status'      => 'required|in:' . implode(',', Kemahasiswaan::STATUS_LIST),
+            'nama' => 'required|string|max:255',
+            'nim' => 'required|string|max:30',
+            'angkatan' => 'required|integer|min:2000|max:2099',
+            'status' => 'required|in:' . implode(',', Kemahasiswaan::STATUS_LIST),
             'tahun_lulus' => 'nullable|integer|min:2000|max:2099',
-            'profesi'     => 'nullable|string|max:255',
-            'kontak'      => 'nullable|string|max:255',
+            'profesi' => 'nullable|string|max:255',
+            'kontak' => 'nullable|string|max:255',
         ]);
 
         $mhs = Kemahasiswaan::findOrFail($id);
         $oldStatus = $mhs->status;
 
         $mhs->update($request->only([
-            'nama', 'nim', 'angkatan', 'status', 'tahun_lulus', 'profesi', 'kontak',
+            'nama',
+            'nim',
+            'angkatan',
+            'status',
+            'tahun_lulus',
+            'profesi',
+            'kontak',
         ]));
 
         // Sinkronisasi: jika status baru = alumni, otomatis buat record di mk_alumni
@@ -314,9 +421,9 @@ class DirektoriMahasiswaController extends Controller
             \Modules\ManajemenMahasiswa\Models\Alumni::firstOrCreate(
                 ['user_id' => $mhs->user_id],
                 [
-                    'nim'          => $mhs->nim,
-                    'angkatan'     => $mhs->angkatan,
-                    'tahun_lulus'  => $mhs->tahun_lulus ?? (int) date('Y'),
+                    'nim' => $mhs->nim,
+                    'angkatan' => $mhs->angkatan,
+                    'tahun_lulus' => $mhs->tahun_lulus ?? (int) date('Y'),
                     'program_studi' => 'Teknik Komputer',
                 ]
             );
@@ -342,15 +449,20 @@ class DirektoriMahasiswaController extends Controller
     public function profil()
     {
         $user = Auth::user();
-        $mhs  = Kemahasiswaan::with(['prestasi' => function($q) {
-            $q->where('verification_status', 'approved');
-        }, 'user', 'user.student'])->where('user_id', $user->id)->first();
+
+        $mhs = $this->withRetry(fn() => Kemahasiswaan::with([
+            'prestasi' => function ($q) {
+                $q->where('verification_status', 'approved');
+            },
+            'user',
+            'user.student'
+        ])->where('user_id', $user->id)->first());
 
         if (!$mhs) {
             return back()->with('error', 'Data kemahasiswaan Anda belum terdaftar dalam sistem.');
         }
 
-        $riwayatKegiatan = $this->buildMergedRiwayat($user->id);
+        $riwayatKegiatan = $this->withRetry(fn() => $this->buildMergedRiwayat($user->id));
 
         return view('manajemenmahasiswa::direktori.mahasiswa-profil', compact(
             'mhs',
@@ -370,8 +482,8 @@ class DirektoriMahasiswaController extends Controller
             // Mode manual: ketik nama kegiatan & peran bebas
             $request->validate([
                 'nama_kegiatan_manual' => 'required|string|max:255',
-                'peran_manual'         => 'required|string|max:255',
-                'tanggal_kegiatan'     => 'nullable|date',
+                'peran_manual' => 'required|string|max:255',
+                'tanggal_kegiatan' => 'nullable|date',
             ]);
 
             $mhs = Kemahasiswaan::with('user.student')->findOrFail($id);
@@ -379,18 +491,18 @@ class DirektoriMahasiswaController extends Controller
             abort_if(!$studentId, 404, 'Data student tidak ditemukan.');
 
             RiwayatKegiatan::create([
-                'student_id'           => $studentId,
-                'kegiatan_id'          => null,
-                'peran'                => null,
+                'student_id' => $studentId,
+                'kegiatan_id' => null,
+                'peran' => null,
                 'nama_kegiatan_manual' => $request->nama_kegiatan_manual,
-                'peran_manual'         => $request->peran_manual,
-                'tanggal_kegiatan'     => $request->tanggal_kegiatan,
+                'peran_manual' => $request->peran_manual,
+                'tanggal_kegiatan' => $request->tanggal_kegiatan,
             ]);
         } else {
             // Mode dropdown: pilih dari list kegiatan
             $request->validate([
                 'kegiatan_id' => 'required|exists:mk_kegiatan,id',
-                'peran'       => 'required|in:' . implode(',', RiwayatKegiatan::PERAN_LIST),
+                'peran' => 'required|in:' . implode(',', RiwayatKegiatan::PERAN_LIST),
             ]);
 
             $mhs = Kemahasiswaan::with('user.student')->findOrFail($id);
@@ -398,9 +510,9 @@ class DirektoriMahasiswaController extends Controller
             abort_if(!$studentId, 404, 'Data student tidak ditemukan.');
 
             RiwayatKegiatan::create([
-                'student_id'  => $studentId,
+                'student_id' => $studentId,
                 'kegiatan_id' => $request->kegiatan_id,
-                'peran'       => $request->peran,
+                'peran' => $request->peran,
             ]);
         }
 
@@ -417,7 +529,7 @@ class DirektoriMahasiswaController extends Controller
     {
         $request->validate([
             'kegiatan_id' => 'required|exists:mk_kegiatan,id',
-            'peran'       => 'required|in:' . implode(',', RiwayatKegiatan::PERAN_LIST),
+            'peran' => 'required|in:' . implode(',', RiwayatKegiatan::PERAN_LIST),
         ]);
 
         $riwayat = RiwayatKegiatan::findOrFail($riwayatId);
@@ -452,9 +564,13 @@ class DirektoriMahasiswaController extends Controller
 
     public function generateCv(int $id)
     {
-        $mhs = Kemahasiswaan::with(['user', 'user.student', 'prestasi' => function($q) {
-            $q->where('verification_status', 'approved');
-        }])->findOrFail($id);
+        $mhs = Kemahasiswaan::with([
+            'user',
+            'user.student',
+            'prestasi' => function ($q) {
+                $q->where('verification_status', 'approved');
+            }
+        ])->findOrFail($id);
 
         $riwayatKegiatan = $this->buildMergedRiwayat($mhs->user_id);
 
@@ -470,9 +586,13 @@ class DirektoriMahasiswaController extends Controller
     public function generateCvSelf()
     {
         $user = Auth::user();
-        $mhs  = Kemahasiswaan::with(['prestasi' => function($q) {
-            $q->where('verification_status', 'approved');
-        }, 'user', 'user.student'])->where('user_id', $user->id)->firstOrFail();
+        $mhs = Kemahasiswaan::with([
+            'prestasi' => function ($q) {
+                $q->where('verification_status', 'approved');
+            },
+            'user',
+            'user.student'
+        ])->where('user_id', $user->id)->firstOrFail();
 
         $riwayatKegiatan = $this->buildMergedRiwayat($user->id);
 
@@ -488,9 +608,13 @@ class DirektoriMahasiswaController extends Controller
 
     public function previewCvBuilder(int $id)
     {
-        $mhs = Kemahasiswaan::with(['user', 'user.student', 'prestasi' => function($q) {
-            $q->where('verification_status', 'approved');
-        }])->findOrFail($id);
+        $mhs = Kemahasiswaan::with([
+            'user',
+            'user.student',
+            'prestasi' => function ($q) {
+                $q->where('verification_status', 'approved');
+            }
+        ])->findOrFail($id);
 
         $user = $mhs->user;
         abort_if(!$user, 404, 'User tidak ditemukan.');
