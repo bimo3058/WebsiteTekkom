@@ -86,7 +86,7 @@
 
         <div class="level-up-overlay" id="confettiOverlay"></div>
         <div class="level-up-toast" id="levelUpToast">
-            <span class="level-icon">{{ $levelUp['tier_icon'] }}</span>
+            <span class="level-icon">{!! $levelUp['tier_icon'] !!}</span>
             <div class="level-text">LEVEL UP!</div>
             <div class="level-tier">Level {{ $levelUp['new_level'] }} — {{ $levelUp['tier_name'] }}</div>
             <div class="level-sub">Selamat! Anda naik dari Level {{ $levelUp['old_level'] }}</div>

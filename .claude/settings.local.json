@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -E \"Controller.php$\")",
+      "Bash(git -C d:/laragon/www/Capstone-V2/WebsiteTekkom ls-files .claude/settings.local.json)",
+      "Bash(xargs grep *)"
+    ]
+  }
+}
