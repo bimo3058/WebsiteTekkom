@@ -53,7 +53,7 @@ class Alumni extends Model
         self::STATUS_BEKERJA      => 'Bekerja',
         self::STATUS_WIRAUSAHA    => 'Wirausaha',
         self::STATUS_STUDI_LANJUT => 'Studi Lanjut',
-        self::STATUS_BELUM_BEKERJA => 'Belum Bekerja',
+        self::STATUS_BELUM_BEKERJA => 'Belum Terdata',
     ];
 
     const BIDANG_INDUSTRI_LIST = [

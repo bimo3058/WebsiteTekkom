@@ -14,7 +14,7 @@
     @php
         $sidebarRoles = auth()->user()->roles->pluck('name')->toArray();
         $showDashboardAnalitik = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm'])) > 0;
-        $showManajemenPengguna = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit'])) > 0;
+        $showManajemenPengguna = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit'])) > 0;
 
         // Tentukan URL dashboard utama sesuai role
         $mainDashboardUrl = in_array('superadmin', $sidebarRoles)
@@ -27,6 +27,8 @@
             $portalLabel = 'Portal Dosen';
         } elseif (in_array('pengurus_himpunan', $sidebarRoles)) {
             $portalLabel = 'Portal Mahasiswa';
+        } elseif (in_array('alumni', $sidebarRoles)) {
+            $portalLabel = 'Portal Alumni';
         } else {
             $portalLabel = 'Portal Mahasiswa';
         }
@@ -188,7 +190,7 @@
                 @php
                     $userRoles = auth()->user()->roles->pluck('name')->toArray();
                     // Pengurus himpunan dan mahasiswa bisa lihat list tapi tidak bisa edit (dikontrol di routes)
-                    $canViewAll = (bool) array_intersect($userRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa', 'alumni']);
+                    $canViewAll = (bool) array_intersect($userRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa', 'alumni']);
                     $mahasiswaRoute = $canViewAll
                         ? route('manajemenmahasiswa.direktori.mahasiswa.index')
                         : route('manajemenmahasiswa.direktori.mahasiswa.profil');

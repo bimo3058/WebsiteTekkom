@@ -208,6 +208,29 @@
                 background-color: #f9fafb;
                 text-transform: uppercase;
                 letter-spacing: 0.04em;
+                position: sticky;
+                top: 0;
+                z-index: 10;
+            }
+
+            .leaderboard-scroll-container {
+                max-height: 280px;
+                overflow-y: auto;
+                scrollbar-width: thin;
+                scrollbar-color: #e2e8f0 transparent;
+            }
+
+            .leaderboard-scroll-container::-webkit-scrollbar {
+                width: 6px;
+            }
+
+            .leaderboard-scroll-container::-webkit-scrollbar-track {
+                background: transparent;
+            }
+
+            .leaderboard-scroll-container::-webkit-scrollbar-thumb {
+                background-color: #e2e8f0;
+                border-radius: 20px;
             }
 
             .leaderboard-table td {
@@ -473,6 +496,50 @@
             .pagination-container .pagination {
                 margin-bottom: 0;
             }
+
+            /* ── Leaderboard Ranks ───────────────────────────────────────────── */
+            .rank-container {
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                width: 28px;
+            }
+
+            .rank-badge {
+                width: 26px;
+                height: 26px;
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: 800;
+                font-size: 12px;
+                color: #fff;
+                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            }
+
+            .rank-1 {
+                background: linear-gradient(135deg, #fbbf24 0%, #d97706 100%);
+                border: 2px solid #fef3c7;
+            }
+
+            .rank-2 {
+                background: linear-gradient(135deg, #cbd5e1 0%, #64748b 100%);
+                border: 2px solid #f1f5f9;
+            }
+
+            .rank-3 {
+                background: linear-gradient(135deg, #f97316 0%, #b45309 100%);
+                border: 2px solid #ffedd5;
+            }
+
+            .rank-text {
+                font-weight: 700;
+                font-size: 13px;
+                color: #94a3b8;
+                width: 26px;
+                text-align: center;
+            }
         </style>
     @endpush
 
@@ -507,7 +574,7 @@
                     </div>
                 </div>
                 <div style="padding: 0;">
-                    <div class="table-responsive">
+                    <div class="table-responsive leaderboard-scroll-container">
                         <table class="table table-borderless table-sm mb-0 leaderboard-table">
                             <thead>
                                 <tr>
@@ -520,16 +587,18 @@
                             <tbody>
                                 @forelse($leaderboard as $index => $entry)
                                     <tr style="{{ $index < 3 ? 'background:' . ['#fffbeb','#f8fafc','#fdf4f0'][$index] . ';' : '' }}">
-                                        <td style="padding-left: 20px;">
-                                            @if($index === 0)
-                                                <span style="font-size: 18px; filter: drop-shadow(0 1px 2px rgba(234,179,8,0.4));">🥇</span>
-                                            @elseif($index === 1)
-                                                <span style="font-size: 18px; filter: drop-shadow(0 1px 2px rgba(148,163,184,0.4));">🥈</span>
-                                            @elseif($index === 2)
-                                                <span style="font-size: 18px; filter: drop-shadow(0 1px 2px rgba(180,83,9,0.3));">🥉</span>
-                                            @else
-                                                <span style="color: #94a3b8; font-weight: 600;">{{ $index + 1 }}</span>
-                                            @endif
+                                        <td style="padding-left: 20px; vertical-align: middle;">
+                                            <div class="rank-container">
+                                                @if($index === 0)
+                                                    <div class="rank-badge rank-1" title="Juara 1">1</div>
+                                                @elseif($index === 1)
+                                                    <div class="rank-badge rank-2" title="Juara 2">2</div>
+                                                @elseif($index === 2)
+                                                    <div class="rank-badge rank-3" title="Juara 3">3</div>
+                                                @else
+                                                    <div class="rank-text">{{ $index + 1 }}</div>
+                                                @endif
+                                            </div>
                                         </td>
                                         <td>
                                             <span class="fw-semibold" style="color: #1e293b; font-size: 13px;">{{ $entry->name }}</span>
@@ -563,36 +632,7 @@
                                     </tr>
                                 @endforelse
                             </tbody>
-                            <tfoot>
-                                <tr style="border-top: 2px dashed #e2e8f0; background: #f0f9ff;">
-                                    <td style="padding-left: 20px;">
-                                        <span style="background: #6366f1; color: #fff; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 10px;">#{{ $userStats['rank'] }}</span>
-                                    </td>
-                                    <td>
-                                        <span class="fw-semibold" style="color: #1e293b; font-size: 13px;">{{ $user->name }}</span>
-                                        <span style="font-size: 10px; color: #6366f1; font-weight: 600; margin-left: 4px; background: #eef2ff; padding: 1px 6px; border-radius: 4px;">Anda</span>
-                                    </td>
-                                    <td>
-                                        <span class="d-inline-flex align-items-center gap-1" style="font-size: 13px;">
-                                            <span>{!! $userStats['tier_icon'] !!}</span>
-                                            <span style="color: #6366f1; font-weight: 600;">Lv.{{ $userStats['level'] }}</span>
-                                        </span>
-                                    </td>
-                                    <td>
-                                        @foreach($userStats['badges']->take(3) as $badge)
-                                            @if($badge->image)
-                                                <img src="{{ asset($badge->image) }}?v={{ time() }}" title="{{ $badge->name }}" style="width: 22px; height: 22px; object-fit: contain; margin-right: 2px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                                                <span style="display:none;">{{ $badge->icon }}</span>
-                                            @else
-                                                <span title="{{ $badge->name }}">{{ $badge->icon }}</span>
-                                            @endif
-                                        @endforeach
-                                        @if($userStats['badges']->count() > 3)
-                                            <span style="font-size: 11px; opacity: 0.7;">+{{ $userStats['badges']->count() - 3 }}</span>
-                                        @endif
-                                    </td>
-                                </tr>
-                            </tfoot>
+
                         </table>
                     </div>
                 </div>
@@ -968,6 +1008,13 @@
                             <svg width="18" height="18" viewBox="0 0 24 24" fill="{{ $threadUserVote && $threadUserVote->value === -1 ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
                         </button>
                     </div>
+                    @if($thread->poll)
+                        <span class="action-btn ms-1" style="cursor:default;color:#4f46e5;background:#eef2ff;border-color:#c7d2fe;"
+                              title="Thread ini memiliki poll">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+                            Poll
+                        </span>
+                    @endif
                     <button class="action-btn ms-2" onclick="window.location.href='{{ route('manajemenmahasiswa.forum.show', $thread->id) }}'">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
                         {{ $thread->comments_count ?? $thread->comment_count }}

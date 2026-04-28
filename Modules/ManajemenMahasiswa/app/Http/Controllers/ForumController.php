@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Modules\ManajemenMahasiswa\Models\Thread;
+use Modules\ManajemenMahasiswa\Models\ThreadPoll;
+use Modules\ManajemenMahasiswa\Models\ThreadPollOption;
+use Modules\ManajemenMahasiswa\Models\ThreadPollVote;
 use Modules\ManajemenMahasiswa\Services\ThreadService;
 use Modules\ManajemenMahasiswa\Services\CommentService;
 use Modules\ManajemenMahasiswa\Services\GamificationService;
@@ -32,7 +35,7 @@ class ForumController extends Controller
         $roles = $user->roles->pluck('name');
 
         $threads = $this->threadService->listThreads($request->all(), 15);
-        $leaderboard = $this->gamificationService->getLeaderboard(5);
+        $leaderboard = $this->gamificationService->getLeaderboard(10);
         $userStats = $this->gamificationService->getUserStats($user->id);
         $categories = Thread::KATEGORI_LABELS;
 
@@ -158,6 +161,10 @@ class ForumController extends Controller
             'media_files' => 'nullable|array|max:5',
             'media_files.*' => 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:10240',
             'link_url' => 'nullable|url|max:2000',
+            'has_poll' => 'nullable|boolean',
+            'poll_options' => 'nullable|array|min:2|max:6',
+            'poll_options.*' => 'required_with:has_poll|string|max:150',
+            'poll_expires_at' => 'nullable|date|after:now',
         ];
 
         $validated = $request->validate($rules);
@@ -221,11 +228,25 @@ class ForumController extends Controller
             $this->gamificationService->getTotalXp(Auth::id())
         );
 
-        $this->threadService->createThread(Auth::id(), [
+        $thread = $this->threadService->createThread(Auth::id(), [
             'judul' => $validated['judul'],
             'konten' => $konten,
             'kategori' => $validated['kategori'],
         ]);
+
+        // Buat poll jika dipilih
+        if ($request->boolean('has_poll') && !empty($validated['poll_options'])) {
+            $options = array_values(array_filter($validated['poll_options'], fn($o) => trim($o) !== ''));
+            if (count($options) >= 2) {
+                $poll = ThreadPoll::create([
+                    'thread_id'  => $thread->id,
+                    'expires_at' => $validated['poll_expires_at'] ?? null,
+                ]);
+                foreach ($options as $optText) {
+                    ThreadPollOption::create(['poll_id' => $poll->id, 'text' => trim($optText)]);
+                }
+            }
+        }
 
         // Check level after
         $newLevel = $this->gamificationService->calculateLevel(
@@ -263,6 +284,7 @@ class ForumController extends Controller
         $user = Auth::user();
 
         $thread = $this->threadService->findThread($id);
+        $thread->load(['poll.options', 'poll.votes']);
         $comments = $this->commentService->listComments($id);
 
         $userVotes = \Modules\ManajemenMahasiswa\Models\Vote::where('user_id', $user->id)
@@ -304,6 +326,67 @@ class ForumController extends Controller
     }
 
     /**
+     * Vote pada poll (AJAX).
+     */
+    public function votePoll(int $threadId, Request $request)
+    {
+        $request->validate(['option_id' => 'required|integer']);
+
+        $thread = $this->threadService->findThread($threadId);
+        $poll   = $thread->poll;
+
+        if (!$poll) {
+            return response()->json(['error' => 'Poll tidak ditemukan.'], 404);
+        }
+
+        if ($poll->isClosed()) {
+            return response()->json(['error' => 'Poll sudah ditutup.'], 403);
+        }
+
+        $option = ThreadPollOption::where('poll_id', $poll->id)
+            ->where('id', $request->option_id)
+            ->firstOrFail();
+
+        $userId = Auth::id();
+
+        // Cek apakah sudah pernah vote
+        $existing = ThreadPollVote::where('poll_id', $poll->id)->where('user_id', $userId)->first();
+
+        if ($existing) {
+            if ($existing->option_id === $option->id) {
+                return response()->json(['error' => 'Kamu sudah memilih opsi ini.'], 422);
+            }
+            // Kurangi votes_count opsi lama
+            ThreadPollOption::where('id', $existing->option_id)->decrement('votes_count');
+            $existing->update(['option_id' => $option->id]);
+        } else {
+            ThreadPollVote::create([
+                'poll_id'   => $poll->id,
+                'option_id' => $option->id,
+                'user_id'   => $userId,
+            ]);
+        }
+
+        // Tambah votes_count opsi baru
+        $option->increment('votes_count');
+
+        // Reload poll options dengan total terbaru
+        $poll->load('options');
+        $total = $poll->totalVotes();
+
+        return response()->json([
+            'success'        => true,
+            'voted_option_id'=> $option->id,
+            'total_votes'    => $total,
+            'options'        => $poll->options->map(fn($o) => [
+                'id'          => $o->id,
+                'votes_count' => $o->votes_count,
+                'percentage'  => $o->percentage($total),
+            ]),
+        ]);
+    }
+
+    /**
      * Form edit thread.
      */
     public function edit(int $id)
@@ -316,6 +399,7 @@ class ForumController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk mengedit thread ini.');
         }
 
+        $thread->load(['poll.options']);
         $categories = Thread::KATEGORI_LABELS;
 
         return view('manajemenmahasiswa::forum.edit', compact('thread', 'categories', 'user'));
@@ -362,6 +446,18 @@ class ForumController extends Controller
             'link_url' => 'nullable|url|max:2000',
             'remove_media' => 'nullable|array',
             'remove_media.*' => 'string',
+            // Poll fields
+            'has_poll' => 'nullable|boolean',
+            'poll_options' => 'nullable|array|min:2|max:6',
+            'poll_options.*' => 'nullable|string|max:150',
+            'poll_expires_at' => 'nullable|date|after:now',
+            'poll_is_closed' => 'nullable|boolean',
+            'poll_option_text' => 'nullable|array',
+            'poll_option_text.*' => 'nullable|string|max:150',
+            'poll_delete_options' => 'nullable|array',
+            'poll_delete_options.*' => 'integer',
+            'poll_new_options' => 'nullable|array|max:4',
+            'poll_new_options.*' => 'nullable|string|max:150',
         ]);
 
         // Rebuild konten HTML
@@ -435,6 +531,72 @@ class ForumController extends Controller
             'kategori' => $validated['kategori'],
             'remove_media' => $removeMedia,
         ]);
+
+        // ── Sinkronisasi Poll ──────────────────────────────────────────────
+        $thread->load('poll.options');
+        $existingPoll = $thread->poll;
+
+        if ($existingPoll) {
+            // Update teks opsi yang ada
+            if (!empty($validated['poll_option_text'])) {
+                foreach ($validated['poll_option_text'] as $optId => $text) {
+                    $opt = $existingPoll->options->firstWhere('id', (int) $optId);
+                    if ($opt && trim($text) !== '') {
+                        $opt->update(['text' => trim($text)]);
+                    }
+                }
+            }
+
+            // Hapus opsi yang dipilih (hanya yang votes_count = 0)
+            if (!empty($validated['poll_delete_options'])) {
+                foreach ($validated['poll_delete_options'] as $optId) {
+                    $opt = $existingPoll->options->firstWhere('id', (int) $optId);
+                    if ($opt && $opt->votes_count === 0) {
+                        // Pastikan minimal 2 opsi tersisa setelah hapus
+                        $remainingCount = $existingPoll->options->where('id', '!=', $opt->id)->count();
+                        if ($remainingCount >= 2) {
+                            $opt->delete();
+                        }
+                    }
+                }
+            }
+
+            // Tambah opsi baru
+            if (!empty($validated['poll_new_options'])) {
+                $existingPoll->load('options'); // reload setelah delete
+                $currentCount = $existingPoll->options->count();
+                foreach ($validated['poll_new_options'] as $text) {
+                    if ($currentCount >= 6 || trim($text ?? '') === '') continue;
+                    ThreadPollOption::create(['poll_id' => $existingPoll->id, 'text' => trim($text)]);
+                    $currentCount++;
+                }
+            }
+
+            // Update status tutup & expiry
+            $updatePollData = [];
+            if ($request->boolean('poll_is_closed') !== $existingPoll->is_closed) {
+                $updatePollData['is_closed'] = $request->boolean('poll_is_closed');
+            }
+            if (array_key_exists('poll_expires_at', $validated)) {
+                $updatePollData['expires_at'] = $validated['poll_expires_at'] ?? null;
+            }
+            if (!empty($updatePollData)) {
+                $existingPoll->update($updatePollData);
+            }
+
+        } elseif ($request->boolean('has_poll') && !empty($validated['poll_options'])) {
+            // Thread belum punya poll — buat baru
+            $options = array_values(array_filter($validated['poll_options'], fn($o) => trim($o ?? '') !== ''));
+            if (count($options) >= 2) {
+                $newPoll = ThreadPoll::create([
+                    'thread_id'  => $thread->id,
+                    'expires_at' => $validated['poll_expires_at'] ?? null,
+                ]);
+                foreach ($options as $optText) {
+                    ThreadPollOption::create(['poll_id' => $newPoll->id, 'text' => trim($optText)]);
+                }
+            }
+        }
 
         return redirect()
             ->route('manajemenmahasiswa.forum.show', $id)
