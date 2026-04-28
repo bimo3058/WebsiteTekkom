@@ -1,7 +1,7 @@
 @php
     $userRoleNames = $user->roles->pluck('name')->map(fn($r) => strtolower($r))->toArray();
 
-    $himpunanPositions = ['ketua_himpunan','wakil_ketua_himpunan','ketua_bidang','ketua_unit','staff_himpunan'];
+    $himpunanPositions = ['ketua_himpunan','ketua_bidang','ketua_unit','staff_himpunan'];
     $isAlumni          = in_array('alumni', $userRoleNames);
     $isPengurus        = count(array_intersect($userRoleNames, $himpunanPositions)) > 0;
     $isMahasiswa       = in_array('mahasiswa', $userRoleNames) && !$isPengurus && !$isAlumni;
@@ -27,7 +27,6 @@
     $roleBadgeStyle = function(string $role): string {
         return match(true) {
             $role === 'ketua_himpunan'       => 'background:#F1E9FF;color:#5E53F4;border:1px solid #D1BFFF;',
-            $role === 'wakil_ketua_himpunan' => 'background:#F1E9FF;color:#5E53F4;border:1px solid #D1BFFF;',
             $role === 'ketua_bidang'         => 'background:#EBF1FF;color:#3377FF;border:1px solid #B3CCFF;',
             $role === 'ketua_unit'           => 'background:#EBF1FF;color:#3377FF;border:1px solid #B3CCFF;',
             $role === 'staff_himpunan'       => 'background:#F8F9FA;color:#495057;border:1px solid #DEE2E6;',
@@ -41,7 +40,6 @@
     $roleLabel = function(string $role): string {
         return match($role) {
             'ketua_himpunan'       => 'Ketua Himpunan',
-            'wakil_ketua_himpunan' => 'Wakil Ketua Himpunan',
             'ketua_bidang'         => 'Ketua Bidang',
             'ketua_unit'           => 'Ketua Unit',
             'staff_himpunan'       => 'Staff Himpunan',
@@ -174,7 +172,7 @@
                     @php
                         $isCurrentRole = in_array($role->name, $userRoleNames);
                         [$bg, $border, $color] = match(true) {
-                            in_array($role->name, ['ketua_himpunan','wakil_ketua_himpunan'])
+                            in_array($role->name, ['ketua_himpunan'])
                                 => ['#F1E9FF', '#D1BFFF', '#5E53F4'],
                             in_array($role->name, ['ketua_bidang','ketua_unit'])
                                 => ['#EBF1FF', '#B3CCFF', '#3377FF'],

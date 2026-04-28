@@ -511,6 +511,11 @@
         {!! nl2br(strip_tags($thread->konten, '<a><br>')) !!}
     </div>
 
+    {{-- Poll --}}
+    @if($thread->poll)
+        @include('manajemenmahasiswa::forum._poll', ['poll' => $thread->poll, 'threadId' => $thread->id])
+    @endif
+
     @php
         $mediaUrls = $thread->extractMediaUrls();
     @endphp

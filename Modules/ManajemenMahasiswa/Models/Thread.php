@@ -5,6 +5,7 @@ namespace Modules\ManajemenMahasiswa\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -91,6 +92,11 @@ class Thread extends Model
     public function bestAnswer(): BelongsTo
     {
         return $this->belongsTo(Comment::class, 'best_answer_id');
+    }
+
+    public function poll(): HasOne
+    {
+        return $this->hasOne(ThreadPoll::class, 'thread_id');
     }
 
     // -------------------------------------------------------------------------

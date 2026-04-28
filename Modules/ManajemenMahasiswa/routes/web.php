@@ -86,14 +86,14 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
         Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
             // Mahasiswa & pengurus himpunan membuat pengaduan
             // NOTE: HARUS didefinisikan sebelum /{pengaduan} agar tidak konflik dengan path seperti /create
-            Route::middleware('role:mahasiswa,pengurus_himpunan,ketua_himpunan,wakil_ketua_himpunan,ketua_bidang,ketua_unit,staff_himpunan')->group(function () {
+            Route::middleware('role:mahasiswa,pengurus_himpunan,ketua_himpunan,ketua_bidang,ketua_unit,staff_himpunan')->group(function () {
                 Route::get('/create', [PengaduanController::class, 'create'])->name('create');
                 Route::post('/confirm', [PengaduanController::class, 'confirm'])->name('confirm');
                 Route::post('/', [PengaduanController::class, 'store'])->name('store');
             });
 
             // Akses pengaduan: mahasiswa, pengurus himpunan, dan staff (dosen/gpm/admin)
-            Route::middleware('role:mahasiswa,pengurus_himpunan,ketua_himpunan,wakil_ketua_himpunan,ketua_bidang,ketua_unit,staff_himpunan,dosen,gpm,admin,superadmin,admin_kemahasiswaan')->group(function () {
+            Route::middleware('role:mahasiswa,pengurus_himpunan,ketua_himpunan,ketua_bidang,ketua_unit,staff_himpunan,dosen,gpm,admin,superadmin,admin_kemahasiswaan')->group(function () {
                 Route::get('/', [PengaduanController::class, 'index'])->name('index');
                 Route::get('/{pengaduan}', [PengaduanController::class, 'show'])
                     ->whereNumber('pengaduan')
@@ -138,6 +138,9 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::put('/{id}', [ForumController::class, 'update'])->name('update');
             Route::delete('/{id}', [ForumController::class, 'destroy'])->name('destroy');
 
+            // Poll Vote
+            Route::post('/{threadId}/poll/vote', [ForumController::class, 'votePoll'])->name('poll.vote');
+
             // Best Answer
             Route::post('/{threadId}/best-answer/{commentId}', [ForumController::class, 'markBestAnswer'])->name('best_answer');
 
@@ -165,7 +168,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
         });
 
         // ── Manajemen Pengguna (Role Assignment) ─────────────────────────
-        Route::middleware('role:admin_kemahasiswaan,admin,superadmin,ketua_himpunan,wakil_ketua_himpunan,ketua_bidang,ketua_unit')
+        Route::middleware('role:admin_kemahasiswaan,admin,superadmin,ketua_himpunan,ketua_bidang,ketua_unit')
             ->prefix('pengguna')
             ->name('pengguna.')
             ->group(function () {
