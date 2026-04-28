@@ -266,8 +266,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             // Index — semua role boleh akses (view berbeda per role)
             Route::get('/', [VerifikasiController::class, 'index'])->name('index');
 
-            // Submit pengajuan — mahasiswa, alumni, pengurus himpunan
-            Route::middleware('role:mahasiswa,alumni,pengurus_himpunan,superadmin,admin,admin_kemahasiswaan')
+            // Submit pengajuan — mahasiswa, alumni, semua pengurus himpunan
+            Route::middleware('role:mahasiswa,alumni,pengurus_himpunan,ketua_himpunan,wakil_ketua_himpunan,ketua_bidang,ketua_unit,staff_himpunan,superadmin,admin,admin_kemahasiswaan')
                 ->group(function () {
                     Route::post('/riwayat', [VerifikasiController::class, 'storeRiwayat'])->name('riwayat.store');
                     Route::post('/prestasi', [VerifikasiController::class, 'storePrestasi'])->name('prestasi.store');
