@@ -239,7 +239,7 @@ class VerifikasiController extends Controller
         $request->validate([
             'nama_kegiatan_manual' => 'required|string|max:255',
             'peran_manual'         => 'required|string|max:255',
-            'tanggal_kegiatan'     => 'nullable|date',
+            'tanggal_kegiatan'     => 'required|date',
             'bukti_images'         => 'nullable|array|max:5',
             'bukti_images.*'       => 'file|mimes:jpg,jpeg,png,gif,webp|max:10240',
             'bukti_docs'           => 'nullable|array|max:5',
