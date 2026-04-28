@@ -224,8 +224,6 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->group(function () {
                     Route::get('/{id}/cv', [DirektoriMahasiswaController::class, 'generateCv'])
                         ->name('cv')->where('id', '[0-9]+');
-                    Route::get('/{id}/cv-builder-preview', [DirektoriMahasiswaController::class, 'previewCvBuilder'])
-                        ->name('cv-builder-preview')->where('id', '[0-9]+');
                 });
             });
 
@@ -235,6 +233,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 Route::middleware('role:mahasiswa,alumni')->group(function () {
                     Route::get('/profil', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'profil'])
                         ->name('profil');
+                    Route::get('/profil/cv', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'generateCvSelf'])
+                        ->name('profil.cv');
                     Route::put('/profil', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'updateProfil'])
                         ->name('profil.update');
                 });
@@ -246,6 +246,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('index');
                     Route::get('/{id}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'show'])
                         ->name('show')->where('id', '[0-9]+');
+                    Route::get('/{id}/cv', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'generateCv'])
+                        ->name('cv')->where('id', '[0-9]+');
                 });
 
                 // Edit data alumni — admin only

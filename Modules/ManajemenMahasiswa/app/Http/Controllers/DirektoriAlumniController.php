@@ -117,36 +117,50 @@ class DirektoriAlumniController extends Controller
         $this->withRetry(function () {
             $changed = false;
 
-            // 1. Tambah: mahasiswa status=alumni yang belum ada di mk_alumni
-            $existingUserIds = Alumni::pluck('user_id')->toArray();
+            // 1. Ambil semua user yang berstatus role 'alumni'
+            $alumniUserIds = \App\Models\User::whereHas('roles', fn($q) => $q->where('name', 'alumni'))
+                ->pluck('id')
+                ->toArray();
 
-            $alumniMahasiswa = Kemahasiswaan::where('status', Kemahasiswaan::STATUS_ALUMNI)
-                ->whereNotIn('user_id', $existingUserIds)
-                ->get();
+            // Buat record mk_alumni untuk user alumni yang belum ada
+            $existingAlumniUserIds = Alumni::whereIn('user_id', $alumniUserIds)->pluck('user_id')->toArray();
+            $missingUserIds = array_diff($alumniUserIds, $existingAlumniUserIds);
 
-            foreach ($alumniMahasiswa as $mhs) {
+            foreach ($missingUserIds as $userId) {
+                $user = \App\Models\User::with('student')->find($userId);
+                if (!$user)
+                    continue;
+
+                $km = Kemahasiswaan::where('user_id', $userId)->first();
+                $student = $user->student;
+
                 Alumni::create([
-                    'user_id' => $mhs->user_id,
-                    'nim' => $mhs->nim,
-                    'angkatan' => $mhs->angkatan,
-                    'tahun_lulus' => $mhs->tahun_lulus ?? (int) date('Y'),
-                    'program_studi' => 'Teknik Komputer',
+                    'user_id' => $userId,
+                    'nim' => $km?->nim ?? $student?->student_number ?? '-',
+                    'angkatan' => $km?->angkatan ?? $student?->cohort_year ?? date('Y'),
+                    'tahun_lulus' => $km?->tahun_lulus ?? (int) date('Y'),
+                    'program_studi' => 'S1 Teknik Komputer',
                 ]);
+
+                // Sekaligus pastikan status km juga konsisten
+                if ($km && $km->status !== Kemahasiswaan::STATUS_ALUMNI) {
+                    $km->update(['status' => Kemahasiswaan::STATUS_ALUMNI]);
+                }
+
                 $changed = true;
             }
 
-            // 2. Hapus: alumni di mk_alumni yang statusnya sudah bukan 'alumni'
-            $alumniUserIds = Alumni::pluck('user_id')->toArray();
-            if (!empty($alumniUserIds)) {
-                $noLongerAlumni = Kemahasiswaan::whereIn('user_id', $alumniUserIds)
-                    ->where('status', '!=', Kemahasiswaan::STATUS_ALUMNI)
-                    ->pluck('user_id')
-                    ->toArray();
+            // 2. Hapus: alumni di mk_alumni yang user-nya SUDAH TIDAK lagi berole alumni
+            $allAlumniInTable = Alumni::pluck('user_id')->toArray();
+            $noLongerAlumni = array_diff($allAlumniInTable, $alumniUserIds);
 
-                if (!empty($noLongerAlumni)) {
-                    Alumni::whereIn('user_id', $noLongerAlumni)->delete();
-                    $changed = true;
-                }
+            if (!empty($noLongerAlumni)) {
+                Alumni::whereIn('user_id', $noLongerAlumni)->delete();
+                // Kembalikan status ke aktif jika record km-nya ada
+                Kemahasiswaan::whereIn('user_id', $noLongerAlumni)
+                    ->where('status', Kemahasiswaan::STATUS_ALUMNI)
+                    ->update(['status' => Kemahasiswaan::STATUS_AKTIF]);
+                $changed = true;
             }
 
             if ($changed) {
@@ -353,5 +367,55 @@ class DirektoriAlumniController extends Controller
         return redirect()
             ->route('manajemenmahasiswa.direktori.alumni.show', $id)
             ->with('success', 'Data alumni berhasil diperbarui.');
+    }
+
+    // -------------------------------------------------------------------------
+    // Generate CV — Halaman CV print-ready (Alumni)
+    // -------------------------------------------------------------------------
+
+    public function generateCv(int $id)
+    {
+        $alumni = $this->alumniService->findById($id);
+        $user = $alumni->user;
+
+        // Ambil CV Profile jika ada, atau buat instance kosong tanpa disimpan
+        $cvProfile = \App\Models\CvProfile::where('user_id', $user->id)->first() ?? new \App\Models\CvProfile([
+            'user_id' => $user->id,
+            'tentang_diri' => '',
+            'pendidikan' => [],
+            'pengalaman_kerja' => [],
+            'keahlian' => [],
+            'sertifikasi' => [],
+            'template' => 'modern'
+        ]);
+
+        $data = app(\App\Http\Controllers\CvBuilderController::class)->getAllCvData($user, $cvProfile);
+        $data['is_print'] = true;
+
+        return view('profile.cv.template-ats', $data);
+    }
+
+    /**
+     * CV untuk alumni sendiri (dari halaman Profil)
+     */
+    public function generateCvSelf()
+    {
+        $user = Auth::user();
+
+        // Ambil CV Profile jika ada, atau buat instance kosong tanpa disimpan
+        $cvProfile = \App\Models\CvProfile::where('user_id', $user->id)->first() ?? new \App\Models\CvProfile([
+            'user_id' => $user->id,
+            'tentang_diri' => '',
+            'pendidikan' => [],
+            'pengalaman_kerja' => [],
+            'keahlian' => [],
+            'sertifikasi' => [],
+            'template' => 'modern'
+        ]);
+
+        $data = app(\App\Http\Controllers\CvBuilderController::class)->getAllCvData($user, $cvProfile);
+        $data['is_print'] = true;
+
+        return view('profile.cv.template-ats', $data);
     }
 }

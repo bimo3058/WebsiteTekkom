@@ -571,13 +571,23 @@ class DirektoriMahasiswaController extends Controller
                 $q->where('verification_status', 'approved');
             }
         ])->findOrFail($id);
+        $user = $mhs->user;
 
-        $riwayatKegiatan = $this->buildMergedRiwayat($mhs->user_id);
+        // Ambil CV Profile jika ada, atau buat instance kosong tanpa disimpan
+        $cvProfile = \App\Models\CvProfile::where('user_id', $user->id)->first() ?? new \App\Models\CvProfile([
+            'user_id' => $user->id,
+            'tentang_diri' => '',
+            'pendidikan' => [],
+            'pengalaman_kerja' => [],
+            'keahlian' => [],
+            'sertifikasi' => [],
+            'template' => 'modern'
+        ]);
 
-        return view('manajemenmahasiswa::direktori.mahasiswa-cv', compact(
-            'mhs',
-            'riwayatKegiatan',
-        ));
+        $data = app(\App\Http\Controllers\CvBuilderController::class)->getAllCvData($user, $cvProfile);
+        $data['is_print'] = true;
+
+        return view('profile.cv.template-ats', $data);
     }
 
     /**
@@ -594,117 +604,22 @@ class DirektoriMahasiswaController extends Controller
             'user.student'
         ])->where('user_id', $user->id)->firstOrFail();
 
-        $riwayatKegiatan = $this->buildMergedRiwayat($user->id);
+        // Ambil CV Profile jika ada, atau buat instance kosong tanpa disimpan
+        $cvProfile = \App\Models\CvProfile::where('user_id', $user->id)->first() ?? new \App\Models\CvProfile([
+            'user_id' => $user->id,
+            'tentang_diri' => '',
+            'pendidikan' => [],
+            'pengalaman_kerja' => [],
+            'keahlian' => [],
+            'sertifikasi' => [],
+            'template' => 'modern'
+        ]);
 
-        return view('manajemenmahasiswa::direktori.mahasiswa-cv', compact(
-            'mhs',
-            'riwayatKegiatan',
-        ));
-    }
-
-    // -------------------------------------------------------------------------
-    // Preview CV Builder — Lihat hasil CV Builder mahasiswa (Admin/Pengurus)
-    // -------------------------------------------------------------------------
-
-    public function previewCvBuilder(int $id)
-    {
-        $mhs = Kemahasiswaan::with([
-            'user',
-            'user.student',
-            'prestasi' => function ($q) {
-                $q->where('verification_status', 'approved');
-            }
-        ])->findOrFail($id);
-
-        $user = $mhs->user;
-        abort_if(!$user, 404, 'User tidak ditemukan.');
-
-        $cvProfile = CvProfile::where('user_id', $user->id)->first();
-        abort_if(!$cvProfile, 404, 'Mahasiswa belum membuat CV melalui CV Builder.');
-
-        $data = $this->buildCvBuilderData($user, $cvProfile);
+        $data = app(\App\Http\Controllers\CvBuilderController::class)->getAllCvData($user, $cvProfile);
+        $data['is_print'] = true;
 
         return view('profile.cv.template-ats', $data);
     }
 
-    /**
-     * Build all CV data for the ATS template (mirrored from CvBuilderController).
-     */
-    private function buildCvBuilderData($user, CvProfile $cvProfile): array
-    {
-        $data = [
-            'user' => [
-                'name' => $user->name,
-                'email' => $user->email,
-                'personal_email' => $cvProfile->cv_email ?? $user->personal_email ?? null,
-                'whatsapp' => $cvProfile->cv_whatsapp ?? data_get($user, 'whatsapp'),
-                'avatar_url' => $user->avatar_url_format ?? $user->avatar_url ?? null,
-                'nim' => '-',
-                'angkatan' => '-'
-            ],
-            'cv' => $cvProfile,
-            'pendidikan' => $cvProfile->pendidikan ?? [],
-            'bahasa' => $cvProfile->bahasa ?? [],
-            'pengalaman' => $cvProfile->pengalaman_kerja ?? [],
-            'kegiatan_manual' => $cvProfile->kegiatan_organisasi ?? [],
-            'kegiatan' => [],
-            'proyek' => $cvProfile->proyek ?? [],
-            'prestasi' => [],
-            'keahlian' => $cvProfile->keahlian ?? [],
-            'sertifikasi' => $cvProfile->sertifikasi ?? [],
-        ];
-
-        // Populate sync data
-        if ($user->hasRole('mahasiswa') && $user->student) {
-            $data['user']['nim'] = $user->student->student_number;
-            $data['user']['angkatan'] = $user->student->cohort_year;
-
-            $riwayat = RiwayatKegiatan::with('kegiatan')->where('student_id', $user->student->id)->get();
-            foreach ($riwayat as $rw) {
-                $data['kegiatan'][] = [
-                    'nama' => $rw->nama_kegiatan,
-                    'peran' => $rw->peran_label,
-                    'tanggal' => $rw->tanggal_display,
-                ];
-            }
-        } elseif ($user->hasRole('alumni')) {
-            $alumni = Alumni::where('user_id', $user->id)->first();
-            if ($alumni) {
-                $data['user']['nim'] = $alumni->nim;
-                $data['user']['angkatan'] = $alumni->angkatan;
-
-                if ($alumni->perusahaan) {
-                    array_unshift($data['pengalaman'], [
-                        'perusahaan' => $alumni->perusahaan,
-                        'posisi' => $alumni->jabatan,
-                        'tahun_mulai' => $alumni->tahun_mulai_bekerja,
-                        'tahun_selesai' => 'Sekarang',
-                        'deskripsi' => 'Data tersinkronisasi dari direktori alumni.'
-                    ]);
-                }
-            }
-        }
-
-        $kemahasiswaan = Kemahasiswaan::with('prestasi')->where('user_id', $user->id)->first();
-        if ($kemahasiswaan) {
-            array_unshift($data['pendidikan'], [
-                'institusi' => 'Universitas Diponegoro',
-                'jurusan' => 'S1 Teknik Komputer',
-                'tahun_masuk' => $kemahasiswaan->angkatan,
-                'tahun_lulus' => $kemahasiswaan->tahun_lulus ?? 'Sekarang'
-            ]);
-
-            if ($kemahasiswaan->prestasi) {
-                foreach ($kemahasiswaan->prestasi as $p) {
-                    $data['prestasi'][] = [
-                        'nama' => $p->nama_prestasi,
-                        'tingkat' => $p->tingkat,
-                        'tahun' => $p->tanggal ? $p->tanggal->format('Y') : null,
-                    ];
-                }
-            }
-        }
-
-        return $data;
-    }
 }
+

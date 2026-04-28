@@ -149,11 +149,14 @@ class Thread extends Model
     }
 
     /**
-     * Cek apakah thread pernah diedit (updated_at > created_at).
+     * Cek apakah thread pernah diedit (updated_at > created_at + 2 detik).
+     * Toleransi 2 detik untuk menghindari false positive saat pembuatan thread.
      */
     public function isEdited(): bool
     {
-        return $this->updated_at && $this->updated_at->gt($this->created_at);
+        return $this->updated_at
+            && $this->created_at
+            && $this->updated_at->gt($this->created_at->copy()->addSeconds(2));
     }
 
     /**
@@ -228,14 +231,16 @@ class Thread extends Model
 
     public function syncVoteCount(): void
     {
-        $this->update([
+        // Use query builder to avoid touching updated_at
+        static::where('id', $this->id)->update([
             'vote_count' => $this->votes()->where('value', 1)->count(),
         ]);
     }
 
     public function syncCommentCount(): void
     {
-        $this->update([
+        // Use query builder to avoid touching updated_at
+        static::where('id', $this->id)->update([
             'comment_count' => $this->comments()->count(),
         ]);
     }
