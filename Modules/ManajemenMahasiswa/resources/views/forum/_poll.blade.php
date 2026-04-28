@@ -12,6 +12,7 @@
      id="poll-{{ $poll->id }}"
      data-is-open="{{ $isClosed ? '0' : '1' }}"
      data-voted-option="{{ $userVotedId ?? '' }}"
+     data-vote-url="{{ $voteUrl }}"
      style="background:#f8fafc;border:1.5px solid #e5e7eb;border-radius:14px;padding:20px 22px;margin-bottom:22px;">
 
     {{-- Header --}}
@@ -134,7 +135,7 @@ document.addEventListener('DOMContentLoaded', function () {
             const optionId  = parseInt(this.dataset.optionId);
             const pollId    = this.dataset.pollId;
             const container = document.getElementById('poll-' + pollId);
-            const voteUrl   = '{{ $voteUrl }}';
+            const voteUrl   = container.dataset.voteUrl;
 
             const currentVotedId = parseInt(container.dataset.votedOption) || null;
 
