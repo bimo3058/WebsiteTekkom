@@ -26,7 +26,7 @@ class ThreadService
         $userId = \Illuminate\Support\Facades\Auth::id();
         $sort   = $filters['sort'] ?? 'terbaru';
 
-        $query = Thread::with(['author.roles'])
+        $query = Thread::with(['author.roles', 'poll'])
             ->withCount('comments')
             ->when(isset($filters['search']) && $filters['search'], fn($q) => $q->search($filters['search']))
             ->when(isset($filters['kategori']) && $filters['kategori'] && $filters['kategori'] !== 'semua',

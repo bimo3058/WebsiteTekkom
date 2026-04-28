@@ -200,7 +200,6 @@
                 roles: [
                     { name: 'all',                    label: 'Semua Role' },
                     { name: 'ketua_himpunan',         label: 'Ketua Himpunan' },
-                    { name: 'wakil_ketua_himpunan',   label: 'Wakil Ketua Himpunan' },
                     { name: 'ketua_bidang',           label: 'Ketua Bidang' },
                     { name: 'ketua_unit',             label: 'Ketua Unit' },
                     { name: 'staff_himpunan',         label: 'Staff Himpunan' },

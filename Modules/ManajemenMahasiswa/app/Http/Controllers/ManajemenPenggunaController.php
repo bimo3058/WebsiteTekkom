@@ -18,7 +18,6 @@ class ManajemenPenggunaController extends Controller
     // Semua role posisi himpunan (tidak termasuk pengurus_himpunan yang bersifat umbrella)
     private const HIMPUNAN_POSITION_ROLES = [
         'ketua_himpunan',
-        'wakil_ketua_himpunan',
         'ketua_bidang',
         'ketua_unit',
         'staff_himpunan',
@@ -26,11 +25,10 @@ class ManajemenPenggunaController extends Controller
 
     // Role yang dapat diassign oleh masing-masing level caller
     private const ASSIGNABLE_BY = [
-        'admin_kemahasiswaan' => ['ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'alumni'],
-        'admin'               => ['ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'alumni'],
-        'superadmin'          => ['ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'alumni'],
-        'ketua_himpunan'      => ['wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'],
-        'wakil_ketua_himpunan'=> ['ketua_bidang', 'ketua_unit', 'staff_himpunan'],
+        'admin_kemahasiswaan' => ['ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'alumni'],
+        'admin'               => ['ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'alumni'],
+        'superadmin'          => ['ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'alumni'],
+        'ketua_himpunan'      => ['ketua_bidang', 'ketua_unit', 'staff_himpunan'],
         'ketua_bidang'        => ['staff_himpunan'],
         'ketua_unit'          => ['staff_himpunan'],
     ];
@@ -385,7 +383,6 @@ class ManajemenPenggunaController extends Controller
     {
         return match ($roleName) {
             'ketua_himpunan'       => 'Ketua Himpunan',
-            'wakil_ketua_himpunan' => 'Wakil Ketua Himpunan',
             'ketua_bidang'         => 'Ketua Bidang',
             'ketua_unit'           => 'Ketua Unit',
             'staff_himpunan'       => 'Staff Himpunan',

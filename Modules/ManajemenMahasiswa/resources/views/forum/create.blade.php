@@ -373,7 +373,7 @@
             </div>
 
             {{-- Link (Collapsible) --}}
-            <div class="mb-5">
+            <div class="mb-3">
                 <button type="button" class="section-toggle" id="toggleLink" onclick="toggleSection('link')">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Tambah Link
                     <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
@@ -381,6 +381,46 @@
                 <div class="section-content" id="sectionLink">
                     <input type="url" name="link_url" id="inputLinkUrl" class="custom-input"
                         placeholder="https://contoh.com/artikel-menarik" value="{{ old('link_url') }}">
+                </div>
+            </div>
+
+            {{-- Poll (Collapsible) --}}
+            <div class="mb-5">
+                <button type="button" class="section-toggle" id="togglePoll" onclick="togglePollSection()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+                    Tambah Poll
+                    <span id="pollToggleChevron" style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
+                </button>
+                <div class="section-content" id="sectionPoll">
+                    <input type="hidden" name="has_poll" id="hasPollInput" value="0">
+                    <style>
+                        .poll-option-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+                        .poll-option-input { flex: 1; padding: 9px 14px; border: 1.5px solid #e5e7eb; border-radius: 10px; font-size: 13px; font-weight: 500; outline: none; transition: border-color 0.2s; }
+                        .poll-option-input:focus { border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,0.1); }
+                        .poll-option-remove { width: 30px; height: 30px; border-radius: 50%; border: none; background: #fee2e2; color: #dc2626; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; transition: background 0.2s; }
+                        .poll-option-remove:hover { background: #fca5a5; }
+                        .poll-add-option { font-size: 13px; font-weight: 600; color: #4f46e5; background: #eef2ff; border: 1.5px dashed #a5b4fc; border-radius: 10px; padding: 8px 16px; cursor: pointer; width: 100%; text-align: center; transition: all 0.2s; margin-top: 4px; }
+                        .poll-add-option:hover { background: #e0e7ff; }
+                        .poll-duration-label { font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 4px; margin-top: 12px; display: block; }
+                        .poll-duration-input { padding: 8px 12px; border: 1.5px solid #e5e7eb; border-radius: 10px; font-size: 13px; outline: none; transition: border-color 0.2s; }
+                        .poll-duration-input:focus { border-color: #4f46e5; }
+                    </style>
+                    <div id="pollOptionsContainer">
+                        <div class="poll-option-row">
+                            <input type="text" name="poll_options[]" class="poll-option-input" placeholder="Opsi 1" maxlength="150">
+                            <button type="button" class="poll-option-remove" onclick="removePollOption(this)" style="visibility:hidden;">×</button>
+                        </div>
+                        <div class="poll-option-row">
+                            <input type="text" name="poll_options[]" class="poll-option-input" placeholder="Opsi 2" maxlength="150">
+                            <button type="button" class="poll-option-remove" onclick="removePollOption(this)" style="visibility:hidden;">×</button>
+                        </div>
+                    </div>
+                    <button type="button" class="poll-add-option" id="btnAddPollOption" onclick="addPollOption()">
+                        + Tambah Opsi <span id="pollOptionCount" style="color:#9ca3af;">(2/6)</span>
+                    </button>
+                    <span class="poll-duration-label">Batas Waktu Poll (opsional)</span>
+                    <input type="datetime-local" name="poll_expires_at" class="poll-duration-input" id="pollExpiresAt"
+                        min="{{ now()->addHours(1)->format('Y-m-d\TH:i') }}">
                 </div>
             </div>
 
@@ -464,6 +504,63 @@
                 const toggle = document.getElementById(`toggle${section.charAt(0).toUpperCase() + section.slice(1)}`);
                 content.classList.toggle('open');
                 toggle.classList.toggle('active');
+            }
+
+            // ---- Poll Builder ----
+            let pollOpen = false;
+            const MAX_POLL_OPTIONS = 6;
+
+            function togglePollSection() {
+                pollOpen = !pollOpen;
+                const content = document.getElementById('sectionPoll');
+                const chevron = document.getElementById('pollToggleChevron');
+                const btn = document.getElementById('togglePoll');
+                const input = document.getElementById('hasPollInput');
+
+                content.classList.toggle('open', pollOpen);
+                btn.classList.toggle('active', pollOpen);
+                chevron.textContent = pollOpen ? '▲' : '▼';
+                input.value = pollOpen ? '1' : '0';
+            }
+
+            function updatePollOptionCount() {
+                const rows = document.querySelectorAll('#pollOptionsContainer .poll-option-row');
+                const count = rows.length;
+                document.getElementById('pollOptionCount').textContent = `(${count}/${MAX_POLL_OPTIONS})`;
+                document.getElementById('btnAddPollOption').style.display = count >= MAX_POLL_OPTIONS ? 'none' : '';
+
+                // Tampilkan/sembunyikan tombol hapus — min 2 opsi
+                rows.forEach((row, i) => {
+                    const btn = row.querySelector('.poll-option-remove');
+                    btn.style.visibility = count > 2 ? 'visible' : 'hidden';
+                });
+            }
+
+            function addPollOption() {
+                const container = document.getElementById('pollOptionsContainer');
+                const count = container.querySelectorAll('.poll-option-row').length;
+                if (count >= MAX_POLL_OPTIONS) return;
+
+                const row = document.createElement('div');
+                row.className = 'poll-option-row';
+                row.innerHTML = `
+                    <input type="text" name="poll_options[]" class="poll-option-input"
+                           placeholder="Opsi ${count + 1}" maxlength="150">
+                    <button type="button" class="poll-option-remove" onclick="removePollOption(this)">×</button>`;
+                container.appendChild(row);
+                updatePollOptionCount();
+                row.querySelector('input').focus();
+            }
+
+            function removePollOption(btn) {
+                const rows = document.querySelectorAll('#pollOptionsContainer .poll-option-row');
+                if (rows.length <= 2) return;
+                btn.closest('.poll-option-row').remove();
+                // Re-number placeholders
+                document.querySelectorAll('#pollOptionsContainer .poll-option-input').forEach((inp, i) => {
+                    if (!inp.value) inp.placeholder = `Opsi ${i + 1}`;
+                });
+                updatePollOptionCount();
             }
 
             // ---- Draft Auto-Save Logic ----
