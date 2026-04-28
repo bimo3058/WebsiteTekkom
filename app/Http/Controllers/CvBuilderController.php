@@ -7,6 +7,7 @@ use App\Models\CvProfile;
 use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Models\Alumni;
 use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
+use Modules\ManajemenMahasiswa\Models\Kegiatan;
 
 class CvBuilderController extends Controller
 {
@@ -86,8 +87,18 @@ class CvBuilderController extends Controller
             // Pengalaman & Kegiatan
             $kegiatanSync = [];
             
-            if ($user->hasRole('mahasiswa') && $user->student) {
-                $riwayat = RiwayatKegiatan::with('kegiatan')->where('student_id', $user->student->id)->get();
+            if ($user->student) {
+                $riwayat = RiwayatKegiatan::with('kegiatan')
+                    ->where('student_id', $user->student->id)
+                    ->where('verification_status', 'approved')
+                    ->get();
+                $kegiatanAsKetua = Kegiatan::where('ketua_pelaksana_id', $user->student->id)->get();
+                $kegiatanAsPanitia = Kegiatan::whereHas('panitia', fn($q) => $q->where('students.id', $user->student->id))
+                    ->with(['panitia' => fn($q) => $q->where('students.id', $user->student->id)])
+                    ->get();
+                
+                $existingKegiatanIds = $riwayat->pluck('kegiatan_id')->filter()->toArray();
+
                 foreach ($riwayat as $rw) {
                     $kegiatanSync[] = [
                         'nama' => $rw->nama_kegiatan,
@@ -95,6 +106,35 @@ class CvBuilderController extends Controller
                         'tanggal' => $rw->tanggal_display,
                         'is_sync' => true
                     ];
+                }
+                
+                foreach ($kegiatanAsKetua as $kg) {
+                    if (!in_array($kg->id, $existingKegiatanIds)) {
+                        $kegiatanSync[] = [
+                            'nama' => $kg->judul,
+                            'peran' => 'Ketua Pelaksana',
+                            'tanggal' => $kg->tanggal_mulai,
+                            'is_sync' => true
+                        ];
+                        $existingKegiatanIds[] = $kg->id;
+                    }
+                }
+                
+                foreach ($kegiatanAsPanitia as $kg) {
+                    if (!in_array($kg->id, $existingKegiatanIds)) {
+                        $peran = 'Panitia';
+                        $panitiaCurrent = $kg->panitia->first();
+                        if ($panitiaCurrent && $panitiaCurrent->pivot->peran) {
+                            $peran = ucfirst($panitiaCurrent->pivot->peran);
+                        }
+                        $kegiatanSync[] = [
+                            'nama' => $kg->judul,
+                            'peran' => $peran,
+                            'tanggal' => $kg->tanggal_mulai,
+                            'is_sync' => true
+                        ];
+                        $existingKegiatanIds[] = $kg->id;
+                    }
                 }
             }
             
@@ -117,13 +157,15 @@ class CvBuilderController extends Controller
         } elseif ($step == 4) {
             // Prestasi & Keahlian
             $prestasiSync = [];
-            $kemahasiswaan = Kemahasiswaan::with('prestasi')->where('user_id', $user->id)->first();
+            $kemahasiswaan = Kemahasiswaan::with(['prestasi' => function($q) {
+                $q->where('verification_status', 'approved');
+            }])->where('user_id', $user->id)->first();
             if ($kemahasiswaan && $kemahasiswaan->prestasi) {
                 foreach ($kemahasiswaan->prestasi as $p) {
                     $prestasiSync[] = [
                         'nama' => $p->nama_prestasi,
                         'tingkat' => $p->tingkat,
-                        'tahun' => $p->tanggal ? $p->tanggal->format('Y') : null,
+                        'tahun' => $p->tanggal ? $p->tanggal->format('M Y') : null,
                         'is_sync' => true
                     ];
                 }
@@ -222,7 +264,7 @@ class CvBuilderController extends Controller
         return view('profile.cv.template-ats', $data);
     }
     
-    private function getAllCvData($user, $cvProfile)
+    public function getAllCvData($user, $cvProfile)
     {
         $data = [
             'user' => [
@@ -247,11 +289,21 @@ class CvBuilderController extends Controller
         ];
         
         // Populate sync data
-        if ($user->hasRole('mahasiswa') && $user->student) {
+        if ($user->student) {
             $data['user']['nim'] = $user->student->student_number;
             $data['user']['angkatan'] = $user->student->cohort_year;
             
-            $riwayat = RiwayatKegiatan::with('kegiatan')->where('student_id', $user->student->id)->get();
+            $riwayat = RiwayatKegiatan::with('kegiatan')
+                ->where('student_id', $user->student->id)
+                ->where('verification_status', 'approved')
+                ->get();
+            $kegiatanAsKetua = Kegiatan::where('ketua_pelaksana_id', $user->student->id)->get();
+            $kegiatanAsPanitia = Kegiatan::whereHas('panitia', fn($q) => $q->where('students.id', $user->student->id))
+                ->with(['panitia' => fn($q) => $q->where('students.id', $user->student->id)])
+                ->get();
+                
+            $existingKegiatanIds = $riwayat->pluck('kegiatan_id')->filter()->toArray();
+
             foreach ($riwayat as $rw) {
                 $data['kegiatan'][] = [
                     'nama' => $rw->nama_kegiatan,
@@ -259,11 +311,40 @@ class CvBuilderController extends Controller
                     'tanggal' => $rw->tanggal_display,
                 ];
             }
-        } elseif ($user->hasRole('alumni')) {
+            
+            foreach ($kegiatanAsKetua as $kg) {
+                if (!in_array($kg->id, $existingKegiatanIds)) {
+                    $data['kegiatan'][] = [
+                        'nama' => $kg->judul,
+                        'peran' => 'Ketua Pelaksana',
+                        'tanggal' => $kg->tanggal_mulai,
+                    ];
+                    $existingKegiatanIds[] = $kg->id;
+                }
+            }
+            
+            foreach ($kegiatanAsPanitia as $kg) {
+                if (!in_array($kg->id, $existingKegiatanIds)) {
+                    $peran = 'Panitia';
+                    $panitiaCurrent = $kg->panitia->first();
+                    if ($panitiaCurrent && $panitiaCurrent->pivot->peran) {
+                        $peran = ucfirst($panitiaCurrent->pivot->peran);
+                    }
+                    $data['kegiatan'][] = [
+                        'nama' => $kg->judul,
+                        'peran' => $peran,
+                        'tanggal' => $kg->tanggal_mulai,
+                    ];
+                    $existingKegiatanIds[] = $kg->id;
+                }
+            }
+        }
+        
+        if ($user->hasRole('alumni')) {
             $alumni = Alumni::where('user_id', $user->id)->first();
             if ($alumni) {
-                $data['user']['nim'] = $alumni->nim;
-                $data['user']['angkatan'] = $alumni->angkatan;
+                $data['user']['nim'] = $alumni->nim ?? $data['user']['nim'];
+                $data['user']['angkatan'] = $alumni->angkatan ?? $data['user']['angkatan'];
                 
                 if ($alumni->perusahaan) {
                     array_unshift($data['pengalaman'], [
@@ -277,7 +358,9 @@ class CvBuilderController extends Controller
             }
         }
         
-        $kemahasiswaan = Kemahasiswaan::with('prestasi')->where('user_id', $user->id)->first();
+        $kemahasiswaan = Kemahasiswaan::with(['prestasi' => function($q) {
+            $q->where('verification_status', 'approved');
+        }])->where('user_id', $user->id)->first();
         if ($kemahasiswaan) {
             array_unshift($data['pendidikan'], [
                 'institusi' => 'Universitas Diponegoro',
@@ -291,7 +374,7 @@ class CvBuilderController extends Controller
                     $data['prestasi'][] = [
                         'nama' => $p->nama_prestasi,
                         'tingkat' => $p->tingkat,
-                        'tahun' => $p->tanggal ? $p->tanggal->format('Y') : null,
+                        'tahun' => $p->tanggal ? $p->tanggal->format('M Y') : null,
                     ];
                 }
             }

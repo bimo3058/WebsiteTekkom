@@ -142,11 +142,18 @@
                                         <p class="text-[11px] opacity-90 mb-3 leading-relaxed">
                                             Buat CV profesional semi-otomatis menggunakan data profil, akademik, dan kegiatan Anda.
                                         </p>
-                                        <a href="{{ route('profile.cv.index') }}" 
-                                           class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-indigo-700 text-[11px] font-bold uppercase tracking-wide rounded-lg hover:bg-slate-50 transition-colors shadow-sm w-full">
-                                            Mulai Buat CV
-                                            <span class="material-symbols-outlined !text-[14px]">arrow_forward</span>
-                                        </a>
+                                        <div class="flex flex-col gap-2">
+                                            <a href="{{ route('profile.cv.index') }}" 
+                                               class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-indigo-700 text-[11px] font-bold uppercase tracking-wide rounded-lg hover:bg-slate-50 transition-colors shadow-sm w-full">
+                                                Mulai / Edit CV
+                                                <span class="material-symbols-outlined !text-[14px]">arrow_forward</span>
+                                            </a>
+                                            <a href="{{ auth()->user()->hasRole('mahasiswa') ? route('manajemenmahasiswa.direktori.mahasiswa.profil.cv') : route('manajemenmahasiswa.direktori.alumni.profil.cv') }}" target="_blank"
+                                               class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-700/30 border border-indigo-400/50 text-white text-[11px] font-bold uppercase tracking-wide rounded-lg hover:bg-indigo-700/50 transition-colors shadow-sm w-full">
+                                                <span class="material-symbols-outlined !text-[14px]">download</span>
+                                                Download PDF Langsung
+                                            </a>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

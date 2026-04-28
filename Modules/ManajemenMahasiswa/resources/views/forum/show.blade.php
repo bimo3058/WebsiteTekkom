@@ -51,22 +51,24 @@
             border-radius: 20px;
             display: inline-flex;
             align-items: center;
-            padding: 2px;
+            padding: 1px;
             margin-right: 12px;
+            border: 1px solid #e2e8f0;
         }
         .post-actions .vote-pill button {
             background: transparent;
             border: none;
-            padding: 6px 8px;
+            padding: 5px 10px;
             border-radius: 20px;
             color: #64748b;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s, color 0.2s;
+            transition: all 0.2s ease;
         }
         .post-actions .vote-pill button:hover {
             background: #e2e8f0;
+            color: #1e293b;
         }
         .post-actions .vote-pill button.vote-active-up {
             color: #ff4500;
@@ -83,9 +85,16 @@
         .post-actions .vote-pill span {
             font-weight: 700;
             font-size: 14px;
-            min-width: 18px;
+            padding: 0 4px;
             text-align: center;
             color: #1e293b;
+        }
+
+        .post-actions .vote-pill .v-separator {
+            width: 1px;
+            height: 18px;
+            background-color: #cbd5e1;
+            margin: 0 2px;
         }
         .post-actions .action-btn {
             background: #f1f5f9;
@@ -201,30 +210,37 @@
             display: inline-flex;
             align-items: center;
             padding: 1px;
+            border: 1px solid #e2e8f0;
         }
         .comment-actions .c-vote-pill button {
             background: transparent;
             border: none;
-            padding: 4px 6px;
+            padding: 3px 8px;
             border-radius: 16px;
             color: #64748b;
             display: flex;
             align-items: center;
             justify-content: center;
-            transition: background 0.2s, color 0.2s;
+            transition: all 0.2s ease;
             cursor: pointer;
             font-size: 13px;
         }
-        .comment-actions .c-vote-pill button:hover { background: #e2e8f0; }
+        .comment-actions .c-vote-pill button:hover { background: #e2e8f0; color: #1e293b; }
         .comment-actions .c-vote-pill button.active-up { color: #ff4500; }
         .comment-actions .c-vote-pill button.active-down { color: #7193ff; }
         .comment-actions .c-vote-pill .c-vote-count {
             font-weight: 700;
             font-size: 12px;
-            min-width: 14px;
+            padding: 0 2px;
             text-align: center;
             color: #1e293b;
-            padding: 0 2px;
+        }
+
+        .comment-actions .c-vote-pill .cv-separator {
+            width: 1px;
+            height: 14px;
+            background-color: #cbd5e1;
+            margin: 0 1px;
         }
         .comment-actions .c-action-btn {
             background: transparent;
@@ -384,6 +400,7 @@
             <div>
                 <div class="d-flex align-items-center gap-2 flex-wrap">
                     <h5 class="fw-bold text-dark mb-0">{{ $thread->author->name ?? 'Unknown' }}</h5>
+                    @include('manajemenmahasiswa::forum.partials.role-badge', ['roleUser' => $thread->author, 'badgeSize' => '11px'])
                     @if(isset($authorTiers[$thread->user_id]))
                         <span class="badge rounded-pill" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-size: 10px; font-weight: 600; padding: 3px 8px;" title="{{ $authorTiers[$thread->user_id]['tier_name'] }}">
                             {!! $authorTiers[$thread->user_id]['tier_icon'] !!} Lv.{{ $authorTiers[$thread->user_id]['level'] }} — {{ $authorTiers[$thread->user_id]['tier_name'] }}
@@ -430,13 +447,13 @@
                         <li>
                             <form method="POST" action="{{ route('manajemenmahasiswa.forum.pin', $thread->id) }}">
                                 @csrf @method('PATCH')
-                                    <div class="d-flex align-items-center gap-2">
-                                        @if($thread->is_pinned)
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Unpin Global
-                                        @else
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a3 3 0 0 0-6 0v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg> Pin Global
-                                        @endif
-                                    </div>
+                                <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
+                                    @if($thread->is_pinned)
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Unpin Global
+                                    @else
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a3 3 0 0 0-6 0v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg> Pin Global
+                                    @endif
+                                </button>
                             </form>
                         </li>
                     @endif
@@ -563,11 +580,12 @@
     <div class="post-actions d-flex align-items-center mb-4" id="thread-vote-area">
         <div class="vote-pill shadow-sm">
             <button class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === 1 ? 'vote-active-up' : '' }}" data-thread-id="{{ $thread->id }}" data-value="1">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="{{ $threadUserVote && $threadUserVote->value === 1 ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
             </button>
-            <span id="thread-vote-count">{{ $thread->vote_count }}</span>
+            <span class="thread-vote-count-{{ $thread->id }}">{{ $thread->vote_count }}</span>
+            <div class="v-separator"></div>
             <button class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === -1 ? 'vote-active-down' : '' }}" data-thread-id="{{ $thread->id }}" data-value="-1">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="{{ $threadUserVote && $threadUserVote->value === -1 ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
             </button>
         </div>
         <button class="action-btn shadow-sm" style="cursor: default;">
@@ -677,6 +695,7 @@
                 e.preventDefault();
                 const threadId = this.dataset.threadId;
                 const value = parseInt(this.dataset.value);
+                const parent = this.closest('#thread-vote-area');
 
                 try {
                     const res = await fetch(`{{ url('manajemen-mahasiswa/forum') }}/${threadId}/vote`, {
@@ -691,18 +710,23 @@
 
                     const data = await res.json();
 
-                    // Update count
-                    document.getElementById('thread-vote-count').textContent = data.vote_count;
-
-                    // Update button states
-                    document.querySelectorAll('.vote-thread-btn').forEach(b => {
-                        b.classList.remove('vote-active-up', 'vote-active-down');
-                    });
-
-                    if (data.user_vote === 1) {
-                        document.querySelector('.vote-thread-btn[data-value="1"]').classList.add('vote-active-up');
-                    } else if (data.user_vote === -1) {
-                        document.querySelector('.vote-thread-btn[data-value="-1"]').classList.add('vote-active-down');
+                    if (parent) {
+                        parent.querySelectorAll('.vote-thread-btn').forEach(b => b.classList.remove('vote-active-up', 'vote-active-down'));
+                        const countEl = parent.querySelector(`.thread-vote-count-${threadId}`);
+                        countEl.textContent = data.vote_count;
+                        
+                        if (data.user_vote === 1) {
+                            parent.querySelector('.vote-thread-btn[data-value="1"]').classList.add('vote-active-up');
+                            parent.querySelector('.vote-thread-btn[data-value="1"] svg').setAttribute('fill', 'currentColor');
+                            parent.querySelector('.vote-thread-btn[data-value="-1"] svg').setAttribute('fill', 'none');
+                        } else if (data.user_vote === -1) {
+                            parent.querySelector('.vote-thread-btn[data-value="-1"]').classList.add('vote-active-down');
+                            parent.querySelector('.vote-thread-btn[data-value="-1"] svg').setAttribute('fill', 'currentColor');
+                            parent.querySelector('.vote-thread-btn[data-value="1"] svg').setAttribute('fill', 'none');
+                        } else {
+                            parent.querySelector('.vote-thread-btn[data-value="1"] svg').setAttribute('fill', 'none');
+                            parent.querySelector('.vote-thread-btn[data-value="-1"] svg').setAttribute('fill', 'none');
+                        }
                     }
                 } catch (err) {
                     console.error('Vote error:', err);
@@ -710,13 +734,13 @@
             });
         });
 
-        // Vote Comment (AJAX) — updated for c-vote-pill
+        // Vote Comment (AJAX)
         document.querySelectorAll('.vote-comment-btn').forEach(btn => {
             btn.addEventListener('click', async function(e) {
                 e.preventDefault();
                 const commentId = this.dataset.commentId;
                 const value = parseInt(this.dataset.value);
-                const pill = this.closest('.c-vote-pill');
+                const parent = this.closest('.c-vote-pill');
 
                 try {
                     const res = await fetch(`{{ url('manajemen-mahasiswa/forum/comments') }}/${commentId}/vote`, {
@@ -731,14 +755,23 @@
 
                     const data = await res.json();
 
-                    document.querySelectorAll(`.comment-vote-count-${commentId}`).forEach(el => {
-                        el.textContent = data.vote_count;
-                    });
-
-                    if (pill) {
-                        pill.querySelectorAll('.vote-comment-btn').forEach(b => b.classList.remove('active-up', 'active-down'));
-                        if (data.user_vote === 1) pill.querySelector('[data-value="1"]').classList.add('active-up');
-                        else if (data.user_vote === -1) pill.querySelector('[data-value="-1"]').classList.add('active-down');
+                    if (parent) {
+                        parent.querySelectorAll('.vote-comment-btn').forEach(b => b.classList.remove('active-up', 'active-down'));
+                        const countEl = parent.querySelector(`.comment-vote-count-${commentId}`);
+                        countEl.textContent = data.vote_count;
+                        
+                        if (data.user_vote === 1) {
+                            parent.querySelector('.vote-comment-btn[data-value="1"]').classList.add('active-up');
+                            parent.querySelector('.vote-comment-btn[data-value="1"] svg').setAttribute('fill', 'currentColor');
+                            parent.querySelector('.vote-comment-btn[data-value="-1"] svg').setAttribute('fill', 'none');
+                        } else if (data.user_vote === -1) {
+                            parent.querySelector('.vote-comment-btn[data-value="-1"]').classList.add('active-down');
+                            parent.querySelector('.vote-comment-btn[data-value="-1"] svg').setAttribute('fill', 'currentColor');
+                            parent.querySelector('.vote-comment-btn[data-value="1"] svg').setAttribute('fill', 'none');
+                        } else {
+                            parent.querySelector('.vote-comment-btn[data-value="1"] svg').setAttribute('fill', 'none');
+                            parent.querySelector('.vote-comment-btn[data-value="-1"] svg').setAttribute('fill', 'none');
+                        }
                     }
                 } catch (err) {
                     console.error('Vote error:', err);

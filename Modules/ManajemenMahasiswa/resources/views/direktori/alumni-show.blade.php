@@ -50,6 +50,43 @@
         height: 120px;
         position: relative;
     }
+    .profile-actions {
+        position: absolute;
+        top: 20px;
+        right: 20px;
+        display: flex;
+        gap: 8px;
+    }
+    .btn-banner {
+        font-weight: 600;
+        font-size: 13px;
+        text-decoration: none;
+        border-radius: 8px;
+        padding: 8px 16px;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+    }
+    .btn-banner-edit {
+        background: rgba(255, 255, 255, 0.15);
+        border: 1px solid rgba(255, 255, 255, 0.3);
+        color: white;
+        backdrop-filter: blur(4px);
+    }
+    .btn-banner-edit:hover {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+    }
+    .btn-banner-cv {
+        background: white;
+        border: 1px solid white;
+        color: #4f46e5;
+    }
+    .btn-banner-cv:hover {
+        background: #f8fafc;
+        color: #4338ca;
+    }
     .profile-avatar-wrap {
         position: absolute;
         bottom: -44px;
@@ -175,16 +212,22 @@
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
         Kembali
     </a>
-    @if($isAdmin)
-        <a href="{{ route('manajemenmahasiswa.direktori.alumni.edit', $alumni->id) }}" class="btn-edit-top">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-            Edit Data
-        </a>
-    @endif
 </div>
 
 <div class="profile-card">
     <div class="profile-banner">
+        <div class="profile-actions">
+            @if($isAdmin)
+                <a href="{{ route('manajemenmahasiswa.direktori.alumni.edit', $alumni->id) }}" class="btn-banner btn-banner-edit">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit Data
+                </a>
+            @endif
+            <a href="{{ route('manajemenmahasiswa.direktori.alumni.cv', $alumni->id) }}" target="_blank" class="btn-banner btn-banner-cv">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+                Generate CV
+            </a>
+        </div>
         <div class="profile-avatar-wrap">
             <div class="profile-avatar">
                 @if($alumni->user && $alumni->user->avatar_url)
