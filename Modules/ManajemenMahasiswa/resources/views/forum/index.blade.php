@@ -485,14 +485,16 @@
             }
 
             /* Pagination Custom Layout */
-            .pagination-container nav > .d-sm-flex {
+            .pagination-container nav>.d-sm-flex {
                 flex-direction: column-reverse;
                 align-items: center !important;
                 gap: 0.75rem;
             }
-            .pagination-container nav > .d-sm-flex > div:last-child {
+
+            .pagination-container nav>.d-sm-flex>div:last-child {
                 margin-bottom: 0.25rem;
             }
+
             .pagination-container .pagination {
                 margin-bottom: 0;
             }
@@ -515,7 +517,7 @@
                 font-weight: 800;
                 font-size: 12px;
                 color: #fff;
-                box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             }
 
             .rank-1 {
@@ -561,14 +563,26 @@
     <div class="row mb-4">
         <!-- Leaderboard -->
         <div class="col-md-7 mb-3 mb-md-0">
-            <div class="gamification-card h-100" style="overflow:hidden; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff;">
-                <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%); padding: 16px 20px; border-radius: 12px 12px 0 0;">
+            <div class="gamification-card h-100"
+                style="overflow:hidden; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff;">
+                <div
+                    style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%); padding: 16px 20px; border-radius: 12px 12px 0 0;">
                     <div class="d-flex align-items-center gap-2">
-                        <div style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                        <div
+                            style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fbbf24"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                                <path d="M4 22h16" />
+                                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                            </svg>
                         </div>
                         <div>
-                            <h6 class="fw-bold mb-0" style="color: #fff; font-size: 15px; letter-spacing: -0.01em;">Leaderboard</h6>
+                            <h6 class="fw-bold mb-0" style="color: #fff; font-size: 15px; letter-spacing: -0.01em;">
+                                Leaderboard</h6>
                             <small style="color: rgba(255,255,255,0.7); font-size: 11px;">Top kontributor forum</small>
                         </div>
                     </div>
@@ -586,7 +600,8 @@
                             </thead>
                             <tbody>
                                 @forelse($leaderboard as $index => $entry)
-                                    <tr style="{{ $index < 3 ? 'background:' . ['#fffbeb','#f8fafc','#fdf4f0'][$index] . ';' : '' }}">
+                                    <tr
+                                        style="{{ $index < 3 ? 'background:' . ['#fffbeb', '#f8fafc', '#fdf4f0'][$index] . ';' : '' }}">
                                         <td style="padding-left: 20px; vertical-align: middle;">
                                             <div class="rank-container">
                                                 @if($index === 0)
@@ -601,32 +616,46 @@
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="fw-semibold" style="color: #1e293b; font-size: 13px;">{{ $entry->name }}</span>
+                                            <span class="fw-semibold"
+                                                style="color: #1e293b; font-size: 13px;">{{ $entry->name }}</span>
                                         </td>
                                         <td>
                                             <span class="d-inline-flex align-items-center gap-1" style="font-size: 13px;">
                                                 <span title="{{ $entry->tier_name }}">{!! $entry->tier_icon !!}</span>
-                                                <span style="color: #6366f1; font-weight: 600;">Lv.{{ $entry->level }}</span>
+                                                <span
+                                                    style="color: #6366f1; font-weight: 600;">Lv.{{ $entry->level }}</span>
                                             </span>
                                         </td>
                                         <td>
                                             @foreach($entry->badges->take(3) as $badge)
                                                 @if($badge->image)
-                                                    <img src="{{ asset($badge->image) }}?v={{ time() }}" title="{{ $badge->name }}" style="width: 22px; height: 22px; object-fit: contain; margin-right: 2px;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                                    <img src="{{ asset($badge->image) }}?v={{ time() }}" title="{{ $badge->name }}"
+                                                        style="width: 22px; height: 22px; object-fit: contain; margin-right: 2px;"
+                                                        onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
                                                     <span style="display:none;">{{ $badge->icon }}</span>
                                                 @else
                                                     <span title="{{ $badge->name }}">{{ $badge->icon }}</span>
                                                 @endif
                                             @endforeach
                                             @if($entry->badges->count() > 3)
-                                                <span style="font-size: 11px; opacity: 0.7;">+{{ $entry->badges->count() - 3 }}</span>
+                                                <span
+                                                    style="font-size: 11px; opacity: 0.7;">+{{ $entry->badges->count() - 3 }}</span>
                                             @endif
                                         </td>
                                     </tr>
                                 @empty
                                     <tr>
                                         <td colspan="4" class="text-center py-4" style="color: #94a3b8;">
-                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6"/><path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18"/><path d="M4 22h16"/><path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22"/><path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22"/><path d="M18 2H6v7a6 6 0 0 0 12 0V2Z"/></svg>
+                                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                                stroke="currentColor" stroke-width="1.5" stroke-linecap="round"
+                                                stroke-linejoin="round" class="mb-2">
+                                                <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6" />
+                                                <path d="M18 9h1.5a2.5 2.5 0 0 0 0-5H18" />
+                                                <path d="M4 22h16" />
+                                                <path d="M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22" />
+                                                <path d="M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22" />
+                                                <path d="M18 2H6v7a6 6 0 0 0 12 0V2Z" />
+                                            </svg>
                                             <br>Belum ada data leaderboard
                                         </td>
                                     </tr>
@@ -641,20 +670,36 @@
 
         <!-- User Stats Card -->
         <div class="col-md-5">
-            <div class="gamification-card h-100" style="overflow:hidden; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff;">
+            <div class="gamification-card h-100"
+                style="overflow:hidden; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff;">
                 {{-- Streak Banner --}}
-                <div style="background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #dc2626 100%); padding: 18px 20px; border-radius: 12px 12px 0 0; position: relative; overflow: hidden;">
+                <div
+                    style="background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #dc2626 100%); padding: 18px 20px; border-radius: 12px 12px 0 0; position: relative; overflow: hidden;">
                     {{-- Decorative circles --}}
-                    <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.08); border-radius: 50%;"></div>
-                    <div style="position: absolute; bottom: -30px; right: 40px; width: 60px; height: 60px; background: rgba(255,255,255,0.06); border-radius: 50%;"></div>
+                    <div
+                        style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(255,255,255,0.08); border-radius: 50%;">
+                    </div>
+                    <div
+                        style="position: absolute; bottom: -30px; right: 40px; width: 60px; height: 60px; background: rgba(255,255,255,0.06); border-radius: 50%;">
+                    </div>
 
                     <div class="d-flex align-items-center gap-3">
-                        <div style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            <svg width="26" height="26" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24" stroke-width="1" stroke-linecap="round" stroke-linejoin="round"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+                        <div
+                            style="width: 48px; height: 48px; background: rgba(255,255,255,0.2); border-radius: 12px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <svg width="26" height="26" viewBox="0 0 24 24" fill="#fbbf24" stroke="#fbbf24"
+                                stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                                <path
+                                    d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+                            </svg>
                         </div>
                         <div>
-                            <div style="color: rgba(255,255,255,0.8); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Streak Harian</div>
-                            <div style="color: #fff; font-size: 28px; font-weight: 800; line-height: 1; letter-spacing: -0.02em;">{{ $userStats['current_streak'] }} <span style="font-size: 14px; font-weight: 600; opacity: 0.8;">Hari</span></div>
+                            <div
+                                style="color: rgba(255,255,255,0.8); font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">
+                                Streak Harian</div>
+                            <div
+                                style="color: #fff; font-size: 28px; font-weight: 800; line-height: 1; letter-spacing: -0.02em;">
+                                {{ $userStats['current_streak'] }} <span
+                                    style="font-size: 14px; font-weight: 600; opacity: 0.8;">Hari</span></div>
                         </div>
                     </div>
                 </div>
@@ -664,28 +709,43 @@
                     {{-- Rank & Level Grid --}}
                     <div class="d-flex gap-3 mb-3">
                         {{-- Rank --}}
-                        <div style="flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; text-align: center;">
-                            <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">Rank</div>
-                            <div style="font-size: 22px; font-weight: 800; color: #1e293b; letter-spacing: -0.02em;">#{{ $userStats['rank'] }}</div>
+                        <div
+                            style="flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px 14px; text-align: center;">
+                            <div
+                                style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
+                                Rank</div>
+                            <div style="font-size: 22px; font-weight: 800; color: #1e293b; letter-spacing: -0.02em;">
+                                #{{ $userStats['rank'] }}</div>
                         </div>
                         {{-- Level --}}
-                        <div style="flex: 1; background: #f5f3ff; border: 1px solid #e9e5ff; border-radius: 10px; padding: 12px 14px; text-align: center;">
-                            <div style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">Level</div>
+                        <div
+                            style="flex: 1; background: #f5f3ff; border: 1px solid #e9e5ff; border-radius: 10px; padding: 12px 14px; text-align: center;">
+                            <div
+                                style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
+                                Level</div>
                             <div style="font-size: 22px; font-weight: 800; color: #6366f1; letter-spacing: -0.02em;">
                                 <span>{!! $userStats['tier_icon'] !!}</span> {{ $userStats['level'] }}
                             </div>
-                            <div style="font-size: 11px; color: #8b5cf6; font-weight: 600;">{{ $userStats['tier_name'] }}</div>
+                            <div style="font-size: 11px; color: #8b5cf6; font-weight: 600;">
+                                {{ $userStats['tier_name'] }}</div>
                         </div>
                     </div>
 
                     {{-- XP Progress --}}
                     <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px;">
                         <div class="d-flex justify-content-between align-items-center mb-2">
-                            <span style="font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.03em;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px; vertical-align: -2px;"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+                            <span
+                                style="font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.03em;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1"
+                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                                    style="margin-right: 4px; vertical-align: -2px;">
+                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                                </svg>
                                 Experience
                             </span>
-                            <span style="font-size: 12px; font-weight: 700; color: #6366f1;">{{ $userStats['total_xp'] }} / {{ $userStats['xp_for_next'] }} XP</span>
+                            <span
+                                style="font-size: 12px; font-weight: 700; color: #6366f1;">{{ $userStats['total_xp'] }}
+                                / {{ $userStats['xp_for_next'] }} XP</span>
                         </div>
                         @php
                             $progressPct = $userStats['xp_needed'] > 0
@@ -693,31 +753,48 @@
                                 : 100;
                         @endphp
                         <div style="height: 10px; background: #e2e8f0; border-radius: 6px; overflow: hidden;">
-                            <div style="height: 100%; width: {{ $progressPct }}%; background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7); border-radius: 6px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);"></div>
+                            <div
+                                style="height: 100%; width: {{ $progressPct }}%; background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7); border-radius: 6px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);">
+                            </div>
                         </div>
                         <div class="d-flex justify-content-between mt-1">
-                            <span style="font-size: 10px; color: #94a3b8; font-weight: 500;">Level {{ $userStats['level'] }}</span>
-                            <span style="font-size: 10px; color: #94a3b8; font-weight: 500;">Level {{ $userStats['level'] + 1 }}</span>
+                            <span style="font-size: 10px; color: #94a3b8; font-weight: 500;">Level
+                                {{ $userStats['level'] }}</span>
+                            <span style="font-size: 10px; color: #94a3b8; font-weight: 500;">Level
+                                {{ $userStats['level'] + 1 }}</span>
                         </div>
                     </div>
 
                     {{-- Badges --}}
                     @if($userStats['badges']->isNotEmpty())
                         <div class="mt-3">
-                            <div style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 3px; vertical-align: -2px;"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11"/></svg>
+                            <div
+                                style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                                    style="margin-right: 3px; vertical-align: -2px;">
+                                    <circle cx="12" cy="8" r="6" />
+                                    <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
+                                </svg>
                                 Badges
                             </div>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                 @foreach($userStats['badges'] as $badge)
-                                    <div style="background: #f5f3ff; border: 1px solid #e9e5ff; border-radius: 8px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;">
+                                    <div
+                                        style="background: #f5f3ff; border: 1px solid #e9e5ff; border-radius: 8px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;">
                                         @if($badge->image)
-                                            <img src="{{ asset($badge->image) }}?v={{ time() }}" title="{{ $badge->name }}: {{ $badge->description }}" style="width: 20px; height: 20px; object-fit: contain;" onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
-                                            <span style="display:none; font-size: 16px;" title="{{ $badge->name }}: {{ $badge->description }}">{{ $badge->icon }}</span>
+                                            <img src="{{ asset($badge->image) }}?v={{ time() }}"
+                                                title="{{ $badge->name }}: {{ $badge->description }}"
+                                                style="width: 20px; height: 20px; object-fit: contain;"
+                                                onerror="this.style.display='none'; this.nextElementSibling.style.display='inline';">
+                                            <span style="display:none; font-size: 16px;"
+                                                title="{{ $badge->name }}: {{ $badge->description }}">{{ $badge->icon }}</span>
                                         @else
-                                            <span title="{{ $badge->name }}: {{ $badge->description }}" style="font-size: 16px;">{{ $badge->icon }}</span>
+                                            <span title="{{ $badge->name }}: {{ $badge->description }}"
+                                                style="font-size: 16px;">{{ $badge->icon }}</span>
                                         @endif
-                                        <span style="font-size: 11px; font-weight: 600; color: #6366f1;">{{ $badge->name }}</span>
+                                        <span
+                                            style="font-size: 11px; font-weight: 600; color: #6366f1;">{{ $badge->name }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -768,17 +845,31 @@
         <input type="hidden" name="sort" id="sortInput" value="{{ request('sort', 'terbaru') }}">
         <div class="d-flex gap-2 mb-4">
             @php $currentSort = request('sort', 'terbaru'); @endphp
-            <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 {{ $currentSort === 'terbaru' ? 'btn-dark' : 'btn-outline-secondary' }}"
+            <button type="button"
+                class="btn btn-sm rounded-pill fw-semibold px-3 {{ $currentSort === 'terbaru' ? 'btn-dark' : 'btn-outline-secondary' }}"
                 onclick="document.getElementById('sortInput').value='terbaru'; document.getElementById('forumFilterForm').submit();">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> Terbaru
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                </svg> Terbaru
             </button>
-            <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 {{ $currentSort === 'hot' ? 'btn-dark' : 'btn-outline-secondary' }}"
+            <button type="button"
+                class="btn btn-sm rounded-pill fw-semibold px-3 {{ $currentSort === 'hot' ? 'btn-dark' : 'btn-outline-secondary' }}"
                 onclick="document.getElementById('sortInput').value='hot'; document.getElementById('forumFilterForm').submit();">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg> Hot
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;">
+                    <path
+                        d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
+                </svg> Hot
             </button>
-            <button type="button" class="btn btn-sm rounded-pill fw-semibold px-3 {{ $currentSort === 'top' ? 'btn-dark' : 'btn-outline-secondary' }}"
+            <button type="button"
+                class="btn btn-sm rounded-pill fw-semibold px-3 {{ $currentSort === 'top' ? 'btn-dark' : 'btn-outline-secondary' }}"
                 onclick="document.getElementById('sortInput').value='top'; document.getElementById('forumFilterForm').submit();">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><polyline points="18 15 12 9 6 15"/></svg> Top
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;">
+                    <polyline points="18 15 12 9 6 15" />
+                </svg> Top
             </button>
         </div>
     </form>
@@ -786,12 +877,20 @@
     {{-- Admin Report Panel --}}
     @if($user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']) && $forumReports->isNotEmpty())
         <div class="report-panel">
-            <div class="report-panel-header" onclick="this.nextElementSibling.classList.toggle('open'); this.querySelector('.chevron-icon').classList.toggle('rotated')">
+            <div class="report-panel-header"
+                onclick="this.nextElementSibling.classList.toggle('open'); this.querySelector('.chevron-icon').classList.toggle('rotated')">
                 <h6>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#991b1b" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg> Laporan Masuk
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#991b1b" stroke-width="2.5"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                        <line x1="4" x2="4" y1="22" y2="15" />
+                    </svg> Laporan Masuk
                     <span class="report-badge">{{ $forumReports->count() }}</span>
                 </h6>
-                <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#991b1b" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.3s;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#991b1b"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.3s;">
+                    <polyline points="6 9 12 15 18 9"></polyline>
+                </svg>
             </div>
             <div class="report-panel-body">
                 @foreach($forumReports as $report)
@@ -799,14 +898,17 @@
                         <div class="report-item-header">
                             <div>
                                 @if($report->thread)
-                                    <a href="{{ route('manajemenmahasiswa.forum.show', $report->thread_id) }}" class="report-thread-title">
+                                    <a href="{{ route('manajemenmahasiswa.forum.show', $report->thread_id) }}"
+                                        class="report-thread-title">
                                         {{ $report->thread->judul }}
                                     </a>
                                 @else
-                                    <span class="report-thread-title" style="color:#9ca3af;text-decoration:line-through;">Thread telah dihapus</span>
+                                    <span class="report-thread-title" style="color:#9ca3af;text-decoration:line-through;">Thread
+                                        telah dihapus</span>
                                 @endif
                             </div>
-                            <span style="font-size:11px; color:#9ca3af; white-space:nowrap;">{{ $report->created_at->diffForHumans() }}</span>
+                            <span
+                                style="font-size:11px; color:#9ca3af; white-space:nowrap;">{{ $report->created_at->diffForHumans() }}</span>
                         </div>
                         <div class="report-meta-line">
                             Dilaporkan oleh <strong>{{ $report->reporter->name ?? 'Unknown' }}</strong>
@@ -814,24 +916,55 @@
                                 &nbsp;• Thread oleh <strong>{{ $report->thread->author->name }}</strong>
                             @endif
                         </div>
-                        <div class="report-reason-text"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg> {{ $report->alasan }}</div>
+                        <div class="report-reason-text"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
+                                style="margin-right: 4px;">
+                                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                                <line x1="4" x2="4" y1="22" y2="15" />
+                            </svg> {{ $report->alasan }}</div>
                         <div class="report-actions-row">
                             @if($report->thread)
-                                <a href="{{ route('manajemenmahasiswa.forum.show', $report->thread_id) }}" class="report-action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/></svg> Lihat</a>
+                                <a href="{{ route('manajemenmahasiswa.forum.show', $report->thread_id) }}"
+                                    class="report-action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
+                                        <circle cx="12" cy="12" r="3" />
+                                    </svg> Lihat</a>
                                 @if(!($report->thread->is_locked ?? false))
-                                    <form method="POST" action="{{ route('manajemenmahasiswa.forum.reports.lock_thread', $report->id) }}" style="display:inline;" onsubmit="return confirm('Kunci thread ini?')">
+                                    <form method="POST"
+                                        action="{{ route('manajemenmahasiswa.forum.reports.lock_thread', $report->id) }}"
+                                        style="display:inline;" onsubmit="return confirm('Kunci thread ini?')">
                                         @csrf @method('PATCH')
-                                        <button type="submit" class="report-action-btn warning"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Kunci</button>
+                                        <button type="submit" class="report-action-btn warning"><svg width="12" height="12"
+                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                                stroke-linecap="round" stroke-linejoin="round">
+                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                            </svg> Kunci</button>
                                     </form>
                                 @endif
-                                <form method="POST" action="{{ route('manajemenmahasiswa.forum.reports.delete_thread', $report->id) }}" style="display:inline;" onsubmit="return confirm('HAPUS thread ini secara permanen?')">
+                                <form method="POST"
+                                    action="{{ route('manajemenmahasiswa.forum.reports.delete_thread', $report->id) }}"
+                                    style="display:inline;" onsubmit="return confirm('HAPUS thread ini secara permanen?')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="report-action-btn danger"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/></svg> Hapus Thread</button>
+                                    <button type="submit" class="report-action-btn danger"><svg width="12" height="12"
+                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                                            stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M3 6h18" />
+                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                        </svg> Hapus Thread</button>
                                 </form>
                             @endif
-                            <form method="POST" action="{{ route('manajemenmahasiswa.forum.reports.dismiss', $report->id) }}" style="display:inline;" onsubmit="return confirm('Abaikan laporan ini?')">
+                            <form method="POST" action="{{ route('manajemenmahasiswa.forum.reports.dismiss', $report->id) }}"
+                                style="display:inline;" onsubmit="return confirm('Abaikan laporan ini?')">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="report-action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Abaikan</button>
+                                <button type="submit" class="report-action-btn"><svg width="12" height="12" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <line x1="18" y1="6" x2="6" y2="18" />
+                                        <line x1="6" y1="6" x2="18" y2="18" />
+                                    </svg> Abaikan</button>
                             </form>
                         </div>
                     </div>
@@ -842,8 +975,8 @@
 
     <!-- Forum Posts -->
     <div class="forum-cards-container">
-    @forelse($threads as $thread)
-        <div class="forum-card" data-thread-id="{{ $thread->id }}" style="cursor: pointer;">
+        @forelse($threads as $thread)
+            <div class="forum-card" data-thread-id="{{ $thread->id }}" style="cursor: pointer;">
                 <div class="d-flex justify-content-between align-items-start mb-3">
                     <div class="d-flex align-items-center gap-3">
                         <div class="avatar-placeholder">
@@ -854,8 +987,11 @@
                                 <h6 class="fw-bold text-dark mb-0">{{ $thread->author->name ?? 'Unknown' }}</h6>
                                 @include('manajemenmahasiswa::forum.partials.role-badge', ['roleUser' => $thread->author])
                                 @if(isset($authorTiers[$thread->user_id]))
-                                    <span class="badge rounded-pill" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-size: 10px; font-weight: 600; padding: 3px 8px;" title="{{ $authorTiers[$thread->user_id]['tier_name'] }}">
-                                        {!! $authorTiers[$thread->user_id]['tier_icon'] !!} Lv.{{ $authorTiers[$thread->user_id]['level'] }}
+                                    <span class="badge rounded-pill"
+                                        style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-size: 10px; font-weight: 600; padding: 3px 8px;"
+                                        title="{{ $authorTiers[$thread->user_id]['tier_name'] }}">
+                                        {!! $authorTiers[$thread->user_id]['tier_icon'] !!}
+                                        Lv.{{ $authorTiers[$thread->user_id]['level'] }}
                                     </span>
                                 @endif
                                 <span class="text-primary fw-medium" style="font-size: 12px;">•
@@ -871,22 +1007,40 @@
                                         Pinned
                                     </span>
                                 @endif
-                                <span class="personal-pin-badge" data-personal-pin="{{ $thread->id }}" style="display: {{ $thread->is_personal_pinned ? 'inline-flex' : 'none' }};">
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a3 3 0 0 0-6 0v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg> Pin Pribadi
+                                <span class="personal-pin-badge" data-personal-pin="{{ $thread->id }}"
+                                    style="display: {{ $thread->is_personal_pinned ? 'inline-flex' : 'none' }};">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                                        style="margin-right:2px;">
+                                        <line x1="12" y1="17" x2="12" y2="22" />
+                                        <path
+                                            d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a3 3 0 0 0-6 0v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+                                    </svg> Pin Pribadi
                                 </span>
                             </div>
                         </div>
                     </div>
                     <div class="dropdown">
-                        <button type="button" class="btn btn-link p-0 text-muted fw-bold text-decoration-none shadow-none d-flex align-items-center" data-bs-toggle="dropdown">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+                        <button type="button"
+                            class="btn btn-link p-0 text-muted fw-bold text-decoration-none shadow-none d-flex align-items-center"
+                            data-bs-toggle="dropdown">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="1" />
+                                <circle cx="19" cy="12" r="1" />
+                                <circle cx="5" cy="12" r="1" />
+                            </svg>
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 8px;">
                             {{-- Edit (owner only) --}}
                             @if($thread->user_id === $user->id)
                                 <li>
-                                    <a href="{{ route('manajemenmahasiswa.forum.edit', $thread->id) }}" class="dropdown-item d-flex align-items-center gap-2">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit
+                                    <a href="{{ route('manajemenmahasiswa.forum.edit', $thread->id) }}"
+                                        class="dropdown-item d-flex align-items-center gap-2">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
+                                        </svg> Edit
                                     </a>
                                 </li>
                             @endif
@@ -897,9 +1051,17 @@
                                         @csrf @method('PATCH')
                                         <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
                                             @if($thread->is_locked)
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Unlock Thread
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                                    <path d="M7 11V7a5 5 0 0 1 9.9-1" />
+                                                </svg> Unlock Thread
                                             @else
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg> Kunci Thread
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
+                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                                                </svg> Kunci Thread
                                             @endif
                                         </button>
                                     </form>
@@ -912,9 +1074,20 @@
                                         @csrf @method('PATCH')
                                         <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
                                             @if($thread->is_pinned)
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg> Unpin Global
+                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                    <line x1="12" y1="17" x2="12" y2="22" />
+                                                    <path
+                                                        d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a3 3 0 0 0-6 0v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+                                                </svg> Unpin Global
                                             @else
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a3 3 0 0 0-6 0v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg> Pin Global
+                                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                    stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
+                                                    style="margin-right:2px;">
+                                                    <line x1="12" y1="17" x2="12" y2="22" />
+                                                    <path
+                                                        d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a3 3 0 0 0-6 0v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+                                                </svg> Pin Global
                                             @endif
                                         </button>
                                     </form>
@@ -922,15 +1095,23 @@
                             @endif
                             {{-- Pin Pribadi (semua role) --}}
                             <li>
-                                <form method="POST" action="{{ route('manajemenmahasiswa.forum.personal_pin', $thread->id) }}">
+                                <form method="POST"
+                                    action="{{ route('manajemenmahasiswa.forum.personal_pin', $thread->id) }}">
                                     @csrf
                                     <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"/><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a3 3 0 0 0-6 0v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"/></svg>
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <line x1="12" y1="17" x2="12" y2="22" />
+                                            <path
+                                                d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a3 3 0 0 0-6 0v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
+                                        </svg>
                                         @if($thread->is_personal_pinned) Unpin Pribadi @else Pin Pribadi @endif
                                     </button>
                                 </form>
                             </li>
-                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
                             {{-- Delete --}}
                             @if($thread->user_id === $user->id)
                                 <li>
@@ -938,7 +1119,14 @@
                                         onsubmit="return confirm('Yakin ingin menghapus thread ini?')">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg> Hapus
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M3 6h18" />
+                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                                <line x1="10" x2="10" y1="11" y2="17" />
+                                                <line x1="14" x2="14" y1="11" y2="17" />
+                                            </svg> Hapus
                                         </button>
                                     </form>
                                 </li>
@@ -948,17 +1136,28 @@
                                         onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg> Hapus (Admin)
+                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                                <path d="M3 6h18" />
+                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
+                                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
+                                                <line x1="10" x2="10" y1="11" y2="17" />
+                                                <line x1="14" x2="14" y1="11" y2="17" />
+                                            </svg> Hapus (Admin)
                                         </button>
                                     </form>
                                 </li>
                             @endif
                             @if($thread->user_id !== $user->id && !$user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']))
                                 <li>
-                                    <button type="button" class="dropdown-item text-danger d-flex align-items-center gap-2" data-bs-toggle="modal"
-                                        data-bs-target="#reportModal" data-thread-id="{{ $thread->id }}"
+                                    <button type="button" class="dropdown-item text-danger d-flex align-items-center gap-2"
+                                        data-bs-toggle="modal" data-bs-target="#reportModal" data-thread-id="{{ $thread->id }}"
                                         data-thread-title="{{ $thread->judul }}">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"/><line x1="4" x2="4" y1="22" y2="15"/></svg> Laporkan Thread
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
+                                            <line x1="4" x2="4" y1="22" y2="15" />
+                                        </svg> Laporkan Thread
                                     </button>
                                 </li>
                             @endif
@@ -976,15 +1175,17 @@
                 </div>
 
                 @if($thread->getFirstImageUrl())
-                    <div class="mt-2 mb-3" style="width: 100%; max-height: 512px; overflow: hidden; border-radius: 12px; border: 1px solid #e5e7eb; background: #f8fafc; display: flex; justify-content: center; align-items: center;">
-                        <img src="{{ $thread->getFirstImageUrl() }}" alt="Thumbnail" style="width: 100%; max-height: 512px; object-fit: contain;">
+                    <div class="mt-2 mb-3"
+                        style="width: 100%; max-height: 512px; overflow: hidden; border-radius: 12px; border: 1px solid #e5e7eb; background: #f8fafc; display: flex; justify-content: center; align-items: center;">
+                        <img src="{{ $thread->getFirstImageUrl() }}" alt="Thumbnail"
+                            style="width: 100%; max-height: 512px; object-fit: contain;">
                     </div>
                 @endif
 
                 {{-- Poll preview --}}
                 @if($thread->poll)
                     @php
-                        $poll     = $thread->poll;
+                        $poll = $thread->poll;
                         $threadId = $thread->id;
                     @endphp
                     @include('manajemenmahasiswa::forum._poll', ['poll' => $poll, 'threadId' => $threadId])
@@ -1008,45 +1209,68 @@
                 @endphp
                 <div class="post-actions d-flex align-items-center mt-2">
                     <div class="vote-pill shadow-sm">
-                        <button class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === 1 ? 'vote-active-up' : '' }}" data-thread-id="{{ $thread->id }}" data-value="1">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="{{ $threadUserVote && $threadUserVote->value === 1 ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="19" x2="12" y2="5"></line><polyline points="5 12 12 5 19 12"></polyline></svg>
+                        <button
+                            class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === 1 ? 'vote-active-up' : '' }}"
+                            data-thread-id="{{ $thread->id }}" data-value="1">
+                            <svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="{{ $threadUserVote && $threadUserVote->value === 1 ? 'currentColor' : 'none' }}"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="19" x2="12" y2="5"></line>
+                                <polyline points="5 12 12 5 19 12"></polyline>
+                            </svg>
                         </button>
                         <span class="thread-vote-count-{{ $thread->id }}">{{ $thread->vote_count }}</span>
                         <div class="v-separator"></div>
-                        <button class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === -1 ? 'vote-active-down' : '' }}" data-thread-id="{{ $thread->id }}" data-value="-1">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="{{ $threadUserVote && $threadUserVote->value === -1 ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><polyline points="19 12 12 19 5 12"></polyline></svg>
+                        <button
+                            class="vote-thread-btn {{ $threadUserVote && $threadUserVote->value === -1 ? 'vote-active-down' : '' }}"
+                            data-thread-id="{{ $thread->id }}" data-value="-1">
+                            <svg width="18" height="18" viewBox="0 0 24 24"
+                                fill="{{ $threadUserVote && $threadUserVote->value === -1 ? 'currentColor' : 'none' }}"
+                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="12" y1="5" x2="12" y2="19"></line>
+                                <polyline points="19 12 12 19 5 12"></polyline>
+                            </svg>
                         </button>
                     </div>
-                    <button class="action-btn ms-2" onclick="window.location.href='{{ route('manajemenmahasiswa.forum.show', $thread->id) }}'">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <button class="action-btn ms-2"
+                        onclick="window.location.href='{{ route('manajemenmahasiswa.forum.show', $thread->id) }}'">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+                        </svg>
                         {{ $thread->comments_count ?? $thread->comment_count }}
                     </button>
-                    <button class="action-btn share-btn ms-1" data-url="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path></svg>
+                    <button class="action-btn share-btn ms-1"
+                        data-url="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
+                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
+                        </svg>
                         Bagikan
                     </button>
                 </div>
             </div>
-    @empty
-        <div class="empty-state">
-            <div class="icon">
-                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                </svg>
+        @empty
+            <div class="empty-state">
+                <div class="icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                    </svg>
+                </div>
+                <h5 class="fw-bold text-dark">Belum ada diskusi</h5>
+                <p>Jadilah yang pertama memulai diskusi!</p>
+                <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post text-decoration-none">
+                    Buat Post Pertama
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        class="ms-1">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="16"></line>
+                        <line x1="8" y1="12" x2="16" y2="12"></line>
+                    </svg>
+                </a>
             </div>
-            <h5 class="fw-bold text-dark">Belum ada diskusi</h5>
-            <p>Jadilah yang pertama memulai diskusi!</p>
-            <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post text-decoration-none">
-                Buat Post Pertama
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    class="ms-1">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <line x1="12" y1="8" x2="12" y2="16"></line>
-                    <line x1="8" y1="12" x2="16" y2="12"></line>
-                </svg>
-            </a>
-        </div>
-    @endforelse
+        @endforelse
     </div>
 
     <!-- Pagination -->
@@ -1126,7 +1350,7 @@
                             parent.querySelectorAll('.vote-thread-btn').forEach(b => b.classList.remove('vote-active-up', 'vote-active-down'));
                             const countEl = parent.querySelector(`.thread-vote-count-${threadId}`);
                             countEl.textContent = data.vote_count;
-                            
+
                             if (data.user_vote === 1) {
                                 parent.querySelector('.vote-thread-btn[data-value="1"]').classList.add('vote-active-up');
                                 parent.querySelector('.vote-thread-btn[data-value="1"] svg').setAttribute('fill', 'currentColor');
@@ -1167,7 +1391,7 @@
             }
             // ---- Forum Card Click Handler ----
             document.querySelectorAll('.forum-card').forEach(card => {
-                card.addEventListener('click', function(e) {
+                card.addEventListener('click', function (e) {
                     if (e.target.closest('.dropdown') || e.target.closest('.post-actions') || e.target.closest('.poll-container')) {
                         return;
                     }
