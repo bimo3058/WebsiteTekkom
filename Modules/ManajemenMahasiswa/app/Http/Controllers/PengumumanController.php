@@ -28,12 +28,14 @@ class PengumumanController extends Controller
         $filterKategori = $request->query('kategori');
 
         // Admin, Dosen Koordinator, Pengurus Himpunan, GPM, Admin Kemahasiswaan: lihat semua
+        $perPage = max(5, min(100, (int) $request->input('per_page', 10)));
+
         if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'dosen', 'pengurus_himpunan', 'gpm', 'admin_kemahasiswaan'])->isNotEmpty()) {
             $filters = $request->only(['status', 'search', 'audience']);
             if ($filterKategori && $filterKategori !== 'semua') {
                 $filters['kategori'] = $filterKategori;
             }
-            $pengumuman = $this->pengumumanService->listAll($filters);
+            $pengumuman = $this->pengumumanService->listAll($filters, $perPage);
 
             return view('manajemenmahasiswa::pengumuman.pengumuman-a', compact('pengumuman'));
         }
@@ -44,7 +46,7 @@ class PengumumanController extends Controller
         $targetKategoriFilter = ($filterKategori && $filterKategori !== 'semua') ? $filterKategori : null;
         $searchString = $request->query('search');
 
-        $pengumuman = $this->pengumumanService->listPublished($userAudience, $targetKategoriFilter, $searchString);
+        $pengumuman = $this->pengumumanService->listPublished($userAudience, $targetKategoriFilter, $searchString, $perPage);
 
         return view('manajemenmahasiswa::mahasiswa.pengumuman-mahasiswa', compact('pengumuman'));
     }
@@ -67,10 +69,10 @@ class PengumumanController extends Controller
         try {
             $request->validate([
                 'draft_id' => 'nullable|integer',
-                'judul'    => 'nullable|string|max:255',
+                'judul' => 'nullable|string|max:255',
                 'kategori' => 'nullable|string|max:100',
                 'target_audience' => 'nullable|in:all,mahasiswa,alumni,dosen,pengurus',
-                'konten'   => 'nullable|string',
+                'konten' => 'nullable|string',
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             \Illuminate\Support\Facades\Log::error('Draft validation failed: ', $e->errors());
@@ -78,42 +80,42 @@ class PengumumanController extends Controller
         }
 
         $draftId = $request->input('draft_id');
-        
+
         if ($draftId) {
             $draft = PengumumanDraft::where('id', $draftId)
                 ->where('user_id', Auth::id())
                 ->first();
-                
+
             if ($draft) {
                 $draft->update([
-                    'judul'    => $request->input('judul'),
+                    'judul' => $request->input('judul'),
                     'kategori' => $request->input('kategori'),
                     'target_audience' => $request->input('target_audience'),
-                    'konten'   => $request->input('konten'),
+                    'konten' => $request->input('konten'),
                 ]);
             } else {
                 $draft = PengumumanDraft::create([
-                    'user_id'  => Auth::id(),
-                    'judul'    => $request->input('judul'),
+                    'user_id' => Auth::id(),
+                    'judul' => $request->input('judul'),
                     'kategori' => $request->input('kategori'),
                     'target_audience' => $request->input('target_audience'),
-                    'konten'   => $request->input('konten'),
+                    'konten' => $request->input('konten'),
                 ]);
             }
         } else {
             $draft = PengumumanDraft::create([
-                'user_id'  => Auth::id(),
-                'judul'    => $request->input('judul'),
+                'user_id' => Auth::id(),
+                'judul' => $request->input('judul'),
                 'kategori' => $request->input('kategori'),
                 'target_audience' => $request->input('target_audience'),
-                'konten'   => $request->input('konten'),
+                'konten' => $request->input('konten'),
             ]);
         }
 
         return response()->json([
-            'success'  => true,
+            'success' => true,
             'draft_id' => $draft->id,
-            'message'  => 'Draf berhasil disimpan.'
+            'message' => 'Draf berhasil disimpan.'
         ]);
     }
 
@@ -194,8 +196,8 @@ class PengumumanController extends Controller
         $user = Auth::user();
         $roles = $user->roles->pluck('name');
 
-        // Admin, GPM, Pengurus, Dosen Koordinator: admin layout
-        if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'pengurus_himpunan', 'gpm', 'admin_kemahasiswaan'])->isNotEmpty()) {
+        // Admin, GPM, Pengurus, Dosen: admin layout
+        if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'dosen', 'pengurus_himpunan', 'gpm', 'admin_kemahasiswaan'])->isNotEmpty()) {
             return view('manajemenmahasiswa::pengumuman.pengumuman-detail', compact('pengumuman', 'user'));
         }
 
@@ -227,7 +229,7 @@ class PengumumanController extends Controller
             'judul' => 'required|string|max:255',
             'konten' => 'required|string|min:50',
             'kategori' => 'nullable|string|max:100',
-            'target_audience' => 'required|in:all,mahasiswa,alumni,dosen,pengurus',
+            'target_audience' => 'required|in:all,mahasiswa,alumni',
             'status_publish' => 'required|in:draft,published,archived',
             'poster' => 'nullable|image|mimes:jpg,jpeg,png|max:10240',
             'lampiran.*' => 'nullable|file|mimes:pdf,docx,xlsx,jpg,png|max:10240',
