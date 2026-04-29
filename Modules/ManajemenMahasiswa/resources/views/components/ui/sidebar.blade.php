@@ -190,7 +190,7 @@
                 @php
                     $userRoles = auth()->user()->roles->pluck('name')->toArray();
                     // Pengurus himpunan dan mahasiswa bisa lihat list tapi tidak bisa edit (dikontrol di routes)
-                    $canViewAll = (bool) array_intersect($userRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa', 'alumni']);
+                    $canViewAll = (bool) array_intersect($userRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dosen', 'dosen_koordinator', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa', 'alumni']);
                     $mahasiswaRoute = $canViewAll
                         ? route('manajemenmahasiswa.direktori.mahasiswa.index')
                         : route('manajemenmahasiswa.direktori.mahasiswa.profil');
@@ -236,6 +236,7 @@
             </x-slot:iconSlot>
         </x-manajemenmahasiswa::ui.sidebar-item>
 
+        @if(!array_intersect($sidebarRoles, ['dosen', 'dosen_koordinator']))
         <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}"
            class="nav-link-item {{ request()->routeIs('manajemenmahasiswa.verifikasi.*') ? 'active' : '' }}"
            :class="{ 'justify-content-center': !sidebarOpen }">
@@ -248,6 +249,7 @@
             </span>
             <span class="nav-label" x-show="sidebarOpen" style="flex-grow: 1;">Verifikasi Data</span>
         </a>
+        @endif
 
         <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.forum.index') }}"
             routeName="manajemenmahasiswa.forum" label="Forum Diskusi">

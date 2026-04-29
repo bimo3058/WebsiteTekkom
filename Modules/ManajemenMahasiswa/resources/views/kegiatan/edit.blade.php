@@ -900,7 +900,7 @@
         <div class="banner-upload-area" onclick="document.getElementById('bannerInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
             <p>Klik untuk upload banner {{ $kegiatan->banner ? 'baru' : 'kegiatan' }}</p>
-            <small>Format: JPG, PNG, WebP • Maks: 5MB<br><span style="color: #4f46e5; font-weight: 500;">Rekomendasi: Resolusi 1280 x 720 (Rasio 16:9)</span></small>
+            <small>Format: JPG, PNG, WebP • Maks: 10MB<br><span style="color: #4f46e5; font-weight: 500;">Rekomendasi: Resolusi 1280 x 720 (Rasio 16:9)</span></small>
         </div>
         <input type="file" name="banner" id="bannerInput" accept="image/jpeg,image/png,image/webp"
                style="display: none;" onchange="previewBanner(this)">
@@ -927,7 +927,7 @@
         <div class="file-upload-area" id="fotoUploadArea" onclick="document.getElementById('fotoInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
             <p>Klik atau drag & drop foto baru ke sini</p>
-            <small>Format: JPG, PNG, WebP • Maks: 5MB per file</small>
+            <small>Format: JPG, PNG, WebP • Maks: 10MB per file</small>
         </div>
         <input type="file" name="foto_kegiatan[]" id="fotoInput" accept="image/jpeg,image/png,image/webp"
                multiple style="display: none;" onchange="handleFotoSelect(this)">

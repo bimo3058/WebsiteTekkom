@@ -85,7 +85,7 @@ class DirektoriAlumniController extends Controller
         if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles)) {
             return 'manajemenmahasiswa::layouts.admin';
         }
-        if (\in_array('gpm', $roles)) {
+        if (\in_array('gpm', $roles) || \in_array('dosen', $roles) || \in_array('dosen_koordinator', $roles)) {
             return 'manajemenmahasiswa::layouts.dosen';
         }
         if (\in_array('pengurus_himpunan', $roles)) {

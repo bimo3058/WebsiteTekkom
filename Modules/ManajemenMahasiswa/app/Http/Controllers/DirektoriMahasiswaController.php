@@ -129,7 +129,7 @@ class DirektoriMahasiswaController extends Controller
             return 'manajemenmahasiswa::layouts.admin';
         }
 
-        if (\in_array('gpm', $roles)) {
+        if (\in_array('gpm', $roles) || \in_array('dosen', $roles) || \in_array('dosen_koordinator', $roles)) {
             return 'manajemenmahasiswa::layouts.dosen';
         }
 
