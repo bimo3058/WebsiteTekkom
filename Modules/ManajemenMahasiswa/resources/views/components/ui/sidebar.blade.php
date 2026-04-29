@@ -106,10 +106,8 @@
 
         <nav class="sidebar-nav d-flex flex-column gap-1">
         {{-- Dashboard Utama — selalu tampil, link sesuai role --}}
-        <a href="{{ $mainDashboardUrl }}"
-           class="nav-link-item"
-           :class="{ 'justify-content-center': !sidebarOpen }"
-           style="border-bottom: 1px solid #e5e7eb; margin-bottom: 4px; padding-bottom: 10px;">
+        <a href="{{ $mainDashboardUrl }}" class="nav-link-item" :class="{ 'justify-content-center': !sidebarOpen }"
+            style="border-bottom: 1px solid #e5e7eb; margin-bottom: 4px; padding-bottom: 10px;">
             <span class="nav-icon d-inline-flex">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
@@ -118,7 +116,10 @@
                 </svg>
             </span>
             <span class="nav-label" x-show="sidebarOpen" style="flex-grow:1;">Dashboard Utama</span>
-            <svg x-show="sidebarOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.4; flex-shrink:0;"><path d="m9 18 6-6-6-6"/></svg>
+            <svg x-show="sidebarOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.4; flex-shrink:0;">
+                <path d="m9 18 6-6-6-6" />
+            </svg>
         </a>
 
         @if($showDashboardAnalitik)
@@ -238,8 +239,8 @@
 
         @if(!array_intersect($sidebarRoles, ['dosen', 'dosen_koordinator']))
         <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}"
-           class="nav-link-item {{ request()->routeIs('manajemenmahasiswa.verifikasi.*') ? 'active' : '' }}"
-           :class="{ 'justify-content-center': !sidebarOpen }">
+            class="nav-link-item {{ request()->routeIs('manajemenmahasiswa.verifikasi.*') ? 'active' : '' }}"
+            :class="{ 'justify-content-center': !sidebarOpen }">
             <span class="nav-icon d-inline-flex">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
@@ -288,7 +289,8 @@
                 $currentInitials .= strtoupper(substr($currentName, $spIdx + 1, 1));
             }
         @endphp
-        <a href="{{ route('profile.edit') }}" class="text-decoration-none w-100" style="display: block; padding: 0; margin: 0;">
+        <a href="{{ route('profile.edit') }}" class="text-decoration-none w-100"
+            style="display: block; padding: 0; margin: 0;">
             <div class="d-flex align-items-center gap-3 px-3 py-2 mb-2 rounded"
                 style="background: #f8fafc; border: 1px solid #e5e7eb; cursor: pointer;"
                 :class="{ 'justify-content-center px-2': !sidebarOpen }">
