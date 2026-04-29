@@ -58,6 +58,51 @@
                 margin-bottom: 8px;
             }
 
+            .checkbox-card-group {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .checkbox-card {
+                position: relative;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 16px;
+                border: 1.5px solid #e5e7eb;
+                border-radius: 10px;
+                background: #fff;
+                cursor: pointer;
+                transition: all 0.2s;
+                font-size: 13px;
+                font-weight: 500;
+                color: #374151;
+                user-select: none;
+            }
+            .checkbox-card:hover {
+                border-color: #a5b4fc;
+                background: #f5f3ff;
+            }
+            .checkbox-card input[type="checkbox"] {
+                width: 16px;
+                height: 16px;
+                accent-color: #4f46e5;
+                cursor: pointer;
+                flex-shrink: 0;
+            }
+            .checkbox-card.checked {
+                border-color: #4f46e5;
+                background: #eef2ff;
+                color: #4338ca;
+                font-weight: 600;
+            }
+            .checkbox-hint {
+                font-size: 11px;
+                color: #9ca3af;
+                font-weight: 400;
+                margin-top: 6px;
+            }
+
             .custom-input,
             .custom-select,
             .custom-textarea {
@@ -209,11 +254,20 @@
 
             .media-preview-item {
                 position: relative;
-                border-radius: 10px;
+                border-radius: 12px;
                 overflow: hidden;
                 border: 1px solid #e5e7eb;
-                background: #f9fafb;
+                background: #000;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .media-preview-item .media-thumb {
+                position: relative;
+                width: 100%;
                 aspect-ratio: 1;
+                overflow: hidden;
+                flex-shrink: 0;
             }
 
             .media-preview-item img,
@@ -221,6 +275,7 @@
                 width: 100%;
                 height: 100%;
                 object-fit: cover;
+                display: block;
             }
 
             .media-preview-item .remove-media {
@@ -230,34 +285,44 @@
                 width: 26px;
                 height: 26px;
                 border-radius: 50%;
-                background: rgba(239, 68, 68, 0.9);
+                background: #ef4444;
                 color: white;
-                border: none;
-                font-size: 14px;
+                border: 2px solid #fff;
+                font-size: 13px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
                 cursor: pointer;
                 transition: transform 0.15s;
                 z-index: 2;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.25);
             }
 
             .media-preview-item .remove-media:hover {
-                transform: scale(1.15);
+                transform: scale(1.12);
+            }
+
+            .media-preview-item .file-info {
+                padding: 8px 10px;
+                background: #fff;
+                border-top: 1px solid #f3f4f6;
             }
 
             .media-preview-item .file-name {
-                position: absolute;
-                bottom: 0;
-                left: 0;
-                right: 0;
-                padding: 4px 8px;
-                background: rgba(0, 0, 0, 0.55);
-                color: white;
-                font-size: 11px;
+                color: #111827;
+                font-size: 12px;
+                font-weight: 600;
                 white-space: nowrap;
                 overflow: hidden;
                 text-overflow: ellipsis;
+                line-height: 1.4;
+            }
+
+            .media-preview-item .file-size {
+                color: #9ca3af;
+                font-size: 11px;
+                font-weight: 400;
+                margin-top: 1px;
             }
 
             .media-counter {
@@ -334,16 +399,21 @@
             {{-- Kategori --}}
             <div class="mb-4">
                 <label class="form-label">Kategori Postingan <span class="text-danger">*</span></label>
-                <div class="d-flex flex-wrap gap-3 mt-2 @error('kategori') is-invalid @enderror">
+                <div class="checkbox-card-group mt-2 @error('kategori') is-invalid @enderror" id="kategoriGroup">
                     @foreach($categories as $key => $label)
-                        <div class="form-check form-check-inline m-0">
-                            <input class="form-check-input shadow-none" style="cursor: pointer;" type="checkbox"
-                                name="kategori[]" id="kategori_{{ $key }}" value="{{ $key }}" {{ in_array($key, old('kategori', [])) ? 'checked' : '' }}>
-                            <label class="form-check-label text-dark" style="cursor: pointer; font-size: 14px;"
-                                for="kategori_{{ $key }}">{{ $label }}</label>
-                        </div>
+                        <label class="checkbox-card {{ in_array($key, old('kategori', [])) ? 'checked' : '' }}"
+                               id="kategoriCard_{{ $key }}">
+                            <input type="checkbox" name="kategori[]"
+                                   id="kategori_{{ $key }}" value="{{ $key }}"
+                                   {{ in_array($key, old('kategori', [])) ? 'checked' : '' }}>
+                            {{ $label }}
+                        </label>
                     @endforeach
                 </div>
+                <div class="checkbox-hint">Pilih satu atau lebih kategori</div>
+                @error('kategori')
+                    <div class="invalid-feedback d-block" style="font-size:12px;">{{ $message }}</div>
+                @enderror
             </div>
 
             {{-- Konten Teks --}}
@@ -597,6 +667,13 @@
 
     @push('scripts')
         <script>
+            // ---- Checkbox Cards (Kategori) ----
+            document.querySelectorAll('#kategoriGroup .checkbox-card input[type="checkbox"]').forEach(function (cb) {
+                cb.addEventListener('change', function () {
+                    this.closest('.checkbox-card').classList.toggle('checked', this.checked);
+                });
+            });
+
             // ---- Toggle Sections ----
             function toggleSection(section) {
                 const content = document.getElementById(`section${section.charAt(0).toUpperCase() + section.slice(1)}`);
@@ -832,30 +909,51 @@
                     const item = document.createElement('div');
                     item.className = 'media-preview-item';
 
+                    // Thumb wrapper (image/video + remove button)
+                    const thumb = document.createElement('div');
+                    thumb.className = 'media-thumb';
+
                     const removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
                     removeBtn.className = 'remove-media';
                     removeBtn.innerHTML = '✕';
                     removeBtn.onclick = () => removeMediaFile(idx);
-                    item.appendChild(removeBtn);
+                    thumb.appendChild(removeBtn);
 
                     if (file.type.startsWith('image/')) {
                         const img = document.createElement('img');
                         img.src = URL.createObjectURL(file);
                         img.onload = () => URL.revokeObjectURL(img.src);
-                        item.appendChild(img);
+                        thumb.appendChild(img);
                     } else if (file.type.startsWith('video/')) {
                         const video = document.createElement('video');
                         video.src = URL.createObjectURL(file);
                         video.muted = true;
                         video.onloadeddata = () => { video.currentTime = 1; };
-                        item.appendChild(video);
+                        thumb.appendChild(video);
                     }
+
+                    item.appendChild(thumb);
+
+                    // File info strip below the image
+                    const fileInfo = document.createElement('div');
+                    fileInfo.className = 'file-info';
 
                     const nameLabel = document.createElement('div');
                     nameLabel.className = 'file-name';
                     nameLabel.textContent = file.name;
-                    item.appendChild(nameLabel);
+                    nameLabel.title = file.name;
+
+                    const sizeLabel = document.createElement('div');
+                    sizeLabel.className = 'file-size';
+                    const kb = file.size / 1024;
+                    sizeLabel.textContent = kb >= 1024
+                        ? (kb / 1024).toFixed(1) + ' MB'
+                        : kb.toFixed(1) + ' KB';
+
+                    fileInfo.appendChild(nameLabel);
+                    fileInfo.appendChild(sizeLabel);
+                    item.appendChild(fileInfo);
 
                     mediaPreviewGrid.appendChild(item);
                 });
