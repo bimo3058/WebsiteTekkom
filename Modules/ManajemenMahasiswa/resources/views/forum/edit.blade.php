@@ -134,33 +134,59 @@
 
             .media-preview-item {
                 position: relative;
-                border-radius: 10px;
+                border-radius: 12px;
                 overflow: hidden;
                 border: 1px solid #e5e7eb;
-                background: #f9fafb;
+                background: #000;
+                display: flex;
+                flex-direction: column;
+            }
+
+            .media-preview-item .media-thumb {
+                position: relative;
+                width: 100%;
                 aspect-ratio: 1;
+                overflow: hidden;
+                flex-shrink: 0;
             }
 
             .media-preview-item img, .media-preview-item video {
-                width: 100%; height: 100%; object-fit: cover;
+                width: 100%; height: 100%; object-fit: cover; display: block;
             }
 
             .media-preview-item .remove-media {
                 position: absolute; top: 6px; right: 6px;
                 width: 26px; height: 26px; border-radius: 50%;
-                background: rgba(239, 68, 68, 0.9); color: white;
-                border: none; font-size: 14px;
+                background: #ef4444; color: white;
+                border: 2px solid #fff; font-size: 13px;
                 display: flex; align-items: center; justify-content: center;
                 cursor: pointer; transition: transform 0.15s; z-index: 2;
+                box-shadow: 0 1px 4px rgba(0,0,0,0.25);
             }
 
-            .media-preview-item .remove-media:hover { transform: scale(1.15); }
+            .media-preview-item .remove-media:hover { transform: scale(1.12); }
+
+            .media-preview-item .file-info {
+                padding: 8px 10px;
+                background: #fff;
+                border-top: 1px solid #f3f4f6;
+            }
 
             .media-preview-item .file-name {
-                position: absolute; bottom: 0; left: 0; right: 0;
-                padding: 4px 8px; background: rgba(0, 0, 0, 0.55);
-                color: white; font-size: 11px;
-                white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                color: #111827;
+                font-size: 12px;
+                font-weight: 600;
+                white-space: nowrap;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                line-height: 1.4;
+            }
+
+            .media-preview-item .file-size {
+                color: #9ca3af;
+                font-size: 11px;
+                font-weight: 400;
+                margin-top: 1px;
             }
 
             .existing-badge {
@@ -269,13 +295,18 @@
                         <div class="media-preview-grid mb-3" id="existingMediaGrid">
                             @foreach($existingMedia as $i => $media)
                                 <div class="media-preview-item" id="existing-media-{{ $i }}">
-                                    <span class="existing-badge">Existing</span>
-                                    <button type="button" class="remove-media" onclick="removeExistingMedia({{ $i }}, '{{ $media['url'] }}')">✕</button>
-                                    @if($media['type'] === 'image')
-                                        <img src="{{ $media['url'] }}" alt="Media">
-                                    @else
-                                        <video src="{{ $media['url'] }}" muted></video>
-                                    @endif
+                                    <div class="media-thumb">
+                                        <span class="existing-badge">Existing</span>
+                                        <button type="button" class="remove-media" onclick="removeExistingMedia({{ $i }}, '{{ $media['url'] }}')">✕</button>
+                                        @if($media['type'] === 'image')
+                                            <img src="{{ $media['url'] }}" alt="Media">
+                                        @else
+                                            <video src="{{ $media['url'] }}" muted></video>
+                                        @endif
+                                    </div>
+                                    <div class="file-info">
+                                        <div class="file-name" title="{{ basename($media['url']) }}">{{ basename($media['url']) }}</div>
+                                    </div>
                                 </div>
                             @endforeach
                         </div>
@@ -649,30 +680,49 @@
                     const item = document.createElement('div');
                     item.className = 'media-preview-item';
 
+                    const thumb = document.createElement('div');
+                    thumb.className = 'media-thumb';
+
                     const removeBtn = document.createElement('button');
                     removeBtn.type = 'button';
                     removeBtn.className = 'remove-media';
                     removeBtn.innerHTML = '✕';
                     removeBtn.onclick = () => removeMediaFile(idx);
-                    item.appendChild(removeBtn);
+                    thumb.appendChild(removeBtn);
 
                     if (file.type.startsWith('image/')) {
                         const img = document.createElement('img');
                         img.src = URL.createObjectURL(file);
                         img.onload = () => URL.revokeObjectURL(img.src);
-                        item.appendChild(img);
+                        thumb.appendChild(img);
                     } else if (file.type.startsWith('video/')) {
                         const video = document.createElement('video');
                         video.src = URL.createObjectURL(file);
                         video.muted = true;
                         video.onloadeddata = () => { video.currentTime = 1; };
-                        item.appendChild(video);
+                        thumb.appendChild(video);
                     }
+
+                    item.appendChild(thumb);
+
+                    const fileInfo = document.createElement('div');
+                    fileInfo.className = 'file-info';
 
                     const nameLabel = document.createElement('div');
                     nameLabel.className = 'file-name';
                     nameLabel.textContent = file.name;
-                    item.appendChild(nameLabel);
+                    nameLabel.title = file.name;
+
+                    const sizeLabel = document.createElement('div');
+                    sizeLabel.className = 'file-size';
+                    const kb = file.size / 1024;
+                    sizeLabel.textContent = kb >= 1024
+                        ? (kb / 1024).toFixed(1) + ' MB'
+                        : kb.toFixed(1) + ' KB';
+
+                    fileInfo.appendChild(nameLabel);
+                    fileInfo.appendChild(sizeLabel);
+                    item.appendChild(fileInfo);
 
                     mediaPreviewGrid.appendChild(item);
                 });
