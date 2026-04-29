@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Redirect;
 use Illuminate\View\View;
+use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 
 class ProfileController extends Controller
 {
@@ -28,12 +29,51 @@ class ProfileController extends Controller
         $canEditName = $user->hasRole('superadmin')
             || $user->hasAnyRole(['admin_banksoal', 'admin_capstone', 'admin_eoffice', 'admin_kemahasiswaan']);
 
+        // Susun nomor WA lengkap (kode negara + nomor lokal)
+        $phoneCode = $validated['phone_code'] ?? '+62';
+        $localNum  = $validated['whatsapp'] ?? null;
+        
+        if ($localNum) {
+            // Hilangkan 0 di depan jika kode negaranya +62 (Indonesia)
+            if ($phoneCode === '+62' && str_starts_with($localNum, '0')) {
+                $localNum = ltrim($localNum, '0');
+            }
+            $fullWa = $phoneCode . $localNum;
+        } else {
+            $fullWa = null;
+        }
+
         // updateQuietly agar tidak trigger observers yang tidak relevan
         // (perubahan nama/email tidak ada hubungannya dengan roles/permissions)
         $user->updateQuietly([
             'name'           => $canEditName ? $validated['name'] : $user->name,
             'personal_email' => $validated['personal_email'] ?? null,
+            'whatsapp'       => $fullWa,
         ]);
+
+        // Sinkronisasi: perbarui mk_kemahasiswaan.kontak agar direktori mahasiswa ikut update
+        try {
+            Kemahasiswaan::where('user_id', $user->id)
+                ->update(['kontak' => $fullWa]);
+        } catch (\Throwable $e) {
+            Log::warning('Gagal sinkronisasi kontak ke mk_kemahasiswaan', [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ]);
+        }
+
+        // Sinkronisasi: perbarui cv_profiles agar CV Builder selalu memiliki kontak terbaru
+        try {
+            \App\Models\CvProfile::where('user_id', $user->id)->update([
+                'cv_whatsapp' => $fullWa,
+                'cv_email'    => $validated['personal_email'] ?? null,
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning('Gagal sinkronisasi kontak ke cv_profiles', [
+                'user_id' => $user->id,
+                'error'   => $e->getMessage(),
+            ]);
+        }
 
         $user->clearUserCache();
 

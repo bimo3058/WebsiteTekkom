@@ -149,7 +149,7 @@ class KegiatanController extends Controller
             'dokumen_kegiatan.*'  => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
         ]);
 
-        $validated['status'] = 'akan_datang';
+        $validated['status'] = 'selesai';
 
         // Handle banner upload
         if ($request->hasFile('banner')) {
@@ -255,7 +255,7 @@ class KegiatanController extends Controller
             'hapus_file.*'        => 'integer|exists:mk_repo_mulmed,id',
         ]);
 
-        $validated['status'] = 'akan_datang';
+        $validated['status'] = 'selesai';
 
         // Handle banner upload
         if ($request->hasFile('banner')) {

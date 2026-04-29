@@ -133,15 +133,6 @@
         background: #eef2ff;
         color: #4f46e5;
     }
-    .badge-status {
-        font-size: 11px;
-        font-weight: 700;
-        padding: 3px 10px;
-        border-radius: 20px;
-    }
-    .badge-status.akan_datang { background: #fef3c7; color: #d97706; }
-    .badge-status.berlangsung { background: #dbeafe; color: #2563eb; }
-    .badge-status.selesai { background: #dcfce7; color: #16a34a; }
 
     .kegiatan-card-title {
         font-weight: 700;

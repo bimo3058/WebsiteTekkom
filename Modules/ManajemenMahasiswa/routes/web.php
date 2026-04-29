@@ -61,8 +61,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             // Index — semua role boleh
             Route::get('/', [PengumumanController::class, 'index'])->name('index');
 
-            // Create/Edit/Delete — hanya pengurus + admin
-            Route::middleware('role:pengurus_himpunan,gpm,admin,admin_kemahasiswaan,superadmin')->group(function () {
+            // Create/Edit/Delete — pengurus, dosen, dan admin
+            Route::middleware('role:pengurus_himpunan,dosen,gpm,admin,admin_kemahasiswaan,superadmin')->group(function () {
                 Route::get('/create', [PengumumanController::class, 'create'])->name('create');
                 Route::post('/drafts', [PengumumanController::class, 'saveDraft'])->name('drafts.store');
                 Route::delete('/drafts/{id}', [PengumumanController::class, 'deleteDraft'])->name('drafts.destroy');
@@ -194,8 +194,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('profil.cv');
                 });
 
-                // Daftar semua mahasiswa — admin, gpm, pengurus, mahasiswa, alumni
-                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,pengurus_himpunan,mahasiswa,alumni')
+                // Daftar semua mahasiswa — admin, gpm, dosen, pengurus, mahasiswa, alumni
+                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,dosen,pengurus_himpunan,mahasiswa,alumni')
                     ->group(function () {
                     Route::get('/', [DirektoriMahasiswaController::class, 'index'])
                         ->name('index');
@@ -242,8 +242,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('profil.update');
                 });
 
-                // Daftar semua alumni — admin, gpm, pengurus, dosen, mahasiswa, alumni
-                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,pengurus_himpunan,mahasiswa,alumni')
+                // Daftar semua alumni — admin, gpm, dosen, pengurus, mahasiswa, alumni
+                Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm,dosen,pengurus_himpunan,mahasiswa,alumni')
                     ->group(function () {
                     Route::get('/', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'index'])
                         ->name('index');

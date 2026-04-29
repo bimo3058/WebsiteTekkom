@@ -38,8 +38,8 @@ class CvBuilderController extends Controller
             $data['user'] = [
                 'name' => $user->name,
                 'email' => $user->email,
-                'personal_email' => $cvProfile->cv_email ?? $user->personal_email ?? null,
-                'whatsapp' => $cvProfile->cv_whatsapp ?? data_get($user, 'whatsapp'),
+                'personal_email' => !empty($cvProfile->cv_email) ? $cvProfile->cv_email : ($user->personal_email ?? null),
+                'whatsapp' => !empty($cvProfile->cv_whatsapp) ? $cvProfile->cv_whatsapp : data_get($user, 'whatsapp'),
                 'avatar_url' => $user->avatar_url_format ?? $user->avatar_url ?? null,
             ];
             
@@ -202,9 +202,38 @@ class CvBuilderController extends Controller
             ]);
             $cvProfile->tentang_diri = $request->tentang_diri;
             $cvProfile->cv_email = $request->personal_email;
-            $cvProfile->cv_whatsapp = $request->whatsapp;
+            $whatsapp = $request->whatsapp;
+            $phoneCode = $request->phone_code ?? '+62';
+            
+            if ($whatsapp) {
+                // Bersihkan non-digit
+                $whatsapp = preg_replace('/[^\d]/', '', $whatsapp);
+                // Hilangkan 0 di depan jika kode negara +62
+                if ($phoneCode === '+62' && str_starts_with($whatsapp, '0')) {
+                    $whatsapp = ltrim($whatsapp, '0');
+                }
+                $fullWa = $phoneCode . $whatsapp;
+            } else {
+                $fullWa = null;
+            }
+
+            $cvProfile->cv_whatsapp = $fullWa;
             $cvProfile->cv_domisili = $request->cv_domisili;
             $cvProfile->cv_portfolio = $request->cv_portfolio;
+
+            // Sinkronisasi ke tabel users agar Global Profile selalu terupdate
+            $user->updateQuietly([
+                'whatsapp'       => $fullWa,
+                'personal_email' => $request->personal_email,
+            ]);
+
+            // Sinkronisasi ke mk_kemahasiswaan
+            try {
+                Kemahasiswaan::where('user_id', $user->id)
+                    ->update(['kontak' => $fullWa]);
+            } catch (\Throwable $e) {
+                // Abaikan jika error
+            }
         } elseif ($step == 2) {
             $request->validate([
                 'pendidikan' => 'nullable|array',
@@ -270,8 +299,8 @@ class CvBuilderController extends Controller
             'user' => [
                 'name' => $user->name,
                 'email' => $user->email,
-                'personal_email' => $cvProfile->cv_email ?? $user->personal_email ?? null,
-                'whatsapp' => $cvProfile->cv_whatsapp ?? data_get($user, 'whatsapp'),
+                'personal_email' => !empty($cvProfile->cv_email) ? $cvProfile->cv_email : ($user->personal_email ?? null),
+                'whatsapp' => !empty($cvProfile->cv_whatsapp) ? $cvProfile->cv_whatsapp : data_get($user, 'whatsapp'),
                 'avatar_url' => $user->avatar_url_format ?? $user->avatar_url ?? null,
                 'nim' => '-',
                 'angkatan' => '-'

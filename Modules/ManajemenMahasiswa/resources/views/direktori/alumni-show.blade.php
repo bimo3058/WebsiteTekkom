@@ -223,10 +223,12 @@
                     Edit Data
                 </a>
             @endif
+            @if($canGenerateCv ?? false)
             <a href="{{ route('manajemenmahasiswa.direktori.alumni.cv', $alumni->id) }}" target="_blank" class="btn-banner btn-banner-cv">
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
                 Generate CV
             </a>
+            @endif
         </div>
         <div class="profile-avatar-wrap">
             <div class="profile-avatar">
@@ -267,6 +269,18 @@
         <div class="section-title">Informasi Karir & Pekerjaan</div>
 
         <div class="info-grid">
+            <div class="info-item">
+                <div class="info-label">WhatsApp / Telepon</div>
+                <div class="info-value {{ empty($alumni->user->whatsapp) ? 'empty' : '' }}">
+                    {{ $alumni->user->whatsapp ?? 'Belum diisi' }}
+                </div>
+            </div>
+            <div class="info-item">
+                <div class="info-label">Email Pribadi</div>
+                <div class="info-value {{ empty($alumni->user->personal_email) ? 'empty' : '' }}">
+                    {{ $alumni->user->personal_email ?? 'Belum diisi' }}
+                </div>
+            </div>
             <div class="info-item">
                 <div class="info-label">Perusahaan / Instansi</div>
                 <div class="info-value {{ !$alumni->perusahaan ? 'empty' : '' }}">
