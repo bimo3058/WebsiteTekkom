@@ -62,7 +62,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::get('/', [PengumumanController::class, 'index'])->name('index');
 
             // Create/Edit/Delete — hanya pengurus + admin
-            Route::middleware('role:pengurus_himpunan,gpm,admin,admin_kemahasiswaan,superadmin')->group(function () {
+            Route::middleware('role:pengurus_himpunan,dosen,gpm,admin,admin_kemahasiswaan,superadmin')->group(function () {
                 Route::get('/create', [PengumumanController::class, 'create'])->name('create');
                 Route::post('/drafts', [PengumumanController::class, 'saveDraft'])->name('drafts.store');
                 Route::delete('/drafts/{id}', [PengumumanController::class, 'deleteDraft'])->name('drafts.destroy');
@@ -272,22 +272,22 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             // Submit pengajuan — mahasiswa, alumni, semua pengurus himpunan
             Route::middleware('role:mahasiswa,alumni,pengurus_himpunan,ketua_himpunan,wakil_ketua_himpunan,ketua_bidang,ketua_unit,staff_himpunan,superadmin,admin,admin_kemahasiswaan')
                 ->group(function () {
-                    Route::post('/riwayat', [VerifikasiController::class, 'storeRiwayat'])->name('riwayat.store');
-                    Route::post('/prestasi', [VerifikasiController::class, 'storePrestasi'])->name('prestasi.store');
-                });
+                Route::post('/riwayat', [VerifikasiController::class, 'storeRiwayat'])->name('riwayat.store');
+                Route::post('/prestasi', [VerifikasiController::class, 'storePrestasi'])->name('prestasi.store');
+            });
 
             // Approve/Reject — admin & GPM only
             Route::middleware('role:superadmin,admin,admin_kemahasiswaan,gpm')
                 ->group(function () {
-                    Route::patch('/riwayat/{id}/approve', [VerifikasiController::class, 'approveRiwayat'])
-                        ->name('riwayat.approve')->where('id', '[0-9]+');
-                    Route::patch('/riwayat/{id}/reject', [VerifikasiController::class, 'rejectRiwayat'])
-                        ->name('riwayat.reject')->where('id', '[0-9]+');
-                    Route::patch('/prestasi/{id}/approve', [VerifikasiController::class, 'approvePrestasi'])
-                        ->name('prestasi.approve')->where('id', '[0-9]+');
-                    Route::patch('/prestasi/{id}/reject', [VerifikasiController::class, 'rejectPrestasi'])
-                        ->name('prestasi.reject')->where('id', '[0-9]+');
-                });
+                Route::patch('/riwayat/{id}/approve', [VerifikasiController::class, 'approveRiwayat'])
+                    ->name('riwayat.approve')->where('id', '[0-9]+');
+                Route::patch('/riwayat/{id}/reject', [VerifikasiController::class, 'rejectRiwayat'])
+                    ->name('riwayat.reject')->where('id', '[0-9]+');
+                Route::patch('/prestasi/{id}/approve', [VerifikasiController::class, 'approvePrestasi'])
+                    ->name('prestasi.approve')->where('id', '[0-9]+');
+                Route::patch('/prestasi/{id}/reject', [VerifikasiController::class, 'rejectPrestasi'])
+                    ->name('prestasi.reject')->where('id', '[0-9]+');
+            });
         });
 
     });

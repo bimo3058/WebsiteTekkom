@@ -418,6 +418,15 @@
             font-weight: 500;
         }
 
+        .pagination-container nav > .d-sm-flex {
+            flex-direction: column-reverse;
+            align-items: center !important;
+            gap: 0.75rem;
+        }
+        .pagination-container .pagination {
+            margin-bottom: 0;
+        }
+
         /* Empty State */
         .pengumuman-empty {
             display: flex;
@@ -520,6 +529,16 @@
                 </div>
             </div>
 
+            <!-- Per Page Selector -->
+            <select name="per_page" onchange="document.getElementById('pengumumanFilterForm').submit()"
+                style="height:44px;padding:0 12px;border:1px solid #e5e7eb;border-radius:12px;background:#f3f0ff;font-size:0.85rem;font-weight:600;color:#4b5563;cursor:pointer;outline:none;transition:all .2s;">
+                @foreach([5, 10, 20, 50] as $opt)
+                    <option value="{{ $opt }}" {{ request('per_page', 10) == $opt ? 'selected' : '' }}>
+                        {{ $opt }} / hal
+                    </option>
+                @endforeach
+            </select>
+
             <!-- Buat Post Button -->
             <a href="{{ route('manajemenmahasiswa.pengumuman.create') }}" class="btn-buat-post">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -605,17 +624,17 @@
     </div>
 
     <!-- Pagination -->
+    @if($pengumuman->total() > 0)
+        <div class="mt-4 mb-2">
+            <span class="pagination-info-text">
+                Menampilkan {{ $pengumuman->firstItem() }}–{{ $pengumuman->lastItem() }}
+                dari {{ $pengumuman->total() }} pengumuman
+            </span>
+        </div>
+    @endif
     @if($pengumuman->hasPages())
-        <div class="mt-4">
-            <div class="d-flex justify-content-between align-items-center flex-wrap gap-2">
-                <span class="pagination-info-text">
-                    Menampilkan {{ $pengumuman->firstItem() }}–{{ $pengumuman->lastItem() }}
-                    dari {{ $pengumuman->total() }} pengumuman
-                </span>
-                <div>
-                    {{ $pengumuman->appends(request()->query())->links() }}
-                </div>
-            </div>
+        <div class="d-flex justify-content-center mt-2 mb-4 pagination-container">
+            {{ $pengumuman->appends(request()->query())->links('pagination::bootstrap-5') }}
         </div>
     @endif
 
