@@ -167,6 +167,16 @@
                 background-color: #dc2626;
             }
 
+            .btn-draft {
+                background-color: #fff;
+                color: #4f46e5;
+                border: 1.5px solid #4f46e5 !important;
+            }
+
+            .btn-draft:hover {
+                background-color: #eef2ff;
+            }
+
             /* Collapsible Section */
             .section-toggle {
                 display: flex;
@@ -591,9 +601,15 @@
                         style="font-size: 13px; font-style: italic; display: none;">Menyimpan draf...</span>
                 </div>
                 <div class="d-flex justify-content-end gap-3 align-items-center">
-                    <button type="button" class="btn-action btn-cancel text-decoration-none shadow-sm"
+                    <button type="button" class="btn-action btn-draft text-decoration-none"
                         onclick="saveDraftManual()">
-                        Simpan Draf
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
+                            <polyline points="17 21 17 13 7 13 7 21"/>
+                            <polyline points="7 3 7 8 15 8"/>
+                        </svg>
+                        Simpan Draft
                     </button>
                     <a href="{{ route('manajemenmahasiswa.forum.index') }}"
                         class="btn-action btn-cancel text-decoration-none shadow-sm text-center">
