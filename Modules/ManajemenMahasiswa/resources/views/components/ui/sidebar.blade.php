@@ -262,7 +262,8 @@
             </x-slot:iconSlot>
         </x-manajemenmahasiswa::ui.sidebar-item>
 
-        @if(!array_intersect($sidebarRoles, ['gpm', 'dosen_koordinator', 'dosen', 'alumni']))
+        {{-- LAYANAN PENGADUAN: Boleh dilihat oleh Mahasiswa, Pengurus Himpunan, Admin, dan GPM --}}
+        @if(array_intersect($sidebarRoles, ['mahasiswa', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
             <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengaduan.index') }}"
                 routeName="manajemenmahasiswa.pengaduan" label="Layanan Pengaduan">
                 <x-slot:iconSlot>
