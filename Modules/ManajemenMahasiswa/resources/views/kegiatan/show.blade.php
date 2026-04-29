@@ -79,15 +79,6 @@
         background: #eef2ff;
         color: #4f46e5;
     }
-    .badge-status {
-        font-size: 11px;
-        font-weight: 700;
-        padding: 4px 12px;
-        border-radius: 20px;
-    }
-    .badge-status.akan_datang { background: #fef3c7; color: #d97706; }
-    .badge-status.berlangsung { background: #dbeafe; color: #2563eb; }
-    .badge-status.selesai { background: #dcfce7; color: #16a34a; }
     .badge-kategori {
         font-size: 11px;
         font-weight: 700;
@@ -552,9 +543,6 @@
             @endforeach
         @elseif($kegiatan->kategoriKegiatan)
             <span class="badge-kategori">{{ $kegiatan->kategoriKegiatan->nama_kategori }}</span>
-        @endif
-        @if($kegiatan->status)
-            <span class="badge-status {{ $kegiatan->status }}">{{ $kegiatan->status_label }}</span>
         @endif
     </div>
 

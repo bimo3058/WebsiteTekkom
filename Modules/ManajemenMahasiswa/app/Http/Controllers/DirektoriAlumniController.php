@@ -85,7 +85,7 @@ class DirektoriAlumniController extends Controller
         if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles)) {
             return 'manajemenmahasiswa::layouts.admin';
         }
-        if (\in_array('gpm', $roles)) {
+        if (\in_array('gpm', $roles) || \in_array('dosen', $roles) || \in_array('dosen_koordinator', $roles)) {
             return 'manajemenmahasiswa::layouts.dosen';
         }
         if (\in_array('pengurus_himpunan', $roles)) {
@@ -240,8 +240,9 @@ class DirektoriAlumniController extends Controller
         try {
             $alumni = $this->withRetry(fn() => $this->alumniService->findById($id));
             $isAdmin = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+            $canGenerateCv = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan');
 
-            return view('manajemenmahasiswa::direktori.alumni-show', compact('alumni', 'isAdmin'))
+            return view('manajemenmahasiswa::direktori.alumni-show', compact('alumni', 'isAdmin', 'canGenerateCv'))
                 ->with('layout', $this->resolveLayout());
 
         } catch (\Throwable) {
@@ -359,8 +360,38 @@ class DirektoriAlumniController extends Controller
         ]);
 
         try {
-            $this->withRetry(fn() => $this->alumniService->update($id, $validated));
-        } catch (\Throwable) {
+            $alumni = $this->withRetry(fn() => $this->alumniService->update($id, $validated));
+
+            // Sinkronisasi kontak ke tabel users dan cv_profiles
+            if ($request->has('kontak') || $request->has('phone_code')) {
+                $kontak = $request->kontak;
+                $phoneCode = $request->phone_code ?? '+62';
+                
+                if ($kontak) {
+                    // Bersihkan non-digit
+                    $kontak = preg_replace('/[^\d]/', '', $kontak);
+                    if ($phoneCode === '+62' && str_starts_with($kontak, '0')) {
+                        $kontak = ltrim($kontak, '0');
+                    }
+                    $fullWa = $phoneCode . $kontak;
+                } else {
+                    $fullWa = null;
+                }
+
+                // Sync ke user
+                $userModel = \App\Models\User::find($alumni->user_id);
+                if ($userModel) {
+                    $userModel->updateQuietly(['whatsapp' => $fullWa]);
+                }
+                
+                // Sync ke cv_profiles
+                \App\Models\CvProfile::where('user_id', $alumni->user_id)->update(['cv_whatsapp' => $fullWa]);
+                
+                // Sync ke kemahasiswaan
+                \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('user_id', $alumni->user_id)->update(['kontak' => $fullWa]);
+            }
+
+        } catch (\Throwable $e) {
             return back()->with('error', 'Koneksi database sedang tidak stabil. Silakan coba lagi.');
         }
 

@@ -129,7 +129,7 @@ class DirektoriMahasiswaController extends Controller
             return 'manajemenmahasiswa::layouts.admin';
         }
 
-        if (\in_array('gpm', $roles)) {
+        if (\in_array('gpm', $roles) || \in_array('dosen', $roles) || \in_array('dosen_koordinator', $roles)) {
             return 'manajemenmahasiswa::layouts.dosen';
         }
 
@@ -413,8 +413,36 @@ class DirektoriMahasiswaController extends Controller
             'status',
             'tahun_lulus',
             'profesi',
-            'kontak',
         ]));
+
+        // Sinkronisasi kontak ke tabel users dan cv_profiles
+        if ($request->has('kontak') || $request->has('phone_code')) {
+            $kontak = $request->kontak;
+            $phoneCode = $request->phone_code ?? '+62';
+            
+            if ($kontak) {
+                // Bersihkan non-digit
+                $kontak = preg_replace('/[^\d]/', '', $kontak);
+                if ($phoneCode === '+62' && str_starts_with($kontak, '0')) {
+                    $kontak = ltrim($kontak, '0');
+                }
+                $fullWa = $phoneCode . $kontak;
+            } else {
+                $fullWa = null;
+            }
+
+            // Sync ke user
+            $userModel = \App\Models\User::find($mhs->user_id);
+            if ($userModel) {
+                $userModel->updateQuietly(['whatsapp' => $fullWa]);
+            }
+            
+            // Sync ke cv_profiles
+            \App\Models\CvProfile::where('user_id', $mhs->user_id)->update(['cv_whatsapp' => $fullWa]);
+            
+            // Perbarui mk_kemahasiswaan
+            $mhs->updateQuietly(['kontak' => $fullWa]);
+        }
 
         // Sinkronisasi: jika status baru = alumni, otomatis buat record di mk_alumni
         if ($mhs->status === Kemahasiswaan::STATUS_ALUMNI && $oldStatus !== Kemahasiswaan::STATUS_ALUMNI) {
