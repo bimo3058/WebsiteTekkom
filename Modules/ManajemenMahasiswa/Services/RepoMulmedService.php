@@ -2,15 +2,15 @@
 
 namespace Modules\ManajemenMahasiswa\Services;
 
+use App\Services\SupabaseStorage;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 use Modules\ManajemenMahasiswa\Models\RepoMulmed;
 
 class RepoMulmedService
 {
-    private const DISK = 'public';
+    public function __construct(private SupabaseStorage $supabase) {}
 
     /**
      * Listing file repo dengan filter.
@@ -36,12 +36,16 @@ class RepoMulmedService
     public function upload(UploadedFile $file, array $meta): RepoMulmed
     {
         return DB::transaction(function () use ($file, $meta) {
-            $tipe     = $this->resolveTipe($file->getMimeType());
-            $path     = $file->store("mk_mulmed/{$tipe}", self::DISK);
-            $namaFile = $file->getClientOriginalName();
+            $tipe   = $this->resolveTipe($file->getMimeType());
+            $folder = "mk_mulmed/{$tipe}";
+            $path   = $this->supabase->upload($file, $folder);
+
+            if (!$path) {
+                throw new \RuntimeException('Gagal mengupload file ke Supabase.');
+            }
 
             return RepoMulmed::create(array_merge($meta, [
-                'nama_file'    => $namaFile,
+                'nama_file'    => $file->getClientOriginalName(),
                 'path_file'    => $path,
                 'tipe_file'    => $tipe,
                 'status_arsip' => RepoMulmed::ARSIP_AKTIF,
@@ -74,7 +78,7 @@ class RepoMulmedService
     {
         DB::transaction(function () use ($id) {
             $repo = RepoMulmed::findOrFail($id);
-            Storage::disk(self::DISK)->delete($repo->path_file);
+            $this->supabase->delete($repo->path_file);
             $repo->delete();
         });
     }

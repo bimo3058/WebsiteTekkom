@@ -23,14 +23,40 @@ class ThreadService
      */
     public function listThreads(array $filters = [], int $perPage = 15): LengthAwarePaginator
     {
-        return Thread::with(['author'])
+        $userId = \Illuminate\Support\Facades\Auth::id();
+        $sort   = $filters['sort'] ?? 'terbaru';
+
+        $query = Thread::with(['author'])
             ->withCount('comments')
             ->when(isset($filters['search']) && $filters['search'], fn($q) => $q->search($filters['search']))
             ->when(isset($filters['kategori']) && $filters['kategori'] && $filters['kategori'] !== 'semua',
                 fn($q) => $q->byKategori($filters['kategori']))
-            ->orderByDesc('is_pinned')
-            ->orderByDesc('created_at')
-            ->paginate($perPage);
+            ->leftJoin('mk_thread_personal_pins', function($join) use ($userId) {
+                $join->on('mk_threads.id', '=', 'mk_thread_personal_pins.thread_id')
+                     ->where('mk_thread_personal_pins.user_id', '=', $userId);
+            })
+            ->select('mk_threads.*', DB::raw('CASE WHEN mk_thread_personal_pins.id IS NOT NULL THEN 1 ELSE 0 END as is_personal_pinned'))
+            ->orderByDesc('mk_threads.is_pinned')
+            ->orderByDesc('is_personal_pinned');
+
+        // Sort modes
+        switch ($sort) {
+            case 'hot':
+                // Hot = kombinasi vote tinggi + recency (dalam 7 hari terakhir)
+                $query->orderByDesc('mk_threads.vote_count')
+                      ->orderByDesc('mk_threads.created_at');
+                break;
+            case 'top':
+                // Top = paling banyak vote sepanjang waktu
+                $query->orderByDesc('mk_threads.vote_count');
+                break;
+            case 'terbaru':
+            default:
+                $query->orderByDesc('mk_threads.created_at');
+                break;
+        }
+
+        return $query->paginate($perPage);
     }
 
     // =========================================================================
@@ -77,6 +103,65 @@ class ThreadService
         DB::transaction(fn() => $thread->delete());
     }
 
+    /**
+     * Update thread yang sudah ada.
+     * User hanya bisa edit thread sendiri, admin bisa edit semua.
+     */
+    public function updateThread(int $id, int $userId, array $data, bool $isAdmin = false): Thread
+    {
+        $thread = Thread::findOrFail($id);
+
+        if (!$isAdmin && $thread->user_id !== $userId) {
+            throw new \RuntimeException('Tidak memiliki akses untuk mengedit thread ini.');
+        }
+
+        return DB::transaction(function () use ($thread, $data) {
+            // Hapus media lama dari storage jika diminta
+            if (!empty($data['remove_media'])) {
+                $supabaseStorage = app(\App\Services\SupabaseStorage::class);
+                
+                foreach ($data['remove_media'] as $mediaUrl) {
+                    if (str_contains($mediaUrl, 'supabase.co')) {
+                        // Extract bucket and path dari public URL Supabase
+                        // Format: https://{project}.supabase.co/storage/v1/object/public/{bucket}/{path}
+                        $parsedUrl = parse_url($mediaUrl, PHP_URL_PATH);
+                        $parts = explode('/storage/v1/object/public/', $parsedUrl);
+                        if (count($parts) === 2) {
+                            $bucketAndPath = explode('/', $parts[1], 2);
+                            if (count($bucketAndPath) === 2) {
+                                $bucket = $bucketAndPath[0];
+                                $path   = $bucketAndPath[1];
+                                try {
+                                    $supabaseStorage->delete($path, $bucket);
+                                    // Hapus juga record di mk_repo_mulmed
+                                    \Modules\ManajemenMahasiswa\Models\RepoMulmed::where('path_file', $path)->delete();
+                                } catch (\Exception $e) {
+                                    \Log::error('Failed to delete old Supabase media', ['path' => $path, 'error' => $e->getMessage()]);
+                                }
+                            }
+                        }
+                    } else {
+                        // Fallback: hapus dari local storage (gambar lama)
+                        $path = str_replace('/storage/', '', parse_url($mediaUrl, PHP_URL_PATH));
+                        if ($path && \Illuminate\Support\Facades\Storage::disk('public')->exists($path)) {
+                            \Illuminate\Support\Facades\Storage::disk('public')->delete($path);
+                            // Hapus juga record di mk_repo_mulmed jika ada yang menggunakan local path
+                            \Modules\ManajemenMahasiswa\Models\RepoMulmed::where('path_file', $path)->delete();
+                        }
+                    }
+                }
+            }
+
+            $thread->update([
+                'judul'    => $data['judul'],
+                'konten'   => $data['konten'],
+                'kategori' => $data['kategori'],
+            ]);
+
+            return $thread->fresh();
+        });
+    }
+
     // =========================================================================
     // Voting
     // =========================================================================
@@ -114,13 +199,18 @@ class ThreadService
                     'value'         => $value,
                 ]);
 
-                // Award XP ke pemilik thread jika upvote
+                // Award XP ke pemilik thread jika upvote (+3 XP)
                 if ($value === 1 && $thread->user_id !== $userId) {
                     $this->gamificationService->awardXp(
                         $thread->user_id,
-                        XpLog::ACTION_RECEIVE_UPVOTE,
+                        XpLog::ACTION_RECEIVE_THREAD_UPVOTE,
                         $thread
                     );
+                }
+
+                // Penalti -1 XP untuk pemberi downvote
+                if ($value === -1) {
+                    $this->gamificationService->penalizeDownvote($userId, $thread);
                 }
             }
 

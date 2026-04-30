@@ -14,13 +14,14 @@ class BadgeSeeder extends Seeder
     public function run(): void
     {
         $badges = [
+            // --- Badge awal (sudah ada, disesuaikan ikon) ---
             [
                 'name' => 'Thread Starter',
                 'slug' => 'thread-starter',
-                'icon' => '📝',
-                'description' => 'Membuat 1 diskusi pertama. Keren!',
+                'icon' => '🚀',
+                'description' => 'Membuat 10 thread pertama. Keren!',
                 'criteria_type' => Badge::CRITERIA_THREAD_COUNT,
-                'criteria_value' => 1,
+                'criteria_value' => 10,
             ],
             [
                 'name' => 'Kontributor Aktif',
@@ -39,18 +40,18 @@ class BadgeSeeder extends Seeder
                 'criteria_value' => 50,
             ],
             [
-                'name' => 'Top Helper',
+                'name' => 'Helpful',
                 'slug' => 'top-helper',
-                'icon' => '⭐',
-                'description' => 'Menjadi jawaban terbaik sebanyak 5 kali.',
+                'icon' => '🤝',
+                'description' => '10 komentar ditandai Best Answer.',
                 'criteria_type' => Badge::CRITERIA_BEST_ANSWER_COUNT,
-                'criteria_value' => 5,
+                'criteria_value' => 10,
             ],
             [
-                'name' => 'Streak Master',
+                'name' => 'Marathon',
                 'slug' => 'streak-master',
-                'icon' => '🏆',
-                'description' => 'Login setiap hari selama 30 hari tanpa terputus.',
+                'icon' => '🏃',
+                'description' => 'Login streak 30 hari berturut-turut.',
                 'criteria_type' => Badge::CRITERIA_STREAK,
                 'criteria_value' => 30,
             ],
@@ -61,6 +62,56 @@ class BadgeSeeder extends Seeder
                 'description' => 'Telah mengumpulkan total 500 XP.',
                 'criteria_type' => Badge::CRITERIA_TOTAL_XP,
                 'criteria_value' => 500,
+            ],
+
+            // --- Badge baru dari rencana ---
+            [
+                'name' => 'Storyteller',
+                'slug' => 'storyteller',
+                'icon' => '📖',
+                'description' => 'Buat 50 thread. Anda seorang pencerita ulung!',
+                'criteria_type' => Badge::CRITERIA_THREAD_COUNT,
+                'criteria_value' => 50,
+            ],
+            [
+                'name' => 'Community Hero',
+                'slug' => 'community-hero',
+                'icon' => '🦸',
+                'description' => 'Raih 5.000 XP total. Pahlawan komunitas!',
+                'criteria_type' => Badge::CRITERIA_TOTAL_XP,
+                'criteria_value' => 5000,
+            ],
+            [
+                'name' => 'Viral',
+                'slug' => 'viral',
+                'icon' => '💥',
+                'description' => 'Menerima total 100 upvote. Konten Anda viral!',
+                'criteria_type' => Badge::CRITERIA_UPVOTE_COUNT,
+                'criteria_value' => 100,
+            ],
+            [
+                'name' => 'First Blood',
+                'slug' => 'first-blood',
+                'icon' => '🎯',
+                'description' => 'Jawab pertama di 20 thread. Selalu yang tercepat!',
+                'criteria_type' => Badge::CRITERIA_FIRST_ANSWER_COUNT,
+                'criteria_value' => 20,
+            ],
+            [
+                'name' => 'Mentor Alumni',
+                'slug' => 'mentor-alumni',
+                'icon' => '🎓',
+                'description' => 'Alumni dengan 50+ komentar di kategori Loker & Karir.',
+                'criteria_type' => Badge::CRITERIA_ALUMNI_COMMENT_COUNT,
+                'criteria_value' => 50,
+            ],
+            [
+                'name' => 'Professor',
+                'slug' => 'professor',
+                'icon' => '🧑‍🏫',
+                'description' => 'Dosen dengan 30+ komentar di kategori Tanya Tugas / Info Skripsi.',
+                'criteria_type' => Badge::CRITERIA_DOSEN_COMMENT_COUNT,
+                'criteria_value' => 30,
             ],
         ];
 

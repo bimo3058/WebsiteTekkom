@@ -41,9 +41,13 @@ class DashboardAnalitikService
                     ->pluck('total', 'angkatan'),
 
                 // Distribusi alumni per status pekerjaan
-                'alumni_per_status'     => Alumni::selectRaw("CASE WHEN perusahaan IS NOT NULL THEN 'bekerja' ELSE 'belum_bekerja' END as status_posisi_pekerjaan, count(*) as total")
-                    ->groupByRaw("CASE WHEN perusahaan IS NOT NULL THEN 'bekerja' ELSE 'belum_bekerja' END")
-                    ->pluck('total', 'status_posisi_pekerjaan'),
+                'alumni_per_status'     => Alumni::selectRaw("COALESCE(status_karir, 'belum_terdata') as status, count(*) as total")
+                    ->groupByRaw("COALESCE(status_karir, 'belum_terdata')")
+                    ->pluck('total', 'status'),
+
+                // Data Serapan Kerja untuk Chart
+                'serapan_per_angkatan'  => app(\Modules\ManajemenMahasiswa\Services\AlumniService::class)->getSerapanPerAngkatan(),
+                'distribusi_industri'   => app(\Modules\ManajemenMahasiswa\Services\AlumniService::class)->getDistribusiIndustri(),
             ];
         });
     }
