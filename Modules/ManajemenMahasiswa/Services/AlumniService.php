@@ -17,7 +17,8 @@ class AlumniService
         $query = Alumni::with('user')
             ->when(isset($filters['angkatan']), fn($q) => $q->byAngkatan((int) $filters['angkatan']))
             ->when(isset($filters['tahun_lulus']), fn($q) => $q->byTahunLulus((int) $filters['tahun_lulus']))
-            ->when(isset($filters['status']), fn($q) => $q->byStatus($filters['status']))
+            ->when(isset($filters['status_karir']), fn($q) => $q->byStatusKarir($filters['status_karir']))
+            ->when(isset($filters['bidang_industri']), fn($q) => $q->byBidangIndustri($filters['bidang_industri']))
             ->when(isset($filters['search']), fn($q) => $q->search($filters['search']));
 
         return $query->orderByDesc('tahun_lulus')->paginate($perPage);
@@ -67,11 +68,64 @@ class AlumniService
                     ->groupBy('angkatan')
                     ->orderBy('angkatan')
                     ->pluck('total', 'angkatan'),
-                'per_status'   => Alumni::selectRaw('status_posisi_pekerjaan, count(*) as total')
-                    ->groupBy('status_posisi_pekerjaan')
-                    ->pluck('total', 'status_posisi_pekerjaan'),
+                'per_status'   => Alumni::selectRaw("COALESCE(status_karir, 'belum_terdata') as status, count(*) as total")
+                    ->groupByRaw("COALESCE(status_karir, 'belum_terdata')")
+                    ->pluck('total', 'status'),
             ];
         });
+    }
+
+    /**
+     * Data persentase serapan kerja per angkatan
+     */
+    public function getSerapanPerAngkatan(): array
+    {
+        $data = DB::table('mk_alumni')
+            ->selectRaw("angkatan, 
+                         COUNT(*) as total, 
+                         SUM(CASE WHEN status_karir IN ('bekerja', 'wirausaha') THEN 1 ELSE 0 END) as bekerja")
+            ->groupBy('angkatan')
+            ->orderBy('angkatan')
+            ->get();
+
+        $result = [];
+        foreach ($data as $row) {
+            $persentase = $row->total > 0 ? round(($row->bekerja / $row->total) * 100, 1) : 0;
+            $result[$row->angkatan] = $persentase;
+        }
+
+        return $result;
+    }
+
+    /**
+     * Data distribusi bidang industri alumni yang bekerja
+     */
+    public function getDistribusiIndustri(): array
+    {
+        return DB::table('mk_alumni')
+            ->selectRaw('bidang_industri, count(*) as total')
+            ->whereNotNull('bidang_industri')
+            ->groupBy('bidang_industri')
+            ->orderByDesc('total')
+            ->pluck('total', 'bidang_industri')
+            ->toArray();
+    }
+
+    /**
+     * Rata-rata waktu tunggu kerja per angkatan
+     */
+    public function getWaktuTungguPerAngkatan(): array
+    {
+        return DB::table('mk_alumni')
+            ->selectRaw('angkatan, AVG(tahun_mulai_bekerja - tahun_lulus) as rata_rata')
+            ->whereNotNull('tahun_mulai_bekerja')
+            ->whereNotNull('tahun_lulus')
+            ->whereRaw('tahun_mulai_bekerja >= tahun_lulus')
+            ->groupBy('angkatan')
+            ->orderBy('angkatan')
+            ->pluck('rata_rata', 'angkatan')
+            ->map(fn($val) => round((float)$val, 1))
+            ->toArray();
     }
 
     private function flushCache(): void

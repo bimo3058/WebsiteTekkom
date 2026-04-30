@@ -1,49 +1,20 @@
-<x-manajemenmahasiswa::layouts.mahasiswa>
+<x-manajemenmahasiswa::layouts.forum-layout>
 
     @push('styles')
         <style>
+            /* ── Page Title ──────────────────────────────────────────────────── */
+            .page-title { margin-bottom: 22px; display: flex; align-items: center; gap: 16px; }
+            .page-title .back-btn { background: #fff; border: 1px solid #e5e7eb; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; color: #4b5563; text-decoration: none; transition: background 0.2s; }
+            .page-title .back-btn:hover { background: #f3f4f6; }
+            .page-title h1 { font-size: 26px; font-weight: 700; color: #111827; margin: 0 0 2px; letter-spacing: -0.02em; }
+            .page-title p { font-size: 14px; color: #6b7280; margin: 0; }
+
             .create-post-card {
                 background: #ffffff;
                 border-radius: 12px;
                 padding: 30px;
-                box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+                border: 1px solid #e5e7eb;
                 margin-bottom: 20px;
-            }
-
-            /* Post Tabs */
-            .post-tabs {
-                border-bottom: 2px solid #f3f4f6;
-                margin-bottom: 24px;
-                display: flex;
-                gap: 24px;
-            }
-
-            .post-tab-item {
-                padding-bottom: 12px;
-                color: #1f2937;
-                font-weight: 600;
-                font-size: 15px;
-                cursor: pointer;
-                position: relative;
-            }
-
-            .post-tab-item:hover {
-                color: #4f46e5;
-            }
-
-            .post-tab-item.active {
-                color: #4f46e5;
-            }
-
-            .post-tab-item.active::after {
-                content: '';
-                position: absolute;
-                bottom: -2px;
-                left: 0;
-                right: 0;
-                height: 2px;
-                background-color: #4f46e5;
-                border-radius: 2px;
             }
 
             /* Form Elements */
@@ -101,12 +72,12 @@
             }
 
             .btn-post {
-                background-color: #818cf8;
+                background-color: #4f46e5;
                 color: white;
             }
 
             .btn-post:hover {
-                background-color: #6366f1;
+                background-color: #4338ca;
             }
 
             .btn-cancel {
@@ -118,26 +89,52 @@
                 background-color: #dc2626;
             }
 
-            .btn-drafts {
-                background: transparent;
-                border: none;
-                color: #111827;
-                font-weight: 700;
-                font-size: 15px;
-                padding: 6px 12px;
-                border-radius: 6px;
-                transition: background 0.2s;
+            /* Collapsible Section */
+            .section-toggle {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                padding: 10px 16px;
+                background: #f9fafb;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+                cursor: pointer;
+                font-size: 14px;
+                font-weight: 600;
+                color: #374151;
+                transition: all 0.2s;
+                width: 100%;
+                text-align: left;
             }
 
-            .btn-drafts:hover {
-                background: #f3f4f6;
+            .section-toggle:hover {
+                background: #eef2ff;
+                border-color: #4f46e5;
+                color: #4338ca;
+            }
+
+            .section-toggle.active {
+                background: #eef2ff;
+                border-color: #4f46e5;
+                color: #4338ca;
+            }
+
+            .section-content {
+                max-height: 0;
+                overflow: hidden;
+                transition: max-height 0.3s ease, padding 0.3s ease;
+            }
+
+            .section-content.open {
+                max-height: 600px;
+                padding-top: 16px;
             }
 
             /* Media Upload Dropzone */
             .media-dropzone {
                 border: 2px dashed #d1d5db;
                 border-radius: 12px;
-                padding: 40px 20px;
+                padding: 32px 20px;
                 text-align: center;
                 cursor: pointer;
                 transition: all 0.3s ease;
@@ -147,14 +144,8 @@
 
             .media-dropzone:hover,
             .media-dropzone.dragover {
-                border-color: #818cf8;
+                border-color: #4f46e5;
                 background: #eef2ff;
-            }
-
-            .media-dropzone .dropzone-icon {
-                font-size: 48px;
-                margin-bottom: 12px;
-                display: block;
             }
 
             .media-dropzone .dropzone-text {
@@ -178,7 +169,7 @@
 
             .media-preview-grid {
                 display: grid;
-                grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
                 gap: 12px;
                 margin-top: 16px;
             }
@@ -235,162 +226,314 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
             }
+
+            .media-counter {
+                font-size: 13px;
+                font-weight: 600;
+                padding: 4px 12px;
+                border-radius: 20px;
+                display: inline-block;
+                margin-top: 8px;
+            }
+
+            .media-counter.ok {
+                background: #dcfce7;
+                color: #16a34a;
+            }
         </style>
     @endpush
 
-    <div class="mb-4">
-        <h3 class="fw-bold mb-1 text-dark">Forum Diskusi</h3>
-        <p class="text-dark fw-bold" style="font-size: 14px;">Wadah komunikasi mahasiswa & alumni</p>
+    <div class="page-title">
+        <a href="{{ route('manajemenmahasiswa.forum.index') }}" class="back-btn">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+        </a>
+        <div>
+            <h1>Forum Diskusi</h1>
+            <p>Wadah komunikasi mahasiswa & alumni</p>
+        </div>
     </div>
 
     <div class="create-post-card">
         <div class="d-flex justify-content-between align-items-center mb-4">
             <h4 class="fw-bold text-dark mb-0">Buat Post</h4>
-            <button type="button" class="btn-drafts" onclick="loadDraft()">Load Draft</button>
+            @if(isset($drafts) && $drafts->count() > 0)
+                <button type="button" class="btn btn-sm rounded-pill fw-bold px-4 text-white shadow-sm"
+                    style="background: linear-gradient(135deg, #f59e0b 0%, #ea580c 100%); border: none; transition: transform 0.2s ease, box-shadow 0.2s ease;"
+                    onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 12px rgba(234, 88, 12, 0.3)';"
+                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.05)';"
+                    data-bs-toggle="modal" data-bs-target="#draftsModal">
+                    <i class="bi bi-cloud-arrow-down-fill me-1"></i> Load Draft ({{ $drafts->count() }})
+                </button>
+            @endif
         </div>
 
-        <div class="post-tabs">
-            <div class="post-tab-item active" data-tab="text" onclick="switchTab('text')">Teks</div>
-            <div class="post-tab-item" data-tab="media" onclick="switchTab('media')">Image & Video</div>
-            <div class="post-tab-item" data-tab="link" onclick="switchTab('link')">Link</div>
-        </div>
+        @if($errors->any())
+            <div class="alert alert-danger" style="border-radius: 10px; border: none; font-size: 14px;">
+                <ul class="mb-0">
+                    @foreach($errors->all() as $error)
+                        <li>{{ $error }}</li>
+                    @endforeach
+                </ul>
+            </div>
+        @endif
 
         <form action="{{ route('manajemenmahasiswa.forum.store') }}" method="POST" id="createPostForm"
             enctype="multipart/form-data">
             @csrf
-            <input type="hidden" name="format" id="postFormat" value="text">
-            <input type="hidden" name="konten" id="finalKonten" value="">
+            <input type="hidden" name="draft_id" id="draft_id" value="">
 
+            {{-- Judul --}}
             <div class="mb-4">
-                <label class="form-label">Judul Postingan</label>
+                <label class="form-label">Judul Postingan <span class="text-danger">*</span></label>
                 <div class="input-wrapper">
                     <input type="text" name="judul" id="inputJudul"
-                        class="custom-input align-content-start @error('judul') border-danger @enderror"
-                        placeholder="Tuliskan judul yang menarik dan deskriptif..." maxlength="200" required
+                        class="custom-input @error('judul') border-danger @enderror"
+                        placeholder="Tuliskan judul yang menarik dan deskriptif..." maxlength="100" required
                         value="{{ old('judul') }}">
-                    <span class="char-count"><span id="judulCount">0</span>/200</span>
+                    <span class="char-count"><span id="judulCount">0</span>/100</span>
                 </div>
-                @error('judul')
-                    <div class="text-danger mt-1 fw-medium" style="font-size: 13px;">{{ $message }}</div>
-                @enderror
             </div>
 
+            {{-- Kategori --}}
             <div class="mb-4">
-                <label class="form-label">Kategori Postingan</label>
-                <select name="kategori" id="inputKategori"
-                    class="custom-select form-select @error('kategori') border-danger @enderror" required>
-                    <option value="" disabled {{ old('kategori') ? '' : 'selected' }}>Pilih Kategori Obrolan</option>
+                <label class="form-label">Kategori Postingan <span class="text-danger">*</span></label>
+                <div class="d-flex flex-wrap gap-3 mt-2 @error('kategori') is-invalid @enderror">
                     @foreach($categories as $key => $label)
-                        <option value="{{ $key }}" {{ old('kategori') === $key ? 'selected' : '' }}>{{ $label }}</option>
+                        <div class="form-check form-check-inline m-0">
+                            <input class="form-check-input shadow-none" style="cursor: pointer;" type="checkbox"
+                                name="kategori[]" id="kategori_{{ $key }}" value="{{ $key }}" {{ in_array($key, old('kategori', [])) ? 'checked' : '' }}>
+                            <label class="form-check-label text-dark" style="cursor: pointer; font-size: 14px;"
+                                for="kategori_{{ $key }}">{{ $label }}</label>
+                        </div>
                     @endforeach
-                </select>
-                @error('kategori')
-                    <div class="text-danger mt-1 fw-medium" style="font-size: 13px;">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <!-- Tab Content: Text -->
-            <div class="mb-5 tab-content" id="content-text">
-                <label class="form-label">Isi Postingan</label>
-                <textarea id="inputTextBody" class="custom-textarea @error('konten') border-danger @enderror" rows="8"
-                    placeholder="Bagikan apa yang ada di pikiranmu..."></textarea>
-                @error('konten')
-                    <div class="text-danger mt-1 fw-medium" style="font-size: 13px;">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <!-- Tab Content: Media -->
-            <div class="mb-5 tab-content" id="content-media" style="display: none;">
-                <label class="form-label">Upload Gambar / Video</label>
-                <div class="media-dropzone" id="mediaDropzone">
-                    <input type="file" name="media_files[]" id="mediaFileInput" multiple
-                        accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm">
-                    <div class="dropzone-text">Click or drag file ke sini</div>
-                    <div class="dropzone-hint">Mendukung: JPG, PNG, GIF, WEBP, MP4, WEBM &bull; Maks 10MB per file
-                        &bull; Maks 5 file</div>
                 </div>
-                <div class="media-preview-grid" id="mediaPreviewGrid"></div>
-                @error('media_files')
-                    <div class="text-danger mt-1 fw-medium" style="font-size: 13px;">{{ $message }}</div>
-                @enderror
-                @error('media_files.*')
-                    <div class="text-danger mt-1 fw-medium" style="font-size: 13px;">{{ $message }}</div>
-                @enderror
-
-                <label class="form-label mt-3">Deskripsi Tambahan (Opsional)</label>
-                <textarea id="inputMediaCaption" name="media_caption" class="custom-textarea" rows="4"
-                    placeholder="Ceritakan lebih banyak tentang media ini..."></textarea>
             </div>
 
-            <!-- Tab Content: Link -->
-            <div class="mb-5 tab-content" id="content-link" style="display: none;">
-                <label class="form-label">Tautan (URL)</label>
-                <input type="url" id="inputLinkUrl" class="custom-input mb-3"
-                    placeholder="Contoh: https://medium.com/@username/title">
-                <label class="form-label">Deskripsi Tautan (Opsional)</label>
-                <textarea id="inputLinkCaption" class="custom-textarea" rows="4"
-                    placeholder="Mengapa tautan ini menarik untuk dibagikan?"></textarea>
+            {{-- Konten Teks --}}
+            <div class="mb-4">
+                <label class="form-label">Isi Postingan</label>
+                <textarea name="konten" id="inputKonten" class="custom-textarea" rows="6"
+                    placeholder="Bagikan apa yang ada di pikiranmu...">{{ old('konten') }}</textarea>
             </div>
 
-            <div class="d-flex justify-content-end gap-3 align-items-center pb-2">
-                <span id="draftStatus" class="text-muted me-auto bg-light rounded px-3 py-2 fw-medium"
-                    style="font-size: 13px; display: none;"></span>
+            {{-- Media Upload (Collapsible) --}}
+            <div class="mb-4">
+                <button type="button" class="section-toggle" id="toggleMedia" onclick="toggleSection('media')">
+                    📷 Tambah Gambar / Video
+                    <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
+                </button>
+                <div class="section-content" id="sectionMedia">
+                    <div class="media-dropzone" id="mediaDropzone">
+                        <input type="file" name="media_files[]" id="mediaFileInput" multiple
+                            accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm">
+                        <div class="dropzone-text">Click atau drag file ke sini</div>
+                        <div class="dropzone-hint">JPG, PNG, GIF, WEBP, MP4, WEBM • Maks 10MB per file • Maks 5 file
+                        </div>
+                    </div>
+                    <div id="mediaCounter"></div>
+                    <div class="media-preview-grid" id="mediaPreviewGrid"></div>
+                </div>
+            </div>
 
-                <button type="button" class="btn btn-light fw-bold text-secondary px-4 py-2 shadow-sm"
-                    onclick="saveDraft()" style="border-radius: 8px;">
-                    Simpan Draft
+            {{-- Link (Collapsible) --}}
+            <div class="mb-5">
+                <button type="button" class="section-toggle" id="toggleLink" onclick="toggleSection('link')">
+                    🔗 Tambah Link
+                    <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
                 </button>
-                <a href="{{ route('manajemenmahasiswa.forum.index') }}"
-                    class="btn-action btn-cancel text-decoration-none shadow-sm">
-                    <span>✕</span> Batal
-                </a>
-                <button type="submit" class="btn-action btn-post shadow-sm px-4">
-                    Terbitkan
-                </button>
+                <div class="section-content" id="sectionLink">
+                    <input type="url" name="link_url" id="inputLinkUrl" class="custom-input"
+                        placeholder="https://contoh.com/artikel-menarik" value="{{ old('link_url') }}">
+                </div>
+            </div>
+
+            {{-- Action Buttons --}}
+            <div class="d-flex justify-content-between align-items-center pb-2">
+                <div class="d-flex align-items-center gap-2">
+                    <span id="draftStatus" class="text-muted"
+                        style="font-size: 13px; font-style: italic; display: none;">Menyimpan draf...</span>
+                </div>
+                <div class="d-flex justify-content-end gap-3 align-items-center">
+                    <button type="button" class="btn-action btn-cancel text-decoration-none shadow-sm"
+                        onclick="saveDraftManual()">
+                        Simpan Draf
+                    </button>
+                    <a href="{{ route('manajemenmahasiswa.forum.index') }}"
+                        class="btn-action btn-cancel text-decoration-none shadow-sm text-center">
+                        <span>✕</span> Batal
+                    </a>
+                    <button type="submit" class="btn-action btn-post shadow-sm px-4">
+                        Terbitkan
+                    </button>
+                </div>
             </div>
         </form>
     </div>
 
+    {{-- Modal Drafts --}}
+    @if(isset($drafts) && $drafts->count() > 0)
+        <div class="modal fade" id="draftsModal" tabindex="-1" aria-labelledby="draftsModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content border-0 shadow" style="border-radius: 16px;">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold" id="draftsModalLabel">Draf Anda</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="list-group list-group-flush">
+                            @foreach($drafts as $draft)
+                                <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center p-3"
+                                    style="border-radius: 12px; margin-bottom: 8px; border: 1px solid #e5e7eb; cursor: pointer;">
+                                    <div class="flex-grow-1 pe-3"
+                                        onclick="loadDraft({{ $draft->id }}, {{ json_encode($draft->judul) }}, {{ json_encode($draft->kategori) }}, {{ json_encode($draft->konten) }})">
+                                        <h6 class="mb-1 fw-bold text-dark" style="font-size: 15px;">
+                                            {{ $draft->judul ?: '(Tanpa Judul)' }}</h6>
+                                        <p class="mb-1 text-muted"
+                                            style="font-size: 13px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                            {{ $draft->konten ?: '(Tidak ada konten teks)' }}
+                                        </p>
+                                        <small class="text-muted" style="font-size: 11px;">
+                                            Diperbarui: {{ $draft->updated_at->diffForHumans() }}
+                                        </small>
+                                    </div>
+                                    <div class="ms-1">
+                                        <form action="{{ route('manajemenmahasiswa.forum.drafts.destroy', $draft->id) }}"
+                                            method="POST" class="d-inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="btn btn-sm btn-light text-danger rounded-circle shadow-sm border border-danger-subtle"
+                                                style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
+                                                title="Hapus draf ini">
+                                                ✕
+                                            </button>
+                                        </form>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
+
     @push('scripts')
         <script>
-            // Tab switching logic
-            function switchTab(tab) {
-                // Toggle Active Class on Tabs
-                document.querySelectorAll('.post-tab-item').forEach(el => el.classList.remove('active'));
-                document.querySelector(`.post-tab-item[data-tab="${tab}"]`).classList.add('active');
-
-                // Toggle Display Content
-                document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-                document.getElementById(`content-${tab}`).style.display = 'block';
-
-                // Update hidden format input
-                document.getElementById('postFormat').value = tab;
+            // ---- Toggle Sections ----
+            function toggleSection(section) {
+                const content = document.getElementById(`section${section.charAt(0).toUpperCase() + section.slice(1)}`);
+                const toggle = document.getElementById(`toggle${section.charAt(0).toUpperCase() + section.slice(1)}`);
+                content.classList.toggle('open');
+                toggle.classList.toggle('active');
             }
 
-            // Live Character counter for Judul
+            // ---- Draft Auto-Save Logic ----
+            let draftTimer;
+            const DRAFT_DELAY = 60000; // 1 menit
+
+            const formInputs = document.querySelectorAll('#inputJudul, #inputKonten, input[name="kategori[]"]');
+
+            formInputs.forEach(input => {
+                input.addEventListener('input', () => {
+                    clearTimeout(draftTimer);
+                    document.getElementById('draftStatus').style.display = 'none';
+                    draftTimer = setTimeout(saveDraftAJAX, DRAFT_DELAY);
+                });
+            });
+
+            function saveDraftManual() {
+                saveDraftAJAX(true);
+            }
+
+            function saveDraftAJAX(isManual = false) {
+                const draftStatus = document.getElementById('draftStatus');
+                draftStatus.style.display = 'inline';
+                draftStatus.textContent = 'Menyimpan draf...';
+
+                const formData = new FormData(document.getElementById('createPostForm'));
+
+                fetch('{{ route("manajemenmahasiswa.forum.drafts.store") }}', {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    },
+                    body: formData
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.getElementById('draft_id').value = data.draft_id;
+                            draftStatus.textContent = 'Draf tersimpan.';
+                            setTimeout(() => { draftStatus.style.display = 'none'; }, 3000);
+                            if (isManual) {
+                                alert('Draf berhasil disimpan!');
+                            }
+                        } else {
+                            draftStatus.textContent = 'Gagal menyimpan draf.';
+                            if (isManual) {
+                                alert('Terjadi kesalahan saat menyimpan draf: ' + (data.message || 'Data tidak valid.'));
+                            }
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error saving draft:', error);
+                        draftStatus.textContent = 'Gagal menyimpan draf.';
+                        if (isManual) {
+                            alert('Terjadi kesalahan saat menyimpan draf.');
+                        }
+                    });
+            }
+
+            function loadDraft(id, judul, kategoriArr, konten) {
+                document.getElementById('draft_id').value = id;
+                document.getElementById('inputJudul').value = judul || '';
+                if (judul) {
+                    document.getElementById('judulCount').textContent = judul.length;
+                } else {
+                    document.getElementById('judulCount').textContent = '0';
+                }
+
+                document.getElementById('inputKonten').value = konten || '';
+
+                // Reset checkboxes
+                const checkboxes = document.querySelectorAll('input[name="kategori[]"]');
+                checkboxes.forEach(cb => cb.checked = false);
+
+                if (kategoriArr && Array.isArray(kategoriArr)) {
+                    kategoriArr.forEach(cat => {
+                        const cb = document.getElementById('kategori_' + cat);
+                        if (cb) cb.checked = true;
+                    });
+                }
+
+                // Hide modal via Bootstrap API if available
+                if (typeof bootstrap !== 'undefined') {
+                    const modalEl = document.getElementById('draftsModal');
+                    const modal = bootstrap.Modal.getInstance(modalEl);
+                    if (modal) modal.hide();
+                }
+            }
+
+            // ---- Character Counter ----
             const judulInput = document.getElementById('inputJudul');
             const judulCount = document.getElementById('judulCount');
-
-            // Check initial length (if validation fail return back with old)
-            if (judulInput.value) {
-                judulCount.textContent = judulInput.value.length;
-            }
-
+            if (judulInput.value) judulCount.textContent = judulInput.value.length;
             judulInput.addEventListener('input', function () {
                 judulCount.textContent = this.value.length;
             });
 
-            // ---- Media Upload Logic ----
+            // ---- Media Upload ----
             const mediaFileInput = document.getElementById('mediaFileInput');
             const mediaDropzone = document.getElementById('mediaDropzone');
             const mediaPreviewGrid = document.getElementById('mediaPreviewGrid');
-            let selectedFiles = []; // Track files in a DataTransfer object
+            const mediaCounter = document.getElementById('mediaCounter');
+            let selectedFiles = [];
+            const MAX_FILES = 5;
+            const MAX_SIZE = 10 * 1024 * 1024;
 
-            // Drag & drop visual feedback
-            mediaDropzone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                mediaDropzone.classList.add('dragover');
-            });
+            mediaDropzone.addEventListener('dragover', (e) => { e.preventDefault(); mediaDropzone.classList.add('dragover'); });
             mediaDropzone.addEventListener('dragleave', () => mediaDropzone.classList.remove('dragover'));
             mediaDropzone.addEventListener('drop', () => mediaDropzone.classList.remove('dragover'));
 
@@ -399,15 +542,12 @@
             });
 
             function addMediaFiles(fileList) {
-                const maxFiles = 5;
-                const maxSize = 10 * 1024 * 1024; // 10MB
-
                 for (const file of fileList) {
-                    if (selectedFiles.length >= maxFiles) {
-                        alert(`Maksimal ${maxFiles} file yang bisa diupload.`);
+                    if (selectedFiles.length >= MAX_FILES) {
+                        alert(`Maksimal ${MAX_FILES} file yang bisa diupload.`);
                         break;
                     }
-                    if (file.size > maxSize) {
+                    if (file.size > MAX_SIZE) {
                         alert(`File "${file.name}" terlalu besar. Maksimal 10MB per file.`);
                         continue;
                     }
@@ -419,19 +559,37 @@
                 }
                 syncFileInput();
                 renderPreviews();
+                updateCounter();
+
+                // Auto-open media section
+                if (selectedFiles.length > 0) {
+                    document.getElementById('sectionMedia').classList.add('open');
+                    document.getElementById('toggleMedia').classList.add('active');
+                }
             }
 
             function removeMediaFile(index) {
                 selectedFiles.splice(index, 1);
                 syncFileInput();
                 renderPreviews();
+                updateCounter();
             }
 
             function syncFileInput() {
-                // Rebuild the file input with a DataTransfer
                 const dt = new DataTransfer();
                 selectedFiles.forEach(f => dt.items.add(f));
                 mediaFileInput.files = dt.files;
+            }
+
+            function updateCounter() {
+                if (selectedFiles.length === 0) {
+                    mediaCounter.innerHTML = '';
+                    return;
+                }
+                let cls = 'ok';
+                if (selectedFiles.length >= 4) cls = 'warn';
+                if (selectedFiles.length >= MAX_FILES) cls = 'full';
+                mediaCounter.innerHTML = `<span class="media-counter ${cls}">${selectedFiles.length}/${MAX_FILES} file</span>`;
             }
 
             function renderPreviews() {
@@ -468,118 +626,14 @@
                     mediaPreviewGrid.appendChild(item);
                 });
             }
-
-            // Handle Form Submission Interceptor
+            // ---- Prevent Double Submit ----
             const form = document.getElementById('createPostForm');
-            form.addEventListener('submit', function (e) {
-                const format = document.getElementById('postFormat').value;
-                let combinedKonten = '';
-
-                if (format === 'text') {
-                    combinedKonten = document.getElementById('inputTextBody').value;
-                }
-                else if (format === 'media') {
-                    // Media files are handled server-side via multipart upload
-                    // Only set caption as konten placeholder; server will prepend media HTML
-                    const caption = document.getElementById('inputMediaCaption').value;
-                    combinedKonten = caption || '';
-                }
-                else if (format === 'link') {
-                    const linkUrl = document.getElementById('inputLinkUrl').value;
-                    const caption = document.getElementById('inputLinkCaption').value;
-                    if (linkUrl) {
-                        combinedKonten = `<a href="${linkUrl}" target="_blank" class="d-inline-flex p-3 rounded bg-light border border-primary-subtle text-primary fw-bold text-decoration-none mb-3">🔗 ${linkUrl}</a><br>${caption}`;
-                    } else {
-                        combinedKonten = caption;
-                    }
-                }
-
-                // Fill the final hidden input to be sent to backend
-                document.getElementById('finalKonten').value = combinedKonten;
-
-                // Clean draft completely upon successful submission
-                localStorage.removeItem('forum_draft_judul');
-                localStorage.removeItem('forum_draft_kategori');
-                localStorage.removeItem('forum_draft_text');
-                localStorage.removeItem('forum_draft_mediaCap');
-                localStorage.removeItem('forum_draft_linkUrl');
-                localStorage.removeItem('forum_draft_linkCap');
-                localStorage.removeItem('forum_draft_format');
+            const submitBtn = form.querySelector('button[type="submit"]');
+            form.addEventListener('submit', function () {
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Loading...';
             });
-
-            // -----------------------------------------
-            // Drafts Logic using Client Side localStorage
-            // -----------------------------------------
-            function saveDraft() {
-                // Save current format tab
-                const format = document.getElementById('postFormat').value;
-                localStorage.setItem('forum_draft_format', format);
-
-                // Save Global Fields
-                localStorage.setItem('forum_draft_judul', document.getElementById('inputJudul').value);
-                localStorage.setItem('forum_draft_kategori', document.getElementById('inputKategori').value);
-
-                // Save tab-specific fields
-                localStorage.setItem('forum_draft_text', document.getElementById('inputTextBody').value);
-                localStorage.setItem('forum_draft_mediaCap', document.getElementById('inputMediaCaption').value);
-                localStorage.setItem('forum_draft_linkUrl', document.getElementById('inputLinkUrl').value);
-                localStorage.setItem('forum_draft_linkCap', document.getElementById('inputLinkCaption').value);
-
-                showDraftStatus('✅ Draft berhasil disimpan: ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
-            }
-
-            function loadDraft() {
-                const title = localStorage.getItem('forum_draft_judul');
-                const category = localStorage.getItem('forum_draft_kategori');
-                const format = localStorage.getItem('forum_draft_format') || 'text';
-
-                let draftFound = false;
-
-                // Restore global fields
-                if (title) { document.getElementById('inputJudul').value = title; draftFound = true; }
-                if (category) { document.getElementById('inputKategori').value = category; draftFound = true; }
-
-                // Restore tab-specific fields
-                const text = localStorage.getItem('forum_draft_text');
-                if (text) document.getElementById('inputTextBody').value = text;
-
-                const mediaCap = localStorage.getItem('forum_draft_mediaCap');
-                if (mediaCap) document.getElementById('inputMediaCaption').value = mediaCap;
-
-                const linkUrl = localStorage.getItem('forum_draft_linkUrl');
-                if (linkUrl) document.getElementById('inputLinkUrl').value = linkUrl;
-
-                const linkCap = localStorage.getItem('forum_draft_linkCap');
-                if (linkCap) document.getElementById('inputLinkCaption').value = linkCap;
-
-                if (draftFound) {
-                    // Trigger length calculation
-                    judulInput.dispatchEvent(new Event('input'));
-
-                    // Switch to the correct tab where the draft was saved
-                    switchTab(format);
-
-                    showDraftStatus('📥 Berhasil memuat draft terakhir!');
-                } else {
-                    showDraftStatus('⚠️ Tidak ada draft yang tersimpan.');
-                }
-            }
-
-            function showDraftStatus(message) {
-                const status = document.getElementById('draftStatus');
-                status.style.display = 'block';
-                status.textContent = message;
-                setTimeout(() => status.style.display = 'none', 4000);
-            }
-
-            // Auto-save draft quietly every 1 min if user changes things
-            setInterval(() => {
-                if (document.getElementById('inputJudul').value.length > 5 || document.getElementById('inputTextBody').value.length > 5) {
-                    saveDraft();
-                }
-            }, 60000);
-
         </script>
     @endpush
 
-</x-manajemenmahasiswa::layouts.mahasiswa>
+</x-manajemenmahasiswa::layouts.forum-layout>

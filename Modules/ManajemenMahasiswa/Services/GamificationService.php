@@ -15,15 +15,53 @@ use Illuminate\Database\Eloquent\Model;
 class GamificationService
 {
     // =========================================================================
+    // Tier Reputasi
+    // =========================================================================
+
+    /**
+     * Daftar tier reputasi berdasarkan level.
+     */
+    const TIERS = [
+        ['min_level' => 1,  'max_level' => 2,  'name' => 'Pendatang Baru',  'icon' => '🌱'],
+        ['min_level' => 3,  'max_level' => 4,  'name' => 'Kontributor',     'icon' => '📝'],
+        ['min_level' => 5,  'max_level' => 6,  'name' => 'Penjelajah',      'icon' => '🧭'],
+        ['min_level' => 7,  'max_level' => 8,  'name' => 'Ahli',            'icon' => '🎯'],
+        ['min_level' => 9,  'max_level' => 10, 'name' => 'Pakar',           'icon' => '⭐'],
+        ['min_level' => 11, 'max_level' => 12, 'name' => 'Mentor',          'icon' => '🏅'],
+        ['min_level' => 13, 'max_level' => 99, 'name' => 'Legenda Kampus',  'icon' => '👑'],
+    ];
+
+    /**
+     * Ambil informasi tier berdasarkan level.
+     */
+    public function getTierInfo(int $level): array
+    {
+        foreach (self::TIERS as $tier) {
+            if ($level >= $tier['min_level'] && $level <= $tier['max_level']) {
+                return [
+                    'name' => $tier['name'],
+                    'icon' => $tier['icon'],
+                ];
+            }
+        }
+        return ['name' => 'Pendatang Baru', 'icon' => '🌱'];
+    }
+
+    // =========================================================================
     // XP
     // =========================================================================
 
     /**
      * Berikan XP ke user berdasarkan aksi yang dilakukan.
+     * Mengembalikan array ['log' => XpLog, 'leveled_up' => bool, 'old_level' => int, 'new_level' => int]
      */
-    public function awardXp(int $userId, string $action, ?Model $reference = null): XpLog
+    public function awardXp(int $userId, string $action, ?Model $reference = null): array
     {
         $xpAmount = XpLog::XP_MAP[$action] ?? 0;
+
+        // Hitung level SEBELUM award
+        $oldTotalXp = $this->getTotalXp($userId);
+        $oldLevel   = $this->calculateLevel($oldTotalXp);
 
         $log = XpLog::create([
             'user_id'        => $userId,
@@ -33,18 +71,41 @@ class GamificationService
             'reference_id'   => $reference?->id,
         ]);
 
+        // Hitung level SESUDAH award
+        $newTotalXp = $oldTotalXp + $xpAmount;
+        // XP tidak boleh negatif
+        if ($newTotalXp < 0) {
+            $newTotalXp = 0;
+        }
+        $newLevel   = $this->calculateLevel($newTotalXp);
+        $leveledUp  = $newLevel > $oldLevel;
+
         // Setelah memberi XP, cek apakah ada badge baru yang bisa diraih
         $this->checkAndAwardBadges($userId);
 
-        return $log;
+        return [
+            'log'        => $log,
+            'leveled_up' => $leveledUp,
+            'old_level'  => $oldLevel,
+            'new_level'  => $newLevel,
+        ];
     }
 
     /**
-     * Hitung total XP user.
+     * Penalti XP untuk pemberi downvote (-1 XP).
+     * XP total tidak akan pernah negatif.
+     */
+    public function penalizeDownvote(int $userId, ?Model $reference = null): array
+    {
+        return $this->awardXp($userId, XpLog::ACTION_DOWNVOTE_PENALTY, $reference);
+    }
+
+    /**
+     * Hitung total XP user (minimum 0).
      */
     public function getTotalXp(int $userId): int
     {
-        return (int) XpLog::where('user_id', $userId)->sum('xp_amount');
+        return max(0, (int) XpLog::where('user_id', $userId)->sum('xp_amount'));
     }
 
     // =========================================================================
@@ -92,6 +153,7 @@ class GamificationService
         $xpForCurrent = $this->getXpForLevel($level);
         $xpForNext    = $this->getXpForNextLevel($level);
         $rank         = $this->getUserRank($userId);
+        $tier         = $this->getTierInfo($level);
         $streak       = Streak::where('user_id', $userId)->first();
         $badges       = UserBadge::with('badge')
                             ->where('user_id', $userId)
@@ -101,6 +163,8 @@ class GamificationService
         return [
             'total_xp'       => $totalXp,
             'level'          => $level,
+            'tier_name'      => $tier['name'],
+            'tier_icon'      => $tier['icon'],
             'xp_current'     => $totalXp - $xpForCurrent,
             'xp_needed'      => $xpForNext - $xpForCurrent,
             'xp_for_next'    => $xpForNext,
@@ -143,17 +207,20 @@ class GamificationService
             ->map(function ($row) {
                 $user   = \App\Models\User::find($row->user_id);
                 $level  = $this->calculateLevel($row->total_xp);
+                $tier   = $this->getTierInfo($level);
                 $badges = UserBadge::with('badge')
                     ->where('user_id', $row->user_id)
                     ->get()
                     ->pluck('badge');
 
                 return (object) [
-                    'user_id'  => $row->user_id,
-                    'name'     => $user?->name ?? 'Unknown',
-                    'total_xp' => (int) $row->total_xp,
-                    'level'    => $level,
-                    'badges'   => $badges,
+                    'user_id'   => $row->user_id,
+                    'name'      => $user?->name ?? 'Unknown',
+                    'total_xp'  => (int) $row->total_xp,
+                    'level'     => $level,
+                    'tier_name' => $tier['name'],
+                    'tier_icon' => $tier['icon'],
+                    'badges'    => $badges,
                 ];
             });
     }
@@ -181,6 +248,11 @@ class GamificationService
             // Bonus streak setiap 7 hari berturut-turut
             if ($streak->current_streak > 0 && $streak->current_streak % 7 === 0) {
                 $this->awardXp($userId, XpLog::ACTION_STREAK_BONUS);
+            }
+
+            // Bonus streak setiap 30 hari berturut-turut (+100 XP)
+            if ($streak->current_streak > 0 && $streak->current_streak % 30 === 0) {
+                $this->awardXp($userId, XpLog::ACTION_STREAK_BONUS_30);
             }
         }
 
@@ -231,7 +303,58 @@ class GamificationService
             Badge::CRITERIA_BEST_ANSWER_COUNT => Comment::where('user_id', $userId)->where('is_best_answer', true)->count(),
             Badge::CRITERIA_STREAK => Streak::where('user_id', $userId)->value('longest_streak') ?? 0,
             Badge::CRITERIA_TOTAL_XP => $this->getTotalXp($userId),
+            Badge::CRITERIA_FIRST_ANSWER_COUNT => $this->getFirstAnswerCount($userId),
+            Badge::CRITERIA_ALUMNI_COMMENT_COUNT => $this->getAlumniCategoryCommentCount($userId),
+            Badge::CRITERIA_DOSEN_COMMENT_COUNT => $this->getDosenCategoryCommentCount($userId),
             default => 0,
         };
+    }
+
+    /**
+     * Hitung berapa kali user menjadi penjawab pertama di thread.
+     */
+    private function getFirstAnswerCount(int $userId): int
+    {
+        return Comment::where('user_id', $userId)
+            ->whereNull('parent_id')
+            ->whereRaw('id = (SELECT MIN(c2.id) FROM mk_comments c2 WHERE c2.thread_id = mk_comments.thread_id AND c2.parent_id IS NULL)')
+            ->count();
+    }
+
+    /**
+     * Hitung komentar alumni di kategori Loker & Karir.
+     */
+    private function getAlumniCategoryCommentCount(int $userId): int
+    {
+        $user = \App\Models\User::find($userId);
+        if (!$user || !$user->hasRole('alumni')) {
+            return 0;
+        }
+
+        return Comment::where('user_id', $userId)
+            ->whereHas('thread', function ($q) {
+                $q->whereJsonContains('kategori', 'loker_karir');
+            })
+            ->count();
+    }
+
+    /**
+     * Hitung komentar dosen di kategori Tanya Tugas / Info Skripsi.
+     */
+    private function getDosenCategoryCommentCount(int $userId): int
+    {
+        $user = \App\Models\User::find($userId);
+        if (!$user || !$user->hasAnyRole(['dosen', 'dosen_koordinator'])) {
+            return 0;
+        }
+
+        return Comment::where('user_id', $userId)
+            ->whereHas('thread', function ($q) {
+                $q->where(function ($q2) {
+                    $q2->whereJsonContains('kategori', 'tanya_tugas')
+                       ->orWhereJsonContains('kategori', 'info_skripsi');
+                });
+            })
+            ->count();
     }
 }

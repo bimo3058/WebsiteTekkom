@@ -83,11 +83,7 @@
 
 @section('body')
     {{-- Sidebar Dinamis --}}
-    @if(auth()->user()->role == 'admin')
-        <x-manajemenmahasiswa::ui.sidebar-a />
-    @else
-        <x-manajemenmahasiswa::ui.sidebar-b />
-    @endif
+    <x-manajemenmahasiswa::ui.sidebar />
 
     {{-- Navbar --}}
     <x-manajemenmahasiswa::ui.navbar-admin />

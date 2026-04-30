@@ -12,27 +12,32 @@ class DashboardController extends Controller
 {
     public function __construct(
         private DashboardAnalitikService $analitikService
-    ) {}
+    ) {
+    }
 
     public function index()
     {
-        $user  = Auth::user();
+        $user = Auth::user();
         $roles = $user->roles->pluck('name')->toArray();
+
+        $pengurusRoles = ['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
+        if (!empty(array_intersect($roles, $pengurusRoles))) {
+            return redirect()->route('manajemenmahasiswa.pengumuman.index');
+        }
 
         if (
             \in_array('superadmin', $roles) ||
             \in_array('admin', $roles) ||
             \in_array('admin_kemahasiswaan', $roles) ||
-            \in_array('gpm', $roles) ||
-            \in_array('pengurus_himpunan', $roles)
+            \in_array('gpm', $roles)
         ) {
             $snapshot = $this->analitikService->getSnapshot();
 
             // Status breakdown untuk donut chart
             $statusMahasiswa = [
                 'aktif' => Kemahasiswaan::where('status', Kemahasiswaan::STATUS_AKTIF)->count(),
-                'cuti'  => Kemahasiswaan::where('status', Kemahasiswaan::STATUS_CUTI)->count(),
-                'do'    => Kemahasiswaan::where('status', Kemahasiswaan::STATUS_DO)->count(),
+                'cuti' => Kemahasiswaan::where('status', Kemahasiswaan::STATUS_CUTI)->count(),
+                'do' => Kemahasiswaan::where('status', Kemahasiswaan::STATUS_DO)->count(),
                 'lulus' => Kemahasiswaan::where('status', Kemahasiswaan::STATUS_ALUMNI)->count(),
             ];
 
@@ -42,15 +47,22 @@ class DashboardController extends Controller
                 ->limit(10)
                 ->get();
 
+            // Data analytics alumni baru
+            $alumniService = app(\Modules\ManajemenMahasiswa\Services\AlumniService::class);
+            $serapanPerAngkatan = $alumniService->getSerapanPerAngkatan();
+            $distribusiIndustri = $alumniService->getDistribusiIndustri();
+
             return view('manajemenmahasiswa::dashboard.dashboard-analitik', compact(
                 'snapshot',
                 'statusMahasiswa',
                 'serapanAlumni',
+                'serapanPerAngkatan',
+                'distribusiIndustri',
             ));
         }
 
         if (\in_array('dosen', $roles)) {
-            return view('manajemenmahasiswa::dashboard.dosen');
+            return redirect()->route('manajemenmahasiswa.pengumuman.index');
         }
 
         if (\in_array('mahasiswa', $roles)) {
