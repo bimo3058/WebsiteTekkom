@@ -30,3 +30,5 @@ Modules/BankSoal/node_modules
 composer.json
 composer.lock
 bootstrap/providers.php
+
+CLAUDE.md

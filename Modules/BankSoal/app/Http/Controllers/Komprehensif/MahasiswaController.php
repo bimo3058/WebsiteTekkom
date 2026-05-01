@@ -9,6 +9,20 @@ use Modules\BankSoal\Models\PendaftarUjian;
 
 class MahasiswaController extends Controller
 {
+    private function getStudentSemester()
+    {
+        $student = auth()->user()->student;
+        $semester = 1;
+        if ($student && $student->cohort_year) {
+            $currentYear = date('Y');
+            $currentMonth = date('n');
+            $yearsPassed = $currentYear - $student->cohort_year;
+            $semester = ($yearsPassed * 2) + ($currentMonth >= 8 ? 1 : 0);
+            if ($semester < 1) $semester = 1;
+        }
+        return $semester;
+    }
+
     public function dashboard()
     {
         $activePeriode = PeriodeUjian::where('status', 'aktif')->latest()->first();
@@ -20,7 +34,10 @@ class MahasiswaController extends Controller
                 ->first();
         }
 
-        return view('banksoal::mahasiswa.dashboard', compact('activePeriode', 'pendaftar'));
+        $semester = $this->getStudentSemester();
+        $isEligible = $semester >= 7;
+
+        return view('banksoal::mahasiswa.dashboard', compact('activePeriode', 'pendaftar', 'semester', 'isEligible'));
     }
 
     public function pendaftaran()
@@ -29,7 +46,8 @@ class MahasiswaController extends Controller
         $pendaftar = null;
 
         if ($activePeriode) {
-            $pendaftar = PendaftarUjian::where('periode_ujian_id', $activePeriode->id)
+            $pendaftar = PendaftarUjian::withTrashed()
+                ->where('periode_ujian_id', $activePeriode->id)
                 ->where('mahasiswa_id', auth()->id())
                 ->first();
         }
@@ -39,20 +57,41 @@ class MahasiswaController extends Controller
 
     public function createPendaftaran()
     {
-        $activePeriode = PeriodeUjian::where('status', 'aktif')->latest()->first();
-
-        // Hindari jika tidak ada periode aktif (dipingpong kembali)
-        if (!$activePeriode) {
-            return redirect()->route('komprehensif.mahasiswa.dashboard')->with('error', 'Tidak ada periode pendaftaran aktif.');
+        // Gunakan scope date-driven; auto-update draft→aktif jika mahasiswa akses sebelum admin refresh
+        $activePeriode = PeriodeUjian::currentlyActive()->latest()->first();
+        if ($activePeriode && $activePeriode->status === 'draft') {
+            $activePeriode->update(['status' => 'aktif']);
+            $activePeriode->refresh();
         }
 
-        // Hindari jika sudah mendaftar
-        $pendaftar = PendaftarUjian::where('periode_ujian_id', $activePeriode->id)
+        // Cek eligibility semester minimal
+        $semester = $this->getStudentSemester();
+        if ($semester < 7) {
+            return redirect()->route('komprehensif.mahasiswa.dashboard')->with('error', 'Akses ditolak: Anda belum memenuhi syarat minimal Semester 7.');
+        }
+
+        // Satu gate terpadu: periode aktif, belum ditutup paksa, dan masih dalam rentang tanggal
+        if (!$activePeriode || !$activePeriode->pendaftaran_terbuka) {
+            $msg = 'Pendaftaran tidak tersedia saat ini.';
+            if ($activePeriode && $activePeriode->pendaftaran_ditutup_paksa) {
+                $msg = 'Pendaftaran telah ditutup oleh admin sebelum tanggal berakhir.';
+            } elseif (!$activePeriode) {
+                $msg = 'Tidak ada periode pendaftaran aktif.';
+            }
+            return redirect()->route('komprehensif.mahasiswa.dashboard')->with('error', $msg);
+        }
+
+        // Hindari jika sudah mendaftar (termasuk yang pernah ditolak / soft-deleted)
+        $pendaftar = PendaftarUjian::withTrashed()
+            ->where('periode_ujian_id', $activePeriode->id)
             ->where('mahasiswa_id', auth()->id())
             ->first();
 
         if ($pendaftar) {
-            return redirect()->route('komprehensif.mahasiswa.pendaftaran')->with('error', 'Anda sudah terdaftar pada periode ini.');
+            $msg = $pendaftar->trashed()
+                ? 'Pendaftaran Anda pada periode ini telah ditolak. Anda tidak dapat mendaftar ulang.'
+                : 'Anda sudah terdaftar pada periode ini.';
+            return redirect()->route('komprehensif.mahasiswa.dashboard')->with('info', $msg);
         }
 
         $dosens = \App\Models\User::whereHas('roles', fn($q) => $q->where('name', 'dosen'))->orderBy('name')->get(['id', 'name']);
@@ -62,10 +101,27 @@ class MahasiswaController extends Controller
 
     public function storePendaftaran(Request $request)
     {
-        $activePeriode = PeriodeUjian::where('status', 'aktif')->latest()->first();
+        $activePeriode = PeriodeUjian::currentlyActive()->latest()->first();
+        if ($activePeriode && $activePeriode->status === 'draft') {
+            $activePeriode->update(['status' => 'aktif']);
+            $activePeriode->refresh();
+        }
 
         if (!$activePeriode) {
             return redirect()->route('komprehensif.mahasiswa.dashboard');
+        }
+
+        $semester = $this->getStudentSemester();
+        if ($semester < 7) {
+            return redirect()->route('komprehensif.mahasiswa.dashboard')->with('error', 'Akses ditolak: Anda belum memenuhi syarat minimal Semester 7.');
+        }
+
+        // Gate terpadu — konsisten dengan createPendaftaran()
+        if (!$activePeriode->pendaftaran_terbuka) {
+            $msg = $activePeriode->pendaftaran_ditutup_paksa
+                ? 'Aksi ditolak: Pendaftaran telah ditutup oleh admin.'
+                : 'Aksi ditolak: Pendaftaran sedang ditutup.';
+            return redirect()->route('komprehensif.mahasiswa.dashboard')->with('error', $msg);
         }
 
         $request->validate([
@@ -94,6 +150,6 @@ class MahasiswaController extends Controller
             'status_pendaftaran' => 'pending',
         ]);
 
-        return redirect()->route('komprehensif.mahasiswa.pendaftaran')->with('success', 'Berhasil! Pengajuan pendaftaran telah sukses terkirim ke sistem program studi.');
+        return redirect()->route('komprehensif.mahasiswa.dashboard')->with('success', 'Berhasil! Pengajuan pendaftaran telah sukses terkirim ke sistem program studi.');
     }
 }

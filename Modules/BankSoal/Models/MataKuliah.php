@@ -17,11 +17,37 @@ class MataKuliah extends Model
         'kode',
         'nama',
         'sks',
+        'semester',
     ];
 
     protected $casts = [
         'sks' => 'integer',
     ];
+
+    // -------------------------------------------------------------------------
+    // Validasi Rules
+    // -------------------------------------------------------------------------
+
+    public static function validationRules(?int $id = null): array
+    {
+        $uniqueKode = $id ? "unique:bs_mata_kuliah,kode,{$id}" : 'unique:bs_mata_kuliah,kode';
+        $uniqueNama = $id ? "unique:bs_mata_kuliah,nama,{$id}" : 'unique:bs_mata_kuliah,nama';
+
+        return [
+            'kode'     => "required|string|max:50|{$uniqueKode}",
+            'nama'     => "required|string|max:255|{$uniqueNama}",
+            'sks'      => 'required|integer|min:1|max:3',
+            'semester' => 'required|integer|min:1|max:8',
+        ];
+    }
+
+    public static function validationMessages(): array
+    {
+        return [
+            'kode.unique' => 'Kode mata kuliah sudah terdaftar. Gunakan kode lain.',
+            'nama.unique' => 'Nama mata kuliah sudah terdaftar. Gunakan nama lain.',
+        ];
+    }
 
     // -------------------------------------------------------------------------
     // Relations

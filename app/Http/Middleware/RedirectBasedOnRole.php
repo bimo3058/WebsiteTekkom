@@ -15,6 +15,7 @@ class RedirectBasedOnRole
         'logout',
         'sso/password',
         'sso/verify',
+        'livewire*',
     ];
 
     // Role yang diarahkan ke dashboard global
