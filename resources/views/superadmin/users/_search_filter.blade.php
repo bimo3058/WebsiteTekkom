@@ -1,48 +1,51 @@
-<div class="bg-white border border-slate-200 rounded-xl p-4 mb-6 shadow-sm">
+@php
+    $selectedRole  = request('role', 'all');
+    $selectedLimit = request('per_page', '10');
+    $roleItems = $roles->map(fn($r) => [
+        'name'  => $r->name,
+        'label' => ucfirst(str_replace('_', ' ', $r->name)),
+    ])->prepend(['name' => 'all', 'label' => 'Semua Role'])->values()->all();
+@endphp
+
+<div class="bg-white border border-[#DFE1E6] rounded-xl px-4 py-3 mb-4">
     <form method="GET" action="{{ route('superadmin.users.index') }}">
-        <div class="grid grid-cols-1 md:grid-cols-12 gap-5">
-            
-            {{-- Search Input --}}
-            <div class="md:col-span-4">
-                <label class="block text-slate-700 text-[10px] font-semibold uppercase tracking-tight mb-1.5 ml-1">Pencarian</label>
-                <div class="relative group">
-                    <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-[#5E53F4] transition-colors" style="font-size:18px">search</span>
+        <div class="flex flex-wrap items-end gap-2">
+
+            {{-- Search --}}
+            <div class="flex-1 min-w-40">
+                <label class="block text-[10px] font-semibold text-[#808897] uppercase tracking-wider mb-1">Cari</label>
+                <div class="relative">
+                    <span class="material-symbols-outlined absolute left-2.5 top-1/2 -translate-y-1/2 text-[#C1C7CF]" style="font-size:15px">search</span>
                     <input type="text" name="search" value="{{ request('search') }}"
                         placeholder="Nama atau email..."
-                        class="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-slate-800 placeholder-slate-400 focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4] outline-none transition-all text-xs shadow-sm">
+                        class="w-full h-8 bg-[#F8F9FB] border border-[#DFE1E6] rounded-lg pl-8 pr-3 text-[12px] text-[#1A1B25] placeholder-[#C1C7CF] focus:border-[#6B39F4] focus:ring-1 focus:ring-[#6B39F4]/20 outline-none transition-all">
                 </div>
             </div>
 
-            {{-- Custom Dropdown Role (Alpine.js) --}}
-            <div class="md:col-span-3" x-data="{ 
-                open: false, 
-                selected: '{{ request('role', 'all') }}',
-                roles: [
-                    { name: 'all', label: 'Semua Role' },
-                    @foreach($roles as $role)
-                        { name: '{{ $role->name }}', label: '{{ ucfirst($role->name) }}' },
-                    @endforeach
-                ],
+            {{-- Role Dropdown --}}
+            <div class="w-36" x-data="{
+                open: false,
+                selected: '{{ $selectedRole }}',
+                roles: @js($roleItems),
                 get currentLabel() {
-                    return this.roles.find(r => r.name === this.selected)?.label || 'Semua Role';
+                    return this.roles.find(r => r.name === this.selected)?.label ?? 'Semua Role';
                 }
             }">
-                <label class="block text-slate-700 text-[10px] font-semibold uppercase tracking-tight mb-1.5 ml-1">Filter Role</label>
+                <label class="block text-[10px] font-semibold text-[#808897] uppercase tracking-wider mb-1">Role</label>
                 <div class="relative">
-                    <button type="button" @click="open = !open" 
-                        class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4] transition-all shadow-sm outline-none">
-                        <span x-text="currentLabel"></span>
-                        <span class="material-symbols-outlined text-slate-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" style="font-size:18px">expand_more</span>
+                    <button type="button" @click="open = !open"
+                        class="w-full h-8 flex items-center justify-between bg-[#F8F9FB] border border-[#DFE1E6] rounded-lg px-3 text-[12px] text-[#353849] outline-none transition-all">
+                        <span x-text="currentLabel" class="truncate"></span>
+                        <span class="material-symbols-outlined text-[#C1C7CF] shrink-0 transition-transform duration-200"
+                            :class="open ? 'rotate-180' : ''" style="font-size:15px">expand_more</span>
                     </button>
-                    
                     <input type="hidden" name="role" :value="selected">
-
                     <div x-show="open" @click.outside="open = false" x-transition
-                        class="absolute left-0 top-full mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-2xl z-[50] overflow-hidden py-1">
+                        class="absolute left-0 top-full mt-1 w-full bg-white border border-[#DFE1E6] rounded-lg shadow-lg z-50 py-1 max-h-48 overflow-y-auto">
                         <template x-for="r in roles" :key="r.name">
-                            <button type="button" @click="selected = r.name; open = false" 
-                                class="w-full text-left px-4 py-2 text-xs transition-colors hover:bg-slate-50"
-                                :class="selected === r.name ? 'text-[#5E53F4] font-semibold bg-[#5E53F4]/5' : 'text-slate-600'">
+                            <button type="button" @click="selected = r.name; open = false"
+                                class="w-full text-left px-3 py-1.5 text-[11px] hover:bg-[#F8F9FB] transition-colors"
+                                :class="selected === r.name ? 'text-[#6B39F4] font-semibold' : 'text-[#666D80]'">
                                 <span x-text="r.label"></span>
                             </button>
                         </template>
@@ -50,46 +53,46 @@
                 </div>
             </div>
 
-            {{-- Custom Dropdown Limit (Alpine.js) --}}
-            <div class="md:col-span-2" x-data="{ 
-                open: false, 
-                selected: '{{ request('per_page') }}' || localStorage.getItem('um_per_page') || '10',
+            {{-- Limit Dropdown --}}
+            <div class="w-28" x-data="{
+                open: false,
+                selected: '{{ $selectedLimit }}',
                 options: [10, 25, 50, 100],
-                get currentLabel() { return this.selected + ' Baris'; },
-                setSelected(val) {
+                select(val) {
                     this.selected = String(val);
                     localStorage.setItem('um_per_page', String(val));
                 }
             }">
-                <label class="block text-slate-700 text-[10px] font-semibold uppercase tracking-tight mb-1.5 ml-1">Limit</label>
+                <label class="block text-[10px] font-semibold text-[#808897] uppercase tracking-wider mb-1">Limit</label>
                 <div class="relative">
-                    <button type="button" @click="open = !open" 
-                        class="w-full flex items-center justify-between bg-white border border-slate-200 rounded-xl px-4 py-2.5 text-xs text-slate-700 focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4] transition-all shadow-sm outline-none">
-                        <span x-text="currentLabel"></span>
-                        <span class="material-symbols-outlined text-slate-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" style="font-size:18px">expand_more</span>
+                    <button type="button" @click="open = !open"
+                        class="w-full h-8 flex items-center justify-between bg-[#F8F9FB] border border-[#DFE1E6] rounded-lg px-3 text-[12px] text-[#353849] outline-none transition-all">
+                        <span x-text="selected + ' baris'"></span>
+                        <span class="material-symbols-outlined text-[#C1C7CF] shrink-0 transition-transform duration-200"
+                            :class="open ? 'rotate-180' : ''" style="font-size:15px">expand_more</span>
                     </button>
-
                     <input type="hidden" name="per_page" :value="selected">
-
                     <div x-show="open" @click.outside="open = false" x-transition
-                        class="absolute left-0 top-full mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-2xl z-[50] overflow-hidden py-1">
+                        class="absolute left-0 top-full mt-1 w-full bg-white border border-[#DFE1E6] rounded-lg shadow-lg z-50 py-1">
                         <template x-for="opt in options" :key="opt">
-                            <button type="button" @click="setSelected(opt); open = false" 
-                                class="w-full text-left px-4 py-2 text-xs transition-colors hover:bg-slate-50"
-                                :class="selected == opt ? 'text-[#5E53F4] font-semibold bg-[#5E53F4]/5' : 'text-slate-600'">
-                                <span x-text="opt + ' Baris'"></span>
+                            <button type="button" @click="select(opt); open = false"
+                                class="w-full text-left px-3 py-1.5 text-[11px] hover:bg-[#F8F9FB] transition-colors"
+                                :class="selected == opt ? 'text-[#6B39F4] font-semibold' : 'text-[#666D80]'">
+                                <span x-text="opt + ' baris'"></span>
                             </button>
                         </template>
                     </div>
                 </div>
             </div>
 
-            {{-- Action Buttons --}}
-            <div class="md:col-span-3 flex items-end gap-2 pb-0.5">
-                <button type="submit" class="flex-1 bg-[#5E53F4] hover:bg-[#4e44e0] active:scale-[0.98] text-white font-semibold py-2.5 px-4 rounded-xl transition-all text-xs shadow-sm shadow-[#5E53F4]/20 uppercase tracking-widest">
+            {{-- Filter Button --}}
+            <div>
+                <button type="submit"
+                    class="h-8 bg-[#6B39F4] hover:bg-[#5B2FD9] text-white text-[11px] font-medium px-4 rounded-lg transition-all">
                     Filter
                 </button>
             </div>
+
         </div>
     </form>
 </div>

@@ -1,6 +1,6 @@
 <x-app-layout>
 <x-sidebar :user="auth()->user()">
-    <div class="min-h-screen bg-[#F8F9FA] p-6">
+    <div class="min-h-screen bg-[#F8F9FB] p-6">
         <div class="max-w-full mx-auto">
 
             {{-- Header & Filter --}}
@@ -24,7 +24,7 @@
                     }">
                         <input type="hidden" name="per_page" :value="selected">
                         <button type="button" @click="open = !open" @click.away="open = false"
-                            class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700 focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4] outline-none transition-all text-xs flex items-center justify-between shadow-sm">
+                            class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700 focus:border-[#6B39F4] focus:ring-1 focus:ring-[#6B39F4] outline-none transition-all text-xs flex items-center justify-between shadow-sm">
                             <span x-text="selected + ' Baris'" class="font-medium"></span>
                             <span class="material-symbols-outlined text-slate-400 ml-1" :class="{'rotate-180': open}" style="font-size:16px; transition: transform 0.2s;">expand_more</span>
                         </button>
@@ -33,7 +33,7 @@
                             <template x-for="opt in options" :key="opt">
                                 <button type="button" @click="selected = opt; $el.closest('form').submit()"
                                     class="w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-50"
-                                    :class="selected == opt ? 'text-[#5E53F4] font-semibold bg-[#5E53F4]/5' : 'text-slate-600'">
+                                    :class="selected == opt ? 'text-[#6B39F4] font-semibold bg-[#6B39F4]/5' : 'text-slate-600'">
                                     <span x-text="opt + ' Baris'"></span>
                                 </button>
                             </template>
@@ -65,7 +65,7 @@
                             <template x-for="r in roles" :key="r.name">
                                 <button type="button" @click="selected = r.name; open = false"
                                     class="w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-50"
-                                    :class="selected === r.name ? 'text-[#5E53F4] font-semibold bg-[#5E53F4]/5' : 'text-slate-600'">
+                                    :class="selected === r.name ? 'text-[#6B39F4] font-semibold bg-[#6B39F4]/5' : 'text-slate-600'">
                                     <span x-text="r.label"></span>
                                 </button>
                             </template>
@@ -76,42 +76,42 @@
                     <div class="relative">
                         <input type="text" name="search" value="{{ request('search') }}"
                             placeholder="Cari nama atau email..."
-                            class="text-xs border border-slate-200 rounded-lg pl-8 pr-4 py-2 focus:ring-1 focus:ring-[#5E53F4] focus:border-[#5E53F4] outline-none w-56 shadow-sm">
+                            class="text-xs border border-slate-200 rounded-lg pl-8 pr-4 py-2 focus:ring-1 focus:ring-[#6B39F4] focus:border-[#6B39F4] outline-none w-56 shadow-sm">
                         <span class="material-symbols-outlined text-slate-400 absolute left-2.5 top-2" style="font-size:18px">search</span>
                     </div>
 
                     <button type="submit"
-                        class="bg-[#5E53F4] hover:bg-[#4e44e0] text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition-colors">
+                        class="bg-[#6B39F4] hover:bg-[#5B2FD9] text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition-colors">
                         Filter
                     </button>
                     <a href="{{ route('superadmin.users.index') }}"
-                        class="text-xs font-bold text-[#5E53F4] ml-2 hover:underline transition-all">
+                        class="text-xs font-bold text-[#6B39F4] ml-2 hover:underline transition-all">
                         Kembali
                     </a>
                 </form>
             </div>
 
             {{-- Table --}}
-            <div class="bg-white border border-[#DEE2E6] rounded-2xl overflow-hidden shadow-sm">
+            <div class="bg-white border border-[#DFE1E6] rounded-2xl overflow-hidden shadow-sm">
                 <div class="overflow-x-auto">
                     <table class="w-full border-collapse">
                         <thead>
-                            <tr class="border-b border-[#DEE2E6] bg-[#F8F9FA]">
-                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">User Identity</th>
-                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Access Roles</th>
-                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Alasan Suspend</th>
-                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Suspended At</th>
-                                <th class="px-5 py-4 text-center text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Actions</th>
+                            <tr class="border-b border-[#DFE1E6] bg-[#F8F9FB]">
+                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#666D80] uppercase tracking-[0.15em]">User Identity</th>
+                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#666D80] uppercase tracking-[0.15em]">Access Roles</th>
+                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#666D80] uppercase tracking-[0.15em]">Alasan Suspend</th>
+                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#666D80] uppercase tracking-[0.15em]">Suspended At</th>
+                                <th class="px-5 py-4 text-center text-[11px] font-semibold text-[#666D80] uppercase tracking-[0.15em]">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-[#F8F9FA]">
+                        <tbody class="divide-y divide-[#F8F9FB]">
                             @forelse($users as $user)
                             @php
                                 $isSuperadmin = $user->roles->pluck('name')->contains('superadmin');
                                 $initials = strtoupper(substr($user->name, 0, 1));
                                 $avatarColors = match(true) {
-                                    $isSuperadmin => '!bg-[#F1E9FF] !text-[#5E53F4] border-[#D1BFFF]',
-                                    default => '!bg-[#F8F9FA] !text-[#6C757D] border-[#DEE2E6]',
+                                    $isSuperadmin => '!bg-[#EDE9FD] !text-[#6B39F4] border-[#C4B5FC]',
+                                    default => '!bg-[#F8F9FB] !text-[#666D80] border-[#DFE1E6]',
                                 };
                             @endphp
                             <tr class="hover:bg-rose-50/30 transition-colors group bg-rose-50/10">
@@ -141,7 +141,7 @@
                                                     Suspended
                                                 </span>
                                             </div>
-                                            <p class="text-[#6C757D] text-[11px] font-medium truncate leading-normal">
+                                            <p class="text-[#666D80] text-[11px] font-medium truncate leading-normal">
                                                 {{ $user->email }}
                                             </p>
                                         </div>
@@ -153,17 +153,17 @@
                                             @php
                                                 $roleName = strtolower($role->name);
                                                 $roleStyle = match(true) {
-                                                    $roleName === 'superadmin' => 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]',
-                                                    $roleName === 'dosen'      => 'bg-[#E7F9F3] text-[#00C08D] border-[#B2EBD9]',
-                                                    $roleName === 'mahasiswa'  => 'bg-[#FFF9E6] text-[#FFB800] border-[#FFEBB3]',
-                                                    default                    => 'bg-[#F0F5FF] text-[#5E53F4] border-[#D1DFFF]',
+                                                    $roleName === 'superadmin' => 'bg-[#EDE9FD] text-[#6B39F4] border-[#C4B5FC]',
+                                                    $roleName === 'dosen'      => 'bg-[#EFFEFA] text-[#40C4AA] border-[#9DE0D3]',
+                                                    $roleName === 'mahasiswa'  => 'bg-[#FFFBE0] text-[#FFB04C] border-[#FBD982]',
+                                                    default                    => 'bg-[#EDE9FD] text-[#6B39F4] border-[#C4B5FC]',
                                                 };
                                             @endphp
                                             <span class="px-2 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider {{ $roleStyle }}">
                                                 {{ str_replace('_', ' ', $role->name) }}
                                             </span>
                                         @empty
-                                            <span class="text-[#ADB5BD] text-[10px] font-semibold italic uppercase tracking-tighter">No Role</span>
+                                            <span class="text-[#A4ABB8] text-[10px] font-semibold italic uppercase tracking-tighter">No Role</span>
                                         @endforelse
                                     </div>
                                 </td>
@@ -174,8 +174,8 @@
                                 </td>
                                 <td class="px-5 py-4 text-center">
                                     <div class="flex flex-col items-start">
-                                        <span class="text-[#1A1C1E] font-semibold text-[11px] uppercase tracking-tighter">Banned</span>
-                                        <span class="text-[#6C757D] text-[10px] italic">
+                                        <span class="text-[#1A1B25] font-semibold text-[11px] uppercase tracking-tighter">Banned</span>
+                                        <span class="text-[#666D80] text-[10px] italic">
                                             {{ $user->suspended_at?->diffForHumans() ?? '-' }}
                                         </span>
                                     </div>

@@ -1,27 +1,24 @@
-<div class="mb-6 flex items-center justify-between">
+<div class="mb-5 flex items-center justify-between">
     <div>
-        <h1 class="text-xl font-semibold text-slate-800 tracking-tight">User Management</h1>
-        <p class="text-slate-500 text-[11px] mt-0.5 font-medium">Total <span class="text-blue-600">{{ $total }}</span> user terdaftar dalam sistem</p>
+        <h1 class="text-base font-semibold text-[#1A1B25]">User Management</h1>
+        <p class="text-[11px] text-[#A4ABB8] mt-0.5">
+            Total <span class="text-[#6B39F4] font-semibold">{{ $total }}</span> pengguna terdaftar
+        </p>
     </div>
-    <div class="flex items-center gap-3">
-        {{-- Tombol Permissions --}}
+    <div class="flex items-center gap-2">
         <a href="{{ route('superadmin.permissions') }}"
-           class="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-600 font-semibold px-3 py-1.5 rounded-lg transition-all text-[11px] border border-slate-200 shadow-sm">
-            <span class="material-symbols-outlined" style="font-size:16px">shield_person</span>
+           class="inline-flex items-center gap-1.5 bg-white hover:bg-[#F8F9FB] text-[#666D80] text-[11px] font-medium px-3 py-2 rounded-lg border border-[#DFE1E6] transition-all">
+            <span class="material-symbols-outlined" style="font-size:15px">shield_person</span>
             Permissions
         </a>
-
-        {{-- Tombol Import CSV (Sudah Diselaraskan) --}}
-        <button onclick="openModal('modalImportUser')" 
-            class="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-700 font-semibold px-3 py-1.5 rounded-lg transition-all text-[11px] border border-slate-200 shadow-sm">
-            <span class="material-symbols-outlined" style="font-size:16px">upload_file</span>
-            Input User Massal
+        <button onclick="openModal('modalImportUser')"
+            class="inline-flex items-center gap-1.5 bg-white hover:bg-[#F8F9FB] text-[#666D80] text-[11px] font-medium px-3 py-2 rounded-lg border border-[#DFE1E6] transition-all">
+            <span class="material-symbols-outlined" style="font-size:15px">upload_file</span>
+            Import CSV
         </button>
-
-        {{-- Tombol Tambah User --}}
         <button onclick="openModal('modalAddUser')"
-            class="inline-flex items-center gap-2 bg-slate-800 hover:bg-black text-white font-semibold px-3 py-1.5 rounded-lg transition-all shadow-sm text-[11px]">
-            <span class="material-symbols-outlined" style="font-size:16px">person_add</span>
+            class="inline-flex items-center gap-1.5 bg-[#1A1B25] hover:bg-[#0D0D12] text-white text-[11px] font-medium px-3 py-2 rounded-lg transition-all">
+            <span class="material-symbols-outlined" style="font-size:15px">person_add</span>
             Tambah User
         </button>
     </div>

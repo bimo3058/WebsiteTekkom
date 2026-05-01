@@ -1,6 +1,6 @@
 <x-app-layout>
 <x-sidebar :user="auth()->user()">
-    <div class="min-h-screen bg-slate-50 p-8">
+    <div class="min-h-screen bg-slate-50">
         <div class="max-w-full mx-auto">
 
             {{-- Header --}}
