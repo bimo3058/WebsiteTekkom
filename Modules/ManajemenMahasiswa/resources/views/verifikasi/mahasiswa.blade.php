@@ -205,7 +205,7 @@
         </div>
         @php
             $canSubmit = auth()->user()->hasAnyRole([
-                'mahasiswa','alumni','pengurus_himpunan',
+                'mahasiswa','pengurus_himpunan',
                 'ketua_himpunan','wakil_ketua_himpunan','ketua_bidang',
                 'ketua_unit','staff_himpunan','superadmin','admin','admin_kemahasiswaan'
             ]);

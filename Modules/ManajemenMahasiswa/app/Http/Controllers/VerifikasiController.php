@@ -236,6 +236,10 @@ class VerifikasiController extends Controller
 
     public function storeRiwayat(Request $request)
     {
+        if ($this->hasRole('alumni') && !$this->hasRole('mahasiswa', 'pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'superadmin', 'admin', 'admin_kemahasiswaan')) {
+            return redirect()->back()->with('error', 'Role alumni tidak dapat mengajukan data baru.');
+        }
+
         $request->validate([
             'nama_kegiatan_manual' => 'required|string|max:255',
             'peran_manual'         => 'required|string|max:255',
@@ -273,6 +277,10 @@ class VerifikasiController extends Controller
 
     public function storePrestasi(Request $request)
     {
+        if ($this->hasRole('alumni') && !$this->hasRole('mahasiswa', 'pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'superadmin', 'admin', 'admin_kemahasiswaan')) {
+            return redirect()->back()->with('error', 'Role alumni tidak dapat mengajukan data baru.');
+        }
+
         $request->validate([
             'nama_prestasi' => 'required|string|max:255',
             'tingkat'       => 'required|in:' . implode(',', Prestasi::TINGKAT_LIST),
