@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use App\Services\SupabaseStorage;
 use Modules\BankSoal\Models\RpsDetail;
 use Modules\BankSoal\Models\PeriodeRps;
@@ -57,6 +58,26 @@ class RpsController extends Controller
             $end   = $activePeriode->tanggal_selesai->timezone('Asia/Jakarta')->endOfDay();
             $isPeriodeRunning = $now->between($start, $end);
         }
+        
+        // Ambil periode yang tidak aktif untuk tombol "Nyalakan Sesi"
+        // Hanya tampilkan sesi terakhir (paling baru dibuat)
+        $inactivePeriodes = PeriodeRps::where('is_active', 'false')
+            ->orderBy('created_at', 'desc')
+            ->limit(1)
+            ->get();
+        
+        // Generate tahun ajaran options
+        $currentYear = (int) now()->format('Y');
+        $tahunAjarans = [
+            ($currentYear - 1) . '/' . $currentYear,
+            $currentYear . '/' . ($currentYear + 1),
+            ($currentYear + 1) . '/' . ($currentYear + 2),
+        ];
+        
+        // Auto-detect current semester
+        // Semester Ganjil: Juli-Desember (bulan 7-12)
+        // Semester Genap: Januari-Juni (bulan 1-6)
+        $currentSemester = now()->month >= 7 ? 'Ganjil' : 'Genap';
 
         return view('banksoal::gpm.validasi-rps', [
             'rpsDiajukan' => $rpsDiajukan,
@@ -64,6 +85,9 @@ class RpsController extends Controller
             'rpsDisetujui' => $rpsDisetujui,
             'activePeriode' => $activePeriode,
             'isPeriodeRunning' => $isPeriodeRunning,
+            'inactivePeriodes' => $inactivePeriodes,
+            'tahunAjarans' => $tahunAjarans,
+            'currentSemester' => $currentSemester,
         ]);
     }
 
@@ -118,8 +142,8 @@ class RpsController extends Controller
     public function previewDokumen(int $rpsId)
     {
         try {
-            // Fetch RPS record atau throw 404
-            $rps = RpsDetail::findOrFail($rpsId);
+            // Fetch RPS record dengan eager loading atau throw 404
+            $rps = RpsDetail::with('mataKuliah', 'dosens')->findOrFail($rpsId);
             
             if (!$rps->dokumen) {
                 abort(404, 'Dokumen tidak ditemukan');
@@ -162,7 +186,8 @@ class RpsController extends Controller
 
         try {
             // Fetch RPS
-            $rps = RpsDetail::findOrFail($rpsId);
+            $rps = RpsDetail::with('mataKuliah')->findOrFail($rpsId);
+            $oldStatus = $rps->status->value;
 
             // Fetch semua parameter dengan bobot
             $parameters = DB::table('bs_parameter')->get();
@@ -198,8 +223,59 @@ class RpsController extends Controller
             // Tentukan status baru berdasarkan action
             $statusBaru = ($action === 'setuju') ? 'disetujui' : 'revisi';
 
+            // Saat pertama kali transisi ke "disetujui", rename file sesuai format terbaru.
+            if ($action === 'setuju' && $oldStatus !== 'disetujui' && !empty($rps->dokumen)) {
+                $approvedCountBeforeThis = RpsDetail::query()
+                    ->where('mk_id', $rps->mk_id)
+                    ->where('status', 'disetujui')
+                    ->where('id', '!=', $rps->id)
+                    ->count();
+
+                $mkName = trim($rps->mataKuliah->nama ?? 'MataKuliah');
+                $mkName = preg_replace('/\s+/', ' ', $mkName);
+                // Karakter slash tidak aman untuk filename object storage.
+                $tahunAjaranSafe = str_replace('/', '-', (string) $rps->tahun_ajaran);
+                $semesterSafe = ucfirst(strtolower((string) $rps->semester));
+
+                $baseFileName = sprintf(
+                    'RPS_%s_%s_%s',
+                    $mkName,
+                    $tahunAjaranSafe,
+                    $semesterSafe
+                );
+
+                if ($approvedCountBeforeThis > 0) {
+                    $baseFileName .= '_Rev' . $approvedCountBeforeThis;
+                }
+
+                // Sanitasi seperlunya agar tetap aman di object key Supabase.
+                $baseFileName = preg_replace('/[\\\\:*?"<>|]+/', '', $baseFileName);
+                $baseFileName = trim((string) $baseFileName, " \t\n\r\0\x0B._");
+                if ($baseFileName === '') {
+                    $baseFileName = 'RPS_' . Str::uuid();
+                }
+
+                $oldPath = $rps->dokumen;
+                $extension = pathinfo($oldPath, PATHINFO_EXTENSION) ?: 'pdf';
+                $directory = trim((string) pathinfo($oldPath, PATHINFO_DIRNAME), '.');
+                $newFileName = $baseFileName . '.' . strtolower($extension);
+                $newPath = ($directory !== '' ? $directory . '/' : '') . $newFileName;
+
+                if ($newPath !== $oldPath) {
+                    $supabaseStorage = new SupabaseStorage();
+                    $moved = $supabaseStorage->move($oldPath, $newPath, 'rps');
+
+                    if (!$moved) {
+                        throw new \Exception('Gagal mengganti nama file RPS di storage Supabase');
+                    }
+
+                    $rps->dokumen = $newPath;
+                }
+            }
+
             // Update status RPS
-            $rps->update(['status' => $statusBaru]);
+            $rps->status = $statusBaru;
+            $rps->save();
 
             // Delete hasil review lama dan insert yang baru untuk update case
             DB::table('bs_hasil_review_rps')->where('rps_detail_id', $rpsId)->delete();

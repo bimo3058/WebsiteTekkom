@@ -12,7 +12,7 @@ use Modules\BankSoal\Enums\RpsStatus;
 class RpsDetail extends Model
 {
     protected $table    = 'bs_rps_detail';
-    protected $fillable = ['mk_id', 'semester', 'tahun_ajaran', 'dokumen', 'status'];
+    protected $fillable = ['mk_id', 'semester', 'tahun_ajaran', 'dokumen', 'status', 'catatan'];
 
     protected $casts = [
         'status' => RpsStatus::class,

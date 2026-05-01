@@ -160,6 +160,32 @@ class RpsService
     }
 
     // =========================================================================
+    // Dashboard Queries
+    // =========================================================================
+
+    public function getDiajukan(int $limit = 50): \Illuminate\Database\Eloquent\Collection
+    {
+        return RpsDetail::with('mataKuliah', 'dosens')
+            ->where('status', 'diajukan')
+            ->orderBy('created_at', 'asc')
+            ->limit($limit)
+            ->get();
+    }
+
+    /**
+     * Get RpsDetail records with status 'revisi' for dashboard
+     * Eager loads relationships to avoid N+1 queries
+     */
+    public function getRevisi(int $limit = 50): \Illuminate\Database\Eloquent\Collection
+    {
+        return RpsDetail::with('mataKuliah', 'dosens')
+            ->where('status', 'revisi')
+            ->orderBy('updated_at', 'asc')
+            ->limit($limit)
+            ->get();
+    }
+
+    // =========================================================================
     // Helpers
     // =========================================================================
 

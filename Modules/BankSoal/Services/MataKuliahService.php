@@ -27,7 +27,12 @@ class MataKuliahService
      */
     public function listAll(): \Illuminate\Database\Eloquent\Collection
     {
-        return Cache::remember('bs.mk.all', 3600, fn() => MataKuliah::orderBy('nama')->get());
+        return Cache::remember('bs.mk.all', 3600, fn() =>
+            MataKuliah::query()
+                ->select(['id', 'kode', 'nama', 'sks', 'semester'])
+                ->orderBy('kode')
+                ->get()
+        );
     }
 
     public function findById(int $id): MataKuliah

@@ -12,7 +12,7 @@
         <div x-init="addToast({ type: 'error', message: '{{ addslashes(session('error')) }}' })"></div>
     @endif
 
-    @if($errors->any())
+    @if($errors->any() && !View::hasSection('hide_global_errors'))
         <div x-init="addToast({ type: 'error', message: '{{ addslashes($errors->first()) }}' })"></div>
     @endif
 

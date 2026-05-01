@@ -5,17 +5,12 @@
     <div class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm" onclick="closeDetailModal()"></div>
 
     <!-- Modal Content -->
-    <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl flex flex-col max-h-full z-10">
+    <div class="relative w-full max-w-lg bg-white rounded-lg shadow-lg flex flex-col max-h-full z-10">
         
         <!-- Header -->
-        <div class="px-6 py-5 flex items-center justify-between border-b border-slate-100">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-blue-100 flex items-center justify-center">
-                    <svg class="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                </div>
-                <h3 class="text-lg font-bold text-slate-800 tracking-tight">Detail Pendaftaran</h3>
-            </div>
-            <button type="button" onclick="closeDetailModal()" class="text-slate-400 hover:text-slate-600 hover:bg-slate-100 p-2 rounded-xl transition-colors">
+        <div class="px-6 py-4 flex items-center justify-between border-b border-gray-200">
+            <h3 class="text-lg font-semibold text-gray-900">Detail Pendaftaran</h3>
+            <button type="button" onclick="closeDetailModal()" class="text-gray-400 hover:text-gray-500">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                 </svg>
@@ -74,12 +69,6 @@
 
                 <div class="h-px bg-slate-100"></div>
 
-                <!-- Catatan Admin -->
-                <div class="flex items-start justify-between gap-4">
-                    <span class="text-sm font-medium text-slate-500 shrink-0">Catatan Admin</span>
-                    <span id="detail-catatan" class="text-sm text-slate-600 text-right"></span>
-                </div>
-
                 <!-- Tanggal Daftar -->
                 <div class="flex items-start justify-between gap-4">
                     <span class="text-sm font-medium text-slate-500 shrink-0">Tanggal Mendaftar</span>
@@ -90,11 +79,11 @@
         </div>
 
         <!-- Footer -->
-        <div class="px-6 py-4 flex items-center justify-end rounded-b-2xl bg-white border-t border-slate-100">
+        <div class="px-6 py-4 flex items-center justify-end bg-gray-50 border-t border-gray-200 rounded-b-lg">
             <button
                 type="button"
                 onclick="closeDetailModal()"
-                class="px-5 py-2.5 text-sm font-bold text-slate-700 bg-white border border-slate-200 rounded-xl hover:bg-slate-50 focus:outline-none transition-colors"
+                class="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none"
             >
                 Tutup
             </button>
@@ -111,7 +100,6 @@ function openDetailModal(data) {
     document.getElementById('detail-wisuda').textContent = data.target_wisuda;
     document.getElementById('detail-dosen1').textContent = data.dosen1 || '-';
     document.getElementById('detail-dosen2').textContent = data.dosen2 || '-';
-    document.getElementById('detail-catatan').textContent = data.catatan;
     document.getElementById('detail-tanggal').textContent = data.tanggal;
 
     // Status badge

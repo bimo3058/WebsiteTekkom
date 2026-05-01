@@ -4,6 +4,9 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Http\Controllers\BS\DashboardController;
+use Modules\BankSoal\Http\Controllers\BS\Admin\CplCpmkController;
+use Modules\BankSoal\Http\Controllers\BS\Admin\MataKuliahController;
+use Modules\BankSoal\Http\Controllers\BS\Admin\PemetaanController;
 use Modules\BankSoal\Http\Controllers\RPS\Dosen\RpsController as DosenRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\RpsController as GpmRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Admin\RpsController as AdminRpsController;
@@ -27,14 +30,33 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
 
         # Admin Routes - Kontrol Umum
         Route::middleware('role:admin_banksoal')->prefix('admin/kontrol-umum')->name('banksoal.admin.kontrol-umum.')->group(function () {
-            Route::get('/mata-kuliah', fn() => view('banksoal::pages.admin.kontrol-umum.mata-kuliah'))->name('mata-kuliah');
-            Route::get('/cpl-cpmk', fn() => view('banksoal::pages.admin.kontrol-umum.cpl-cpmk'))->name('cpl-cpmk');
-            Route::get('/pemetaan', fn() => view('banksoal::pages.admin.kontrol-umum.pemetaan'))->name('pemetaan');
+            Route::get('/mata-kuliah', [MataKuliahController::class, 'index'])->name('mata-kuliah');
+            Route::get('/cpl-cpmk', [CplCpmkController::class, 'index'])->name('cpl-cpmk');
+            Route::get('/pemetaan', [PemetaanController::class, 'index'])->name('pemetaan');
+        });
+
+        Route::middleware('role:admin_banksoal')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
+            Route::get('/cpl', [CplCpmkController::class, 'listCpl'])->name('cpl.index');
+            Route::get('/cpl/next-code', [CplCpmkController::class, 'nextCplCode'])->name('cpl.next-code');
+            Route::get('/cpl/{id}', [CplCpmkController::class, 'showCpl'])->name('cpl.show');
+
+            Route::get('/rps/approved', [AdminRpsController::class, 'listApproved'])->name('rps.approved.index');
+
+            Route::get('/cpmk', [CplCpmkController::class, 'listCpmk'])->name('cpmk.index');
+            Route::get('/cpmk/next-code', [CplCpmkController::class, 'nextCpmkCode'])->name('cpmk.next-code');
+            Route::get('/cpmk/{id}', [CplCpmkController::class, 'showCpmk'])->name('cpmk.show');
+
+            Route::get('/pemetaan/options', [PemetaanController::class, 'options'])->name('pemetaan.options');
+            Route::get('/pemetaan/cpmk-cpl', [PemetaanController::class, 'listCpmkCpl'])->name('pemetaan.cpmk-cpl.index');
+            Route::get('/pemetaan/mk-cpl', [PemetaanController::class, 'listMkCpl'])->name('pemetaan.mk-cpl.index');
+            Route::get('/pemetaan/dosen-mk', [PemetaanController::class, 'listDosenMk'])->name('pemetaan.dosen-mk.index');
         });
 
         # Admin Routes - Kontrol BankSoal
         Route::middleware('role:admin_banksoal')->prefix('admin/kontrol-banksoal')->name('banksoal.admin.kontrol-banksoal.')->group(function () {
-            Route::get('/rps', fn() => view('banksoal::pages.admin.kontrol-banksoal.rps'))->name('rps');
+            Route::get('/rps', [AdminRpsController::class, 'index'])->name('rps');
+            Route::get('/rps/{rpsId}/preview', [AdminRpsController::class, 'previewDokumen'])->name('rps.preview');
+            Route::get('/rps/{rpsId}/download', [AdminRpsController::class, 'downloadDokumen'])->name('rps.download');
             Route::get('/soal', fn() => view('banksoal::pages.admin.kontrol-banksoal.soal'))->name('soal');
         });
 
@@ -44,10 +66,13 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::get('/', [DosenRpsController::class, 'index'])->name('index');
                 Route::get('/preview/{rpsId}', [DosenRpsController::class, 'previewDokumen'])->name('preview');
+                Route::get('/download/{rpsId}', [DosenRpsController::class, 'downloadDokumen'])->name('download');
                 Route::get('/{rpsId}/edit', [DosenRpsController::class, 'edit'])->name('edit');
+                Route::get('/{rpsId}/edit-modal', [DosenRpsController::class, 'editModal'])->name('edit-modal');
                 Route::get('/mk', [DosenRpsController::class, 'getMkByDosen'])->name('mk');
                 Route::get('/cpl/{mkId?}', [DosenRpsController::class, 'getCplByMk'])->name('cpl');
                 Route::get('/cpmk', [DosenRpsController::class, 'getCpmkByCpl'])->name('cpmk');
+                Route::get('/cpmk-by-rps/{rpsId}', [DosenRpsController::class, 'getCpmkByRps'])->name('cpmk-by-rps');
                 Route::get('/dosen', [DosenRpsController::class, 'getDosenByMk'])->name('dosen');
             });
             // RPS - GPM
@@ -115,6 +140,26 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
     // -------------------------------------------------------------------------
     Route::middleware(['permission:banksoal.edit'])->group(function () {
         
+        // 0. Admin Mata Kuliah CRUD Routes
+        Route::middleware('role:admin_banksoal')->prefix('admin/api/mata-kuliah')->name('banksoal.api.v1.admin.mata-kuliah.')->group(function () {
+            Route::get('/', [MataKuliahController::class, 'index'])->name('index');
+            Route::post('/', [MataKuliahController::class, 'store'])->name('store');
+            Route::get('/{id}', [MataKuliahController::class, 'show'])->name('show');
+            Route::put('/{id}', [MataKuliahController::class, 'update'])->name('update');
+        });
+
+        Route::middleware('role:admin_banksoal')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
+            Route::post('/cpl', [CplCpmkController::class, 'storeCpl'])->name('cpl.store');
+            Route::put('/cpl/{id}', [CplCpmkController::class, 'updateCpl'])->name('cpl.update');
+
+            Route::post('/cpmk', [CplCpmkController::class, 'storeCpmk'])->name('cpmk.store');
+            Route::put('/cpmk/{id}', [CplCpmkController::class, 'updateCpmk'])->name('cpmk.update');
+
+            Route::post('/pemetaan/cpmk-cpl', [PemetaanController::class, 'storeCpmkCpl'])->name('pemetaan.cpmk-cpl.store');
+            Route::post('/pemetaan/mk-cpl', [PemetaanController::class, 'storeMkCpl'])->name('pemetaan.mk-cpl.store');
+            Route::post('/pemetaan/dosen-mk', [PemetaanController::class, 'storeDosenMk'])->name('pemetaan.dosen-mk.store');
+        });
+
         // 1. Blok RPS
         Route::prefix('rps')->name('banksoal.rps.')->group(function () {
             // RPS - Dosen
@@ -127,6 +172,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::post('/validasi-rps/store', [GpmRpsController::class, 'storeValidasi'])->name('validasi-rps.store');                
                 Route::post('/periode-rps', [PeriodeRpsController::class, 'store'])->name('periode-rps.store');
                 Route::put('/periode-rps/{id}', [PeriodeRpsController::class, 'update'])->name('periode-rps.update');
+                Route::post('/periode-rps/open-session', [PeriodeRpsController::class, 'openSession'])->name('periode-rps.open-session');
                 Route::post('/periode-rps/close-session', [PeriodeRpsController::class, 'closeSession'])->name('periode-rps.close-session');
                 Route::post('/template', [TemplateRpsController::class, 'store'])->name('template.store');
             });
@@ -146,6 +192,21 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
     // -------------------------------------------------------------------------
     Route::middleware(['permission:banksoal.delete'])->group(function () {
         Route::delete('/destroy/{id}', [BankSoalController::class, 'destroy'])->name('banksoal.destroy');
+        
+        // Admin Mata Kuliah Delete Routes
+        Route::middleware('role:admin_banksoal')->prefix('admin/api/mata-kuliah')->name('banksoal.api.v1.admin.mata-kuliah.')->group(function () {
+            Route::delete('/{id}', [MataKuliahController::class, 'destroy'])->name('destroy');
+            Route::post('/bulk-delete', [MataKuliahController::class, 'bulkDelete'])->name('bulk-delete');
+        });
+
+        Route::middleware('role:admin_banksoal')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
+            Route::delete('/cpl/{id}', [CplCpmkController::class, 'destroyCpl'])->name('cpl.destroy');
+            Route::delete('/cpmk/{id}', [CplCpmkController::class, 'destroyCpmk'])->name('cpmk.destroy');
+
+            Route::delete('/pemetaan/cpmk-cpl', [PemetaanController::class, 'destroyCpmkCpl'])->name('pemetaan.cpmk-cpl.destroy');
+            Route::delete('/pemetaan/mk-cpl', [PemetaanController::class, 'destroyMkCpl'])->name('pemetaan.mk-cpl.destroy');
+            Route::delete('/pemetaan/dosen-mk/{id}', [PemetaanController::class, 'destroyDosenMk'])->name('pemetaan.dosen-mk.destroy');
+        });
         
         // RPS Dosen Delete
         Route::prefix('rps')->name('banksoal.rps.')->group(function () {
@@ -172,6 +233,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::post('/setup', [\Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController::class, 'store'])->name('store');
             Route::put('/setup/{id}', [\Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController::class, 'update'])->name('update');
             Route::delete('/setup/{id}', [\Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController::class, 'destroy'])->name('destroy');
+            Route::patch('/setup/{id}/close-pendaftaran', [\Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController::class, 'closePendaftaran'])->name('close-pendaftaran');
 
             Route::get('/jadwal', [\Modules\BankSoal\Http\Controllers\Komprehensif\JadwalController::class, 'index'])->name('jadwal');
             Route::post('/jadwal', [\Modules\BankSoal\Http\Controllers\Komprehensif\JadwalController::class, 'store'])->name('jadwal.store');
@@ -183,6 +245,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
     Route::prefix('admin/pendaftar')->name('banksoal.pendaftaran.')->group(function () {
         Route::middleware('role:admin_banksoal,admin')->group(function () {
             Route::get('/', [\Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController::class, 'index'])->name('index');
+            Route::get('/lookup-nim', [\Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController::class, 'lookupNIM'])->name('lookupNIM');
             Route::post('/', [\Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController::class, 'store'])->name('store');
             Route::patch('/{id}/status', [\Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController::class, 'updateStatus'])->name('updateStatus');
             Route::delete('/{id}', [\Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController::class, 'destroy'])->name('destroy');
@@ -207,6 +270,16 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         });
     });
 
+    # Manajemen Ujian (Live Proctoring & Riwayat)
+    Route::prefix('admin/cbt')->name('banksoal.admin.cbt.')->group(function () {
+        Route::middleware('role:admin_banksoal,admin')->group(function () {
+            Route::get('/live-proctoring', [\Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController::class, 'liveProctoring'])->name('live-proctoring');
+            Route::post('/live-proctoring/{id}/force-submit', [\Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController::class, 'forceSubmit'])->name('force-submit');
+            Route::get('/riwayat', [\Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController::class, 'riwayat'])->name('riwayat');
+            Route::get('/riwayat/{id}', [\Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController::class, 'detailHasil'])->name('detail');
+        });
+    });
+
 });
 
 // -------------------------------------------------------------------------
@@ -218,7 +291,10 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
     ->group(function () {
         Route::get('/dashboard', [\Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController::class, 'dashboard'])->name('dashboard');
         
-        Route::get('/pengajuan-pendaftaran', [\Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController::class, 'pendaftaran'])->name('pendaftaran');
+        // Route lama di-redirect langsung ke form (landing page tidak diperlukan)
+        Route::get('/pengajuan-pendaftaran', function () {
+            return redirect()->route('komprehensif.mahasiswa.pendaftaran.form');
+        })->name('pendaftaran');
         
         Route::get('/pengajuan-pendaftaran/form', [\Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController::class, 'createPendaftaran'])->name('pendaftaran.form');
         Route::post('/pengajuan-pendaftaran/form', [\Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController::class, 'storePendaftaran'])->name('pendaftaran.store');
@@ -226,5 +302,16 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
         Route::get('/riwayat-ujian', function () {
             return view('banksoal::mahasiswa.riwayat');
         })->name('riwayat');
+
+        // CBT Engine Routes
+        Route::post('/engine/validate-token', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'validateToken'])->name('engine.validate');
+        Route::get('/engine/waiting-room', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'waitingRoom'])->name('engine.waiting');
+        Route::post('/engine/start', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'startUjian'])->name('engine.start');
+        Route::get('/engine/run', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'run'])->name('engine.run');
+        
+        // CBT Engine API Routes
+        Route::post('/engine/save-answer', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'saveAnswer'])->name('engine.save-answer');
+        Route::post('/engine/toggle-ragu', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'toggleRagu'])->name('engine.toggle-ragu');
+        Route::get('/engine/finish', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'finish'])->name('engine.finish');
     });
 

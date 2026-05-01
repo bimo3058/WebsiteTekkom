@@ -4,7 +4,7 @@
         <!-- Page Header -->
         <div class="mb-6 flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div>
-                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Manajemen Pendaftar</h1>
+                <h1 class="text-2xl font-bold text-slate-800 tracking-tight">Manajemen Peserta</h1>
                 <p class="text-sm text-slate-500 mt-1">Kelola data mahasiswa yang mendaftar ujian pada periode aktif.</p>
             </div>
 
@@ -46,7 +46,7 @@
 
                 <!-- Trigger Button -->
                 <button type="button" @click="toggle()"
-                        class="group inline-flex items-center gap-2.5 pl-4 pr-3 py-2.5 rounded-xl text-[13px] font-semibold border transition-all duration-200 shadow-sm
+                        class="group inline-flex items-center gap-2.5 pl-4 pr-3 py-2 rounded-lg text-[13px] font-semibold border transition-all duration-200 shadow-sm
                                {{ $selectedPeriode
                                    ? 'bg-white text-slate-700 border-slate-300 hover:border-blue-400 hover:shadow-md'
                                    : 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700' }}">
@@ -118,10 +118,26 @@
             @if(request('periode_id'))
                 <input type="hidden" name="periode_id" value="{{ request('periode_id') }}">
             @endif
-            <div class="flex flex-col sm:flex-row items-center gap-3 mb-6">
-                <!-- Search -->
+            <div class="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-sm text-slate-500 font-medium">
+                
+                <!-- Show Entries (Kiri) -->
+                <div class="flex items-center gap-2">
+                    <span>Tampilkan</span>
+                    <select name="per_page" onchange="document.getElementById('filter-form').submit()" {{ !request('periode_id') ? 'disabled' : '' }} class="pl-3 pr-8 py-1.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-600 cursor-pointer shadow-sm disabled:bg-slate-50 disabled:cursor-not-allowed">
+                        <option value="5"  {{ request('per_page', 5) == 5  ? 'selected' : '' }}>5</option>
+                        <option value="10" {{ request('per_page', 5) == 10 ? 'selected' : '' }}>10</option>
+                        <option value="15" {{ request('per_page', 5) == 15 ? 'selected' : '' }}>15</option>
+                        <option value="25" {{ request('per_page', 5) == 25 ? 'selected' : '' }}>25</option>
+                        <option value="50" {{ request('per_page', 5) == 50 ? 'selected' : '' }}>50</option>
+                    </select>
+                    <span>data</span>
+                </div>
+
+                <!-- Filters & Search (Kanan) -->
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                    <!-- Search -->
                 <div class="relative w-full sm:flex-1">
-                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
@@ -130,9 +146,9 @@
                         type="text"
                         name="search"
                         value="{{ request('search') }}"
-                        placeholder="Cari NIM atau nama pendaftar..."
+                        placeholder="Cari NIM atau nama..."
                         {{ !request('periode_id') ? 'disabled' : '' }}
-                        class="w-full pl-10 pr-4 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700 placeholder-slate-400 transition-all {{ !request('periode_id') ? 'bg-slate-50 cursor-not-allowed text-slate-400' : 'bg-white' }}"
+                        class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700 placeholder-slate-400 transition-all shadow-sm {{ !request('periode_id') ? 'bg-slate-50 cursor-not-allowed text-slate-400' : 'bg-white' }}"
                     >
                 </div>
 
@@ -142,16 +158,12 @@
                         name="status"
                         onchange="document.getElementById('filter-form').submit()"
                         {{ !request('periode_id') ? 'disabled' : '' }}
-                        class="w-full appearance-none pl-4 pr-9 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all {{ !request('periode_id') ? 'bg-slate-50 cursor-not-allowed text-slate-400' : 'bg-white text-slate-700 cursor-pointer' }}"
+                        class="w-full appearance-none pl-3 pr-10 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm {{ !request('periode_id') ? 'bg-slate-50 cursor-not-allowed text-slate-400' : 'bg-white text-slate-700 cursor-pointer' }}"
                     >
                         <option value="">Semua Status</option>
                         <option value="pending"  {{ request('status') === 'pending'   ? 'selected' : '' }}>Pending</option>
                         <option value="approved" {{ request('status') === 'approved'  ? 'selected' : '' }}>Disetujui</option>
-                        <option value="rejected" {{ request('status') === 'rejected'  ? 'selected' : '' }}>Ditolak</option>
                     </select>
-                    <div class="absolute inset-y-0 right-0 pr-3.5 flex items-center pointer-events-none">
-                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </div>
                 </div>
 
                 <!-- Add Button -->
@@ -159,15 +171,16 @@
                     type="button"
                     onclick="document.getElementById('modal-tambah-manual').classList.remove('hidden')"
                     {{ !request('periode_id') ? 'disabled' : '' }}
-                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2.5 text-sm font-semibold shadow-sm transition-all focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition-all focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    Tambah Manual
+                    Tambah Peserta
                 </button>
 
                 @if(request('periode_id'))
                     <button type="submit" class="hidden">Cari</button>
                 @endif
+                </div> <!-- End right filters wrapper -->
             </div>
         </form>
 
@@ -190,4 +203,13 @@
         @include('banksoal::pendaftaran.partials.modal-manual')
         @include('banksoal::pendaftaran.partials.modal-detail')
     </div>
+
+    {{-- Auto-reopen modal jika ada validation error --}}
+    @if($errors->any())
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            document.getElementById('modal-tambah-manual').classList.remove('hidden');
+        });
+    </script>
+    @endif
 </x-banksoal::layouts.admin>

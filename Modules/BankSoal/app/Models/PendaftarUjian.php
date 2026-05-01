@@ -24,7 +24,8 @@ class PendaftarUjian extends Model
         'dosen_pembimbing_2_id',
         'status_pendaftaran', 
         'jadwal_ujian_id', 
-        'catatan_admin'
+        'catatan_admin',
+        'ditambahkan_oleh'
     ];
 
     public function mahasiswa() 
@@ -50,5 +51,10 @@ class PendaftarUjian extends Model
     public function dosenPembimbing2()
     {
         return $this->belongsTo(User::class, 'dosen_pembimbing_2_id');
+    }
+
+    public function ditambahkanOleh()
+    {
+        return $this->belongsTo(User::class, 'ditambahkan_oleh');
     }
 }
