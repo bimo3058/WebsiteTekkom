@@ -146,6 +146,145 @@
             @endforeach
         </div>
 
+        {{-- ── Pengumuman Global ────────────────────────────────────────────────── --}}
+        <div class="mt-8" x-data="{ activeTab: 'all' }">
+
+            {{-- Section header --}}
+            <div class="flex items-center justify-between mb-3">
+                <div>
+                    <h2 class="text-sm font-bold text-slate-800 tracking-tight">Pengumuman</h2>
+                    <p class="text-[11px] text-slate-400 mt-0.5">Informasi terbaru dari setiap modul</p>
+                </div>
+            </div>
+
+            {{-- Tabs --}}
+            <div class="flex items-end gap-1 border-b border-slate-200">
+                @php
+                    $tabs = [
+                        ['key' => 'all',           'label' => 'Semua',          'color' => 'blue'],
+                        ['key' => 'bank_soal',     'label' => 'Bank Soal',      'color' => 'blue'],
+                        ['key' => 'capstone',      'label' => 'Capstone TA',    'color' => 'purple'],
+                        ['key' => 'kemahasiswaan', 'label' => 'Kemahasiswaan',  'color' => 'green'],
+                        ['key' => 'eoffice',       'label' => 'EOffice',        'color' => 'orange'],
+                    ];
+                    $tabActiveClass = [
+                        'blue'   => 'border-blue-500 text-blue-600',
+                        'purple' => 'border-purple-500 text-purple-600',
+                        'green'  => 'border-emerald-500 text-emerald-600',
+                        'orange' => 'border-orange-500 text-orange-600',
+                    ];
+                @endphp
+
+                @foreach($tabs as $tab)
+                <button
+                    @click="activeTab = '{{ $tab['key'] }}'"
+                    :class="activeTab === '{{ $tab['key'] }}'
+                        ? 'border-b-2 {{ $tabActiveClass[$tab['color']] }} bg-white font-semibold'
+                        : 'text-slate-400 hover:text-slate-600 border-b-2 border-transparent'"
+                    class="px-3.5 py-2 text-[12px] transition-all duration-150 -mb-px whitespace-nowrap">
+                    {{ $tab['label'] }}
+                    @if($tab['key'] !== 'all')
+                    <span
+                        x-show="activeTab !== '{{ $tab['key'] }}'"
+                        class="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-100 text-[9px] font-bold text-slate-400">
+                        {{-- ganti dengan count nyata, misal: $announcementCounts[$tab['key']] ?? 0 --}}
+                        {{ $announcementCounts[$tab['key']] ?? 0 }}
+                    </span>
+                    @endif
+                </button>
+                @endforeach
+            </div>
+
+            {{-- Pane konten --}}
+            <div class="bg-white border border-t-0 border-slate-200 rounded-b-2xl">
+
+                {{-- Helper macro badge warna --}}
+                @php
+                    $badgeMap = [
+                        'bank_soal'     => ['bg' => 'bg-blue-50',    'text' => 'text-blue-600',    'dot' => 'bg-blue-400',    'label' => 'Bank Soal'],
+                        'capstone'      => ['bg' => 'bg-purple-50',  'text' => 'text-purple-600',  'dot' => 'bg-purple-400',  'label' => 'Capstone TA'],
+                        'kemahasiswaan' => ['bg' => 'bg-emerald-50', 'text' => 'text-emerald-600', 'dot' => 'bg-emerald-400', 'label' => 'Kemahasiswaan'],
+                        'eoffice'       => ['bg' => 'bg-orange-50',  'text' => 'text-orange-600',  'dot' => 'bg-orange-400',  'label' => 'EOffice'],
+                    ];
+                    $borderMap = [
+                        'bank_soal'     => 'border-l-blue-400',
+                        'capstone'      => 'border-l-purple-400',
+                        'kemahasiswaan' => 'border-l-emerald-400',
+                        'eoffice'       => 'border-l-orange-400',
+                    ];
+                @endphp
+
+                {{-- Tab: Semua --}}
+                <div x-show="activeTab === 'all'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0">
+                    @forelse($announcements['all'] ?? [] as $item)
+                    @php $b = $badgeMap[$item['module']] ?? $badgeMap['bank_soal']; $br = $borderMap[$item['module']] ?? ''; @endphp
+                    <div class="flex items-start gap-3.5 px-5 py-4 border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors group border-l-2 {{ $br }}">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full {{ $b['bg'] }} {{ $b['text'] }} text-[10px] font-semibold">
+                                    <span class="w-1.5 h-1.5 rounded-full {{ $b['dot'] }}"></span>
+                                    {{ $b['label'] }}
+                                </span>
+                                <span class="text-[10px] text-slate-300">{{ $item['date'] }}</span>
+                            </div>
+                            <p class="text-[12.5px] font-semibold text-slate-800 leading-snug group-hover:text-slate-900 truncate">
+                                {{ $item['title'] }}
+                            </p>
+                            <p class="text-[11.5px] text-slate-400 mt-0.5 leading-relaxed line-clamp-2">
+                                {{ $item['body'] }}
+                            </p>
+                        </div>
+                        <svg class="w-3.5 h-3.5 text-slate-200 group-hover:text-slate-400 flex-shrink-0 mt-1 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                    @empty
+                    <div class="flex flex-col items-center justify-center py-12 text-slate-300">
+                        <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        <p class="text-[12px]">Belum ada pengumuman</p>
+                    </div>
+                    @endforelse
+                </div>
+
+                {{-- Tab: Per modul --}}
+                @foreach(['bank_soal', 'capstone', 'kemahasiswaan', 'eoffice'] as $moduleKey)
+                @php $b = $badgeMap[$moduleKey]; $br = $borderMap[$moduleKey]; @endphp
+                <div x-show="activeTab === '{{ $moduleKey }}'" x-transition:enter="transition ease-out duration-150" x-transition:enter-start="opacity-0 translate-y-1" x-transition:enter-end="opacity-100 translate-y-0" style="display:none">
+                    @forelse($announcements[$moduleKey] ?? [] as $item)
+                    <div class="flex items-start gap-3.5 px-5 py-4 border-b border-slate-100 last:border-b-0 hover:bg-slate-50/50 transition-colors group border-l-2 {{ $br }}">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-2 mb-1">
+                                <span class="text-[10px] text-slate-300">{{ $item['date'] }}</span>
+                                @if(!empty($item['pinned']))
+                                <span class="text-[10px] font-semibold text-amber-500 bg-amber-50 px-2 py-0.5 rounded-full">📌 Penting</span>
+                                @endif
+                            </div>
+                            <p class="text-[12.5px] font-semibold text-slate-800 leading-snug group-hover:text-slate-900 truncate">
+                                {{ $item['title'] }}
+                            </p>
+                            <p class="text-[11.5px] text-slate-400 mt-0.5 leading-relaxed line-clamp-2">
+                                {{ $item['body'] }}
+                            </p>
+                        </div>
+                        <svg class="w-3.5 h-3.5 text-slate-200 group-hover:text-slate-400 flex-shrink-0 mt-1 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                        </svg>
+                    </div>
+                    @empty
+                    <div class="flex flex-col items-center justify-center py-12 text-slate-300">
+                        <svg class="w-8 h-8 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6 6 0 10-12 0v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/>
+                        </svg>
+                        <p class="text-[12px]">Belum ada pengumuman dari {{ $b['label'] }}</p>
+                    </div>
+                    @endforelse
+                </div>
+                @endforeach
+            </div>
+        </div>
+
         {{-- Footer --}}
         <div class="mt-10 pt-6 border-t border-slate-200 flex items-center justify-between">
             <p class="text-[11px] text-slate-400">
