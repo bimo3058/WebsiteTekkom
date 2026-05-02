@@ -401,6 +401,7 @@ class DirektoriMahasiswaController extends Controller
             'tahun_lulus' => 'nullable|integer|min:2000|max:2099',
             'profesi' => 'nullable|string|max:255',
             'kontak' => 'nullable|string|max:255',
+            'email_pribadi' => 'nullable|email|max:255',
         ]);
 
         $mhs = Kemahasiswaan::findOrFail($id);
@@ -414,6 +415,9 @@ class DirektoriMahasiswaController extends Controller
             'tahun_lulus',
             'profesi',
         ]));
+
+        // Cache user model agar tidak double-query jika kontak & email sama-sama diedit
+        $userModel = null;
 
         // Sinkronisasi kontak ke tabel users dan cv_profiles
         if ($request->has('kontak') || $request->has('phone_code')) {
@@ -435,6 +439,8 @@ class DirektoriMahasiswaController extends Controller
             $userModel = \App\Models\User::find($mhs->user_id);
             if ($userModel) {
                 $userModel->updateQuietly(['whatsapp' => $fullWa]);
+                // Hapus cache profil global agar perubahan nomor langsung tampil
+                $userModel->clearUserCache();
             }
             
             // Sync ke cv_profiles
@@ -442,6 +448,21 @@ class DirektoriMahasiswaController extends Controller
             
             // Perbarui mk_kemahasiswaan
             $mhs->updateQuietly(['kontak' => $fullWa]);
+        }
+
+        // Sinkronisasi email pribadi ke tabel users dan cv_profiles
+        if ($request->has('email_pribadi')) {
+            $emailPribadi = $request->input('email_pribadi') ?: null;
+
+            $userModel = $userModel ?? \App\Models\User::find($mhs->user_id);
+            if ($userModel) {
+                $userModel->updateQuietly(['personal_email' => $emailPribadi]);
+                // Hapus cache agar profil global langsung menampilkan email terbaru
+                $userModel->clearUserCache();
+            }
+
+            // Sync ke cv_profiles
+            \App\Models\CvProfile::where('user_id', $mhs->user_id)->update(['cv_email' => $emailPribadi]);
         }
 
         // Sinkronisasi: jika status baru = alumni, otomatis buat record di mk_alumni

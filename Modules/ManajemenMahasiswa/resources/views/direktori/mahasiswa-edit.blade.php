@@ -170,19 +170,24 @@
                 </select>
             </div>
 
-            <!-- Tahun Lulus -->
-            <div class="col-md-6">
-                <label class="form-label-custom">Tahun Lulus</label>
-                <input type="number" name="tahun_lulus" class="form-control form-control-custom"
-                       value="{{ old('tahun_lulus', $mhs->tahun_lulus) }}" min="2000" max="2099"
-                       placeholder="Kosongkan jika belum lulus">
-            </div>
 
             <!-- Profesi -->
             <div class="col-md-6">
                 <label class="form-label-custom">Profesi</label>
                 <input type="text" name="profesi" class="form-control form-control-custom"
                        value="{{ old('profesi', $mhs->profesi) }}" placeholder="Opsional">
+            </div>
+
+            <!-- Email Pribadi -->
+            <div class="col-md-6">
+                <label class="form-label-custom">Email Pribadi</label>
+                <input type="email" name="email_pribadi" class="form-control form-control-custom"
+                       value="{{ old('email_pribadi', $mhs->user?->personal_email) }}"
+                       placeholder="contoh@gmail.com">
+                <small class="text-muted d-block mt-1" style="font-size: 11px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1 text-warning"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    Akan tersinkron ke profil global mahasiswa.
+                </small>
             </div>
 
             <!-- Kontak -->

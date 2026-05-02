@@ -280,12 +280,6 @@
                 @endswitch
             </span></div>
         </div>
-        @if($mhs->tahun_lulus)
-        <div>
-            <div class="info-item-label">Tahun Lulus</div>
-            <div class="info-item-value">{{ $mhs->tahun_lulus }}</div>
-        </div>
-        @endif
     </div>
 </div>
 
