@@ -27,57 +27,60 @@
 
     <div class="document-container">
         <!-- Header -->
-        <div class="flex items-center justify-between border-b-4 border-black pb-4 mb-6">
-            <div class="w-24">
-                <!-- Placeholder untuk Logo Universitas -->
-                <div class="w-20 h-20 border-2 border-gray-400 border-dashed rounded-full flex items-center justify-center text-xs text-gray-400 no-print">
-                    Logo
-                </div>
-            </div>
-            <div class="flex-1 text-center">
-                <h1 class="text-[14pt] font-bold">KEMENTERIAN PENDIDIKAN, KEBUDAYAAN, RISET, DAN TEKNOLOGI</h1>
-                <h2 class="text-[16pt] font-bold">UNIVERSITAS DIPONEGORO</h2>
-                <h3 class="text-[14pt] font-bold uppercase">FAKULTAS TEKNIK</h3>
-                <h4 class="text-[12pt] font-bold uppercase">DEPARTEMEN TEKNIK KOMPUTER</h4>
-                <p class="text-[10pt]">Jl. Prof. Soedarto, SH, Kampus Undip Tembalang, Semarang 50275</p>
-            </div>
-            <div class="w-24"></div>
+        <div style="border-bottom: 3px solid black; padding-bottom: 15px; margin-bottom: 25px;">
+            <table style="width: 100%; border-collapse: collapse; color: #000066;">
+                <tr>
+                    <td style="width: 220px; padding-right: 20px; padding-left: 10px; vertical-align: middle; text-align: center;">
+                        <img src="{{ asset('images/logo-undip.png') }}" style="width: 180px !important; max-width: none !important; height: auto !important;" alt="Logo Undip" />
+                    </td>
+                    <td style="vertical-align: middle; padding-top: 5px;">
+                        <h1 style="font-size: 13pt; font-weight: bold; margin: 0; line-height: 1.2;">KEMENTERIAN PENDIDIKAN TINGGI,<br>SAIN, DAN TEKNOLOGI</h1>
+                        <h2 style="font-size: 18pt; font-weight: bold; margin: 4px 0 0 0; line-height: 1.2;">UNIVERSITAS DIPONEGORO</h2>
+                        <h3 style="font-size: 15pt; font-weight: bold; margin: 4px 0 0 0; line-height: 1.2;">FAKULTAS TEKNIK</h3>
+                        <h4 style="font-size: 14pt; font-weight: bold; margin: 4px 0 0 0; line-height: 1.2;">DEPARTEMEN TEKNIK KOMPUTER</h4>
+                    </td>
+                    <td style="width: 250px; vertical-align: bottom; text-align: right; padding-bottom: 5px;">
+                        <div style="font-size: 9pt; line-height: 1.5; white-space: nowrap;">
+                            <p style="margin: 0;">Jalan Prof. Sudarto, S.H.</p>
+                            <p style="margin: 0;">Tembalang Semarang Kode Pos 50275</p>
+                            <p style="margin: 0;">Telp. (024) 7460055, (024) 7460053, Faks. (024) 7460053</p>
+                            <p style="margin: 0;"><span style="text-decoration: underline;">tekkom.ft.undip.ac.id</span> | email: tekkom[at]undip.ac.id</p>
+                        </div>
+                    </td>
+                </tr>
+            </table>
         </div>
 
         <!-- Judul Ujian & Informasi Pelaksanaan -->
-        <div class="text-center mb-6">
-            <h2 class="text-[14pt] font-bold underline mb-4 uppercase">{{ $request->agenda ?? 'SOAL UJIAN' }}</h2>
-            <table class="w-full text-left font-bold text-[11pt] mx-auto" style="max-width: 80%;">
+        <div class="mb-8">
+            <table class="w-full text-left text-[11pt] border-none">
                 <tbody>
                     <tr>
-                        <td class="py-1 w-[150px]">Mata Kuliah</td>
-                        <td class="py-1 w-2">:</td>
-                        <td class="py-1 font-normal">{{ $mataKuliah->nama }} ({{ $mataKuliah->kode }})</td>
+                        <td class="py-1.5 w-[120px] align-top">Matakuliah</td>
+                        <td class="py-1.5 w-4 align-top">:</td>
+                        <td class="py-1.5 align-top pr-4">{{ $mataKuliah->nama }}</td>
+                        
+                        <td class="py-1.5 w-[120px] align-top pl-4">Ruang Ujian</td>
+                        <td class="py-1.5 w-4 align-top">:</td>
+                        <td class="py-1.5 align-top">{{ $request->ruang_ujian ?? '............................' }}</td>
                     </tr>
                     <tr>
-                        <td class="py-1">Semester / T.A</td>
-                        <td class="py-1">:</td>
-                        <td class="py-1 font-normal">{{ $request->semester ?? '-' }} / {{ $request->tahun_ajaran ?? '-' }}</td>
+                        <td class="py-1.5 align-top">Hari/Tanggal</td>
+                        <td class="py-1.5 align-top">:</td>
+                        <td class="py-1.5 align-top pr-4">............................</td>
+                        
+                        <td class="py-1.5 align-top pl-4">Sifat Ujian</td>
+                        <td class="py-1.5 align-top">:</td>
+                        <td class="py-1.5 align-top">{{ $request->sifat_ujian ?? '............................' }}</td>
                     </tr>
                     <tr>
-                        <td class="py-1">Sifat Ujian</td>
-                        <td class="py-1">:</td>
-                        <td class="py-1 font-normal">Tertutup / Terbuka</td>
-                    </tr>
-                    <tr>
-                        <td class="py-1">Hari/Tanggal</td>
-                        <td class="py-1">:</td>
-                        <td class="py-1 font-normal">............................</td>
-                    </tr>
-                    <tr>
-                        <td class="py-1">Waktu</td>
-                        <td class="py-1">:</td>
-                        <td class="py-1 font-normal">{{ $request->waktu ?? '120 Menit' }}</td>
-                    </tr>
-                    <tr>
-                        <td class="py-1">Dosen Pengampu</td>
-                        <td class="py-1">:</td>
-                        <td class="py-1 font-normal">{{ auth()->user()->name ?? '............................' }}</td>
+                        <td class="py-1.5 align-top">Jam</td>
+                        <td class="py-1.5 align-top">:</td>
+                        <td class="py-1.5 align-top pr-4">{{ $request->waktu ?? '............................' }}</td>
+                        
+                        <td class="py-1.5 align-top pl-4">Dosen Penguji</td>
+                        <td class="py-1.5 align-top">:</td>
+                        <td class="py-1.5 align-top">{{ auth()->user()->name ?? '............................' }}</td>
                     </tr>
                 </tbody>
             </table>

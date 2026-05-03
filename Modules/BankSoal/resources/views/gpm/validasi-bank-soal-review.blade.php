@@ -82,40 +82,58 @@
                     @endforeach
                 </div>
 
-                <form action="{{ route('banksoal.soal.gpm.validasi-bank-soal.store', ['mk_id' => request('mk_id')]) }}" method="POST" class="mt-6">
+                <form action="{{ route('banksoal.soal.gpm.validasi-bank-soal.store', ['mk_id' => request('mk_id')]) }}" method="POST" class="mt-6" id="validasiForm">
                     @csrf
                     <input type="hidden" name="pertanyaan_id" value="{{ $soal->id }}">
+                    <input type="hidden" name="status_review" id="statusReview" value="Sesuai">
 
                     <div class="border-t border-dashed border-slate-200 pt-6">
-                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-4">Keputusan GPM</p>
-                        <div class="flex flex-col gap-3 md:flex-row">
-                            <label class="flex-1 cursor-pointer rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 flex items-center justify-center gap-2" data-decision onclick="selectDecision(this)">
-                                <input type="radio" name="status_review" value="Sesuai" class="hidden" required>
-                                <i class="fas fa-check"></i> Sesuai
-                            </label>
-                            <label class="flex-1 cursor-pointer rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 flex items-center justify-center gap-2" data-decision onclick="selectDecision(this)">
-                                <input type="radio" name="status_review" value="Kurang Sesuai" class="hidden">
-                                <i class="fas fa-exclamation-triangle"></i> Kurang Sesuai
-                            </label>
-                            <label class="flex-1 cursor-pointer rounded-xl border border-slate-200 px-4 py-3 text-sm font-semibold text-slate-600 flex items-center justify-center gap-2" data-decision onclick="selectDecision(this)">
-                                <input type="radio" name="status_review" value="Revisi Total" class="hidden">
-                                <i class="fas fa-exclamation-circle"></i> Revisi Total
-                            </label>
+                        <div class="flex items-center justify-between mb-4">
+                            <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Parameter Penilaian</p>
+                            <span class="text-[11px] font-medium text-slate-400">Total 100%</span>
                         </div>
-                    </div>
 
-                    <div class="mt-6">
-                        <p class="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Catatan Revisi</p>
-                        <textarea name="catatan" placeholder="Masukkan feedback untuk dosen..." required class="w-full min-h-[120px] rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 focus:outline-none"></textarea>
-                    </div>
+                        <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200">
+                            @php
+                                $dummyParams = [
+                                    ['id' => 1, 'parameter' => 'Kesesuaian materi soal dengan CPL/CPMK', 'bobot' => 40],
+                                    ['id' => 2, 'parameter' => 'Tingkat kesukaran dan tingkatan kognitif', 'bobot' => 30],
+                                    ['id' => 3, 'parameter' => 'Kejelasan redaksi dan tata bahasa', 'bobot' => 30],
+                                ];
+                            @endphp
+                            @foreach($dummyParams as $param)
+                                <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
+                                    <p class="text-sm font-semibold text-slate-700">{{ $param['parameter'] }} <span class="text-blue-600">({{ $param['bobot'] }}%)</span></p>
+                                    <div class="mt-3 flex gap-6 text-sm text-slate-600">
+                                        <label class="inline-flex items-center gap-2 cursor-pointer font-medium hover:text-blue-600 transition-colors">
+                                            <input type="radio" name="parameter_{{ $param['id'] }}" value="1" data-bobot="{{ $param['bobot'] }}" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500" onchange="hitungSkor()" required> Sesuai
+                                        </label>
+                                        <label class="inline-flex items-center gap-2 cursor-pointer font-medium hover:text-rose-600 transition-colors">
+                                            <input type="radio" name="parameter_{{ $param['id'] }}" value="0" data-bobot="{{ $param['bobot'] }}" class="w-4 h-4 text-rose-600 border-slate-300 focus:ring-rose-500" onchange="hitungSkor()" required> Tidak Sesuai
+                                        </label>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
 
-                    <div class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-slate-200 pt-6">
-                        <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
-                            <i class="fas fa-arrow-left"></i> Kembali ke Daftar
-                        </a>
-                        <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
-                            Simpan & Lanjut Berikutnya <i class="fas fa-arrow-right"></i>
-                        </button>
+                        <div class="mt-5 border-y border-dashed border-slate-200 py-4 flex items-center justify-between bg-white">
+                            <span class="text-sm font-bold text-slate-700">Skor Evaluasi (Otomatis)</span>
+                            <span class="text-2xl font-black text-slate-300" id="nilaiAkhir">0/100</span>
+                        </div>
+
+                        <div class="mt-5">
+                            <label for="catatan" class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Catatan Revisi</label>
+                            <textarea id="catatan" name="catatan" placeholder="Masukkan feedback untuk dosen..." class="w-full min-h-[120px] rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-50/50 focus:border-blue-300 transition-colors"></textarea>
+                        </div>
+
+                        <div class="mt-6 flex flex-col sm:flex-row gap-3 pt-2">
+                            <button type="submit" class="flex-1 rounded-xl border border-rose-200 px-4 py-3 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-center gap-2" id="btnKembalikan" onclick="setKembalikan()">
+                                Kembalikan Ke Dosen <i class="fas fa-undo"></i>
+                            </button>
+                            <button type="submit" class="flex-1 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" id="btnSetujui" onclick="setSetuju()">
+                                Valid dan Lanjut <i class="fas fa-arrow-right"></i>
+                            </button>
+                        </div>
                     </div>
                 </form>
             </div>
@@ -123,26 +141,89 @@
     </div>
 
     <script>
-        function selectDecision(element) {
-            document.querySelectorAll('[data-decision]').forEach(btn => {
-                btn.classList.remove('bg-blue-50', 'border-blue-300', 'text-blue-600');
-                btn.classList.add('border-slate-200', 'text-slate-600');
+        function hitungSkor() {
+            const form = document.getElementById('validasiForm');
+            const nilaiAkhirEl = document.getElementById('nilaiAkhir');
+            let totalNilai = 0;
+
+            const inputs = form.querySelectorAll('input[type="radio"]:checked');
+            inputs.forEach(input => {
+                if (input.value === '1') {
+                    totalNilai += parseInt(input.getAttribute('data-bobot')) || 0;
+                }
             });
 
-            element.classList.remove('border-slate-200', 'text-slate-600');
-            element.classList.add('bg-blue-50', 'border-blue-300', 'text-blue-600');
-
-            const radioVal = element.querySelector('input[type="radio"]').value;
-            const catatanElement = document.querySelector('textarea[name="catatan"]');
-            if (!catatanElement) return;
-
-            if (radioVal === 'Sesuai') {
-                catatanElement.removeAttribute('required');
-                catatanElement.placeholder = 'Opsional: Tambahkan catatan jika ada...';
+            nilaiAkhirEl.textContent = totalNilai + '/100';
+            
+            // Ubah warna skor mengikuti nilai
+            if (totalNilai >= 60) {
+                nilaiAkhirEl.classList.remove('text-slate-300', 'text-rose-600');
+                nilaiAkhirEl.classList.add('text-emerald-600');
+            } else if (totalNilai > 0) {
+                nilaiAkhirEl.classList.remove('text-slate-300', 'text-emerald-600');
+                nilaiAkhirEl.classList.add('text-rose-600');
             } else {
-                catatanElement.setAttribute('required', 'required');
-                catatanElement.placeholder = 'Masukkan feedback untuk dosen...';
+                nilaiAkhirEl.classList.remove('text-emerald-600', 'text-rose-600');
+                nilaiAkhirEl.classList.add('text-slate-300');
+            }
+
+            updateButtonState(totalNilai);
+        }
+
+        function updateButtonState(score) {
+            const MIN_SCORE = 60;
+            const btnSetujui = document.getElementById('btnSetujui');
+            if (!btnSetujui) return;
+
+            const allAnswered = document.querySelectorAll('input[type="radio"]:checked').length === 3; // Total parameter is 3
+            
+            if (!allAnswered || score < MIN_SCORE) {
+                btnSetujui.disabled = true;
+                btnSetujui.setAttribute('title', 'Seluruh parameter wajib diisi. Nilai < 60 silakan kembalikan soal.');
+            } else {
+                btnSetujui.disabled = false;
+                btnSetujui.setAttribute('title', '');
             }
         }
+
+        function setKembalikan() {
+            const catatan = document.getElementById('catatan');
+            catatan.required = true;
+            document.getElementById('statusReview').value = 'Revisi Total';
+        }
+
+        function setSetuju() {
+            const form = document.getElementById('validasiForm');
+            const allAnswered = document.querySelectorAll('input[type="radio"]:checked').length === 3;
+            if(!allAnswered) {
+                // Biarkan validasi HTML5 handle prevent form submission
+                return;
+            }
+            
+            const btnSetujui = document.getElementById('btnSetujui');
+            if(btnSetujui.disabled) {
+                // Pencegahan ekstra
+                event.preventDefault();
+                return;
+            }
+            
+            const catatan = document.getElementById('catatan');
+            catatan.required = false;
+            document.getElementById('statusReview').value = 'Sesuai';
+        }
+
+        document.getElementById('btnSetujui').addEventListener('mousedown', function (e) {
+            const allAnswered = document.querySelectorAll('input[type="radio"]:checked').length === 3;
+            if(!allAnswered) {
+                return;
+            }
+            if (this.disabled) {
+                e.preventDefault();
+                alert('Nilai di bawah standar (< 60). Silakan kembalikan soal ini dengan menyertakan catatan revisi.');
+            }
+        });
+        
+        // Initial hitung
+        hitungSkor();
     </script>
 </x-banksoal::layouts.gpm-master>
