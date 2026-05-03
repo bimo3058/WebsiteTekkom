@@ -19,9 +19,6 @@ class AktivasiSesiController extends Controller
         $selectedPeriode = null;
         if ($selectedPeriodeId) {
             $selectedPeriode = $periodes->firstWhere('id', $selectedPeriodeId);
-        } else {
-            $selectedPeriode = $periodes->firstWhere('status', 'aktif') ?? $periodes->first();
-            $selectedPeriodeId = $selectedPeriode?->id;
         }
 
         $jadwals = [];

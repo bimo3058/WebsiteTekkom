@@ -276,7 +276,9 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::get('/live-proctoring', [\Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController::class, 'liveProctoring'])->name('live-proctoring');
             Route::post('/live-proctoring/{id}/force-submit', [\Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController::class, 'forceSubmit'])->name('force-submit');
             Route::get('/riwayat', [\Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController::class, 'riwayat'])->name('riwayat');
+            Route::get('/analitik', [\Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController::class, 'analytics'])->name('analitik');
             Route::get('/riwayat/{id}', [\Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController::class, 'detailHasil'])->name('detail');
+            Route::post('/reset-semua', [\Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController::class, 'resetSemua'])->name('reset-semua');
         });
     });
 
@@ -299,9 +301,7 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
         Route::get('/pengajuan-pendaftaran/form', [\Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController::class, 'createPendaftaran'])->name('pendaftaran.form');
         Route::post('/pengajuan-pendaftaran/form', [\Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController::class, 'storePendaftaran'])->name('pendaftaran.store');
         
-        Route::get('/riwayat-ujian', function () {
-            return view('banksoal::mahasiswa.riwayat');
-        })->name('riwayat');
+        Route::get('/riwayat-ujian', [\Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController::class, 'riwayat'])->name('riwayat');
 
         // CBT Engine Routes
         Route::post('/engine/validate-token', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'validateToken'])->name('engine.validate');
@@ -312,6 +312,7 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
         // CBT Engine API Routes
         Route::post('/engine/save-answer', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'saveAnswer'])->name('engine.save-answer');
         Route::post('/engine/toggle-ragu', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'toggleRagu'])->name('engine.toggle-ragu');
+        Route::post('/engine/log-violation', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'logViolation'])->name('engine.log-violation');
         Route::get('/engine/finish', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'finish'])->name('engine.finish');
     });
 
