@@ -64,7 +64,9 @@ class ManajemenMahasiswaServiceProvider extends ServiceProvider
      */
     protected function registerCommands(): void
     {
-        // $this->commands([]);
+        $this->commands([
+            \Modules\ManajemenMahasiswa\Console\Commands\CheckAlumniStatus::class,
+        ]);
     }
 
     /**
