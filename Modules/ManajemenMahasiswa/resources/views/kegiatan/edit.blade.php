@@ -101,6 +101,57 @@
         font-weight: 400;
     }
 
+    /* ── Checkbox Card Group ── */
+    .checkbox-card-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .checkbox-card {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 16px;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        background: #fff;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 13px;
+        font-weight: 500;
+        color: #374151;
+        user-select: none;
+    }
+    .checkbox-card:hover {
+        border-color: #a5b4fc;
+        background: #f5f3ff;
+    }
+    .checkbox-card input[type="checkbox"] {
+        width: 16px;
+        height: 16px;
+        accent-color: #4f46e5;
+        cursor: pointer;
+        flex-shrink: 0;
+    }
+    .checkbox-card.checked {
+        border-color: #4f46e5;
+        background: #eef2ff;
+        color: #4338ca;
+        font-weight: 600;
+    }
+    .checkbox-card.disabled {
+        opacity: 0.45;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+    .checkbox-hint {
+        font-size: 11px;
+        color: #9ca3af;
+        font-weight: 400;
+        margin-top: 6px;
+    }
+
     /* ── Banner Preview ── */
     .banner-upload-area {
         border: 2px dashed #d1d5db;
@@ -136,6 +187,73 @@
         object-fit: cover;
         border-radius: 10px;
         margin-top: 12px;
+        cursor: pointer;
+        transition: transform 0.2s;
+    }
+    .banner-preview:hover {
+        transform: scale(1.01);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+    /* ── Lightbox Modal ── */
+    .lightbox-modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        z-index: 10000;
+        background: rgba(0, 0, 0, 0.92);
+        align-items: center;
+        justify-content: center;
+        animation: lightboxFadeIn 0.25s ease;
+    }
+    .lightbox-modal.active {
+        display: flex;
+    }
+    @keyframes lightboxFadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+    }
+    .lightbox-content {
+        position: relative;
+        max-width: 90vw;
+        max-height: 85vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .lightbox-content img {
+        max-width: 90vw;
+        max-height: 82vh;
+        object-fit: contain;
+        border-radius: 8px;
+        box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+        animation: lightboxZoomIn 0.3s ease;
+    }
+    @keyframes lightboxZoomIn {
+        from { transform: scale(0.9); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+    }
+    .lightbox-close {
+        position: fixed;
+        top: 20px;
+        right: 24px;
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255,255,255,0.15);
+        color: #fff;
+        font-size: 20px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+        z-index: 10001;
+    }
+    .lightbox-close:hover {
+        background: rgba(255,255,255,0.2);
+        transform: scale(1.05);
     }
     .banner-current {
         position: relative;
@@ -360,6 +478,151 @@
         background: #e5e7eb;
         color: #1f2937;
     }
+
+    /* ── Multi-Select Panitia ── */
+    .panitia-select-wrapper {
+        position: relative;
+    }
+    .panitia-chips-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        min-height: 44px;
+        padding: 8px 12px;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        background: #fff;
+        cursor: text;
+        transition: border-color 0.2s, box-shadow 0.2s;
+        align-items: center;
+    }
+    .panitia-chips-container:focus-within {
+        border-color: #818cf8;
+        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+    }
+    .panitia-chip {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 10px;
+        background: #eef2ff;
+        color: #4338ca;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+        border: 1px solid #c7d2fe;
+        transition: all 0.15s;
+        white-space: nowrap;
+    }
+    .panitia-chip:hover {
+        background: #e0e7ff;
+    }
+    .panitia-chip-remove {
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        background: #c7d2fe;
+        color: #4338ca;
+        border: none;
+        font-size: 11px;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        line-height: 1;
+        padding: 0;
+        transition: all 0.15s;
+        flex-shrink: 0;
+    }
+    .panitia-chip-remove:hover {
+        background: #dc2626;
+        color: #fff;
+    }
+    .panitia-search-input {
+        border: none;
+        outline: none;
+        font-size: 13px;
+        font-weight: 500;
+        color: #1f2937;
+        flex: 1;
+        min-width: 120px;
+        background: transparent;
+        padding: 2px 0;
+    }
+    .panitia-search-input::placeholder {
+        color: #9ca3af;
+        font-weight: 400;
+    }
+    .panitia-dropdown {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: #fff;
+        border: 1.5px solid #e5e7eb;
+        border-top: none;
+        border-radius: 0 0 10px 10px;
+        max-height: 220px;
+        overflow-y: auto;
+        z-index: 200;
+        display: none;
+        box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+    .panitia-dropdown.show {
+        display: block;
+    }
+    .panitia-option {
+        padding: 10px 14px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 500;
+        color: #374151;
+        transition: background 0.15s;
+        border-bottom: 1px solid #f9fafb;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .panitia-option:hover {
+        background: #eef2ff;
+        color: #4f46e5;
+    }
+    .panitia-option.selected {
+        background: #f0fdf4;
+        color: #16a34a;
+        pointer-events: none;
+        opacity: 0.6;
+    }
+    .panitia-option .sub-text {
+        font-size: 11px;
+        color: #9ca3af;
+        font-weight: 400;
+    }
+    .panitia-option .check-icon {
+        margin-left: auto;
+        color: #16a34a;
+        font-size: 13px;
+        display: none;
+    }
+    .panitia-option.selected .check-icon {
+        display: inline;
+    }
+    .panitia-empty {
+        padding: 14px;
+        text-align: center;
+        font-size: 13px;
+        color: #9ca3af;
+        font-weight: 400;
+    }
+    .panitia-count-badge {
+        font-size: 11px;
+        font-weight: 600;
+        color: #6b7280;
+        background: #f3f4f6;
+        padding: 2px 8px;
+        border-radius: 20px;
+        margin-left: 6px;
+    }
 </style>
 
 @php
@@ -375,6 +638,11 @@
     }
     $existingFoto = $kegiatan->repoMulmed->where('tipe_file', 'image');
     $existingDokumen = $kegiatan->repoMulmed->where('tipe_file', 'document');
+    $selectedKategoriIds = old('kategori_kegiatan_id', $kegiatan->kategoris->pluck('id')->toArray());
+    $selectedBidangIds = old('bidang_id', $kegiatan->bidangs->pluck('id')->toArray());
+    // Panitia yang sudah ada — untuk pre-populate chips
+    $existingPanitia = $kegiatan->panitia ?? collect();
+    $existingPanitiaIds = old('panitia_ids', $existingPanitia->pluck('id')->toArray());
 @endphp
 
 <!-- Header -->
@@ -411,43 +679,48 @@
         <div class="mb-3">
             <label class="form-label-custom">Judul Kegiatan <span class="required">*</span></label>
             <input type="text" name="judul" class="form-control form-control-custom"
-                   value="{{ old('judul', $kegiatan->judul) }}" required>
+                   value="{{ old('judul', $kegiatan->judul) }}" required maxlength="255">
         </div>
 
         <div class="row g-3 mb-3">
             <div class="col-md-4">
                 <label class="form-label-custom">Kategori <span class="required">*</span></label>
-                <select name="kategori_kegiatan_id" id="kategoriSelect" class="form-select form-select-custom" required onchange="toggleBidangField()">
-                    <option value="">— Pilih Kategori —</option>
+                <div class="checkbox-card-group" id="kategoriGroup">
                     @foreach($kategoriList as $kategori)
-                        <option value="{{ $kategori->id }}"
-                                data-is-prodi="{{ stripos($kategori->nama_kategori, 'prodi') !== false ? '1' : '0' }}"
-                            {{ old('kategori_kegiatan_id', $kegiatan->kategori_kegiatan_id) == $kategori->id ? 'selected' : '' }}>
+                        <label class="checkbox-card" id="kategoriCard{{ $kategori->id }}">
+                            <input type="checkbox" name="kategori_kegiatan_id[]"
+                                   value="{{ $kategori->id }}"
+                                   data-is-prodi="{{ stripos($kategori->nama_kategori, 'prodi') !== false ? '1' : '0' }}"
+                                   onchange="handleKategoriChange()"
+                                   {{ in_array($kategori->id, $selectedKategoriIds) ? 'checked' : '' }}>
                             {{ $kategori->nama_kategori }}
-                        </option>
+                        </label>
                     @endforeach
-                </select>
+                </div>
+                <div class="checkbox-hint">Pilih maksimal 2 kategori</div>
             </div>
             <div class="col-md-4" id="bidangFieldWrapper">
                 <label class="form-label-custom">Bidang <span class="required" id="bidangRequired">*</span></label>
-                <select name="bidang_id" id="bidangSelect" class="form-select form-select-custom" required>
-                    <option value="">— Pilih Bidang —</option>
+                <div class="checkbox-card-group" id="bidangGroup">
                     @foreach($bidangList as $bidang)
-                        <option value="{{ $bidang->id }}"
-                            {{ old('bidang_id', $kegiatan->bidang_id) == $bidang->id ? 'selected' : '' }}>
+                        <label class="checkbox-card" id="bidangCard{{ $bidang->id }}">
+                            <input type="checkbox" name="bidang_id[]"
+                                   value="{{ $bidang->id }}"
+                                   {{ in_array($bidang->id, $selectedBidangIds) ? 'checked' : '' }}>
                             {{ $bidang->nama_bidang }}
-                        </option>
+                        </label>
                     @endforeach
-                </select>
+                </div>
+                <div class="checkbox-hint">Pilih satu atau lebih bidang</div>
             </div>
             <div class="col-md-4">
-                <label class="form-label-custom">Kepengurusan</label>
-                <select name="kepengurusan_id" class="form-select form-select-custom">
-                    <option value="">— Pilih Kepengurusan —</option>
-                    @foreach($kepengurusanList as $kp)
-                        <option value="{{ $kp->id }}"
-                            {{ old('kepengurusan_id', $kegiatan->kepengurusan_id) == $kp->id ? 'selected' : '' }}>
-                            {{ $kp->tahun_periode }}
+                <label class="form-label-custom">Tahun</label>
+                <select name="tahun" class="form-select form-select-custom">
+                    <option value="">— Pilih Tahun —</option>
+                    @foreach($tahunList as $t)
+                        <option value="{{ $t }}"
+                            {{ old('tahun', $kegiatan->tahun) == $t ? 'selected' : '' }}>
+                            {{ $t }}
                         </option>
                     @endforeach
                 </select>
@@ -558,6 +831,45 @@
                 </div>
             </div>
         </div>
+
+        {{-- ── Panitia Kegiatan (Multi-Select) ── --}}
+        <div class="mb-1">
+            <label class="form-label-custom">
+                Panitia Kegiatan
+                <span style="color: #9ca3af; font-weight: 400;">(opsional)</span>
+                <span class="panitia-count-badge" id="panitiaCountBadge" style="display:none;">0 dipilih</span>
+            </label>
+            <div class="panitia-select-wrapper" id="panitiaSelectWrapper">
+                <div class="panitia-chips-container" id="panitiaChipsContainer" onclick="focusPanitiaSearch()">
+                    <input type="text" class="panitia-search-input" id="panitiaSearchInput"
+                           placeholder="Cari dan tambah panitia..."
+                           autocomplete="off"
+                           oninput="filterPanitiaOptions(this.value)"
+                           onfocus="showPanitiaDropdown()">
+                </div>
+                <div class="panitia-dropdown" id="panitiaDropdown">
+                    @foreach($mahasiswaList as $mhs)
+                        <div class="panitia-option"
+                             data-id="{{ $mhs->id }}"
+                             data-name="{{ $mhs->user->name ?? 'N/A' }}"
+                             data-name-lower="{{ strtolower($mhs->user->name ?? '') }}"
+                             data-nim="{{ $mhs->student_number }}"
+                             data-angkatan="{{ $mhs->cohort_year }}"
+                             onclick="togglePanitia(this)">
+                            <div>
+                                {{ $mhs->user->name ?? 'N/A' }}
+                                <div class="sub-text">NIM: {{ $mhs->student_number }} • Angkatan {{ $mhs->cohort_year }}</div>
+                            </div>
+                            <span class="check-icon">✓</span>
+                        </div>
+                    @endforeach
+                    <div class="panitia-empty" id="panitiaEmpty" style="display:none;">Tidak ada mahasiswa yang cocok</div>
+                </div>
+                {{-- Hidden inputs di-generate JS --}}
+                <div id="panitiaHiddenInputs"></div>
+            </div>
+            <div class="checkbox-hint">Pilih satu atau lebih mahasiswa sebagai panitia. Ketik nama untuk mencari.</div>
+        </div>
     </div>
 
     <!-- Detail Tambahan -->
@@ -573,7 +885,7 @@
             <div class="col-md-6">
                 <label class="form-label-custom">Anggaran (Rp)</label>
                 <input type="number" name="anggaran" class="form-control form-control-custom"
-                       value="{{ old('anggaran', $kegiatan->anggaran) }}" min="0" step="1000">
+                       value="{{ old('anggaran', $kegiatan->anggaran) }}" min="0" max="9999999999999" step="1000">
             </div>
         </div>
     </div>
@@ -585,7 +897,7 @@
         @if($kegiatan->banner)
             <div class="banner-current">
                 <span class="badge-current">Banner Saat Ini</span>
-                <img src="{{ asset('storage/' . $kegiatan->banner) }}" alt="Banner saat ini" class="banner-preview" style="display: block;">
+                <img src="{{ $kegiatan->banner_url }}" alt="Banner saat ini" class="banner-preview" style="display: block;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
             </div>
             <p style="font-size: 13px; color: #6b7280; margin-bottom: 12px;">Upload gambar baru untuk mengganti banner saat ini.</p>
         @endif
@@ -593,11 +905,11 @@
         <div class="banner-upload-area" onclick="document.getElementById('bannerInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
             <p>Klik untuk upload banner {{ $kegiatan->banner ? 'baru' : 'kegiatan' }}</p>
-            <small>Format: JPG, PNG, WebP • Maks: 5MB</small>
+            <small>Format: JPG, PNG, WebP • Maks: 5MB<br><span style="color: #4f46e5; font-weight: 500;">Rekomendasi: Resolusi 1280 x 720 (Rasio 16:9)</span></small>
         </div>
         <input type="file" name="banner" id="bannerInput" accept="image/jpeg,image/png,image/webp"
                style="display: none;" onchange="previewBanner(this)">
-        <img id="bannerPreview" class="banner-preview" alt="Preview Banner" style="display: none;">
+        <img id="bannerPreview" class="banner-preview" alt="Preview Banner" style="display: none;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
     </div>
 
     <!-- Foto Kegiatan -->
@@ -610,7 +922,7 @@
                 @foreach($existingFoto as $foto)
                     <div class="file-preview-item" id="existingFile{{ $foto->id }}">
                         <button type="button" class="btn-remove-file" onclick="markFileForDeletion({{ $foto->id }})">✕</button>
-                        <img src="{{ asset('storage/' . $foto->path_file) }}" alt="{{ $foto->judul_file }}">
+                        <img src="{{ $foto->url }}" alt="{{ $foto->judul_file }}" style="cursor: pointer;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
                         <div class="file-info">{{ $foto->nama_file }}</div>
                     </div>
                 @endforeach
@@ -645,7 +957,7 @@
                         <div class="doc-name">{{ $doc->nama_file }}</div>
                         <div class="doc-size">{{ strtoupper($ext) }}</div>
                     </div>
-                    <a href="{{ asset('storage/' . $doc->path_file) }}" target="_blank" class="btn-remove-doc" style="background: #dbeafe; color: #2563eb;" title="Download">⬇</a>
+                    <a href="{{ $doc->url }}" target="_blank" class="btn-remove-doc" style="background: #dbeafe; color: #2563eb;" title="Download">⬇</a>
                     <button type="button" class="btn-remove-doc" onclick="markFileForDeletion({{ $doc->id }})" title="Hapus">✕</button>
                 </div>
             @endforeach
@@ -675,6 +987,14 @@
     </div>
 </form>
 
+<!-- Lightbox Modal -->
+<div class="lightbox-modal" id="lightboxModal" onclick="closeLightbox(event)">
+    <button class="lightbox-close" onclick="closeLightbox(event)" title="Tutup">&times;</button>
+    <div class="lightbox-content">
+        <img id="lightboxImage" src="" alt="Full Screen Banner">
+    </div>
+</div>
+
 <script>
 // ── Banner Preview ──
 function previewBanner(input) {
@@ -687,6 +1007,25 @@ function previewBanner(input) {
         };
         reader.readAsDataURL(input.files[0]);
     }
+}
+
+// ── Lightbox ──
+function openLightbox(src) {
+    const modal = document.getElementById('lightboxModal');
+    const img = document.getElementById('lightboxImage');
+    img.src = src;
+    modal.classList.add('active');
+    document.body.style.overflow = 'hidden'; // prevent scrolling
+}
+
+function closeLightbox(e) {
+    if (e && e.target !== document.getElementById('lightboxModal') && e.target.tagName !== 'BUTTON') {
+        // Allow clicking the image to do nothing, but clicking outside closes
+        if (e.target.tagName === 'IMG') return;
+    }
+    const modal = document.getElementById('lightboxModal');
+    modal.classList.remove('active');
+    document.body.style.overflow = 'auto';
 }
 
 // ── Searchable Dropdown ──
@@ -769,7 +1108,7 @@ function renderFotoPreviews() {
         reader.onload = function(e) {
             item.innerHTML = `
                 <button type="button" class="btn-remove-file" onclick="removeFoto(${i})">✕</button>
-                <img src="${e.target.result}" alt="${file.name}">
+                <img src="${e.target.result}" alt="${file.name}" style="cursor: pointer;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
                 <div class="file-info">${file.name}<br><span class="file-size">${formatFileSize(file.size)}</span></div>
             `;
         };
@@ -861,29 +1200,195 @@ function formatFileSize(bytes) {
     });
 });
 
-// ── Toggle Bidang Field based on Kategori ──
-function toggleBidangField() {
-    const kategoriSelect = document.getElementById('kategoriSelect');
-    const bidangWrapper = document.getElementById('bidangFieldWrapper');
-    const bidangSelect = document.getElementById('bidangSelect');
-    const bidangRequired = document.getElementById('bidangRequired');
-    const selected = kategoriSelect.options[kategoriSelect.selectedIndex];
-    const isProdi = selected && selected.getAttribute('data-is-prodi') === '1';
+// ── Panitia Multi-Select ──
+let selectedPanitia = {}; // { id: name }
 
-    if (isProdi) {
-        bidangWrapper.style.display = 'none';
-        bidangSelect.removeAttribute('required');
-        bidangSelect.value = '';
+// Pre-populate dari data yang ada di database
+@foreach($existingPanitia as $pan)
+selectedPanitia['{{ $pan->id }}'] = '{{ addslashes($pan->user->name ?? '') }}';
+@endforeach
+
+function focusPanitiaSearch() {
+    document.getElementById('panitiaSearchInput').focus();
+}
+
+function showPanitiaDropdown() {
+    const dropdown = document.getElementById('panitiaDropdown');
+    dropdown.classList.add('show');
+    filterPanitiaOptions(document.getElementById('panitiaSearchInput').value);
+}
+
+function filterPanitiaOptions(query) {
+    const q = query.toLowerCase().trim();
+    const options = document.querySelectorAll('#panitiaDropdown .panitia-option');
+    const empty = document.getElementById('panitiaEmpty');
+    let visibleCount = 0;
+
+    options.forEach(opt => {
+        const name = opt.getAttribute('data-name-lower') || '';
+        const nim  = opt.getAttribute('data-nim') || '';
+        const match = !q || name.includes(q) || nim.includes(q);
+        opt.style.display = match ? 'flex' : 'none';
+        if (match) visibleCount++;
+    });
+
+    empty.style.display = visibleCount === 0 ? 'block' : 'none';
+    document.getElementById('panitiaDropdown').classList.add('show');
+}
+
+function togglePanitia(optEl) {
+    const id   = optEl.getAttribute('data-id');
+    const name = optEl.getAttribute('data-name');
+
+    if (selectedPanitia[id]) {
+        removePanitia(id);
+    } else {
+        selectedPanitia[id] = name;
+        optEl.classList.add('selected');
+        renderPanitiaChips();
+        updatePanitiaHiddenInputs();
+    }
+
+    document.getElementById('panitiaSearchInput').value = '';
+    filterPanitiaOptions('');
+    document.getElementById('panitiaSearchInput').focus();
+}
+
+function removePanitia(id) {
+    delete selectedPanitia[id];
+    const opt = document.querySelector(`#panitiaDropdown .panitia-option[data-id="${id}"]`);
+    if (opt) opt.classList.remove('selected');
+    renderPanitiaChips();
+    updatePanitiaHiddenInputs();
+}
+
+function renderPanitiaChips() {
+    const container = document.getElementById('panitiaChipsContainer');
+    const searchInput = document.getElementById('panitiaSearchInput');
+
+    container.querySelectorAll('.panitia-chip').forEach(c => c.remove());
+
+    Object.entries(selectedPanitia).forEach(([id, name]) => {
+        const chip = document.createElement('span');
+        chip.className = 'panitia-chip';
+        chip.innerHTML = `
+            ${name}
+            <button type="button" class="panitia-chip-remove" onclick="removePanitia('${id}')" title="Hapus">×</button>
+        `;
+        container.insertBefore(chip, searchInput);
+    });
+
+    const count = Object.keys(selectedPanitia).length;
+    const badge = document.getElementById('panitiaCountBadge');
+    if (count > 0) {
+        badge.textContent = count + ' dipilih';
+        badge.style.display = 'inline';
+        document.getElementById('panitiaSearchInput').placeholder = 'Tambah lebih banyak...';
+    } else {
+        badge.style.display = 'none';
+        document.getElementById('panitiaSearchInput').placeholder = 'Cari dan tambah panitia...';
+    }
+}
+
+function updatePanitiaHiddenInputs() {
+    const container = document.getElementById('panitiaHiddenInputs');
+    container.innerHTML = '';
+    Object.keys(selectedPanitia).forEach(id => {
+        const input = document.createElement('input');
+        input.type  = 'hidden';
+        input.name  = 'panitia_ids[]';
+        input.value = id;
+        container.appendChild(input);
+    });
+}
+
+// Tutup dropdown panitia saat klik di luar
+document.addEventListener('click', function(e) {
+    const wrapper = document.getElementById('panitiaSelectWrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        document.getElementById('panitiaDropdown').classList.remove('show');
+    }
+});
+
+// ── Toggle Bidang Field based on Kategori (checkbox version) ──
+function handleKategoriChange() {
+    const checkboxes = document.querySelectorAll('#kategoriGroup input[type="checkbox"]');
+    const checked = document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked');
+    const maxKategori = 2;
+
+    // Enforce max 2 selections
+    checkboxes.forEach(cb => {
+        const card = cb.closest('.checkbox-card');
+        if (cb.checked) {
+            card.classList.add('checked');
+        } else {
+            card.classList.remove('checked');
+        }
+    });
+
+    if (checked.length >= maxKategori) {
+        checkboxes.forEach(cb => {
+            if (!cb.checked) {
+                cb.closest('.checkbox-card').classList.add('disabled');
+                cb.disabled = true;
+            }
+        });
+    } else {
+        checkboxes.forEach(cb => {
+            cb.closest('.checkbox-card').classList.remove('disabled');
+            cb.disabled = false;
+        });
+    }
+
+    // Toggle bidang visibility
+    toggleBidangField();
+}
+
+function toggleBidangField() {
+    const checked = document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked');
+    const bidangRequired = document.getElementById('bidangRequired');
+
+    let allProdi = checked.length > 0;
+    checked.forEach(cb => {
+        if (cb.getAttribute('data-is-prodi') !== '1') {
+            allProdi = false;
+        }
+    });
+
+    if (allProdi && checked.length > 0) {
         if (bidangRequired) bidangRequired.style.display = 'none';
     } else {
-        bidangWrapper.style.display = '';
-        bidangSelect.setAttribute('required', 'required');
         if (bidangRequired) bidangRequired.style.display = '';
     }
 }
 
-// Run on page load in case kegiatan already has prodi kategori
-document.addEventListener('DOMContentLoaded', toggleBidangField);
+// ── Initialize on page load ──
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.checkbox-card input[type="checkbox"]:checked').forEach(cb => {
+        cb.closest('.checkbox-card').classList.add('checked');
+    });
+
+    document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', function() {
+            if (this.checked) {
+                this.closest('.checkbox-card').classList.add('checked');
+            } else {
+                this.closest('.checkbox-card').classList.remove('checked');
+            }
+        });
+    });
+
+    handleKategoriChange();
+
+    // Pre-populate panitia chips dan hidden inputs dari data existing
+    // Tandai options yang sudah dipilih di dropdown
+    Object.keys(selectedPanitia).forEach(id => {
+        const opt = document.querySelector(`#panitiaDropdown .panitia-option[data-id="${id}"]`);
+        if (opt) opt.classList.add('selected');
+    });
+    renderPanitiaChips();
+    updatePanitiaHiddenInputs();
+});
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>

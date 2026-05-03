@@ -8,39 +8,46 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use App\Models\Student;
 use App\Models\Lecturer;
+use App\Services\SupabaseStorage;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\Bidang;
 use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
-use Modules\ManajemenMahasiswa\Models\Kepengurusan;
+use Modules\ManajemenMahasiswa\Models\KegiatanPeserta;
 use Modules\ManajemenMahasiswa\Models\RepoMulmed;
+use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
 
 class KegiatanController extends Controller
 {
+    public function __construct(
+        private RepoMulmedService $repoMulmedService,
+        private SupabaseStorage $supabase
+    ) {}
+
     /**
      * Halaman utama daftar kegiatan — mahasiswa & alumni.
      */
     public function index(Request $request)
     {
         $bidangList       = Bidang::orderBy('nama_bidang')->get();
-        $kepengurusanList = Kepengurusan::orderBy('tahun_periode', 'desc')->get();
         $kategoriList     = KategoriKegiatan::orderBy('nama_kategori')->get();
+        $tahunList        = range(date('Y') + 1, 2008);
 
-        $query = Kegiatan::with(['bidang', 'kategoriKegiatan', 'kepengurusan', 'ketuaPelaksana.user', 'dosenPendamping.user'])
+        $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'ketuaPelaksana.user', 'dosenPendamping.user'])
             ->orderBy('tanggal_mulai', 'desc');
 
         // Filter by bidang or prodi
         if ($request->filled('bidang') && $request->bidang !== 'semua') {
             if ($request->bidang === 'prodi') {
-                // Kegiatan Prodi = kegiatan tanpa bidang (bidang_id is null)
-                $query->whereNull('bidang_id');
+                // Kegiatan Prodi = kegiatan tanpa bidang (no bidangs in pivot)
+                $query->whereDoesntHave('bidangs');
             } else {
-                $query->where('bidang_id', $request->bidang);
+                $query->whereHas('bidangs', fn($q) => $q->where('mk_bidang.id', $request->bidang));
             }
         }
 
-        // Filter by kepengurusan (tahun periode)
-        if ($request->filled('kepengurusan') && $request->kepengurusan !== 'semua') {
-            $query->where('kepengurusan_id', $request->kepengurusan);
+        // Filter by tahun
+        if ($request->filled('tahun') && $request->tahun !== 'semua') {
+            $query->where('tahun', $request->tahun);
         }
 
         // Search by judul
@@ -58,7 +65,7 @@ class KegiatanController extends Controller
         return view('manajemenmahasiswa::kegiatan.index', compact(
             'kegiatan',
             'bidangList',
-            'kepengurusanList',
+            'tahunList',
             'kategoriList',
             'isAdmin',
         ));
@@ -71,11 +78,13 @@ class KegiatanController extends Controller
     {
         $kegiatan = Kegiatan::with([
             'bidang',
+            'bidangs',
             'kategoriKegiatan',
-            'kepengurusan',
+            'kategoris',
             'repoMulmed',
             'ketuaPelaksana.user',
             'dosenPendamping.user',
+            'panitia.user',
         ])->findOrFail($id);
 
         // Cek apakah user adalah admin/pengurus (untuk tombol Edit/Hapus)
@@ -94,14 +103,14 @@ class KegiatanController extends Controller
     {
         $bidangList       = Bidang::orderBy('nama_bidang')->get();
         $kategoriList     = KategoriKegiatan::orderBy('nama_kategori')->get();
-        $kepengurusanList = Kepengurusan::orderBy('tahun_periode', 'desc')->get();
+        $tahunList        = range(date('Y') + 1, 2008);
         $mahasiswaList    = Student::with('user')->get()->sortBy(fn($s) => $s->user->name ?? '');
         $dosenList        = Lecturer::with('user')->get()->sortBy(fn($l) => $l->user->name ?? '');
 
         return view('manajemenmahasiswa::kegiatan.create', compact(
             'bidangList',
             'kategoriList',
-            'kepengurusanList',
+            'tahunList',
             'mahasiswaList',
             'dosenList',
         ));
@@ -112,28 +121,25 @@ class KegiatanController extends Controller
      */
     public function store(Request $request)
     {
-        // Check if selected kategori is "Kegiatan Prodi" (bidang not needed)
-        $isProdi = false;
-        if ($request->filled('kategori_kegiatan_id')) {
-            $kategori = KategoriKegiatan::find($request->kategori_kegiatan_id);
-            $isProdi  = $kategori && stripos($kategori->nama_kategori, 'prodi') !== false;
-        }
-
         $validated = $request->validate([
             'judul'               => 'required|string|max:255',
             'deskripsi'           => 'required|string|min:20',
-            'kategori_kegiatan_id'=> 'required|exists:mk_kategori_kegiatan,id',
-            'bidang_id'           => $isProdi ? 'nullable|exists:mk_bidang,id' : 'required|exists:mk_bidang,id',
-            'kepengurusan_id'     => 'nullable|exists:mk_kepengurusan,id',
+            'kategori_kegiatan_id'=> 'required|array|min:1|max:2',
+            'kategori_kegiatan_id.*' => 'exists:mk_kategori_kegiatan,id',
+            'bidang_id'           => 'nullable|array',
+            'bidang_id.*'         => 'exists:mk_bidang,id',
+            'tahun'               => 'nullable|integer|min:2008',
             'tanggal_mulai'       => 'required|date',
             'jam_mulai'           => 'nullable|date_format:H:i',
             'tanggal_selesai'     => 'nullable|date|after_or_equal:tanggal_mulai',
             'jam_selesai'         => 'nullable|date_format:H:i',
             'lokasi'              => 'nullable|string|max:255',
             'banner'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
-            'anggaran'            => 'nullable|numeric|min:0',
+            'anggaran'            => 'nullable|numeric|min:0|max:9999999999999',
             'ketua_pelaksana_id'  => 'nullable|exists:students,id',
             'dosen_pendamping_id' => 'nullable|exists:lecturers,id',
+            'panitia_ids'         => 'nullable|array',
+            'panitia_ids.*'       => 'exists:students,id',
             'target_peserta'      => 'nullable|integer|min:1',
             'status'              => 'required|in:akan_datang,berlangsung,selesai',
             'foto_kegiatan'       => 'nullable|array|max:10',
@@ -144,7 +150,7 @@ class KegiatanController extends Controller
 
         // Handle banner upload
         if ($request->hasFile('banner')) {
-            $validated['banner'] = $request->file('banner')->store('kegiatan/banners', 'public');
+            $validated['banner'] = $this->supabase->upload($request->file('banner'), 'mk_mulmed/image');
         }
 
         $validated['user_id'] = Auth::id();
@@ -155,10 +161,22 @@ class KegiatanController extends Controller
             $validated['penanggung_jawab'] = $student?->user?->name;
         }
 
+        // Set backward-compat FK columns (first item)
+        $kategoriIds = $validated['kategori_kegiatan_id'];
+        $bidangIds = $validated['bidang_id'] ?? [];
+        $panitiaIds = $validated['panitia_ids'] ?? [];
+        $validated['kategori_kegiatan_id'] = $kategoriIds[0] ?? null;
+        $validated['bidang_id'] = $bidangIds[0] ?? null;
+
         // Remove non-kegiatan fields before creating
-        unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan']);
+        unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan'], $validated['panitia_ids']);
 
         $kegiatan = Kegiatan::create($validated);
+
+        // Sync pivot tables
+        $kegiatan->kategoris()->sync($kategoriIds);
+        $kegiatan->bidangs()->sync($bidangIds);
+        $kegiatan->panitia()->sync($panitiaIds);
 
         // Handle foto uploads
         $this->handleFileUploads($request, $kegiatan);
@@ -173,10 +191,10 @@ class KegiatanController extends Controller
      */
     public function edit($id)
     {
-        $kegiatan         = Kegiatan::with('repoMulmed')->findOrFail($id);
+        $kegiatan         = Kegiatan::with(['repoMulmed', 'kategoris', 'bidangs', 'panitia'])->findOrFail($id);
         $bidangList       = Bidang::orderBy('nama_bidang')->get();
         $kategoriList     = KategoriKegiatan::orderBy('nama_kategori')->get();
-        $kepengurusanList = Kepengurusan::orderBy('tahun_periode', 'desc')->get();
+        $tahunList        = range(date('Y') + 1, 2008);
         $mahasiswaList    = Student::with('user')->get()->sortBy(fn($s) => $s->user->name ?? '');
         $dosenList        = Lecturer::with('user')->get()->sortBy(fn($l) => $l->user->name ?? '');
 
@@ -184,7 +202,7 @@ class KegiatanController extends Controller
             'kegiatan',
             'bidangList',
             'kategoriList',
-            'kepengurusanList',
+            'tahunList',
             'mahasiswaList',
             'dosenList',
         ));
@@ -197,28 +215,26 @@ class KegiatanController extends Controller
     {
         $kegiatan = Kegiatan::findOrFail($id);
 
-        // Check if selected kategori is "Kegiatan Prodi" (bidang not needed)
-        $isProdi = false;
-        if ($request->filled('kategori_kegiatan_id')) {
-            $kategori = KategoriKegiatan::find($request->kategori_kegiatan_id);
-            $isProdi  = $kategori && stripos($kategori->nama_kategori, 'prodi') !== false;
-        }
-
+        // Check if all selected kategori are "Kegiatan Prodi" (bidang not needed)
         $validated = $request->validate([
             'judul'               => 'required|string|max:255',
             'deskripsi'           => 'required|string|min:20',
-            'kategori_kegiatan_id'=> 'required|exists:mk_kategori_kegiatan,id',
-            'bidang_id'           => $isProdi ? 'nullable|exists:mk_bidang,id' : 'required|exists:mk_bidang,id',
-            'kepengurusan_id'     => 'nullable|exists:mk_kepengurusan,id',
+            'kategori_kegiatan_id'=> 'required|array|min:1|max:2',
+            'kategori_kegiatan_id.*' => 'exists:mk_kategori_kegiatan,id',
+            'bidang_id'           => 'nullable|array',
+            'bidang_id.*'         => 'exists:mk_bidang,id',
+            'tahun'               => 'nullable|integer|min:2008',
             'tanggal_mulai'       => 'required|date',
             'jam_mulai'           => 'nullable|date_format:H:i',
             'tanggal_selesai'     => 'nullable|date|after_or_equal:tanggal_mulai',
             'jam_selesai'         => 'nullable|date_format:H:i',
             'lokasi'              => 'nullable|string|max:255',
             'banner'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
-            'anggaran'            => 'nullable|numeric|min:0',
+            'anggaran'            => 'nullable|numeric|min:0|max:9999999999999',
             'ketua_pelaksana_id'  => 'nullable|exists:students,id',
             'dosen_pendamping_id' => 'nullable|exists:lecturers,id',
+            'panitia_ids'         => 'nullable|array',
+            'panitia_ids.*'       => 'exists:students,id',
             'target_peserta'      => 'nullable|integer|min:1',
             'status'              => 'required|in:akan_datang,berlangsung,selesai',
             'foto_kegiatan'       => 'nullable|array|max:10',
@@ -232,9 +248,9 @@ class KegiatanController extends Controller
         // Handle banner upload
         if ($request->hasFile('banner')) {
             if ($kegiatan->banner) {
-                Storage::disk('public')->delete($kegiatan->banner);
+                $this->supabase->delete($kegiatan->banner);
             }
-            $validated['banner'] = $request->file('banner')->store('kegiatan/banners', 'public');
+            $validated['banner'] = $this->supabase->upload($request->file('banner'), 'mk_mulmed/image');
         }
 
         // Set penanggung_jawab from ketua pelaksana name for backward compatibility
@@ -250,16 +266,27 @@ class KegiatanController extends Controller
             foreach ($request->hapus_file as $fileId) {
                 $file = RepoMulmed::where('kegiatan_id', $kegiatan->id)->find($fileId);
                 if ($file) {
-                    Storage::disk('public')->delete($file->path_file);
-                    $file->delete();
+                    $this->repoMulmedService->deletePermanent($file->id);
                 }
             }
         }
 
+        // Set backward-compat FK columns (first item)
+        $kategoriIds = $validated['kategori_kegiatan_id'];
+        $bidangIds = $validated['bidang_id'] ?? [];
+        $panitiaIds = $validated['panitia_ids'] ?? [];
+        $validated['kategori_kegiatan_id'] = $kategoriIds[0] ?? null;
+        $validated['bidang_id'] = $bidangIds[0] ?? null;
+
         // Remove non-kegiatan fields before updating
-        unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan'], $validated['hapus_file']);
+        unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan'], $validated['hapus_file'], $validated['panitia_ids']);
 
         $kegiatan->update($validated);
+
+        // Sync pivot tables
+        $kegiatan->kategoris()->sync($kategoriIds);
+        $kegiatan->bidangs()->sync($bidangIds);
+        $kegiatan->panitia()->sync($panitiaIds);
 
         // Handle new file uploads
         $this->handleFileUploads($request, $kegiatan);
@@ -277,12 +304,12 @@ class KegiatanController extends Controller
         $kegiatan = Kegiatan::with('repoMulmed')->findOrFail($id);
 
         if ($kegiatan->banner) {
-            Storage::disk('public')->delete($kegiatan->banner);
+            $this->supabase->delete($kegiatan->banner);
         }
 
         // Delete all associated files
         foreach ($kegiatan->repoMulmed as $file) {
-            Storage::disk('public')->delete($file->path_file);
+            $this->repoMulmedService->deletePermanent($file->id);
         }
 
         $kegiatan->delete();
@@ -300,16 +327,10 @@ class KegiatanController extends Controller
         // Upload foto kegiatan
         if ($request->hasFile('foto_kegiatan')) {
             foreach ($request->file('foto_kegiatan') as $foto) {
-                $path = $foto->store('kegiatan/foto', 'public');
-                RepoMulmed::create([
+                $this->repoMulmedService->upload($foto, [
                     'kegiatan_id'       => $kegiatan->id,
-                    'nama_file'         => $foto->getClientOriginalName(),
-                    'path_file'         => $path,
-                    'tipe_file'         => 'image',
                     'judul_file'        => pathinfo($foto->getClientOriginalName(), PATHINFO_FILENAME),
-                    'deskripsi_meta'    => null,
                     'visibility_status' => 'public',
-                    'status_arsip'      => 'aktif',
                 ]);
             }
         }
@@ -317,16 +338,10 @@ class KegiatanController extends Controller
         // Upload dokumen kegiatan
         if ($request->hasFile('dokumen_kegiatan')) {
             foreach ($request->file('dokumen_kegiatan') as $doc) {
-                $path = $doc->store('kegiatan/dokumen', 'public');
-                RepoMulmed::create([
+                $this->repoMulmedService->upload($doc, [
                     'kegiatan_id'       => $kegiatan->id,
-                    'nama_file'         => $doc->getClientOriginalName(),
-                    'path_file'         => $path,
-                    'tipe_file'         => 'document',
                     'judul_file'        => pathinfo($doc->getClientOriginalName(), PATHINFO_FILENAME),
-                    'deskripsi_meta'    => null,
                     'visibility_status' => 'public',
-                    'status_arsip'      => 'aktif',
                 ]);
             }
         }

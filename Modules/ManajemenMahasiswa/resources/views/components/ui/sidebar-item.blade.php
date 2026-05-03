@@ -5,7 +5,8 @@
 @endphp
 
 <a href="{{ $route }}"
-   class="nav-link-item {{ $isActive ? 'active' : '' }}">
+   class="nav-link-item {{ $isActive ? 'active' : '' }}"
+   :class="{ 'justify-content-center': !sidebarOpen }">
     <span class="nav-icon d-inline-flex">{!! $iconSlot ?? $icon !!}</span>
-    <span class="nav-label">{{ $slot->isNotEmpty() ? $slot : $label }}</span>
+    <span class="nav-label" x-show="sidebarOpen">{{ $slot->isNotEmpty() ? $slot : $label }}</span>
 </a>
