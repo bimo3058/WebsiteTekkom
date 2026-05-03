@@ -260,6 +260,23 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     Route::put('/{id}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'update'])
                         ->name('update')->where('id', '[0-9]+');
                 });
+
+                // Riwayat kegiatan & prestasi alumni — admin only (tambahkan role di sini jika diperlukan)
+                Route::middleware('role:superadmin,admin,admin_kemahasiswaan')
+                    ->group(function () {
+                    // Riwayat kegiatan
+                    Route::post('/{id}/riwayat', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'storeRiwayat'])
+                        ->name('riwayat.store')->where('id', '[0-9]+');
+                    Route::put('/riwayat/{riwayatId}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'updateRiwayat'])
+                        ->name('riwayat.update')->where('riwayatId', '[0-9]+');
+                    Route::delete('/riwayat/{riwayatId}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'destroyRiwayat'])
+                        ->name('riwayat.destroy')->where('riwayatId', '[0-9]+');
+                    // Prestasi
+                    Route::post('/{id}/prestasi', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'storePrestasi'])
+                        ->name('prestasi.store')->where('id', '[0-9]+');
+                    Route::delete('/prestasi/{prestasiId}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'destroyPrestasi'])
+                        ->name('prestasi.destroy')->where('prestasiId', '[0-9]+');
+                });
             });
         });
 

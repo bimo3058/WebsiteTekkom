@@ -3,11 +3,15 @@
 namespace Modules\ManajemenMahasiswa\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Modules\ManajemenMahasiswa\Models\Alumni;
+use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
+use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
 use Modules\ManajemenMahasiswa\Services\AlumniService;
 
 class DirektoriAlumniController extends Controller
@@ -103,6 +107,153 @@ class DirektoriAlumniController extends Controller
             }
         }
         return false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Permission Helpers
+    // — Pisahkan "siapa yang bisa lihat" vs "siapa yang bisa kelola"
+    //   agar mudah diperluas tanpa menyentuh logika view.
+    // -------------------------------------------------------------------------
+
+    /**
+     * Role yang bisa MELIHAT riwayat kegiatan & prestasi alumni.
+     * Tambahkan role baru di sini jika diperlukan.
+     */
+    private function canSeeHistory(): bool
+    {
+        return $this->hasRole(
+            'superadmin',
+            'admin',
+            'admin_kemahasiswaan',
+            'gpm',
+            'dosen',
+            'dosen_koordinator',
+            'pengurus_himpunan'
+        );
+    }
+
+    /**
+     * Role yang bisa MENGELOLA (tambah/edit/hapus) riwayat kegiatan & prestasi alumni.
+     * Tambahkan role baru di sini jika diperlukan.
+     */
+    private function canManageHistory(): bool
+    {
+        return $this->hasRole(
+            'superadmin',
+            'admin',
+            'admin_kemahasiswaan'
+            // Tambahkan role lain di sini jika suatu saat dibutuhkan:
+            // 'gpm',
+            // 'pengurus_himpunan',
+        );
+    }
+
+    // -------------------------------------------------------------------------
+    // Riwayat Kegiatan — Merged Build
+    // — Menggabungkan 3 sumber: manual (mk_riwayat_kegiatan approved) +
+    //   otomatis dari ketua pelaksana + otomatis dari panitia kegiatan.
+    // -------------------------------------------------------------------------
+
+    /**
+     * Bangun koleksi riwayat kegiatan unified untuk satu user.
+     * Sama persis dengan logika di DirektoriMahasiswaController;
+     * jika perlu refactor ke shared service, pindahkan method ini.
+     *
+     * @param int $userId  — users.id (bukan students.id)
+     */
+    private function buildMergedRiwayat(int $userId): Collection
+    {
+        // 1. Resolve students.id dari user_id
+        $student = Student::where('user_id', $userId)->first();
+
+        if (!$student) {
+            return collect();
+        }
+
+        $studentId = $student->id;
+
+        // 2. Riwayat manual yang sudah disetujui
+        $riwayatManual = RiwayatKegiatan::with('kegiatan')
+            ->where('student_id', $studentId)
+            ->where('verification_status', 'approved')
+            ->get();
+
+        // 3. Sebagai ketua pelaksana
+        $kegiatanAsKetua = Kegiatan::where('ketua_pelaksana_id', $studentId)->get();
+
+        // 4. Sebagai panitia (via pivot)
+        $kegiatanAsPanitia = Kegiatan::whereHas('panitia', fn($q) => $q->where('students.id', $studentId))
+            ->with(['panitia' => fn($q) => $q->where('students.id', $studentId)])
+            ->get();
+
+        // 5. ID yang sudah dicakup riwayat manual
+        $existingKegiatanIds = $riwayatManual->pluck('kegiatan_id')->filter()->toArray();
+
+        // 6. Auto-riwayat dari ketua (yang belum ada di manual)
+        $autoRiwayat = $kegiatanAsKetua
+            ->filter(fn($kg) => !in_array($kg->id, $existingKegiatanIds))
+            ->map(function ($kg) use ($studentId) {
+                $item = new \stdClass();
+                $item->id                    = null;
+                $item->student_id            = $studentId;
+                $item->kegiatan_id           = $kg->id;
+                $item->peran                 = 'ketua';
+                $item->peran_manual          = null;
+                $item->nama_kegiatan_manual  = null;
+                $item->tanggal_kegiatan      = null;
+                $item->kegiatan              = $kg;
+                $item->is_auto               = true;
+                $item->created_at            = $kg->created_at;
+                $item->updated_at            = $kg->updated_at;
+                return $item;
+            });
+
+        // 7. ID yang sudah dicakup manual + ketua
+        $coveredByKetua = $autoRiwayat->pluck('kegiatan_id')->toArray();
+        $allCoveredIds  = array_merge($existingKegiatanIds, $coveredByKetua);
+
+        // 8. Auto-riwayat dari panitia (yang belum dicakup)
+        $autoPanitia = $kegiatanAsPanitia
+            ->filter(fn($kg) => !in_array($kg->id, $allCoveredIds))
+            ->map(function ($kg) use ($studentId) {
+                $item = new \stdClass();
+                $item->id                    = null;
+                $item->student_id            = $studentId;
+                $item->kegiatan_id           = $kg->id;
+
+                $peran         = 'panitia';
+                $panitiaCurrent = $kg->panitia->first();
+                if ($panitiaCurrent && $panitiaCurrent->pivot->peran) {
+                    $peran = $panitiaCurrent->pivot->peran;
+                }
+                $item->peran                = $peran;
+                $item->peran_manual         = null;
+                $item->nama_kegiatan_manual = null;
+                $item->tanggal_kegiatan     = null;
+                $item->kegiatan             = $kg;
+                $item->is_auto              = true;
+                $item->created_at           = $kg->created_at;
+                $item->updated_at           = $kg->updated_at;
+                return $item;
+            });
+
+        // 9. Tandai riwayat manual
+        $riwayatManual->each(fn($r) => $r->is_auto = false);
+
+        // 10. Gabungkan & urutkan terbaru dulu
+        return $riwayatManual
+            ->concat($autoRiwayat)
+            ->concat($autoPanitia)
+            ->sortByDesc(function ($item) {
+                $kegiatan = is_object($item->kegiatan ?? null) ? $item->kegiatan : null;
+                if ($kegiatan && $kegiatan->tanggal_mulai) {
+                    return $kegiatan->tanggal_mulai;
+                }
+                if (isset($item->tanggal_kegiatan) && $item->tanggal_kegiatan) {
+                    return $item->tanggal_kegiatan;
+                }
+                return $item->created_at;
+            })->values();
     }
 
     // -------------------------------------------------------------------------
@@ -239,11 +390,40 @@ class DirektoriAlumniController extends Controller
     {
         try {
             $alumni = $this->withRetry(fn() => $this->alumniService->findById($id));
-            $isAdmin = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
-            $canGenerateCv = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan');
 
-            return view('manajemenmahasiswa::direktori.alumni-show', compact('alumni', 'isAdmin', 'canGenerateCv'))
-                ->with('layout', $this->resolveLayout());
+            // Ambil data kemahasiswaan (untuk prestasi) via user_id
+            $kemahasiswaan = $this->withRetry(
+                fn() => Kemahasiswaan::with([
+                    'prestasi' => fn($q) => $q->where('verification_status', 'approved')->orderByDesc('tanggal'),
+                ])->where('user_id', $alumni->user_id)->first()
+            );
+
+            // Ambil riwayat kegiatan (merged: manual + otomatis)
+            $riwayatKegiatan = $this->withRetry(
+                fn() => $this->buildMergedRiwayat($alumni->user_id)
+            );
+
+            // Semua kegiatan untuk dropdown tambah riwayat manual
+            $semuaKegiatan = $this->withRetry(
+                fn() => Kegiatan::orderBy('judul')->get()
+            );
+
+            // Permission flags — mudah diperluas lewat canSeeHistory() / canManageHistory()
+            $isAdmin         = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+            $canGenerateCv   = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan');
+            $canSeeHistory   = $this->canSeeHistory();
+            $canManageHistory = $this->canManageHistory();
+
+            return view('manajemenmahasiswa::direktori.alumni-show', compact(
+                'alumni',
+                'kemahasiswaan',
+                'riwayatKegiatan',
+                'semuaKegiatan',
+                'isAdmin',
+                'canGenerateCv',
+                'canSeeHistory',
+                'canManageHistory',
+            ))->with('layout', $this->resolveLayout());
 
         } catch (\Throwable) {
             return redirect()
@@ -398,6 +578,144 @@ class DirektoriAlumniController extends Controller
         return redirect()
             ->route('manajemenmahasiswa.direktori.alumni.show', $id)
             ->with('success', 'Data alumni berhasil diperbarui.');
+    }
+
+    // -------------------------------------------------------------------------
+    // Riwayat Kegiatan — Store (tambah manual)
+    // -------------------------------------------------------------------------
+
+    public function storeRiwayat(Request $request, int $id)
+    {
+        $alumni = Alumni::findOrFail($id);
+        $student = Student::where('user_id', $alumni->user_id)->first();
+        abort_if(!$student, 404, 'Data student tidak ditemukan untuk alumni ini.');
+
+        $mode = $request->input('input_mode', 'dropdown');
+
+        if ($mode === 'manual') {
+            $request->validate([
+                'nama_kegiatan_manual' => 'required|string|max:255',
+                'peran_manual'         => 'required|string|max:255',
+                'tanggal_kegiatan'     => 'nullable|date',
+            ]);
+
+            RiwayatKegiatan::create([
+                'student_id'           => $student->id,
+                'kegiatan_id'          => null,
+                'peran'                => null,
+                'nama_kegiatan_manual' => $request->nama_kegiatan_manual,
+                'peran_manual'         => $request->peran_manual,
+                'tanggal_kegiatan'     => $request->tanggal_kegiatan,
+            ]);
+        } else {
+            $request->validate([
+                'kegiatan_id' => 'required|exists:mk_kegiatan,id',
+                'peran'       => 'required|in:' . implode(',', RiwayatKegiatan::PERAN_LIST),
+            ]);
+
+            RiwayatKegiatan::create([
+                'student_id'  => $student->id,
+                'kegiatan_id' => $request->kegiatan_id,
+                'peran'       => $request->peran,
+            ]);
+        }
+
+        return redirect()
+            ->route('manajemenmahasiswa.direktori.alumni.show', $id)
+            ->with('success', 'Riwayat kegiatan berhasil ditambahkan.');
+    }
+
+    // -------------------------------------------------------------------------
+    // Riwayat Kegiatan — Update
+    // -------------------------------------------------------------------------
+
+    public function updateRiwayat(Request $request, int $riwayatId)
+    {
+        $request->validate([
+            'kegiatan_id' => 'required|exists:mk_kegiatan,id',
+            'peran'       => 'required|in:' . implode(',', RiwayatKegiatan::PERAN_LIST),
+        ]);
+
+        $riwayat = RiwayatKegiatan::findOrFail($riwayatId);
+        $riwayat->update($request->only(['kegiatan_id', 'peran']));
+
+        // Cari alumni_id untuk redirect — lewat student → user → alumni
+        $student = Student::find($riwayat->student_id);
+        $alumni  = $student ? Alumni::where('user_id', $student->user_id)->first() : null;
+
+        return redirect()
+            ->route('manajemenmahasiswa.direktori.alumni.show', $alumni?->id ?? 0)
+            ->with('success', 'Riwayat kegiatan berhasil diperbarui.');
+    }
+
+    // -------------------------------------------------------------------------
+    // Riwayat Kegiatan — Destroy
+    // -------------------------------------------------------------------------
+
+    public function destroyRiwayat(int $riwayatId)
+    {
+        $riwayat = RiwayatKegiatan::findOrFail($riwayatId);
+
+        $student = Student::find($riwayat->student_id);
+        $alumni  = $student ? Alumni::where('user_id', $student->user_id)->first() : null;
+
+        $riwayat->delete();
+
+        return redirect()
+            ->route('manajemenmahasiswa.direktori.alumni.show', $alumni?->id ?? 0)
+            ->with('success', 'Riwayat kegiatan berhasil dihapus.');
+    }
+
+    // -------------------------------------------------------------------------
+    // Prestasi — Store
+    // -------------------------------------------------------------------------
+
+    public function storePrestasi(Request $request, int $id)
+    {
+        $request->validate([
+            'nama_prestasi' => 'required|string|max:255',
+            'tingkat'       => 'required|in:' . implode(',', \Modules\ManajemenMahasiswa\Models\Prestasi::TINGKAT_LIST),
+            'tanggal'       => 'nullable|date',
+        ]);
+
+        $alumni = Alumni::findOrFail($id);
+
+        // Prestasi terhubung ke Kemahasiswaan, bukan Alumni langsung
+        $kemahasiswaan = Kemahasiswaan::where('user_id', $alumni->user_id)->first();
+        abort_if(!$kemahasiswaan, 404, 'Data kemahasiswaan tidak ditemukan untuk alumni ini.');
+
+        // Ditambah admin → langsung approved (bukan self-report mahasiswa)
+        $kemahasiswaan->prestasi()->create([
+            'nama_prestasi'       => $request->nama_prestasi,
+            'tingkat'             => $request->tingkat,
+            'tanggal'             => $request->tanggal,
+            'verification_status' => \Modules\ManajemenMahasiswa\Models\Prestasi::VERIF_APPROVED,
+            'verified_by'         => auth()->id(),
+            'verified_at'         => now(),
+        ]);
+
+        return redirect()
+            ->route('manajemenmahasiswa.direktori.alumni.show', $id)
+            ->with('success', 'Prestasi berhasil ditambahkan.');
+    }
+
+    // -------------------------------------------------------------------------
+    // Prestasi — Destroy
+    // -------------------------------------------------------------------------
+
+    public function destroyPrestasi(int $prestasiId)
+    {
+        $prestasi = \Modules\ManajemenMahasiswa\Models\Prestasi::findOrFail($prestasiId);
+
+        // Resolve alumni_id untuk redirect — lewat kemahasiswaan → user → alumni
+        $kemahasiswaan = Kemahasiswaan::find($prestasi->kemahasiswaan_id);
+        $alumni = $kemahasiswaan ? Alumni::where('user_id', $kemahasiswaan->user_id)->first() : null;
+
+        $prestasi->delete();
+
+        return redirect()
+            ->route('manajemenmahasiswa.direktori.alumni.show', $alumni?->id ?? 0)
+            ->with('success', 'Prestasi berhasil dihapus.');
     }
 
     // -------------------------------------------------------------------------
