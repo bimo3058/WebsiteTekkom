@@ -13,12 +13,13 @@ class KompreJawaban extends Model
     protected $table = 'bs_kompre_jawaban';
     
     protected $fillable = [
-        'kompre_session_id', 'pertanyaan_id', 'jawaban_dipilih', 'urutan_soal', 'kesulitan_now', 'is_benar_now', 'urutan_opsi'
+        'kompre_session_id', 'pertanyaan_id', 'jawaban_dipilih', 'urutan_soal', 'kesulitan_now', 'is_benar_now', 'urutan_opsi', 'is_ragu'
     ];
 
     protected $casts = [
         'urutan_opsi' => 'array',
-        'is_benar_now' => 'boolean'
+        'is_benar_now' => 'boolean',
+        'is_ragu' => 'boolean'
     ];
 
     public function session()
@@ -32,6 +33,14 @@ class KompreJawaban extends Model
     }
 
     public function jawaban()
+    {
+        return $this->belongsTo(Jawaban::class, 'jawaban_dipilih');
+    }
+
+    /**
+     * Alias untuk jawaban() — digunakan oleh CbtEngineController::finish()
+     */
+    public function opsiTerpilih()
     {
         return $this->belongsTo(Jawaban::class, 'jawaban_dipilih');
     }

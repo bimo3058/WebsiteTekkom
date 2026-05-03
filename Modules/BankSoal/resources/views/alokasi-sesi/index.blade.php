@@ -46,7 +46,7 @@
 
                     <!-- Trigger Button -->
                     <button type="button" @click="toggle()"
-                            class="group inline-flex items-center gap-2.5 pl-4 pr-3 py-2.5 rounded-xl text-[13px] font-semibold border transition-all duration-200 shadow-sm
+                            class="group inline-flex items-center gap-2.5 pl-4 pr-3 py-2 rounded-lg text-[13px] font-semibold border transition-all duration-200 shadow-sm
                                    {{ $selectedPeriode
                                        ? 'bg-white text-slate-700 border-slate-300 hover:border-blue-400 hover:shadow-md'
                                        : 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700' }}">
@@ -133,13 +133,16 @@
         </div>
         @else
         <!-- Empty State: no periode selected -->
-        <div class="mb-6 p-4 bg-yellow-50 border border-yellow-100 rounded-xl flex items-start gap-3">
-            <svg class="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            <p class="text-sm text-yellow-800">Pilih <strong>Periode Ujian</strong> di atas untuk memunculkan daftar sesi ujian.</p>
+        <div class="mb-6 bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex gap-3">
+            <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <p class="text-sm text-blue-800">
+                Data sesi ujian akan tampil setelah Anda memilih <strong>Periode Ujian</strong> di atas.
+            </p>
         </div>
         @endif
 
-        @if($activePeriode)
         <!-- Table Jadwal -->
         <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
             <!-- Header Table Actions -->
@@ -148,7 +151,7 @@
                     <h2 class="font-bold text-slate-800">Daftar Sesi Ujian</h2>
 
                 </div>
-                <button @click="openModal = true" @if(!$selectedPeriode) disabled @endif class="inline-flex items-center justify-center gap-2 bg-primary-500 hover:bg-primary-400 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-xl px-4 py-2 text-white font-semibold text-[13px] shadow-sm focus:outline-none focus:ring-2 focus:ring-primary-500/30">
+                <button @click="openModal = true" @if(!$selectedPeriode) disabled @endif class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-xl px-4 py-2 text-white font-semibold text-[13px] shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600/30">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                     Tambah Sesi
                 </button>
@@ -205,17 +208,16 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="4" class="px-6 py-16 text-center bg-white">
+                            <td colspan="4" class="px-6 py-16 text-center bg-white border-b-0">
                                 <div class="flex flex-col items-center justify-center">
                                     <div class="w-12 h-12 bg-slate-50 border border-slate-100 flex items-center justify-center rounded-full mb-3">
                                         <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </div>
                                     <h3 class="text-[13px] font-semibold text-slate-700">Belum Ada Sesi Ujian</h3>
-                                    <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">Buat sesi pertama untuk mulai mengalokasikan jadwal peserta.</p>
-                                    <button @click="openModal = true" class="mt-4 inline-flex items-center gap-1.5 px-4 py-2 bg-primary-500 hover:bg-primary-400 text-white text-xs font-bold rounded-lg transition-colors shadow-sm">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                                        Tambah Sesi Pertama
-                                    </button>
+                                    <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
+                                        {{ $selectedPeriode ? 'Buat sesi pertama untuk mulai mengalokasikan jadwal peserta.' : 'Pilih periode ujian di atas untuk menampilkan sesi ujian.' }}
+                                    </p>
+
                                 </div>
                             </td>
                         </tr>
@@ -224,7 +226,6 @@
                 </table>
             </div>
         </div>
-        @endif
 
         @if($activePeriode)
             @php
