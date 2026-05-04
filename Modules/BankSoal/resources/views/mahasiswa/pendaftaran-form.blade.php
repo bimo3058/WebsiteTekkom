@@ -55,23 +55,23 @@
             <div class="grid grid-cols-2 gap-x-8 gap-y-5 border-t border-slate-200 pt-5">
                 <div>
                     <h4 class="font-bold text-slate-900 text-[10px] tracking-widest uppercase mb-1">Pelaksanaan</h4>
-                    <p class="text-xs font-mono font-medium text-slate-700">
+                    <p class="text-xs font-medium text-slate-700">
                         {{ $activePeriode->tanggal_mulai_ujian ? \Carbon\Carbon::parse($activePeriode->tanggal_mulai_ujian)->translatedFormat('d M Y') : '-' }}
-                        â€”
+                        &ndash;
                         {{ $activePeriode->tanggal_selesai_ujian ? \Carbon\Carbon::parse($activePeriode->tanggal_selesai_ujian)->translatedFormat('d M Y') : '-' }}
                     </p>
                 </div>
                 <div>
                     <h4 class="font-bold text-slate-900 text-[10px] tracking-widest uppercase mb-1">Durasi</h4>
-                    <p class="text-xs font-mono font-medium text-slate-700">100 Menit</p>
+                    <p class="text-xs font-medium text-slate-700">100 Menit</p>
                 </div>
                 <div>
                     <h4 class="font-bold text-slate-900 text-[10px] tracking-widest uppercase mb-1">Lokasi</h4>
-                    <p class="text-xs font-mono font-medium text-slate-700">Lab. Jaringan Komputer</p>
+                    <p class="text-xs font-medium text-slate-700">Lab. Jaringan Komputer</p>
                 </div>
                 <div>
                     <h4 class="font-bold text-slate-900 text-[10px] tracking-widest uppercase mb-1">Syarat</h4>
-                    <p class="text-xs font-mono font-medium text-slate-700">Minimal Semester 7</p>
+                    <p class="text-xs font-medium text-slate-700">Minimal Semester 7</p>
                 </div>
             </div>
         </div>
@@ -183,7 +183,7 @@
                     </div>
 
                     <button type="submit"
-                        class="w-full h-12 inline-flex items-center justify-center bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold tracking-widest uppercase transition-colors">
+                        class="w-full h-12 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold tracking-widest uppercase transition-colors rounded-xl">
                         Submit Pendaftaran &rarr;
                     </button>
                 </form>

@@ -1,331 +1,387 @@
 <!DOCTYPE html>
-<html lang="id" class="h-full bg-slate-50 antialiased">
+<html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ujian Komprehensif - CBT Engine</title>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Ujian Komprehensif - CBT</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     <style>
-        /* Mencegah seleksi teks dan klik kanan */
         body {
             user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
+            font-family: 'Inter', sans-serif;
+            background-color: #eeeeee;
         }
-        /* Style scrollbar khusus grid navigasi */
-        .grid-scroll::-webkit-scrollbar { width: 6px; }
-        .grid-scroll::-webkit-scrollbar-track { background: transparent; }
-        .grid-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .diagonal-hash {
+            background-image: repeating-linear-gradient(45deg, #e2e2e2 0px, #e2e2e2 2px, transparent 2px, transparent 8px);
+        }
+        .diagonal-hash-active {
+            background-image: repeating-linear-gradient(45deg, #18181b 0px, #18181b 2px, transparent 2px, transparent 8px);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Lock everything into a 16:9 container */
+        .viewport-container {
+            aspect-ratio: 16 / 9;
+            max-height: 100vh;
+            max-width: 177.78vh; /* 100 * 16/9 */
+            margin: auto;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
     </style>
 </head>
-<body class="h-full flex flex-col overflow-hidden" oncontextmenu="return false;">
+<body class="text-slate-900 overflow-hidden flex items-center justify-center min-h-screen" oncontextmenu="return false;">
+    <div x-data="cbtEngine()" x-init="initEngine()" class="viewport-container bg-white border-x-2 border-black shadow-2xl relative w-full h-full">
 
-<div x-data="cbtEngine()" x-init="initEngine()" class="h-full flex flex-col relative">
-
-    <!-- Header / Topbar -->
-    <header class="bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between shrink-0 shadow-sm z-10">
-        <div class="flex items-center gap-4">
-            <div class="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold shadow-md">
-                CBT
-            </div>
-            <div>
-                <h1 class="font-bold text-slate-900 leading-tight">{{ $session->title }}</h1>
-                <p class="text-xs text-slate-500 font-medium">{{ auth()->user()->name }} &bull; {{ auth()->user()->nim ?? 'NIM' }}</p>
-            </div>
-        </div>
-        
-        <div class="flex items-center gap-6">
-            <!-- Indikator Ragu-ragu -->
-            <label class="flex items-center gap-2 cursor-pointer bg-amber-50 px-4 py-2 rounded-lg border border-amber-200 hover:bg-amber-100 transition-colors">
-                <input type="checkbox" x-model="isRagu" @change="toggleRagu()" class="w-4 h-4 text-amber-500 border-amber-300 rounded focus:ring-amber-500">
-                <span class="text-sm font-semibold text-amber-700">Ragu-ragu</span>
-            </label>
-
-            <!-- Timer -->
-            <div class="flex items-center gap-3 bg-slate-900 text-white px-5 py-2.5 rounded-xl shadow-inner">
-                <svg class="w-5 h-5 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <div class="font-mono text-xl font-bold tracking-wider" x-text="formattedTime" :class="timeLeft < 300 ? 'text-red-400 animate-pulse' : ''">
-                    --:--:--
+        <!-- TopAppBar -->
+        <header class="w-full z-50 flex justify-between items-center py-4 bg-white border-b-2 border-black px-10 shrink-0">
+            <div class="w-full flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <div class="text-xl font-black border-2 border-black px-2 py-1 uppercase tracking-widest">CBT</div>
+                    <div class="text-sm font-bold uppercase tracking-widest opacity-60 hidden md:block">
+                        {{ $session->title }}
+                    </div>
+                </div>
+                <div class="flex items-center gap-8">
+                    <div class="flex items-center gap-2 border-2 border-black px-4 py-2 text-lg font-black bg-black text-white" :class="timeLeft < 300 ? 'bg-red-600 text-white animate-pulse' : 'bg-black text-white'">
+                        <span class="material-symbols-outlined">timer</span>
+                        <span x-text="formattedTime">--:--:--</span>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-right">
+                            <p class="text-xs font-bold uppercase">Student: {{ auth()->user()->name }}</p>
+                            <p class="text-[10px] opacity-60 font-bold tracking-wider">{{ auth()->user()->nim ?? 'NIM' }}</p>
+                        </div>
+                        <span class="material-symbols-outlined text-4xl">account_circle</span>
+                    </div>
                 </div>
             </div>
-        </div>
-    </header>
+        </header>
 
-    <!-- Main Content Area -->
-    <main class="flex-1 flex overflow-hidden">
-        
-        <!-- Left Side: Soal & Opsi (70%) -->
-        <div class="flex-1 bg-white overflow-y-auto px-8 py-8 relative">
-            
-            <template x-if="currentSoal">
-                <div class="max-w-4xl mx-auto pb-20">
+        <div class="flex-grow flex overflow-hidden">
+            <!-- Main Content Area (75%) -->
+            <main class="w-3/4 px-10 py-8 overflow-y-auto">
+                <template x-if="currentSoal">
+                    <div class="border-2 border-black p-8 bg-white min-h-full flex flex-col">
+                        <div class="flex justify-between items-start mb-8">
+                            <h1 class="text-3xl font-black uppercase tracking-tight">Soal No. <span x-text="currentIndex + 1"></span></h1>
+                            <div class="border border-black bg-black text-white px-3 py-1 text-xs font-bold tracking-widest uppercase">SOAL UJIAN</div>
+                        </div>
+                        
+                        <div class="mb-10 text-lg font-medium leading-relaxed prose max-w-none prose-p:my-2" x-html="currentSoal.soal">
+                            <!-- Konten soal dirender di sini -->
+                        </div>
+
+                        <!-- Multiple Choice Options -->
+                        <div class="space-y-4 mt-auto">
+                            <template x-for="(opsi, index) in currentSoal.opsi" :key="opsi.id">
+                                <label class="flex items-center gap-4 p-4 border-2 transition-none cursor-pointer group"
+                                       :class="currentJawaban == opsi.id ? 'border-black bg-zinc-100' : 'border-transparent ring-1 ring-black hover:bg-zinc-50'">
+                                    
+                                    <input class="w-6 h-6 border-2 border-black text-black focus:ring-0" 
+                                           :name="'soal_'+currentSoal.id" 
+                                           type="radio" 
+                                           :value="opsi.id"
+                                           x-model="currentJawaban" 
+                                           @change="saveAnswer(opsi.id)"/>
+                                    
+                                    <span class="font-bold text-lg w-6" x-text="String.fromCharCode(65 + index) + '.'"></span>
+                                    <div class="font-medium prose max-w-none prose-p:my-0" x-html="opsi.teks"></div>
+                                </label>
+                            </template>
+                        </div>
+                    </div>
+                </template>
+            </main>
+
+            <!-- SideNavBar (25%) -->
+            <aside class="w-1/4 pr-10 py-8 overflow-hidden">
+                <div class="bg-zinc-50 border-2 border-black h-full flex flex-col">
+                    <div class="p-6 border-b-2 border-black bg-white">
+                        <h2 class="text-base font-black uppercase tracking-tight">Navigasi Soal (<span x-text="soals.length"></span>)</h2>
+                        <div class="flex flex-wrap gap-x-4 gap-y-2 mt-4">
+                            <div class="flex items-center gap-2 text-[10px] font-bold uppercase"><div class="w-3 h-3 bg-zinc-800 border border-black"></div> Terjawab</div>
+                            <div class="flex items-center gap-2 text-[10px] font-bold uppercase"><div class="w-3 h-3 diagonal-hash border border-black"></div> Ragu</div>
+                            <div class="flex items-center gap-2 text-[10px] font-bold uppercase"><div class="w-3 h-3 bg-white border border-black"></div> Kosong</div>
+                        </div>
+                    </div>
                     
-                    <!-- Nomor Soal -->
-                    <div class="flex items-center gap-3 mb-6">
-                        <div class="bg-blue-50 text-blue-700 px-4 py-1.5 rounded-lg font-bold border border-blue-100">
-                            Soal No. <span x-text="currentIndex + 1"></span>
+                    <div class="p-5 overflow-y-auto flex-grow scrollbar-hide">
+                        <div class="grid grid-cols-5 xl:grid-cols-5 lg:grid-cols-4 gap-1.5">
+                            <template x-for="(soal, idx) in soals" :key="soal.id">
+                                <div @click="goToSoal(idx)" 
+                                     :class="{
+                                         'border-[3px] border-black scale-110 z-10': currentIndex === idx,
+                                         'border border-black': currentIndex !== idx,
+                                         'diagonal-hash': soal.ragu_ragu && !soal.jawaban_terpilih,
+                                         'diagonal-hash-active': soal.ragu_ragu && soal.jawaban_terpilih,
+                                         'bg-zinc-800 text-white': !soal.ragu_ragu && soal.jawaban_terpilih,
+                                         'bg-white text-black': !soal.ragu_ragu && !soal.jawaban_terpilih
+                                     }"
+                                     class="aspect-square flex items-center justify-center font-bold text-xs cursor-pointer transition-transform hover:scale-105 active:scale-95" 
+                                     :title="'Soal ' + (idx + 1)">
+                                    <span x-text="idx + 1"></span>
+                                </div>
+                            </template>
                         </div>
                     </div>
 
-                    <!-- Teks Soal -->
-                    <div class="prose max-w-none text-slate-800 text-lg mb-10 leading-relaxed font-medium" x-html="currentSoal.soal">
-                        <!-- Konten soal dirender di sini (Rich Text) -->
-                    </div>
-
-                    <!-- Pilihan Ganda -->
-                    <div class="space-y-4">
-                        <template x-for="(opsi, index) in currentSoal.opsi" :key="opsi.id">
-                            <label class="block relative cursor-pointer group">
-                                <input type="radio" 
-                                       :name="'soal_'+currentSoal.id" 
-                                       :value="opsi.id" 
-                                       x-model="currentJawaban"
-                                       @change="saveAnswer(opsi.id)"
-                                       class="peer sr-only">
-                                
-                                <div class="flex p-4 bg-white border-2 border-slate-200 rounded-xl hover:bg-slate-50 hover:border-slate-300 transition-all peer-checked:border-blue-600 peer-checked:bg-blue-50 peer-checked:shadow-md items-start gap-4">
-                                    <div class="w-8 h-8 shrink-0 rounded-lg flex items-center justify-center font-bold text-sm bg-slate-100 text-slate-600 peer-checked:bg-blue-600 peer-checked:text-white transition-colors">
-                                        <span x-text="opsi.label"></span>
-                                    </div>
-                                    <div class="pt-1 prose max-w-none text-slate-700 text-base" x-html="opsi.teks"></div>
-                                </div>
-                            </label>
-                        </template>
-                    </div>
-
-                </div>
-            </template>
-
-            <!-- Bottom Navigation Bar (Prev/Next) -->
-            <div class="absolute bottom-0 left-0 right-0 bg-white/90 backdrop-blur-md border-t border-slate-200 p-4 px-8 flex justify-between items-center shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
-                <button @click="prevSoal()" :disabled="currentIndex === 0" class="flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-slate-700 bg-slate-100 hover:bg-slate-200">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
-                    Soal Sebelumnya
-                </button>
-                <button @click="nextSoal()" :disabled="currentIndex === soals.length - 1" class="flex items-center gap-2 px-6 py-2.5 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed text-white bg-blue-600 hover:bg-blue-700 shadow-sm">
-                    Soal Selanjutnya
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-                </button>
-            </div>
-
-        </div>
-
-        <!-- Right Side: Grid Navigasi (30%) -->
-        <div class="w-80 bg-slate-50 border-l border-slate-200 flex flex-col shrink-0 z-10 shadow-[-4px_0_15px_-3px_rgba(0,0,0,0.05)]">
-            <div class="p-5 border-b border-slate-200 bg-white">
-                <h3 class="font-bold text-slate-800">Navigasi Soal</h3>
-                <div class="flex gap-4 mt-3 text-xs font-medium">
-                    <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-sm bg-green-500"></div> Terjawab</div>
-                    <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-sm bg-amber-400"></div> Ragu-ragu</div>
-                    <div class="flex items-center gap-1.5"><div class="w-3 h-3 rounded-sm bg-white border border-slate-300"></div> Kosong</div>
-                </div>
-            </div>
-            
-            <div class="p-5 flex-1 overflow-y-auto grid-scroll">
-                <div class="grid grid-cols-5 gap-2">
-                    <template x-for="(soal, idx) in soals" :key="soal.id">
-                        <button @click="goToSoal(idx)" 
-                                :class="{
-                                    'ring-2 ring-blue-600 ring-offset-1': currentIndex === idx,
-                                    'bg-amber-400 text-white border-transparent': soal.ragu_ragu,
-                                    'bg-green-500 text-white border-transparent': !soal.ragu_ragu && soal.jawaban_terpilih,
-                                    'bg-white text-slate-700 border-slate-300 hover:bg-slate-100': !soal.ragu_ragu && !soal.jawaban_terpilih
-                                }"
-                                class="w-full aspect-square rounded-lg border font-semibold text-sm transition-all flex items-center justify-center">
-                            <span x-text="idx + 1"></span>
+                    <div class="p-6 border-t-2 border-black bg-white">
+                        <button @click="submitExam()" class="w-full bg-red-600 text-white border-2 border-black px-4 py-3 text-sm font-black uppercase tracking-tight hover:bg-red-700 active:translate-y-0.5 transition-none flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined">done_all</span>
+                            Selesaikan Ujian
                         </button>
-                    </template>
+                    </div>
                 </div>
-            </div>
-
-            <div class="p-5 border-t border-slate-200 bg-white">
-                <button @click="submitExam()" class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white rounded-xl font-bold transition-colors shadow-md flex items-center justify-center gap-2">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
-                    Selesaikan Ujian
-                </button>
-            </div>
+            </aside>
         </div>
 
-    </main>
+        <!-- Footer Actions -->
+        <footer class="w-full z-50 flex justify-between items-center px-10 py-5 bg-white border-t-2 border-black shrink-0">
+            <div class="w-full flex justify-between items-center">
+                <button @click="prevSoal()" :disabled="currentIndex === 0" :class="currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:invert active:translate-y-0.5'" class="border-2 border-black px-6 py-2.5 text-sm font-bold uppercase tracking-tight transition-none flex items-center gap-2 bg-white">
+                    <span class="material-symbols-outlined">arrow_back</span>
+                    Prev
+                </button>
+                
+                <button @click="toggleRagu()" :class="isRagu ? 'bg-amber-300' : 'diagonal-hash hover:bg-zinc-200'" class="border-2 border-black px-8 py-2.5 text-sm font-bold uppercase tracking-tight transition-none active:translate-y-0.5 flex items-center gap-2">
+                    <span class="material-symbols-outlined" x-text="isRagu ? 'flag' : 'outlined_flag'">flag</span>
+                    <span x-text="isRagu ? 'Hapus Ragu' : 'Ragu-ragu'"></span>
+                </button>
+                
+                <button @click="nextSoal()" :disabled="currentIndex === soals.length - 1" :class="currentIndex === soals.length - 1 ? 'opacity-50 cursor-not-allowed' : 'hover:invert active:translate-y-0.5'" class="bg-black text-white border-2 border-black px-10 py-2.5 text-sm font-bold uppercase tracking-tight transition-none flex items-center gap-2">
+                    Next
+                    <span class="material-symbols-outlined">arrow_forward</span>
+                </button>
+            </div>
+        </footer>
 
-    <!-- Overlay Loading Auto-Save (Hanya tampil sangat singkat) -->
-    <div x-show="isSaving" x-transition.opacity class="fixed top-6 left-1/2 -translate-x-1/2 bg-slate-900/90 text-white px-4 py-2 rounded-full text-xs font-medium flex items-center gap-2 z-50 shadow-lg">
-        <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-        Menyimpan jawaban...
+        <!-- Overlay Loading Auto-Save -->
+        <div x-show="isSaving" x-transition.opacity class="fixed top-6 left-1/2 -translate-x-1/2 bg-black border-2 border-white text-white px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-3 z-50 shadow-2xl">
+            <span class="material-symbols-outlined animate-spin" style="font-size: 18px;">autorenew</span>
+            Menyimpan...
+        </div>
+
     </div>
 
-</div>
+    <script>
+        // Konfigurasi dari backend
+        const rawSoals = @json($jawabans);
+        const endTimeRaw = "{{ $endTime->toIso8601String() }}";
 
-<script>
-    // Konfigurasi dari backend
-    const rawSoals = @json($jawabans);
-    const endTimeRaw = "{{ $endTime->toIso8601String() }}";
-    
-    // Mencegah Copy Paste
-    document.addEventListener('copy', (e) => { e.preventDefault(); return false; });
-    document.addEventListener('paste', (e) => { e.preventDefault(); return false; });
+        // Mencegah Copy Paste
+        document.addEventListener('copy', (e) => { e.preventDefault(); return false; });
+        document.addEventListener('paste', (e) => { e.preventDefault(); return false; });
 
-    document.addEventListener('alpine:init', () => {
-        Alpine.data('cbtEngine', () => ({
-            soals: rawSoals,
-            currentIndex: 0,
-            endTime: new Date(endTimeRaw).getTime(),
-            timeLeft: 0,
-            formattedTime: '--:--:--',
-            timerInterval: null,
-            isSaving: false,
-            
-            get currentSoal() {
-                return this.soals[this.currentIndex] || null;
-            },
-            
-            get currentJawaban() {
-                return this.currentSoal ? this.currentSoal.jawaban_terpilih : null;
-            },
-            set currentJawaban(val) {
-                if(this.currentSoal) this.currentSoal.jawaban_terpilih = val;
-            },
+        // Anti-Cheat Logging
+        document.addEventListener("visibilitychange", () => {
+            if (document.hidden) {
+                logCheatEvent('tab_switch', 'Peserta berpindah tab browser atau minimize.');
+            }
+        });
 
-            get isRagu() {
-                return this.currentSoal ? this.currentSoal.ragu_ragu : false;
-            },
-            set isRagu(val) {
-                if(this.currentSoal) this.currentSoal.ragu_ragu = val;
-            },
+        window.addEventListener("blur", () => {
+            logCheatEvent('window_blur', 'Jendela ujian kehilangan fokus aplikasi.');
+        });
 
-            initEngine() {
-                this.updateTimer();
-                this.timerInterval = setInterval(() => {
+        async function logCheatEvent(eventType, description) {
+            try {
+                await fetch('{{ route('komprehensif.mahasiswa.engine.log-violation') }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        event_type: eventType,
+                        description: description
+                    })
+                });
+            } catch (e) {
+                console.error('Failed to log cheat event:', e);
+            }
+        }
+
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('cbtEngine', () => ({
+                soals: rawSoals,
+                currentIndex: 0,
+                endTime: new Date(endTimeRaw).getTime(),
+                timeLeft: 0,
+                formattedTime: '--:--:--',
+                timerInterval: null,
+                isSaving: false,
+
+                get currentSoal() {
+                    return this.soals[this.currentIndex] || null;
+                },
+
+                get currentJawaban() {
+                    return this.currentSoal ? this.currentSoal.jawaban_terpilih : null;
+                },
+                set currentJawaban(val) {
+                    if (this.currentSoal) this.currentSoal.jawaban_terpilih = val;
+                },
+
+                get isRagu() {
+                    return this.currentSoal ? this.currentSoal.ragu_ragu : false;
+                },
+                set isRagu(val) {
+                    if (this.currentSoal) this.currentSoal.ragu_ragu = val;
+                },
+
+                initEngine() {
                     this.updateTimer();
-                }, 1000);
+                    this.timerInterval = setInterval(() => {
+                        this.updateTimer();
+                    }, 1000);
 
-                // Disable back button by pushing state forward
-                history.pushState(null, null, location.href);
-                window.onpopstate = function () {
-                    history.go(1);
-                };
-                
-                // Mencegah leave tanpa sengaja
-                window.onbeforeunload = function() {
-                    return "Yakin ingin keluar? Ujian sedang berlangsung.";
-                }
-            },
+                    history.pushState(null, null, location.href);
+                    window.onpopstate = function () {
+                        history.go(1);
+                    };
 
-            updateTimer() {
-                const now = new Date().getTime();
-                const distance = this.endTime - now;
-
-                if (distance <= 0) {
-                    clearInterval(this.timerInterval);
-                    this.formattedTime = "00:00:00";
-                    this.timeLeft = 0;
-                    this.forceSubmitTimeUp();
-                    return;
-                }
-
-                this.timeLeft = Math.floor(distance / 1000);
-                const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
-                const seconds = Math.floor((distance % (1000 * 60)) / 1000);
-
-                this.formattedTime = 
-                    String(hours).padStart(2, '0') + ":" + 
-                    String(minutes).padStart(2, '0') + ":" + 
-                    String(seconds).padStart(2, '0');
-            },
-
-            goToSoal(index) {
-                if (index >= 0 && index < this.soals.length) {
-                    this.currentIndex = index;
-                }
-            },
-
-            nextSoal() {
-                this.goToSoal(this.currentIndex + 1);
-            },
-
-            prevSoal() {
-                this.goToSoal(this.currentIndex - 1);
-            },
-
-            async saveAnswer(opsiId) {
-                this.isSaving = true;
-                const kompreJawabanId = this.currentSoal.id;
-                
-                try {
-                    const response = await fetch("{{ route('komprehensif.mahasiswa.engine.save-answer') }}", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            jawaban_id: kompreJawabanId,
-                            opsi_terpilih: opsiId
-                        })
-                    });
-                    const data = await response.json();
-                    if (!data.success) {
-                        alert('Gagal menyimpan jawaban. Periksa koneksi internet Anda!');
+                    window.onbeforeunload = function () {
+                        return "Yakin ingin keluar? Ujian sedang berlangsung.";
                     }
-                } catch (error) {
-                    console.error('Save error:', error);
-                } finally {
-                    setTimeout(() => { this.isSaving = false; }, 300);
-                }
-            },
+                },
 
-            async toggleRagu() {
-                this.isSaving = true;
-                const kompreJawabanId = this.currentSoal.id;
-                const statusRagu = this.isRagu;
+                updateTimer() {
+                    const now = new Date().getTime();
+                    const distance = this.endTime - now;
 
-                try {
-                    const response = await fetch("{{ route('komprehensif.mahasiswa.engine.toggle-ragu') }}", {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            jawaban_id: kompreJawabanId,
-                            is_ragu: statusRagu
-                        })
-                    });
-                } catch (error) {
-                    console.error('Save error:', error);
-                } finally {
-                    setTimeout(() => { this.isSaving = false; }, 300);
-                }
-            },
+                    if (distance <= 0) {
+                        clearInterval(this.timerInterval);
+                        this.formattedTime = "00:00:00";
+                        this.timeLeft = 0;
+                        this.forceSubmitTimeUp();
+                        return;
+                    }
 
-            submitExam() {
-                const unAnswered = this.soals.filter(s => !s.jawaban_terpilih).length;
-                let msg = 'Apakah Anda yakin ingin menyelesaikan ujian ini?';
-                if (unAnswered > 0) {
-                    msg = `PERINGATAN: Masih ada ${unAnswered} soal yang BELUM dijawab. Yakin ingin mengakhiri?`;
-                }
+                    this.timeLeft = Math.floor(distance / 1000);
+                    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
 
-                if (confirm(msg)) {
-                    window.onbeforeunload = null; // lepas pengunci
+                    this.formattedTime =
+                        String(hours).padStart(2, '0') + ":" +
+                        String(minutes).padStart(2, '0') + ":" +
+                        String(seconds).padStart(2, '0');
+                },
+
+                goToSoal(index) {
+                    if (index >= 0 && index < this.soals.length) {
+                        this.currentIndex = index;
+                    }
+                },
+
+                nextSoal() {
+                    this.goToSoal(this.currentIndex + 1);
+                },
+
+                prevSoal() {
+                    this.goToSoal(this.currentIndex - 1);
+                },
+
+                async saveAnswer(opsiId) {
+                    this.isSaving = true;
+                    const kompreJawabanId = this.currentSoal.id;
+
+                    try {
+                        const response = await fetch("{{ route('komprehensif.mahasiswa.engine.save-answer') }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                jawaban_id: kompreJawabanId,
+                                opsi_terpilih: opsiId
+                            })
+                        });
+                        const data = await response.json();
+                        if (!data.success) {
+                            alert('Gagal menyimpan jawaban. Periksa koneksi internet Anda!');
+                        } else {
+                            // Validasi perubahan UI
+                            this.currentJawaban = opsiId;
+                        }
+                    } catch (error) {
+                        console.error('Save error:', error);
+                    } finally {
+                        setTimeout(() => { this.isSaving = false; }, 300);
+                    }
+                },
+
+                async toggleRagu() {
+                    this.isSaving = true;
+                    const kompreJawabanId = this.currentSoal.id;
+                    const statusRagu = !this.isRagu;
+
+                    try {
+                        const response = await fetch("{{ route('komprehensif.mahasiswa.engine.toggle-ragu') }}", {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content'),
+                                'Accept': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                jawaban_id: kompreJawabanId,
+                                is_ragu: statusRagu
+                            })
+                        });
+                        
+                        if (response.ok) {
+                            this.isRagu = statusRagu;
+                        }
+                    } catch (error) {
+                        console.error('Save error:', error);
+                    } finally {
+                        setTimeout(() => { this.isSaving = false; }, 300);
+                    }
+                },
+
+                submitExam() {
+                    const unAnswered = this.soals.filter(s => !s.jawaban_terpilih).length;
+                    let msg = 'Apakah Anda yakin ingin menyelesaikan ujian ini?\n\nSetelah klik OK, Anda tidak bisa mengubah jawaban lagi.';
+                    if (unAnswered > 0) {
+                        msg = `PERINGATAN: Masih ada ${unAnswered} soal yang BELUM dijawab.\n\nYakin ingin mengakhiri?`;
+                    }
+
+                    if (confirm(msg)) {
+                        window.onbeforeunload = null;
+                        window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}";
+                    }
+                },
+
+                forceSubmitTimeUp() {
+                    window.onbeforeunload = null;
+                    alert("Waktu Ujian Telah Habis! Jawaban Anda akan otomatis disubmit.");
                     window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}";
                 }
-            },
-
-            forceSubmitTimeUp() {
-                window.onbeforeunload = null;
-                alert("Waktu Ujian Telah Habis! Jawaban Anda akan otomatis disubmit.");
-                window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}";
-            }
-        }));
-    });
-</script>
-
+            }));
+        });
+    </script>
 </body>
 </html>

@@ -13,12 +13,12 @@ class Jawaban extends Model
     protected $table = 'bs_jawaban';
     
     protected $fillable = [
-        'pertanyaan_id', 'opsi', 'is_benar'
+        'soal_id', 'opsi', 'deskripsi', 'is_benar'
     ];
 
     public function pertanyaan()
     {
-        return $this->belongsTo(Pertanyaan::class, 'pertanyaan_id');
+        return $this->belongsTo(Pertanyaan::class, 'soal_id');
     }
 
     // protected static function newFactory(): JawabanFactory

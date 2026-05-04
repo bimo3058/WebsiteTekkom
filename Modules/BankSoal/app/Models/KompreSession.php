@@ -36,6 +36,11 @@ class KompreSession extends Model
         return $this->belongsTo(\Modules\BankSoal\Models\JadwalUjian::class, 'jadwal_id');
     }
 
+    public function cheatLogs()
+    {
+        return $this->hasMany(CheatLog::class, 'kompre_session_id');
+    }
+
     // protected static function newFactory(): KompreSessionFactory
     // {
     //     // return KompreSessionFactory::new();

@@ -8,8 +8,8 @@
                     <i class="fas fa-bell"></i>
                 </div>
                 <div>
-                    <p class="text-sm font-semibold text-amber-900">Perhatian: Ada 3 RPS dan 5 Paket Soal yang mendekati batas waktu review.</p>
-                    <p class="text-xs text-amber-800">Segera lakukan peninjauan sebelum batas waktu berakhir untuk menjaga kualitas akademik.</p>
+                    <p class="text-sm font-semibold text-amber-900">Perhatian: Ada {{ $statRpsMenunggu ?? 0 }} RPS dan {{ $statBankSoalMenunggu ?? 0 }} Paket Soal yang masuk ke daftar antrean review.</p>
+                    <p class="text-xs text-amber-800">Segera lakukan peninjauan untuk menjaga kualitas akademik.</p>
                 </div>
             </div>
             <button class="inline-flex items-center justify-center rounded-xl bg-amber-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-amber-700">
