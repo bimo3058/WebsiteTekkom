@@ -1,4 +1,4 @@
-@props([
+g@props([
     'variant' => 'default',
     'size' => 'default',
     'as' => 'button',

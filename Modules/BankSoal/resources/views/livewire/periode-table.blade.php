@@ -103,7 +103,7 @@
                                         'deskripsi' => $periode->deskripsi,
                                     ];
                                 @endphp
-                                <button type="button" @click="editData = {{ json_encode($periodeData) }}; editModal = true" class="inline-flex items-center justify-center w-8 h-8 rounded-md bg-[#3B82F6] hover:bg-[#2563EB] text-white transition-all" title="Edit">
+                                <button type="button" @click="editData = {{ \Illuminate\Support\Js::from($periodeData) }}; editModal = true" class="inline-flex items-center justify-center w-8 h-8 rounded-md bg-[#3B82F6] hover:bg-[#2563EB] text-white transition-all" title="Edit">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-4 h-4">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                                     </svg>
@@ -114,6 +114,15 @@
                                 <button type="button" wire:click="closePendaftaran({{ $periode->id }})" wire:confirm="Tutup pendaftaran untuk periode ini sekarang?\nMahasiswa tidak dapat mendaftar lagi meskipun tanggal belum berakhir." class="inline-flex items-center justify-center w-8 h-8 rounded-md bg-[#F59E0B] hover:bg-[#D97706] text-white transition-all" title="Tutup Pendaftaran">
                                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-4 h-4">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                                    </svg>
+                                </button>
+                                @endif
+
+                                {{-- Tombol Buka Kembali Pendaftaran (muncul jika ditutup paksa & tanggal masih valid) --}}
+                                @if($periode->pendaftaran_ditutup_paksa && now()->lte(\Carbon\Carbon::parse($periode->tanggal_selesai)->endOfDay()))
+                                <button type="button" wire:click="openPendaftaran({{ $periode->id }})" wire:confirm="Buka kembali pendaftaran untuk periode ini?\nMahasiswa yang memenuhi syarat akan bisa mendaftar lagi." class="inline-flex items-center justify-center w-8 h-8 rounded-md bg-[#10B981] hover:bg-[#059669] text-white transition-all" title="Buka Kembali Pendaftaran">
+                                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-4 h-4">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"></path>
                                     </svg>
                                 </button>
                                 @endif

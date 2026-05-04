@@ -3,20 +3,14 @@
     <x-banksoal::ui.page-header title="Validasi Bank Soal" subtitle="Pilih paket soal mata kuliah yang perlu dievaluasi" />
 
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <form action="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}" method="GET" class="relative flex-1">
+        <div class="relative flex-1">
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                 <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
             </div>
-            <input type="text" name="search" autocomplete="off" list="datalistAntrean" value="{{ request('search') }}" placeholder="Cari mata kuliah..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" onchange="this.form.submit()">
-            <datalist id="datalistAntrean">
-                @foreach($all_paket_soal as $item)
-                    <option value="{{ $item->mk_nama }}"></option>
-                    <option value="{{ $item->mk_kode }}"></option>
-                @endforeach
-            </datalist>
-        </form>
+            <input type="text" data-search-tab="menunggu" placeholder="Cari mata kuliah atau dosen..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none">
+        </div>
 
         <div class="flex items-center gap-3">
             <span class="hidden md:inline text-xs font-semibold text-slate-500 uppercase tracking-wider">Semester</span>
@@ -41,7 +35,7 @@
             </nav>
         </div>
 
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto" data-tab-panel="menunggu">
             <table class="w-full">
                 <thead class="bg-slate-50 border-b border-slate-200">
                     <tr>
@@ -80,7 +74,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr>
+                        <tr class="no-results-message">
                             <td colspan="6" class="px-6 py-12 text-center text-slate-600">
                                 <div class="flex flex-col items-center justify-center">
                                     <i class="fas fa-check-circle text-3xl text-slate-300 mb-3"></i>
@@ -94,10 +88,73 @@
             </table>
         </div>
 
-        @if($paket_soal->count() > 0)
+        @if($all_paket_soal->count() > 0)
             <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between">
-                <span class="text-xs text-slate-500">Menampilkan {{ $paket_soal->count() }} mata kuliah</span>
+                <span class="text-xs text-slate-500">Menampilkan <span id="count-menunggu">{{ $all_paket_soal->count() }}</span> mata kuliah</span>
             </div>
         @endif
     </div>
+
+    @push('scripts')
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            function debounce(func, delay) {
+                let timeoutId;
+                return function (...args) {
+                    clearTimeout(timeoutId);
+                    timeoutId = setTimeout(() => func.apply(this, args), delay);
+                };
+            }
+
+            function searchTable(searchInput, tabId) {
+                const searchValue = searchInput.value.toLowerCase().trim();
+                const tabContent = document.querySelector(`[data-tab-panel="${tabId}"]`);
+                if (!tabContent) return;
+
+                const rows = tabContent.querySelectorAll('table tbody tr:not(.no-results-message)');
+                let visibleCount = 0;
+
+                rows.forEach(row => {
+                    const cells = row.querySelectorAll('td');
+                    let rowText = '';
+                    if (cells.length >= 2) {
+                        rowText = (cells[0].textContent + ' ' + cells[1].textContent).toLowerCase();
+                    } else {
+                        rowText = row.textContent.toLowerCase();
+                    }
+
+                    if (rowText.includes(searchValue) || searchValue === '') {
+                        row.classList.remove('hidden');
+                        visibleCount++;
+                    } else {
+                        row.classList.add('hidden');
+                    }
+                });
+
+                const noResultsMsg = tabContent.querySelector('.no-results-message');
+                if (noResultsMsg) {
+                    if (visibleCount === 0) {
+                        noResultsMsg.classList.remove('hidden');
+                    } else {
+                        noResultsMsg.classList.add('hidden');
+                    }
+                }
+
+                // Update counter logic
+                const countElement = document.getElementById(`count-${tabId}`);
+                if (countElement) {
+                    countElement.textContent = visibleCount;
+                }
+            }
+
+            const searchInputs = document.querySelectorAll('[data-search-tab]');
+            searchInputs.forEach((input) => {
+                const tabId = input.getAttribute('data-search-tab');
+                input.addEventListener('input', debounce(function () {
+                    searchTable(this, tabId);
+                }, 300));
+            });
+        });
+    </script>
+    @endpush
 </x-banksoal::layouts.gpm-master>

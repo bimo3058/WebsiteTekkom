@@ -193,7 +193,8 @@
                                 class="block text-[11px] {{ request()->routeIs('banksoal.aktivasi.index') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Aktivasi
                                 Sesi</a>
                             <a href="{{ route('banksoal.admin.cbt.live-proctoring') }}"
-                                class="block text-[11px] {{ request()->routeIs('banksoal.admin.cbt.live-proctoring') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Live Proctoring</a>
+                                class="block text-[11px] {{ request()->routeIs('banksoal.admin.cbt.live-proctoring') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Live
+                                Pengawasan</a>
                         </div>
                     </div>
 
@@ -204,7 +205,9 @@
                     <div x-data="{ open: {{ $isHasilActive ? 'true' : 'false' }} }" class="space-y-1">
                         <button @click="open = !open"
                             class="w-full flex items-center justify-between py-1.5 px-3 rounded-lg text-slate-600 hover:bg-slate-100/50 font-medium transition-all group text-[12px]">
-                            <span class="text-left {{ $isHasilActive ? 'text-blue-600 font-semibold' : 'text-slate-600' }}">Hasil & Analitik</span>
+                            <span
+                                class="text-left {{ $isHasilActive ? 'text-blue-600 font-semibold' : 'text-slate-600' }}">Hasil
+                                & Analitik</span>
                             <svg class="w-3.5 h-3.5 transition-transform duration-200 {{ $isHasilActive ? 'text-blue-600' : 'text-slate-400' }}"
                                 :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                                 xmlns="http://www.w3.org/2000/svg">
@@ -214,10 +217,11 @@
                         </button>
                         <div x-show="open" class="pl-7 pr-2 py-1 space-y-1">
                             <a href="{{ route('banksoal.admin.cbt.riwayat') }}"
-                                class="block text-[11px] {{ request()->routeIs('banksoal.admin.cbt.riwayat') || request()->routeIs('banksoal.admin.cbt.detail') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Riwayat Ujian</a>
-                            <a href="#"
-                                class="block text-[11px] text-slate-500 hover:text-slate-800 py-1 transition-colors">Laporan
-                                CPL</a>
+                                class="block text-[11px] {{ request()->routeIs('banksoal.admin.cbt.riwayat') || request()->routeIs('banksoal.admin.cbt.detail') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Riwayat
+                                Ujian</a>
+                            <a href="{{ route('banksoal.admin.cbt.analitik') }}"
+                                class="block text-[11px] {{ request()->routeIs('banksoal.admin.cbt.analitik') ? 'text-blue-600 font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1 transition-colors">Dasbor
+                                Analitik</a>
                         </div>
                     </div>
                 </div>
