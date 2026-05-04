@@ -1,6 +1,6 @@
 {{-- resources/views/profile/partials/update-password-form.blade.php --}}
-<section>
-    <form method="post" action="{{ route('password.update') }}" class="space-y-4" id="password-form">
+<section class="h-full">
+    <form method="post" action="{{ route('password.update') }}" class="flex flex-col h-full space-y-5" id="password-form">
         @csrf
         @method('put')
 
