@@ -36,9 +36,10 @@ class RiwayatValidasiController extends Controller
 
         $baseQuery = DB::table('bs_mata_kuliah')
             ->join('bs_pertanyaan', 'bs_mata_kuliah.id', '=', 'bs_pertanyaan.mk_id')
-            ->joinSub($latestReviews, 'latest_reviews', function($join) {
+            ->leftJoinSub($latestReviews, 'latest_reviews', function($join) {
                 $join->on('bs_pertanyaan.id', '=', 'latest_reviews.pertanyaan_id');
             })
+            ->whereIn('bs_pertanyaan.status', [\Modules\BankSoal\Models\Pertanyaan::STATUS_DISETUJUI, \Modules\BankSoal\Models\Pertanyaan::STATUS_REVISI, 'ditolak'])
             ->select(
                 'bs_mata_kuliah.id as mk_id',
                 'bs_mata_kuliah.kode as mk_kode',
@@ -93,17 +94,18 @@ class RiwayatValidasiController extends Controller
             });
 
         $riwayatSoal = \Modules\BankSoal\Models\Pertanyaan::with(['jawaban', 'cpl'])
-            ->joinSub($latestReviews, 'latest_reviews', function($join) {
+            ->leftJoinSub($latestReviews, 'latest_reviews', function($join) {
                 $join->on('bs_pertanyaan.id', '=', 'latest_reviews.pertanyaan_id');
             })
             ->where('bs_pertanyaan.mk_id', $id)
+            ->whereIn('bs_pertanyaan.status', [\Modules\BankSoal\Models\Pertanyaan::STATUS_DISETUJUI, \Modules\BankSoal\Models\Pertanyaan::STATUS_REVISI, 'ditolak'])
             ->select(
                 'bs_pertanyaan.*',
                 'latest_reviews.status_review',
                 'latest_reviews.catatan',
                 'latest_reviews.created_at as tanggal_review'
             )
-            ->orderBy('latest_reviews.created_at', 'desc')
+            ->orderBy('bs_pertanyaan.created_at', 'desc')
             ->paginate(5);
 
         return view('banksoal::gpm.riwayat-validasi.bank-soal-detail', compact('mataKuliah', 'riwayatSoal'));    }

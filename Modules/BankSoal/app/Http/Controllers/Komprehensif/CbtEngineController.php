@@ -186,7 +186,7 @@ class CbtEngineController extends Controller
                             'label' => chr(65 + $idx) // A, B, C, D, E berdasarkan urutan acak
                         ];
                     }),
-                    'jawaban_terpilih' => $j->jawaban_id,
+                    'jawaban_terpilih' => $j->jawaban_dipilih,
                     'ragu_ragu' => (bool) $j->is_ragu
                 ];
             });
@@ -210,7 +210,7 @@ class CbtEngineController extends Controller
             return response()->json(['success' => false, 'message' => 'Sesi tidak valid.'], 403);
         }
 
-        $jawaban->update(['jawaban_id' => $request->opsi_terpilih]);
+        $jawaban->update(['jawaban_dipilih' => $request->opsi_terpilih]);
 
         return response()->json(['success' => true]);
     }
@@ -236,6 +236,32 @@ class CbtEngineController extends Controller
         return response()->json(['success' => true]);
     }
 
+    public function logViolation(Request $request)
+    {
+        $request->validate([
+            'event_type' => 'required|string',
+            'description' => 'nullable|string'
+        ]);
+
+        $session = \Modules\BankSoal\Models\KompreSession::where('user_id', auth()->id())
+            ->where('status', 'ongoing')
+            ->first();
+
+        if ($session) {
+            \Modules\BankSoal\Models\CheatLog::create([
+                'kompre_session_id' => $session->id,
+                'event_type' => $request->event_type,
+                'description' => $request->description,
+                'metadata' => [
+                    'ip' => $request->ip(),
+                    'user_agent' => $request->userAgent()
+                ]
+            ]);
+            return response()->json(['success' => true]);
+        }
+        return response()->json(['success' => false, 'message' => 'Tidak ada sesi berjalan'], 403);
+    }
+
     public function finish()
     {
         $session = \Modules\BankSoal\Models\KompreSession::where('user_id', auth()->id())
@@ -243,18 +269,17 @@ class CbtEngineController extends Controller
             ->first();
 
         if ($session) {
-            // Kalkulasi skor akhir (Asumsi skor sederhana: (benar / total soal) * 100)
+            // Kalkulasi skor akhir: Benar = 1 poin, Salah = 0 poin.
             $jawabans = \Modules\BankSoal\Models\KompreJawaban::where('kompre_session_id', $session->id)->with('opsiTerpilih')->get();
             $benar = 0;
-            $total = $jawabans->count();
 
             foreach ($jawabans as $j) {
                 if ($j->opsiTerpilih && $j->opsiTerpilih->is_benar) {
-                    $benar++;
+                    $benar += 1;
                 }
             }
 
-            $skor = $total > 0 ? round(($benar / $total) * 100, 2) : 0;
+            $skor = $benar; // Skor adalah jumlah jawaban benar
 
             $session->update([
                 'status' => 'finished',

@@ -85,6 +85,28 @@ class PeriodeTable extends Component
         }
     }
 
+    public function openPendaftaran($id)
+    {
+        $periode = PeriodeUjian::findOrFail($id);
+
+        // Hanya bisa dibuka jika periode belum expired tanggalnya
+        $now       = now();
+        $tglSelesai = \Carbon\Carbon::parse($periode->tanggal_selesai)->endOfDay();
+
+        if ($now->gt($tglSelesai)) {
+            session()->flash('error', 'Tidak dapat membuka kembali: tanggal pendaftaran sudah berakhir (' . $periode->tanggal_selesai->format('d M Y') . ').');
+            return;
+        }
+
+        if (!$periode->pendaftaran_ditutup_paksa) {
+            session()->flash('error', 'Pendaftaran periode ini tidak sedang ditutup paksa.');
+            return;
+        }
+
+        $periode->update(['pendaftaran_ditutup_paksa' => false]);
+        session()->flash('success', 'Pendaftaran periode "' . $periode->nama_periode . '" berhasil dibuka kembali.');
+    }
+
     public function deletePeriode($id)
     {
         $hasPendaftar = PendaftarUjian::where('periode_ujian_id', $id)->exists();

@@ -27,32 +27,26 @@ class MahasiswaController extends Controller
     {
         $activePeriode = PeriodeUjian::where('status', 'aktif')->latest()->first();
         $pendaftar = null;
-
-        if ($activePeriode) {
-            $pendaftar = PendaftarUjian::where('periode_ujian_id', $activePeriode->id)
-                ->where('mahasiswa_id', auth()->id())
-                ->first();
-        }
-
-        $semester = $this->getStudentSemester();
-        $isEligible = $semester >= 7;
-
-        return view('banksoal::mahasiswa.dashboard', compact('activePeriode', 'pendaftar', 'semester', 'isEligible'));
-    }
-
-    public function pendaftaran()
-    {
-        $activePeriode = PeriodeUjian::where('status', 'aktif')->latest()->first();
-        $pendaftar = null;
+        $finishedSession = null;
 
         if ($activePeriode) {
             $pendaftar = PendaftarUjian::withTrashed()
                 ->where('periode_ujian_id', $activePeriode->id)
                 ->where('mahasiswa_id', auth()->id())
                 ->first();
+                
+            if ($pendaftar && $pendaftar->jadwal) {
+                $finishedSession = \Modules\BankSoal\Models\KompreSession::where('user_id', auth()->id())
+                    ->where('jadwal_id', $pendaftar->jadwal->id)
+                    ->where('status', 'finished')
+                    ->first();
+            }
         }
 
-        return view('banksoal::mahasiswa.pendaftaran', compact('activePeriode', 'pendaftar'));
+        $semester = $this->getStudentSemester();
+        $isEligible = $semester >= 7;
+
+        return view('banksoal::mahasiswa.dashboard', compact('activePeriode', 'pendaftar', 'semester', 'isEligible', 'finishedSession'));
     }
 
     public function createPendaftaran()
@@ -151,5 +145,23 @@ class MahasiswaController extends Controller
         ]);
 
         return redirect()->route('komprehensif.mahasiswa.dashboard')->with('success', 'Berhasil! Pengajuan pendaftaran telah sukses terkirim ke sistem program studi.');
+    }
+
+    public function riwayat()
+    {
+        $sessions = \Modules\BankSoal\Models\KompreSession::where('user_id', auth()->id())
+            ->where('status', 'finished')
+            ->with(['jadwal.periode', 'jawabans'])
+            ->orderBy('finished_at', 'desc')
+            ->get();
+
+        $totalUjian     = $sessions->count();
+        $nilaiTertinggi = $sessions->max('score') ?? 0;
+        $nilaiRataRata  = $totalUjian ? round($sessions->avg('score'), 1) : 0;
+        $jumlahLulus    = $sessions->where('score', '>=', 60)->count();
+
+        return view('banksoal::mahasiswa.riwayat', compact(
+            'sessions', 'totalUjian', 'nilaiTertinggi', 'nilaiRataRata', 'jumlahLulus'
+        ));
     }
 }
