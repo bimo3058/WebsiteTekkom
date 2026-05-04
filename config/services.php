@@ -35,4 +35,19 @@ return [
         ],
     ],
 
+<<<<<<< HEAD
+=======
+    'azure' => [
+        'client_id' => env('MICROSOFT_CLIENT_ID'),
+        'client_secret' => env('MICROSOFT_CLIENT_SECRET'),
+        'redirect' => env('MICROSOFT_REDIRECT_URI'),
+        'tenant' => env('MICROSOFT_TENANT', 'common'),
+    ],
+
+    'supabase' => [
+        'url' => env('SUPABASE_URL'),
+        'key' => env('SUPABASE_KEY'),
+        'bucket' => env('SUPABASE_BUCKET'),
+    ],
+>>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f
 ];

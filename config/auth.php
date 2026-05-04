@@ -1,7 +1,10 @@
 <?php
 
+<<<<<<< HEAD
 use App\Models\Pengguna;
 
+=======
+>>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f
 return [
 
     /*
@@ -39,11 +42,15 @@ return [
 
     'guards' => [
         'web' => [
+<<<<<<< HEAD
             'driver'   => 'session',
             'provider' => 'users',
         ],
         'sanctum' => [
             'driver'   => 'sanctum',
+=======
+            'driver' => 'session',
+>>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f
             'provider' => 'users',
         ],
     ],
@@ -67,8 +74,13 @@ return [
 
     'providers' => [
         'users' => [
+<<<<<<< HEAD
             'driver' => 'eloquent',
             'model'  => env('AUTH_MODEL', Pengguna::class),
+=======
+            'driver' => 'cached-eloquent',
+            'model' => env('AUTH_MODEL', App\Models\User::class),
+>>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f
         ],
 
         // 'users' => [

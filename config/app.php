@@ -65,7 +65,11 @@ return [
     |
     */
 
+<<<<<<< HEAD
     'timezone' => 'UTC',
+=======
+    'timezone' => 'Asia/Jakarta',
+>>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f
 
     /*
     |--------------------------------------------------------------------------
@@ -78,11 +82,19 @@ return [
     |
     */
 
+<<<<<<< HEAD
     'locale' => env('APP_LOCALE', 'en'),
 
     'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
     'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
+=======
+    'locale' => env('APP_LOCALE', 'id'),
+
+    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'id'),
+
+    'faker_locale' => env('APP_FAKER_LOCALE', 'id_ID'),
+>>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f
 
     /*
     |--------------------------------------------------------------------------

@@ -22,3 +22,16 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+<<<<<<< HEAD
+=======
+package-lock.json
+boost.json
+composer.json
+Modules/BankSoal/node_modules
+/bootstrap/*
+composer.json
+composer.lock
+bootstrap/providers.php
+
+CLAUDE.md
+>>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f

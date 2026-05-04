@@ -1,0 +1,11 @@
+{
+    "name": "Capstone",
+    "alias": "capstone",
+    "description": "",
+    "keywords": [],
+    "priority": 0,
+    "providers": [
+        "Modules\\Capstone\\Providers\\CapstoneServiceProvider"
+    ],
+    "files": []
+}

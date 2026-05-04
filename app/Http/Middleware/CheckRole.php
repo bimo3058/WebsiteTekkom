@@ -2,12 +2,16 @@
 
 namespace App\Http\Middleware;
 
+<<<<<<< HEAD
 use App\Models\SesiLogin;
+=======
+>>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
+<<<<<<< HEAD
  * CheckRole (HasRole) Middleware
  *
  * Validasi bahwa role aktif pengguna (dari SESI_LOGIN) memenuhi
@@ -89,3 +93,14 @@ class CheckRole
         return $sesi?->roleAktif?->nama;
     }
 }
+=======
+ * @deprecated Gunakan RoleMiddleware ('role:...') sebagai gantinya.
+ * CheckRole dipertahankan hanya untuk backward compatibility dengan route
+ * yang masih pakai 'check.role:...' — migrasi ke 'role:...' saat ada kesempatan.
+ */
+class CheckRole extends RoleMiddleware
+{
+    // Mewarisi semua logika dari RoleMiddleware.
+    // Tidak perlu kode tambahan — alias murni.
+}
+>>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f

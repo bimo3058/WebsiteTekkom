@@ -47,6 +47,18 @@ return [
             'report' => false,
         ],
 
+<<<<<<< HEAD
+=======
+        'bank-soal' => [
+            'driver' => 'local',
+            'root' => storage_path('app/bank-soal'),
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/storage/bank-soal',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
+>>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),
@@ -60,6 +72,18 @@ return [
             'report' => false,
         ],
 
+<<<<<<< HEAD
+=======
+        'supabase' => [
+            'driver' => 'local',
+            'root' => storage_path('app/supabase'),
+            'url' => env('APP_URL') . '/storage/supabase',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
+
+>>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f
     ],
 
     /*
@@ -75,6 +99,10 @@ return [
 
     'links' => [
         public_path('storage') => storage_path('app/public'),
+<<<<<<< HEAD
+=======
+        public_path('storage/bank-soal') => storage_path('app/bank-soal'),
+>>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f
     ],
 
 ];
