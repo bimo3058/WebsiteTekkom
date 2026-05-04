@@ -3,8 +3,8 @@
 
 @if($user->hasRole('mahasiswa') && $user->student)
 @php
-    $kompreCount   = \App\Models\BsKompreSession::where('user_id', $user->id)->count();
-    $kompreBest    = \App\Models\BsKompreSession::where('user_id', $user->id)->max('score') ?? 0;
+    $kompreCount   = \Modules\BankSoal\Models\KompreSession::where('user_id', $user->id)->count();
+    $kompreBest    = \Modules\BankSoal\Models\KompreSession::where('user_id', $user->id)->max('score') ?? 0;
     $capstoneCount = \Modules\Capstone\Models\CapstoneGroupMember::where('student_id', $user->student->id)
         ->whereHas('group', fn($q) => $q->whereNotIn('status', ['DONE','CANCELLED']))
         ->count();
@@ -34,10 +34,10 @@
 
 @elseif($user->hasRole('dosen') && $user->lecturer)
 @php
-    $mkCount      = \App\Models\BsDosenPengampuMk::where('user_id', $user->id)->distinct('mk_id')->count('mk_id');
-    $rpsCount     = \App\Models\BsRps::where('dosen_id', $user->id)->count();
-    $capstoneLoad = \Modules\Capstone\Models\CapstoneSupervision::where('lecturer_id', $user->lecturer->id)->count();
-    $soalCount    = \App\Models\BsPertanyaan::whereHas('rps.dosen', fn($q) => $q->where('dosen_id', $user->id))->count();
+    $mkCount      = Modules\BankSoal\Models\DosenPengampuMk::where('user_id', $user->id)->distinct('mk_id')->count('mk_id');
+    $rpsCount     = Modules\BankSoal\Models\Rps::where('dosen_id', $user->id)->count();
+    $capstoneLoad = Modules\Capstone\Models\CapstoneSupervision::where('lecturer_id', $user->lecturer->id)->count();
+    $soalCount    = Modules\BankSoal\Models\Pertanyaan::whereHas('rps.dosen', fn($q) => $q->where('dosen_id', $user->id))->count();
 @endphp
 <div class="bg-white border border-[#DFE1E7] rounded-2xl shadow-[0_1px_2px_rgba(228,229,231,0.24)] overflow-hidden">
     <div class="px-5 py-3.5 border-b border-[#F0F1F4] flex items-center gap-2">
