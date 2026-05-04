@@ -76,23 +76,16 @@
 
         @else
             <!-- STUDENT MENU -->
-            <!-- Beranda -->
+            <!-- Portal Ujian -->
             <a href="{{ route('komprehensif.mahasiswa.dashboard') }}" 
                class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors {{ $currentRoute === 'komprehensif.mahasiswa.dashboard' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50' }}">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
                 </svg>
-                <span class="text-sm">Beranda</span>
+                <span class="text-sm">Portal Ujian</span>
             </a>
 
-            <!-- Pengajuan Pendaftaran -->
-            <a href="{{ route('komprehensif.mahasiswa.pendaftaran') }}" 
-               class="flex items-center gap-3 px-4 py-3 rounded-xl font-medium transition-colors {{ $currentRoute === 'komprehensif.mahasiswa.pendaftaran' ? 'bg-blue-600 text-white' : 'text-slate-600 hover:bg-slate-50' }}">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
-                </svg>
-                <span class="text-sm">Pengajuan Pendaftaran</span>
-            </a>
+
 
             <!-- Riwayat Ujian -->
             <a href="{{ route('komprehensif.mahasiswa.riwayat') }}" 
