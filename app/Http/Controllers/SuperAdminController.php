@@ -1003,7 +1003,7 @@ class SuperAdminController extends Controller
             $path,
             'data_user',
             $import->id
-        );
+        )->delay(now()->addSeconds(2));
 
         return response()->json([
             'status'    => 'success',

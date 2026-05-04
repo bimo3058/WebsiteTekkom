@@ -1,14 +1,14 @@
 {{-- Floating Bulk Action Bar --}}
 <div id="bulkActionBar" class="hidden mb-6 p-4 bg-[#1A1C1E] rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300 shadow-xl border border-slate-800">
     <div class="flex items-center gap-4 ml-2">
-        <div class="flex items-center justify-center w-8 h-8 bg-[#5E53F4] rounded-lg">
+        <div class="flex items-center justify-center w-8 h-8 bg-[var(--c-primary)] rounded-lg">
             {{-- check-circle --}}
             <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M7.5 12.5L10.5 15.5L16.5 9.5M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22Z"/>
             </svg>
         </div>
         <span class="text-[13px] font-semibold text-white tracking-wide">
-            <span id="selectedCount" class="text-[#D1BFFF] text-base mr-1">0</span> Users Selected
+            <span id="selectedCount" class="text-[var(--c-primary-border)] text-base mr-1">0</span> Users Selected
         </span>
     </div>
     <div class="flex items-center gap-3">
@@ -48,7 +48,7 @@
                     Online • {{ $allOnline->count() }}
                 </h2>
             </div>
-            <a href="{{ route('superadmin.users.online') }}" class="text-[9px] font-bold text-slate-400 hover:text-[#5E53F4] uppercase tracking-widest transition-colors">View All</a>
+            <a href="{{ route('superadmin.users.online') }}" class="text-[9px] font-bold text-slate-400 hover:text-[var(--c-primary)] uppercase tracking-widest transition-colors">View All</a>
         </div>
         <div class="space-y-1.5">
             @foreach($onlineUsers as $onlineUser)
@@ -144,7 +144,7 @@
                 <tr class="border-b border-slate-200">
                     <th class="px-5 py-3.5 text-left w-12">
                         <input type="checkbox" id="selectAll"
-                            class="size-4 rounded border-slate-300 text-[#5E53F4] focus:ring-[#5E53F4]/20 transition-all cursor-pointer">
+                            class="size-4 rounded border-slate-300 text-[var(--c-primary)] focus:ring-[var(--c-primary)]/20 transition-all cursor-pointer">
                     </th>
                     <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">User Identity</th>
                     <th class="px-5 py-3.5 text-left text-[10px] font-bold text-slate-500 uppercase tracking-widest whitespace-nowrap">Access Roles</th>
@@ -163,7 +163,7 @@
                     $initials    = strtoupper(substr($nameParts[0], 0, 1));
                     if (count($nameParts) > 1) $initials .= strtoupper(substr(end($nameParts), 0, 1));
                     $avatarColors = match(true) {
-                        $isSuperadmin      => '!bg-[#F1E9FF] !text-[#5E53F4] border-transparent',
+                        $isSuperadmin      => '!bg-[rgba(11,38,110,0.06)] !text-[var(--c-primary)] border-transparent',
                         $userRoles->isEmpty() => '!bg-[#FEF2F2] !text-[#EF4444] border-transparent',
                         default            => '!bg-[#F8F9FA] !text-[#6C757D] border-slate-200',
                     };
@@ -174,7 +174,7 @@
                     <td class="px-5 py-3.5">
                         @if(!$isMe)
                         <input type="checkbox" name="selected_users[]" value="{{ $user->id }}"
-                            class="user-checkbox size-4 rounded border-slate-300 text-[#5E53F4] focus:ring-[#5E53F4]/20 transition-all cursor-pointer">
+                            class="user-checkbox size-4 rounded border-slate-300 text-[var(--c-primary)] focus:ring-[var(--c-primary)]/20 transition-all cursor-pointer">
                         @else
                         {{-- locked-01 icon --}}
                         <div class="flex items-center justify-center size-4" title="Your Account">
@@ -211,7 +211,7 @@
                                         {{ $user->name }}
                                     </p>
                                     @if($isMe)
-                                        <span class="text-[9px] text-[#5E53F4] font-bold bg-[#F1E9FF] px-1.5 py-0.5 rounded uppercase">YOU</span>
+                                        <span class="text-[9px] text-[var(--c-primary)] font-bold bg-[rgba(11,38,110,0.06)] px-1.5 py-0.5 rounded uppercase">YOU</span>
                                     @endif
                                     @if($user->isSuspended())
                                         <span class="text-[9px] text-rose-600 font-bold bg-rose-50 px-1.5 py-0.5 rounded uppercase">Suspended</span>
@@ -229,10 +229,10 @@
                             @php
                                 $roleName  = strtolower($role->name);
                                 $roleStyle = match(true) {
-                                    $roleName === 'superadmin' => 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]',
+                                    $roleName === 'superadmin' => 'bg-[rgba(11,38,110,0.06)] text-[var(--c-primary)] border-[var(--c-primary-border)]',
                                     $roleName === 'dosen'      => 'bg-[#E7F9F3] text-[#00C08D] border-[#B2EBD9]',
                                     $roleName === 'mahasiswa'  => 'bg-[#FFF9E6] text-[#FFB800] border-[#FFEBB3]',
-                                    default                    => 'bg-[#F0F5FF] text-[#5E53F4] border-[#D1DFFF]',
+                                    default                    => 'bg-[#F0F5FF] text-[var(--c-primary)] border-[#D1DFFF]',
                                 };
                             @endphp
                             <span class="px-2 py-0.5 rounded-full text-[9px] font-semibold border uppercase tracking-wider {{ $roleStyle }}">
@@ -247,7 +247,7 @@
                     {{-- Module Rights --}}
                     <td class="px-5 py-3.5">
                         @if($isSuperadmin)
-                            <span class="text-[#5E53F4] text-[10px] font-semibold uppercase tracking-widest flex items-center gap-1.5">
+                            <span class="text-[var(--c-primary)] text-[10px] font-semibold uppercase tracking-widest flex items-center gap-1.5">
                                 {{-- check-circle --}}
                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M7.5 12.5L10.5 15.5L16.5 9.5M12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22Z"/>
@@ -264,7 +264,7 @@
                                 <div class="px-2 py-0.5 bg-[#F8F9FA] text-[#495057] text-[9px] font-semibold uppercase border-r border-[#DEE2E6]">
                                     {{ $modCount }} Modules
                                 </div>
-                                <div class="px-2 py-0.5 text-[#5E53F4] text-[9px] font-semibold uppercase bg-white">
+                                <div class="px-2 py-0.5 text-[var(--c-primary)] text-[9px] font-semibold uppercase bg-white">
                                     {{ $perms->count() }} Perms
                                 </div>
                             </div>
@@ -288,7 +288,7 @@
 
                             {{-- Edit — pen/write icon (pakai path sederhana) --}}
                             <button onclick="openEditInfo({{ json_encode(['id' => $user->id, 'name' => $user->name, 'email' => $user->email]) }})"
-                                class="p-1.5 text-slate-400 hover:text-[#5E53F4] rounded-lg transition-colors" title="Edit Profile">
+                                class="p-1.5 text-slate-400 hover:text-[var(--c-primary)] rounded-lg transition-colors" title="Edit Profile">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                                     <path d="M11 4H4C2.89543 4 2 4.89543 2 6V20C2 21.1046 2.89543 22 4 22H18C19.1046 22 20 21.1046 20 20V13M18.5 2.5C19.3284 2.5 20 3.17157 20 4V4C20.8284 4 21.5 4.67157 21.5 5.5C21.5 6.32843 20.8284 7 20 7L11 16L7 17L8 13L17 4C17 3.17157 17.6716 2.5 18.5 2.5Z"/>
                                 </svg>
