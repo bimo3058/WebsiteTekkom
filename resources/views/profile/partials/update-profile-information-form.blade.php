@@ -15,14 +15,11 @@
         $idLabel = 'NIP / No. Karyawan';
     }
 
-    // ── Parse kode negara + nomor lokal dari DB ──────────────────────────
-    // Format tersimpan: +62812xxxxxxx atau +1234xxxxxxx
     $savedWa       = $user->whatsapp ?? '';
-    $savedCode     = '+62';   // default
+    $savedCode     = '+62';
     $savedLocalNum = '';
 
     if ($savedWa !== '') {
-        // Daftar kode yang mungkin, urutkan dari terpanjang agar tidak salah match
         $knownCodes = [
             '+1', '+7', '+20', '+27', '+30', '+31', '+32', '+33', '+34', '+36',
             '+39', '+40', '+41', '+43', '+44', '+45', '+46', '+47', '+48', '+49',
@@ -47,10 +44,7 @@
             '+970', '+971', '+972', '+973', '+974', '+975', '+976', '+977',
             '+992', '+993', '+994', '+995', '+996', '+998',
         ];
-
-        // Urutkan dari yang terpanjang agar +855 tidak salah match ke +85
         usort($knownCodes, fn($a, $b) => strlen($b) - strlen($a));
-
         foreach ($knownCodes as $code) {
             if (str_starts_with($savedWa, $code)) {
                 $savedCode     = $code;
@@ -58,8 +52,6 @@
                 break;
             }
         }
-
-        // Fallback jika tidak ada yang cocok
         if ($savedLocalNum === '') {
             $savedLocalNum = ltrim($savedWa, '+0123456789');
         }
@@ -75,9 +67,9 @@
         {{-- Nama Lengkap --}}
         <div>
             <div class="flex items-center justify-between mb-1.5">
-                <label class="text-[11px] font-bold text-slate-700 tracking-tight">Nama Lengkap</label>
+                <label class="text-[12px] font-medium text-[#0D0D12]">Nama Lengkap</label>
                 @if(!$canEditName)
-                    <span class="text-[9px] text-amber-600 font-black uppercase tracking-tighter bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200">
+                    <span class="text-[10px] text-[#956321] font-semibold bg-[#F9ECCB] border border-[#D39C3D]/30 px-2 py-0.5 rounded-full">
                         Data SSO · Read Only
                     </span>
                 @endif
@@ -89,56 +81,54 @@
                 @if(!$canEditName) readonly @endif
                 class="w-full rounded-xl border text-sm py-2.5 px-3 transition-all outline-none
                     {{ !$canEditName
-                        ? 'border-slate-200 bg-slate-50 text-slate-400 cursor-not-allowed opacity-80'
-                        : 'border-slate-200 bg-white text-slate-900 focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4] shadow-sm' }}"
+                        ? 'border-[#DFE1E7] bg-[#F6F8FA] text-[#A4ABB8] cursor-not-allowed'
+                        : 'border-[#DFE1E7] bg-white text-[#0D0D12] focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E]' }}"
             />
             <x-input-error class="mt-1" :messages="$errors->get('name')" />
         </div>
 
         {{-- Email + NIM/NIP --}}
-        <div class="grid grid-cols-2 gap-5">
+        <div class="grid grid-cols-2 gap-4">
             <div>
-                <label class="text-[11px] font-bold text-slate-700 block mb-1.5 tracking-tight">Email Resmi (SSO)</label>
+                <label class="block text-[12px] font-medium text-[#0D0D12] mb-1.5">Email Resmi (SSO)</label>
                 <input type="email" value="{{ $user->email }}" readonly
-                    class="w-full rounded-xl border border-slate-200 bg-slate-50 text-slate-400 text-sm py-2.5 px-3 cursor-not-allowed opacity-80" />
+                    class="w-full rounded-xl border border-[#DFE1E7] bg-[#F6F8FA] text-[#A4ABB8] text-sm py-2.5 px-3 cursor-not-allowed" />
             </div>
             <div>
-                <label class="text-[11px] font-bold text-slate-700 block mb-1.5 tracking-tight">{{ $idLabel }}</label>
+                <label class="block text-[12px] font-medium text-[#0D0D12] mb-1.5">{{ $idLabel }}</label>
                 <input type="text" value="{{ $idValue ?? '-' }}" readonly
-                    class="w-full rounded-xl border border-slate-200 bg-slate-50 text-slate-400 text-sm py-2.5 px-3 cursor-not-allowed opacity-80" />
+                    class="w-full rounded-xl border border-[#DFE1E7] bg-[#F6F8FA] text-[#A4ABB8] text-sm py-2.5 px-3 cursor-not-allowed" />
             </div>
         </div>
 
-        <div class="h-px bg-slate-100"></div>
+        <div class="h-px bg-[#F0F1F4]"></div>
 
         {{-- WhatsApp + Email Pribadi --}}
-        <div class="grid grid-cols-2 gap-5">
+        <div class="grid grid-cols-2 gap-4">
 
             {{-- WhatsApp dengan dropdown kode negara --}}
             <div x-data="phoneCode('{{ $savedCode }}')">
-                <label class="text-[11px] font-bold text-slate-700 block mb-1.5 tracking-tight">Nomor WhatsApp</label>
+                <label class="block text-[12px] font-medium text-[#0D0D12] mb-1.5">Nomor WhatsApp</label>
 
-                <div class="flex border border-slate-200 rounded-xl bg-white shadow-sm focus-within:border-[#5E53F4] focus-within:ring-1 focus-within:ring-[#5E53F4] transition-all">
-                    {{-- Trigger --}}
+                <div class="flex border border-[#DFE1E7] rounded-xl bg-white focus-within:border-[#0B266E] focus-within:ring-1 focus-within:ring-[#0B266E] transition-all">
                     <button type="button"
                             @click.prevent="toggle($el)"
-                            class="flex-shrink-0 flex items-center gap-1 px-3 py-2.5 bg-slate-50 border-r border-slate-200 hover:bg-slate-100 transition-colors text-[11px] font-bold text-slate-600 rounded-l-xl min-w-[82px]">
+                            class="flex-shrink-0 flex items-center gap-1 px-3 py-2.5 bg-[#F6F8FA] border-r border-[#DFE1E7] hover:bg-[#E8EDF7] transition-colors text-[11px] font-semibold text-[#353849] rounded-l-xl min-w-[82px]">
                         <span x-text="selected.flag" class="leading-none"></span>
                         <span x-text="selected.dial"></span>
-                        <span class="material-symbols-outlined text-[15px] leading-none transition-transform duration-150"
-                              :style="open ? 'transform:rotate(180deg)' : ''">expand_more</span>
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#808897" stroke-width="2" stroke-linecap="round"
+                             :style="open ? 'transform:rotate(180deg)' : ''" style="transition:transform 0.15s">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
                     </button>
-
-                    {{-- Input nomor lokal --}}
                     <input type="tel" name="whatsapp"
                            value="{{ old('whatsapp', $savedLocalNum) }}"
                            placeholder="812xxxxxxx"
-                           class="flex-1 text-sm py-2.5 px-3 outline-none bg-transparent text-slate-900 rounded-r-xl min-w-0" />
-
+                           class="flex-1 text-sm py-2.5 px-3 outline-none bg-transparent text-[#0D0D12] rounded-r-xl min-w-0" />
                     <input type="hidden" name="phone_code" :value="selected.dial">
                 </div>
 
-                {{-- Dropdown FIXED --}}
+                {{-- Dropdown --}}
                 <div x-show="open"
                      x-transition:enter="transition ease-out duration-100"
                      x-transition:enter-start="opacity-0 translate-y-1"
@@ -148,29 +138,29 @@
                      x-transition:leave-end="opacity-0 translate-y-1"
                      @click.outside="open = false"
                      :style="dropdownStyle"
-                     class="fixed w-60 bg-white border border-slate-200 rounded-xl shadow-2xl z-[9999] overflow-hidden"
+                     class="fixed w-60 bg-white border border-[#DFE1E7] rounded-xl shadow-[0_12px_20px_-4px_rgba(22,22,43,0.08)] z-[9999] overflow-hidden"
                      style="display:none">
-                    <div class="p-2 border-b border-slate-100 bg-slate-50">
+                    <div class="p-2 border-b border-[#F0F1F4] bg-[#F6F8FA]">
                         <input type="text"
                                x-model="search"
                                @click.stop
                                placeholder="Cari negara..."
-                               class="w-full text-[11px] border border-slate-200 rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#5E53F4]" />
+                               class="w-full text-[12px] border border-[#DFE1E7] rounded-lg px-2.5 py-1.5 focus:outline-none focus:border-[#0B266E]" />
                     </div>
                     <ul class="max-h-52 overflow-y-auto py-1">
                         <template x-for="c in filtered" :key="c.name">
                             <li>
                                 <button type="button"
                                         @click="select(c)"
-                                        class="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-slate-50 transition-colors"
-                                        :class="selected.name === c.name ? 'bg-[#5E53F4]/5' : ''">
+                                        class="w-full flex items-center gap-2.5 px-3 py-2 text-left hover:bg-[#E8EDF7] transition-colors"
+                                        :class="selected.name === c.name ? 'bg-[#E8EDF7]' : ''">
                                     <span x-text="c.flag" class="text-base leading-none flex-shrink-0"></span>
-                                    <span x-text="c.name" class="text-[11px] text-slate-700 flex-1 truncate"></span>
-                                    <span x-text="c.dial" class="text-[10px] font-bold text-slate-400 flex-shrink-0"></span>
+                                    <span x-text="c.name" class="text-[12px] text-[#353849] flex-1 truncate"></span>
+                                    <span x-text="c.dial" class="text-[10px] font-semibold text-[#A4ABB8] flex-shrink-0"></span>
                                 </button>
                             </li>
                         </template>
-                        <li x-show="filtered.length === 0" class="px-3 py-3 text-[11px] text-slate-400 text-center">
+                        <li x-show="filtered.length === 0" class="px-3 py-3 text-[12px] text-[#A4ABB8] text-center">
                             Tidak ditemukan
                         </li>
                     </ul>
@@ -181,11 +171,11 @@
 
             {{-- Email Pribadi --}}
             <div>
-                <label class="text-[11px] font-bold text-slate-700 block mb-1.5 tracking-tight">Email Pribadi</label>
+                <label class="block text-[12px] font-medium text-[#0D0D12] mb-1.5">Email Pribadi</label>
                 <input type="email" name="personal_email"
                        value="{{ old('personal_email', $user->personal_email ?? '') }}"
                        placeholder="email@pribadi.com"
-                       class="w-full rounded-xl border border-slate-200 bg-white text-slate-900 focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4] text-sm py-2.5 px-3 shadow-sm transition-all outline-none" />
+                       class="w-full rounded-xl border border-[#DFE1E7] bg-white text-[#0D0D12] focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] text-sm py-2.5 px-3 transition-all outline-none" />
                 <x-input-error class="mt-1" :messages="$errors->get('personal_email')" />
             </div>
 
@@ -196,13 +186,15 @@
     {{-- Action --}}
     <div class="mt-auto pt-5 flex flex-col items-end gap-3">
         @if(session('status') === 'profile-updated')
-        <div class="flex items-center gap-2 text-emerald-700 text-[10px] font-bold bg-emerald-50 border border-emerald-100 rounded-lg px-3 py-2">
-            <span class="material-symbols-outlined text-[16px]">check_circle</span>
+        <div class="flex items-center gap-2 text-[#287F6E] text-[12px] font-medium bg-[#DDF2EE] border border-[#40C4AA]/30 rounded-lg px-3 py-2">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"/>
+            </svg>
             {{ __('Profil diperbarui') }}
         </div>
         @endif
         <button type="submit"
-            class="bg-[#5E53F4] hover:bg-[#4e44e0] active:scale-[0.98] text-white font-bold text-[11px] uppercase tracking-widest px-8 py-2.5 rounded-xl transition-all shadow-sm shadow-[#5E53F4]/30">
+            class="bg-[#0B266E] hover:bg-[#091958] active:bg-[#071742] text-white font-semibold text-[13px] px-8 py-2.5 rounded-xl transition-all">
             Simpan Perubahan
         </button>
     </div>
@@ -246,14 +238,11 @@ function phoneCode(defaultDial) {
         { flag: '🇨🇳', name: 'China',              dial: '+86'  },
     ];
 
-    // Cari negara yang cocok dengan kode dari DB, fallback ke Indonesia
     const defaultCountry = countries.find(c => c.dial === defaultDial)
         ?? countries.find(c => c.dial === '+62');
 
     return {
-        open:     false,
-        search:   '',
-        dropdownStyle: '',
+        open: false, search: '', dropdownStyle: '',
         selected: defaultCountry,
         countries,
         get filtered() {
@@ -268,14 +257,10 @@ function phoneCode(defaultDial) {
                 const rect = triggerEl.getBoundingClientRect();
                 this.dropdownStyle = `top:${rect.bottom + 6}px;left:${rect.left}px;`;
             }
-            this.open  = !this.open;
+            this.open   = !this.open;
             this.search = '';
         },
-        select(c) {
-            this.selected = c;
-            this.open     = false;
-            this.search   = '';
-        }
+        select(c) { this.selected = c; this.open = false; this.search = ''; }
     };
 }
 </script>
