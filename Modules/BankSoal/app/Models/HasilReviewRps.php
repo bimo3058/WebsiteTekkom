@@ -3,12 +3,11 @@
 namespace Modules\BankSoal\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class HasilReviewRps extends Model
 {
-    use HasFactory;
+    use SoftDeletes;
 
     protected $table = 'bs_hasil_review_rps';
 
@@ -18,33 +17,13 @@ class HasilReviewRps extends Model
         'skor',
     ];
 
-    protected $casts = [
-        'skor' => 'integer',
-    ];
-
-    // -------------------------------------------------------------------------
-    // Relations
-    // -------------------------------------------------------------------------
-
-    public function rpsDetail(): BelongsTo
+    public function rpsDetail()
     {
         return $this->belongsTo(RpsDetail::class, 'rps_detail_id');
     }
 
-    public function parameter(): BelongsTo
+    public function parameter()
     {
         return $this->belongsTo(Parameter::class, 'parameter_id');
-    }
-
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
-
-    /**
-     * Skor tertimbang = skor × bobot parameter.
-     */
-    public function getSkorTertimbangAttribute(): float
-    {
-        return $this->skor * ($this->parameter->bobot ?? 1);
     }
 }
