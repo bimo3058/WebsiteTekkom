@@ -3,94 +3,55 @@
 namespace Modules\BankSoal\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Builder;
+use App\Models\User;
+use Modules\BankSoal\Models\Shared\Cpl as SharedCpl;
+use Modules\BankSoal\Models\Shared\Cpmk as SharedCpmk;
+use Modules\BankSoal\Models\Shared\MataKuliah as SharedMataKuliah;
+use Modules\BankSoal\Enums\RpsStatus;
 
 class RpsDetail extends Model
 {
-    use HasFactory;
-
-    protected $table = 'bs_rps_detail';
-
-    protected $fillable = [
-        'rps_id',
-        'dokumen',
-        'status_rps',
-        'catatan',
-        'nilai_akhir',
-    ];
+    protected $table    = 'bs_rps_detail';
+    protected $fillable = ['mk_id', 'semester', 'tahun_ajaran', 'dokumen', 'status', 'catatan'];
 
     protected $casts = [
-        'nilai_akhir' => 'integer',
+        'status' => RpsStatus::class,
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
     ];
 
-    // -------------------------------------------------------------------------
-    // Constants — mirror dari Pertanyaan agar konsisten
-    // -------------------------------------------------------------------------
-
-    const STATUS_DRAFT     = 'draft';
-    const STATUS_DIAJUKAN  = 'diajukan';
-    const STATUS_DISETUJUI = 'disetujui';
-    const STATUS_REVISI    = 'revisi';
-
-    const STATUS_LIST = [
-        self::STATUS_DRAFT,
-        self::STATUS_DIAJUKAN,
-        self::STATUS_DISETUJUI,
-        self::STATUS_REVISI,
-    ];
-
-    const STATUS_TRANSITIONS = [
-        self::STATUS_DRAFT     => [self::STATUS_DIAJUKAN],
-        self::STATUS_DIAJUKAN  => [self::STATUS_DISETUJUI, self::STATUS_REVISI],
-        self::STATUS_REVISI    => [self::STATUS_DIAJUKAN],
-        self::STATUS_DISETUJUI => [],
-    ];
-
-    // -------------------------------------------------------------------------
-    // Relations
-    // -------------------------------------------------------------------------
-
-    public function rps(): BelongsTo
+    public function mataKuliah()
     {
-        return $this->belongsTo(Rps::class, 'rps_id');
+        return $this->belongsTo(SharedMataKuliah::class, 'mk_id');
+    }
+    
+    public function cpls()
+    {
+        return $this->belongsToMany(
+            SharedCpl::class,
+            'bs_rps_cpl',
+            'rps_id',
+            'cpl_id'
+        );
     }
 
-    public function hasilReview(): HasMany
+    public function cpmks()
     {
-        return $this->hasMany(HasilReviewRps::class, 'rps_detail_id');
+        return $this->belongsToMany(
+            SharedCpmk::class,
+            'bs_rps_cpmk',
+            'rps_id',
+            'cpmk_id'
+        );
     }
 
-    // -------------------------------------------------------------------------
-    // Scopes
-    // -------------------------------------------------------------------------
-
-    public function scopeDisetujui(Builder $query): Builder
+    public function dosens()
     {
-        return $query->where('status_rps', self::STATUS_DISETUJUI);
-    }
-
-    public function scopeMenungguReview(Builder $query): Builder
-    {
-        return $query->where('status_rps', self::STATUS_DIAJUKAN);
-    }
-
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
-
-    public function canTransitionTo(string $newStatus): bool
-    {
-        return in_array($newStatus, self::STATUS_TRANSITIONS[$this->status_rps] ?? []);
-    }
-
-    /**
-     * Total skor review dari semua parameter.
-     */
-    public function getTotalSkorReviewAttribute(): int
-    {
-        return $this->hasilReview->sum('skor');
+        return $this->belongsToMany(
+            User::class,
+            'bs_rps_dosen',
+            'rps_id',
+            'dosen_id'
+        );
     }
 }
