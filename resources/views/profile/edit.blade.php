@@ -2,24 +2,25 @@
 
 <x-app-layout>
 <x-sidebar :user="auth()->user()">
-    <div class="min-h-screen bg-[#F8F9FA]">
+    <div class="min-h-screen bg-[#F6F8FA]">
         <div class="p-4 sm:p-6">
             <div class="max-w-full mx-auto">
 
-                {{-- Header --}}
-                <div class="mb-5 flex items-center justify-between">
+                {{-- ── PAGE HEADER ── --}}
+                <div class="mb-5 flex items-center justify-between gap-4">
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800 tracking-tight flex items-center gap-2">
-                            <span class="w-1 h-5 bg-blue-600 rounded-full"></span>
+                        <h2 class="text-[18px] font-bold text-[#0D0D12] tracking-tight leading-tight">
                             Profil Akun
                         </h2>
-                        <p class="text-slate-400 text-[11px] font-bold uppercase tracking-widest mt-0.5">
+                        <p class="text-[12px] text-[#808897] mt-0.5 font-medium">
                             Kelola identitas dan keamanan akses Anda
                         </p>
                     </div>
-                    <div class="hidden sm:flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2 text-amber-700">
-                        <span class="material-symbols-outlined text-[14px]">lock</span>
-                        <p class="text-[11px] font-medium">Data SSO tidak dapat diubah via aplikasi ini</p>
+                    <div class="hidden sm:flex items-center gap-2 bg-[#F9ECCB] border border-[#D39C3D]/30 rounded-xl px-3 py-2">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#956321" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                        </svg>
+                        <p class="text-[11px] font-medium text-[#5B3D1E]">Data SSO tidak dapat diubah via aplikasi ini</p>
                     </div>
                 </div>
 
@@ -28,80 +29,81 @@
                     $namaDepan       = explode(' ', auth()->user()->name)[0];
                     $nim             = auth()->user()->student?->student_number ?? '';
                     $defaultPassword = $namaDepan . $nim;
-                    $isDefaultPw     = auth()->user()->password && 
+                    $isDefaultPw     = auth()->user()->password &&
                                     \Illuminate\Support\Facades\Hash::check($defaultPassword, auth()->user()->password);
                 @endphp
 
                 @if ($isDefaultPw)
-                    <div class="mb-4 flex items-start gap-3 p-4 bg-yellow-50 border border-yellow-200 rounded-2xl">
-                        <span class="material-symbols-outlined text-yellow-500 text-[20px] shrink-0 mt-0.5">warning</span>
+                    <div class="mb-4 flex items-start gap-3 p-4 bg-[#F9ECCB] border border-[#D39C3D]/30 rounded-2xl">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#956321" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="shrink-0 mt-0.5">
+                            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+                        </svg>
                         <div>
-                            <p class="text-sm font-semibold text-yellow-700">Harap ubah password Anda</p>
-                            <p class="text-xs text-yellow-600 mt-0.5">
-                                Password Anda masih menggunakan password default. Segera ubah melalui kolom <strong>Keamanan</strong> di sebelah kanan untuk melindungi akun Anda.
+                            <p class="text-[13px] font-semibold text-[#5B3D1E]">Harap ubah password Anda</p>
+                            <p class="text-[12px] text-[#956321] mt-0.5 leading-relaxed">
+                                Password Anda masih menggunakan password default. Segera ubah melalui kolom <strong>Keamanan</strong> di sebelah kanan.
                             </p>
                         </div>
                     </div>
                 @endif
 
-                {{-- Grid 3 kolom — items-stretch agar rata bawah --}}
-                <div class="grid grid-cols-1 lg:grid-cols-[270px_1fr_290px] gap-4 items-stretch pb-6">
+                {{-- ── GRID UTAMA: 3 kolom ── --}}
+                <div class="grid grid-cols-1 lg:grid-cols-[260px_1fr_290px] gap-4 items-start pb-6">
 
-                    {{-- ── KOLOM 1: Avatar + Info + Aktivitas ── --}}
-                    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-                        <div class="flex flex-col items-center pt-6 pb-4 px-4">
-                            @php
-                                $user = auth()->user();
-                                $name = $user->name;
-                                $initials = strtoupper(substr($name, 0, 1));
-                                $sp = strpos($name, ' ');
-                                if ($sp !== false) $initials .= strtoupper(substr($name, $sp + 1, 1));
-                                
-                                $rc = $user->hasRole('superadmin') ? 'bg-red-100 text-red-700'
-                                    : ($user->hasRole('dosen')     ? 'bg-purple-100 text-purple-700'
-                                    : ($user->hasRole('mahasiswa') ? 'bg-blue-100 text-blue-700'
-                                    : 'bg-amber-100 text-amber-700'));
-                            @endphp
+                    {{-- ── KOLOM 1: Avatar + Info + Stats + Aktivitas ── --}}
+                    <div class="flex flex-col gap-4 h-full">
 
-                            {{-- Container Avatar --}}
-                            <div class="relative group">
-                                <div class="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold {{ $rc }} shadow-inner overflow-hidden border-2 border-white bg-white">
-                                    @if($user->avatar_url)
-                                        <img src="{{ $user->avatar_url }}" id="currentAvatar" alt="Avatar" class="w-full h-full object-cover">
-                                    @else
-                                        <span id="avatarInitials">{{ $initials }}</span>
-                                    @endif
+                        {{-- Avatar card --}}
+                        <div class="flex-1 bg-white border border-[#DFE1E7] rounded-2xl shadow-[0_1px_2px_rgba(228,229,231,0.24)] overflow-hidden flex flex-col">
+                            <div class="flex flex-col items-center pt-6 pb-5 px-5">
+                                @php
+                                    $user     = auth()->user();
+                                    $name     = $user->name;
+                                    $initials = strtoupper(substr($name, 0, 1));
+                                    $sp       = strpos($name, ' ');
+                                    if ($sp !== false) $initials .= strtoupper(substr($name, $sp + 1, 1));
+                                @endphp
+
+                                {{-- Avatar --}}
+                                <div class="relative group mb-3">
+                                    <div class="w-16 h-16 rounded-full flex items-center justify-center text-xl font-bold bg-[#E8EDF7] text-[#0B266E] border-2 border-white shadow-sm overflow-hidden">
+                                        @if($user->avatar_url)
+                                            <img src="{{ $user->avatar_url }}" id="currentAvatar" alt="Avatar" class="w-full h-full object-cover">
+                                        @else
+                                            <span id="avatarInitials">{{ $initials }}</span>
+                                        @endif
+                                    </div>
+                                    <button type="button" onclick="openManagePhotoModal()"
+                                        class="absolute -bottom-1 -right-1 w-6 h-6 bg-white border border-[#DFE1E7] rounded-full flex items-center justify-center shadow-sm cursor-pointer hover:border-[#0B266E] hover:text-[#0B266E] transition-all z-10 text-[#808897]">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"/><circle cx="12" cy="13" r="4"/>
+                                        </svg>
+                                    </button>
                                 </div>
 
-                                {{-- Trigger Modal Kelola Foto --}}
-                                <button type="button" onclick="openManagePhotoModal()" 
-                                    class="absolute -bottom-1 -right-1 w-6 h-6 bg-white border border-slate-200 rounded-full flex items-center justify-center shadow-sm cursor-pointer hover:text-blue-600 hover:border-blue-200 transition-all z-10">
-                                    <span class="material-symbols-outlined !text-[14px]">photo_camera</span>
-                                </button>
+                                <p class="text-[14px] font-bold text-[#0D0D12] text-center leading-tight">{{ $user->name }}</p>
+                                <p class="text-[12px] text-[#808897] mt-1 text-center truncate w-full px-2">{{ $user->email }}</p>
+
+                                {{-- Role badges --}}
+                                <div class="mt-3 flex flex-wrap gap-1 justify-center">
+                                    @foreach($user->roles as $role)
+                                    <span class="text-[10px] font-semibold px-2.5 py-0.5 rounded-full border
+                                        @if(str_contains($role->name,'superadmin')) bg-[#FADAE1] text-[#710E21] border-[#ED8296]/30
+                                        @elseif(str_contains($role->name,'dosen'))  bg-[#E8EDF7] text-[#0B266E] border-[#8FA3D1]/30
+                                        @elseif(str_contains($role->name,'mahasiswa')) bg-[#DDF2EE] text-[#174E43] border-[#40C4AA]/30
+                                        @else bg-[#F9ECCB] text-[#5B3D1E] border-[#D39C3D]/30 @endif">
+                                        {{ $role->name }}
+                                    </span>
+                                    @endforeach
+                                </div>
                             </div>
 
-                            <p class="mt-3 text-[14px] font-bold text-slate-800 text-center leading-tight">{{ $user->name }}</p>
-                            <p class="text-[11px] text-slate-400 mt-1 text-center truncate w-full px-2">{{ $user->email }}</p>
-                            
-                            <div class="mt-3 flex flex-wrap gap-1 justify-center">
-                                @foreach($user->roles as $role)
-                                <span class="text-[9px] font-semibold px-2 py-0.5 rounded-lg border uppercase tracking-tighter
-                                    @if(str_contains($role->name,'superadmin')) bg-red-50 text-red-600 border-red-100
-                                    @elseif(str_contains($role->name,'dosen'))  bg-purple-50 text-purple-600 border-purple-100
-                                    @elseif(str_contains($role->name,'mahasiswa')) bg-blue-50 text-blue-600 border-blue-100
-                                    @else bg-amber-50 text-amber-600 border-amber-100 @endif">
-                                    {{ $role->name }}
-                                </span>
-                                @endforeach
-                            </div>
-                        </div>
-
-                        <div class="border-t border-slate-100 px-4 py-5 space-y-5 flex-1">
-                            <div>
-                                <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3">Data Akademik</p>
-                                <div class="space-y-1">
+                            {{-- Data akademik --}}
+                            <div class="border-t border-[#F0F1F4] px-5 py-4 h-full">
+                                <p class="text-[10px] font-semibold text-[#A4ABB8] uppercase tracking-widest mb-3">Data Akademik</p>
+                                <div class="space-y-0">
                                     @if($user->hasRole('mahasiswa') && $user->student)
-                                        @include('profile.partials._info-row', ['label' => 'NIM', 'value' => $user->student->student_number])
+                                        @include('profile.partials._info-row', ['label' => 'NIM',      'value' => $user->student->student_number])
                                         @include('profile.partials._info-row', ['label' => 'Angkatan', 'value' => $user->student->cohort_year])
                                     @elseif($user->hasRole('dosen') && $user->lecturer)
                                         @include('profile.partials._info-row', ['label' => 'NIP', 'value' => $user->lecturer->employee_number])
@@ -111,105 +113,98 @@
                                         'value' => $user->last_login?->diffForHumans() ?? 'Baru saja'
                                     ])
                                 </div>
-                            </div>
-                            <div class="pt-4 border-t border-slate-100">
-                                <p class="text-[10px] font-semibold text-slate-400 uppercase tracking-widest mb-3">Jejak Aktivitas</p>
-                                @include('profile.partials.activity-log')
-                            </div>
-                        </div>
-                    </div>
 
-                    {{-- ── KOLOM 2: Pengaturan Akun ── --}}
-                    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-                        <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2 flex-shrink-0">
-                            <span class="material-symbols-outlined text-blue-600 text-[18px]">manage_accounts</span>
-                            <h3 class="text-xs font-semibold text-slate-700 uppercase tracking-widest">Pengaturan Akun</h3>
-                            <span class="ml-auto text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">Bisa diubah</span>
-                        </div>
-                        <div class="p-6 flex-1 flex flex-col">
-                            @include('profile.partials.update-profile-information-form')
-
-                            {{-- Shortcut CV Builder Terintegrasi --}}
-                            @if(auth()->user()->hasAnyRole(['mahasiswa', 'alumni']))
-                            <div class="mt-12 pt-8 border-t border-slate-100 mt-auto">
-                                <div class="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-xl p-4 shadow-md text-white relative overflow-hidden">
-                                    <div class="absolute -right-5 -top-5 w-24 h-24 bg-white opacity-10 rounded-full blur-xl"></div>
-                                    <div class="relative z-10">
-                                        <h4 class="text-[14px] font-bold mb-1 flex items-center gap-2">
-                                            <span class="material-symbols-outlined !text-[18px]">description</span>
-                                            CV Builder Cerdas
-                                        </h4>
-                                        <p class="text-[11px] opacity-90 mb-3 leading-relaxed">
-                                            Buat CV profesional semi-otomatis menggunakan data profil, akademik, dan kegiatan Anda.
-                                        </p>
-                                        <div class="flex flex-col gap-2">
-                                            <a href="{{ route('profile.cv.index') }}" 
-                                               class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-white text-indigo-700 text-[11px] font-bold uppercase tracking-wide rounded-lg hover:bg-slate-50 transition-colors shadow-sm w-full">
-                                                Mulai / Edit CV
-                                                <span class="material-symbols-outlined !text-[14px]">arrow_forward</span>
-                                            </a>
-                                            <a href="{{ auth()->user()->hasRole('mahasiswa') ? route('manajemenmahasiswa.direktori.mahasiswa.profil.cv') : route('manajemenmahasiswa.direktori.alumni.profil.cv') }}" target="_blank"
-                                               class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-indigo-700/30 border border-indigo-400/50 text-white text-[11px] font-bold uppercase tracking-wide rounded-lg hover:bg-indigo-700/50 transition-colors shadow-sm w-full">
-                                                <span class="material-symbols-outlined !text-[14px]">download</span>
-                                                Download PDF Langsung
-                                            </a>
-                                        </div>
+                                <div class="mt-4 pt-4 border-t border-[#F0F1F4]">
+                                    <div class="flex items-center gap-2 mb-3">
+                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#808897" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+                                        </svg>
+                                        <p class="text-[11px] font-semibold text-[#A4ABB8] uppercase tracking-widest">Jejak Aktivitas</p>
+                                    </div>
+                                    <div>
+                                        @include('profile.partials.activity-log')
                                     </div>
                                 </div>
                             </div>
-                            @endif
+                        </div>
+
+                        {{-- Stats card --}}
+                        @include('profile.partials.stats-card')
+
+                    </div>
+
+                    {{-- ── KOLOM 2: Pengaturan Akun ── --}}
+                    <div class="bg-white border border-[#DFE1E7] rounded-2xl shadow-[0_1px_2px_rgba(228,229,231,0.24)] overflow-hidden flex flex-col h-full">
+
+                        {{-- Header --}}
+                        <div class="px-5 py-4 border-b border-[#F0F1F4] flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-lg bg-[#E8EDF7] flex items-center justify-center">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
+                                </svg>
+                            </div>
+                            <h3 class="text-[12px] font-semibold text-[#0D0D12] tracking-tight">Pengaturan Akun</h3>
+                            <span class="ml-auto text-[10px] font-semibold text-[#287F6E] bg-[#DDF2EE] border border-[#40C4AA]/30 px-2 py-0.5 rounded-full">Bisa diubah</span>
+                        </div>
+                        <div class="p-6 flex-1 flex flex-col">
+                            @include('profile.partials.update-profile-information-form')
                         </div>
                     </div>
 
-                    {{-- ── KOLOM 3: Keamanan ── --}}
-                    <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden flex flex-col">
-                        <div class="px-5 py-4 border-b border-slate-100 bg-slate-50/50 flex items-center gap-2 flex-shrink-0">
-                            <span class="material-symbols-outlined text-purple-600 text-[18px]">lock_person</span>
-                            <h3 class="text-xs font-semibold text-slate-700 uppercase tracking-widest">Keamanan</h3>
-                        </div>
-                        <div class="p-5 flex-1 flex flex-col">
-                            @include('profile.partials.update-password-form')
+                    {{-- ── KOLOM 3: Keamanan + Hapus Akun ── --}}
+                    <div class="flex flex-col gap-4">
+
+                        {{-- Password --}}
+                        <div class="bg-white border border-[#DFE1E7] rounded-2xl shadow-[0_1px_2px_rgba(228,229,231,0.24)] overflow-hidden flex flex-col">
+                            <div class="px-5 py-4 border-b border-[#F0F1F4] flex items-center gap-2.5">
+                                <div class="w-7 h-7 rounded-lg bg-[#E8EDF7] flex items-center justify-center">
+                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/>
+                                    </svg>
+                                </div>
+                                <h3 class="text-[12px] font-semibold text-[#0D0D12] tracking-tight">Keamanan</h3>
+                            </div>
+                            <div class="p-5 flex-1 flex flex-col">
+                                @include('profile.partials.update-password-form')
+                            </div>
                         </div>
                     </div>
                 </div>
-
 
             </div>
         </div>
     </div>
 
-    {{-- ── MODALS SECTION ── --}}
-
-    {{-- MODAL 1: Pilihan Kelola Foto --}}
-    <div id="modalManagePhoto" class="hidden fixed inset-0 z-[100] overflow-y-auto bg-slate-900/60">
+    {{-- ── MODAL: Kelola Foto ── --}}
+    <div id="modalManagePhoto" class="hidden fixed inset-0 z-[100] overflow-y-auto bg-[#0D0D12]/60 backdrop-blur-[2px]">
         <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                    <h3 class="text-xs font-semibold text-slate-700 uppercase tracking-widest">Foto Profil</h3>
-                    <button type="button" onclick="closeManagePhotoModal()" class="text-slate-400 hover:text-slate-600 transition-colors">
-                        <span class="material-symbols-outlined">close</span>
+            <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-[#DFE1E7]">
+                <div class="px-5 py-4 border-b border-[#F0F1F4] flex items-center justify-between">
+                    <h3 class="text-[12px] font-semibold text-[#0D0D12] tracking-tight">Foto Profil</h3>
+                    <button type="button" onclick="closeManagePhotoModal()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-[#F6F8FA] text-[#808897] hover:text-[#0D0D12] transition-all">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                 </div>
                 <div class="p-4 space-y-2">
-                    <label for="avatarInput" class="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:bg-slate-50 hover:border-blue-200 cursor-pointer transition-all group">
-                        <div class="w-10 h-10 rounded-full bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-600 group-hover:text-white transition-colors">
-                            <span class="material-symbols-outlined">upload</span>
+                    <label for="avatarInput" class="w-full flex items-center gap-3 p-3 rounded-xl border border-[#DFE1E7] hover:bg-[#E8EDF7] hover:border-[#8FA3D1] cursor-pointer transition-all group">
+                        <div class="w-9 h-9 rounded-lg bg-[#E8EDF7] flex items-center justify-center text-[#0B266E] group-hover:bg-[#0B266E] group-hover:text-white transition-colors flex-shrink-0">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                         </div>
-                        <div class="text-left">
-                            <p class="text-[11px] font-semibold text-slate-700 uppercase tracking-tight">Unggah Foto Baru</p>
-                            <p class="text-[10px] text-slate-400">JPG, PNG atau WebP (Max. 2MB)</p>
+                        <div>
+                            <p class="text-[12px] font-semibold text-[#0D0D12]">Unggah Foto Baru</p>
+                            <p class="text-[11px] text-[#808897]">JPG, PNG atau WebP (Maks. 2MB)</p>
                         </div>
                     </label>
                     <input type="file" id="avatarInput" class="hidden" accept="image/jpeg,image/png,image/webp">
 
                     @if($user->avatar_url)
-                    <button type="button" onclick="openConfirmDeleteModal()" class="w-full flex items-center gap-3 p-3 rounded-xl border border-slate-100 hover:bg-red-50 hover:border-red-200 transition-all group">
-                        <div class="w-10 h-10 rounded-full bg-red-50 flex items-center justify-center text-red-600 group-hover:bg-red-600 group-hover:text-white transition-colors">
-                            <span class="material-symbols-outlined">delete</span>
+                    <button type="button" onclick="openConfirmDeleteModal()" class="w-full flex items-center gap-3 p-3 rounded-xl border border-[#DFE1E7] hover:bg-[#FADAE1] hover:border-[#ED8296] transition-all group">
+                        <div class="w-9 h-9 rounded-lg bg-[#FADAE1] flex items-center justify-center text-[#DF1C41] group-hover:bg-[#DF1C41] group-hover:text-white transition-colors flex-shrink-0">
+                            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg>
                         </div>
-                        <div class="text-left">
-                            <p class="text-[11px] font-semibold text-red-700 uppercase tracking-tight">Hapus Foto Sekarang</p>
-                            <p class="text-[10px] text-slate-400">Kembali ke inisial nama</p>
+                        <div>
+                            <p class="text-[12px] font-semibold text-[#710E21]">Hapus Foto</p>
+                            <p class="text-[11px] text-[#808897]">Kembali ke inisial nama</p>
                         </div>
                     </button>
                     @endif
@@ -218,50 +213,64 @@
         </div>
     </div>
 
-    {{-- MODAL 2: Cropper --}}
-    <div id="modalCrop" class="hidden fixed inset-0 z-[110] overflow-y-auto bg-slate-900/60">
+    {{-- ── MODAL: Cropper ── --}}
+    <div id="modalCrop" class="hidden fixed inset-0 z-[110] overflow-y-auto bg-[#0D0D12]/60 backdrop-blur-[2px]">
         <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl animate-in fade-in zoom-in-95 duration-200">
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
-                    <h3 class="text-xs font-semibold text-slate-700 uppercase tracking-widest">Sesuaikan Foto</h3>
-                    <button type="button" onclick="closeCropModal()" class="text-slate-400 hover:text-slate-600">
-                        <span class="material-symbols-outlined">close</span>
+            <div class="bg-white rounded-2xl max-w-md w-full shadow-2xl border border-[#DFE1E7]">
+                <div class="px-5 py-4 border-b border-[#F0F1F4] flex items-center justify-between">
+                    <h3 class="text-[12px] font-semibold text-[#0D0D12] tracking-tight">Sesuaikan Foto</h3>
+                    <button type="button" onclick="closeCropModal()" class="w-7 h-7 flex items-center justify-center rounded-lg hover:bg-[#F6F8FA] text-[#808897] transition-all">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                     </button>
                 </div>
-                <div class="p-6 text-center">
-                    <div class="max-h-[400px] overflow-hidden rounded-xl bg-slate-50 border border-slate-100">
+                <div class="p-6">
+                    <div class="max-h-[400px] overflow-hidden rounded-xl bg-[#F6F8FA] border border-[#DFE1E7]">
                         <img id="imageToCrop" class="block max-w-full mx-auto">
                     </div>
-                    <p class="text-[9px] text-slate-400 font-bold uppercase mt-4 tracking-tighter">Gunakan mouse/jari untuk menggeser atau memperbesar foto</p>
+                    <p class="text-[11px] text-[#A4ABB8] text-center mt-3">Gunakan mouse/jari untuk menggeser atau memperbesar foto</p>
                 </div>
-                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-end gap-3 rounded-b-2xl">
-                    <button type="button" onclick="closeCropModal()" class="px-4 py-2 text-[10px] font-semibold text-slate-500 uppercase hover:bg-slate-200 rounded-xl transition-all">Batal</button>
-                    <button type="button" id="btnSaveCrop" class="bg-[#5E53F4] text-white px-6 py-2 text-[10px] font-semibold uppercase rounded-xl shadow-lg shadow-blue-100 hover:bg-[#4e44e0] transition-all">Simpan Foto</button>
+                <div class="px-5 py-4 bg-[#F6F8FA] border-t border-[#F0F1F4] flex justify-end gap-3 rounded-b-2xl">
+                    <button type="button" onclick="closeCropModal()"
+                        class="px-4 py-2 text-[12px] font-medium text-[#666D80] bg-white border border-[#DFE1E7] rounded-lg hover:bg-[#F6F8FA] transition-all">
+                        Batal
+                    </button>
+                    <button type="button" id="btnSaveCrop"
+                        class="px-5 py-2 text-[12px] font-semibold text-white bg-[#0B266E] hover:bg-[#091958] rounded-lg transition-all">
+                        Simpan Foto
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- MODAL 3: Konfirmasi Hapus --}}
-    <div id="modalDeleteAvatar" class="hidden fixed inset-0 z-[120] overflow-y-auto bg-slate-900/60">
+    {{-- ── MODAL: Konfirmasi Hapus Foto ── --}}
+    <div id="modalDeleteAvatar" class="hidden fixed inset-0 z-[120] overflow-y-auto bg-[#0D0D12]/60 backdrop-blur-[2px]">
         <div class="flex items-center justify-center min-h-screen px-4">
-            <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div class="bg-white rounded-2xl max-w-sm w-full shadow-2xl border border-[#DFE1E7]">
                 <div class="p-6 text-center">
-                    <div class="w-12 h-12 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
-                        <span class="material-symbols-outlined text-red-600">delete_forever</span>
+                    <div class="w-12 h-12 rounded-xl bg-[#FADAE1] flex items-center justify-center mx-auto mb-4">
+                        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DF1C41" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/>
+                        </svg>
                     </div>
-                    <h3 class="text-sm font-semibold text-slate-800 uppercase tracking-widest mb-2">Hapus Foto Profil?</h3>
-                    <p class="text-[11px] text-slate-500 font-medium leading-relaxed">Foto profil Anda akan dihapus dan kembali menggunakan inisial nama. Tindakan ini tidak dapat dibatalkan.</p>
+                    <h3 class="text-[14px] font-semibold text-[#0D0D12] mb-2">Hapus Foto Profil?</h3>
+                    <p class="text-[12px] text-[#666D80] leading-relaxed">Foto profil Anda akan dihapus dan kembali menggunakan inisial nama. Tindakan ini tidak dapat dibatalkan.</p>
                 </div>
-                <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex justify-center gap-3 rounded-b-2xl">
-                    <button type="button" onclick="closeDeleteAvatarModal()" class="flex-1 px-4 py-2 text-[10px] font-semibold text-slate-500 uppercase hover:bg-slate-200 rounded-xl transition-all">Batal</button>
-                    <button type="button" id="btnConfirmDeleteAvatar" class="flex-1 bg-red-600 text-white px-4 py-2 text-[10px] font-semibold uppercase rounded-xl shadow-lg shadow-red-100 hover:bg-red-700 transition-all">Ya, Hapus</button>
+                <div class="px-5 py-4 bg-[#F6F8FA] border-t border-[#F0F1F4] flex gap-3 rounded-b-2xl">
+                    <button type="button" onclick="closeDeleteAvatarModal()"
+                        class="flex-1 px-4 py-2.5 text-[12px] font-medium text-[#666D80] bg-white border border-[#DFE1E7] rounded-lg hover:bg-[#F6F8FA] transition-all">
+                        Batal
+                    </button>
+                    <button type="button" id="btnConfirmDeleteAvatar"
+                        class="flex-1 px-4 py-2.5 text-[12px] font-semibold text-white bg-[#DF1C41] hover:bg-[#95122B] rounded-lg transition-all">
+                        Ya, Hapus
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- LOGIC SCRIPT --}}
+    {{-- ── SCRIPTS ── --}}
     <script>
     let cropper;
     const avatarInput = document.getElementById('avatarInput');
@@ -270,24 +279,10 @@
     const modalCrop   = document.getElementById('modalCrop');
     const modalDelete = document.getElementById('modalDeleteAvatar');
 
-    function openManagePhotoModal() { 
-        modalManage.classList.remove('hidden'); 
-        document.body.style.overflow = 'hidden'; 
-    }
-    function closeManagePhotoModal() { 
-        modalManage.classList.add('hidden'); 
-        document.body.style.overflow = ''; 
-    }
-
-    function openConfirmDeleteModal() {
-        closeManagePhotoModal();
-        modalDelete.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-    }
-    function closeDeleteAvatarModal() { 
-        modalDelete.classList.add('hidden'); 
-        document.body.style.overflow = ''; 
-    }
+    function openManagePhotoModal()  { modalManage.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+    function closeManagePhotoModal() { modalManage.classList.add('hidden');    document.body.style.overflow = ''; }
+    function openConfirmDeleteModal()  { closeManagePhotoModal(); modalDelete.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+    function closeDeleteAvatarModal()  { modalDelete.classList.add('hidden');  document.body.style.overflow = ''; }
 
     avatarInput.addEventListener('change', function (e) {
         const files = e.target.files;
@@ -298,17 +293,11 @@
                 imageToCrop.src = event.target.result;
                 modalCrop.classList.remove('hidden');
                 document.body.style.overflow = 'hidden';
-                
                 if (cropper) cropper.destroy();
                 cropper = new Cropper(imageToCrop, {
-                    aspectRatio: 1,
-                    viewMode: 1,
-                    dragMode: 'move',
-                    guides: false,
-                    center: true,
-                    highlight: false,
-                    cropBoxMovable: false,
-                    cropBoxResizable: false,
+                    aspectRatio: 1, viewMode: 1, dragMode: 'move',
+                    guides: false, center: true, highlight: false,
+                    cropBoxMovable: false, cropBoxResizable: false,
                 });
             };
             reader.readAsDataURL(files[0]);
@@ -322,47 +311,48 @@
     }
 
     document.getElementById('btnSaveCrop').addEventListener('click', function () {
-        const btn = this;
+        const btn          = this;
         const originalFile = avatarInput.files[0];
-        const canvas = cropper.getCroppedCanvas({ width: 400, height: 400 });
-        btn.disabled = true;
-        btn.innerHTML = 'MEMPROSES...';
+        const canvas       = cropper.getCroppedCanvas({ width: 400, height: 400 });
+        btn.disabled       = true;
+        btn.textContent    = 'Memproses…';
 
         canvas.toBlob(function (blob) {
             const formData = new FormData();
             formData.append('avatar', blob, 'avatar.webp');
-            formData.append('avatar_original', originalFile); 
+            formData.append('avatar_original', originalFile);
 
             fetch("{{ route('profile.avatar.update') }}", {
                 method: 'POST',
                 body: formData,
                 headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
             })
-            .then(res => res.json())
+            .then(r => r.json())
             .then(data => {
                 if (data.status === 'success') window.location.reload();
-                else { alert(data.message || 'Gagal upload'); btn.disabled = false; btn.innerHTML = 'SIMPAN FOTO'; }
+                else { alert(data.message || 'Gagal upload'); btn.disabled = false; btn.textContent = 'Simpan Foto'; }
             })
-            .catch(err => { console.error(err); btn.disabled = false; btn.innerHTML = 'SIMPAN FOTO'; });
+            .catch(() => { btn.disabled = false; btn.textContent = 'Simpan Foto'; });
         }, 'image/webp', 0.8);
     });
 
-    document.getElementById('btnConfirmDeleteAvatar')?.addEventListener('click', function() {
-        const btn = this;
-        btn.disabled = true;
-        btn.innerHTML = 'MENGHAPUS...';
+    document.getElementById('btnConfirmDeleteAvatar')?.addEventListener('click', function () {
+        const btn       = this;
+        btn.disabled    = true;
+        btn.textContent = 'Menghapus…';
 
         fetch("{{ route('profile.avatar.destroy') }}", {
             method: 'DELETE',
             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
         })
-        .then(res => res.json())
+        .then(r => r.json())
         .then(data => {
             if (data.status === 'success') window.location.reload();
-            else { alert('Gagal menghapus foto'); btn.disabled = false; btn.innerHTML = 'YA, HAPUS'; }
+            else { alert('Gagal menghapus foto'); btn.disabled = false; btn.textContent = 'Ya, Hapus'; }
         })
-        .catch(err => { console.error(err); btn.disabled = false; btn.innerHTML = 'YA, HAPUS'; });
+        .catch(() => { btn.disabled = false; btn.textContent = 'Ya, Hapus'; });
     });
     </script>
+
 </x-sidebar>
 </x-app-layout>
