@@ -46,16 +46,13 @@
                 {{-- Legend --}}
                 <div class="flex-1 space-y-0.5 text-[11px]">
                     <div class="flex items-center justify-between text-slate-700">
-                        <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>Approved</span><span>{{ $approved }}</span>
+                        <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>Disetujui</span><span>{{ $approved }}</span>
                     </div>
                     <div class="flex items-center justify-between text-slate-700">
-                        <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>Pending (Diajukan)</span><span>{{ $perluReview }}</span>
+                        <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>Diajukan</span><span>{{ $perluReview }}</span>
                     </div>
                     <div class="flex items-center justify-between text-slate-700">
-                        <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>Perlu Revisi</span><span>{{ $revisi }}</span>
-                    </div>
-                    <div class="flex items-center justify-between text-slate-700">
-                        <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-red-500"></span>Rejected</span><span>{{ $ditolak }}</span>
+                        <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>Revisi</span><span>{{ $revisi }}</span>
                     </div>
                 </div>
             </div>

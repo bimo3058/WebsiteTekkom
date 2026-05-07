@@ -1,25 +1,18 @@
+{{-- resources/views/superadmin/audit-logs/audit-logs.blade.php --}}
 <x-app-layout>
 <x-sidebar :user="auth()->user()">
-    <div class="min-h-screen bg-[#F8F9FA] p-8">
-        <div class="max-w-full mx-auto">
 
-            {{-- Header --}}
+    <div style="min-height:100vh=; background:var(--c-bg); font-family:var(--font-sans);">
+        <div style="max-width:100%; padding:2px 24px 56px;">
+
             @include('superadmin.audit-logs._header')
-
-            {{-- Floating Bulk Action Bar --}}
             @include('superadmin.audit-logs._bulk_bar')
-
-            {{-- Filter Section --}}
             @include('superadmin.audit-logs._filters')
-
-            {{-- Info Cards (Online & Suspended) --}}
             @include('superadmin.audit-logs._cards')
-            
-            {{-- Main Table --}}
             @include('superadmin.audit-logs._table')
 
             {{-- Pagination --}}
-            <div id="paginationWrapper" class="mt-8 w-full border-t border-[#DEE2E6] pt-5">
+            <div id="paginationWrapper" style="margin-top:24px; padding-top:20px; border-top:1px solid var(--c-border);">
                 {{ $logs->links() }}
             </div>
 
@@ -32,7 +25,6 @@
 
     </div>
 
-    {{-- Script dipindah ke file terpisah atau tetap di sini --}}
     @include('superadmin.audit-logs._scripts')
 
 </x-sidebar>

@@ -3,7 +3,7 @@
         <!-- Header Title -->
         <div>
             <h1 class="text-xl font-bold text-slate-800">
-                @yield('header_title', 'Dashboard Mahasiswa')
+                @yield('header_title', 'Portal Ujian')
             </h1>
         </div>
         

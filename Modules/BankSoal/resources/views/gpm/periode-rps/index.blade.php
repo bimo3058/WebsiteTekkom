@@ -1,253 +1,319 @@
 <x-banksoal::layouts.gpm-master>
-    @section('page-title', 'Manajemen Jadwal RPS')
-    @section('page-subtitle', 'Kelola periode unggah RPS untuk Dosen')
+    <x-banksoal::notification.alerts />
+    <x-banksoal::ui.page-header title="Manajemen Jadwal RPS" subtitle="Kelola periode unggah RPS untuk Dosen">
+        <x-slot:actions>
+            <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50" data-modal-open="modalUploadTemplate">
+                <i class="fas fa-file-upload"></i> Upload Template
+            </button>
+            <button type="button" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700" data-modal-open="modalTambah">
+                <i class="fas fa-plus"></i> Tambah Periode
+            </button>
+        </x-slot:actions>
+    </x-banksoal::ui.page-header>
 
-    <style>
-        .table-container { background-color: white; border-radius: 0.75rem; border: 1px solid #e2e8f0; overflow: hidden; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }
-        .table-periode th { text-transform: uppercase; font-size: 0.75rem; color: #64748b; font-weight: 600; padding: 1.25rem 1.5rem; border-bottom: 1px solid #e2e8f0; background-color: #f8fafc; letter-spacing: 0.5px;}
-        .table-periode td { padding: 1.25rem 1.5rem; vertical-align: middle; border-bottom: 1px solid #e2e8f0; }
-        .table-periode tr:last-child td { border-bottom: none; }
-        .badge-active { background-color: #d1fae5; color: #065f46; border: 1px solid #a7f3d0; padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 0.375rem; font-weight: 600; }
-        .badge-inactive { background-color: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; padding: 0.35rem 0.75rem; font-size: 0.75rem; border-radius: 0.375rem; font-weight: 600; }
-        .btn-action { padding: 0.4rem 0.75rem; font-size: 0.85rem; border-radius: 0.375rem; margin-right: 0.25rem; }
-    </style>
-
-    <div class="container-fluid py-4 px-4 px-xl-5">
-
-        <script>
-            document.addEventListener("DOMContentLoaded", function() {
-                const topbarTitle = document.getElementById('topbar-title');
-                const topbarSubtitle = document.getElementById('topbar-subtitle');
-                if(topbarTitle) topbarTitle.textContent = "Manajemen Jadwal RPS";
-                if(topbarSubtitle) topbarSubtitle.textContent = "Kelola periode unggah RPS untuk Dosen";
-            });
-        </script>
-
-        @if(session('success'))
-            <div class="alert alert-success alert-dismissible fade show rounded-3" role="alert">
-                <i class="fas fa-check-circle me-2"></i> {{ session('success') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-        @if(session('error'))
-            <div class="alert alert-danger alert-dismissible fade show rounded-3" role="alert">
-                <i class="fas fa-exclamation-triangle me-2"></i> {{ session('error') }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
-        @endif
-
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h5 class="mb-0 fw-bold text-dark">Daftar Jadwal Pengajuan RPS</h5>
-            <div class="d-flex gap-2">
-                <button type="button" class="btn btn-outline-secondary rounded-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalUploadTemplate">
-                    <i class="fas fa-file-upload me-2"></i> Upload Template
-                </button>
-                <button type="button" class="btn btn-primary rounded-3 px-4 py-2" data-bs-toggle="modal" data-bs-target="#modalTambah">
-                    <i class="fas fa-plus me-2"></i> Tambah Periode
-                </button>
-            </div>
-        </div>
-
-        <div class="table-container mb-4">
-            <div class="table-responsive">
-                <table class="table table-periode mb-0">
-                    <thead>
+    <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div class="overflow-x-auto">
+            <table class="min-w-full text-sm">
+                <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                    <tr>
+                        <th class="px-6 py-4 text-left">No</th>
+                        <th class="px-6 py-4 text-left">Info Periode</th>
+                        <th class="px-6 py-4 text-left">Rentang Waktu</th>
+                        <th class="px-6 py-4 text-left">Status</th>
+                        <th class="px-6 py-4 text-right">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-200">
+                    @forelse($periodes as $index => $periode)
                         <tr>
-                            <th>No</th>
-                            <th>Info Periode</th>
-                            <th>Rentang Waktu</th>
-                            <th>Status</th>
-                            <th class="text-end">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($periodes as $index => $periode)
-                        <tr>
-                            <td>{{ $index + 1 }}</td>
-                            <td>
-                                <div class="fw-bold text-dark">{{ $periode->judul }}</div>
-                                <div class="text-muted" style="font-size: 0.85rem;">Semester {{ $periode->semester }} - TA {{ $periode->tahun_ajaran }}</div>
+                            <td class="px-6 py-4 text-sm text-slate-600">{{ $index + 1 }}</td>
+                            <td class="px-6 py-4">
+                                <p class="text-sm font-semibold text-slate-900">{{ $periode->judul }}</p>
+                                <p class="text-xs text-slate-500">Semester {{ $periode->semester }} &bull; TA {{ $periode->tahun_ajaran }}</p>
                             </td>
-                            <td>
-                                <div style="font-size: 0.9rem;">
-                                    <i class="fas fa-calendar-alt text-muted me-2"></i> 
+                            <td class="px-6 py-4 text-sm text-slate-600">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-calendar-alt text-slate-400"></i>
                                     {{ \Carbon\Carbon::parse($periode->tanggal_mulai)->format('d M Y, H:i') }}
                                 </div>
-                                <div style="font-size: 0.9rem;" class="mt-1">
-                                    <i class="fas fa-flag-checkered text-danger me-2"></i>
-                                    {{ \Carbon\Carbon::parse($periode->tanggal_selesai)->format('d M Y, H:i') }}
+                                <div class="mt-2 flex items-center gap-2 text-rose-500">
+                                    <i class="fas fa-flag-checkered"></i>
+                                    <span class="text-slate-600">{{ \Carbon\Carbon::parse($periode->tanggal_selesai)->format('d M Y, H:i') }}</span>
                                 </div>
                             </td>
-                            <td>
+                            <td class="px-6 py-4">
                                 @if($periode->is_active)
-                                    <span class="badge-active"><i class="fas fa-circle text-success me-1" style="font-size: 0.5rem; vertical-align: middle;"></i> Aktif</span>
+                                    <span class="inline-flex items-center gap-2 rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">
+                                        <span class="h-2 w-2 rounded-full bg-emerald-500"></span> Aktif
+                                    </span>
                                 @else
-                                    <span class="badge-inactive">Non-Aktif</span>
+                                    <span class="inline-flex items-center rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-[11px] font-semibold text-slate-600">Non-Aktif</span>
                                 @endif
                             </td>
-                            <td class="text-end">
-                                <button type="button" class="btn btn-action btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalEdit{{ $periode->id }}">
+                            <td class="px-6 py-4 text-right">
+                                <button type="button" class="inline-flex items-center justify-center rounded-lg border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50" data-modal-open="modalEdit{{ $periode->id }}">
                                     <i class="fas fa-edit"></i>
                                 </button>
-                                <button type="button" class="btn btn-action btn-outline-danger" data-bs-toggle="modal" data-bs-target="#modalHapus{{ $periode->id }}">
+                                <button type="button" class="inline-flex items-center justify-center rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50" data-modal-open="modalHapus{{ $periode->id }}">
                                     <i class="fas fa-trash"></i>
                                 </button>
                             </td>
                         </tr>
-
-                        <!-- Modal Edit -->
-                        <div class="modal fade" id="modalEdit{{ $periode->id }}" tabindex="-1" aria-labelledby="modalEditLabel" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered">
-                                <div class="modal-content rounded-4 border-0">
-                                    <form action="{{ route('banksoal.rps.gpm.periode-rps.update', $periode->id) }}" method="POST">
-                                        @csrf
-                                        @method('PUT')
-                                        <div class="modal-header border-bottom-0 pb-0">
-                                            <h5 class="modal-title fw-bold" id="modalEditLabel">Edit Periode RPS</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <div class="mb-3">
-                                                <label class="form-label fw-medium text-dark">Judul Periode <span class="text-danger">*</span></label>
-                                                <input type="text" class="form-control" name="judul" value="{{ $periode->judul }}" required placeholder="Contoh: Pengajuan RPS Genap 2025/2026">
-                                            </div>
-                                            <div class="row g-3 mb-3">
-                                                <div class="col-md-6">
-                                                    <label class="form-label fw-medium text-dark">Semester <span class="text-danger">*</span></label>
-                                                    <select class="form-select" name="semester" required>
-                                                        <option value="Ganjil" {{ $periode->semester == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
-                                                        <option value="Genap" {{ $periode->semester == 'Genap' ? 'selected' : '' }}>Genap</option>
-                                                    </select>
-                                                </div>
-                                                <div class="col-md-6">
-                                                    <label class="form-label fw-medium text-dark">Tahun Ajaran <span class="text-danger">*</span></label>
-                                                    <input type="text" class="form-control" name="tahun_ajaran" value="{{ $periode->tahun_ajaran }}" required placeholder="Contoh: 2025/2026">
-                                                </div>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label fw-medium text-dark">Waktu Mulai <span class="text-danger">*</span></label>
-                                                <input type="datetime-local" class="form-control" name="tanggal_mulai" value="{{ \Carbon\Carbon::parse($periode->tanggal_mulai)->format('Y-m-d\TH:i') }}" required>
-                                            </div>
-                                            <div class="mb-3">
-                                                <label class="form-label fw-medium text-dark">Waktu Selesai (Tenggat) <span class="text-danger">*</span></label>
-                                                <input type="datetime-local" class="form-control" name="tanggal_selesai" value="{{ \Carbon\Carbon::parse($periode->tanggal_selesai)->format('Y-m-d\TH:i') }}" required>
-                                            </div>
-                                            <div class="form-check form-switch mt-4">
-                                                <input class="form-check-input" type="checkbox" name="is_active" id="isActiveEdit{{ $periode->id }}" value="1" {{ $periode->is_active ? 'checked' : '' }}>
-                                                <label class="form-check-label ms-2" for="isActiveEdit{{ $periode->id }}">Set sebagai periode aktif saat ini</label>
-                                                <div class="form-text mt-1 text-muted" style="font-size: 0.8rem;">Hanya satu periode yang bisa aktif. Mengaktifkan ini akan menonaktifkan periode lainnya.</div>
-                                            </div>
-                                        </div>
-                                        <div class="modal-footer border-top-0 pt-0">
-                                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                                            <button type="submit" class="btn btn-primary px-4">Simpan Perubahan</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Modal Hapus -->
-                        <div class="modal fade" id="modalHapus{{ $periode->id }}" tabindex="-1" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-centered modal-sm">
-                                <div class="modal-content rounded-4 border-0">
-                                    <div class="modal-body text-center p-4">
-                                        <div class="text-danger mb-3">
-                                            <i class="fas fa-exclamation-triangle fa-3x"></i>
-                                        </div>
-                                        <h5 class="mb-2 fw-bold text-dark">Hapus Periode?</h5>
-                                        <p class="text-muted mb-4" style="font-size: 0.9rem;">Anda yakin ingin menghapus jadwal <strong>{{ $periode->judul }}</strong>?</p>
-                                        <div class="d-flex gap-2 justify-content-center">
-                                            <button type="button" class="btn btn-light w-50" data-bs-dismiss="modal">Batal</button>
-                                            <form action="{{ route('banksoal.rps.gpm.periode-rps.destroy', $periode->id) }}" method="POST" class="w-50">
-                                                @csrf
-                                                @method('DELETE')
-                                                <button type="submit" class="btn btn-danger w-100">Hapus</button>
-                                            </form>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        @empty
+                    @empty
                         <tr>
-                            <td colspan="5" class="text-center py-5">
-                                <div class="text-muted">
-                                    <i class="fas fa-calendar-times fa-3x mb-3 text-light"></i>
-                                    <h5>Belum ada jadwal RPS</h5>
-                                    <p>Silakan tambah periode baru untuk mengaktifkan pengajuan RPS Dosen.</p>
-                                    <button class="btn btn-outline-primary mt-2" data-bs-toggle="modal" data-bs-target="#modalTambah">Tambah Periode Pertama</button>
+                            <td colspan="5" class="px-6 py-12 text-center text-slate-500">
+                                <div class="flex flex-col items-center gap-2">
+                                    <i class="fas fa-calendar-times text-3xl text-slate-300"></i>
+                                    <p class="text-sm font-semibold">Belum ada jadwal RPS</p>
+                                    <p class="text-xs">Silakan tambah periode baru untuk mengaktifkan pengajuan RPS Dosen.</p>
+                                    <button class="mt-2 inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50" data-modal-open="modalTambah">
+                                        <i class="fas fa-plus"></i> Tambah Periode Pertama
+                                    </button>
                                 </div>
                             </td>
                         </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-
     </div>
 
-    <!-- Modal Tambah -->
-    <div class="modal fade" id="modalTambah" tabindex="-1" aria-labelledby="modalTambahLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0">
-                <form action="{{ route('banksoal.rps.gpm.periode-rps.store') }}" method="POST">
+    @foreach($periodes as $periode)
+        <div id="modalEdit{{ $periode->id }}" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+            <div class="absolute inset-0 bg-slate-900/40" data-modal-overlay="modalEdit{{ $periode->id }}"></div>
+            <div class="relative mx-auto mt-16 w-full max-w-xl rounded-2xl bg-white shadow-xl">
+                <form action="{{ route('banksoal.rps.gpm.periode-rps.update', $periode->id) }}" method="POST">
                     @csrf
-                    <div class="modal-header border-bottom-0 pb-0">
-                        <h5 class="modal-title fw-bold" id="modalTambahLabel">Tambah Periode RPS Baru</h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    @method('PUT')
+                    <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                        <h2 class="text-sm font-semibold text-slate-900">Edit Periode RPS</h2>
+                        <button type="button" class="text-slate-400 hover:text-slate-600" data-modal-close="modalEdit{{ $periode->id }}">
+                            <i class="fas fa-times"></i>
+                        </button>
                     </div>
-                    <div class="modal-body">
-                        <div class="mb-3">
-                            <label class="form-label fw-medium text-dark">Judul Periode <span class="text-danger">*</span></label>
-                            <input type="text" class="form-control" name="judul" required placeholder="Contoh: Pengajuan RPS Genap 2025/2026" value="{{ old('judul') }}">
+                    <div class="px-5 py-4 space-y-4">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-600">Judul Periode <span class="text-rose-500">*</span></label>
+                            <input type="text" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="judul" value="{{ $periode->judul }}" required placeholder="Contoh: Pengajuan RPS Genap 2025/2026">
                         </div>
-                        <div class="row g-3 mb-3">
-                            <div class="col-md-6">
-                                <label class="form-label fw-medium text-dark">Semester <span class="text-danger">*</span></label>
-                                <select class="form-select" name="semester" required>
-                                    <option value="Ganjil" {{ old('semester') == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
-                                    <option value="Genap" {{ old('semester') == 'Genap' ? 'selected' : '' }}>Genap</option>
+                        <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                            <div>
+                                <label class="text-xs font-semibold text-slate-600">Semester <span class="text-rose-500">*</span></label>
+                                <select class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="semester" required>
+                                    <option value="Ganjil" {{ $periode->semester == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                                    <option value="Genap" {{ $periode->semester == 'Genap' ? 'selected' : '' }}>Genap</option>
                                 </select>
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label fw-medium text-dark">Tahun Ajaran <span class="text-danger">*</span></label>
-                                <input type="text" class="form-control" name="tahun_ajaran" required placeholder="Contoh: 2025/2026" value="{{ old('tahun_ajaran') }}">
+                            <div>
+                                <label class="text-xs font-semibold text-slate-600">Tahun Ajaran <span class="text-rose-500">*</span></label>
+                                <select class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="tahun_ajaran" required>
+                                    <option value="" disabled>Pilih Tahun Ajaran</option>
+                                    @foreach($tahunAjarans as $ta)
+                                        <option value="{{ $ta }}" {{ $periode->tahun_ajaran == $ta ? 'selected' : '' }}>{{ $ta }}</option>
+                                    @endforeach
+                                </select>
                             </div>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-medium text-dark">Waktu Mulai <span class="text-danger">*</span></label>
-                            <input type="datetime-local" class="form-control" name="tanggal_mulai" required value="{{ old('tanggal_mulai') }}">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-600">Waktu Mulai <span class="text-rose-500">*</span></label>
+                            <input type="datetime-local" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="tanggal_mulai" value="{{ \Carbon\Carbon::parse($periode->tanggal_mulai)->format('Y-m-d\TH:i') }}" required>
                         </div>
-                        <div class="mb-3">
-                            <label class="form-label fw-medium text-dark">Waktu Selesai (Tenggat) <span class="text-danger">*</span></label>
-                            <input type="datetime-local" class="form-control" name="tanggal_selesai" required value="{{ old('tanggal_selesai') }}">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-600">Waktu Selesai (Tenggat) <span class="text-rose-500">*</span></label>
+                            <input type="datetime-local" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="tanggal_selesai" value="{{ \Carbon\Carbon::parse($periode->tanggal_selesai)->format('Y-m-d\TH:i') }}" required>
                         </div>
-                        <div class="form-check form-switch mt-4">
-                            <input class="form-check-input" type="checkbox" name="is_active" id="isActiveAdd" value="1" checked>
-                            <label class="form-check-label ms-2" for="isActiveAdd">Otomatis aktifkan periode ini</label>
-                            <div class="form-text mt-1 text-muted" style="font-size: 0.8rem;">GPM hanya bisa membuka 1 sesi pengajuan dalam satu waktu.</div>
-                        </div>
+                        <label class="flex items-start gap-3 rounded-lg border border-slate-200 p-3 text-xs text-slate-600">
+                            <input class="mt-1" type="checkbox" name="is_active" value="1" {{ $periode->is_active ? 'checked' : '' }}>
+                            <span>
+                                <span class="font-semibold text-slate-700">Set sebagai periode aktif saat ini</span>
+                                <span class="block text-[11px] text-slate-500">Hanya satu periode yang bisa aktif. Mengaktifkan ini akan menonaktifkan periode lainnya.</span>
+                            </span>
+                        </label>
                     </div>
-                    <div class="modal-footer border-top-0 pt-0">
-                        <button type="button" class="btn btn-light" data-bs-dismiss="modal">Batal</button>
-                        <button type="submit" class="btn btn-primary px-4">Buat Periode</button>
+                    <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
+                        <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalEdit{{ $periode->id }}">Batal</button>
+                        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700">Simpan Perubahan</button>
                     </div>
                 </form>
             </div>
         </div>
+
+        <div id="modalHapus{{ $periode->id }}" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+            <div class="absolute inset-0 bg-slate-900/40" data-modal-overlay="modalHapus{{ $periode->id }}"></div>
+            <div class="relative mx-auto mt-24 w-full max-w-sm rounded-2xl bg-white shadow-xl">
+                <div class="px-5 py-5 text-center">
+                    <div class="text-rose-500 mb-3"><i class="fas fa-exclamation-triangle text-3xl"></i></div>
+                    <h3 class="text-sm font-semibold text-slate-900">Hapus Periode?</h3>
+                    <p class="text-xs text-slate-500 mt-2">Anda yakin ingin menghapus jadwal <strong>{{ $periode->judul }}</strong>?</p>
+                    <div class="mt-4 flex gap-2">
+                        <button type="button" class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalHapus{{ $periode->id }}">Batal</button>
+                        <form action="{{ route('banksoal.rps.gpm.periode-rps.destroy', $periode->id) }}" method="POST" class="flex-1">
+                            @csrf
+                            @method('DELETE')
+                            <button type="submit" class="w-full rounded-lg bg-rose-600 px-3 py-2 text-xs font-semibold text-white hover:bg-rose-700">Hapus</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endforeach
+
+    <div id="modalTambah" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+        <div class="absolute inset-0 bg-slate-900/40" data-modal-overlay="modalTambah"></div>
+        <div class="relative mx-auto mt-16 w-full max-w-xl rounded-2xl bg-white shadow-xl">
+            <form action="{{ route('banksoal.rps.gpm.periode-rps.store') }}" method="POST">
+                @csrf
+                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                    <h2 class="text-sm font-semibold text-slate-900">Tambah Periode RPS Baru</h2>
+                    <button type="button" class="text-slate-400 hover:text-slate-600" data-modal-close="modalTambah">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="px-5 py-4 space-y-4">
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600">Judul Periode <span class="text-rose-500">*</span></label>
+                        <input type="text" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="judul" required placeholder="Contoh: Pengajuan RPS Genap 2025/2026" value="{{ old('judul') }}">
+                    </div>
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        <div>
+                            <label class="text-xs font-semibold text-slate-600">Semester <span class="text-rose-500">*</span></label>
+                            <select class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="semester" required>
+                                <option value="Ganjil" {{ old('semester', $currentSemester) == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                                <option value="Genap" {{ old('semester', $currentSemester) == 'Genap' ? 'selected' : '' }}>Genap</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-xs font-semibold text-slate-600">Tahun Ajaran <span class="text-rose-500">*</span></label>
+                            <select class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="tahun_ajaran" required>
+                                <option value="" disabled selected>Pilih Tahun Ajaran</option>
+                                @foreach($tahunAjarans as $ta)
+                                    <option value="{{ $ta }}" {{ old('tahun_ajaran') == $ta ? 'selected' : '' }}>{{ $ta }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600">Waktu Mulai <span class="text-rose-500">*</span></label>
+                        <input type="datetime-local" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="tanggal_mulai" required value="{{ old('tanggal_mulai') }}">
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600">Waktu Selesai (Tenggat) <span class="text-rose-500">*</span></label>
+                        <input type="datetime-local" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="tanggal_selesai" required value="{{ old('tanggal_selesai') }}">
+                    </div>
+                    <label class="flex items-start gap-3 rounded-lg border border-slate-200 p-3 text-xs text-slate-600">
+                        <input class="mt-1" type="checkbox" name="is_active" value="1" checked>
+                        <span>
+                            <span class="font-semibold text-slate-700">Otomatis aktifkan periode ini</span>
+                            <span class="block text-[11px] text-slate-500">GPM hanya bisa membuka 1 sesi pengajuan dalam satu waktu.</span>
+                        </span>
+                    </label>
+                </div>
+                <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
+                    <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalTambah">Batal</button>
+                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700">Buat Periode</button>
+                </div>
+            </form>
+        </div>
     </div>
 
-    <!-- Modal Upload Template RPS -->
-    <div class="modal fade" id="modalUploadTemplate" tabindex="-1" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content rounded-4 border-0">
-                <form action="{{ route('banksoal.rps.gpm.template.store') }}" method="POST" enctype="multipart/form-data">
-                    @csrf
-                    <div class="modal-header border-bottom-0 pb-0">
-                        <h5 class="modal-title fw-bold" id="modalUploadTemplateLabel">
+    <div id="modalUploadTemplate" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+        <div class="absolute inset-0 bg-slate-900/40" data-modal-overlay="modalUploadTemplate"></div>
+        <div class="relative mx-auto mt-16 w-full max-w-xl rounded-2xl bg-white shadow-xl">
+            <form action="{{ route('banksoal.rps.gpm.template.store') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                    <h2 class="text-sm font-semibold text-slate-900">Upload Template RPS</h2>
+                    <button type="button" class="text-slate-400 hover:text-slate-600" data-modal-close="modalUploadTemplate">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="px-5 py-4 space-y-4">
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600">File Template (Word Format) <span class="text-rose-500">*</span></label>
+                        <div id="uploadBoxTemplate" class="mt-2 rounded-xl border-2 border-dashed border-slate-200 p-4 text-center cursor-pointer">
+                            <i class="fas fa-cloud-upload-alt text-slate-400 text-2xl mb-2"></i>
+                            <p class="text-sm text-slate-500">Dragdrop file atau <span class="text-blue-600 underline">pilih file</span></p>
+                            <p class="text-xs text-slate-400">Format: .doc, .docx (Maksimal 1 MB)</p>
+                            <input type="file" name="dokumen" id="fileTemplate" accept=".doc,.docx" required class="hidden">
+                            <div id="fileSelected" class="mt-3 hidden">
+                                <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
+                                    <i class="fas fa-check-circle mr-2"></i>
+                                    File terpilih: <span id="selectedFileName"></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600">Keterangan (Opsional)</label>
+                        <textarea class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="keterangan" rows="3" placeholder="Misal: Update struktur template, tambahan BAB, dll..."></textarea>
+                    </div>
+                    <div class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Template baru akan otomatis menjadi versi terbaru yang dapat diunduh dosen.
+                    </div>
+                </div>
+                <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
+                    <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalUploadTemplate">Batal</button>
+                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700">Upload Template</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const uploadBox = document.getElementById('uploadBoxTemplate');
+            const fileInput = document.getElementById('fileTemplate');
+            const fileSelected = document.getElementById('fileSelected');
+            const selectedFileName = document.getElementById('selectedFileName');
+
+            if (!uploadBox || !fileInput) return;
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                uploadBox.addEventListener(eventName, preventDefaults, false);
+            });
+
+            function preventDefaults(e) {
+                e.preventDefault();
+                e.stopPropagation();
+            }
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                uploadBox.addEventListener(eventName, () => {
+                    uploadBox.classList.add('border-blue-300', 'bg-blue-50/40');
+                });
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                uploadBox.addEventListener(eventName, () => {
+                    uploadBox.classList.remove('border-blue-300', 'bg-blue-50/40');
+                });
+            });
+
+            uploadBox.addEventListener('drop', (e) => {
+                const files = e.dataTransfer.files;
+                fileInput.files = files;
+                updateFileDisplay();
+            });
+
+            fileInput.addEventListener('change', updateFileDisplay);
+
+            function updateFileDisplay() {
+                if (fileInput.files.length > 0) {
+                    const fileName = fileInput.files[0].name;
+                    selectedFileName.textContent = fileName;
+                    fileSelected.classList.remove('hidden');
+                } else {
+                    fileSelected.classList.add('hidden');
+                }
+            }
+
+            uploadBox.addEventListener('click', () => {
+                fileInput.click();
+            });
+        });
+    </script>
+</x-banksoal::layouts.gpm-master>
                             <i class="fas fa-file-upload me-2" style="color: #667eea;"></i>Upload Template RPS Baru
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
