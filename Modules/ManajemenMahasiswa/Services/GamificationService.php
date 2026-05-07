@@ -91,14 +91,6 @@ class GamificationService
         ];
     }
 
-    /**
-     * Penalti XP untuk pemberi downvote (-1 XP).
-     * XP total tidak akan pernah negatif.
-     */
-    public function penalizeDownvote(int $userId, ?Model $reference = null): array
-    {
-        return $this->awardXp($userId, XpLog::ACTION_DOWNVOTE_PENALTY, $reference);
-    }
 
     /**
      * Hitung total XP user (minimum 0).
