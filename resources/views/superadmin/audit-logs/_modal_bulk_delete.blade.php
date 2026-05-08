@@ -1,11 +1,8 @@
 {{-- resources/views/superadmin/audit-logs/_modal_bulk_delete.blade.php --}}
 <div id="modalBulkDeleteAudit"
-     style="display:none; position:fixed; inset:0; z-index:100; align-items:center; justify-content:center; padding:16px; background:rgba(13,13,18,0.5); backdrop-filter:blur(2px);">
+     style="display:none; position:fixed; inset:0; z-index:100; align-items:center; justify-content:center; padding:16px; background:rgba(13,13,18,0.5);">
     <div style="position:fixed; inset:0;" onclick="closeModal('modalBulkDeleteAudit')"></div>
     <div style="position:relative; width:100%; max-width:420px; background:#fff; border-radius:16px; border:1px solid var(--c-border); box-shadow:0 20px 40px rgba(13,13,18,0.15); overflow:hidden;">
-
-        {{-- Top stripe --}}
-        <div style="height:3px; background:linear-gradient(90deg, var(--c-error) 0%, #ED8296 100%);"></div>
 
         {{-- Header --}}
         <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 24px 0;">

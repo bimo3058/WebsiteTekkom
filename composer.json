@@ -13,6 +13,7 @@
         "genealabs/laravel-model-caching": "*",
         "laravel/framework": "^12.0",
         "laravel/pulse": "*",
+        "laravel/sanctum": "*",
         "laravel/socialite": "*",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "*",
