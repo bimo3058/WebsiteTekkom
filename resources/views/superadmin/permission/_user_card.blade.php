@@ -7,7 +7,7 @@
     $userModCount  = $user->getAllPermissions()->groupBy(fn($p) => explode('.', $p->name)[0])->count();
     $isActive      = $user->is_active ?? true;
 
-    $allModules = \Spatie\Permission\Models\Permission::all()
+    $allModules = \App\Models\Permission::all()
         ->groupBy(fn($p) => explode('.', $p->name)[0])
         ->keys();
 
@@ -86,7 +86,7 @@
                 <div class="mb-6">
                     <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Roles</p>
                     <div class="flex flex-wrap gap-2">
-                        @foreach(\Spatie\Permission\Models\Role::all() as $role)
+                        @foreach(\App\Models\Role::all() as $role)
                             @php $hasRole = $user->roles->contains('name', $role->name); @endphp
                             <label class="flex items-center gap-2 px-3 py-2 border rounded-xl cursor-pointer transition-all select-none dot-indicator-wrap"
                                    style="{{ $hasRole ? 'border-color: var(--c-primary); background: rgba(11,38,110,0.06); color: var(--c-primary)' : 'border-color: var(--c-border); background: #fff; color: var(--c-fg-muted)' }}">
@@ -112,7 +112,7 @@
                             @php
                                 $mkey = strtoupper($module);
                                 $ico  = $moduleIcons[$mkey] ?? $defaultIcon;
-                                $modulePerms = \Spatie\Permission\Models\Permission::where('name', 'like', $module . '.%')->get();
+                                $modulePerms = \App\Models\Permission::where('name', 'like', $module . '.%')->get();
                             @endphp
                             <div class="module-box border border-slate-200 rounded-xl p-3 transition-all"
                                  data-all-allowed-roles="{{ json_encode($modulePerms->pluck('name')) }}">

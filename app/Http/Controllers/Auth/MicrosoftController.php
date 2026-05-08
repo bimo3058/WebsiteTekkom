@@ -200,7 +200,7 @@ class MicrosoftController extends Controller
                 }
             }
 
-            if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm', 'pengurus_himpunan', 'alumni'])->isNotEmpty()) {
+            if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm', 'pengurus_himpunan', 'alumni', 'dosen_koor'])->isNotEmpty()) {
                 return redirect()->intended(route('dashboard'));
             }
 
