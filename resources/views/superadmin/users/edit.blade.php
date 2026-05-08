@@ -24,18 +24,28 @@
             'eoffice'             => 'eoffice',
         ];
 
-        $roleList = [
-            'mahasiswa'           => ['label' => 'Mahasiswa',           'color' => '#D97706'],
-            'dosen'               => ['label' => 'Dosen',               'color' => '#10B981'],
-            'gpm'                 => ['label' => 'GPM',                 'color' => '#0EA5E9'],
-            'pengurus_himpunan'   => ['label' => 'Pengurus Himpunan',   'color' => '#8B5CF6'],
-            'alumni'              => ['label' => 'Alumni',              'color' => '#64748B'],
-            'admin_banksoal'      => ['label' => 'Admin Bank Soal',     'color' => '#3B82F6'],
-            'admin_capstone'      => ['label' => 'Admin Capstone',      'color' => '#6366F1'],
-            'admin_eoffice'       => ['label' => 'Admin E-Office',      'color' => '#F43F5E'],
-            'admin_kemahasiswaan' => ['label' => 'Admin Kemahasiswaan', 'color' => '#10B981'],
-            'superadmin'          => ['label' => 'Superadmin',          'color' => '#0B266E'],
-        ];
+        // Ambil dari DB, generate otomatis
+        $roleList = \App\Models\Role::orderBy('name')->get()->mapWithKeys(function ($role) {
+            $colors = [
+                'superadmin'          => '#0B266E',
+                'admin'               => '#1E293B',
+                'dosen'               => '#10B981',
+                'mahasiswa'           => '#D97706',
+                'gpm'                 => '#0EA5E9',
+                'pengurus_himpunan'   => '#8B5CF6',
+                'alumni'              => '#64748B',
+                'admin_banksoal'      => '#3B82F6',
+                'admin_capstone'      => '#6366F1',
+                'admin_eoffice'       => '#F43F5E',
+                'admin_kemahasiswaan' => '#10B981',
+                'dosen_koor'          => '#F59E0B', // warna default untuk role baru
+            ];
+
+            return [$role->name => [
+                'label' => \Illuminate\Support\Str::title(str_replace('_', ' ', $role->name)),
+                'color' => $colors[$role->name] ?? '#94A3B8',
+            ]];
+        })->toArray();
 
         // Style tiap kartu modul — key harus cocok dengan slug DB (underscore)
         $moduleStyles = [
