@@ -2,23 +2,75 @@
 <x-app-layout>
 <x-sidebar :user="auth()->user()">
 
-<div style="min-height:100vh; background:var(--c-bg); font-family:var(--font-sans);">
-<div style="max-width:100%; padding:24px 24px 56px;">
+    {{-- Style Box Wrap khas SITKOM untuk Dashboard --}}
+    <style>
+        /* Hilangkan padding default agar wrap bisa full 100vh */
+        .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
+        
+        /* Container luar */
+        .dash-wrap { 
+            display: flex; flex-direction: column; height: calc(100vh - 60px); 
+            padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif; 
+        }
+        
+        /* Kotak utama (Box) */
+        .dash-box { 
+            display: flex; flex-direction: column; flex: 1; min-height: 0; 
+            background: #fff; border: 1px solid var(--c-border); 
+            border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); 
+            overflow: hidden; width: 100%; box-sizing: border-box;
+        }
 
-    @include('superadmin.dashboard._header')
+        /* Area Header Box (Fixed di atas kotak) */
+        .dash-box-header {
+            background: #fff; 
+            border-bottom: 1px solid var(--c-border); 
+            flex-shrink: 0; width: 100%; box-sizing: border-box; 
+            padding: 16px 24px; 
+        }
 
-    @include('superadmin.dashboard._stats')
-    @include('superadmin.dashboard._chart')
-    @include('superadmin.dashboard._import')
-    @include('superadmin.dashboard._modules')
-    @include('superadmin.dashboard._activity')
+        /* Area Konten Box (Scrollable) */
+        .dash-box-body {
+            flex: 1; overflow-y: auto; padding: 20px 24px; 
+            display: flex; flex-direction: column; gap: 2px;
+        }
 
-</div>
-</div>
+        .dash-box-body > * {
+            flex-shrink: 0; /* Mencegah elemen (terutama chart) menciut/gepeng */
+            width: 100%;
+            min-width: 0;   /* Penting agar Chart.js bisa kalkulasi lebar dengan benar */
+        }
 
+        /* Opsional: Percantik scrollbar agar senada dengan desain SITKOM kamu */
+        .dash-box-body::-webkit-scrollbar { width: 6px; }
+        .dash-box-body::-webkit-scrollbar-thumb { 
+            background: var(--c-border-strong); 
+            border-radius: 10px; 
+        }
+    </style>
+
+    <div class="dash-wrap">
+        <div class="dash-box">
+            
+            {{-- Area Header (Diam) --}}
+            <div class="dash-box-header">
+                @include('superadmin.dashboard._header')
+            </div>
+
+            {{-- Area Konten (Bisa di-scroll) --}}
+            <div class="dash-box-body">
+                @include('superadmin.dashboard._stats')
+                @include('superadmin.dashboard._chart')
+                @include('superadmin.dashboard._import')
+                @include('superadmin.dashboard._modules')
+                @include('superadmin.dashboard._activity')
+            </div>
+
+        </div>
+    </div>
+
+{{-- Modals diletakkan di luar wrap agar overlay-nya menutupi layar penuh --}}
 @include('superadmin.users._modal_import')
-
-
 
 <script>
 function openModal(id) {
