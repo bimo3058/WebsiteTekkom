@@ -156,8 +156,10 @@ class MicrosoftController extends Controller
 
             // ── 8. Login ──────────────────────────────────────────────────────
             $user->refresh();
-            Auth::login($user, remember: true);
+            Auth::login($user, remember: false);
 
+            request()->session()->regenerate();
+            
             $user->cacheUserData();
             Cache::put(
                 "user:{$user->id}:roles",

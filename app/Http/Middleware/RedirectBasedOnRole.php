@@ -16,6 +16,9 @@ class RedirectBasedOnRole
         'sso/password',
         'sso/verify',
         'livewire*',
+        'capstone/launch',
+        'capstone*',
+        'api/capstone/*'
     ];
 
     // Role yang diarahkan ke dashboard global

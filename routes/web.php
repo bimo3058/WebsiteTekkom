@@ -65,6 +65,8 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/users', [SuperAdminController::class, 'users'])
             ->name('users.index');
+        Route::get('/users/{user}', [SuperAdminController::class, 'show'])->name('users.show');
+        Route::get('/users/{user}/edit', [SuperAdminController::class, 'edit'])->name('users.edit');
         Route::get('/permissions/category/{category}', [SuperAdminController::class, 'usersByCategory'])
             ->name('permissions.category');
         Route::get('/import-status/{id}', [SuperAdminController::class, 'getImportStatus'])
@@ -95,6 +97,8 @@ Route::middleware('auth')->group(function () {
             session()->forget('import_id');
             return response()->json(['success' => true]);
         })->name('clear-import-session');
+        Route::post('/permissions/bulk-update', [SuperAdminController::class, 'bulkUpdatePermissions'])
+            ->name('permissions.bulk-update');
         Route::post('/users', [SuperAdminController::class, 'storeUser'])
             ->name('users.store');
 
@@ -129,6 +133,12 @@ Route::middleware('auth')->group(function () {
 
         Route::delete('/audit-logs/bulk-destroy', [SuperAdminController::class, 'bulkDeleteAuditLogs'])
             ->name('audit-logs.bulk-destroy');
+
+        Route::post('/users/bulk-force-logout', [SuperAdminController::class, 'bulkForceLogout'])
+            ->name('users.bulk-force-logout');
+        
+        Route::post('/users/bulk-unsuspend', [SuperAdminController::class, 'bulkUnsuspend'])
+            ->name('users.bulk-unsuspend');
     });
 
     // Global dashboard — pakai DashboardController
@@ -140,6 +150,17 @@ Route::middleware('auth')->group(function () {
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
+    // CV Builder — hanya mahasiswa & alumni
+    Route::middleware('role:mahasiswa,alumni')
+        ->prefix('profile/cv')
+        ->name('profile.cv.')
+        ->group(function () {
+            Route::get('/', [\App\Http\Controllers\CvBuilderController::class, 'index'])->name('index');
+            Route::get('/step/{step}', [\App\Http\Controllers\CvBuilderController::class, 'loadStep'])->name('step');
+            Route::post('/step/{step}', [\App\Http\Controllers\CvBuilderController::class, 'saveStep'])->name('step.save');
+            Route::get('/preview', [\App\Http\Controllers\CvBuilderController::class, 'preview'])->name('preview');
+            Route::get('/generate', [\App\Http\Controllers\CvBuilderController::class, 'generate'])->name('generate');
+        });
     Route::get('/users/online', [\App\Http\Controllers\SuperAdminController::class, 'onlineUsers'])->name('superadmin.users.online');
     Route::get('/users/suspended', [\App\Http\Controllers\SuperAdminController::class, 'suspendedUsers'])->name('superadmin.users.suspended');
 
