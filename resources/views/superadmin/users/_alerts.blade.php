@@ -1,95 +1,86 @@
-{{-- resources/views/superadmin/users/_alerts.blade.php --}}
+{{-- Progress Bar (Design Minimalis & Persistent) --}}
 @php 
     $displayId = $activeImportId ?? session('import_id');
+    
+    // Jika session import_id ada tapi activeImportId tidak, cek ke database
     if ($displayId && !$activeImportId) {
         $importExists = \App\Models\ImportStatus::where('id', $displayId)
-            ->whereIn('status', ['pending', 'processing'])->exists();
-        if (!$importExists) { $displayId = null; session()->forget('import_id'); }
+            ->whereIn('status', ['pending', 'processing'])
+            ->exists();
+        
+        if (!$importExists) {
+            $displayId = null;
+            session()->forget('import_id');
+        }
     }
 @endphp
 
-{{-- Import Progress --}}
-<div id="importProgressContainer"
+<div id="importProgressContainer" 
      data-import-id="{{ $displayId ?? '' }}"
-     style="{{ $displayId ? '' : 'display:none;' }} background:#fff; border:1px solid var(--c-border); border-radius:12px; overflow:hidden; margin-bottom:16px; box-shadow:0px 1px 2px rgba(228,229,231,0.24);">
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:10px 16px; background:var(--c-bg); border-bottom:1px solid var(--c-border);">
-        <div style="display:flex; align-items:center; gap:10px;">
-            <div style="width:28px; height:28px; border-radius:8px; background:rgba(11,38,110,0.08); display:flex; align-items:center; justify-content:center;">
-                <svg id="importIcon" width="14" height="14" fill="none" stroke="var(--c-primary)" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"
-                     style="animation:spin 1s linear infinite;">
-                    <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
-                </svg>
+     class="{{ $displayId ? '' : 'hidden' }} mb-6 bg-white border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+    <div class="px-4 py-3 bg-slate-50/50 border-b border-slate-100 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <div class="w-7 h-7 rounded-lg bg-blue-50 flex items-center justify-center border border-blue-100 shadow-sm">
+                <span id="importIcon" class="material-symbols-outlined text-blue-600 animate-spin" style="font-size: 16px">sync</span>
             </div>
             <div>
-                <p id="importStatusText" style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--c-fg);">Sinkronisasi Data...</p>
-                <p style="font-size:9px; color:var(--c-fg-muted); font-style:italic;">Menghubungkan ke database...</p>
+                <h3 id="importStatusText" class="text-[10px] font-semibold text-slate-700 uppercase tracking-widest">Sinkronisasi Data...</h3>
+                <p class="text-[9px] text-slate-400 font-medium italic">Status: Menghubungkan ke database...</p>
             </div>
         </div>
-        <div style="display:flex; align-items:center; gap:12px;">
-            <div style="text-align:right;">
-                <span id="importPercentText" style="font-size:12px; font-weight:700; color:var(--c-primary); font-variant-numeric:tabular-nums;">0%</span>
-                <span style="display:block; font-size:8px; font-weight:600; text-transform:uppercase; letter-spacing:.08em; color:var(--c-fg-placeholder);">Progress</span>
+        <div class="flex items-center gap-4">
+            <div class="text-right flex flex-col items-end">
+                <span id="importPercentText" class="text-xs font-semibold text-blue-600 tracking-tighter">0%</span>
+                <span class="text-[8px] font-semibold text-slate-300 uppercase tracking-tighter">Progress</span>
             </div>
+            
+            {{-- Tombol Cancel --}}
             <button type="button" id="btnCancelImport" onclick="confirmCancelProgressModal('{{ $displayId }}')"
-                    style="display:flex; align-items:center; gap:5px; padding:5px 10px; background:#fff; border:1px solid var(--c-border); border-radius:7px; color:var(--c-error); font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; cursor:pointer; font-family:inherit; transition:background .15s;"
-                    onmouseover="this.style.background='var(--c-error-subtle)'" onmouseout="this.style.background='#fff'">
-                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round">
-                    <path d="M18 6L6 18M6 6l12 12"/>
-                </svg>
-                Batal
+                class="flex items-center gap-1.5 px-2 py-1 bg-white hover:bg-red-50 text-red-500 border border-slate-200 hover:border-red-100 rounded-lg transition-all group shadow-sm">
+                <span class="material-symbols-outlined group-hover:rotate-90 transition-transform" style="font-size: 14px">close</span>
+                <span class="text-[9px] font-semibold uppercase tracking-wider">Batal</span>
             </button>
         </div>
     </div>
-    <div style="padding:12px 16px; background:#fff;">
-        <div style="width:100%; height:6px; background:var(--c-border); border-radius:9999px; overflow:hidden;">
-            <div id="importProgressBar"
-                 style="height:100%; background:var(--c-primary); border-radius:9999px; width:0%; transition:width 1s ease-out;"></div>
+    
+    <div class="p-4 bg-white">
+        <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden border border-slate-50">
+            <div id="importProgressBar" class="bg-blue-600 h-full rounded-full transition-all duration-1000 ease-out shadow-[0_0_8px_rgba(37,99,235,0.3)]" style="width: 0%"></div>
         </div>
     </div>
 </div>
 
-{{-- Validation Errors --}}
+{{-- Alert Gagal/Error (Compact Design) --}}
 @if($errors->any())
-<div style="background:#fff; border:1px solid var(--c-error-subtle); border-left:3px solid var(--c-error); border-radius:10px; margin-bottom:16px; overflow:hidden;">
-    <div style="display:flex; align-items:center; gap:8px; padding:8px 14px; background:var(--c-error-subtle);">
-        <svg width="14" height="14" fill="none" stroke="var(--c-error)" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
-            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>
-        </svg>
-        <span style="font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--c-error);">Validation Error</span>
+<div class="bg-white border border-red-200 rounded-xl mb-6 shadow-sm overflow-hidden animate-in shake-in duration-300">
+    <div class="px-4 py-2 bg-red-50/50 border-b border-red-100 flex items-center gap-2">
+        <span class="material-symbols-outlined text-red-500" style="font-size:16px">error</span>
+        <h3 class="text-red-800 font-semibold text-[9px] uppercase tracking-widest">Validation Error</h3>
     </div>
-    <ul style="padding:10px 14px 10px 28px; list-style:disc; margin:0;">
-        @foreach($errors->all() as $error)
-        <li style="font-size:11px; color:var(--c-error); font-weight:500; margin-bottom:2px;">{{ $error }}</li>
-        @endforeach
-    </ul>
+    <div class="p-3 bg-white">
+        <ul class="text-red-600 text-[10px] font-medium space-y-1 pl-4 list-disc">
+            @foreach($errors->all() as $error)
+            <li>{{ $error }}</li>
+            @endforeach
+        </ul>
+    </div>
 </div>
 @endif
 
-{{-- Success --}}
+{{-- Alert Sukses Umum --}}
 @if(session('success') && !$displayId)
-<div style="display:flex; align-items:center; justify-content:space-between; background:#fff; border:1px solid #9DE0D3; border-left:3px solid var(--c-success); border-radius:10px; padding:10px 14px; margin-bottom:16px;">
-    <div style="display:flex; align-items:center; gap:10px;">
-        <div style="width:26px; height:26px; border-radius:7px; background:var(--c-success-subtle); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-            <svg width="13" height="13" fill="none" stroke="#287F6E" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 6L9 17l-5-5"/>
-            </svg>
+<div class="bg-white border border-emerald-200 rounded-xl p-3 mb-6 shadow-sm flex items-center justify-between animate-in fade-in slide-in-from-right-4 duration-300">
+    <div class="flex items-center gap-3">
+        <div class="w-7 h-7 rounded-lg bg-emerald-50 flex items-center justify-center border border-emerald-100 shadow-sm">
+            <span class="material-symbols-outlined text-emerald-500" style="font-size:16px">check_circle</span>
         </div>
-        <span style="font-size:11px; font-weight:600; color:#287F6E;">{{ session('success') }}</span>
+        <span class="text-emerald-700 text-[10px] font-semibold uppercase tracking-widest">{{ session('success') }}</span>
     </div>
-    <button type="button" onclick="this.parentElement.remove()"
-            style="background:none; border:none; cursor:pointer; color:var(--c-fg-muted); padding:2px; transition:color .15s;"
-            onmouseover="this.style.color='var(--c-fg)'" onmouseout="this.style.color='var(--c-fg-muted)'">
-        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
-            <path d="M18 6L6 18M6 6l12 12"/>
-        </svg>
+    <button type="button" onclick="this.parentElement.remove()" class="text-slate-300 hover:text-slate-500 transition-colors p-1">
+        <span class="material-symbols-outlined" style="font-size:16px">close</span>
     </button>
 </div>
 @endif
-
-<style>
-@keyframes spin { to { transform: rotate(360deg); } }
-</style>
-
 <script>
 document.addEventListener('DOMContentLoaded', function () {
     const btnCancel = document.getElementById('btnCancelImport');
@@ -98,9 +89,13 @@ document.addEventListener('DOMContentLoaded', function () {
             const container = document.getElementById('importProgressContainer');
             const importId  = container?.getAttribute('data-import-id') || '';
             if (!importId) return;
-            if (typeof confirmCancelProgressModal === 'function') confirmCancelProgressModal(importId);
-            else if (typeof cancelImport === 'function') {
-                if (confirm('Hentikan proses import?')) cancelImport(importId);
+
+            if (typeof confirmCancelProgressModal === 'function') {
+                confirmCancelProgressModal(importId);
+            } else if (typeof cancelImport === 'function') {
+                if (confirm('Hentikan proses import? Data yang sudah diproses akan tetap tersimpan.')) {
+                    cancelImport(importId);
+                }
             }
         });
     }

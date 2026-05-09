@@ -1,92 +1,60 @@
 <x-app-layout>
 <x-sidebar :user="auth()->user()">
+    <div class="min-h-screen bg-slate-50 p-8">
+        <div class="max-w-full mx-auto">
 
-    {{-- Tambahkan Style Box Wrap khas SITKOM --}}
-    <style>
-        /* Hilangkan padding default agar wrap bisa full 100vh */
-        .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
-        
-        /* Container luar */
-        .user-wrap { 
-            display: flex; flex-direction: column; height: calc(100vh - 60px); 
-            padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif; 
-        }
-        
-        /* Kotak utama (Box) */
-        .user-box { 
-            display: flex; flex-direction: column; flex: 1; min-height: 0; 
-            background: #fff; border: 1px solid var(--c-border); 
-            border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); 
-            overflow: hidden; /* Ini memastikan tidak ada konten yang bisa tembus keluar kotak */
-            width: 100%;
-            box-sizing: border-box;
-        }
+            {{-- Header --}}
+            @include('superadmin.users._header', ['total' => $users->total()])
 
-        /* Area Header Box (Fixed di atas kotak) */
-        .user-box-header {
-            background: #fff; 
-            border-bottom: 1px solid var(--c-border); 
-            flex-shrink: 0;
-            width: 100%;
-            box-sizing: border-box; /* Kunci agar padding tidak menambah lebar kotak */
-            padding: 16px 24px; /* Ini kuncinya! Memberi jarak aman agar tombol tidak menabrak garis */
-        }
+            {{-- Alerts & Progress Bar --}}
+            @include('superadmin.users._alerts')
 
-        /* Area Konten Box (Scrollable) */
-        .user-box-body {
-            flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;
-        }
-    </style>
+            {{-- Search & Filter --}}
+            @include('superadmin.users._search_filter', ['roles' => $roles])
 
-    <div class="user-wrap">
-        <div class="user-box">
-            
-            {{-- Area Header (Diam) --}}
-            <div class="user-box-header">
-                @include('superadmin.users._header', ['total' => $users->total()])
-            </div>
+            {{-- Users Table --}}
+            @include('superadmin.users._table', ['users' => $users, 'roles' => $roles])
 
-            {{-- Area Konten (Bisa di-scroll) --}}
-            <div class="user-box-body">
-                {{-- Alerts & Progress Bar --}}
-                @include('superadmin.users._alerts')
+            {{-- Pagination --}}
+            @include('superadmin.users._pagination', ['users' => $users])
 
-                {{-- Users Table (search/filter inline) --}}
-                @include('superadmin.users._table', ['users' => $users, 'roles' => $roles])
-            </div>
-
-        </div>
-    </div>
-
-    {{-- Modals diletakkan di luar wrap agar overlay-nya menutupi layar penuh --}}
-    @include('superadmin.users._modal_import')
-    @include('superadmin.users._modal_add', ['roles' => $roles])
-    @include('superadmin.users._modal_suspend')
-    @include('superadmin.users._modal_delete_hybrid')
-    @include('superadmin.users._modal_force_logout')
+            {{-- Modals --}}
+            @include('superadmin.users._modal_import')
+            @include('superadmin.users._modal_add', ['roles' => $roles])
+            @include('superadmin.users._modal_edit_info')
+            @include('superadmin.users._modal_suspend')
+            @include('superadmin.users._modal_delete_hybrid')
+            @include('superadmin.users._modal_force_logout')
 
         </div>
     </div>
 
     <script>
-        const DOSEN_ID     = {{ $roles->first(fn($r) => strtolower($r->name) === 'dosen')?->id ?? 'null' }};
+        // ============================================
+        // VARIABLES & CONSTANTS
+        // ============================================
+        const DOSEN_ID = {{ $roles->first(fn($r) => strtolower($r->name) === 'dosen')?->id ?? 'null' }};
         const MAHASISWA_ID = {{ $roles->first(fn($r) => strtolower($r->name) === 'mahasiswa')?->id ?? 'null' }};
-
+        
         let importTimer = null;
-
-        // ── Polling ──────────────────────────────────────────────────────────
+        
+        
+        // Polling untuk Import Progress
         function stopPolling() {
-            if (importTimer) { clearInterval(importTimer); importTimer = null; }
+            if (importTimer) {
+                clearInterval(importTimer);
+                importTimer = null;
+            }
         }
 
         function startPolling(importId) {
-            if (!importId || importId === 'null' || importId === '') return;
+            if (!importId || importId === "null" || importId === "") return;
             if (importTimer) clearInterval(importTimer);
 
+            // Tampilkan container
             const container = document.getElementById('importProgressContainer');
             if (container) {
                 container.setAttribute('data-import-id', importId);
-                container.style.display = '';
                 container.classList.remove('hidden');
             }
 
@@ -97,24 +65,34 @@
             importTimer = setInterval(async () => {
                 try {
                     const response = await fetch(`/superadmin/import-status/${importId}`);
-                    const ct = response.headers.get('content-type');
-                    if (!ct?.includes('application/json')) { stopPolling(); return; }
-                    if (response.status === 401 || response.status === 403) { window.location.href = '/login'; return; }
-                    if (!response.ok) { stopPolling(); return; }
+                    const contentType = response.headers.get("content-type");
+                    if (!contentType || !contentType.includes("application/json")) {
+                        stopPolling();
+                        if (container) container.classList.add('hidden');
+                        return;
+                    }
+                    if (!response.ok) {
+                        if (response.status === 401 || response.status === 403) {
+                            window.location.href = '/login';
+                            return;
+                        }
+                        stopPolling();
+                        return;
+                    }
 
                     const data = await response.json();
                     if (!data || typeof data !== 'object') { stopPolling(); return; }
 
-                    const pct = data.total > 0 ? Math.round((data.processed / data.total) * 100) : 0;
-                    if (bar)         bar.style.width      = pct + '%';
-                    if (percentText) percentText.textContent = pct + '%';
+                    const percentage = data.total > 0 ? Math.round((data.processed / data.total) * 100) : 0;
+                    if (bar) bar.style.width = percentage + '%';
+                    if (percentText) percentText.textContent = percentage + '%';
 
                     if (data.status === 'processing') {
                         if (text) text.textContent = `Memproses: ${data.processed} / ${data.total} user...`;
                     } else if (data.status === 'completed') {
                         stopPolling();
-                        if (text) text.innerHTML = '<span style="color:#059669;font-weight:700;">✓ Impor Berhasil Selesai!</span>';
-                        if (bar)  { bar.style.width = '100%'; bar.style.background = '#22C55E'; }
+                        if (text) text.innerHTML = '<span class="text-emerald-600 font-bold">Impor Berhasil Selesai!</span>';
+                        if (bar) { bar.style.width = '100%'; bar.className = "h-full bg-emerald-500 transition-all duration-500"; }
                         setTimeout(async () => {
                             await fetch('/superadmin/clear-import-session', { method: 'POST' });
                             await fetch('/superadmin/bust-stats-cache', {
@@ -125,21 +103,27 @@
                         }, 1500);
                     } else if (data.status === 'failed') {
                         stopPolling();
-                        if (text) text.innerHTML = `<span style="color:#DC2626;font-weight:700;">✕ Gagal: ${data.error_message || 'Import gagal'}</span>`;
-                        if (bar)  bar.style.background = '#EF4444';
+                        if (text) text.innerHTML = `<span class="text-red-600 font-bold">❌ Gagal: ${data.error_message || 'Import gagal'}</span>`;
+                        if (bar) bar.className = "h-full bg-red-500 transition-all duration-500";
                         setTimeout(async () => {
                             await fetch('/superadmin/clear-import-session', { method: 'POST' });
                             window.location.reload();
                         }, 3000);
                     }
-                } catch (e) { console.error('Polling error:', e); stopPolling(); }
+                } catch (e) {
+                    console.error("Polling error:", e);
+                    stopPolling();
+                }
             }, 2000);
         }
 
+        // ============================================
+        // CANCEL IMPORT FUNCTION
+        // ============================================
         async function cancelImport(importId) {
             if (!importId) return;
             try {
-                const res = await fetch(`/superadmin/import-status/${importId}/cancel`, {
+                const response = await fetch(`/superadmin/import-status/${importId}/cancel`, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -147,12 +131,14 @@
                         'Accept': 'application/json'
                     }
                 });
-                if (res.ok) {
+                
+                if (response.ok) {
                     stopPolling();
                     const bar  = document.getElementById('importProgressBar');
                     const text = document.getElementById('importStatusText');
-                    if (bar)  bar.style.background = '#EF4444';
-                    if (text) text.innerHTML = '<span style="color:#DC2626;font-weight:700;">Impor dibatalkan</span>';
+                    if (bar)  bar.className = "h-full bg-red-500 transition-all duration-500";
+                    if (text) text.innerHTML = '<span class="text-red-600 font-bold">Impor dibatalkan</span>';
+                    
                     setTimeout(async () => {
                         await fetch('/superadmin/clear-import-session', { method: 'POST' });
                         await fetch('/superadmin/bust-stats-cache', {
@@ -161,49 +147,71 @@
                         });
                         window.location.reload();
                     }, 1500);
+                } else {
+                    const error = await response.json();
+                    alert('Gagal membatalkan: ' + (error.message || 'Unknown error'));
                 }
-            } catch (e) { console.error('Cancel error:', e); }
+            } catch (e) {
+                console.error("Error cancelling import:", e);
+                alert('Gagal membatalkan impor. Silakan refresh halaman.');
+            }
         }
-
-        // ── Modal helpers ─────────────────────────────────────────────────────
-        function openModal(id) {
-            const el = document.getElementById(id);
-            if (el) { el.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+        // ============================================
+        // 2. MODAL CORE FUNCTIONS
+        // ============================================
+        function openModal(id) { 
+            const modal = document.getElementById(id);
+            if(modal) {
+                modal.classList.remove('hidden'); 
+                document.body.style.overflow = 'hidden'; 
+            }
         }
-        function closeModal(id) {
-            const el = document.getElementById(id);
-            if (el) { el.classList.add('hidden'); document.body.style.overflow = ''; }
+        
+        function closeModal(id) { 
+            const modal = document.getElementById(id);
+            if(modal) {
+                modal.classList.add('hidden'); 
+                document.body.style.overflow = ''; 
+            }
         }
-        document.addEventListener('keydown', e => {
+        
+        document.addEventListener('keydown', e => { 
             if (e.key === 'Escape') {
-                ['modalAddUser','modalEditInfo','superadminWarningModal','modalSuspend',
-                 'modalImportUser','modalDeleteHybrid','modalForceLogout'].forEach(closeModal);
+                ['modalAddUser', 'modalEditRoles', 'superadminWarningModal', 'modalEditInfo', 'modalSuspend', 'modalImportUser', 'modalDeleteHybrid', 'modalForceLogout'].forEach(closeModal); 
             }
         });
 
-        // ── Init ──────────────────────────────────────────────────────────────
-        document.addEventListener('DOMContentLoaded', function () {
-
-            // Cek import aktif
+        // ============================================
+        // 3. INITIALIZATION & AJAX SUBMIT
+        // ============================================
+        document.addEventListener('DOMContentLoaded', function() {
+            
+            // Cek Impor Aktif (Persistent)
             const container = document.getElementById('importProgressContainer');
-            const activeId  = container?.getAttribute('data-import-id') || '';
-            if (activeId && activeId !== 'null' && activeId !== '') startPolling(activeId);
+            const activeId = container ? container.getAttribute('data-import-id') : "{{ session('import_id') }}";
+            if (activeId && activeId !== "null" && activeId !== "") startPolling(activeId);
 
-            // AJAX import form
+            // AJAX Form Import
             const importForm = document.getElementById('formImportUser');
             if (importForm) {
                 let isSubmitting = false;
+
                 importForm.addEventListener('submit', async function (e) {
                     e.preventDefault();
-                    if (isSubmitting) return;
+                    if (isSubmitting) return; // cegah double submit
                     isSubmitting = true;
+
                     const btn            = document.getElementById('btnSubmitImport');
                     const errorContainer = document.getElementById('importErrorContainer');
+                    const errorMessage   = document.getElementById('importErrorMessage');
                     const dupeContainer  = document.getElementById('importDuplicateContainer');
+
                     if (errorContainer) errorContainer.classList.add('hidden');
                     if (dupeContainer)  dupeContainer.classList.add('hidden');
+
                     btn.disabled  = true;
-                    btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px;animation:spin 1s linear infinite;">sync</span> Memvalidasi...';
+                    btn.innerHTML = '<span class="animate-spin material-symbols-outlined" style="font-size:18px">sync</span> Memvalidasi...';
+
                     try {
                         const res  = await fetch(this.action, {
                             method: 'POST',
@@ -211,84 +219,109 @@
                             headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
                         });
                         const data = await res.json();
+
                         if (data.status === 'duplicate') {
                             handleImportDuplicateResponse(data);
-                            isSubmitting = false;
+                            isSubmitting = false; // reset agar bisa submit ulang setelah perbaiki file
                             return;
                         }
+
                         if (!res.ok) throw new Error(data.message || 'Gagal memproses file.');
+
                         if (data.import_id) {
-                            btn.innerHTML = '✓ Berhasil!';
+                            btn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Berhasil!';
                             closeModal('modalImportUser');
+
+                            const container = document.getElementById('importProgressContainer');
+                            if (container) {
+                                container.setAttribute('data-import-id', data.import_id);
+                                container.classList.remove('hidden');
+                            }
                             startPolling(data.import_id);
+                            // isSubmitting tidak di-reset — modal sudah tutup, tidak perlu submit lagi
+
                         } else if (data.status === 'success') {
-                            btn.innerHTML = '✓ Berhasil!';
+                            btn.innerHTML = '<span class="material-symbols-outlined">check_circle</span> Berhasil!';
                             window.location.reload();
                         }
+
                     } catch (err) {
-                        const errorMessage = document.getElementById('importErrorMessage');
-                        if (errorMessage) errorMessage.textContent = err.message;
+                        if (errorMessage)   errorMessage.textContent = err.message;
                         if (errorContainer) errorContainer.classList.remove('hidden');
                         btn.disabled  = false;
-                        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:16px">upload</span> Mulai Impor';
-                        isSubmitting  = false;
+                        btn.innerHTML = '<span class="material-symbols-outlined" style="font-size:20px">upload</span> Mulai Impor';
+                        isSubmitting = false; // reset agar bisa coba lagi setelah error
                     }
                 });
             }
 
-            // Bulk delete form
             const deleteForm = document.getElementById('formDeleteHybrid');
             if (deleteForm) {
-                deleteForm.addEventListener('submit', async function (e) {
+                deleteForm.addEventListener('submit', async function(e) {
+                    // Kita deteksi apakah ini Bulk Delete dengan mengecek input ids[]
                     const isBulk = this.querySelectorAll('.bulk-ids-input').length > 0;
+                    
                     if (isBulk) {
-                        e.preventDefault();
+                        e.preventDefault(); 
+                        
                         const btn = this.querySelector('button[type="submit"]');
-                        const orig = btn.innerHTML;
+                        const originalContent = btn.innerHTML;
+                        
                         btn.disabled = true;
-                        btn.innerHTML = 'Memproses...';
+                        btn.innerHTML = '<span class="animate-spin material-symbols-outlined" style="font-size:14px">sync</span> Memproses...';
+
                         try {
-                            const res = await fetch(this.action, {
+                            const response = await fetch(this.action, {
                                 method: 'POST',
                                 body: new FormData(this),
-                                headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'Accept': 'application/json' }
+                                headers: {
+                                    'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                    'Accept': 'application/json'
+                                }
                             });
-                            if (res.ok) window.location.reload();
-                            else {
-                                const data = await res.json();
-                                alert('Gagal: ' + (data.message || 'Terjadi kesalahan'));
+
+                            if (response.ok) {
+                                // Jika berhasil, reload agar tabel sinkron
+                                window.location.reload();
+                            } else {
+                                const data = await response.json();
+                                alert('Gagal menghapus: ' + (data.message || 'Terjadi kesalahan'));
                                 btn.disabled = false;
-                                btn.innerHTML = orig;
+                                btn.innerHTML = originalContent;
                             }
-                        } catch (err) {
+                        } catch (error) {
+                            console.error('Error:', error);
                             alert('Terjadi kesalahan jaringan.');
                             btn.disabled = false;
-                            btn.innerHTML = orig;
+                            btn.innerHTML = originalContent;
                         }
                     }
+                    // Jika bukan bulk (penghapusan satu user), biarkan submit normal (HTML default)
+                    // karena Controller biasanya me-return redirect() yang otomatis me-refresh page.
                 });
             }
 
-            // Checkbox select all
+            // --- Checkbox & Selection Logic ---
             const selectAll = document.getElementById('selectAll');
-            selectAll?.addEventListener('change', function () {
+            selectAll?.addEventListener('change', function() {
                 document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = this.checked);
                 updateBulkBar();
             });
+
             document.addEventListener('change', e => {
                 if (e.target.classList.contains('user-checkbox')) updateBulkBar();
             });
 
-            // Add modal role toggle
+            // Add Modal Role Toggle
             document.querySelectorAll('.add-role-cb').forEach(cb => {
-                cb.addEventListener('change', function () {
+                cb.addEventListener('change', function() {
                     const id = parseInt(this.value);
-                    if (id === DOSEN_ID)     document.getElementById('addFieldDosen')?.classList.toggle('hidden', !this.checked);
+                    if (id === DOSEN_ID) document.getElementById('addFieldDosen')?.classList.toggle('hidden', !this.checked);
                     if (id === MAHASISWA_ID) document.getElementById('addFieldMahasiswa')?.classList.toggle('hidden', !this.checked);
                 });
             });
 
-            // Superadmin safety
+            // Superadmin Safety Trigger
             document.addEventListener('change', e => {
                 const cb = e.target.closest('.add-role-cb');
                 if (cb && cb.getAttribute('data-role-name') === 'superadmin' && cb.checked) {
@@ -297,68 +330,96 @@
                 }
             });
         });
-
-        // ── Bulk actions ──────────────────────────────────────────────────────
-        function updateBulkBar() {
-            const cbs = document.querySelectorAll('.user-checkbox:checked');
-            const bar = document.getElementById('bulkActionBar');
-            const cnt = document.getElementById('selectedCount');
-            if (cnt) cnt.textContent = cbs.length;
-            if (cbs.length > 0) { bar.style.display = 'flex'; }
-            else { bar.style.display = 'none'; }
-        }
-
-        function deselectAll() {
-            const selectAll = document.getElementById('selectAll');
-            if (selectAll) selectAll.checked = false;
-            document.querySelectorAll('.user-checkbox').forEach(cb => cb.checked = false);
-            updateBulkBar();
-        }
-
+    
         function openBulkDeleteHybrid() {
-            const selectedIds = Array.from(document.querySelectorAll('.user-checkbox:checked')).map(cb => cb.value);
-            if (!selectedIds.length) return;
+            const selectedIds = Array.from(document.querySelectorAll('.user-checkbox:checked'))
+                                    .map(cb => cb.value);
+
+            if (selectedIds.length === 0) return;
+
             const form = document.getElementById('formDeleteHybrid');
-            form.action = '{{ route("superadmin.users.bulk-destroy") }}';
+            
+            // Pastikan method spoofing Laravel tetap DELETE
+            let methodInput = form.querySelector('input[name="_method"]');
+            if (!methodInput) {
+                methodInput = document.createElement('input');
+                methodInput.type = 'hidden';
+                methodInput.name = '_method';
+                methodInput.value = 'DELETE';
+                form.appendChild(methodInput);
+            }
+
+            form.action = "{{ route('superadmin.users.bulk-destroy') }}";
+            
+            // Hapus input ID lama
             form.querySelectorAll('.bulk-ids-input').forEach(el => el.remove());
+            
             selectedIds.forEach(id => {
-                const inp = document.createElement('input');
-                inp.type  = 'hidden';
-                inp.name  = 'ids[]';
-                inp.value = id;
-                inp.classList.add('bulk-ids-input');
-                form.appendChild(inp);
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'ids[]'; // Pastikan sesuai dengan $request->ids di Controller
+                input.value = id;
+                input.classList.add('bulk-ids-input');
+                form.appendChild(input);
             });
-            document.getElementById('deleteTargetName').textContent = selectedIds.length + ' user yang dipilih';
+
+            document.getElementById('deleteTargetName').textContent = selectedIds.length + " user yang dipilih";
             openModal('modalDeleteHybrid');
         }
 
-        // ── Account action helpers ────────────────────────────────────────────
+        // Tambahkan juga fungsi deselectAll agar tombol Batal di bulk bar berfungsi
+        function deselectAll() {
+            const selectAll = document.getElementById('selectAll');
+            if (selectAll) selectAll.checked = false;
+            
+            document.querySelectorAll('.user-checkbox').forEach(cb => {
+                cb.checked = false;
+            });
+            
+            updateBulkBar();
+        }
+
+        // ============================================
+        // 4. ACCOUNT ACTIONS (EDIT, DELETE, ETC)
+        // ============================================
+        function updateBulkBar() {
+            const checkboxes = document.querySelectorAll('.user-checkbox:checked');
+            const bulkBar = document.getElementById('bulkActionBar');
+            const selectedCountText = document.getElementById('selectedCount');
+            if (selectedCountText) selectedCountText.textContent = checkboxes.length;
+            if (checkboxes.length > 0) bulkBar?.classList.replace('hidden', 'flex');
+            else bulkBar?.classList.replace('flex', 'hidden');
+        }
+
         function openEditInfo(data) {
-            window.location.href = `/superadmin/users/${data.id}/edit`;
+            document.getElementById('formEditInfo').action = `/superadmin/users/${data.id}/update`;
+            document.getElementById('editInfoName').value = data.name;
+            document.getElementById('editInfoEmail').value = data.email;
+            openModal('modalEditInfo');
         }
 
         function openForceLogoutModal(data) {
-            document.getElementById('formForceLogout').action        = `/superadmin/users/${data.id}/force-logout`;
-            document.getElementById('logoutTargetName').textContent  = data.name;
+            document.getElementById('formForceLogout').action = `/superadmin/users/${data.id}/force-logout`;
+            document.getElementById('logoutTargetName').textContent = data.name;
             openModal('modalForceLogout');
         }
 
         function openDeleteHybrid(data) {
-            document.getElementById('formDeleteHybrid').action       = `/superadmin/users/${data.id}/destroy`;
-            document.getElementById('deleteTargetName').textContent  = data.name;
+            document.getElementById('formDeleteHybrid').action = `/superadmin/users/${data.id}/destroy`;
+            document.getElementById('deleteTargetName').textContent = data.name;
             openModal('modalDeleteHybrid');
         }
 
-        // Superadmin confirm
-        document.getElementById('confirmSuperadminAddText')?.addEventListener('input', function () {
-            const btn     = document.getElementById('confirmSuperadminAdd');
-            btn.disabled  = this.value.toUpperCase() !== 'SUPERADMIN';
-            btn.className = btn.disabled
-                ? 'flex-1 bg-slate-200 text-slate-400 cursor-not-allowed text-[10px] font-black uppercase py-3 rounded-xl'
-                : 'flex-1 bg-red-600 text-white text-[10px] font-black uppercase py-3 rounded-xl shadow-md';
+        // Superadmin Double Confirmation
+        document.getElementById('confirmSuperadminAddText')?.addEventListener('input', function() {
+            const btn = document.getElementById('confirmSuperadminAdd');
+            btn.disabled = this.value.toUpperCase() !== 'SUPERADMIN';
+            btn.className = btn.disabled 
+                ? "flex-1 bg-slate-200 text-slate-400 cursor-not-allowed text-[10px] font-black uppercase py-3 rounded-xl"
+                : "flex-1 bg-red-600 text-white text-[10px] font-black uppercase py-3 rounded-xl shadow-md";
         });
-        document.getElementById('confirmSuperadminAdd')?.addEventListener('click', function () {
+
+        document.getElementById('confirmSuperadminAdd')?.addEventListener('click', function() {
             const cb = document.querySelector('.add-role-cb[data-role-name="superadmin"]');
             if (cb) cb.checked = true;
             closeModal('superadminWarningModal');

@@ -13,7 +13,6 @@
         "genealabs/laravel-model-caching": "*",
         "laravel/framework": "^12.0",
         "laravel/pulse": "*",
-        "laravel/sanctum": "*",
         "laravel/socialite": "*",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "~3.1",
@@ -58,7 +57,7 @@
         ],
         "dev": [
             "Composer\\Config::disableProcessTimeout",
-            "npx concurrently \"php artisan serve\" \"npm run dev\""
+            "npx concurrently -c \"#93c5fd,#c4b5fd,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1\" \"npm run dev\" --names='server,queue,vite'"
         ],
         "test": [
             "@php artisan config:clear --ansi",

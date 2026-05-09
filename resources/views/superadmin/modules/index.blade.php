@@ -1,109 +1,55 @@
-{{-- resources/views/superadmin/modules/index.blade.php --}}
 <x-app-layout>
 <x-sidebar :user="auth()->user()">
+    <div class="min-h-screen bg-slate-50 p-6">
+        <div class="max-w-full mx-auto">
 
-    <style>
-        /* Hilangkan padding default agar wrap bisa full 100vh */
-        .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
-
-        /* Container luar */
-        .mod-wrap {
-            display: flex; flex-direction: column; height: calc(100vh - 60px);
-            padding: 20px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif;
-        }
-
-        /* Kotak utama (Box) */
-        .mod-box {
-            display: flex; flex-direction: column; flex: 1; min-height: 0;
-            background: #fff; border: 1px solid var(--c-border);
-            border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
-            overflow: hidden;
-            width: 100%;
-            box-sizing: border-box;
-        }
-
-        /* Area Header Box (Fixed di atas kotak) */
-        .mod-box-header {
-            background: #fff;
-            border-bottom: 1px solid var(--c-border);
-            flex-shrink: 0;
-            width: 100%;
-            box-sizing: border-box;
-            padding: 16px 24px;
-        }
-
-        /* Area Konten Box (Scrollable) */
-        .mod-box-body {
-            flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;
-            background: var(--c-bg);
-        }
-
-        /* Responsive grid */
-        .mod-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-        }
-        @media (min-width: 768px)  { .mod-grid { grid-template-columns: repeat(3, 1fr); } }
-        @media (min-width: 1280px) { .mod-grid { grid-template-columns: repeat(4, 1fr); } }
-    </style>
-
-    <div class="mod-wrap">
-        <div class="mod-box">
-
-            {{-- Header (diam/fixed) --}}
-            <div class="mod-box-header">
-
-                {{-- Title row --}}
-                <div style="display:flex; align-items:center; justify-content:space-between; gap:16px; flex-wrap:wrap;">
-                    <div>
-                        <h1 style="font-size:16px; font-weight:700; color:var(--c-fg); letter-spacing:-0.01em; line-height:1.2; margin:0;">System Modules</h1>
-                        <p style="font-size:12px; color:var(--c-fg-muted); margin-top:3px;">
-                            Total <span style="color:var(--c-primary); font-weight:600;">{{ $modules->count() }}</span> modul terintegrasi dalam ekosistem
-                        </p>
-                    </div>
-                    <a href="{{ route('superadmin.dashboard') }}"
-                       style="display:inline-flex; align-items:center; gap:6px; padding:7px 13px; background:#fff; border:1px solid var(--c-border); border-radius:8px; font-size:12px; font-weight:600; color:var(--c-fg-sec); text-decoration:none; transition:background .15s; flex-shrink:0;"
-                       onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">
-                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M19 12H5M5 12l7 7M5 12l7-7"/></svg>
-                        Dashboard
-                    </a>
+            {{-- Header --}}
+            <div class="mb-6 flex items-center justify-between">
+                <div>
+                    <h1 class="text-xl font-semibold text-slate-800 tracking-tight">System Modules</h1>
+                    <p class="text-slate-500 text-[11px] mt-0.5 font-medium">
+                        Total <span class="text-purple-600">{{ $modules->count() }}</span> modul terintegrasi dalam ekosistem
+                    </p>
                 </div>
+                <a href="{{ route('superadmin.dashboard') }}"
+                   class="inline-flex items-center gap-2 bg-white hover:bg-slate-50 text-slate-600 font-bold px-3 py-1.5 rounded-lg transition-all text-[11px] border border-slate-200 shadow-sm">
+                    <span class="material-symbols-outlined" style="font-size:16px">arrow_back</span>
+                    Dashboard
+                </a>
             </div>
 
-            {{-- Body (scrollable) --}}
-            <div class="mod-box-body">
-                <div class="mod-grid">
-                    @foreach($modules as $module)
-                        @include('superadmin.modules._card', ['module' => $module])
-                    @endforeach
-                </div>
+            {{-- Module Grid --}}
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+                @foreach($modules as $module)
+                    @include('superadmin.modules._card', ['module' => $module])
+                @endforeach
             </div>
-
         </div>
     </div>
 
-    {{-- Modals diletakkan di luar wrap agar overlay-nya menutupi layar penuh --}}
+    {{-- Render Modals --}}
     @foreach($modules as $module)
-        @include('superadmin.modules._modal_manage', ['module' => $module])
+        @include('superadmin.modules._modal_manage', ['module' => $module]) 
     @endforeach
 
     <script>
         function openModal(id) {
-            const m = document.getElementById(id);
-            if (m) { m.style.display = 'flex'; document.body.style.overflow = 'hidden'; }
-        }
-        function closeModal(id) {
-            const m = document.getElementById(id);
-            if (m) { m.style.display = 'none'; document.body.style.overflow = ''; }
-        }
-        document.addEventListener('keydown', e => {
-            if (e.key === 'Escape') {
-                document.querySelectorAll('[id^="modal-"]').forEach(m => { m.style.display = 'none'; });
-                document.body.style.overflow = '';
+            const modal = document.getElementById(id);
+            if(modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
             }
-        });
-    </script>
+        }
 
+        function closeModal(id) {
+            const modal = document.getElementById(id);
+            if(modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.body.style.overflow = 'auto';
+            }
+        }
+    </script>
 </x-sidebar>
 </x-app-layout>
