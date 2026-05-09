@@ -3,17 +3,17 @@
     <div class="fixed inset-0" onclick="closeModal('modalAddUser')"></div>
     
     <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-        <div class="px-6 py-4 border-b border-[var(--c-primary-subtle)] flex items-center justify-between bg-[rgba(11,38,110,0.06)]">
+        <div class="px-6 py-4 border-b border-[#E8E6FD] flex items-center justify-between bg-[#F1E9FF]">
             <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-[var(--c-primary)] flex items-center justify-center">
+                <div class="w-9 h-9 rounded-xl bg-[#5E53F4] flex items-center justify-center">
                     <span class="material-symbols-outlined text-white" style="font-size:20px">person_add</span>
                 </div>
                 <div>
                     <h3 class="text-sm font-bold text-[#1A1C1E] uppercase tracking-tight">Tambah User Baru</h3>
-                    <p class="text-[10px] text-[var(--c-primary)] font-medium">Daftarkan akun pengguna baru ke sistem</p>
+                    <p class="text-[10px] text-[#5E53F4] font-medium">Daftarkan akun pengguna baru ke sistem</p>
                 </div>
             </div>
-            <button onclick="closeModal('modalAddUser')" class="text-[var(--c-primary)] hover:text-[var(--c-primary-hover)] hover:bg-[var(--c-primary-subtle)] transition-colors p-1.5 rounded-lg">
+            <button onclick="closeModal('modalAddUser')" class="text-[#5E53F4] hover:text-[#4e44e0] hover:bg-[#E8E6FD] transition-colors p-1.5 rounded-lg">
                 <span class="material-symbols-outlined" style="font-size:20px">close</span>
             </button>
         </div>
@@ -85,7 +85,7 @@
                     Batal
                 </button>
                 <button type="submit" 
-                    class="bg-[var(--c-primary)] hover:bg-[var(--c-primary-hover)] text-white text-[11px] font-bold uppercase tracking-widest px-6 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-2">
+                    class="bg-[#5E53F4] hover:bg-[#4e44e0] text-white text-[11px] font-bold uppercase tracking-widest px-6 py-2.5 rounded-xl transition-all shadow-sm flex items-center gap-2">
                     <span class="material-symbols-outlined" style="font-size:16px">person_add</span>
                     Simpan User
                 </button>

@@ -4,17 +4,17 @@
 
     <div class="relative w-full max-w-lg bg-white rounded-2xl shadow-xl overflow-hidden">
         {{-- Header --}}
-        <div class="px-6 py-4 border-b border-[var(--c-primary-subtle)] flex items-center justify-between bg-[rgba(11,38,110,0.06)]">
+        <div class="px-6 py-4 border-b border-[#E8E6FD] flex items-center justify-between bg-[#F1E9FF]">
             <div class="flex items-center gap-3">
-                <div class="bg-[var(--c-primary)] p-2.5 rounded-xl">
+                <div class="bg-[#5E53F4] p-2.5 rounded-xl">
                     <span class="material-symbols-outlined text-white" style="font-size:20px">database</span>
                 </div>
                 <div>
                     <h3 class="text-base font-semibold text-[#1A1C1E]">Bulk Import User</h3>
-                    <p class="text-xs text-[var(--c-primary)] mt-0.5">Upload file ke bucket: <span class="font-bold">data_user</span></p>
+                    <p class="text-xs text-[#5E53F4] mt-0.5">Upload file ke bucket: <span class="font-bold">data_user</span></p>
                 </div>
             </div>
-            <button onclick="closeModal('modalImportUser')" class="text-[var(--c-primary)] hover:text-[var(--c-primary-hover)] hover:bg-[var(--c-primary-subtle)] transition-colors p-1.5 rounded-lg">
+            <button onclick="closeModal('modalImportUser')" class="text-[#5E53F4] hover:text-[#4e44e0] hover:bg-[#E8E6FD] transition-colors p-1.5 rounded-lg">
                 <span class="material-symbols-outlined">close</span>
             </button>
         </div>
@@ -76,7 +76,7 @@
                     Batal
                 </button>
                 <button type="submit" id="btnSubmitImport"
-                    class="flex-1 px-4 py-2.5 bg-[var(--c-primary)] hover:bg-[var(--c-primary-hover)] text-white font-semibold rounded-xl transition text-sm flex items-center justify-center gap-2">
+                    class="flex-1 px-4 py-2.5 bg-[#5E53F4] hover:bg-[#4e44e0] text-white font-semibold rounded-xl transition text-sm flex items-center justify-center gap-2">
                     <span class="material-symbols-outlined" style="font-size:20px">upload</span>
                     Mulai Impor
                 </button>
@@ -126,8 +126,8 @@
     <div class="bg-white rounded-2xl w-full max-w-sm shadow-xl border border-slate-100">
         <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
             <div class="flex items-center gap-3">
-                <div class="w-10 h-10 rounded-full bg-[rgba(11,38,110,0.06)] flex items-center justify-center">
-                    <span class="material-symbols-outlined text-[var(--c-primary)]">cancel</span>
+                <div class="w-10 h-10 rounded-full bg-[#F1E9FF] flex items-center justify-center">
+                    <span class="material-symbols-outlined text-[#5E53F4]">cancel</span>
                 </div>
                 <div>
                     <h2 class="text-base font-bold text-slate-800">Hentikan Import?</h2>
@@ -150,7 +150,7 @@
                 Kembali
             </button>
             <button type="button" id="btnConfirmCancelProgress"
-                class="flex-1 bg-[var(--c-primary)] hover:bg-[var(--c-primary-hover)] text-white font-medium py-2.5 px-4 rounded-xl transition text-sm">
+                class="flex-1 bg-[#5E53F4] hover:bg-[#4e44e0] text-white font-medium py-2.5 px-4 rounded-xl transition text-sm">
                 Ya, Hentikan
             </button>
         </div>
@@ -203,7 +203,7 @@ function renderDuplicateList(duplicates) {
     if (!container) return;
 
     const roleColors = {
-        superadmin: 'bg-[rgba(11,38,110,0.06)] text-[var(--c-primary)] border-[var(--c-primary-border)]',
+        superadmin: 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]',
         dosen:      'bg-[#E7F9F3] text-[#00C08D] border-[#B2EBD9]',
         mahasiswa:  'bg-[#FFF9E6] text-[#FFB800] border-[#FFEBB3]',
     };
@@ -211,11 +211,11 @@ function renderDuplicateList(duplicates) {
     container.innerHTML = duplicates.map(u => {
         const initials = u.name ? u.name.charAt(0).toUpperCase() : '?';
         const isSa     = u.roles.includes('superadmin');
-        const avatarBg = isSa ? 'bg-[rgba(11,38,110,0.06)] text-[var(--c-primary)]' : 'bg-[#F8F9FA] text-[#6C757D]';
+        const avatarBg = isSa ? 'bg-[#F1E9FF] text-[#5E53F4]' : 'bg-[#F8F9FA] text-[#6C757D]';
 
         const rolesHtml = u.roles.length
             ? u.roles.map(r => {
-                const style = roleColors[r] ?? 'bg-[#F0F5FF] text-[var(--c-primary)] border-[#D1DFFF]';
+                const style = roleColors[r] ?? 'bg-[#F0F5FF] text-[#5E53F4] border-[#D1DFFF]';
                 return `<span class="px-1.5 py-0.5 rounded-full text-[9px] font-semibold border uppercase tracking-wider ${style}">${r}</span>`;
               }).join('')
             : `<span class="text-[10px] text-slate-400 italic">No Role</span>`;

@@ -1,229 +1,226 @@
-{{-- resources/views/superadmin/users/online.blade.php --}}
 <x-app-layout>
 <x-sidebar :user="auth()->user()">
-<div style="min-height:100vh; background:var(--c-bg); font-family:var(--font-sans);">
-<div style="max-width:100%; padding:24px 24px 56px;">
+    <div class="min-h-screen bg-[#F8F9FA] p-6">
+        <div class="max-w-full mx-auto">
 
-    {{-- Breadcrumb --}}
-    <nav style="display:flex; align-items:center; gap:6px; font-size:11px; color:var(--c-fg-muted); margin-bottom:16px;">
-        <a href="{{ route('superadmin.dashboard') }}" style="color:var(--c-fg-muted); text-decoration:none;"
-           onmouseover="this.style.color='var(--c-fg)'" onmouseout="this.style.color='var(--c-fg-muted)'">Dashboard</a>
-        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-        <a href="{{ route('superadmin.users.index') }}" style="color:var(--c-fg-muted); text-decoration:none;"
-           onmouseover="this.style.color='var(--c-fg)'" onmouseout="this.style.color='var(--c-fg-muted)'">User Management</a>
-        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
-        <span style="color:var(--c-fg); font-weight:500;">User Online</span>
-    </nav>
+            {{-- Header & Filter --}}
+            <div class="mb-6 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
+                <div>
+                    <h1 class="text-xl font-bold text-slate-800 tracking-tight">
+                        User <span class="text-emerald-600">Online</span>
+                    </h1>
+                    <p class="text-slate-500 text-xs mt-0.5">
+                        Total <span class="text-emerald-600 font-semibold">{{ $users->total() }}</span> user sedang aktif
+                    </p>
+                </div>
 
-    {{-- Header + Filter --}}
-    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:20px; flex-wrap:wrap;">
-        <div>
-            <h1 style="font-size:20px; font-weight:700; color:var(--c-fg); letter-spacing:-0.01em; line-height:1.2;">User Online</h1>
-            <p style="font-size:12px; color:var(--c-fg-muted); margin-top:3px;">
-                <span style="color:var(--c-success); font-weight:600;">{{ $users->total() }}</span> user sedang aktif
-            </p>
+                <form action="{{ url()->current() }}" method="GET" class="flex flex-wrap items-center gap-2">
+
+                    {{-- Dropdown Per Page --}}
+                    <div class="relative w-32" x-data="{
+                        open: false,
+                        selected: '{{ request('per_page', '10') }}',
+                        options: ['10', '25', '50', '100']
+                    }">
+                        <input type="hidden" name="per_page" :value="selected">
+                        <button type="button" @click="open = !open" @click.away="open = false"
+                            class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700 focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4] outline-none transition-all text-xs flex items-center justify-between shadow-sm">
+                            <span x-text="selected + ' Baris'" class="font-medium"></span>
+                            <span class="material-symbols-outlined text-slate-400 ml-1" :class="{'rotate-180': open}" style="font-size:16px; transition: transform 0.2s;">expand_more</span>
+                        </button>
+                        <div x-show="open" x-transition.opacity.duration.200ms style="display:none;"
+                            class="absolute top-full left-0 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-xl z-[50] overflow-hidden py-1">
+                            <template x-for="opt in options" :key="opt">
+                                <button type="button" @click="selected = opt; $el.closest('form').submit()"
+                                    class="w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-50"
+                                    :class="selected == opt ? 'text-[#5E53F4] font-semibold bg-[#5E53F4]/5' : 'text-slate-600'">
+                                    <span x-text="opt + ' Baris'"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    {{-- Dropdown Role --}}
+                    <div class="relative w-40" x-data="{
+                        open: false,
+                        selected: '{{ request('role', 'all') }}',
+                        roles: [
+                            { name: 'all', label: 'Semua Role' },
+                            @foreach($roles as $role)
+                                { name: '{{ $role->name }}', label: '{{ ucfirst($role->name) }}' },
+                            @endforeach
+                        ],
+                        get currentLabel() {
+                            return this.roles.find(r => r.name === this.selected)?.label || 'Semua Role';
+                        }
+                    }">
+                        <input type="hidden" name="role" :value="selected">
+                        <button type="button" @click="open = !open" @click.away="open = false"
+                            class="w-full bg-white border border-slate-200 rounded-lg px-3 py-2 text-slate-700 focus:border-[#5E53F4] outline-none transition-all text-xs flex items-center justify-between shadow-sm">
+                            <span x-text="currentLabel" class="font-medium truncate"></span>
+                            <span class="material-symbols-outlined text-slate-400 ml-1" :class="{'rotate-180': open}" style="font-size:16px; transition: transform 0.2s;">expand_more</span>
+                        </button>
+                        <div x-show="open" x-transition.opacity.duration.200ms style="display:none;"
+                            class="absolute top-full left-0 mt-1 w-full bg-white border border-slate-200 rounded-lg shadow-xl z-[50] overflow-hidden py-1 max-h-52 overflow-y-auto">
+                            <template x-for="r in roles" :key="r.name">
+                                <button type="button" @click="selected = r.name; open = false"
+                                    class="w-full text-left px-3 py-1.5 text-xs transition-colors hover:bg-slate-50"
+                                    :class="selected === r.name ? 'text-[#5E53F4] font-semibold bg-[#5E53F4]/5' : 'text-slate-600'">
+                                    <span x-text="r.label"></span>
+                                </button>
+                            </template>
+                        </div>
+                    </div>
+
+                    {{-- Search --}}
+                    <div class="relative">
+                        <input type="text" name="search" value="{{ request('search') }}"
+                            placeholder="Cari nama atau email..."
+                            class="text-xs border border-slate-200 rounded-lg pl-8 pr-4 py-2 focus:ring-1 focus:ring-[#5E53F4] focus:border-[#5E53F4] outline-none w-56 shadow-sm">
+                        <span class="material-symbols-outlined text-slate-400 absolute left-2.5 top-2" style="font-size:18px">search</span>
+                    </div>
+
+                    <button type="submit"
+                        class="bg-[#5E53F4] hover:bg-[#4e44e0] text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition-colors">
+                        Filter
+                    </button>
+                    <a href="{{ route('superadmin.users.index') }}"
+                        class="text-xs font-bold text-[#5E53F4] ml-2 hover:underline transition-all">
+                        Kembali
+                    </a>
+                </form>
+            </div>
+
+            {{-- Table --}}
+            <div class="bg-white border border-[#DEE2E6] rounded-2xl overflow-hidden shadow-sm">
+                <div class="overflow-x-auto">
+                    <table class="w-full border-collapse">
+                        <thead>
+                            <tr class="border-b border-[#DEE2E6] bg-[#F8F9FA]">
+                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">User Identity</th>
+                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Access Roles</th>
+                                <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Last Login</th>
+                                <th class="px-5 py-4 text-center text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-[#F8F9FA]">
+                            @forelse($users as $user)
+                            @php
+                                $isMe = $user->id === auth()->id();
+                                $isSuperadmin = $user->roles->pluck('name')->contains('superadmin');
+                                $initials = strtoupper(substr($user->name, 0, 1));
+                                
+                                $avatarColors = match(true) {
+                                    $isSuperadmin => '!bg-[#F1E9FF] !text-[#5E53F4] border-[#D1BFFF]',
+                                    default => '!bg-[#F8F9FA] !text-[#6C757D] border-[#DEE2E6]',
+                                };
+                            @endphp
+                            <tr class="hover:bg-[#F8F9FA]/50 transition-colors group">
+                                <td class="px-5 py-4">
+                                    <div class="flex items-center gap-4">
+                                        {{-- Avatar Container --}}
+                                        <div class="relative shrink-0">
+                                            <div class="size-9 rounded-full flex items-center justify-center border-2 border-white shadow-sm overflow-hidden {{ $avatarColors }}">
+                                                @if($user->avatar_url)
+                                                    <img src="{{ $user->avatar_url }}" alt="avatar" class="w-full h-full object-cover">
+                                                @elseif($isSuperadmin)
+                                                    <span class="material-symbols-outlined !text-[18px]">admin_panel_settings</span>
+                                                @else
+                                                    <span class="text-[11px] font-semibold uppercase">{{ $initials }}</span>
+                                                @endif
+                                            </div>
+                                            <span class="absolute bottom-0 right-0 size-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+                                        </div>
+
+                                        {{-- Info Text --}}
+                                        <div class="min-w-0 flex-1">
+                                            <div class="flex items-center gap-1.5 mb-0.5">
+                                                <p class="text-[13px] font-bold text-[#1A1C1E] truncate tracking-tight">
+                                                    {{ $user->name }}
+                                                </p>
+                                                @if($isMe)
+                                                    <span class="text-[10px] text-[#5E53F4] font-semibold bg-[#F1E9FF] px-1.5 rounded-md">YOU</span>
+                                                @endif
+                                            </div>
+                                            <p class="text-[#6C757D] text-[11px] font-medium truncate leading-normal">
+                                                {{ $user->email }}
+                                            </p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-5 py-4">
+                                    <div class="flex gap-1.5 flex-wrap">
+                                        @forelse($user->roles as $role)
+                                            @php
+                                                $roleName = strtolower($role->name);
+                                                $roleStyle = match(true) {
+                                                    $roleName === 'superadmin' => 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]',
+                                                    $roleName === 'dosen'      => 'bg-[#E7F9F3] text-[#00C08D] border-[#B2EBD9]',
+                                                    $roleName === 'mahasiswa'  => 'bg-[#FFF9E6] text-[#FFB800] border-[#FFEBB3]',
+                                                    default                    => 'bg-[#F0F5FF] text-[#5E53F4] border-[#D1DFFF]',
+                                                };
+                                            @endphp
+                                            <span class="px-2 py-0.5 rounded-full text-[9px] font-bold border uppercase tracking-wider {{ $roleStyle }}">
+                                                {{ str_replace('_', ' ', $role->name) }}
+                                            </span>
+                                        @empty
+                                            <span class="text-[#ADB5BD] text-[10px] font-semibold italic uppercase tracking-tighter">No Role</span>
+                                        @endforelse
+                                    </div>
+                                </td>
+                                <td class="px-5 py-4">
+                                    <div class="flex flex-col">
+                                        <span class="text-[#1A1C1E] font-semibold text-[11px] uppercase tracking-tighter">Active Now</span>
+                                        <span class="text-[#6C757D] text-[10px] italic">
+                                            In: {{ $user->last_login?->diffForHumans() ?? 'Just now' }}
+                                        </span>
+                                    </div>
+                                </td>
+                                <td class="px-5 py-4 text-center">
+                                    <div class="flex items-center justify-center gap-1">
+                                        <button type="button"
+                                            onclick="openForceLogoutModal({ id: '{{ $user->id }}', name: '{{ $user->name }}' })"
+                                            class="p-2 text-amber-500 hover:bg-amber-50 rounded-xl transition-all" title="Force Logout">
+                                            <span class="material-symbols-outlined" style="font-size:18px">logout</span>
+                                        </button>
+                                        @if(!$isSuperadmin && !$isMe)
+                                        <button type="button"
+                                            onclick="openSuspendModal({ id: '{{ $user->id }}', name: '{{ $user->name }}' })"
+                                            class="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-all" title="Suspend">
+                                            <span class="material-symbols-outlined" style="font-size:18px">block</span>
+                                        </button>
+                                        @endif
+                                    </div>
+                                </td>
+                            </tr>
+                            @empty
+                            {{-- Empty state tetap sama --}}
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            {{-- Pagination --}}
+            <div class="mt-6">
+                {{ $users->appends(request()->query())->links() }}
+            </div>
+
         </div>
-
-        <form action="{{ url()->current() }}" method="GET" style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
-
-            {{-- Per Page --}}
-            <div x-data="{ open:false, selected:'{{ request('per_page','10') }}', opts:['10','25','50','100'] }" style="position:relative; width:110px;">
-                <input type="hidden" name="per_page" :value="selected">
-                <button type="button" @click="open=!open" @click.outside="open=false"
-                        style="width:100%; display:flex; align-items:center; justify-content:space-between; padding:7px 10px; background:#fff; border:1px solid #D0D5DD; border-radius:8px; font-size:12px; font-family:inherit; color:var(--c-fg-sec); cursor:pointer; transition:border-color .15s;"
-                        :style="open ? 'border-color:var(--c-primary); box-shadow:0 0 0 3px var(--c-primary-subtle)' : ''">
-                    <span x-text="selected + ' baris'" style="font-weight:500;"></span>
-                    <svg :class="open ? 'rotate-180' : ''" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="transition:transform .2s; color:var(--c-fg-placeholder); flex-shrink:0;"><path d="M6 9l6 6 6-6"/></svg>
-                </button>
-                <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                     style="display:none; position:absolute; top:calc(100% + 4px); left:0; width:100%; background:#fff; border:1px solid var(--c-border); border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,.08); z-index:50; padding:4px 0;">
-                    <template x-for="opt in opts" :key="opt">
-                        <button type="button" @click="selected=opt; open=false; $nextTick(()=>$el.closest('form').submit())"
-                                class="w-full text-left hover:bg-[var(--c-bg)]"
-                                :style="selected==opt ? 'color:var(--c-primary); background:rgba(11,38,110,0.04); font-weight:600' : 'color:var(--c-fg-sec)'"
-                                style="padding:6px 12px; font-size:12px; font-family:inherit; border:none; cursor:pointer; background:none; transition:background .12s;">
-                            <span x-text="opt + ' baris'"></span>
-                        </button>
-                    </template>
-                </div>
-            </div>
-
-            {{-- Role --}}
-            <div x-data="{
-                open:false,
-                selected:'{{ request('role','all') }}',
-                roles:[{name:'all',label:'Semua Role'}, @foreach($roles as $r){name:'{{ $r->name }}',label:'{{ ucfirst($r->name) }}'}, @endforeach],
-                get lbl(){ return this.roles.find(r=>r.name===this.selected)?.label||'Semua Role'; }
-            }" style="position:relative; width:140px;">
-                <input type="hidden" name="role" :value="selected">
-                <button type="button" @click="open=!open" @click.outside="open=false"
-                        style="width:100%; display:flex; align-items:center; justify-content:space-between; padding:7px 10px; background:#fff; border:1px solid #D0D5DD; border-radius:8px; font-size:12px; font-family:inherit; color:var(--c-fg-sec); cursor:pointer; transition:border-color .15s;"
-                        :style="open ? 'border-color:var(--c-primary); box-shadow:0 0 0 3px var(--c-primary-subtle)' : ''">
-                    <span x-text="lbl" style="font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;"></span>
-                    <svg :class="open ? 'rotate-180' : ''" width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" style="transition:transform .2s; color:var(--c-fg-placeholder); flex-shrink:0; margin-left:4px;"><path d="M6 9l6 6 6-6"/></svg>
-                </button>
-                <div x-show="open" x-transition:enter="transition ease-out duration-100" x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
-                     style="display:none; position:absolute; top:calc(100% + 4px); left:0; width:100%; background:#fff; border:1px solid var(--c-border); border-radius:8px; box-shadow:0 8px 20px rgba(0,0,0,.08); z-index:50; padding:4px 0; max-height:200px; overflow-y:auto;">
-                    <template x-for="r in roles" :key="r.name">
-                        <button type="button" @click="selected=r.name; open=false; $nextTick(()=>$el.closest('form').submit())"
-                                :style="selected===r.name ? 'color:var(--c-primary); background:rgba(11,38,110,0.04); font-weight:600' : 'color:var(--c-fg-sec)'"
-                                style="width:100%; text-align:left; padding:6px 12px; font-size:12px; font-family:inherit; border:none; cursor:pointer; background:none; transition:background .12s;">
-                            <span x-text="r.label"></span>
-                        </button>
-                    </template>
-                </div>
-            </div>
-
-            {{-- Search --}}
-            <div style="position:relative;">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2"
-                     style="position:absolute; left:10px; top:50%; transform:translateY(-50%); pointer-events:none; color:var(--c-fg-placeholder);">
-                    <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                </svg>
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama atau email..."
-                       style="padding:7px 12px 7px 32px; background:#fff; border:1px solid #D0D5DD; border-radius:8px; font-size:12px; font-family:inherit; color:var(--c-fg); outline:none; width:220px; transition:border-color .15s, box-shadow .15s;"
-                       onfocus="this.style.borderColor='var(--c-primary)'; this.style.boxShadow='0 0 0 3px var(--c-primary-subtle)'"
-                       onblur="this.style.borderColor='#D0D5DD'; this.style.boxShadow='none'">
-            </div>
-
-            <button type="submit"
-                    style="padding:7px 14px; background:var(--c-primary); border:none; border-radius:8px; color:#fff; font-size:12px; font-weight:600; cursor:pointer; font-family:inherit; transition:background .15s;"
-                    onmouseover="this.style.background='var(--c-primary-hover)'" onmouseout="this.style.background='var(--c-primary)'">
-                Filter
-            </button>
-            <a href="{{ route('superadmin.users.index') }}"
-               style="font-size:12px; font-weight:500; color:var(--c-fg-muted); text-decoration:none; padding:7px 4px; transition:color .15s;"
-               onmouseover="this.style.color='var(--c-fg)'" onmouseout="this.style.color='var(--c-fg-muted)'">
-                Kembali
-            </a>
-        </form>
     </div>
 
-    {{-- Table --}}
-    <div style="background:#fff; border:1px solid var(--c-border); border-radius:14px; overflow:hidden; box-shadow:0px 1px 2px rgba(228,229,231,0.24);">
-        <table style="width:100%; border-collapse:collapse;">
-            <thead>
-                <tr style="border-bottom:1px solid var(--c-border); background:var(--c-bg);">
-                    <th style="padding:12px 16px; text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--c-fg-muted);">User</th>
-                    <th style="padding:12px 16px; text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--c-fg-muted);">Role</th>
-                    <th style="padding:12px 16px; text-align:left; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--c-fg-muted);">Login</th>
-                    <th style="padding:12px 16px; text-align:center; font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--c-fg-muted);">Aksi</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse($users as $user)
-                @php
-                    $isMe         = $user->id === auth()->id();
-                    $isSuperadmin = $user->roles->pluck('name')->contains('superadmin');
-                    $initials     = strtoupper(substr($user->name, 0, 1));
-                    $sp = strpos($user->name, ' ');
-                    if ($sp !== false) $initials .= strtoupper(substr($user->name, $sp+1, 1));
-                    [$avBg, $avColor] = $isSuperadmin
-                        ? ['rgba(11,38,110,0.08)', 'var(--c-primary)']
-                        : ['var(--c-success-subtle)', '#287F6E'];
-                @endphp
-                <tr style="border-bottom:1px solid #F6F8FA; transition:background .12s;"
-                    onmouseover="this.style.background='#FAFAFC'" onmouseout="this.style.background='transparent'">
+    @include('superadmin.users._modal_force_logout')
+    @include('superadmin.users._modal_suspend')
 
-                    <td style="padding:12px 16px;">
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <div style="position:relative; flex-shrink:0;">
-                                <div style="width:32px; height:32px; border-radius:50%; background:{{ $avBg }}; color:{{ $avColor }}; display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:11px; font-weight:700; border:1px solid rgba(0,0,0,0.06);">
-                                    @if($user->avatar_url)
-                                        <img src="{{ $user->avatar_url }}" style="width:100%;height:100%;object-fit:cover;">
-                                    @elseif($isSuperadmin)
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M3.00059 7.59352C3.20646 13.6197 5.53308 19.0699 11.1059 20.8601C11.6866 21.0466 12.3134 21.0466 12.8941 20.8601C18.4669 19.0699 20.7935 13.6197 20.9994 7.59352C21.0169 7.08167 20.6467 6.65046 20.1578 6.55081C17.5104 6.01123 15.4106 4.85537 13.1163 3.3374C12.4363 2.88753 11.5637 2.88753 10.8837 3.3374C8.58942 4.85537 6.48962 6.01123 3.8422 6.55081C3.35327 6.65046 2.98311 7.08167 3.00059 7.59352Z"/></svg>
-                                    @else
-                                        {{ $initials }}
-                                    @endif
-                                </div>
-                                <span style="position:absolute; bottom:-1px; right:-1px; width:8px; height:8px; border-radius:50%; background:var(--c-success); border:1.5px solid #fff;"></span>
-                            </div>
-                            <div style="min-width:0;">
-                                <div style="display:flex; align-items:center; gap:6px;">
-                                    <p style="font-size:13px; font-weight:600; color:var(--c-fg); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">{{ $user->name }}</p>
-                                    @if($isMe)
-                                        <span style="font-size:8px; font-weight:700; text-transform:uppercase; padding:2px 6px; border-radius:9999px; background:rgba(11,38,110,0.08); color:var(--c-primary);">YOU</span>
-                                    @endif
-                                </div>
-                                <p style="font-size:11px; color:var(--c-fg-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px;">{{ $user->email }}</p>
-                            </div>
-                        </div>
-                    </td>
-
-                    <td style="padding:12px 16px;">
-                        @forelse($user->roles as $role)
-                        @php
-                            [$rBg, $rColor] = match(strtolower($role->name)) {
-                                'superadmin' => ['rgba(11,38,110,0.08)', 'var(--c-primary)'],
-                                'dosen'      => ['#DDF2EE', '#287F6E'],
-                                'mahasiswa'  => ['#F9ECCB', '#956321'],
-                                'gpm'        => ['#D1F0F9', '#0C4D6E'],
-                                default      => ['var(--c-bg)', 'var(--c-fg-muted)'],
-                            };
-                        @endphp
-                        <span style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:3px 8px; border-radius:9999px; background:{{ $rBg }}; color:{{ $rColor }}; display:inline-block; margin-right:3px;">
-                            {{ ucfirst(str_replace('_', ' ', $role->name)) }}
-                        </span>
-                        @empty
-                        <span style="font-size:10px; color:var(--c-fg-placeholder); font-style:italic;">—</span>
-                        @endforelse
-                    </td>
-
-                    <td style="padding:12px 16px;">
-                        <p style="font-size:12px; font-weight:600; color:var(--c-success);">Aktif sekarang</p>
-                        <p style="font-size:10px; color:var(--c-fg-muted);">{{ $user->last_login?->diffForHumans() ?? 'Baru saja' }}</p>
-                    </td>
-
-                    <td style="padding:12px 16px; text-align:center;">
-                        <div style="display:flex; align-items:center; justify-content:center; gap:4px;">
-                            <button onclick="openForceLogoutModal({ id: '{{ $user->id }}', name: '{{ addslashes($user->name) }}' })"
-                                    title="Force Logout"
-                                    style="width:28px; height:28px; border-radius:7px; border:none; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--c-warning); transition:background .12s;"
-                                    onmouseover="this.style.background='var(--c-warning-subtle)'" onmouseout="this.style.background='transparent'">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M13 8.73096V8.14189C13 6.5836 12.1925 5.24194 11.0707 4.93634L7.87068 4.06459C6.38558 3.66002 5 5.20723 5 7.27015V16.7298C5 18.7928 6.38558 20.34 7.87068 19.9354L11.0707 19.0637C12.1925 18.7581 13 17.4164 13 15.8581V15.269M11 11.9996H19M19 11.9996L16.5 9.27539M19 11.9996L16.5 14.7238"/>
-                                </svg>
-                            </button>
-                            @if(!$isSuperadmin && !$isMe)
-                            <button onclick="openSuspendModal({ id: '{{ $user->id }}', name: '{{ addslashes($user->name) }}' })"
-                                    title="Suspend"
-                                    style="width:28px; height:28px; border-radius:7px; border:none; background:transparent; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--c-error); transition:background .12s;"
-                                    onmouseover="this.style.background='var(--c-error-subtle)'" onmouseout="this.style.background='transparent'">
-                                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
-                            </button>
-                            @endif
-                        </div>
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="4" style="padding:56px 24px; text-align:center;">
-                        <div style="display:flex; flex-direction:column; align-items:center; gap:10px;">
-                            <svg width="36" height="36" fill="none" stroke="var(--c-border)" viewBox="0 0 24 24" stroke-width="1.5">
-                                <path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" stroke-linecap="round"/>
-                                <path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" stroke-linecap="round"/>
-                            </svg>
-                            <p style="font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.1em; color:var(--c-fg-placeholder);">Tidak ada user online saat ini</p>
-                        </div>
-                    </td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-
-    <div style="margin-top:20px;">{{ $users->appends(request()->query())->links() }}</div>
-
-</div>
-</div>
-
-@include('superadmin.users._modal_force_logout')
-@include('superadmin.users._modal_suspend')
-
-<script>
-function openModal(id) { const m=document.getElementById(id); if(m){m.style.display='flex'; document.body.style.overflow='hidden';} }
-function closeModal(id) { const m=document.getElementById(id); if(m){m.style.display='none'; document.body.style.overflow='';} }
-</script>
+    <script>
+    function openModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) { modal.classList.remove('hidden'); document.body.style.overflow = 'hidden'; }
+    }
+    function closeModal(id) {
+        const modal = document.getElementById(id);
+        if (modal) { modal.classList.add('hidden'); document.body.style.overflow = ''; }
+    }
+    </script>
 </x-sidebar>
 </x-app-layout>

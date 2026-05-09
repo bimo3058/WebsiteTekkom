@@ -1,515 +1,344 @@
-{{-- resources/views/superadmin/users/_table.blade.php --}}
-
-{{-- Bulk Action Bar --}}
-<div id="bulkActionBar"
-     style="display:none; align-items:center; justify-content:space-between; background:#1A1A2E; border-radius:10px; padding:10px 16px; margin-bottom:12px; box-shadow:0 4px 16px rgba(0,0,0,.2);">
-    <div style="display:flex; align-items:center; gap:10px;">
-        <div style="width:28px; height:28px; border-radius:7px; background:var(--c-primary); display:flex; align-items:center; justify-content:center;">
-            <svg width="13" height="13" fill="none" stroke="#fff" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>
+{{-- Floating Bulk Action Bar --}}
+<div id="bulkActionBar" class="hidden mb-6 p-4 bg-[#1A1C1E] rounded-2xl flex items-center justify-between animate-in fade-in slide-in-from-top-2 duration-300 shadow-xl border border-slate-800">
+    <div class="flex items-center gap-4 ml-2">
+        <div class="flex items-center justify-center w-8 h-8 bg-[#5E53F4] rounded-lg">
+            <span class="material-symbols-outlined text-white" style="font-size: 18px">check_circle</span>
         </div>
-        <span style="font-size:13px; font-weight:600; color:#fff;">
-            <span id="selectedCount" style="color:#A5B4FC; font-size:15px; font-weight:700; margin-right:2px;">0</span> user dipilih
+        <span class="text-[13px] font-semibold text-white tracking-wide">
+            <span id="selectedCount" class="text-[#D1BFFF] text-base mr-1">0</span> Users Selected
         </span>
     </div>
-    <div style="display:flex; align-items:center; gap:10px;">
-        <button onclick="openBulkDeleteHybrid()"
-                style="display:inline-flex; align-items:center; gap:5px; padding:6px 14px; background:#EF4444; border:none; border-radius:7px; font-size:11px; font-weight:700; color:#fff; cursor:pointer; font-family:inherit; text-transform:uppercase; letter-spacing:0.05em; transition:background .15s;"
-                onmouseover="this.style.background='#DC2626'" onmouseout="this.style.background='#EF4444'">
-            <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M3 6H5H21M8 6V4C8 3.44772 8.44772 3 9 3H15C15.5523 3 16 3.44772 16 4V6M19 6L18.1245 19.1338C18.0544 20.1818 17.1818 21 16.1315 21H7.86852C6.81818 21 5.94558 20.1818 5.87551 19.1338L5 6H19Z"/></svg>
+    <div class="flex items-center gap-3">
+        <button onclick="openBulkDeleteHybrid()" class="flex items-center gap-2 bg-rose-500 hover:bg-rose-600 text-white text-[11px] font-semibold uppercase tracking-widest px-5 py-2.5 rounded-xl transition-all shadow-sm active:scale-95 group">
+            <span class="material-symbols-outlined group-hover:rotate-12 transition-transform" style="font-size: 18px">delete_sweep</span>
             Bulk Delete
         </button>
-        <div style="width:1px; height:18px; background:rgba(255,255,255,.12);"></div>
-        <button onclick="deselectAll()"
-                style="font-size:11px; font-weight:600; color:rgba(255,255,255,.5); background:none; border:none; cursor:pointer; font-family:inherit; text-transform:uppercase; letter-spacing:0.05em; transition:color .15s; padding:0 4px;"
-                onmouseover="this.style.color='#fff'" onmouseout="this.style.color='rgba(255,255,255,.5)'">
-            Batal
+        <div class="w-px h-5 bg-slate-700 mx-1"></div>
+        <button onclick="deselectAll()" class="text-slate-400 hover:text-white text-[11px] font-semibold uppercase tracking-widest px-4 transition-colors">
+            Cancel
         </button>
     </div>
 </div>
 
-{{-- Main Table Card --}}
-<div style="background:#fff; border:1px solid var(--c-border); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column;">
+@php
+    $allOnline = \App\Models\User::with('roles')->where('is_online', \Illuminate\Support\Facades\DB::raw('true'))->get();
+    $allSuspended = \App\Models\User::with('roles')->whereNotNull('suspended_at')->get();
 
-    {{-- Table Toolbar --}}
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border); gap:12px; flex-wrap:wrap;">
-        <h2 style="font-size:14px; font-weight:700; color:var(--c-fg); margin:0;">User Table</h2>
+    $onlineUsers = $allOnline->take(3);
+    $suspendedUsers = $allSuspended->take(3);
+    
+    $hasOnline = $allOnline->isNotEmpty();
+    $hasSuspended = $allSuspended->isNotEmpty();
+@endphp
 
-        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+<div class="grid grid-cols-1 @if($hasOnline && $hasSuspended) md:grid-cols-2 @endif gap-5 mb-6">
+    {{-- 1. Card Online Users --}}
+    @if($hasOnline)
+    <div class="bg-emerald-50/30 border border-emerald-100 rounded-2xl p-4 shadow-sm h-full">
+        <div class="flex items-center justify-between mb-4 px-1">
+            <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></div>
+                <h2 class="text-[11px] font-bold text-emerald-800 uppercase tracking-widest">
+                    Online ({{ $allOnline->count() }})
+                </h2>
+            </div>
+            <a href="{{ route('superadmin.users.online') }}" class="text-[9px] font-bold text-emerald-600 hover:text-emerald-700 uppercase tracking-widest bg-white px-2 py-1 rounded-lg border border-emerald-100 shadow-sm transition-all">View All &rarr;</a>
+        </div>
 
-            {{-- ── SEARCH + FILTER FORM ── --}}
-            <form method="GET" action="{{ route('superadmin.users.index') }}" id="searchForm"
-                  style="display:flex; align-items:center; gap:8px; margin:0;">
-
-                {{-- Preserve sort & per_page state --}}
-                <input type="hidden" name="sort_by"  value="{{ request('sort_by', 'created_at') }}">
-                <input type="hidden" name="sort_dir" value="{{ request('sort_dir', 'desc') }}">
-                <input type="hidden" name="per_page" value="{{ request('per_page', 10) }}">
-                <input type="hidden" name="role"     value="{{ request('role', 'all') }}">
-
-                {{-- Search --}}
-                <div style="position:relative; width:220px;">
-                    <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--c-fg-placeholder); pointer-events:none;"
-                         width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
-                        <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                    </svg>
-                    <input type="text" name="search" value="{{ request('search') }}"
-                           placeholder="Search..."
-                           style="width:100%; height:34px; padding:0 12px 0 34px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; color:var(--c-fg); font-family:inherit; outline:none; transition:all .15s; box-sizing:border-box; background:#fff;"
-                           onfocus="this.style.borderColor='var(--c-primary)'; this.style.boxShadow='0 0 0 3px rgba(94,83,244,0.08)'"
-                           onblur="this.style.borderColor='var(--c-border)'; this.style.boxShadow='none'">
-                </div>
-
-                {{-- Filter (Role) dropdown --}}
-                <div class="relative inline-block" x-data="{ open: false }">
-                    <button type="button" @click="open = !open" @click.outside="open = false"
-                            class="flex flex-row items-center justify-center gap-1.5 h-[34px] px-3.5 bg-white border rounded-lg text-[12.5px] font-semibold text-[var(--c-fg-sec)] whitespace-nowrap cursor-pointer transition-all box-border"
-                            style="border-color:var(--c-border); font-family:inherit;"
-                            :style="open ? 'border-color:var(--c-primary); color:var(--c-primary);' : ''">
-                        <svg class="shrink-0 w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
-                            <path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/>
-                        </svg>
-                        <span class="leading-none tracking-normal">Filter</span>
-                        @if(request('role') && request('role') !== 'all')
-                            <span class="shrink-0 w-1.5 h-1.5 rounded-full bg-[var(--c-primary)] ml-0.5"></span>
-                        @endif
-                    </button>
-
-                    <div x-show="open" x-cloak
-                        x-transition:enter="transition ease-out duration-100"
-                        x-transition:enter-start="opacity-0 scale-95"
-                        x-transition:enter-end="opacity-100 scale-100"
-                        class="absolute right-0 top-[calc(100%+6px)] bg-white border rounded-xl shadow-lg min-w-[160px] z-50 overflow-hidden"
-                        style="border-color:var(--c-border); display:none;">
-                        <div class="p-1.5">
-                            @php $selectedRole = request('role', 'all'); @endphp
-                            <a href="{{ route('superadmin.users.index', array_merge(request()->except(['role','page']), ['role' => 'all'])) }}"
-                            class="block px-2.5 py-1.5 rounded-lg text-[11px] transition-colors"
-                            style="font-weight:{{ $selectedRole === 'all' ? '700' : '500' }}; color:{{ $selectedRole === 'all' ? 'var(--c-primary)' : 'var(--c-fg-sec)' }}; text-decoration:none; background:{{ $selectedRole === 'all' ? 'rgba(94,83,244,0.06)' : 'transparent' }};"
-                            onmouseover="if('{{ $selectedRole }}' !== 'all') this.style.background='var(--c-bg)'" onmouseout="if('{{ $selectedRole }}' !== 'all') this.style.background='transparent'">
-                                Semua Role
-                            </a>
-                            @foreach($roles as $r)
-                            <a href="{{ route('superadmin.users.index', array_merge(request()->except(['role','page']), ['role' => $r->name])) }}"
-                            class="block px-2.5 py-1.5 rounded-lg text-[11px] transition-colors"
-                            style="font-weight:{{ $selectedRole === $r->name ? '700' : '500' }}; color:{{ $selectedRole === $r->name ? 'var(--c-primary)' : 'var(--c-fg-sec)' }}; text-decoration:none; background:{{ $selectedRole === $r->name ? 'rgba(94,83,244,0.06)' : 'transparent' }};"
-                            onmouseover="if('{{ $selectedRole }}' !== '{{ $r->name }}') this.style.background='var(--c-bg)'" onmouseout="if('{{ $selectedRole }}' !== '{{ $r->name }}') this.style.background='transparent'">
-                                {{ ucfirst(str_replace('_', ' ', $r->name)) }}
-                            </a>
-                            @endforeach
+        <div class="space-y-2">
+            @foreach($onlineUsers as $onlineUser)
+                @php 
+                    $isSuperadmin = $onlineUser->hasRole('superadmin');
+                    $initials = strtoupper(substr($onlineUser->name, 0, 1));
+                    $avatarColors = $isSuperadmin ? '!bg-[#F1E9FF] !text-[#5E53F4] border-[#D1BFFF]' : '!bg-[#F8F9FA] !text-[#6C757D] border-[#DEE2E6]';
+                @endphp
+                <div class="bg-white border border-emerald-100/50 rounded-xl p-2.5 flex items-center justify-between gap-3 hover:border-emerald-300 hover:shadow-md hover:shadow-emerald-500/5 transition-all group">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="relative shrink-0">
+                            <x-ui.avatar 
+                                size="sm" 
+                                :src="$onlineUser->avatar_url" 
+                                :fallback="new \Illuminate\Support\HtmlString($isSuperadmin ? '<span class=\'material-symbols-outlined !text-[16px]\'>admin_panel_settings</span>' : $initials)" 
+                                class="border-2 border-white shadow-sm {{ $avatarColors }}" 
+                            />
+                            <span class="absolute bottom-0 right-0 size-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[12px] font-bold text-slate-800 truncate tracking-tight group-hover:text-emerald-700 transition-colors">{{ $onlineUser->name }}</p>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[9px] font-bold text-emerald-600 uppercase tracking-tighter bg-emerald-50 px-1 rounded">Active Now</span>
+                                <span class="text-[10px] text-slate-400 font-medium">•</span>
+                                <span class="text-[9px] text-slate-500 uppercase font-semibold tracking-tighter">{{ $onlineUser->roles->first()->name ?? 'User' }}</span>
+                            </div>
                         </div>
                     </div>
-                </div>
-
-                {{-- ── SORT BY DROPDOWN ── --}}
-                @php
-                    $currentSortBy  = request('sort_by', 'created_at');
-                    $currentSortDir = request('sort_dir', 'desc');
-                    $sortLabels = [
-                        'name'       => 'Nama',
-                        'role'       => 'Role',
-                        'created_at' => 'Terdaftar',
-                    ];
-                    $activeSortLabel = match($currentSortBy) {
-                        'name'       => $currentSortDir === 'asc' ? 'Nama A–Z' : 'Nama Z–A',
-                        'role'       => 'Role',
-                        'created_at' => $currentSortDir === 'asc' ? 'Terlama' : 'Terbaru',
-                        default      => 'Terbaru',
-                    };
-                @endphp
-                <div style="position:relative; display:inline-block;"
-                     x-data="{ sortOpen: false }">
-
-                    <button type="button"
-                            @click="sortOpen = !sortOpen"
-                            class="flex flex-row items-center justify-center gap-1.5 h-[34px] px-3.5 bg-white border rounded-lg text-[12.5px] font-semibold whitespace-nowrap cursor-pointer transition-all box-border"
-                            style="border-color:var(--c-border); color:var(--c-fg-sec); font-family:inherit;"
-                            :style="sortOpen ? 'border-color:var(--c-primary); color:var(--c-primary);' : ''">
-                        @if($currentSortDir === 'asc')
-                        <svg class="shrink-0 w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
-                            <path d="M3 6h18M3 12h12M3 18h6"/><path d="M19 9V3m0 0l-2 2m2-2l2 2"/>
-                        </svg>
-                        @else
-                        <svg class="shrink-0 w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
-                            <path d="M3 6h18M3 12h12M3 18h6"/><path d="M19 15v6m0 0l-2-2m2 2l2-2"/>
-                        </svg>
+                    <div class="flex items-center gap-1">
+                        @if(!$isSuperadmin)
+                            <button type="button" onclick="openSuspendModal({ id: '{{ $onlineUser->id }}', name: '{{ $onlineUser->name }}' })" class="p-1.5 text-rose-500 hover:bg-rose-50 rounded-lg transition-colors">
+                                <span class="material-symbols-outlined" style="font-size:16px">block</span>
+                            </button>
                         @endif
-                        <span class="leading-none">Sort: {{ $activeSortLabel }}</span>
-                        @if($currentSortBy !== 'created_at' || $currentSortDir !== 'desc')
-                            <span class="shrink-0 w-1.5 h-1.5 rounded-full bg-[var(--c-primary)] ml-0.5"></span>
-                        @endif
-                    </button>
-
-                    {{-- Backdrop --}}
-                    <div x-show="sortOpen" x-cloak @click="sortOpen = false"
-                         style="position:fixed; inset:0; z-index:48; display:none; background:transparent;"></div>
-
-                    {{-- Dropdown panel --}}
-                    <div x-show="sortOpen" x-cloak
-                         x-transition:enter="transition ease-out duration-100"
-                         x-transition:enter-start="opacity-0 scale-95"
-                         x-transition:enter-end="opacity-100 scale-100"
-                         x-transition:leave="transition ease-in duration-75"
-                         x-transition:leave-start="opacity-100 scale-100"
-                         x-transition:leave-end="opacity-0 scale-95"
-                         style="position:absolute; right:0; top:calc(100% + 6px); z-index:49; min-width:200px; background:#fff; border:1px solid var(--c-border); border-radius:12px; box-shadow:0 8px 24px rgba(0,0,0,.1); padding:8px; display:none;">
-
-                        {{-- Nama --}}
-                        <p style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--c-fg-placeholder); margin:0 0 5px 6px;">Nama</p>
-                        @php $nameAZ = $currentSortBy === 'name' && $currentSortDir === 'asc'; @endphp
-                        @php $nameZA = $currentSortBy === 'name' && $currentSortDir === 'desc'; @endphp
-                        <button type="button" onclick="setSortUser('name', 'asc')"
-                                style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; border:none; border-radius:7px; background:{{ $nameAZ ? 'rgba(11,38,110,0.06)' : 'transparent' }}; font-size:12px; font-weight:{{ $nameAZ ? '700' : '500' }}; color:{{ $nameAZ ? 'var(--c-primary)' : 'var(--c-fg-sec)' }}; cursor:pointer; font-family:inherit; text-align:left; transition:background .12s;"
-                                onmouseover="if(!{{ $nameAZ ? 'true' : 'false' }}) this.style.background='var(--c-bg)'"
-                                onmouseout="if(!{{ $nameAZ ? 'true' : 'false' }}) this.style.background='transparent'">
-                            <div style="display:flex; align-items:center; gap:7px;">
-                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h12M3 18h6"/><path d="M19 9V3m0 0l-2 2m2-2l2 2"/></svg>
-                                <span>Nama A–Z</span>
-                            </div>
-                            @if($nameAZ)<svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>@endif
-                        </button>
-                        <button type="button" onclick="setSortUser('name', 'desc')"
-                                style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; border:none; border-radius:7px; background:{{ $nameZA ? 'rgba(11,38,110,0.06)' : 'transparent' }}; font-size:12px; font-weight:{{ $nameZA ? '700' : '500' }}; color:{{ $nameZA ? 'var(--c-primary)' : 'var(--c-fg-sec)' }}; cursor:pointer; font-family:inherit; text-align:left; transition:background .12s;"
-                                onmouseover="if(!{{ $nameZA ? 'true' : 'false' }}) this.style.background='var(--c-bg)'"
-                                onmouseout="if(!{{ $nameZA ? 'true' : 'false' }}) this.style.background='transparent'">
-                            <div style="display:flex; align-items:center; gap:7px;">
-                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h12M3 18h6"/><path d="M19 15v6m0 0l-2-2m2 2l2-2"/></svg>
-                                <span>Nama Z–A</span>
-                            </div>
-                            @if($nameZA)<svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>@endif
-                        </button>
-
-                        <div style="height:1px; background:var(--c-border); margin:7px 0;"></div>
-
-                        {{-- Role --}}
-                        <p style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--c-fg-placeholder); margin:0 0 5px 6px;">Role</p>
-                        @php $roleAZ = $currentSortBy === 'role' && $currentSortDir === 'asc'; @endphp
-                        @php $roleZA = $currentSortBy === 'role' && $currentSortDir === 'desc'; @endphp
-                        <button type="button" onclick="setSortUser('role', 'asc')"
-                                style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; border:none; border-radius:7px; background:{{ $roleAZ ? 'rgba(11,38,110,0.06)' : 'transparent' }}; font-size:12px; font-weight:{{ $roleAZ ? '700' : '500' }}; color:{{ $roleAZ ? 'var(--c-primary)' : 'var(--c-fg-sec)' }}; cursor:pointer; font-family:inherit; text-align:left; transition:background .12s;"
-                                onmouseover="if(!{{ $roleAZ ? 'true' : 'false' }}) this.style.background='var(--c-bg)'"
-                                onmouseout="if(!{{ $roleAZ ? 'true' : 'false' }}) this.style.background='transparent'">
-                            <div style="display:flex; align-items:center; gap:7px;">
-                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h12M3 18h6"/><path d="M19 9V3m0 0l-2 2m2-2l2 2"/></svg>
-                                <span>Role A–Z</span>
-                            </div>
-                            @if($roleAZ)<svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>@endif
-                        </button>
-                        <button type="button" onclick="setSortUser('role', 'desc')"
-                                style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; border:none; border-radius:7px; background:{{ $roleZA ? 'rgba(11,38,110,0.06)' : 'transparent' }}; font-size:12px; font-weight:{{ $roleZA ? '700' : '500' }}; color:{{ $roleZA ? 'var(--c-primary)' : 'var(--c-fg-sec)' }}; cursor:pointer; font-family:inherit; text-align:left; transition:background .12s;"
-                                onmouseover="if(!{{ $roleZA ? 'true' : 'false' }}) this.style.background='var(--c-bg)'"
-                                onmouseout="if(!{{ $roleZA ? 'true' : 'false' }}) this.style.background='transparent'">
-                            <div style="display:flex; align-items:center; gap:7px;">
-                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h12M3 18h6"/><path d="M19 15v6m0 0l-2-2m2 2l2-2"/></svg>
-                                <span>Role Z–A</span>
-                            </div>
-                            @if($roleZA)<svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>@endif
-                        </button>
-
-                        <div style="height:1px; background:var(--c-border); margin:7px 0;"></div>
-
-                        {{-- Terdaftar --}}
-                        <p style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.08em; color:var(--c-fg-placeholder); margin:0 0 5px 6px;">Terdaftar</p>
-                        @php $regNew = $currentSortBy === 'created_at' && $currentSortDir === 'desc'; @endphp
-                        @php $regOld = $currentSortBy === 'created_at' && $currentSortDir === 'asc'; @endphp
-                        <button type="button" onclick="setSortUser('created_at', 'desc')"
-                                style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; border:none; border-radius:7px; background:{{ $regNew ? 'rgba(11,38,110,0.06)' : 'transparent' }}; font-size:12px; font-weight:{{ $regNew ? '700' : '500' }}; color:{{ $regNew ? 'var(--c-primary)' : 'var(--c-fg-sec)' }}; cursor:pointer; font-family:inherit; text-align:left; transition:background .12s;"
-                                onmouseover="if(!{{ $regNew ? 'true' : 'false' }}) this.style.background='var(--c-bg)'"
-                                onmouseout="if(!{{ $regNew ? 'true' : 'false' }}) this.style.background='transparent'">
-                            <div style="display:flex; align-items:center; gap:7px;">
-                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h12M3 18h6"/><path d="M19 15v6m0 0l-2-2m2 2l2-2"/></svg>
-                                <span>Terbaru</span>
-                            </div>
-                            @if($regNew)<svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>@endif
-                        </button>
-                        <button type="button" onclick="setSortUser('created_at', 'asc')"
-                                style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; border:none; border-radius:7px; background:{{ $regOld ? 'rgba(11,38,110,0.06)' : 'transparent' }}; font-size:12px; font-weight:{{ $regOld ? '700' : '500' }}; color:{{ $regOld ? 'var(--c-primary)' : 'var(--c-fg-sec)' }}; cursor:pointer; font-family:inherit; text-align:left; transition:background .12s;"
-                                onmouseover="if(!{{ $regOld ? 'true' : 'false' }}) this.style.background='var(--c-bg)'"
-                                onmouseout="if(!{{ $regOld ? 'true' : 'false' }}) this.style.background='transparent'">
-                            <div style="display:flex; align-items:center; gap:7px;">
-                                <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h12M3 18h6"/><path d="M19 9V3m0 0l-2 2m2-2l2 2"/></svg>
-                                <span>Terlama</span>
-                            </div>
-                            @if($regOld)<svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>@endif
+                        <button type="button" onclick="openForceLogoutModal({ id: '{{ $onlineUser->id }}', name: '{{ $onlineUser->name }}' })" class="p-1.5 text-amber-500 hover:bg-amber-50 rounded-lg transition-colors">
+                            <span class="material-symbols-outlined" style="font-size:16px">logout</span>
                         </button>
                     </div>
                 </div>
-
-            </form>
+            @endforeach
         </div>
     </div>
+    @endif
 
-    {{-- Table --}}
-    <div style="overflow-x:auto;">
-        <table style="width:100%; border-collapse:collapse; min-width:780px;">
+    {{-- 2. Card Suspended Users --}}
+    @if($hasSuspended)
+    <div class="bg-rose-50/30 border border-rose-100 rounded-2xl p-4 shadow-sm h-full">
+        <div class="flex items-center justify-between mb-4 px-1">
+            <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 rounded-full bg-rose-500"></div>
+                <h2 class="text-[11px] font-bold text-rose-800 uppercase tracking-widest">
+                    Suspended ({{ $allSuspended->count() }})
+                </h2>
+            </div>
+            <a href="{{ route('superadmin.users.suspended') }}" class="text-[9px] font-bold text-rose-600 hover:text-rose-700 uppercase tracking-widest bg-white px-2 py-1 rounded-lg border border-rose-100 shadow-sm transition-all">View All &rarr;</a>
+        </div>
+
+        <div class="space-y-2">
+            @foreach($suspendedUsers as $suspendedUser)
+                @php 
+                    $isSuperadmin = $suspendedUser->hasRole('superadmin');
+                    $initials = strtoupper(substr($suspendedUser->name, 0, 1));
+                    $avatarColors = $isSuperadmin ? '!bg-[#F1E9FF] !text-[#5E53F4] border-[#D1BFFF]' : '!bg-rose-50 !text-rose-400 border-rose-100';
+                @endphp
+                <div class="bg-white border border-rose-100/50 rounded-xl p-2.5 flex items-center justify-between gap-3 hover:border-rose-300 hover:shadow-md hover:shadow-rose-500/5 transition-all group">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <div class="relative shrink-0 opacity-60 grayscale-[0.5]">
+                            <x-ui.avatar 
+                                size="sm" 
+                                :src="$suspendedUser->avatar_url" 
+                                :fallback="new \Illuminate\Support\HtmlString($isSuperadmin ? '<span class=\'material-symbols-outlined !text-[16px]\'>admin_panel_settings</span>' : $initials)" 
+                                class="border-2 border-white shadow-sm {{ $avatarColors }}" 
+                            />
+                        </div>
+                        <div class="min-w-0">
+                            <p class="text-[12px] font-bold text-slate-800 truncate tracking-tight line-through decoration-rose-300 opacity-70 group-hover:text-rose-700 transition-colors">
+                                {{ $suspendedUser->name }}
+                            </p>
+                            <div class="flex items-center gap-1.5">
+                                <span class="text-[9px] font-bold text-rose-600 bg-rose-50 px-1.5 py-0.5 rounded uppercase tracking-tighter border border-rose-100">Blocked</span>
+                                <span class="text-[9px] text-rose-400 font-medium truncate italic max-w-[100px]">
+                                    {{ $suspendedUser->suspension_reason ?? 'Policy Violation' }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                    <form method="POST" action="{{ route('superadmin.users.unsuspend', $suspendedUser) }}" class="m-0">
+                        @csrf
+                        <button type="submit" class="p-1.5 text-emerald-500 hover:bg-emerald-50 rounded-lg transition-colors shadow-sm bg-white border border-emerald-100 active:scale-95" title="Unsuspend">
+                            <span class="material-symbols-outlined" style="font-size:16px">lock_open</span>
+                        </button>
+                    </form>
+                </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
+</div>
+
+{{-- MAIN TABLE --}}
+<div class="bg-white border border-[#DEE2E6] rounded-2xl overflow-hidden shadow-sm">
+    <div class="overflow-x-auto">
+        <table class="w-full border-collapse">
             <thead>
-                <tr style="border-bottom:1px solid var(--c-border); background:#FAFAFA;">
-                    <th style="padding:11px 16px; width:44px; text-align:left;">
-                        <input type="checkbox" id="selectAll" style="width:15px; height:15px; border-radius:4px; border:1.5px solid #CBD5E1; cursor:pointer; accent-color:var(--c-primary);">
+                <tr class="border-b border-[#DEE2E6] bg-[#F8F9FA]">
+                    <th class="px-5 py-4 text-left w-12">
+                        <input type="checkbox" id="selectAll" 
+                            class="size-4 rounded border-[#DEE2E6] text-[#5E53F4] focus:ring-[#5E53F4]/20 transition-all cursor-pointer">
                     </th>
-                    <th style="padding:11px 12px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; width:48px;">No</th>
-                    <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:200px;">User Name</th>
-                    <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:140px;">Access Role</th>
-                    <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Modul</th>
-                    <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Permissions</th>
-                    <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Status</th>
-                    <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Action</th>
+                    <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">User Identity</th>
+                    <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Access Roles</th>
+                    <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Module Rights</th>
+                    <th class="px-5 py-4 text-left text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Last Activity</th>
+                    <th class="px-5 py-4 text-center text-[11px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                @forelse($users as $index => $user)
-                @php
-                    $isMe         = $user->id === auth()->id();
-                    $userRoles    = $user->roles;
+            <tbody class="divide-y divide-[#F8F9FA]">
+                @forelse($users as $user)
+                @php 
+                    $isMe = $user->id === auth()->id();
+                    $userRoles = $user->roles;
                     $isSuperadmin = $userRoles->pluck('name')->contains('superadmin');
-                    $isSuspended  = $user->isSuspended();
-
-                    $rowNo = ($users->currentPage() - 1) * $users->perPage() + $index + 1;
-
+                    
+                    // Inisial untuk fallback
                     $nameParts = explode(' ', $user->name);
-                    $initials  = strtoupper(substr($nameParts[0], 0, 1));
-                    if (count($nameParts) > 1) $initials .= strtoupper(substr(end($nameParts), 0, 1));
+                    $initials = strtoupper(substr($nameParts[0], 0, 1));
+                    if (count($nameParts) > 1) {
+                        $initials .= strtoupper(substr(end($nameParts), 0, 1));
+                    }
 
-                    $perms     = $user->directPermissions;
-                    $permCount = $perms->count();
-                    $modCount  = $isSuperadmin ? 4 : $perms->pluck('name')->map(fn($p) => explode('.', $p)[0])->unique()->count();
-
-                    $roleStyleMap = [
-                        'superadmin'         => ['color' => '#7C3AED', 'border' => '#C4B5FD'],
-                        'dosen'              => ['color' => '#059669', 'border' => '#6EE7B7'],
-                        'mahasiswa'          => ['color' => '#D97706', 'border' => '#FCD34D'],
-                        'gpm'                => ['color' => '#0284C7', 'border' => '#7DD3FC'],
-                        'alumni'             => ['color' => '#7C3AED', 'border' => '#C4B5FD'],
-                        'admin_banksoal'     => ['color' => '#92400E', 'border' => '#FCD34D'],
-                        'admin_capstone'     => ['color' => '#1D4ED8', 'border' => '#93C5FD'],
-                        'admin_eoffice'      => ['color' => '#047857', 'border' => '#6EE7B7'],
-                        'admin_kemahasiswaan'=> ['color' => '#9D174D', 'border' => '#F9A8D4'],
-                    ];
-                    $firstRole      = $userRoles->first();
-                    $extraRoleCount = max(0, $userRoles->count() - 1);
+                    // Avatar Fallback Styles
+                    $avatarColors = match(true) {
+                        $isSuperadmin => '!bg-[#F1E9FF] !text-[#5E53F4] border-[#D1BFFF]',
+                        $userRoles->isEmpty() => '!bg-[#FEF2F2] !text-[#EF4444] border-[#FEE2E2]',
+                        default => '!bg-[#F8F9FA] !text-[#6C757D] border-[#DEE2E6]',
+                    };
                 @endphp
-
-                <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s; {{ $isSuspended ? 'background:#FFF9F9;' : '' }}"
-                    onmouseover="this.style.background='{{ $isSuspended ? '#FFF5F5' : '#FAFAFA' }}'"
-                    onmouseout="this.style.background='{{ $isSuspended ? '#FFF9F9' : 'transparent' }}'">
-
-                    {{-- Checkbox --}}
-                    <td style="padding:14px 16px; width:44px;">
+                <tr class="hover:bg-[#F8F9FA]/50 transition-colors group {{ $isMe ? 'bg-slate-50/30' : '' }} {{ $user->isSuspended() ? 'bg-rose-50/20' : '' }}">
+                    <td class="px-5 py-4">
                         @if(!$isMe)
-                        <input type="checkbox" name="selected_users[]" value="{{ $user->id }}"
-                               class="user-checkbox"
-                               style="width:15px; height:15px; border-radius:4px; border:1.5px solid #CBD5E1; cursor:pointer; accent-color:var(--c-primary);">
+                        <input type="checkbox" name="selected_users[]" value="{{ $user->id }}" 
+                            class="user-checkbox size-4 rounded border-[#DEE2E6] text-[#5E53F4] focus:ring-[#5E53F4]/20 transition-all cursor-pointer">
                         @else
-                        <div style="width:15px; height:15px; display:flex; align-items:center; justify-content:center;" title="Akun Anda">
-                            <svg width="12" height="12" fill="currentColor" viewBox="0 0 24 24" style="color:#9CA3AF;">
-                                <path fill-rule="evenodd" clip-rule="evenodd" d="M9 8C9 6.34315 10.3431 5 12 5C13.6569 5 15 6.34315 15 8V11H9V8ZM17 8V11C18.6569 11 20 12.3431 20 14V18C20 19.6569 18.6569 21 17 21H7C5.34315 21 4 19.6569 4 18V14C4 12.3431 5.34315 11 7 11V8C7 5.23858 9.23858 3 12 3C14.7614 3 17 5.23858 17 8Z"/>
-                            </svg>
+                        <div class="flex items-center justify-center size-4 rounded bg-slate-100 border border-[#DEE2E6]" title="Your Account">
+                            <span class="material-symbols-outlined text-slate-400" style="font-size: 12px">lock</span>
                         </div>
                         @endif
                     </td>
 
-                    {{-- No --}}
-                    <td style="padding:14px 12px; font-size:13px; font-weight:400; color:var(--c-fg-muted); width:48px;">
-                        {{ $rowNo }}
-                    </td>
-
-                    {{-- User Name --}}
-                    <td style="padding:14px 16px; min-width:200px;">
-                        <div style="display:flex; align-items:center; gap:12px;">
-                            <div style="position:relative; flex-shrink:0;">
-                                <div style="width:36px; height:36px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; border:1.5px solid #E5E7EB; font-size:12px; font-weight:700;
-                                    {{ $isSuspended ? 'filter:grayscale(0.5); opacity:0.75;' : '' }}
-                                    {{ $isSuperadmin ? 'background:rgba(11,38,110,0.07); color:#0B266E; border-color:rgba(11,38,110,0.15);' : 'background:#F3F4F6; color:#6B7280;' }}">
+                    {{-- User Identity with Dynamic Avatar --}}
+                    <td class="px-5 py-4">
+                        <div class="flex items-center gap-4">
+                            {{-- Avatar Container --}}
+                            <div class="relative shrink-0 {{ $user->isSuspended() ? 'opacity-70 grayscale-[0.5]' : '' }}">
+                                <div class="size-9 rounded-full flex items-center justify-center border-2 border-white shadow-sm overflow-hidden {{ $avatarColors }}">
                                     @if($user->avatar_url)
-                                        <img src="{{ $user->avatar_url }}" alt="avatar" style="width:100%; height:100%; object-fit:cover;">
+                                        <img src="{{ $user->avatar_url }}" alt="avatar" class="w-full h-full object-cover">
                                     @elseif($isSuperadmin)
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linejoin="round">
-                                            <path d="M3.00059 7.59352C3.20646 13.6197 5.53308 19.0699 11.1059 20.8601C11.6866 21.0466 12.3134 21.0466 12.8941 20.8601C18.4669 19.0699 20.7935 13.6197 20.9994 7.59352C21.0169 7.08167 20.6467 6.65046 20.1578 6.55081C17.5104 6.01123 15.4106 4.85537 13.1163 3.3374C12.4363 2.88753 11.5637 2.88753 10.8837 3.3374C8.58942 4.85537 6.48962 6.01123 3.8422 6.55081C3.35327 6.65046 2.98311 7.08167 3.00059 7.59352Z"/>
-                                        </svg>
+                                        <span class="material-symbols-outlined !text-[18px]">admin_panel_settings</span>
                                     @else
-                                        {{ $initials }}
+                                        <span class="text-[11px] font-semibold uppercase">{{ $initials }}</span>
                                     @endif
                                 </div>
-                                @if($user->is_online && !$isSuspended)
-                                <span style="position:absolute; bottom:-1px; right:-1px; width:9px; height:9px; border-radius:50%; background:#22C55E; border:2px solid #fff;"></span>
+                                @if($user->is_online)
+                                    <span class="absolute bottom-0 right-0 size-2.5 bg-emerald-500 border-2 border-white rounded-full"></span>
                                 @endif
                             </div>
-                            <div style="min-width:0;">
-                                <div style="display:flex; align-items:center; gap:5px;">
-                                    <a href="{{ route('superadmin.users.show', $user->id) }}" style="text-decoration:none; outline:none;">
-                                        <p style="font-size:13px; font-weight:600; color:{{ $isSuspended ? '#DC2626' : 'var(--c-fg)' }}; {{ $isSuspended ? 'text-decoration:line-through; text-decoration-color:#FCA5A5;' : '' }} white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; transition:color 0.2s;"
-                                        onmouseover="this.style.color='var(--c-primary)'"
-                                        onmouseout="this.style.color='{{ $isSuspended ? '#DC2626' : 'var(--c-fg)' }}'">
-                                            {{ $user->name }}
-                                        </p>
-                                    </a>
+
+                            {{-- Info Text --}}
+                            <div class="min-w-0 flex-1">
+                                <div class="flex items-center gap-1.5 mb-0.5">
+                                    <p class="text-[13px] font-semibold {{ $user->isSuspended() ? 'text-rose-600 line-through decoration-rose-300' : 'text-[#1A1C1E]' }} truncate tracking-tight">
+                                        {{ $user->name }}
+                                    </p>
                                     @if($isMe)
-                                    <span style="font-size:8px; font-weight:700; color:#0B266E; background:rgba(11,38,110,0.07); padding:1px 5px; border-radius:4px; text-transform:uppercase; flex-shrink:0;">YOU</span>
+                                        <span class="text-[10px] text-[#5E53F4] font-semibold bg-[#F1E9FF] px-1.5 rounded-md">YOU</span>
+                                    @endif
+                                    
+                                    {{-- Badge Penanda Suspended --}}
+                                    @if($user->isSuspended())
+                                        <span class="flex items-center gap-0.5 text-[9px] text-rose-600 font-bold bg-rose-50 border border-rose-100 px-1.5 py-0.5 rounded-md uppercase tracking-tighter">
+                                            <span class="material-symbols-outlined !text-[12px]">block</span>
+                                            Suspended
+                                        </span>
                                     @endif
                                 </div>
-                                <p style="font-size:11px; color:var(--c-fg-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:180px; margin-top:1px;">
+                                <p class="text-[#6C757D] text-[11px] font-medium truncate leading-normal">
                                     {{ $user->email }}
                                 </p>
                             </div>
                         </div>
                     </td>
 
-                    {{-- Access Role --}}
-                    <td style="padding:14px 16px; min-width:140px;">
-                        <div style="display:flex; align-items:center; gap:4px; flex-wrap:nowrap;">
-                            @if($firstRole)
-                            @php
-                                $rs = $roleStyleMap[strtolower($firstRole->name)] ?? ['color' => '#0B266E', 'border' => '#93C5FD'];
-                                $displayName = match(strtolower($firstRole->name)) {
-                                    'superadmin'         => 'Super Admin',
-                                    'admin_banksoal'     => 'Admin SIBASO',
-                                    'admin_capstone'     => 'Admin SICATA',
-                                    'admin_eoffice'      => 'Admin SIMENMA',
-                                    'admin_kemahasiswaan'=> 'Admin SIPERKOM',
-                                    default              => ucfirst(str_replace('_', ' ', $firstRole->name)),
-                                };
-                            @endphp
-                            <span style="font-size:11px; font-weight:500; color:{{ $rs['color'] }}; background:transparent; border:1px solid {{ $rs['border'] }}; padding:3px 12px; border-radius:9999px; white-space:nowrap; letter-spacing:0.01em;">
-                                {{ $displayName }}
-                            </span>
-                            @if($extraRoleCount > 0)
-                            <span style="font-size:11px; font-weight:500; color:var(--c-fg-muted); background:transparent; border:1px solid var(--c-border); padding:3px 9px; border-radius:9999px; white-space:nowrap;">
-                                +{{ $extraRoleCount }}
-                            </span>
-                            @endif
-                            @else
-                            <span style="font-size:10px; color:var(--c-fg-muted); font-style:italic;">No Role</span>
-                            @endif
+                    {{-- Access Roles --}}
+                    <td class="px-5 py-4">
+                        <div class="flex gap-1.5 flex-wrap">
+                            @forelse($userRoles as $role)
+                                @php
+                                    $roleName = strtolower($role->name);
+                                    $roleStyle = match(true) {
+                                        $roleName === 'superadmin' => 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]',
+                                        $roleName === 'dosen' => 'bg-[#E7F9F3] text-[#00C08D] border-[#B2EBD9]',
+                                        $roleName === 'mahasiswa' => 'bg-[#FFF9E6] text-[#FFB800] border-[#FFEBB3]',
+                                        default => 'bg-[#F0F5FF] text-[#5E53F4] border-[#D1DFFF]',
+                                    };
+                                @endphp
+                                <span class="px-2 py-0.5 rounded-full text-[9px] font-semibold border uppercase tracking-wider {{ $roleStyle }}">
+                                    {{ str_replace('_', ' ', $role->name) }}
+                                </span>
+                            @empty
+                                <span class="text-[#ADB5BD] text-[10px] font-semibold italic uppercase tracking-tighter">No Assigned Role</span>
+                            @endforelse
                         </div>
                     </td>
 
-                    {{-- Modul --}}
-                    <td style="padding:14px 16px;">
-                        <span style="font-size:13px; font-weight:400; color:var(--c-fg);">
-                            @if($isSuperadmin) All @else {{ $modCount }} @endif Modul
-                        </span>
-                    </td>
-
-                    {{-- Permissions --}}
-                    <td style="padding:14px 16px;">
-                        <span style="font-size:13px; font-weight:400; color:var(--c-fg);">
-                            @if($isSuperadmin) All @else {{ $permCount }} @endif Permissions
-                        </span>
-                    </td>
-
-                    {{-- Status --}}
-                    <td style="padding:12px 16px;">
-                        @if($isSuspended)
-                        <span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:500; color:#DC2626; background:transparent; border:1px solid #FCA5A5; padding:3px 12px; border-radius:9999px; white-space:nowrap;">
-                            <span style="width:6px; height:6px; border-radius:50%; background:#DC2626; flex-shrink:0;"></span>
-                            Suspend
-                        </span>
+                    {{-- Module Rights --}}
+                    <td class="px-5 py-4">
+                        @if($isSuperadmin)
+                            <span class="text-[#5E53F4] text-[10px] font-semibold uppercase tracking-widest flex items-center gap-1.5">
+                                <span class="material-symbols-outlined fill-1" style="font-size: 16px">verified</span> Root Access
+                            </span>
                         @else
-                        <span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:500; color:#059669; background:transparent; border:1px solid #6EE7B7; padding:3px 12px; border-radius:9999px; white-space:nowrap;">
-                            <span style="width:6px; height:6px; border-radius:50%; background:#22C55E; flex-shrink:0;"></span>
-                            Active
-                        </span>
+                            @php 
+                                $perms = $user->directPermissions->pluck('name');
+                                $modCount = $perms->map(fn($p) => explode('.', $p)[0])->unique()->count();
+                            @endphp
+                            @if($modCount > 0)
+                                <div class="inline-flex items-center border border-[#DEE2E6] rounded-full overflow-hidden bg-white shadow-sm">
+                                    <div class="px-2 py-0.5 bg-[#F8F9FA] text-[#495057] text-[9px] font-semibold uppercase border-r border-[#DEE2E6]">
+                                        {{ $modCount }} Modules
+                                    </div>
+                                    <div class="px-2 py-0.5 text-[#5E53F4] text-[9px] font-semibold uppercase bg-white">
+                                        {{ $perms->count() }} Perms
+                                    </div>
+                                </div>
+                            @else
+                                <span class="text-[#ADB5BD] text-[10px]">—</span>
+                            @endif
                         @endif
                     </td>
 
-                    {{-- Action --}}
-                    <td style="padding:14px 16px; text-align:center;">
-                        <div style="position:relative; display:inline-block;" x-data="{ open: false }">
-                            <button type="button" @click="open = !open" @click.outside="open = false"
-                                    style="width:28px; height:28px; border-radius:6px; border:1px solid var(--c-border); background:#fff; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--c-fg-muted); transition:all .15s; margin:0 auto;"
-                                    onmouseover="this.style.background='var(--c-bg)'; this.style.borderColor='var(--c-border-strong)'"
-                                    onmouseout="this.style.background='#fff'; this.style.borderColor='var(--c-border)'">
-                                <svg width="13" height="13" fill="currentColor" viewBox="0 0 24 24"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
-                            </button>
-
-                            <div x-show="open"
-                                 x-transition:enter="transition ease-out duration-100"
-                                 x-transition:enter-start="opacity-0 scale-95"
-                                 x-transition:enter-end="opacity-100 scale-100"
-                                 style="position:absolute; right:0; top:calc(100% + 5px); background:#fff; border:1px solid var(--c-border); border-radius:10px; box-shadow:0 8px 24px rgba(0,0,0,.1); min-width:160px; z-index:40; overflow:hidden; display:none;">
-                                <div style="padding:5px;">
-
-                                    <a href="{{ route('superadmin.users.show', $user->id) }}"
-                                    style="width:100%; display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:6px; font-size:11px; font-weight:500; color:var(--c-fg-sec); text-decoration:none; transition:background .12s;"
-                                    onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='transparent'">
-                                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                        Detail Info
-                                    </a>
-
-                                    <button type="button"
-                                            onclick="openEditInfo({{ json_encode(['id' => $user->id, 'name' => $user->name, 'email' => $user->email]) }}); open = false"
-                                            style="width:100%; display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; border-radius:6px; background:none; font-size:11px; font-weight:500; color:var(--c-fg-sec); cursor:pointer; font-family:inherit; text-align:left; transition:background .12s;"
-                                            onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='none'">
-                                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M11 4H4C2.89 4 2 4.9 2 6V20C2 21.1 2.9 22 4 22H18C19.1 22 20 21.1 20 20V13M18.5 2.5C19.33 2.5 20 3.17 20 4V4C20.83 4 21.5 4.67 21.5 5.5C21.5 6.33 20.83 7 20 7L11 16L7 17L8 13L17 4C17 3.17 17.67 2.5 18.5 2.5Z"/></svg>
-                                        Edit Info
-                                    </button>
-
-                                    <a href="{{ route('superadmin.permissions') }}"
-                                       style="width:100%; display:flex; align-items:center; gap:8px; padding:7px 10px; border-radius:6px; font-size:11px; font-weight:500; color:var(--c-fg-sec); text-decoration:none; transition:background .12s;"
-                                       onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='transparent'">
-                                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linejoin="round"><path d="M3.00059 7.59352C3.20646 13.6197 5.53308 19.0699 11.1059 20.8601C11.6866 21.0466 12.3134 21.0466 12.8941 20.8601C18.4669 19.0699 20.7935 13.6197 20.9994 7.59352C21.0169 7.08167 20.6467 6.65046 20.1578 6.55081C17.5104 6.01123 15.4106 4.85537 13.1163 3.3374C12.4363 2.88753 11.5637 2.88753 10.8837 3.3374C8.58942 4.85537 6.48962 6.01123 3.8422 6.55081C3.35327 6.65046 2.98311 7.08167 3.00059 7.59352Z"/></svg>
-                                        Permission
-                                    </a>
-
-                                    @if(!$isMe)
-                                    <div style="height:1px; background:var(--c-border); margin:4px 6px;"></div>
-
-                                    <button type="button"
-                                            onclick="openForceLogoutModal({ id: '{{ $user->id }}', name: '{{ addslashes($user->name) }}' }); open = false"
-                                            style="width:100%; display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; border-radius:6px; background:none; font-size:11px; font-weight:500; color:#D97706; cursor:pointer; font-family:inherit; text-align:left; transition:background .12s;"
-                                            onmouseover="this.style.background='#FFFBEB'" onmouseout="this.style.background='none'">
-                                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M13 8.73V8.14C13 6.58 12.19 5.24 11.07 4.93L7.87 4.06C6.39 3.66 5 5.21 5 7.27V16.73C5 18.79 6.39 20.34 7.87 19.94L11.07 19.06C12.19 18.76 13 17.42 13 15.86V15.27M11 12H19M19 12L16.5 9.5M19 12L16.5 14.5"/></svg>
-                                        Force Logout
-                                    </button>
-
-                                    @if($isSuspended)
-                                    <form method="POST" action="{{ route('superadmin.users.unsuspend', $user) }}" style="display:block;">
-                                        @csrf
-                                        <button type="submit"
-                                                style="width:100%; display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; border-radius:6px; background:none; font-size:11px; font-weight:500; color:#059669; cursor:pointer; font-family:inherit; text-align:left; transition:background .12s;"
-                                                onmouseover="this.style.background='#ECFDF5'" onmouseout="this.style.background='none'">
-                                            <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                            Unsuspend
-                                        </button>
-                                    </form>
-                                    @elseif(!$isSuperadmin)
-                                    <button type="button"
-                                            onclick="openSuspendModal({{ json_encode(['id' => $user->id, 'name' => $user->name]) }}); open = false"
-                                            style="width:100%; display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; border-radius:6px; background:none; font-size:11px; font-weight:500; color:#DC2626; cursor:pointer; font-family:inherit; text-align:left; transition:background .12s;"
-                                            onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background='none'">
-                                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M15.5 15.5L12 12M8.5 8.5L12 12M8.5 15.5L12 12M15.5 8.5L12 12M12 22C6.48 22 2 17.52 2 12C2 6.48 6.48 2 12 2C17.52 2 22 6.48 22 12C22 17.52 17.52 22 12 22Z"/></svg>
-                                        Suspend
-                                    </button>
-                                    @endif
-
-                                    <button type="button"
-                                            onclick="openDeleteHybrid({{ json_encode(['id' => $user->id, 'name' => $user->name]) }}); open = false"
-                                            style="width:100%; display:flex; align-items:center; gap:8px; padding:7px 10px; border:none; border-radius:6px; background:none; font-size:11px; font-weight:500; color:#DC2626; cursor:pointer; font-family:inherit; text-align:left; transition:background .12s;"
-                                            onmouseover="this.style.background='#FEF2F2'" onmouseout="this.style.background='none'">
-                                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M3 6H5H21M8 6V4C8 3.45 8.45 3 9 3H15C15.55 3 16 3.45 16 4V6M19 6L18.12 19.13C18.05 20.18 17.18 21 16.13 21H7.87C6.82 21 5.95 20.18 5.88 19.13L5 6H19Z"/></svg>
-                                        Hapus User
-                                    </button>
-                                    @endif
-                                </div>
-                            </div>
+                    {{-- Last Activity --}}
+                    <td class="px-5 py-4">
+                        <div class="flex flex-col">
+                            <span class="text-[#1A1C1E] font-semibold text-[11px]">{{ $user->created_at->format('d M Y') }}</span>
+                            <span class="text-[#6C757D] text-[10px] italic">
+                                Log: {{ $user->last_login ? $user->last_login->diffForHumans() : 'Never' }}
+                            </span>
                         </div>
                     </td>
 
+                    {{-- Actions --}}
+                    <td class="px-5 py-4">
+                        <div class="flex items-center justify-center gap-1">
+                            <button onclick="openEditInfo({{ json_encode(['id' => $user->id, 'name' => $user->name, 'email' => $user->email]) }})"
+                                class="p-2 text-[#5E53F4] hover:bg-[#F1E9FF] rounded-xl transition-all" title="Edit Profile">
+                                <span class="material-symbols-outlined" style="font-size:18px">edit_square</span>
+                            </button>
+
+                            @if(!$isMe)
+                                <button type="button" 
+                                    onclick="openForceLogoutModal({ id: '{{ $user->id }}', name: '{{ $user->name }}' })"
+                                    class="p-2 text-amber-500 hover:bg-amber-50 rounded-xl transition-all" title="Force Logout">
+                                    <span class="material-symbols-outlined" style="font-size:18px">logout</span>
+                                </button>
+
+                                @if($user->isSuspended())
+                                    <form method="POST" action="{{ route('superadmin.users.unsuspend', $user) }}" class="inline">
+                                        @csrf
+                                        <button type="submit" class="p-2 text-emerald-500 hover:bg-emerald-50 rounded-xl transition-all" title="Unsuspend">
+                                            <span class="material-symbols-outlined" style="font-size:18px">lock_open</span>
+                                        </button>
+                                    </form>
+                                @elseif(!$isSuperadmin)
+                                    <button onclick="openSuspendModal({{ json_encode(['id' => $user->id, 'name' => $user->name]) }})"
+                                        class="p-2 text-rose-500 hover:bg-rose-50 rounded-xl transition-all" title="Suspend User">
+                                        <span class="material-symbols-outlined" style="font-size:18px">block</span>
+                                    </button>
+                                @endif
+
+                                <button type="button" 
+                                    onclick="openDeleteHybrid({{ json_encode(['id' => $user->id, 'name' => $user->name]) }})"
+                                    class="p-2 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-xl transition-all" title="Delete User">
+                                    <span class="material-symbols-outlined" style="font-size:18px">delete</span>
+                                </button>
+                            @endif
+                        </div>
+                    </td>
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="8" style="padding:60px 24px; text-align:center;">
-                        <div style="display:flex; flex-direction:column; align-items:center; gap:8px;">
-                            <svg width="40" height="40" fill="none" viewBox="0 0 24 24" style="color:#E5E7EB;">
-                                <path fill-rule="evenodd" clip-rule="evenodd"
-                                    d="M14.86 10.83C15.58 9.73 16 8.42 16 7C16 5.58 15.58 4.27 14.86 3.17C15.22 3.06 15.6 3 16 3C18.21 3 20 4.79 20 7C20 9.21 18.21 11 16 11C15.6 11 15.22 10.94 14.86 10.83ZM17.87 21C17.96 20.68 18 20.35 18 20V19C18 17.11 17.34 15.37 16.25 14H17C19.76 14 22 16.24 22 19V20C22 20.55 21.55 21 21 21H17.87Z"
-                                    fill="currentColor"/>
-                                <path d="M10 14H8C5.24 14 3 16.24 3 19V20C3 20.55 3.45 21 4 21H14C14.55 21 15 20.55 15 20V19C15 16.24 12.76 14 10 14Z"
-                                    stroke="currentColor" stroke-width="1.5"/>
-                                <path d="M9 11C11.21 11 13 9.21 13 7C13 4.79 11.21 3 9 3C6.79 3 5 4.79 5 7C5 9.21 6.79 11 9 11Z"
-                                    stroke="currentColor" stroke-width="1.5"/>
-                            </svg>
-                            <p style="font-size:12px; font-weight:600; color:var(--c-fg-muted); text-transform:uppercase; letter-spacing:0.06em;">No users found</p>
-                            <p style="font-size:11px; color:var(--c-fg-placeholder);">Coba ubah filter pencarian</p>
+                    <td colspan="6" class="px-6 py-16 text-center">
+                        <div class="flex flex-col items-center gap-2">
+                            <span class="material-symbols-outlined text-[#DEE2E6]" style="font-size: 48px">group_off</span>
+                            <p class="text-[#ADB5BD] text-sm font-medium uppercase tracking-widest">No users matching your criteria</p>
                         </div>
                     </td>
                 </tr>
@@ -517,17 +346,4 @@
             </tbody>
         </table>
     </div>
-    @include('superadmin.users._pagination')
 </div>
-
-<script>
-    // Sort helpers — prefixed "User" agar tidak clash dengan halaman audit logs
-    // jika keduanya dimuat bersamaan
-    function setSortUser(col, dir) {
-        const form = document.getElementById('searchForm');
-        form.querySelector('input[name="sort_by"]').value  = col;
-        form.querySelector('input[name="sort_dir"]').value = dir;
-        form.querySelector('input[name="page"]')?.remove();
-        form.submit();
-    }
-</script>

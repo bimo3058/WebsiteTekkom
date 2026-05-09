@@ -10,12 +10,6 @@ class CheckSessionVersion
 {
     public function handle(Request $request, Closure $next)
     {
-        \Log::info('CheckSessionVersion hit', [
-            'auth_check'      => Auth::check(),
-            'session_version' => session('session_version'),
-            'url'             => $request->url(),
-        ]);
-        
         if (Auth::check()) {
             $user                  = Auth::user();
             $currentSessionVersion = (int) session('session_version', 0);

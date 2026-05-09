@@ -1,109 +1,104 @@
-{{-- resources/views/superadmin/audit-logs/_modal_bulk_delete.blade.php --}}
-<div id="modalBulkDeleteAudit"
-     style="display:none; position:fixed; inset:0; z-index:100; align-items:center; justify-content:center; padding:16px; background:rgba(13,13,18,0.5);">
-    <div style="position:fixed; inset:0;" onclick="closeModal('modalBulkDeleteAudit')"></div>
-    <div style="position:relative; width:100%; max-width:420px; background:#fff; border-radius:16px; border:1px solid var(--c-border); box-shadow:0 20px 40px rgba(13,13,18,0.15); overflow:hidden;">
-
+{{-- Modal Bulk Delete --}}
+<div id="modalBulkDeleteAudit" class="fixed inset-0 hidden z-50 flex items-center justify-center p-4">
+    <div class="fixed inset-0 bg-slate-900/60" onclick="closeModal('modalBulkDeleteAudit')"></div>
+    
+    <div class="relative w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden">
         {{-- Header --}}
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:20px 24px 0;">
-            <div style="display:flex; align-items:center; gap:12px;">
-                <div style="width:38px; height:38px; border-radius:10px; background:var(--c-error-subtle); display:flex; align-items:center; justify-content:center; flex-shrink:0;">
-                    <svg width="18" height="18" fill="none" stroke="var(--c-error)" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+                <div class="bg-red-50 p-2.5 rounded-xl border border-red-100">
+                    <span class="material-symbols-outlined text-red-600" style="font-size:20px">delete_sweep</span>
                 </div>
                 <div>
-                    <h3 style="font-size:14px; font-weight:700; color:var(--c-fg); line-height:1.2;">Hapus Log Aktivitas</h3>
-                    <p style="font-size:11px; color:var(--c-fg-muted); margin-top:2px;">Pilih kriteria log yang akan dihapus</p>
+                    <h3 class="text-base font-semibold text-slate-800">Hapus Log Aktivitas</h3>
+                    <p class="text-xs text-slate-400 mt-0.5">Pilih kriteria log yang akan dihapus</p>
                 </div>
             </div>
-            <button onclick="closeModal('modalBulkDeleteAudit')"
-                    style="width:28px; height:28px; border-radius:7px; border:1px solid var(--c-border); background:#fff; cursor:pointer; display:flex; align-items:center; justify-content:center; color:var(--c-fg-muted); transition:background .15s;"
-                    onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">
-                <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M18 6L6 18M6 6l12 12"/></svg>
+            <button onclick="closeModal('modalBulkDeleteAudit')" class="text-slate-400 hover:text-slate-700 transition-colors">
+                <span class="material-symbols-outlined">close</span>
             </button>
         </div>
 
         {{-- Form --}}
-        <form id="formBulkDeleteAudit" action="{{ route('superadmin.audit-logs.bulk-destroy') }}" method="POST" style="padding:20px 24px 24px;">
+        <form id="formBulkDeleteAudit" action="{{ route('superadmin.audit-logs.bulk-destroy') }}" method="POST" class="p-6">
             @csrf
             @method('DELETE')
-
+            
+            {{-- Hidden input untuk menyimpan IDs --}}
             <div id="selectedIdsContainer"></div>
-
-            {{-- Options --}}
-            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:16px;">
-
-                @foreach([
-                    ['6hours',  'Log lebih dari 6 jam',  'Semua log yang berumur > 6 jam'],
-                    ['12hours', 'Log lebih dari 12 jam', 'Semua log yang berumur > 12 jam'],
-                    ['24hours', 'Log lebih dari 24 jam', 'Semua log yang berumur > 24 jam'],
-                ] as [$val, $label, $desc])
-                <label style="display:flex; align-items:center; gap:12px; padding:10px 14px; border:1px solid var(--c-border); border-radius:10px; cursor:pointer; transition:border-color .15s, background .15s;"
-                       onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">
-                    <input type="radio" name="delete_type" value="{{ $val }}"
-                           style="width:14px; height:14px; accent-color:var(--c-error); cursor:pointer; flex-shrink:0;">
-                    <div>
-                        <span style="font-size:13px; font-weight:600; color:var(--c-fg); display:block;">{{ $label }}</span>
-                        <span style="font-size:10px; color:var(--c-fg-muted);">{{ $desc }}</span>
+            
+            <div class="mb-5">
+                <label class="block text-sm font-medium text-slate-700 mb-3">Pilih metode penghapusan:</label>
+                
+                {{-- Opsi 1: Hapus berdasarkan waktu --}}
+                <div class="space-y-3 mb-4">
+                    <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-all">
+                        <input type="radio" name="delete_type" value="6hours" class="w-4 h-4 text-red-600 focus:ring-red-500">
+                        <div class="flex-1">
+                            <span class="font-semibold text-sm text-slate-700">Log lebih dari 6 jam yang lalu</span>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Menghapus semua log yang berumur lebih dari 6 jam</p>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-all">
+                        <input type="radio" name="delete_type" value="12hours" class="w-4 h-4 text-red-600 focus:ring-red-500">
+                        <div class="flex-1">
+                            <span class="font-semibold text-sm text-slate-700">Log lebih dari 12 jam yang lalu</span>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Menghapus semua log yang berumur lebih dari 12 jam</p>
+                        </div>
+                    </label>
+                    
+                    <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-all">
+                        <input type="radio" name="delete_type" value="24hours" class="w-4 h-4 text-red-600 focus:ring-red-500">
+                        <div class="flex-1">
+                            <span class="font-semibold text-sm text-slate-700">Log lebih dari 24 jam yang lalu</span>
+                            <p class="text-[10px] text-slate-400 mt-0.5">Menghapus semua log yang berumur lebih dari 24 jam</p>
+                        </div>
+                    </label>
+                </div>
+                
+                <div class="relative my-3">
+                    <div class="absolute inset-0 flex items-center">
+                        <div class="w-full border-t border-slate-200"></div>
                     </div>
-                </label>
-                @endforeach
-
-                {{-- Divider --}}
-                <div style="position:relative; margin:4px 0;">
-                    <div style="position:absolute; inset:0; display:flex; align-items:center;">
-                        <div style="width:100%; height:1px; background:var(--c-border);"></div>
-                    </div>
-                    <div style="position:relative; display:flex; justify-content:center;">
-                        <span style="background:#fff; padding:0 10px; font-size:10px; font-weight:700; color:var(--c-fg-placeholder); text-transform:uppercase; letter-spacing:0.06em;">Atau</span>
+                    <div class="relative flex justify-center text-xs">
+                        <span class="bg-white px-2 text-slate-400">ATAU</span>
                     </div>
                 </div>
-
-                {{-- Selected --}}
-                <label style="display:flex; align-items:center; gap:12px; padding:10px 14px; border:1px solid var(--c-border); border-radius:10px; cursor:pointer; transition:border-color .15s, background .15s;"
-                       onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">
-                    <input type="radio" name="delete_type" value="selected" id="deleteSelectedRadio"
-                           style="width:14px; height:14px; accent-color:var(--c-error); cursor:pointer; flex-shrink:0;">
-                    <div>
-                        <span style="font-size:13px; font-weight:600; color:var(--c-fg); display:block;">Hanya log yang dipilih</span>
-                        <span style="font-size:10px; color:var(--c-fg-muted);">
-                            Menghapus <span id="selectedCountText" style="font-weight:700; color:var(--c-error);">0</span> log yang dicentang
-                        </span>
+                
+                {{-- Opsi 2: Hapus yang dipilih --}}
+                <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl cursor-pointer hover:bg-slate-50 transition-all">
+                    <input type="radio" name="delete_type" value="selected" class="w-4 h-4 text-red-600 focus:ring-red-500" id="deleteSelectedRadio">
+                    <div class="flex-1">
+                        <span class="font-semibold text-sm text-slate-700">Hanya log yang dipilih</span>
+                        <p class="text-[10px] text-slate-400 mt-0.5">
+                            Menghapus <span id="selectedCountText" class="font-bold text-red-600">0</span> log yang Anda centang
+                        </p>
                     </div>
                 </label>
             </div>
 
-            {{-- Warning --}}
-            <div style="display:flex; align-items:flex-start; gap:10px; padding:12px 14px; background:var(--c-warning-subtle); border:1px solid #FBD982; border-radius:10px; margin-bottom:20px;">
-                <svg width="16" height="16" fill="none" stroke="var(--c-warning)" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" style="flex-shrink:0; margin-top:1px;">
-                    <path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
-                </svg>
-                <p style="font-size:11px; color:#5B3D1E; line-height:1.6;">
-                    <strong>Peringatan:</strong> Data log yang dihapus tidak dapat dikembalikan.
-                </p>
+            {{-- Peringatan --}}
+            <div class="bg-amber-50 rounded-xl p-4 mb-6 border border-amber-100">
+                <div class="flex gap-3">
+                    <span class="material-symbols-outlined text-amber-600" style="font-size:18px">warning</span>
+                    <div class="text-xs text-amber-700 leading-relaxed">
+                        <strong>Peringatan:</strong> Data log yang dihapus tidak dapat dikembalikan. Pastikan Anda yakin dengan pilihan ini.
+                    </div>
+                </div>
             </div>
 
-            {{-- Buttons --}}
-            <div style="display:flex; gap:10px;">
+            <div class="flex gap-3 mt-2">
                 <button type="button" onclick="closeModal('modalBulkDeleteAudit')"
-                        style="flex:1; padding:10px; background:#fff; border:1px solid var(--c-border); border-radius:8px; font-size:12px; font-weight:600; color:var(--c-fg-sec); cursor:pointer; font-family:inherit; transition:background .15s;"
-                        onmouseover="this.style.background='var(--c-bg)'" onmouseout="this.style.background='#fff'">
+                    class="flex-1 px-4 py-2.5 border border-slate-200 text-slate-600 font-semibold rounded-xl hover:bg-slate-50 transition-all">
                     Batal
                 </button>
-                <button type="submit"
-                        style="flex:1; padding:10px; background:var(--c-error); border:none; border-radius:8px; font-size:12px; font-weight:700; color:#fff; cursor:pointer; font-family:inherit; display:flex; align-items:center; justify-content:center; gap:6px; transition:background .15s;"
-                        onmouseover="this.style.background='#95122B'" onmouseout="this.style.background='var(--c-error)'">
-                    <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
-                    </svg>
+                <button type="submit" id="btnConfirmDelete"
+                    class="flex-1 px-4 py-2.5 bg-red-600 text-white font-semibold rounded-xl hover:bg-red-700 transition-all shadow-md shadow-red-200 flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined" style="font-size:20px">delete_forever</span>
                     Hapus Log
                 </button>
             </div>
         </form>
     </div>
 </div>
-
-<style>
-#modalBulkDeleteAudit.active { display: flex !important; }
-</style>
