@@ -14,7 +14,7 @@ class PertanyaanService
      */
     public function list(array $filters = [], int $perPage = 20): LengthAwarePaginator
     {
-        return Pertanyaan::with(['cpl', 'mataKuliah'])
+        return Pertanyaan::with(['cpl', 'mataKuliah', 'cpmk'])
             ->withCount('jawaban')
             ->when(isset($filters['mk_id']), fn($q) => $q->byMk((int) $filters['mk_id']))
             ->when(isset($filters['cpl_id']), fn($q) => $q->byCpl((int) $filters['cpl_id']))
@@ -27,7 +27,7 @@ class PertanyaanService
 
     public function findById(int $id): Pertanyaan
     {
-        return Pertanyaan::with(['cpl', 'mataKuliah', 'jawaban'])->findOrFail($id);
+        return Pertanyaan::with(['cpl', 'mataKuliah', 'jawaban', 'cpmk'])->findOrFail($id);
     }
 
     /**
@@ -47,7 +47,7 @@ class PertanyaanService
                 $this->syncJawaban($pertanyaan->id, $jawaban);
             }
 
-            return $pertanyaan->load('jawaban');
+            return $pertanyaan->load(['jawaban', 'cpmk']);
         });
     }
 
@@ -73,7 +73,7 @@ class PertanyaanService
                 Jawaban::where('soal_id', $pertanyaan->id)->delete();
             }
 
-            return $pertanyaan->fresh('jawaban');
+            return $pertanyaan->fresh(['jawaban', 'cpmk']);
         });
     }
 
