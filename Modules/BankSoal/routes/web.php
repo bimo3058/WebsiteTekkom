@@ -12,6 +12,7 @@ use Modules\BankSoal\Http\Controllers\RPS\Gpm\RpsController as GpmRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Admin\RpsController as AdminRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\TemplateRpsController;
 use Modules\BankSoal\Http\Controllers\BS\BankSoalController;
+use Modules\BankSoal\Http\Controllers\BS\Dosen\ArsipSoalController;
 use Modules\BankSoal\Http\Controllers\BS\GPM\ValidasiBankSoalController;
 use Modules\BankSoal\Http\Controllers\BS\GPM\RiwayatValidasiController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\PeriodeRpsController;
@@ -129,7 +130,17 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
 
         # Arsip Routes - View Mode
         Route::prefix('arsip')->name('banksoal.arsip.')->group(function () {
-            Route::get('/dosen', fn() => view('banksoal::pages.arsip.Dosen.index'))->name('dosen.index')->middleware('role:dosen');
+            Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
+                Route::get('/', [ArsipSoalController::class, 'index'])->name('index');
+                Route::get('/{id}', [ArsipSoalController::class, 'show'])->name('show');
+                Route::get('/penarikan/{id}', [ArsipSoalController::class, 'showPenarikan'])->name('penarikan.show');
+                Route::get('/penarikan/{id}/edit', [ArsipSoalController::class, 'editPenarikan'])->name('penarikan.edit');
+                Route::put('/penarikan/{id}', [ArsipSoalController::class, 'convertPenarikan'])->name('penarikan.update');
+                Route::delete('/penarikan/{id}', [ArsipSoalController::class, 'destroyPenarikan'])->name('penarikan.destroy');
+                Route::delete('/{id}', [ArsipSoalController::class, 'destroy'])->name('destroy');
+                Route::post('/upload/pdf', [ArsipSoalController::class, 'uploadPdf'])->name('upload-pdf');
+                Route::post('/upload/csv', [ArsipSoalController::class, 'uploadCsv'])->name('upload-csv');
+            });
             Route::get('/gpm', fn() => view('banksoal::pages.arsip.Gpm.index'))->name('gpm.index')->middleware('role:gpm');
             Route::get('/admin', fn() => view('banksoal::pages.arsip.Admin.index'))->name('admin.index')->middleware('role:admin_banksoal');
         });
@@ -184,6 +195,10 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
                 Route::post('/validasi-bank-soal/store', [ValidasiBankSoalController::class, 'store'])->name('validasi-bank-soal.store');            
                 Route::put('/validasi-bank-soal/update/{id}', [ValidasiBankSoalController::class, 'update'])->name('validasi-bank-soal.update');
+            });
+
+            Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
+                Route::post('/arsip-soal', [ArsipSoalController::class, 'storeFromEkstraksi'])->name('arsip-soal.store');
             });
         });
     });
