@@ -38,13 +38,20 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         Route::middleware('role:admin_banksoal')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
             Route::get('/cpl', [CplCpmkController::class, 'listCpl'])->name('cpl.index');
             Route::get('/cpl/next-code', [CplCpmkController::class, 'nextCplCode'])->name('cpl.next-code');
+            Route::get('/cpl/export-template', [CplCpmkController::class, 'exportCplTemplate'])->name('cpl.export-template');
+            Route::post('/cpl/import', [CplCpmkController::class, 'importCpl'])->name('cpl.import');
             Route::get('/cpl/{id}', [CplCpmkController::class, 'showCpl'])->name('cpl.show');
 
             Route::get('/rps/approved', [AdminRpsController::class, 'listApproved'])->name('rps.approved.index');
 
             Route::get('/cpmk', [CplCpmkController::class, 'listCpmk'])->name('cpmk.index');
             Route::get('/cpmk/next-code', [CplCpmkController::class, 'nextCpmkCode'])->name('cpmk.next-code');
+            Route::get('/cpmk/export-template', [CplCpmkController::class, 'exportCpmkTemplate'])->name('cpmk.export-template');
+            Route::post('/cpmk/import', [CplCpmkController::class, 'importCpmk'])->name('cpmk.import');
             Route::get('/cpmk/{id}', [CplCpmkController::class, 'showCpmk'])->name('cpmk.show');
+
+            Route::post('/mata-kuliah/import', [MataKuliahController::class, 'import'])->name('mata-kuliah.import');
+            Route::get('/mata-kuliah/export-template', [MataKuliahController::class, 'exportTemplate'])->name('mata-kuliah.export-template');
 
             Route::get('/pemetaan/options', [PemetaanController::class, 'options'])->name('pemetaan.options');
             Route::get('/pemetaan/cpmk-cpl', [PemetaanController::class, 'listCpmkCpl'])->name('pemetaan.cpmk-cpl.index');
@@ -57,7 +64,8 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::get('/rps', [AdminRpsController::class, 'index'])->name('rps');
             Route::get('/rps/{rpsId}/preview', [AdminRpsController::class, 'previewDokumen'])->name('rps.preview');
             Route::get('/rps/{rpsId}/download', [AdminRpsController::class, 'downloadDokumen'])->name('rps.download');
-            Route::get('/soal', fn() => view('banksoal::pages.admin.kontrol-banksoal.soal'))->name('soal');
+            Route::get('/soal', [\Modules\BankSoal\Http\Controllers\BS\Admin\ManajemenSoalController::class, 'index'])->name('soal');
+            Route::post('/soal/cetak-semua', [\Modules\BankSoal\Http\Controllers\BS\Admin\ManajemenSoalController::class, 'cetakSemua'])->name('soal.ekstrak');
         });
 
         # RPS Routes - View Mode
