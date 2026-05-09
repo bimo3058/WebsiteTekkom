@@ -452,7 +452,7 @@
     <div class="page-header">
         <div class="header-content">
             <h1>Manajemen CPL & CPMK</h1>
-            <p>Kelola data CPL dan CPMK. Masing-masing tabel menampilkan 5 item per halaman.</p>
+            <p>Kelola data CPL dan CPMK.</p>
         </div>
     </div>
 
