@@ -18,7 +18,7 @@
                 </div>
             </div>
 
-            <a href="{{ route('banksoal.soal.dosen.create') }}" class="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl px-4 py-2.5 font-medium transition-colors shadow-sm">
+            <a href="{{ route('banksoal.soal.dosen.create') }}" class="inline-flex items-center gap-2 bg-slate-800 hover:bg-slate-900 text-white rounded-lg px-4 py-2.5 font-medium transition-colors shadow-sm">
                 <i class="fas fa-plus"></i> Buat Soal
             </a>
             
@@ -40,7 +40,7 @@
             Swal.fire({
                 icon: 'success',
                 title: 'Berhasil!',
-                text: '{{ session('success') }}',
+                text: {!! json_encode(session('success')) !!},
                 confirmButtonColor: '#3b82f6',
                 background: '#ffffff',
                 customClass: {
@@ -60,7 +60,7 @@
             Swal.fire({
                 icon: 'error',
                 title: 'Oops...',
-                text: '{{ session('error') }}',
+                text: {!! json_encode(session('error')) !!},
                 confirmButtonColor: '#ef4444',
                 background: '#ffffff',
                 customClass: {
@@ -85,7 +85,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
             </div>
-            <input type="text" name="searchSoal" list="search-suggestions" value="{{ request('searchSoal') }}" placeholder="Cari soal, kursus, atau topik..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" autocomplete="off">
+            <input type="text" data-search-tab="soal" name="searchSoal" list="search-suggestions" value="{{ request('searchSoal') }}" placeholder="Cari soal, kursus, atau topik..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" autocomplete="off" id="searchSoal">
             <datalist id="search-suggestions">
                 @foreach($mataKuliahDosen as $mk)
                     <option value="{{ $mk->nama }}"></option>
@@ -94,20 +94,12 @@
             </datalist>
         </div>
 
-        <select name="mk_id" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer min-w-[160px] flex-shrink-0">
-            <option value="">Semua Mata Kuliah...</option>
-            @foreach($mataKuliahDosen as $mk)
-                <option value="{{ $mk->id }}" {{ request('mk_id') == $mk->id ? 'selected' : '' }}>{{ $mk->nama }}</option>
-            @endforeach
-        </select>
-
-        <select name="status" class="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 cursor-pointer min-w-[140px] flex-shrink-0">
+        <select name="status" onchange="this.form.submit()" class="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none cursor-pointer min-w-[140px] flex-shrink-0">
             <option value="">Semua Status...</option>
             <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Draft</option>
             <option value="diajukan" {{ request('status') == 'diajukan' ? 'selected' : '' }}>Diajukan</option>
             <option value="disetujui" {{ request('status') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
             <option value="revisi" {{ request('status') == 'revisi' ? 'selected' : '' }}>Perlu Revisi</option>
-            <option value="ditolak" {{ request('status') == 'ditolak' ? 'selected' : '' }}>Ditolak</option>
         </select>
 
         <div class="flex items-center gap-2">
@@ -115,7 +107,7 @@
                 <i class="fas fa-filter"></i> Filter
             </button>
 
-            @if(request()->hasAny(['searchSoal', 'mk_id', 'status']))
+            @if(request()->hasAny(['searchSoal', 'status']))
                 <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl px-4 py-2.5 font-medium transition-colors border border-red-200">
                     <i class="fas fa-times"></i> Reset
                 </a>
@@ -123,8 +115,8 @@
         </div>
     </form>
 
-    <div class="overflow-x-auto">
-        <table class="w-full">
+    <div class="overflow-x-auto" data-tab-panel="soal">
+        <table class="w-full" id="tableSoal">
             <thead class="bg-slate-50 border-b border-slate-200">
                 <tr>
                     <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">ID</th>
@@ -173,11 +165,11 @@
                             @endif
                         </td>
                         <td class="px-6 py-4">
-                            @include('banksoal::partials.dosen._soal-actions', ['soal' => $soal])
+                            @include('banksoal::partials.dosen.soal-actions', ['soal' => $soal])
                         </td>
                     </tr>
                 @empty
-                    <tr>
+                    <tr class="no-results-message">
                         <td colspan="6" class="px-6 py-12 text-center text-slate-600">
                             <div class="flex flex-col items-center justify-center">
                                 <i class="fas fa-folder-open text-4xl text-slate-300 mb-3"></i>
@@ -221,7 +213,7 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                     </svg>
                 </div>
-                <input type="text" list="packageSuggestions" autocomplete="off" name="searchPackages" value="{{ request('searchPackages') }}" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500" placeholder="Cari paket soal, kode mata kuliah, atau nama..." id="searchPackages">
+                <input type="text" data-search-tab="paket" list="packageSuggestions" autocomplete="off" name="searchPackages" value="{{ request('searchPackages') }}" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" placeholder="Cari paket soal, kode mata kuliah, atau nama..." id="searchPackages">
                 <datalist id="packageSuggestions">
                     @foreach(($mataKuliahDosen ?? collect()) as $mk)
                         <option value="{{ $mk->nama }}"></option>
@@ -239,8 +231,8 @@
             @endif
         </form>
 
-        <div class="overflow-x-auto">
-            <table class="w-full">
+        <div class="overflow-x-auto" data-tab-panel="paket">
+            <table class="w-full" id="tablePackages">
                 <thead class="bg-slate-50 border-b border-slate-200">
                     <tr>
                         <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Kode MK</th>
@@ -281,7 +273,7 @@
                             </td>
                         </tr>
                     @empty
-                        <tr>
+                        <tr class="no-results-message">
                             <td colspan="6" class="px-6 py-12 text-center text-slate-600">
                                 <div class="flex flex-col items-center justify-center">
                                     <i class="fas fa-box-open text-4xl text-slate-300 mb-3"></i>
@@ -317,8 +309,6 @@
     </div>
 @endcan
 
-<script src="{{ asset('modules/banksoal/js/Banksoal/shared/SearchHandler.js') }}"></script>
-
 <!-- Tarik Soal Modal -->
 <div id="tarikSoalModal" class="fixed inset-0 z-[100] hidden items-center justify-center overflow-y-auto overflow-x-hidden bg-slate-900/50 backdrop-blur-sm p-4 transition-opacity duration-300 opacity-0">
     <div id="tarikSoalModalContent" class="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-200 transform transition-all duration-300 ease-out opacity-0 scale-95 translate-y-4 flex flex-col max-h-[90vh]">
@@ -343,7 +333,7 @@
                 <div class="mb-5">
                     <label class="block text-sm font-medium text-slate-700 mb-2">Mata Kuliah</label>
                     <div class="relative">
-                        <select class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="mk_id" id="tarikMkId" required onchange="loadCplCpmk(this.value)">
+                        <select class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="mk_id" id="tarikMkId" required onchange="loadCplCpmk(this.value)">
                             <option value="">Pilih  Mata Kuliah</option>
                             @foreach($mataKuliahDosen as $mk)
                                 <option value="{{ $mk->id }}">{{ $mk->kode }} - {{ $mk->nama }}</option>
@@ -360,11 +350,11 @@
                     <label class="block text-sm font-medium text-slate-700 mb-3">Jenis Soal</label>
                     <div class="grid grid-cols-2 gap-3">
                         <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                            <input type="checkbox" name="jenis_soal[]" value="Pilihan Ganda" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
+                            <input type="checkbox" name="jenis_soal[]" value="Pilihan Ganda" class="w-4 h-4 border-slate-300 rounded">
                             <span class="text-sm font-medium text-slate-700">Pilihan Ganda</span>
                         </label>
                         <label class="flex items-center gap-3 p-3 border border-slate-200 rounded-xl hover:bg-slate-50 cursor-pointer transition-colors">
-                            <input type="checkbox" name="jenis_soal[]" value="Essay" class="w-4 h-4 text-blue-600 border-slate-300 rounded focus:ring-blue-500">
+                            <input type="checkbox" name="jenis_soal[]" value="Essay" class="w-4 h-4 border-slate-300 rounded">
                             <span class="text-sm font-medium text-slate-700">Essay</span>
                         </label>
                     </div>
@@ -374,7 +364,7 @@
                 <div class="mb-5">
                     <label class="block text-sm font-medium text-slate-700 mb-2">CPL (Capaian Pembelajaran Lulusan)</label>
                     <div class="relative">
-                        <select class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="cpl_id">
+                        <select class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="cpl_id">
                             <option value="">Pilih CPL</option>
                         </select>
                         <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
@@ -387,7 +377,7 @@
                 <div class="mb-5">
                     <label class="block text-sm font-medium text-slate-700 mb-2">CPMK (Capaian Pembelajaran Mata Kuliah)</label>
                     <div class="relative">
-                        <select class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="cpmk_id">
+                        <select class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="cpmk_id">
                             <option value="">Pilih CPMK</option>
                         </select>
                         <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
@@ -400,7 +390,7 @@
                 <div class="mb-2">
                     <label class="block text-sm font-medium text-slate-700 mb-2">Bobot Total</label>
                     <div class="relative">
-                        <input type="number" name="bobot_total" min="1" max="100" class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2.5 pl-4 pr-12 shadow-sm" placeholder="Contoh: 100" oninput="if(this.value > 100) this.value = 100; if(this.value < 0) this.value = 0;">
+                        <input type="number" name="bobot_total" min="1" max="100" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-12 shadow-sm" placeholder="Contoh: 100" oninput="if(this.value > 100) this.value = 100; if(this.value < 0) this.value = 0;">
                         <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                             <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">Pts</span>
                         </div>
@@ -761,28 +751,10 @@
                 <div class="mb-4 text-sm text-slate-600 bg-blue-50 border border-blue-200 rounded-xl p-4">
                     <p class="mb-2"><i class="fas fa-info-circle text-blue-600 mr-1.5"></i> <strong>Langkah Import Baru:</strong></p>
                     <ol class="list-decimal ml-6 space-y-1">
-                        <li>Gunakan template Moodle standar (SOAL pada kolom Jenis).</li>
+                        <li>Gunakan template impor standar (SOAL pada kolom Jenis).</li>
                         <li>Pastikan baris jawaban berada persis di bawah baris soal tersebut.</li>
-                        <li>Pilih Mata Kuliah dan CPL tujuan Anda di bawah.</li>
                         <li>Format yang didukung: <code class="bg-blue-100 px-1 py-0.5 rounded text-blue-800">.xls</code>, <code class="bg-blue-100 px-1 py-0.5 rounded text-blue-800">.xlsx</code>, <code class="bg-blue-100 px-1 py-0.5 rounded text-blue-800">.csv</code>.</li>
                     </ol>
-                </div>
-
-                <div class="mb-4">
-                    <label for="import_mk_id" class="block text-sm font-semibold text-slate-700 mb-2">Mata Kuliah Tujuan</label>
-                    <select name="mk_id" id="import_mk_id" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm" required>
-                        <option value="">Pilih Mata Kuliah...</option>
-                        @foreach($mataKuliahDosen as $mk)
-                            <option value="{{ $mk->id }}">{{ $mk->kode }} - {{ $mk->nama }}</option>
-                        @endforeach
-                    </select>
-                </div>
-
-                <div class="mb-5">
-                    <label for="import_cpl_id" class="mb-2 block text-sm font-semibold text-slate-700">CPL Tujuan</label>
-                    <select name="cpl_id" id="import_cpl_id" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm" required>
-                        <option value="">Pilih CPL...</option>
-                    </select>
                 </div>
 
                 <label for="csv_file" class="block text-sm font-semibold text-slate-700 mb-2">Unggah File Target (Excel/CSV)</label>
@@ -800,7 +772,7 @@
 
             <div class="px-6 py-4 border-t border-slate-200 bg-slate-50 rounded-b-2xl flex justify-end gap-3">
                 <button type="button" onclick="closeImportModal()" class="px-5 py-2.5 font-medium text-slate-600 hover:text-slate-800 transition-colors">Batal</button>
-                <button type="submit" onclick="this.innerHTML='<i class=\'fas fa-spinner fa-spin mr-2\'></i>Memproses...'; this.classList.add('opacity-75');" class="px-5 py-2.5 bg-emerald-600 text-white font-semibold hover:bg-emerald-700 rounded-xl shadow-sm transition-all focus:ring-4 focus:ring-emerald-500/20">
+                <button type="submit" onclick="if(this.closest('form').checkValidity()){ this.innerHTML='<i class=\'fas fa-spinner fa-spin mr-2\'></i>Memproses...'; this.classList.add('opacity-75'); }" class="px-5 py-2.5 bg-emerald-600 text-white font-semibold hover:bg-emerald-700 rounded-xl shadow-sm transition-all focus:ring-4 focus:ring-emerald-500/20">
                     <i class="fas fa-upload mr-1.5"></i> Proses Import
                 </button>
             </div>
@@ -917,6 +889,7 @@
                     <label for="ajukan_mk_id" class="mb-2 block text-sm font-semibold text-slate-700">Pilih Mata Kuliah</label>
                     <select name="mk_id" id="ajukan_mk_id" class="w-full rounded-xl border border-slate-200 px-3 py-2.5 text-sm" required>
                         <option value="">-- Pilih Mata Kuliah --</option>
+                        <option value="all" class="font-semibold text-emerald-700">-- Ajukan Semua Mata Kuliah --</option>
                         @foreach($mataKuliahDosen as $mk)
                             <option value="{{ $mk->id }}">{{ $mk->kode }} - {{ $mk->nama }}</option>
                         @endforeach
@@ -969,8 +942,65 @@
             modal.classList.remove('flex');
         }, 300);
     }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        function debounce(func, delay) {
+            let timeoutId;
+            return function (...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        function searchTable(searchInput, tabId) {
+            const searchValue = searchInput.value.toLowerCase().trim();
+            const tabContent = document.querySelector(`[data-tab-panel="${tabId}"]`);
+            if (!tabContent) return;
+
+            const rows = tabContent.querySelectorAll('table tbody tr:not(.no-results-message)');
+            let visibleCount = 0;
+
+            rows.forEach(row => {
+                const rowText = row.textContent.toLowerCase();
+                if (rowText.includes(searchValue) || searchValue === '') {
+                    row.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+
+            const noResultsMsg = tabContent.querySelector('.no-results-message');
+            if (noResultsMsg) {
+                if (visibleCount === 0) {
+                    noResultsMsg.classList.remove('hidden');
+                } else {
+                    noResultsMsg.classList.add('hidden');
+                }
+            }
+            
+            // Prevent actual form submission to retain real-time UI mapping
+            // But if user hits enter, it will trigger the server-side pagination flow.
+        }
+
+        const searchInputs = document.querySelectorAll('[data-search-tab]');
+        searchInputs.forEach((input) => {
+            const tabId = input.getAttribute('data-search-tab');
+            input.addEventListener('input', debounce(function () {
+                // Untuk table yang di-paginasi server, kita butuh submit form otomatis.
+                // Dengan debouncing 500ms, UX akan terasa seperti live-search 
+                // tetapi akan melakukan fetch ke seluruh data di server.
+                const form = this.closest('form');
+                if (form) {
+                    form.submit();
+                } else {
+                    searchTable(this, tabId); // Fallback ke client-side search
+                }
+            }, 600));
+        });
+    });
 </script>
 
-@include('banksoal::pages.bank-soal.Dosen._review-modal')
+@include('banksoal::pages.bank-soal.Dosen.review-modal')
 
 </x-banksoal::layouts.dosen-admin>

@@ -51,24 +51,24 @@ class DashboardController extends Controller
                     DB::raw("null as dosens_list")
                 )
                 ->groupBy('bs_mata_kuliah.id', 'bs_mata_kuliah.kode', 'bs_mata_kuliah.nama')
-                ->take(5) // Ambil 5 teratas saja untuk dashboard
+                ->take(5)
                 ->get();
 
             // 2. Ambil RPS yang sedang dalam pengajuan (DIAJUKAN) dan revisi (REVISI)
             $rpsService    = app(RpsService::class);
-            $rpsDiajukan   = $rpsService->getDiajukan(50)->getCollection();
-            $rpsRevisi     = $rpsService->getRevisi(50)->getCollection();
+            $rpsDiajukan   = $rpsService->getDiajukan(50);
+            $rpsRevisi     = $rpsService->getRevisi(50);
 
             // Map RPS menjadi format yang seragam dengan Bank Soal
             $mapRps = fn($item, $tipe) => (object)[
                 'mk_id'        => $item->mk_id,
-                'mk_kode'      => $item->kode,
-                'mk_nama'      => $item->mk_nama,
+                'mk_kode'      => $item->mataKuliah?->kode ?? 'N/A',
+                'mk_nama'      => $item->mataKuliah?->nama ?? 'N/A',
                 'tipe_dokumen' => 'RPS',
-                'rps_id'       => $item->rps_id,
+                'rps_id'       => $item->id,
                 'status'       => $item->status,
-                'dosens_list'  => $item->dosens_list ?? null,
-                'sub_status'   => $tipe,   // 'diajukan' | 'revisi'
+                'dosens_list'  => $item->dosens->pluck('name')->join(', ') ?? null,
+                'sub_status'   => $tipe,
             ];
 
             $prioritasRps = $rpsDiajukan->map(fn($r) => $mapRps($r, 'diajukan'))

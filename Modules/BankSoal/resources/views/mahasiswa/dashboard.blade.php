@@ -1,230 +1,319 @@
 <x-banksoal::layouts.mahasiswa>
     <!-- Page Header -->
-    <div class="mb-8">
-        <h1 class="text-3xl font-bold text-slate-900 tracking-tight flex items-center gap-3">
-            Dashboard Mahasiswa
-        </h1>
-        <p class="text-sm text-slate-500 mt-2 font-medium">Ujian Komprehensif S1 Teknik Komputer</p>
-    </div>
-
-    <!-- Welcome Hero Banner -->
-    <div class="bg-primary rounded-[20px] p-8 mb-8 relative overflow-hidden flex justify-between items-center shadow-lg shadow-primary/20">
-        <!-- Abstract shape decoration -->
-        <div class="absolute right-0 top-0 w-64 h-full pointer-events-none opacity-50">
-            <svg class="absolute right-[-20%] md:right-0 top-0 h-full text-white transform translate-x-1/3" viewBox="0 0 100 100" preserveAspectRatio="none" fill="currentColor">
-                <polygon points="50,0 100,0 100,100 0,100" />
-            </svg>
-        </div>
-        
-        <div class="relative z-10 text-primary-foreground w-full">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-4">
-                <div>
-                    <h2 class="text-2xl md:text-3xl font-bold mb-2 tracking-tight">Selamat Datang, {{ auth()->user()->name ?? 'Mahasiswa' }}!</h2>
-                    <p class="text-primary-foreground/80 text-[13px] font-medium tracking-wide">
-                        NIM: {{ optional(auth()->user()->student)->student_number ?? auth()->user()->external_id ?? '-' }} &bull; Program Studi S1 Teknik Komputer
-                    </p>
-                </div>
-                <div>
-                    <span class="inline-flex items-center px-4 py-2 rounded-xl text-xs font-bold bg-white/10 text-white border border-white/20 backdrop-blur-sm tracking-wide shadow-sm">
-                        Semester Ganjil 2025/2026
-                    </span>
-                </div>
+    <div class="mb-12 border-b border-slate-200 pb-8">
+        <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
+            <div>
+                <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-3">Portal Akademik Mahasiswa
+                </p>
+                <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
+                    Ujian Komprehensif
+                </h1>
             </div>
+
         </div>
     </div>
 
-    <!-- Main Content Grid -->
-    <div class="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        
-        <!-- Left: Major Application Status / Info Card -->
-        <div class="col-span-1 xl:col-span-2 flex flex-col">
-            @if($pendaftar && $pendaftar->status_pendaftaran === 'approved')
-                
-                <!-- STATE: APPROVED & READY FOR EXAM GATE -->
-                <x-ui.card class="flex-1 flex flex-col relative overflow-hidden ring-1 ring-success/20 shadow-md">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-success"></div>
-                    <div class="p-8">
-                        <div class="flex items-center gap-3 mb-6">
-                            <x-ui.badge variant="success" class="tracking-widest rounded-full uppercase">PENDAFTARAN DISETUJUI</x-ui.badge>
-                            <span class="text-sm font-medium text-slate-500">&bull; Sesi Ujian Aktif</span>
+    <!-- Main Content Section -->
+    <div class="flex flex-col gap-8 max-w-4xl">
+
+        <!-- Major Application Status / Info Card -->
+        <div class="w-full flex flex-col">
+            @if(isset($finishedSession) && $finishedSession)
+                @php
+                    $skor = $finishedSession->score ?? 0;
+                    $lulus = $skor >= 60;
+                @endphp
+                <!-- STATE: EXAM FINISHED -->
+                <div
+                    class="flex flex-col border-2 {{ $lulus ? 'border-emerald-500 bg-white' : 'border-red-500 bg-red-50' }}">
+                    <div class="p-8 sm:p-10 flex flex-col items-start h-full">
+                        <span
+                            class="inline-flex items-center px-3 py-1 {{ $lulus ? 'bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-red-100 text-red-800 border-red-200' }} text-[11px] font-bold tracking-widest uppercase border mb-6">
+                            {{ $lulus ? 'Ujian Selesai - Lulus' : 'Ujian Selesai - Tidak Lulus' }}
+                        </span>
+
+                        <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-8">
+                            {{ $lulus ? 'Selamat! Anda Telah Lulus Ujian Komprehensif' : 'Mohon Maaf, Anda Belum Lulus Ujian Komprehensif' }}
+                        </h3>
+
+                        <div
+                            class="flex items-center gap-6 p-6 border {{ $lulus ? 'border-emerald-200 bg-emerald-50' : 'border-red-200 bg-white' }} w-full max-w-md mb-8">
+                            <div class="flex-shrink-0">
+                                <span
+                                    class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Skor
+                                    Akhir</span>
+                                <span
+                                    class="text-5xl font-black {{ $lulus ? 'text-emerald-700' : 'text-red-700' }}">{{ $skor }}</span>
+                            </div>
+                            <div class="border-l {{ $lulus ? 'border-emerald-200' : 'border-red-200' }} h-16 mx-2"></div>
+                            <div>
+                                <span
+                                    class="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-1 block">Status</span>
+                                <span
+                                    class="text-xl font-black {{ $lulus ? 'text-emerald-700' : 'text-red-700' }}">{{ $lulus ? 'LULUS' : 'TIDAK LULUS' }}</span>
+                            </div>
                         </div>
-                        
-                        <h3 class="text-2xl font-bold text-slate-900 tracking-tight mb-3">Gerbang Ujian Komprehensif</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed mb-8 max-w-xl">
-                            Untuk mengerjakan soal Ujian Komprehensif, silakan minta <strong class="text-slate-800">Token Akses (PIN 6 Digit)</strong> kepada pengawas.
-                        </p>
+
+                        <a href="{{ route('komprehensif.mahasiswa.riwayat') }}"
+                            class="py-3 px-6 {{ $lulus ? 'bg-emerald-600 hover:bg-emerald-700 text-white' : 'bg-red-600 hover:bg-red-700 text-white' }} font-bold text-sm tracking-widest uppercase transition-colors shadow-sm inline-block">
+                            Lihat Riwayat Ujian
+                        </a>
+                    </div>
+                </div>
+
+            @elseif($pendaftar && $pendaftar->status_pendaftaran === 'approved')
+                @php
+                    $isUjianBerlangsung = false;
+                    $tanggalWaktuTeks = "<strong>menunggu alokasi jadwal</strong>";
+                    if ($pendaftar->jadwal && $pendaftar->jadwal->tanggal_ujian) {
+                        $tanggal = \Carbon\Carbon::parse($pendaftar->jadwal->tanggal_ujian)->translatedFormat('l, d F Y');
+                        $waktu = \Carbon\Carbon::parse($pendaftar->jadwal->waktu_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($pendaftar->jadwal->waktu_selesai)->format('H:i') . ' WIB';
+                        $sesi = $pendaftar->jadwal->nama_sesi;
+                        $tanggalWaktuTeks = "pada Sesi (<strong>{$sesi}</strong>): <strong>{$tanggal}</strong>, pukul <strong>{$waktu}</strong> di <strong>Laboratorium Jaringan Komputer, Departemen Teknik Komputer</strong>";
+
+                        $now = now();
+                        $dateOnly = \Carbon\Carbon::parse($pendaftar->jadwal->tanggal_ujian)->format('Y-m-d');
+                        $waktuMulai = \Carbon\Carbon::parse($dateOnly . ' ' . $pendaftar->jadwal->waktu_mulai);
+                        $waktuSelesai = \Carbon\Carbon::parse($dateOnly . ' ' . $pendaftar->jadwal->waktu_selesai);
+
+                        if ($now->between($waktuMulai, $waktuSelesai)) {
+                            $isUjianBerlangsung = true;
+                        }
+                    }
+                @endphp
+                <!-- STATE: APPROVED & READY FOR EXAM GATE -->
+                <div
+                    class="flex flex-col border-2 {{ $isUjianBerlangsung ? 'border-indigo-500 bg-indigo-50' : 'border-green-500 bg-white' }}">
+                    <div class="p-6 sm:p-8">
+                        <div class="flex items-center gap-4 mb-8">
+                            <span
+                                class="inline-flex items-center px-3 py-1 {{ $isUjianBerlangsung ? 'bg-indigo-100 text-indigo-800 border-indigo-200' : 'bg-green-100 text-green-800 border-green-200' }} text-[11px] font-bold tracking-widest uppercase border">
+                                {{ $isUjianBerlangsung ? 'Ujian Aktif' : 'Disetujui' }}
+                            </span>
+                        </div>
+
+                        @if($isUjianBerlangsung)
+                            <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-2">Waktu Ujian Telah Tiba</h3>
+                            <p class="text-sm text-slate-600 leading-relaxed mb-5 max-w-xl">
+                                Sesi ujian komprehensif Anda telah dimulai. Jangan menutup halaman web atau berpindah aplikasi
+                                selama ujian berlangsung.<br><br>
+                                Masukkan <strong>Token Akses (6 Digit)</strong> yang diberikan oleh pengawas ujian untuk memulai
+                                Test Engine.
+                            </p>
+                        @else
+                            <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-2">Pendaftaran Berhasil
+                                Disetujui</h3>
+                            <p class="text-sm text-slate-600 leading-relaxed mb-5 max-w-xl">
+                                Anda telah terdaftar sebagai peserta ujian komprehensif. Ujian Komprehensif dijadwalkan
+                                {!! $tanggalWaktuTeks !!}.
+                            </p>
+                        @endif
+
+                        @if($pendaftar->jadwal)
+                            <div class="mb-5 p-4 bg-slate-50 border border-slate-200 rounded-lg">
+                                <h4 class="text-[11px] font-bold text-slate-800 uppercase tracking-widest mb-2">Catatan Penting
+                                </h4>
+                                <ol class="list-decimal list-outside pl-4 text-[13px] text-slate-700 space-y-1 leading-relaxed">
+                                    <li>Peserta wajib hadir 15 menit sebelum ujian dimulai. Peserta yang terlambat hadir tidak
+                                        diperkenankan mengikuti ujian.</li>
+                                    <li>Peserta dimohon membawa Kartu Tanda Mahasiswa (KTM). Peserta yang tidak dapat
+                                        membuktikan identitasnya tidak diperbolehkan mengikuti ujian.</li>
+                                    <li>Ujian bersifat buku tertutup dengan format 100 soal pilihan ganda.</li>
+                                    <li>Peserta dinyatakan lulus jika memperoleh skor total &ge; 60.</li>
+                                    <li>Ketentuan lain mengikuti aturan Tata Tertib Ujian Departemen Teknik Komputer.</li>
+                                </ol>
+                            </div>
+                        @endif
 
                         <!-- Token Entry Form -->
-                        <div class="bg-slate-50 p-6 rounded-2xl border border-slate-200">
-                            <form action="#" method="POST" class="flex flex-col sm:flex-row items-end gap-4">
+                        <div
+                            class="border-t border-slate-200 pt-5 {{ !$isUjianBerlangsung ? 'opacity-50 pointer-events-none' : '' }}">
+                            <form action="{{ route('komprehensif.mahasiswa.engine.validate') }}" method="POST"
+                                class="flex flex-col sm:flex-row items-end gap-3">
                                 @csrf
                                 <div class="w-full sm:w-2/3 space-y-2">
-                                    <x-ui.label for="token">Masukkan Token / PIN Sesi</x-ui.label>
-                                    <div class="relative">
-                                        <div class="absolute inset-y-0 left-0 flex items-center pl-4 pointer-events-none text-slate-400">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"></path></svg>
-                                        </div>
-                                        <x-ui.input type="text" id="token" name="token" required class="pl-11 text-lg tracking-widest font-mono uppercase bg-white h-12" placeholder="X X X X X X" maxlength="6" />
-                                    </div>
-                                    <p class="text-[12px] text-slate-500 mt-1">Pastikan Anda sudah berada di PC/Ruangan Ujian yang ditentukan.</p>
+                                    <label for="token"
+                                        class="block text-[11px] font-bold text-slate-900 uppercase tracking-widest">Token
+                                        Sesi</label>
+                                    <input type="text" id="token" name="token" required
+                                        class="w-full h-12 px-4 text-xl tracking-[0.5em] font-mono font-bold text-slate-900 bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-0 outline-none transition-colors uppercase placeholder:text-slate-300"
+                                        placeholder="XXXXXX" maxlength="6" {{ !$isUjianBerlangsung ? 'disabled' : '' }} />
                                 </div>
                                 <div class="w-full sm:w-1/3">
-                                    <x-ui.button type="submit" size="lg" class="w-full h-12 gap-2 shadow-sm font-bold">
-                                        Masuk Ujian
-                                        <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
-                                    </x-ui.button>
+                                    <button type="submit"
+                                        class="w-full h-12 px-5 {{ !$isUjianBerlangsung ? 'bg-slate-300 cursor-not-allowed text-slate-500' : 'bg-blue-600 hover:bg-blue-700 text-white' }} font-bold text-sm tracking-widest uppercase transition-colors flex items-center justify-center rounded-xl shadow-sm"
+                                        {{ !$isUjianBerlangsung ? 'disabled' : '' }}>
+                                        Mulai Ujian
+                                    </button>
                                 </div>
                             </form>
                         </div>
                     </div>
-                </x-ui.card>
+                </div>
 
             @elseif($pendaftar && $pendaftar->status_pendaftaran === 'pending')
-                 <!-- STATE: PENDING -->
-                <x-ui.card class="flex-1 flex flex-col relative overflow-hidden bg-warning/5 border-warning/20">
-                    <div class="p-8 pb-10 flex flex-col items-center text-center">
-                        <div class="w-20 h-20 bg-white rounded-full flex items-center justify-center text-warning shadow-sm mb-6 mt-4">
-                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        </div>
-                        <h3 class="text-2xl font-bold text-slate-900 tracking-tight mb-3">Sedang Diverifikasi</h3>
-                        <p class="text-slate-600 leading-relaxed max-w-lg mb-8 text-sm">
-                            Pendaftaran Anda ke {{ $activePeriode->nama_periode ?? 'Ujian' }} telah berhasil dikirim dan saat ini sedang menunggu validasi dari staf akademik. Silakan periksa halaman ini secara berkala.
+                <!-- STATE: PENDING -->
+                <div class="flex flex-col border border-amber-300 bg-white">
+                    <div class="p-8 sm:p-10 flex flex-col items-start">
+                        <span
+                            class="inline-flex items-center px-3 py-1 bg-amber-100 text-amber-800 text-[11px] font-bold tracking-widest uppercase border border-amber-200 mb-6">Menunggu
+                            Verifikasi</span>
+                        <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-4">Pendaftaran Sedang Diproses
+                        </h3>
+                        <p class="text-slate-600 leading-relaxed max-w-xl mb-10 text-base">
+                            Form pendaftaran ujian komprehensif Anda telah diterima dan sedang dalam tahap verifikasi oleh
+                            admin. Hasil verifikasi dan jadwal ujian akan diperbarui di halaman ini.
                         </p>
-                        <x-ui.button variant="secondary" size="lg" onclick="window.location.reload()" class="font-bold gap-2 bg-white hover:bg-slate-50 text-slate-700">
-                            Refresh Halaman
-                            <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        </x-ui.button>
                     </div>
-                </x-ui.card>
+                </div>
+            @elseif($pendaftar && $pendaftar->status_pendaftaran === 'rejected')
+                <!-- STATE: REJECTED -->
+                <div class="flex flex-col border-2 border-red-500 bg-red-50">
+                    <div class="p-8 sm:p-10 flex flex-col items-start">
+                        <span
+                            class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 text-[11px] font-bold tracking-widest uppercase border border-red-200 mb-6">Ditolak</span>
+                        <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-4">Pendaftaran Ditolak</h3>
+                        <p class="text-slate-600 leading-relaxed max-w-xl mb-4 text-base">
+                            Pendaftaran ujian komprehensif Anda tidak dapat dilanjutkan karena tidak memenuhi persyaratan.
+                            Anda dipersilakan untuk mendaftar kembali pada periode ujian komprehensif yang akan datang.
+                        </p>
+                        @if(!empty($pendaftar->catatan_admin))
+                            <div class="p-4 bg-slate-50 border border-slate-200 rounded-md w-full max-w-xl">
+                                <span class="block text-xs font-bold text-slate-800 uppercase mb-1">Catatan Admin:</span>
+                                <p class="text-sm text-slate-600 italic">"{{ $pendaftar->catatan_admin }}"</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
 
             @elseif($activePeriode)
-                <!-- STATE: REGISTRATION OPEN -->
-                <x-ui.card class="flex-1 flex flex-col relative overflow-hidden border-primary/20">
-                    <div class="absolute top-0 left-0 w-full h-1 bg-primary"></div>
-                    <div class="p-8 flex flex-col h-full">
-                        <div class="flex items-center gap-3 mb-6">
-                            <x-ui.badge variant="info" class="tracking-widest uppercase rounded-full">TERBUKA</x-ui.badge>
+                @if($activePeriode->pendaftaran_ditutup_paksa)
+                    <!-- STATE: CLOSED BY ADMIN (EMERGENCY) -->
+                    <div class="flex flex-col border border-amber-300 bg-amber-50">
+                        <div class="p-8 sm:p-10 flex flex-col items-start h-full">
+                            <span
+                                class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-800 text-[11px] font-bold tracking-widest uppercase border border-amber-300 mb-6">
+                                <svg class="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                    <path fill-rule="evenodd"
+                                        d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z"
+                                        clip-rule="evenodd" />
+                                </svg>
+                                Ditutup Admin
+                            </span>
+                            <h3 class="text-3xl font-extrabold text-amber-900 tracking-tight mb-4">Pendaftaran Ditutup</h3>
+                            <p class="text-base text-amber-800 leading-relaxed mb-10 max-w-xl">
+                                Pendaftaran untuk <strong>{{ $activePeriode->nama_periode }}</strong> telah ditutup lebih awal
+                                oleh staf akademik. Silakan hubungi BAAK untuk informasi lebih lanjut.
+                            </p>
                         </div>
-
-                        <h3 class="text-2xl font-bold text-slate-900 tracking-tight mb-4">Informasi Pendaftaran: {{ $activePeriode->nama_periode }}</h3>
-                        
-                        <p class="text-sm text-slate-600 leading-relaxed mb-8 max-w-xl">
-                            Pendaftaran untuk periode ujian {{ $activePeriode->nama_periode }} telah resmi dibuka. Pastikan Anda melengkapi berkas dan persyaratan yang diperlukan.
-                        </p>
-
-                        <div class="mt-auto bg-slate-50 border border-slate-100 rounded-2xl p-6 transition-colors hover:bg-slate-50/80">
-                            <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
-                                <div class="flex items-center gap-4 w-full">
-                                    <div class="w-12 h-12 rounded-full bg-white flex items-center justify-center border border-slate-200 shadow-sm text-primary shrink-0">
-                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
-                                        </svg>
-                                    </div>
-                                    <div class="flex-1">
-                                        <p class="text-[11px] text-slate-500 font-bold uppercase tracking-widest mb-1">Batas Akhir</p>
-                                        <p class="text-sm font-bold text-slate-900">{{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->translatedFormat('d F Y') }}, 23:59 WIB</p>
-                                    </div>
-                                </div>
-                                <div class="w-full sm:w-auto shrink-0">
-                                    <x-ui.button as="a" href="{{ route('komprehensif.mahasiswa.pendaftaran') }}" size="lg" class="w-full font-bold gap-2">
-                                        Daftar Sekarang
-                                        <svg class="w-4 h-4 transition-transform group-hover:translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"></path>
-                                        </svg>
-                                    </x-ui.button>
-                                </div>
+                    </div>
+                @elseif(now()->lt(\Carbon\Carbon::parse($activePeriode->tanggal_mulai)->startOfDay()))
+                    <!-- STATE: NOT YET OPEN -->
+                    <div class="flex flex-col border border-slate-300 bg-white">
+                        <div class="p-8 sm:p-10 flex flex-col items-start h-full">
+                            <span
+                                class="inline-flex items-center px-3 py-1 bg-slate-100 text-slate-600 text-[11px] font-bold tracking-widest uppercase border border-slate-200 mb-6">Belum
+                                Dibuka</span>
+                            <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-4">Menunggu Jadwal Buka</h3>
+                            <p class="text-base text-slate-600 leading-relaxed mb-10 max-w-xl">
+                                Registrasi ujian komprehensif <strong>{{ $activePeriode->nama_periode }}</strong> baru dapat
+                                diakses mulai tanggal <strong
+                                    class="text-slate-900">{{ \Carbon\Carbon::parse($activePeriode->tanggal_mulai)->translatedFormat('d F Y') }}</strong>.
+                            </p>
+                            <button type="button" onclick="window.location.reload()"
+                                class="py-3 px-6 bg-white border-2 border-slate-900 text-slate-900 font-bold text-sm tracking-widest uppercase hover:bg-slate-900 hover:text-white transition-colors">
+                                Cek Status Terbaru
+                            </button>
+                        </div>
+                    </div>
+                @elseif(now()->gt(\Carbon\Carbon::parse($activePeriode->tanggal_selesai)->endOfDay()))
+                    <!-- STATE: CLOSED BUT ACTIVE -->
+                    <div class="flex flex-col border border-slate-300 bg-white">
+                        <div class="p-8 sm:p-10 flex flex-col items-start h-full">
+                            <span
+                                class="inline-flex items-center px-3 py-1 bg-red-100 text-red-800 text-[11px] font-bold tracking-widest uppercase border border-red-200 mb-6">Ditutup</span>
+                            <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-4">Pendaftaran Ditutup</h3>
+                            <p class="text-base text-slate-600 leading-relaxed mb-10 max-w-xl">
+                                Pendaftaran Ujian Komprehensif untuk periode <strong>{{ $activePeriode->nama_periode }}</strong>
+                                telah ditutup lebih awal oleh Admin. Silakan pantau halaman ini secara berkala atau hubungi
+                                bagian akademik untuk informasi periode pendaftaran berikutnya.
+                            </p>
+                            <div class="mt-auto w-full">
+                                <button disabled
+                                    class="py-3 px-6 bg-slate-100 border border-slate-200 text-slate-400 font-bold text-sm tracking-widest uppercase cursor-not-allowed">
+                                    Daftar Ujian Komprehensif
+                                </button>
                             </div>
                         </div>
                     </div>
-                </x-ui.card>
+                @else
+                    <!-- STATE: REGISTRATION OPEN -->
+                    @if(!$isEligible)
+                        <!-- STATE: NOT ELIGIBLE -->
+                        <div class="flex flex-col border border-slate-300 bg-white">
+                            <div class="p-8 sm:p-10 flex flex-col h-full">
+                                <span
+                                    class="inline-flex items-center self-start px-3 py-1 bg-slate-900 text-white text-[11px] font-bold tracking-widest uppercase mb-6">Terkunci</span>
+
+                                <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-4">Belum Memenuhi Persyaratan
+                                </h3>
+                                <p class="text-base text-slate-600 leading-relaxed mb-10 max-w-xl">
+                                    Anda belum dapat melakukan pendaftaran Ujian Komprehensif karena belum memenuhi persyaratan
+                                    akademik.
+                                </p>
+
+                                <div class="mt-auto">
+                                    <button disabled
+                                        class="py-3 px-6 bg-slate-100 border border-slate-200 text-slate-400 font-bold text-sm tracking-widest uppercase cursor-not-allowed">
+                                        Daftar Ujian Komprehensif
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <!-- STATE: ELIGIBLE & REGISTRATION OPEN -->
+                        <div class="flex flex-col border-2 border-blue-500 bg-white">
+                            <div class="p-8 sm:p-10 flex flex-col h-full">
+                                <div class="flex items-center gap-4 mb-6">
+                                    <span
+                                        class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 border border-blue-200 text-[11px] font-bold tracking-widest uppercase">Terbuka</span>
+                                </div>
+
+                                <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-4 leading-tight">Pendaftaran
+                                    Ujian Komprehensif Dibuka</h3>
+
+                                <p class="text-base text-slate-600 leading-relaxed mb-10 max-w-xl">
+                                    Anda dapat mendaftar untuk ujian komprehensif periode
+                                    <strong>{{ $activePeriode->nama_periode }}</strong>. Batas akhir pendaftaran adalah
+                                    <strong>{{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->translatedFormat('d F Y') }},
+                                        23:59 WIB</strong>.
+                                </p>
+
+                                <div
+                                    class="mt-auto flex flex-col sm:flex-row sm:items-center justify-between border-t border-slate-200 pt-6 gap-6">
+                                    <a href="{{ route('komprehensif.mahasiswa.pendaftaran.form') }}"
+                                        class="inline-block py-4 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm tracking-widest uppercase text-center transition-colors rounded-xl shadow-sm shadow-blue-500/25">
+                                        Daftar Ujian Komprehensif
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    @endif
+                @endif
             @else
-                <!-- STATE: CLOSED -->
-                <x-ui.card class="flex-1 flex flex-col relative overflow-hidden bg-slate-50 opacity-90">
-                    <div class="p-8 flex flex-col items-start h-full">
-                        <div class="flex items-center gap-3 mb-6">
-                            <x-ui.badge variant="gray" class="tracking-widest uppercase rounded-full">DITUTUP</x-ui.badge>
-                        </div>
-                        <h3 class="text-2xl font-bold text-slate-800 tracking-tight mb-4">Pendaftaran Belum Dibuka</h3>
-                        <p class="text-sm text-slate-600 leading-relaxed mb-8 max-w-xl">
-                            Saat ini pendaftaran ujian komprehensif belum dibuka atau masa pendaftarannya sudah melewati batas waktu. Silakan pantau informasi kegiatan akademik secara berkala.
+                <!-- STATE: NO ACTIVE PERIOD -->
+                <div class="flex flex-col border border-slate-300 bg-slate-50">
+                    <div class="p-8 sm:p-10 flex flex-col items-start h-full">
+                        <span
+                            class="inline-flex items-center px-3 py-1 bg-slate-200 text-slate-600 text-[11px] font-bold tracking-widest uppercase mb-6">Ditutup</span>
+                        <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-4">Pendaftaran Belum Dibuka</h3>
+                        <p class="text-base text-slate-600 leading-relaxed mb-10 max-w-xl">
+                            Saat ini belum ada periode pendaftaran ujian komprehensif yang aktif. Silakan pantau halaman ini
+                            secara berkala atau hubungi bagian akademik untuk informasi periode berikutnya.
                         </p>
-                        <div class="mt-auto">
-                            <x-ui.button variant="outline" onclick="window.location.reload()" class="font-bold gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                                Refresh Halaman
-                            </x-ui.button>
-                        </div>
-                    </div>
-                </x-ui.card>
-            @endif
-        </div>
-
-        <!-- Right: Status Tracker Card -->
-        <div class="col-span-1 flex flex-col">
-            <x-ui.card class="flex-1 flex flex-col relative overflow-hidden">
-                <div class="p-8 flex flex-col items-center text-center h-full">
-                    <div class="w-full border-b border-slate-100 pb-4 mb-8">
-                        <h4 class="text-[11px] font-bold text-slate-400 uppercase tracking-widest text-left">Pelacak Status</h4>
-                    </div>
-                    
-                    @php
-                        $iconClass = "text-slate-400 bg-slate-50";
-                        $statusText = "Belum Terdaftar";
-                        $statusDesc = "Silakan lakukan pengajuan pendaftaran terlebih dahulu.";
-                        $indicatorColor = "bg-slate-300";
-                        
-                        if ($pendaftar) {
-                            switch($pendaftar->status_pendaftaran) {
-                                case 'pending':
-                                    $iconClass = "text-warning bg-warning/10";
-                                    $statusText = "Sedang Ditinjau";
-                                    $statusDesc = "Berkas pendaftaran sedang diperiksa oleh BAAK.";
-                                    $indicatorColor = "bg-warning";
-                                    break;
-                                case 'approved':
-                                    $iconClass = "text-success bg-success/10 border border-success/20";
-                                    $statusText = "Disetujui";
-                                    $statusDesc = "Silakan bersiap di tempat ujian dan minta token.";
-                                    $indicatorColor = "bg-success shadow-[0_0_8px_rgba(52,216,137,0.8)]";
-                                    break;
-                                case 'rejected':
-                                    $iconClass = "text-destructive bg-destructive/10";
-                                    $statusText = "Ditolak";
-                                    $statusDesc = "Pengajuan dikembalikan. Hubungi TU untuk revisi.";
-                                    $indicatorColor = "bg-destructive";
-                                    break;
-                            }
-                        }
-                    @endphp
-
-                    <div class="w-20 h-20 {{ $iconClass }} rounded-full flex items-center justify-center mb-6 shadow-sm border border-slate-50">
-                        @if($pendaftar && $pendaftar->status_pendaftaran === 'approved')
-                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        @elseif($pendaftar && $pendaftar->status_pendaftaran === 'rejected')
-                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        @else
-                            <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
-                        @endif
-                    </div>
-                    
-                    <h3 class="text-xl font-bold text-slate-800 tracking-tight mb-3">
-                        {{ $statusText }}
-                    </h3>
-                    <p class="text-[13px] text-slate-500 max-w-[200px] leading-relaxed mb-auto">
-                        {{ $statusDesc }}
-                    </p>
-
-                    <div class="mt-10 w-full flex justify-between items-center px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
-                        <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Aktivitas</span>
-                        <div class="flex justify-center items-center gap-2">
-                             <div class="w-2.5 h-2.5 rounded-full {{ $indicatorColor }} {{ $pendaftar && $pendaftar->status_pendaftaran === 'approved' ? 'animate-pulse' : '' }}"></div>
-                             <span class="text-[11px] font-bold text-slate-700 uppercase tracking-widest">
-                                 {{ $pendaftar ? 'Terdaftar' : 'Belum Ada' }}
-                             </span>
-                        </div>
                     </div>
                 </div>
-            </x-ui.card>
+            @endif
         </div>
 
     </div>

@@ -13,7 +13,7 @@ class AlokasiSesiController extends Controller
     public function index(Request $request)
     {
         $periodes = PeriodeUjian::orderBy('created_at', 'desc')->get();
-        $selectedPeriodeId = $request->periode_id ?? ($periodes->first()->id ?? null);
+        $selectedPeriodeId = $request->query('periode_id');
         
         $jadwals = collect();
         $pendaftars = collect();

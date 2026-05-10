@@ -31,9 +31,16 @@ class BankSoalController extends Controller
 
         // 2. Ambil Soal
         $soals = \Modules\BankSoal\Models\Pertanyaan::with(['mataKuliah', 'cpl'])
-            ->whereIn('mk_id', $mkIds)
+            ->join('bs_mata_kuliah', 'bs_pertanyaan.mk_id', '=', 'bs_mata_kuliah.id')
+            ->leftJoin('bs_cpl', 'bs_pertanyaan.cpl_id', '=', 'bs_cpl.id')
+            ->whereIn('bs_pertanyaan.mk_id', $mkIds)
             ->when($request->searchSoal, function($q, $search) {
-                return $q->where('soal', 'like', "%{$search}%");
+                return $q->where(function($query) use ($search) {
+                    $query->where('bs_pertanyaan.soal', 'like', "%{$search}%")
+                          ->orWhere('bs_mata_kuliah.nama', 'like', "%{$search}%")
+                          ->orWhere('bs_mata_kuliah.kode', 'like', "%{$search}%")
+                          ->orWhere('bs_cpl.kode', 'like', "%{$search}%");
+                });
             })
             ->when($request->mk_id, function($q, $mk_id) {
                 return $q->where('bs_pertanyaan.mk_id', $mk_id);
@@ -42,7 +49,6 @@ class BankSoalController extends Controller
                 return $q->where('bs_pertanyaan.status', $status);
             })
             // Tambahkan orderBy mataKuliah.nama agar soal dalam satu MK terkumpul
-            ->join('bs_mata_kuliah', 'bs_pertanyaan.mk_id', '=', 'bs_mata_kuliah.id')
             ->select('bs_pertanyaan.*')
             ->orderBy('bs_mata_kuliah.nama')
             ->orderByDesc('bs_pertanyaan.created_at')
@@ -487,18 +493,25 @@ class BankSoalController extends Controller
     {
         $this->authorize('banksoal.edit');
 
-        $request->validate([
-            'mk_id' => 'required',
-            'cpl_id' => 'required',
-            'csv_file' => 'required|mimes:csv,txt,xls,xlsx|max:5120'
+        $validator = \Illuminate\Support\Facades\Validator::make($request->all(), [
+            'csv_file' => 'required|file|max:5120'
         ]);
+
+        if ($validator->fails()) {
+            return back()->with('error', $validator->errors()->first());
+        }
+
+        $user = auth()->user();
+        $mkDosen = $this->mataKuliahService->getMkByDosen($user->id);
+        $allowedMkIds = $mkDosen->pluck('id')->toArray();
 
         DB::beginTransaction();
         try {
             $import = new \Modules\BankSoal\Imports\BankSoalImport(
-                $request->mk_id,
-                $request->cpl_id,
-                $this->pertanyaanService
+                null,
+                null,
+                $this->pertanyaanService,
+                $allowedMkIds
             );
             
             \Maatwebsite\Excel\Facades\Excel::import($import, $request->file('csv_file'));
@@ -516,9 +529,21 @@ class BankSoalController extends Controller
     {
         $this->authorize('banksoal.edit'); // assume Dosen capability
 
+        $request->validate([
+            'mk_id' => 'required'
+        ]);
+
         $user = auth()->user();
         $mkDosen = $this->mataKuliahService->getMkByDosen($user->id);
-        $mkIds = $mkDosen->pluck('id')->toArray();
+        
+        if ($request->mk_id === 'all') {
+            $mkIds = $mkDosen->pluck('id')->toArray();
+        } else {
+            if (!$mkDosen->contains('id', $request->mk_id)) {
+                abort(403, 'Anda tidak mengampu Mata Kuliah ini.');
+            }
+            $mkIds = [$request->mk_id];
+        }
 
         DB::beginTransaction();
         try {

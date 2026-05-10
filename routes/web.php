@@ -17,7 +17,7 @@ Route::get('/error/{code}', function ($code) {
 })->name('error.page')->where('code', '400|401|403|404|419|429|500|503');
 
 Route::middleware('web')->group(function () {
-    Route::get('/sso/password',  [MicrosoftController::class, 'showPasswordForm'])->name('sso.password');
+    Route::get('/sso/password', [MicrosoftController::class, 'showPasswordForm'])->name('sso.password');
     Route::post('/sso/password', [MicrosoftController::class, 'verifyPassword'])->name('sso.verify');
     Route::get('/auth/microsoft/switch', [MicrosoftController::class, 'switchAccount'])->name('microsoft.switch');
     Route::post('/logout-and-switch', function () {
@@ -26,8 +26,8 @@ Route::middleware('web')->group(function () {
 
             \App\Models\UserAuditLog::create([
                 'user_id' => $user->id,
-                'action'  => 'logout',
-                'source'  => 'sso_switch',
+                'action' => 'logout',
+                'source' => 'sso_switch',
             ]);
 
             $user->clearUserCache();
@@ -65,6 +65,8 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/users', [SuperAdminController::class, 'users'])
             ->name('users.index');
+        Route::get('/users/{user}', [SuperAdminController::class, 'show'])->name('users.show');
+        Route::get('/users/{user}/edit', [SuperAdminController::class, 'edit'])->name('users.edit');
         Route::get('/permissions/category/{category}', [SuperAdminController::class, 'usersByCategory'])
             ->name('permissions.category');
         Route::get('/import-status/{id}', [SuperAdminController::class, 'getImportStatus'])
@@ -80,21 +82,23 @@ Route::middleware('auth')->group(function () {
         Route::post('/modules/{slug}/update-config', [SuperAdminController::class, 'updateConfig'])->name('modules.update-config');
         Route::post('/users/{user}/update-permissions', [SuperAdminController::class, 'updatePermissions'])
             ->name('users.update-permissions');
-        Route::patch('/users/{user}/update',       [SuperAdminController::class, 'updateUser'])
+        Route::patch('/users/{user}/update', [SuperAdminController::class, 'updateUser'])
             ->name('users.update');
-        Route::post('/users/{user}/force-logout',  [SuperAdminController::class, 'forceLogout'])
+        Route::post('/users/{user}/force-logout', [SuperAdminController::class, 'forceLogout'])
             ->name('users.force-logout');
-        Route::post('/users/{user}/suspend',       [SuperAdminController::class, 'suspend'])
+        Route::post('/users/{user}/suspend', [SuperAdminController::class, 'suspend'])
             ->name('users.suspend');
-        Route::post('/users/{user}/unsuspend',     [SuperAdminController::class, 'unsuspend'])
+        Route::post('/users/{user}/unsuspend', [SuperAdminController::class, 'unsuspend'])
             ->name('users.unsuspend');
         // Tambah user baru
         Route::post('/users/bulk-import', [SuperAdminController::class, 'bulkImport'])->name('users.bulkImport');
         Route::post('/import-status/{id}/cancel', [SuperAdminController::class, 'cancelImport'])->name('import.cancel');
-        Route::post('/clear-import-session', function() {
+        Route::post('/clear-import-session', function () {
             session()->forget('import_id');
             return response()->json(['success' => true]);
         })->name('clear-import-session');
+        Route::post('/permissions/bulk-update', [SuperAdminController::class, 'bulkUpdatePermissions'])
+            ->name('permissions.bulk-update');
         Route::post('/users', [SuperAdminController::class, 'storeUser'])
             ->name('users.store');
 
@@ -105,12 +109,12 @@ Route::middleware('auth')->group(function () {
             ->name('storage.delete');
 
         Route::post('/bust-stats-cache', [SuperAdminController::class, 'bustStatsCache'])
-            ->name('bust-stats-cache'); 
+            ->name('bust-stats-cache');
         // Update role user (ganti dari POST ke PATCH, nama route tetap bisa dipakai keduanya)
         Route::post('/users/{user}/update-role', [SuperAdminController::class, 'updateRole'])
             ->name('users.update-role');
         Route::patch('/users/{user}/roles', [SuperAdminController::class, 'updateRole'])
-            ->name('users.update-roles');       
+            ->name('users.update-roles');
 
         // Hapus user (soft-delete)
         Route::delete('/users/bulk-destroy', [SuperAdminController::class, 'bulkDestroy'])->name('users.bulk-destroy');
@@ -129,6 +133,12 @@ Route::middleware('auth')->group(function () {
 
         Route::delete('/audit-logs/bulk-destroy', [SuperAdminController::class, 'bulkDeleteAuditLogs'])
             ->name('audit-logs.bulk-destroy');
+
+        Route::post('/users/bulk-force-logout', [SuperAdminController::class, 'bulkForceLogout'])
+            ->name('users.bulk-force-logout');
+
+        Route::post('/users/bulk-unsuspend', [SuperAdminController::class, 'bulkUnsuspend'])
+            ->name('users.bulk-unsuspend');
     });
 
     // Global dashboard — pakai DashboardController
@@ -151,20 +161,19 @@ Route::middleware('auth')->group(function () {
             Route::get('/preview', [\App\Http\Controllers\CvBuilderController::class, 'preview'])->name('preview');
             Route::get('/generate', [\App\Http\Controllers\CvBuilderController::class, 'generate'])->name('generate');
         });
-
     Route::get('/users/online', [\App\Http\Controllers\SuperAdminController::class, 'onlineUsers'])->name('superadmin.users.online');
     Route::get('/users/suspended', [\App\Http\Controllers\SuperAdminController::class, 'suspendedUsers'])->name('superadmin.users.suspended');
 
     Route::post('/audit-logs/bulk-delete', [App\Http\Controllers\SuperAdminController::class, 'bulkDeleteAuditLogs'])
-    ->name('superadmin.audit-logs.bulk-delete');
+        ->name('superadmin.audit-logs.bulk-delete');
 
     Route::post('/logout', function () {
         $user = auth()->user();
 
         \App\Models\UserAuditLog::create([
             'user_id' => $user->id,
-            'action'  => 'logout',
-            'source'  => 'manual',
+            'action' => 'logout',
+            'source' => 'manual',
         ]);
 
         $user->clearUserCache();
@@ -177,4 +186,4 @@ Route::middleware('auth')->group(function () {
     })->name('logout');
 });
 
-require __DIR__.'/auth.php';
+require __DIR__ . '/auth.php';

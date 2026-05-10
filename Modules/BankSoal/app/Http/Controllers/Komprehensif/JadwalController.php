@@ -31,12 +31,23 @@ class JadwalController extends Controller
     {
         $validatedData = $request->validate([
             'periode_ujian_id' => 'required|exists:bs_periode_ujians,id',
-            'nama_sesi' => 'required|string|max:255',
+            'nama_sesi' => [
+                'required',
+                'numeric',
+                'min:1',
+                \Illuminate\Validation\Rule::unique('bs_jadwal_ujians', 'nama_sesi')->where(function ($query) use ($request) {
+                    return $query->where('periode_ujian_id', $request->periode_ujian_id)
+                                 ->where('tanggal_ujian', $request->tanggal_ujian)
+                                 ->whereNull('deleted_at');
+                })
+            ],
             'tanggal_ujian' => 'required|date',
             'waktu_mulai' => 'required|date_format:H:i',
             'waktu_selesai' => 'required|date_format:H:i|after:waktu_mulai',
             'kuota' => 'required|integer|min:1',
             'ruangan' => 'nullable|string|max:255',
+        ], [
+            'nama_sesi.unique' => 'Sesi ke-' . $request->nama_sesi . ' sudah ada pada tanggal ini.',
         ]);
 
         JadwalUjian::create($validatedData);
@@ -49,9 +60,13 @@ class JadwalController extends Controller
     {
         $jadwal = JadwalUjian::findOrFail($id);
         $periodeId = $jadwal->periode_ujian_id;
+
+        // Reset status mahasiswa yang sebelumnya dialokasikan ke sesi ini
+        $jadwal->pendaftars()->update(['jadwal_ujian_id' => null]);
+
         $jadwal->delete();
 
         return redirect()->route('banksoal.pendaftaran.alokasi-sesi.index', ['periode_id' => $periodeId])
-            ->with('success', 'Sesi ujian berhasil dihapus.');
+            ->with('success', 'Sesi ujian berhasil dihapus dan peserta telah dikembalikan ke daftar belum dialokasi.');
     }
 }
