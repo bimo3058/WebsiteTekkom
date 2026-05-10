@@ -223,15 +223,15 @@
                                         ['key' => 'tema', 'label' => 'Tema & Bahasa', 'icon' => 'palette'],
                                         ['key' => 'notifikasi', 'label' => 'Notifikasi', 'icon' => 'notifications'],
                                     ] as $t)
-                             <but       ton type="button"
-                                        class="settings-nav-btn"
-                                        :class="tab==='{{ $t['key'] }}' ? 'active' : ''"
-                                        @click="tab='{{ $t['key'] }}'">
+                            <button type="button"
+                                class="settings-nav-btn"
+                                :class="tab==='{{ $t['key'] }}' ? 'active' : ''"
+                                @click="tab='{{ $t['key'] }}'">
                                 <span class="material-symbols-outlined">{{ $t['icon'] }}</span>
-                                        {{ $t['label'] }}
-                                    </button>
+                                {{ $t['label'] }}
+                            </button>
                         @endforeach
-                </na    v>
+                    </nav>
       
                       {{-- Content --}}
             <div class="settings-content">
