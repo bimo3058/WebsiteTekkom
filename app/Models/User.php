@@ -9,11 +9,12 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Laravel\Sanctum\HasApiTokens;
 use Illuminate\Support\Facades\Log;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, HasApiTokens;
 
     protected $fillable = [
         'external_id',
@@ -289,9 +290,15 @@ class User extends Authenticatable
 
     public function cacheUserData(): void
     {
+        // Cache::put(
+        //     "user:{$this->id}:data",
+        //     $this->makeVisible(['remember_token', 'password'])->withoutRelations()->toArray(),
+        //     now()->addHours(8)
+        // );
         Cache::put(
             "user:{$this->id}:data",
-            $this->makeVisible(['remember_token', 'password'])->withoutRelations()->toArray(),
+            // Gunakan getAttributes() untuk mengambil data mentah dari database
+            $this->getAttributes(), 
             now()->addHours(8)
         );
     }

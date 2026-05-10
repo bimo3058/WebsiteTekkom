@@ -1,154 +1,125 @@
 <x-banksoal::layouts.gpm-master>
-
-    @section('page-title', 'Detail Riwayat Validasi')
-    @section('page-subtitle', 'Rincian hasil review paket soal mata kuliah')
-
-    <style>
-        .page-header { margin-bottom: 2rem; padding-bottom: 1.5rem; border-bottom: 1px solid #e2e8f0; }
-        .opt-list { padding-left: 0; list-style: none; margin-top: 1rem; }
-        .opt-item { background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 0.5rem; padding: 0.75rem 1rem; margin-bottom: 0.5rem; display: flex; align-items: center; gap: 1rem; }
-        .opt-item.is-correct { background-color: #f0fdf4; border-color: #bbf7d0; }
-        .opt-label { font-weight: 700; color: #64748b; min-width: 25px; }
-        .opt-item.is-correct .opt-label { color: #16a34a; }
-        .review-box { background-color: #f8fafc; border-left: 4px solid #2563eb; border-radius: 0 0.5rem 0.5rem 0; padding: 1.25rem; margin-top: 1.5rem; }
-        .review-box.status-sesuai { border-left-color: #16a34a; background-color: #f0fdf4; }
-        .review-box.status-kurang-sesuai { border-left-color: #f59e0b; background-color: #fffbeb; }
-        .review-box.status-revisi { border-left-color: #ef4444; background-color: #fef2f2; }
-        .question-card { border: 1px solid #cbd5e1; border-top: none; border-radius: 0.75rem; overflow: hidden; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); background: #fff; margin-bottom: 1.5rem; overflow-wrap: break-word; }
-        .question-card img { max-width: 100%; height: auto; border-radius: 0.5rem; margin: 1rem 0; }
-        .question-color-bar { height: 5px; width: 100%; }
-        .bg-color-sesuai { background-color: #16a34a; }
-        .bg-color-kurang-sesuai { background-color: #f59e0b; }
-        .bg-color-revisi { background-color: #ef4444; }
-        .pagination-kanan nav > div.d-flex.justify-content-between { justify-content: flex-end !important; flex: none !important; gap: 1.5rem; align-items: center; }
-        .pagination-kanan p.text-muted { margin-bottom: 0 !important; }
-    </style>
-
-    <div class="container-fluid py-4 px-4 px-xl-5">
-        <div class="page-header d-flex justify-content-between align-items-center">
-            <div>
-                <h4 class="fw-bold text-dark mb-1" style="font-size: 1.5rem;">{{ $mataKuliah->nama }}</h4>
-                <div class="d-flex align-items-center text-muted" style="font-size: 0.9rem; gap: 0.5rem;">
-                    <span>{{ $mataKuliah->kode }}</span><span>&bull;</span><span>Program Studi Teknik Komputer</span>
-                </div>
-            </div>
-            <a href="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal') }}" class="btn btn-light border shadow-sm rounded-3 fw-semibold px-4 text-dark" style="background:#fff;">
-                <i class="fas fa-arrow-left me-2"></i> Kembali
-            </a>
+    <div class="mb-6 flex flex-col gap-4 border-b border-slate-200 pb-4 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+            <h1 class="text-2xl font-bold text-slate-900">{{ $mataKuliah->nama }}</h1>
+            <p class="text-sm text-slate-500">{{ $mataKuliah->kode }} • Program Studi Teknik Komputer</p>
         </div>
+        <a href="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+            <i class="fas fa-arrow-left"></i> Kembali
+        </a>
+    </div>
 
-        <div class="pagination-kanan d-flex justify-content-end mb-4">
-            {{ $riwayatSoal->links('pagination::bootstrap-5') }}
-        </div>
+    <div class="mb-6 flex justify-end">
+        {{ $riwayatSoal->links() }}
+    </div>
 
-        <div class="row g-4">
-            @forelse($riwayatSoal as $index => $soal)
-            <div class="col-12">
-                @php
-                    $isSesuai = $soal->status_review == 'Sesuai';
-                    $isKurang = $soal->status_review == 'Kurang Sesuai';
-                    $colorClass = $isSesuai ? 'sesuai' : ($isKurang ? 'kurang-sesuai' : 'revisi');
-                    $badgeBg = $isSesuai ? 'bg-success text-white' : ($isKurang ? 'bg-warning text-dark' : 'bg-danger text-white');
-                    $iconStatus = $isSesuai ? 'fa-check-circle' : ($isKurang ? 'fa-exclamation-triangle' : 'fa-times-circle');
-                @endphp
-                <div class="question-card">
-                    <div class="question-color-bar bg-color-{{ $colorClass }}"></div>
-                    <div class="card-body p-4 p-md-5">
-                        <div class="d-flex justify-content-between align-items-start mb-4 pb-3 border-bottom">
-                            <div class="d-flex flex-wrap align-items-center gap-2">
-                                <span class="badge bg-primary text-white px-3 py-2 rounded-pill fw-bold" style="font-size: 0.8rem;">SOAL #{{ $riwayatSoal->firstItem() + $index }}</span>
-                                <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill fw-semibold" style="font-size: 0.75rem; letter-spacing: 0.5px;">LEVEL: {{ strtoupper($soal->kesulitan) }}</span>
-                                @if($soal->cpl)
-                                <span class="badge bg-light text-secondary border px-3 py-2 rounded-pill fw-semibold" style="font-size: 0.75rem; letter-spacing: 0.5px;"><i class="fas fa-tag me-1"></i> {{ $soal->cpl->kode }}</span>
-                                @endif
-                                <span class="text-muted ms-2" style="font-size: 0.85rem;">Dinilai pada: {{ \Carbon\Carbon::parse($soal->tanggal_review)->translatedFormat('d M Y') }}</span>
-                            </div>
-                            <span class="badge {{ $badgeBg }} px-3 py-2 rounded-pill fw-semibold d-flex align-items-center gap-2 shadow-sm" style="font-size: 0.8rem; letter-spacing: 0.5px;">
-                                <i class="fas {{ $iconStatus }}"></i> {{ strtoupper($soal->status_review) }}
-                            </span>
+    <div class="space-y-6">
+        @forelse($riwayatSoal as $index => $soal)
+            @php
+                $isSesuai = $soal->status_review == 'Sesuai';
+                $isKurang = $soal->status_review == 'Kurang Sesuai';
+                $colorClass = $isSesuai ? 'emerald' : ($isKurang ? 'amber' : 'rose');
+                $badgeBg = $isSesuai ? 'bg-emerald-600 text-white' : ($isKurang ? 'bg-amber-500 text-white' : 'bg-rose-600 text-white');
+                $iconStatus = $isSesuai ? 'fa-check-circle' : ($isKurang ? 'fa-exclamation-triangle' : 'fa-times-circle');
+            @endphp
+
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                <div class="h-1 {{ $colorClass === 'emerald' ? 'bg-emerald-500' : ($colorClass === 'amber' ? 'bg-amber-500' : 'bg-rose-500') }}"></div>
+                <div class="p-6">
+                    <div class="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="flex flex-wrap items-center gap-2">
+                            <span class="inline-flex items-center rounded-full bg-blue-600 px-3 py-1 text-[11px] font-semibold text-white">SOAL #{{ $riwayatSoal->firstItem() + $index }}</span>
+                            <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600 border border-slate-200">LEVEL: {{ strtoupper($soal->kesulitan) }}</span>
+                            @if($soal->cpl)
+                                <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600 border border-slate-200"><i class="fas fa-tag mr-1"></i> {{ $soal->cpl->kode }}</span>
+                            @endif
+                            <span class="text-xs text-slate-500">Dinilai pada: {{ \Carbon\Carbon::parse($soal->tanggal_review)->translatedFormat('d M Y') }}</span>
                         </div>
-                        <div class="text-dark fw-bold mb-4 prose prose-sm max-w-none align-middle" style="line-height: 1.6; font-size: 1.15rem;">
-                            {!! $soal->soal !!}
-                        </div>
-                        
-                        @if($soal->jawaban && count($soal->jawaban) > 0)
-                            <ul class="opt-list">
-                                @foreach($soal->jawaban as $idx => $jawab)
-                                    @php $char = chr(65 + $idx); @endphp
-                                    <li class="opt-item {{ $jawab->is_benar ? 'is-correct' : '' }}">
-                                        <div class="opt-label">{{ $jawab->opsi ?? $char }}.</div>
-                                        <div class="text-dark prose prose-sm max-w-none" style="font-size: 0.95rem;">{!! $jawab->deskripsi !!}</div>
-                                        @if($jawab->is_benar)
-                                            <div class="ms-auto text-success" title="Kunci Jawaban"><i class="fas fa-check-circle fs-5"></i></div>
-                                        @endif
-                                    </li>
-                                @endforeach
-                            </ul>
-                        @endif
+                        <span class="inline-flex items-center gap-2 rounded-full {{ $badgeBg }} px-3 py-1 text-[11px] font-semibold">
+                            <i class="fas {{ $iconStatus }}"></i> {{ strtoupper($soal->status_review) }}
+                        </span>
+                    </div>
 
-                        <div class="review-box status-{{ $colorClass }}">
-                            <div class="d-flex align-items-center justify-content-between mb-2">
-                                <div class="d-flex align-items-center">
-                                    <div style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background-color: rgba(0,0,0,0.05); margin-right: 0.75rem;">
-                                        <i class="fas fa-comment-dots" style="color: inherit; opacity: 0.7;"></i>
-                                    </div>
-                                    <h6 class="fw-bold mb-0" style="font-size: 0.9rem; color: inherit; opacity: 0.9;">Catatan Evaluator</h6>
+                    <div class="prose prose-sm max-w-none text-slate-900 font-semibold leading-relaxed mt-4">
+                        {!! $soal->soal !!}
+                    </div>
+
+                    @if($soal->jawaban && count($soal->jawaban) > 0)
+                        <ul class="mt-4 space-y-2">
+                            @foreach($soal->jawaban as $idx => $jawab)
+                                @php $char = chr(65 + $idx); @endphp
+                                <li class="flex items-center gap-3 rounded-lg border {{ $jawab->is_benar ? 'border-emerald-200 bg-emerald-50' : 'border-slate-200 bg-slate-50' }} px-4 py-3">
+                                    <span class="text-xs font-bold {{ $jawab->is_benar ? 'text-emerald-600' : 'text-slate-500' }}">{{ $jawab->opsi ?? $char }}.</span>
+                                    <div class="prose prose-sm max-w-none text-slate-700">{!! $jawab->deskripsi !!}</div>
+                                    @if($jawab->is_benar)
+                                        <i class="fas fa-check-circle text-emerald-500 ml-auto"></i>
+                                    @endif
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+
+                    <div class="mt-5 rounded-xl border-l-4 {{ $colorClass === 'emerald' ? 'border-emerald-500 bg-emerald-50' : ($colorClass === 'amber' ? 'border-amber-500 bg-amber-50' : 'border-rose-500 bg-rose-50') }} p-4">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="flex h-8 w-8 items-center justify-center rounded-full bg-white/60">
+                                    <i class="fas fa-comment-dots text-slate-500"></i>
                                 </div>
-                                <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-toggle="modal" data-bs-target="#editModal{{ $soal->id }}" style="border-radius: 6px; font-weight: 500;">
-                                    <i class="fas fa-edit"></i> Edit Review
-                                </button>
+                                <p class="text-sm font-semibold text-slate-700">Catatan Evaluator</p>
                             </div>
-                            <p class="mb-0 text-dark ps-5" style="font-size: 0.95rem; line-height: 1.5;">{{ $soal->catatan ?: 'Tidak ada catatan.' }}</p>
+                            <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50" data-modal-open="editModal{{ $soal->id }}">
+                                <i class="fas fa-edit"></i> Edit Review
+                            </button>
                         </div>
+                        <p class="mt-3 text-sm text-slate-700">{{ $soal->catatan ?: 'Tidak ada catatan.' }}</p>
                     </div>
                 </div>
             </div>
 
-            <!-- Modal Edit Review -->
-            <div class="modal fade" id="editModal{{ $soal->id }}" tabindex="-1" aria-labelledby="editModalLabel{{ $soal->id }}" aria-hidden="true">
-                <div class="modal-dialog modal-dialog-centered">
-                    <form action="{{ route('banksoal.soal.gpm.validasi-bank-soal.update', $soal->id) }}" method="POST" style="width: 100%;">
+            <div id="editModal{{ $soal->id }}" class="fixed inset-0 z-50 hidden" aria-hidden="true">
+                <div class="absolute inset-0 bg-slate-900/40" data-modal-overlay="editModal{{ $soal->id }}"></div>
+                <div class="relative mx-auto mt-16 w-full max-w-lg rounded-2xl bg-white shadow-xl">
+                    <form action="{{ route('banksoal.soal.gpm.validasi-bank-soal.update', $soal->id) }}" method="POST">
                         @csrf
                         @method('PUT')
-                        <div class="modal-content" style="border-radius: 12px; border: none; box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);">
-                            <div class="modal-header border-bottom">
-                                <h5 class="modal-title fw-bold text-dark" id="editModalLabel{{ $soal->id }}">Edit Hasil Review</h5>
-                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+                            <h2 class="text-sm font-semibold text-slate-900">Edit Hasil Review</h2>
+                            <button type="button" class="text-slate-400 hover:text-slate-600" data-modal-close="editModal{{ $soal->id }}">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                        <div class="px-5 py-4 space-y-4">
+                            <div>
+                                <label class="text-xs font-semibold text-slate-600">Status Review</label>
+                                <select name="status_review" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" required>
+                                    <option value="Sesuai" {{ $soal->status_review == 'Sesuai' ? 'selected' : '' }}>Sesuai</option>
+                                    <option value="Kurang Sesuai" {{ $soal->status_review == 'Kurang Sesuai' ? 'selected' : '' }}>Kurang Sesuai</option>
+                                    <option value="Revisi" {{ $soal->status_review == 'Revisi' ? 'selected' : '' }}>Revisi</option>
+                                </select>
                             </div>
-                            <div class="modal-body p-4">
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold text-secondary" style="font-size: 0.9rem;">Status Review</label>
-                                    <select name="status_review" class="form-select" required style="border-radius: 8px;">
-                                        <option value="Sesuai" {{ $soal->status_review == 'Sesuai' ? 'selected' : '' }}>Sesuai</option>
-                                        <option value="Kurang Sesuai" {{ $soal->status_review == 'Kurang Sesuai' ? 'selected' : '' }}>Kurang Sesuai</option>
-                                        <option value="Revisi" {{ $soal->status_review == 'Revisi' ? 'selected' : '' }}>Revisi</option>
-                                    </select>
-                                </div>
-                                <div class="mb-3">
-                                    <label class="form-label fw-semibold text-secondary" style="font-size: 0.9rem;">Catatan Evaluator</label>
-                                    <textarea name="catatan" class="form-control" rows="4" style="border-radius: 8px;" placeholder="Tuliskan catatan revisi jika ada...">{{ $soal->catatan }}</textarea>
-                                </div>
+                            <div>
+                                <label class="text-xs font-semibold text-slate-600">Catatan Evaluator</label>
+                                <textarea name="catatan" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" rows="4" placeholder="Tuliskan catatan revisi jika ada...">{{ $soal->catatan }}</textarea>
                             </div>
-                            <div class="modal-footer border-top bg-light" style="border-radius: 0 0 12px 12px;">
-                                <button type="button" class="btn btn-light border px-4" data-bs-dismiss="modal" style="border-radius: 8px;">Batal</button>
-                                <button type="submit" class="btn btn-primary px-4" style="border-radius: 8px;">Simpan Perubahan</button>
-                            </div>
+                        </div>
+                        <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
+                            <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="editModal{{ $soal->id }}">Batal</button>
+                            <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700">Simpan Perubahan</button>
                         </div>
                     </form>
                 </div>
             </div>
-            @empty
-            <div class="col-12 text-center py-5 my-5 bg-white border rounded-4">
-                <i class="fas fa-folder-open mb-3 text-muted" style="font-size: 3rem; opacity: 0.3;"></i>
-                <h5 class="fw-bold text-dark">Riwayat Validasi Kosong</h5>
-                <p class="text-muted" style="font-size: 0.95rem;">Belum ada hasil review soal yang bisa ditampilkan untuk mata kuliah ini.</p>
-                <a href="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal') }}" class="btn btn-primary mt-3 px-4">Kembali ke Daftar</a>
+        @empty
+            <div class="rounded-2xl border border-slate-200 bg-white p-8 text-center">
+                <i class="fas fa-folder-open mb-3 text-3xl text-slate-300"></i>
+                <p class="text-lg font-semibold text-slate-900">Riwayat Validasi Kosong</p>
+                <p class="text-sm text-slate-500">Belum ada hasil review soal yang bisa ditampilkan untuk mata kuliah ini.</p>
+                <a href="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal') }}" class="mt-4 inline-flex items-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Kembali ke Daftar</a>
             </div>
-            @endforelse
-        </div>
-        
-        <div class="pagination-kanan d-flex justify-content-center mt-2 mb-5">
-            {{ $riwayatSoal->links('pagination::bootstrap-5') }}
-        </div>
+        @endforelse
+    </div>
+
+    <div class="mt-6 flex justify-center">
+        {{ $riwayatSoal->links() }}
     </div>
 </x-banksoal::layouts.gpm-master>
