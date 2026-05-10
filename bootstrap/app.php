@@ -12,14 +12,29 @@ use App\Http\Middleware\CheckModuleActive;
 use App\Http\Middleware\PreventBackHistory;
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckSessionVersion;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function () {
+            Route::middleware('web')
+                ->group(base_path('Modules/Capstone/routes/web.php'));
+
+            Route::middleware(['api'])
+                ->prefix('api')
+                ->group(function () {
+                    require base_path('Modules/Capstone/routes/api.php');
+                });
+        },
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->validateCsrfTokens(except: [
+            'api/capstone/auth/exchange', 
+        ]);
+
         $middleware->web(append: [
             CheckSuspended::class,
             CheckSessionVersion::class,
@@ -31,6 +46,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role'          => CheckRole::class,
             'permission'    => CheckPermission::class,
             'module.active' => CheckModuleActive::class,
+            'capstone.role' => \Modules\Capstone\Http\Middleware\CapstoneRoleMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

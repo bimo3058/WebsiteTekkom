@@ -1,318 +1,174 @@
+{{-- resources/views/superadmin/permission/_user_card.blade.php --}}
+{{-- Used for standalone accordion view (category detail page) --}}
+
 @php
-    $isSuperadmin = $user->roles->pluck('name')->contains('superadmin');
-    $userRoles    = $user->roles; 
-    $roleNames    = $userRoles->pluck('name')->map(fn($r) => strtolower($r))->toArray();
-    
-    $userPerms    = $user->directPermissions->pluck('name'); 
-    $rolePerms    = $user->roles->flatMap->permissions->pluck('name')->unique();
-    
-    $hasAcademicRole = $userRoles->contains('is_academic', true);
-    $hasNoRole = $userRoles->isEmpty();
-    $hasExistingPermissions = $userPerms->isNotEmpty();
+    $cardKey      = $categoryKey . '_' . $user->id;
+    $userPermCount = $user->getAllPermissions()->count();
+    $userModCount  = $user->getAllPermissions()->groupBy(fn($p) => explode('.', $p->name)[0])->count();
+    $isActive      = $user->is_active ?? true;
 
-    // ============================================
-    // HITUNG PERMISSION YANG SEBENARNYA DIMILIKI
-    // ============================================
-    $permissionCount = $userPerms->count();
-    
-    // Hitung module yang sebenarnya diakses (berdasarkan permission yang ada)
-    $modules = [];
-    foreach ($userPerms as $perm) {
-        $module = explode('.', $perm)[0];
-        if (!in_array($module, $modules)) $modules[] = $module;
-    }
-    $moduleCount = count($modules);
-    
-    // Cek apakah user memiliki FULL ACCESS ke semua module (4 module: banksoal, capstone, eoffice, kemahasiswaan)
-    $allModules = ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'];
-    $hasFullAccess = $moduleCount === 4 && $permissionCount === 12; // 4 module x 3 action = 12 permission
-    
-    // Cek apakah user memiliki akses ke module tertentu (untuk admin per module)
-    $adminModules = [];
-    foreach ($roleNames as $role) {
-        if (str_starts_with($role, 'admin_')) {
-            $moduleMap = [
-                'admin_banksoal' => 'banksoal',
-                'admin_capstone' => 'capstone',
-                'admin_eoffice' => 'eoffice',
-                'admin_kemahasiswaan' => 'kemahasiswaan',
-            ];
-            if (isset($moduleMap[$role])) {
-                $adminModules[] = $moduleMap[$role];
-            }
-        }
-    }
+    $allModules = \App\Models\Permission::all()
+        ->groupBy(fn($p) => explode('.', $p->name)[0])
+        ->keys();
 
-    $cardStyle = match(true) {
-        $hasNoRole => 'border-l-4 border-l-rose-500 bg-rose-50/10',
-        $isSuperadmin => 'border-l-4 border-l-purple-600 bg-purple-50/20',
-        default => 'border-l border-l-slate-200',
-    };
-
-    $roleToModuleMap = [
-        'admin_banksoal'      => ['banksoal'],
-        'admin_capstone'      => ['capstone'],
-        'admin_eoffice'       => ['eoffice'],
-        'admin_kemahasiswaan' => ['kemahasiswaan'],
+    $moduleIcons = [
+        'SIBASO'   => ['bg' => '#FEF3C7', 'color' => '#D97706'],
+        'SICATA'   => ['bg' => '#DBEAFE', 'color' => '#3B82F6'],
+        'SIMENMA'  => ['bg' => '#D1FAE5', 'color' => '#10B981'],
+        'SIPERKOM' => ['bg' => '#FCE7F3', 'color' => '#EC4899'],
     ];
-
-    $allowedModules = [];
-    foreach ($roleNames as $name) {
-        if ($hasAcademicRole) {
-            $allowedModules = ['banksoal', 'capstone', 'eoffice', 'kemahasiswaan'];
-            break;
-        }
-        if (isset($roleToModuleMap[$name])) {
-            $allowedModules = array_merge($allowedModules, $roleToModuleMap[$name]);
-        }
-    }
-    $allowedModules = array_unique($allowedModules);
-
-    $shouldCheck = function(string $permName, string $action, string $module) 
-        use ($userPerms, $roleNames, $hasAcademicRole, $allowedModules, $hasExistingPermissions): bool {
-
-        if ($hasExistingPermissions) {
-            return $userPerms->contains($permName);
-        }
-
-        if (!in_array(strtolower($module), $allowedModules)) return false;
-
-        if (collect($roleNames)->contains(fn($r) => str_starts_with($r, 'admin_'))) {
-            return in_array($action, ['view','index','read','edit','update']);
-        }
-
-        if ($hasAcademicRole) return true;
-
-        return false;
-    };
+    $defaultIcon = ['bg' => '#EDE9FE', 'color' => '#8B5CF6'];
 @endphp
 
-<div class="user-card bg-white border border-slate-200 rounded-lg overflow-hidden transition-all shadow-sm mb-2 group/card {{ $cardStyle }}"
-     data-user-id="{{ $user->id }}"
-     data-name="{{ strtolower($user->name) }}"
-     data-email="{{ strtolower($user->email) }}">
+<div class="user-card bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden" data-user-id="{{ $user->id }}">
 
-    {{-- Header --}}
-    <button type="button" onclick="toggleCard({{ $user->id }})" 
-        class="w-full flex items-center justify-between px-3 py-3 hover:bg-slate-50/80 transition-all text-left">
+    {{-- Card Header --}}
+    <div class="flex items-center gap-4 px-5 py-4 cursor-pointer select-none"
+         onclick="toggleCard('{{ $cardKey }}')">
 
-        <div class="flex items-center gap-3 flex-1 min-w-0">
-            {{-- Avatar Section - Dikembalikan ke style asli dengan pembungkus div --}}
-            @php
-                // Logika warna background, text, dan border asli dari desainmu
-                $avatarWrapperStyle = match(true) {
-                    $isSuperadmin => 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF] shadow-sm',
-                    $hasNoRole    => 'bg-[#FEF2F2] text-[#EF4444] border-[#FEE2E2]',
-                    default       => 'bg-[#F8F9FA] text-[#6C757D] border-[#DEE2E6]',
-                };
-            @endphp
-
-            {{-- Div Pembungkus Asli (Mengembalikan Bulatan dan Border) --}}
-            <div class="w-10 h-10 rounded-full flex items-center justify-center border {{ $avatarWrapperStyle }} flex-shrink-0 overflow-hidden">
-                
-                @include('components.ui.avatar', [
-                    // Ambil URL foto dari user
-                    'src' => $user->avatar_url, 
-                    
-                    // Logika Fallback Asli: Jika Superadmin tampilkan icon shield, jika tidak tampilkan inisial
-                    'fallback' => $isSuperadmin 
-                        ? '<span class="material-symbols-outlined !text-[16px] fill-1">admin_panel_settings</span>' 
-                        : ($hasNoRole 
-                            ? '<span class="material-symbols-outlined !text-[16px]">priority_high</span>'
-                            : '<span class="text-[10px] font-semibold uppercase">'.substr($user->name, 0, 1).'</span>'),
-                        
-                    // Gunakan size 'sm' di komponen (size-9) agar pas di dalam pembungkus w-8
-                    'size' => 'sm', 
-                    
-                    // Kosongkan class komponen agar tidak bentrok dengan pembungkus
-                    'class' => '' 
-                ])
-            </div>
-
-            <div class="flex-1 min-w-0">
-                {{-- Name & Email Line --}}
-                <div class="flex items-center gap-1.5 mb-1">
-                    <span class="font-semibold text-xs tracking-tight {{ $hasNoRole ? 'text-rose-700' : ($isSuperadmin ? 'text-purple-900' : 'text-slate-800') }}">
-                        {{ $user->name }}
-                    </span>
-                    @if($isSuperadmin)
-                        <span class="material-symbols-outlined text-purple-600" style="font-size:13px; font-variation-settings: 'FILL' 1">verified</span>
-                    @endif
-                    <span class="text-slate-400 text-[10px] font-medium truncate">| {{ $user->email }}</span>
-                </div>
-
-                {{-- Badges Row - Berdasarkan LuminHR Design System --}}
-                <div class="flex items-center gap-2 flex-wrap mt-2">
-                    {{-- Role Badges --}}
-                    <div class="flex gap-1.5">
-                        @forelse($user->roles as $role)
-                            @php
-                                $roleName = strtolower($role->name);
-                                // Mapping warna berdasarkan Design System LuminHR
-                                $roleStyle = match(true) {
-                                    $roleName === 'superadmin'       => 'bg-[#F1E9FF] text-[#5E53F4] border-[#D1BFFF]', // Primary Purple 50/100
-                                    $roleName === 'dosen'            => 'bg-[#E7F9F3] text-[#00C08D] border-[#B2EBD9]', // Success/Emerald
-                                    $roleName === 'mahasiswa'        => 'bg-[#FFF9E6] text-[#FFB800] border-[#FFEBB3]', // Warning/Amber
-                                    $roleName === 'admin_eoffice'    => 'bg-[#EBF1FF] text-[#3377FF] border-[#B3CCFF]', // Additional/Sky
-                                    str_starts_with($roleName, 'admin') => 'bg-[#F0F5FF] text-[#5E53F4] border-[#D1DFFF]', // Primary Variant
-                                    default                          => 'bg-[#F8F9FA] text-[#6C757D] border-[#DEE2E6]', // Greyscale
-                                };
-                            @endphp
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold border uppercase tracking-wide {{ $roleStyle }}">
-                                {{ str_replace('_', ' ', $role->name) }}
-                            </span>
-                        @empty
-                            <span class="px-2.5 py-0.5 rounded-full text-[10px] font-semibold border border-[#FEE2E2] bg-[#FEF2F2] text-[#EF4444] italic uppercase">
-                                No Role
-                            </span>
-                        @endforelse
-                    </div>
-
-                    {{-- Permission Badge - LuminHR Split Style --}}
-                    <div class="flex items-center">
-                        @if($isSuperadmin)
-                            <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#5E53F4] text-white text-[10px] font-semibold uppercase tracking-wider shadow-sm">
-                                <span class="material-symbols-outlined text-[12px] fill-1">verified</span>
-                                Root Access
-                            </span>
-                        @elseif($hasFullAccess)
-                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#00C08D] text-white text-[10px] font-semibold uppercase tracking-wider">
-                                Full Access
-                            </span>
-                        @elseif($permissionCount > 0)
-                            <div class="inline-flex items-center border border-[#DEE2E6] rounded-full overflow-hidden bg-white shadow-sm">
-                                <div class="px-2 py-0.5 bg-[#F8F9FA] text-[#495057] text-[9px] font-semibold uppercase border-r border-[#DEE2E6]">
-                                    @if(!empty($adminModules))
-                                        {{ implode(', ', $adminModules) }}
-                                    @elseif($moduleCount <= 2)
-                                        {{ implode(', ', $modules) }}
-                                    @else
-                                        {{ $moduleCount }} Modules
-                                    @endif
-                                </div>
-                                <div class="px-2 py-0.5 text-[#5E53F4] text-[9px] font-semibold uppercase bg-white">
-                                    {{ $permissionCount }} Perms
-                                </div>
-                            </div>
-                        @else
-                            <span class="px-2.5 py-0.5 rounded-full border border-[#DEE2E6] text-[#ADB5BD] text-[9px] font-semibold uppercase tracking-tight bg-[#F8F9FA]">
-                                Unassigned
-                            </span>
-                        @endif
-                    </div>
-                </div>
-            </div>
+        {{-- Avatar --}}
+        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 flex items-center justify-center shrink-0 overflow-hidden border-2 border-white shadow-sm">
+            @if($user->profile_photo_url ?? false)
+                <img src="{{ $user->profile_photo_url }}" alt="" class="w-full h-full object-cover">
+            @else
+                <span class="text-sm font-bold text-white">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
+            @endif
         </div>
 
-        <div class="flex items-center ml-2">
-            <span class="material-symbols-outlined text-slate-300 transition-transform duration-300 card-chevron-{{ $user->id }}" style="font-size: 18px">
-                expand_more
+        {{-- Info --}}
+        <div class="flex-1 min-w-0">
+            <p class="text-sm font-bold text-slate-800 truncate">{{ $user->name }}</p>
+            <p class="text-xs text-slate-400 font-medium truncate">{{ $user->email }}</p>
+        </div>
+
+        {{-- Roles --}}
+        <div class="flex items-center gap-1.5 flex-wrap">
+            @foreach($user->roles->take(3) as $role)
+                <span class="role-pill inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border"
+                      style="border-color: var(--accent, #CBD5E1); color: var(--accent, #64748B); background: color-mix(in srgb, var(--accent, #CBD5E1) 12%, white)">
+                    {{ Str::title(str_replace('_', ' ', $role->name)) }}
+                </span>
+            @endforeach
+        </div>
+
+        {{-- Stats --}}
+        <div class="hidden md:flex items-center gap-4 text-xs text-slate-500 font-semibold">
+            <span>{{ $userModCount }} Modul</span>
+            <span class="text-slate-300">|</span>
+            <span>{{ $userPermCount }} Permissions</span>
+        </div>
+
+        {{-- Status --}}
+        @if($isActive)
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 shrink-0">
+                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
             </span>
-        </div>
-    </button>
-
-    {{-- Body - Detail Permissions --}}
-    <div id="card-body-{{ $user->id }}" class="hidden border-t border-[#DEE2E6] bg-[#F8F9FA]/50 p-6">
-        @if($isSuperadmin)
-            <div class="flex items-center justify-center gap-3 py-6 text-[#5E53F4] text-[11px] font-semibold uppercase tracking-widest bg-white rounded-2xl border border-dashed border-[#D1BFFF] shadow-sm">
-                <span class="material-symbols-outlined" style="font-size:20px; font-variation-settings: 'FILL' 1">verified_user</span> 
-                Full System Privilege Granted
-            </div>
         @else
-            <form method="POST" action="{{ route('superadmin.users.update-permissions', $user->id) }}" id="perm-form-{{ $user->id }}">
-                @csrf
-                {{-- Section: Assign Roles --}}
-                <div class="mb-8">
-                    <div class="flex items-center gap-2 mb-4">
-                        <span class="material-symbols-outlined text-[#6C757D]" style="font-size:18px">group_add</span>
-                        <p class="text-[10px] font-semibold text-[#6C757D] uppercase tracking-[0.15em]">Assign Roles</p>
-                    </div>
-                    <div class="flex flex-wrap gap-2.5">
-                        @foreach($roles as $role)
-                            @php $isActive = $user->roles->contains($role->id); @endphp
-                            <label class="relative cursor-pointer">
+            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 text-red-500 border border-red-200 shrink-0">
+                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Suspend
+            </span>
+        @endif
+
+        {{-- Chevron --}}
+        <svg class="card-chevron-{{ $cardKey }} w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200"
+             fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5">
+            <path d="M6 9l6 6 6-6"/>
+        </svg>
+    </div>
+
+    {{-- Expandable Body --}}
+    <div id="card-body-{{ $cardKey }}" class="hidden border-t border-slate-100">
+        <form id="form-{{ $cardKey }}" method="POST" action="{{ route('superadmin.permissions.update', $user->id) }}">
+            @csrf @method('PUT')
+
+            <div class="p-5">
+                {{-- Role Assignment --}}
+                <div class="mb-6">
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Roles</p>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach(\App\Models\Role::all() as $role)
+                            @php $hasRole = $user->roles->contains('name', $role->name); @endphp
+                            <label class="flex items-center gap-2 px-3 py-2 border rounded-xl cursor-pointer transition-all select-none dot-indicator-wrap"
+                                   style="{{ $hasRole ? 'border-color: var(--c-primary); background: rgba(11,38,110,0.06); color: var(--c-primary)' : 'border-color: var(--c-border); background: #fff; color: var(--c-fg-muted)' }}">
                                 <input type="checkbox"
-                                    name="roles[]"
-                                    value="{{ $role->id }}"
-                                    {{ $isActive ? 'checked' : '' }}
-                                    class="peer sr-only role-checkbox"
-                                    data-role-name="{{ strtolower($role->name) }}"
-                                    data-is-academic="{{ $role->is_academic ? '1' : '0' }}">
-                                <div class="flex items-center gap-2.5 px-4 py-2 rounded-full border border-[#DEE2E6] bg-white text-[#6C757D] transition-all duration-200
-                                            peer-checked:border-[#5E53F4] peer-checked:bg-[#F1E9FF] peer-checked:text-[#5E53F4] peer-checked:shadow-[0_0_0_1px_#5E53F4]
-                                            hover:border-[#ADB5BD] shadow-sm">
-                                    {{-- Dot: warna berdasarkan checked state via JS karena peer tidak bisa ke child --}}
-                                    <div class="dot-indicator size-2 rounded-full transition-colors {{ $isActive ? 'bg-[#5E53F4]' : 'bg-[#DEE2E6]' }}"></div>
-                                    <span class="text-[11px] font-semibold uppercase tracking-tight">{{ str_replace('_', ' ', $role->name) }}</span>
-                                </div>
+                                       name="roles[]"
+                                       value="{{ $role->name }}"
+                                       class="role-checkbox hidden"
+                                       data-role-name="{{ $role->name }}"
+                                       data-is-academic="{{ in_array($role->name, ['superadmin', 'admin']) ? '1' : '0' }}"
+                                       {{ $hasRole ? 'checked' : '' }}>
+                                <span class="dot-indicator w-2 h-2 rounded-full shrink-0" style="background: {{ $hasRole ? 'var(--c-primary)' : 'var(--c-border)' }}"></span>
+                                <span class="text-xs font-bold">{{ Str::title(str_replace('_', ' ', $role->name)) }}</span>
                             </label>
                         @endforeach
                     </div>
                 </div>
 
-                {{-- Section: Module Permissions Grid --}}
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    @foreach($permissions as $module => $perms)
-                        @php
-                            $moduleSlug = strtolower($module);
-                            $isAllowed = in_array($moduleSlug, $allowedModules);
-                            $potentialRoles = [];
-                            foreach ($roleToModuleMap as $r => $m) { if(in_array($moduleSlug, $m)) $potentialRoles[] = $r; }
-                            $potentialRoles = array_merge($potentialRoles, ['superadmin', 'dosen', 'mahasiswa', 'gpm']);
-                        @endphp
-                        <div class="module-box bg-white p-4 rounded-2xl border transition-all duration-300 {{ $isAllowed ? 'border-[#DEE2E6] shadow-sm' : 'border-[#F8F9FA] opacity-40 grayscale pointer-events-none' }}"
-                            data-module-slug="{{ $moduleSlug }}"
-                            data-all-allowed-roles='@json($potentialRoles)'>
-                            
-                            <div class="flex items-center justify-between mb-4 pb-3 border-b border-[#F8F9FA]">
-                                <span class="text-[11px] font-semibold text-[#1A1C1E] uppercase tracking-wider flex items-center gap-2">
-                                    {{ $module }} 
-                                    @if(!$isAllowed) <span class="material-symbols-outlined text-[#ADB5BD]" style="font-size:14px">lock</span> @endif
-                                </span>
-                                <label class="flex items-center gap-1.5 cursor-pointer group {{ !$isAllowed ? 'hidden' : '' }}">
-                                    <input type="checkbox" class="module-select-all size-3.5 rounded border-[#DEE2E6] text-[#5E53F4] focus:ring-0 transition-colors" data-module-target="{{ $user->id }}-{{ $moduleSlug }}">
-                                    <span class="text-[10px] font-semibold text-[#ADB5BD] uppercase group-hover:text-[#5E53F4]">All</span>
-                                </label>
-                            </div>
-
-                            <div class="space-y-2">
-                                @foreach($perms as $permission)
-                                    @php
-                                        $action = explode('.', $permission->name)[1] ?? $permission->name;
-                                        $allowedActions = ['view', 'edit', 'delete'];
-                                        if (!in_array($action, $allowedActions)) continue;
-                                        
-                                        $isView = ($action === 'view');
-                                        $fromRole = $rolePerms->contains($permission->name);
-                                        $isChecked = $shouldCheck($permission->name, $action, $module);
-                                    @endphp
-                                    <label class="flex items-center justify-between group cursor-pointer py-0.5">
-                                        <div class="flex items-center gap-2.5">
-                                            <input type="checkbox" name="permissions[]" value="{{ $permission->name }}" {{ $isChecked ? 'checked' : '' }}
-                                                class="perm-checkbox size-4 rounded border-[#DEE2E6] text-[#5E53F4] focus:ring-0 {{ $isView ? 'master-view-cb' : 'child-perm-cb' }}"
-                                                data-module-key="{{ $user->id }}-{{ $moduleSlug }}"
-                                                data-is-view="{{ $isView ? '1' : '0' }}" data-perm="{{ $permission->name }}">
-                                            <span class="text-[12px] font-semibold capitalize {{ $isChecked ? 'text-[#1A1C1E]' : 'text-[#6C757D]' }} group-hover:text-[#5E53F4] transition-colors">
-                                                {{ str_replace('_', ' ', $action) }}
-                                            </span>
+                {{-- Module Permissions --}}
+                <div>
+                    <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Module Permissions</p>
+                    <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+                        @foreach($allModules as $module)
+                            @php
+                                $mkey = strtoupper($module);
+                                $ico  = $moduleIcons[$mkey] ?? $defaultIcon;
+                                $modulePerms = \App\Models\Permission::where('name', 'like', $module . '.%')->get();
+                            @endphp
+                            <div class="module-box border border-slate-200 rounded-xl p-3 transition-all"
+                                 data-all-allowed-roles="{{ json_encode($modulePerms->pluck('name')) }}">
+                                <div class="flex items-center justify-between mb-2">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-6 h-6 rounded-lg flex items-center justify-center shrink-0"
+                                             style="background:{{ $ico['bg'] }}">
+                                            <div class="w-3 h-3 rounded-sm" style="background:{{ $ico['color'] }}"></div>
                                         </div>
-                                        @if($fromRole) 
-                                            <div class="size-1.5 rounded-full bg-[#D1BFFF]" title="Inherited from role"></div> 
-                                        @endif
+                                        <span class="text-[10px] font-black text-slate-700 uppercase">{{ $mkey }}</span>
+                                    </div>
+                                    <label class="cursor-pointer">
+                                        <input type="checkbox"
+                                               class="module-select-all w-3 h-3 accent-slate-700"
+                                               data-module-target="{{ $cardKey }}_{{ $module }}">
                                     </label>
-                                @endforeach
-                            </div>
-                        </div>
-                    @endforeach
-                </div>
+                                </div>
 
-                {{-- Footer: Action Button --}}
-                <div class="mt-8 pt-5 border-t border-[#DEE2E6] flex items-center justify-end">
-                    <button type="submit" class="bg-[#1A1C1E] hover:bg-[#5E53F4] text-white text-[11px] font-semibold uppercase tracking-[0.15em] px-8 py-3 rounded-xl transition-all shadow-lg hover:shadow-[#5E53F4]/20 flex items-center gap-2.5 active:scale-95">
-                        <span class="material-symbols-outlined" style="font-size:18px">save</span> Save Changes
-                    </button>
+                                <div class="flex flex-col gap-1">
+                                    @foreach($modulePerms as $perm)
+                                        @php
+                                            $hasPerm   = $user->hasPermissionTo($perm->name);
+                                            $isView    = str_contains(strtolower($perm->name), 'view') || str_contains(strtolower($perm->name), 'read') || str_contains(strtolower($perm->name), 'index');
+                                            $permLabel = Str::title(explode('.', $perm->name)[1] ?? $perm->name);
+                                        @endphp
+                                        <label class="flex items-center gap-2 cursor-pointer group">
+                                            <input type="checkbox"
+                                                   name="permissions[]"
+                                                   value="{{ $perm->name }}"
+                                                   class="perm-checkbox w-3.5 h-3.5 accent-slate-700 rounded"
+                                                   data-module-key="{{ $cardKey }}_{{ $module }}"
+                                                   data-perm="{{ $perm->name }}"
+                                                   data-is-view="{{ $isView ? '1' : '0' }}"
+                                                   {{ $hasPerm ? 'checked' : '' }}>
+                                            <span class="text-[11px] text-slate-600 font-medium group-hover:text-slate-900 transition-colors">{{ $permLabel }}</span>
+                                        </label>
+                                    @endforeach
+                                </div>
+                            </div>
+                        @endforeach
+                    </div>
                 </div>
-            </form>
-        @endif
+            </div>
+
+            {{-- Footer --}}
+            <div class="flex items-center justify-end gap-3 px-5 py-3 bg-slate-50 border-t border-slate-100">
+                <button type="button" onclick="toggleCard('{{ $cardKey }}')"
+                        class="px-4 py-2 text-xs font-bold text-slate-600 bg-white border border-slate-200 rounded-xl hover:bg-slate-100 transition-colors">
+                    Tutup
+                </button>
+                <button type="submit"
+                        class="px-5 py-2 text-xs font-bold text-white bg-[#1E293B] rounded-xl hover:bg-slate-700 transition-colors">
+                    Simpan Perubahan
+                </button>
+            </div>
+        </form>
     </div>
+
 </div>
