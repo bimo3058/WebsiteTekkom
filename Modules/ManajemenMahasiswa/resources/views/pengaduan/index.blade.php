@@ -47,7 +47,7 @@
             /* ── Stats Strip ───────────────────────────────────────── */
             .stats-strip {
                 display: grid;
-                grid-template-columns: repeat(3, 1fr);
+                grid-template-columns: repeat(4, 1fr);
                 gap: 14px;
                 margin-bottom: 20px;
             }
@@ -165,6 +165,10 @@
             .badge-success { background: #dcfce7; color: #16a34a; }
             .badge-info { background: #e0f2fe; color: #0284c7; }
             .badge-secondary { background: #f3f4f6; color: #4b5563; }
+            .badge-warning { background: #fef3c7; color: #d97706; }
+            .badge-orange { background: #ffedd5; color: #ea580c; }
+            .badge-purple { background: #e0e7ff; color: #4f46e5; }
+            .badge-dark-green { background: #bbf7d0; color: #15803d; }
         </style>
     @endpush
 
@@ -175,7 +179,7 @@
             <p>Sampaikan keluhan secara terarah (opsional anonim) dan pantau jawabannya.</p>
         </div>
         @if($canCreate)
-            <a href="{{ route('manajemenmahasiswa.pengaduan.create') }}" class="btn-header text-decoration-none">
+            <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-header text-decoration-none">
                 <span>＋</span> Buat Pengaduan
             </a>
         @endif
@@ -192,7 +196,7 @@
     {{-- ── Stats ───────────────────────────────────────────────── --}}
     @php
         $totalPengaduan = $pengaduan->total();
-        $dijawabCount = $totalPengaduan - $belumDijawabCount;
+        $dijawabCount = $totalPengaduan - $belumDijawabCount - ($selesaiCount ?? 0);
     @endphp
     <div class="stats-strip">
         <div class="stat-chip">
@@ -214,6 +218,13 @@
             <div>
                 <div class="stat-chip-value">{{ $dijawabCount }}</div>
                 <div class="stat-chip-label">Dijawab</div>
+            </div>
+        </div>
+        <div class="stat-chip">
+            <div class="stat-chip-icon" style="background: #bbf7d0; color: #15803d;"><span class="material-symbols-outlined">verified</span></div>
+            <div>
+                <div class="stat-chip-value">{{ $selesaiCount ?? 0 }}</div>
+                <div class="stat-chip-label">Selesai</div>
             </div>
         </div>
     </div>
@@ -279,6 +290,10 @@
                             $badgeClass = match ($status) {
                                 'dijawab' => 'badge-success',
                                 'dibaca' => 'badge-info',
+                                'didelegasikan' => 'badge-orange',
+                                'ditanggapi_dosen' => 'badge-purple',
+                                'diajukan_ulang' => 'badge-warning',
+                                'selesai' => 'badge-dark-green',
                                 default => 'badge-secondary',
                             };
                             $pelaporLabel = 'Anonim';

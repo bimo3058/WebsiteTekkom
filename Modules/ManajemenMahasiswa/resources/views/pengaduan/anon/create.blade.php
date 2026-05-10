@@ -1,121 +1,85 @@
-<x-dynamic-component :component="$isStaff ? 'manajemenmahasiswa::layouts.admin' : 'manajemenmahasiswa::layouts.mahasiswa'">
+@extends('manajemenmahasiswa::pengaduan.anon.layout')
 
-    @push('styles')
-        <style>
-            .custom-card {
-                background: #ffffff;
-                border-radius: 12px;
-                padding: 32px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-                border: none;
-            }
-            .btn-custom {
-                background-color: #4D4DFF;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 10px 24px;
-                font-weight: 600;
-                transition: all 0.2s;
-            }
-            .btn-custom:hover {
-                background-color: #3b3be5;
-                color: white;
-                transform: translateY(-1px);
-            }
-            .btn-outline-custom {
-                background-color: transparent;
-                color: #6b7280;
-                border: 2px solid #e5e7eb;
-                border-radius: 8px;
-                padding: 8px 20px;
-                font-weight: 600;
-                transition: all 0.2s;
-            }
-            .btn-outline-custom:hover {
-                background-color: #f3f4f6;
-                color: #374151;
-            }
-            .form-control-custom, .form-select-custom {
-                background-color: #f9fafb;
-                border: 2px solid #f3f4f6;
-                border-radius: 8px;
-                padding: 12px 16px;
-                font-size: 14px;
-                transition: all 0.2s;
-                font-weight: 500;
-            }
-            .form-control-custom:focus, .form-select-custom:focus {
-                background-color: #ffffff;
-                border-color: #a5a5ff;
-                box-shadow: 0 0 0 4px rgba(77, 77, 255, 0.1);
-                outline: none;
-            }
-            .form-label-custom {
-                font-size: 13px;
-                font-weight: 600;
-                color: #4b5563;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                margin-bottom: 8px;
-            }
-            .section-title {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                font-weight: 700;
-                color: #111827;
-                font-size: 16px;
-                margin-bottom: 24px;
-                padding-bottom: 12px;
-                border-bottom: 2px solid #f3f4f6;
-            }
-        </style>
-    @endpush
+@section('title', 'Buat Pengaduan Konfidensial')
 
-    @php
-        $jalur = request()->query('jalur', old('jalur_query'));
-        if (!in_array($jalur, ['reguler', 'konfidensial'])) {
-            // Redirect ke halaman pilihan jalur jika tidak ada param valid
+@push('styles')
+    <style>
+        .custom-card {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 32px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            border: 1px solid #e5e7eb;
+            margin-bottom: 24px;
         }
-        $isAnonim = $jalur === 'konfidensial' ? '1' : '0';
-    @endphp
+        .btn-custom {
+            background-color: #4D4DFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 12px 24px;
+            font-weight: 600;
+            width: 100%;
+            transition: all 0.2s;
+            font-size: 15px;
+        }
+        .btn-custom:hover {
+            background-color: #3b3be5;
+            color: white;
+            transform: translateY(-1px);
+        }
+        .form-control-custom, .form-select-custom {
+            background-color: #f9fafb;
+            border: 2px solid #f3f4f6;
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 14px;
+            transition: all 0.2s;
+            font-weight: 500;
+        }
+        .form-control-custom:focus, .form-select-custom:focus {
+            background-color: #ffffff;
+            border-color: #a5a5ff;
+            box-shadow: 0 0 0 4px rgba(77, 77, 255, 0.1);
+            outline: none;
+        }
+        .form-label-custom {
+            font-size: 13px;
+            font-weight: 600;
+            color: #4b5563;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+        .section-title {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            color: #111827;
+            font-size: 16px;
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid #f3f4f6;
+        }
+        .info-box {
+            background: #f1f5f9;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+        }
+    </style>
+@endpush
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="fw-bold mb-1 text-dark">Buat Pengaduan</h3>
-            <p class="text-muted mb-0 fw-medium">Isi form di bawah ini dengan detail yang jelas dan valid.</p>
-        </div>
-        <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-outline-custom text-decoration-none">
-            ← Kembali
-        </a>
+@section('content')
+    <div class="mb-4">
+        <h3 class="fw-bold mb-1 text-dark">Form Pengaduan</h3>
+        <p class="text-muted mb-0 fw-medium">Silakan isi detail pengaduan Anda. Identitas Anda tidak akan ditampilkan kepada publik maupun admin.</p>
     </div>
 
-    {{-- Jalur Indicator Banner --}}
-    @if($jalur === 'konfidensial')
-        <div class="d-flex align-items-center gap-3 mb-4 p-3 px-4 rounded-3" style="background: #f8fafc; border: 1.5px solid #e2e8f0;">
-            <div style="width: 36px; height: 36px; border-radius: 10px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                <span class="material-symbols-outlined" style="font-size: 20px; color: #64748b;">shield_lock</span>
-            </div>
-            <div>
-                <div class="fw-bold text-dark" style="font-size: 14px;">Jalur Konfidensial</div>
-                <div class="text-muted" style="font-size: 12px;">Identitas Anda tidak akan ditampilkan di sistem. <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" style="color: #6b7280;">Ganti jalur</a></div>
-            </div>
-        </div>
-    @else
-        <div class="d-flex align-items-center gap-3 mb-4 p-3 px-4 rounded-3" style="background: #f5f5ff; border: 1.5px solid #c7d2fe;">
-            <div style="width: 36px; height: 36px; border-radius: 10px; background: #eef2ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                <span class="material-symbols-outlined" style="font-size: 20px; color: #4f46e5;">badge</span>
-            </div>
-            <div>
-                <div class="fw-bold text-dark" style="font-size: 14px;">Jalur Reguler</div>
-                <div class="text-muted" style="font-size: 12px;">Identitas Anda terlihat oleh Admin. <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" style="color: #6b7280;">Ganti jalur</a></div>
-            </div>
-        </div>
-    @endif
-
     @if ($errors->any())
-        <div class="alert alert-danger border-0 shadow-sm" style="background-color: #fee2e2; color: #dc2626; border-radius: 12px;">
+        <div class="alert alert-danger border-0 shadow-sm mb-4" style="background-color: #fee2e2; color: #dc2626; border-radius: 12px;">
             <div class="fw-bold mb-2">⚠ Terdapat kesalahan pada input:</div>
             <ul class="mb-0 fw-medium" style="font-size: 14px;">
                 @foreach ($errors->all() as $error)
@@ -125,11 +89,18 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.confirm') }}" class="custom-card">
+    <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.anon.store', ['token' => $token]) }}" class="custom-card">
         @csrf
-        {{-- Hidden: jalur yang sudah dipilih --}}
-        <input type="hidden" name="is_anonim" value="{{ $isAnonim }}">
-        <input type="hidden" name="jalur_query" value="{{ $jalur }}">
+
+        <div class="info-box">
+            <div class="d-flex align-items-center gap-2 mb-1">
+                <span class="material-symbols-outlined" style="font-size: 18px; color: #64748b;">shield_lock</span>
+                <span class="fw-bold" style="color: #334155; font-size: 14px;">Identitas Dilindungi</span>
+            </div>
+            <div style="color: #64748b; font-size: 13px; line-height: 1.5;">
+                Nama Anda ({{ auth()->user()->name ?? 'Mahasiswa' }}) tetap direkam di dalam sistem demi integritas data, namun <strong>tidak akan ditampilkan</strong> di daftar tiket maupun pada layar penyelesaian.
+            </div>
+        </div>
 
         <div class="mb-4">
             <label class="form-label-custom d-block">Kategori Pengaduan <span class="text-danger">*</span></label>
@@ -155,19 +126,10 @@
             </div>
         </div>
 
-        <div class="row g-4 mb-4">
-            <div class="col-md-6">
-                <label class="form-label-custom d-block">Nama Mahasiswa</label>
-                <input type="text" class="form-control form-control-custom" value="{{ auth()->user()->name ?? '-' }}" disabled>
-                <div class="form-text mt-2 fw-medium" style="color: #9ca3af; font-size: 13px;">
-                    Identitas tersimpan di database. Jika memilih jalur <strong>Konfidensial</strong>, identitas tidak ditampilkan di sistem.
-                </div>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label-custom d-block">Angkatan <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
-                <input type="text" class="form-control form-control-custom" name="template[angkatan]"
-                    value="{{ old('template.angkatan') }}" placeholder="Contoh: 2022">
-            </div>
+        <div class="mb-4">
+            <label class="form-label-custom d-block">Angkatan <span class="text-muted fw-normal text-lowercase">(Opsional)</span></label>
+            <input type="text" class="form-control form-control-custom" name="template[angkatan]"
+                value="{{ old('template.angkatan') }}" placeholder="Contoh: 2022">
         </div>
 
         <div class="mt-5">
@@ -256,10 +218,8 @@
             </div>
         </div>
 
-        <div class="d-flex justify-content-end gap-3 mt-5 pt-4" style="border-top: 1px solid #f3f4f6;">
-            <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="btn-outline-custom text-decoration-none">Batal</a>
-            <button type="submit" class="btn-custom">Lanjut Konfirmasi</button>
+        <div class="mt-5 pt-4" style="border-top: 1px solid #f3f4f6;">
+            <button type="submit" class="btn-custom">Kirim Pengaduan</button>
         </div>
     </form>
-
-</x-dynamic-component>
+@endsection

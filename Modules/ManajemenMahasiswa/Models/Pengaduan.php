@@ -16,6 +16,7 @@ class Pengaduan extends Model
         'user_id',
         'kategori',
         'is_anonim',
+        'anon_token',
         'data_template',
         'status',
         'read_at',
@@ -23,18 +24,32 @@ class Pengaduan extends Model
         'jawaban',
         'answered_at',
         'answered_by',
+        'reopen_count',
+        'reopen_reason',
+        'auto_close_at',
+        'closed_at',
+        'closed_by',
     ];
 
     protected $casts = [
-        'is_anonim' => 'bool',
-        'data_template' => 'array',
-        'read_at' => 'datetime',
-        'answered_at' => 'datetime',
+        'is_anonim'      => 'bool',
+        'data_template'  => 'array',
+        'read_at'        => 'datetime',
+        'answered_at'    => 'datetime',
+        'auto_close_at'  => 'datetime',
+        'closed_at'      => 'datetime',
     ];
 
-    public const STATUS_BARU = 'baru';
-    public const STATUS_DIBACA = 'dibaca';
-    public const STATUS_DIJAWAB = 'dijawab';
+    public const STATUS_DRAFT             = 'draft';
+    public const STATUS_BARU              = 'baru';
+    public const STATUS_DIBACA            = 'dibaca';
+    public const STATUS_DIDELEGASIKAN     = 'didelegasikan';
+    public const STATUS_DITANGGAPI_DOSEN  = 'ditanggapi_dosen';
+    public const STATUS_DIJAWAB           = 'dijawab';
+    public const STATUS_DIAJUKAN_ULANG    = 'diajukan_ulang';
+    public const STATUS_SELESAI           = 'selesai';
+
+    public const MAX_REOPEN = 2;
 
     // Kategori baru (utama)
     public const KATEGORI_AKADEMIK_ADMINISTRASI = 'akademik_administrasi';
@@ -107,5 +122,38 @@ class Pengaduan extends Model
     public function dijawabOleh(): BelongsTo
     {
         return $this->belongsTo(\App\Models\User::class, 'answered_by');
+    }
+
+    public function ditutupOleh(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'closed_by');
+    }
+
+    public function delegasi(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PengaduanDelegasi::class, 'pengaduan_id')->orderByDesc('delegated_at');
+    }
+
+    public function delegasiAktif(): \Illuminate\Database\Eloquent\Relations\HasOne
+    {
+        return $this->hasOne(PengaduanDelegasi::class, 'pengaduan_id')
+            ->where('status', 'aktif')
+            ->latestOfMany('delegated_at');
+    }
+
+    public function logs(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(PengaduanLog::class, 'pengaduan_id')->orderBy('created_at');
+    }
+
+    public function isSelesai(): bool
+    {
+        return $this->status === self::STATUS_SELESAI;
+    }
+
+    public function canReopen(): bool
+    {
+        return $this->status === self::STATUS_DIJAWAB
+            && $this->reopen_count < self::MAX_REOPEN;
     }
 }
