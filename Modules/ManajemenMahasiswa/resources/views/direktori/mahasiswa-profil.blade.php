@@ -96,6 +96,7 @@
     .status-badge.alumni { background: #dbeafe; color: #1e40af; }
     .status-badge.cuti { background: #fef3c7; color: #92400e; }
     .status-badge.drop_out { background: #fef2f2; color: #991b1b; }
+    .status-badge.pindah_studi { background: #f3f4f6; color: #374151; }
 
     .riwayat-table {
         width: 100%;
@@ -204,6 +205,7 @@
                         @case('alumni') ● Lulus @break
                         @case('cuti') ● Cuti @break
                         @case('drop_out') ● Drop Out @break
+                        @case('pindah_studi') ● Pindah Studi @break
                         @default ● {{ ucfirst($mhs->status) }}
                     @endswitch
                 </span>
@@ -248,12 +250,7 @@
             <div class="info-item-value">{{ $mhs->kontak }}</div>
         </div>
         @endif
-        @if($mhs->profesi)
-        <div>
-            <div class="info-item-label">Profesi</div>
-            <div class="info-item-value">{{ $mhs->profesi }}</div>
-        </div>
-        @endif
+
     </div>
 </div>
 
@@ -276,6 +273,7 @@
                     @case('alumni') Lulus @break
                     @case('cuti') Cuti @break
                     @case('drop_out') Drop Out @break
+                    @case('pindah_studi') Pindah Studi @break
                     @default {{ ucfirst($mhs->status) }}
                 @endswitch
             </span></div>

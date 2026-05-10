@@ -224,18 +224,79 @@
             </div>
         </div>
 
-        <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.kegiatan.index') }}"
-            routeName="manajemenmahasiswa.kegiatan" label="Kegiatan">
-            <x-slot:iconSlot>
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
-                    <line x1="16" x2="16" y1="2" y2="6"></line>
-                    <line x1="8" x2="8" y1="2" y2="6"></line>
-                    <line x1="3" x2="21" y1="10" y2="10"></line>
+        {{-- ── Manajemen Kegiatan (Dropdown 3 Subbab) ── --}}
+        @php
+            $kegiatanRoutes = [
+                'manajemenmahasiswa.proker.*',
+                'manajemenmahasiswa.pelaksanaan.*',
+                'manajemenmahasiswa.kegiatan.*',
+            ];
+            $kegiatanActive = collect($kegiatanRoutes)->contains(fn($r) => request()->routeIs($r));
+        @endphp
+        <div class="sidebar-dropdown {{ $kegiatanActive ? 'open' : '' }}">
+            <a href="javascript:void(0)"
+                class="nav-link-item sidebar-dropdown-toggle {{ $kegiatanActive ? 'active' : '' }}"
+                onclick="event.stopPropagation(); this.closest('.sidebar-dropdown').classList.toggle('open')"
+                :class="{ 'justify-content-center': !sidebarOpen }">
+                <span class="nav-icon d-inline-flex">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                        <line x1="16" x2="16" y1="2" y2="6"></line>
+                        <line x1="8" x2="8" y1="2" y2="6"></line>
+                        <line x1="3" x2="21" y1="10" y2="10"></line>
+                    </svg>
+                </span>
+                <span class="nav-label" style="flex-grow: 1;" x-show="sidebarOpen">Manajemen Kegiatan</span>
+                <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;"
+                    x-show="sidebarOpen">
+                    <path d="m6 9 6 6 6-6" />
                 </svg>
-            </x-slot:iconSlot>
-        </x-manajemenmahasiswa::ui.sidebar-item>
+            </a>
+            <div class="sidebar-dropdown-menu" x-show="sidebarOpen">
+                {{-- Subbab 1: Rencana Proker --}}
+                <a href="{{ route('manajemenmahasiswa.proker.index') }}"
+                    class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.proker.*') ? 'active' : '' }}">
+                    <span class="nav-icon d-inline-flex">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 11l3 3L22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Rencana Proker</span>
+                </a>
+                {{-- Subbab 2: Pelaksanaan Kegiatan --}}
+                <a href="{{ route('manajemenmahasiswa.pelaksanaan.index') }}"
+                    class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.pelaksanaan.*') ? 'active' : '' }}">
+                    <span class="nav-icon d-inline-flex">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" x2="8" y1="13" y2="13"/>
+                            <line x1="16" x2="8" y1="17" y2="17"/>
+                            <line x1="10" x2="8" y1="9" y2="9"/>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Pelaksanaan Kegiatan</span>
+                </a>
+                {{-- Subbab 3: Laporan & Arsip (manajemen kegiatan yang sudah ada) --}}
+                <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}"
+                    class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.kegiatan.*') ? 'active' : '' }}">
+                    <span class="nav-icon d-inline-flex">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                            <line x1="12" x2="12" y1="11" y2="17"/>
+                            <line x1="9" x2="15" y1="14" y2="14"/>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Laporan & Arsip</span>
+                </a>
+            </div>
+        </div>
 
         @if(!array_intersect($sidebarRoles, ['dosen', 'dosen_koordinator']))
         <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}"

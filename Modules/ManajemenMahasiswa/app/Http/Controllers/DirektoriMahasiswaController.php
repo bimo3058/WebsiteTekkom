@@ -275,6 +275,9 @@ class DirektoriMahasiswaController extends Controller
         try {
             $query = Kemahasiswaan::with(['user', 'user.student']);
 
+            // Exclude alumni from mahasiswa directory
+            $query->where('status', '!=', 'alumni');
+
             // Filter angkatan
             if ($request->filled('angkatan') && $request->angkatan !== 'semua') {
                 $query->byAngkatan((int) $request->angkatan);

@@ -84,6 +84,17 @@
         border-color: #d1d5db;
         color: #374151;
     }
+    .sso-tag {
+        font-size: 9px;
+        font-weight: 700;
+        padding: 1px 5px;
+        border-radius: 4px;
+        background: #eef2ff;
+        color: #4f46e5;
+        letter-spacing: 0.03em;
+        margin-left: 6px;
+        vertical-align: middle;
+    }
 </style>
 
 <!-- Back Button -->
@@ -140,23 +151,23 @@
             @endphp
             <!-- Nama -->
             <div class="col-12">
-                <label class="form-label-custom">Nama Lengkap <span style="color: #ef4444;">*</span></label>
+                <label class="form-label-custom">Nama Lengkap <span class="sso-tag">SSO</span> <span style="color: #ef4444;">*</span></label>
                 <input type="text" name="nama" class="form-control form-control-custom"
-                       value="{{ old('nama', $mhs->nama) }}" required>
+                       value="{{ old('nama', $mhs->nama) }}" required readonly style="background-color: #f3f4f6; cursor: not-allowed; opacity: 0.7;">
             </div>
 
             <!-- NIM -->
             <div class="col-md-6">
-                <label class="form-label-custom">NIM <span style="color: #ef4444;">*</span></label>
+                <label class="form-label-custom">NIM <span class="sso-tag">SSO</span> <span style="color: #ef4444;">*</span></label>
                 <input type="text" name="nim" class="form-control form-control-custom"
-                       value="{{ old('nim', $mhs->nim) }}" required>
+                       value="{{ old('nim', $mhs->nim) }}" required readonly style="background-color: #f3f4f6; cursor: not-allowed; opacity: 0.7;">
             </div>
 
             <!-- Angkatan -->
             <div class="col-md-6">
-                <label class="form-label-custom">Angkatan <span style="color: #ef4444;">*</span></label>
+                <label class="form-label-custom">Angkatan <span class="sso-tag">SSO</span> <span style="color: #ef4444;">*</span></label>
                 <input type="number" name="angkatan" class="form-control form-control-custom"
-                       value="{{ old('angkatan', $mhs->angkatan) }}" min="2000" max="2099" required>
+                       value="{{ old('angkatan', $mhs->angkatan) }}" min="2000" max="2099" required readonly style="background-color: #f3f4f6; cursor: not-allowed; opacity: 0.7;">
             </div>
 
             <!-- Status -->
@@ -164,19 +175,16 @@
                 <label class="form-label-custom">Status <span style="color: #ef4444;">*</span></label>
                 <select name="status" class="form-select form-select-custom" required>
                     <option value="aktif" {{ old('status', $mhs->status) == 'aktif' ? 'selected' : '' }}>Aktif</option>
-                    <option value="alumni" {{ old('status', $mhs->status) == 'alumni' ? 'selected' : '' }}>Lulus (Alumni)</option>
                     <option value="cuti" {{ old('status', $mhs->status) == 'cuti' ? 'selected' : '' }}>Cuti</option>
                     <option value="drop_out" {{ old('status', $mhs->status) == 'drop_out' ? 'selected' : '' }}>Drop Out</option>
+                    <option value="pindah_studi" {{ old('status', $mhs->status) == 'pindah_studi' ? 'selected' : '' }}>Pindah Studi</option>
+                    <option value="wafat" {{ old('status', $mhs->status) == 'wafat' ? 'selected' : '' }}>Wafat</option>
+                    <option value="mangkir" {{ old('status', $mhs->status) == 'mangkir' ? 'selected' : '' }}>Mangkir</option>
                 </select>
             </div>
 
 
-            <!-- Profesi -->
-            <div class="col-md-6">
-                <label class="form-label-custom">Profesi</label>
-                <input type="text" name="profesi" class="form-control form-control-custom"
-                       value="{{ old('profesi', $mhs->profesi) }}" placeholder="Opsional">
-            </div>
+
 
             <!-- Email Pribadi -->
             <div class="col-md-6">

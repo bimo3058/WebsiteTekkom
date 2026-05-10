@@ -105,6 +105,7 @@
     .status-badge.alumni { background: #dbeafe; color: #1e40af; }
     .status-badge.cuti { background: #fef3c7; color: #92400e; }
     .status-badge.drop_out { background: #fef2f2; color: #991b1b; }
+    .status-badge.pindah_studi { background: #f3f4f6; color: #374151; }
 
     .riwayat-table {
         width: 100%;
@@ -263,6 +264,7 @@
                         @case('alumni') ● Lulus @break
                         @case('cuti') ● Cuti @break
                         @case('drop_out') ● Drop Out @break
+                        @case('pindah_studi') ● Pindah Studi @break
                         @default ● {{ ucfirst($mhs->status) }}
                     @endswitch
                 </span>
@@ -321,12 +323,7 @@
         </div>
         @endif
 
-        @if($mhs->profesi)
-        <div>
-            <div class="info-item-label">Profesi</div>
-            <div class="info-item-value">{{ $mhs->profesi }}</div>
-        </div>
-        @endif
+
         @if($mhs->user && $mhs->user->last_login)
         <div>
             <div class="info-item-label">Terakhir Aktif <span class="sso-tag">SSO</span></div>
@@ -355,6 +352,7 @@
                     @case('alumni') Lulus @break
                     @case('cuti') Cuti @break
                     @case('drop_out') Drop Out @break
+                    @case('pindah_studi') Pindah Studi @break
                     @default {{ ucfirst($mhs->status) }}
                 @endswitch
             </span></div>
@@ -363,7 +361,6 @@
 </div>
 
 <!-- Prestasi -->
-@if(!$isMahasiswa)
 <div class="section-card">
     <div class="section-title">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
@@ -389,9 +386,8 @@
         <p style="color: #9ca3af; font-size: 14px; text-align: center; padding: 20px 0;">Belum ada data prestasi.</p>
     @endif
 </div>
-@endif
 
-@if(!$isMahasiswa)
+
 <!-- Riwayat Kegiatan -->
 <div class="section-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -467,7 +463,7 @@
         <p style="color: #9ca3af; font-size: 14px; text-align: center; padding: 20px 0;">Belum ada riwayat kegiatan.</p>
     @endif
 </div>
-@endif
+
 
 
 
