@@ -307,12 +307,7 @@
                     @endswitch
                 </div>
             </div>
-            @if($mhs->profesi)
-            <div class="cv-info-row">
-                <div class="cv-info-label">Profesi</div>
-                <div class="cv-info-value">{{ $mhs->profesi }}</div>
-            </div>
-            @endif
+
         </div>
 
         <!-- Prestasi -->
