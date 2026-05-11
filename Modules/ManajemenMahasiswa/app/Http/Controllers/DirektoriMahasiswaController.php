@@ -419,7 +419,7 @@ class DirektoriMahasiswaController extends Controller
         if ($request->has('kontak') || $request->has('phone_code')) {
             $kontak = $request->kontak;
             $phoneCode = $request->phone_code ?? '+62';
-            
+
             if ($kontak) {
                 // Bersihkan non-digit
                 $kontak = preg_replace('/[^\d]/', '', $kontak);
@@ -436,10 +436,10 @@ class DirektoriMahasiswaController extends Controller
             if ($userModel) {
                 $userModel->updateQuietly(['whatsapp' => $fullWa]);
             }
-            
+
             // Sync ke cv_profiles
             \App\Models\CvProfile::where('user_id', $mhs->user_id)->update(['cv_whatsapp' => $fullWa]);
-            
+
             // Perbarui mk_kemahasiswaan
             $mhs->updateQuietly(['kontak' => $fullWa]);
         }

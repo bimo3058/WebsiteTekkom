@@ -307,18 +307,7 @@
                     @endswitch
                 </div>
             </div>
-            @if($mhs->tahun_lulus)
-            <div class="cv-info-row">
-                <div class="cv-info-label">Tahun Lulus</div>
-                <div class="cv-info-value">{{ $mhs->tahun_lulus }}</div>
-            </div>
-            @endif
-            @if($mhs->profesi)
-            <div class="cv-info-row">
-                <div class="cv-info-label">Profesi</div>
-                <div class="cv-info-value">{{ $mhs->profesi }}</div>
-            </div>
-            @endif
+
         </div>
 
         <!-- Prestasi -->
@@ -340,7 +329,7 @@
                             <td>{{ $i + 1 }}</td>
                             <td style="font-weight: 600;">{{ $p->nama_prestasi }}</td>
                             <td>{{ ucfirst($p->tingkat) }}</td>
-                            <td>{{ $p->tahun }}</td>
+                            <td>{{ $p->tanggal ? $p->tanggal->format('Y') : '-' }}</td>
                         </tr>
                     @endforeach
                 </tbody>

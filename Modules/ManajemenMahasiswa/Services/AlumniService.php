@@ -3,30 +3,67 @@
 namespace Modules\ManajemenMahasiswa\Services;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Modules\ManajemenMahasiswa\Models\Alumni;
 
 class AlumniService
 {
     /**
+     * Retry otomatis jika koneksi Supabase/pgBouncer terputus.
+     */
+    private function withRetry(callable $callback, int $maxAttempts = 3): mixed
+    {
+        $attempt = 0;
+        while (true) {
+            try {
+                return $callback();
+            } catch (\Throwable $e) {
+                $attempt++;
+                $msg = $e->getMessage();
+                $code = (string) $e->getCode();
+
+                $isConnectionError =
+                    in_array($code, ['08006', '08003', '57P01', '7'])
+                    || str_contains($msg, 'server closed the connection')
+                    || str_contains($msg, 'SSL negotiation')
+                    || str_contains($msg, 'could not connect')
+                    || str_contains($msg, 'connection unexpectedly')
+                    || str_contains($msg, 'pooler.supabase.com');
+
+                if ($isConnectionError && $attempt < $maxAttempts) {
+                    usleep(200_000 * $attempt);
+                    try {
+                        DB::reconnect();
+                    } catch (\Throwable) {
+                    }
+                    continue;
+                }
+                throw $e;
+            }
+        }
+    }
+
+    /**
      * Listing alumni dengan filter, search, dan pagination.
      */
     public function listAlumni(array $filters = [], int $perPage = 20): LengthAwarePaginator
     {
-        $query = Alumni::with('user')
-            ->when(isset($filters['angkatan']), fn($q) => $q->byAngkatan((int) $filters['angkatan']))
-            ->when(isset($filters['tahun_lulus']), fn($q) => $q->byTahunLulus((int) $filters['tahun_lulus']))
-            ->when(isset($filters['status_karir']), fn($q) => $q->byStatusKarir($filters['status_karir']))
-            ->when(isset($filters['bidang_industri']), fn($q) => $q->byBidangIndustri($filters['bidang_industri']))
-            ->when(isset($filters['search']), fn($q) => $q->search($filters['search']));
+        return $this->withRetry(function () use ($filters, $perPage) {
+            $query = Alumni::with('user')
+                ->when(isset($filters['angkatan']), fn($q) => $q->byAngkatan((int) $filters['angkatan']))
+                ->when(isset($filters['tahun_lulus']), fn($q) => $q->byTahunLulus((int) $filters['tahun_lulus']))
+                ->when(isset($filters['status_karir']), fn($q) => $q->byStatusKarir($filters['status_karir']))
+                ->when(isset($filters['bidang_industri']), fn($q) => $q->byBidangIndustri($filters['bidang_industri']))
+                ->when(isset($filters['search']), fn($q) => $q->search($filters['search']));
 
-        return $query->orderByDesc('tahun_lulus')->paginate($perPage);
+            return $query->orderByDesc('tahun_lulus')->paginate($perPage);
+        });
     }
 
     public function findById(int $id): Alumni
     {
-        return Alumni::with('user')->findOrFail($id);
+        return $this->withRetry(fn() => Alumni::with('user')->findOrFail($id));
     }
 
     public function create(array $data): Alumni
@@ -63,12 +100,12 @@ class AlumniService
     {
         return Cache::remember('mk.alumni.summary', 600, function () {
             return [
-                'total'        => Alumni::count(),
+                'total' => Alumni::count(),
                 'per_angkatan' => Alumni::selectRaw('angkatan, count(*) as total')
                     ->groupBy('angkatan')
                     ->orderBy('angkatan')
                     ->pluck('total', 'angkatan'),
-                'per_status'   => Alumni::selectRaw("COALESCE(status_karir, 'belum_terdata') as status, count(*) as total")
+                'per_status' => Alumni::selectRaw("COALESCE(status_karir, 'belum_terdata') as status, count(*) as total")
                     ->groupByRaw("COALESCE(status_karir, 'belum_terdata')")
                     ->pluck('total', 'status'),
             ];
@@ -124,7 +161,7 @@ class AlumniService
             ->groupBy('angkatan')
             ->orderBy('angkatan')
             ->pluck('rata_rata', 'angkatan')
-            ->map(fn($val) => round((float)$val, 1))
+            ->map(fn($val) => round((float) $val, 1))
             ->toArray();
     }
 

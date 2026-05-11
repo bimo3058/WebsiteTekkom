@@ -34,16 +34,22 @@ class Kemahasiswaan extends Model
     // Constants
     // -------------------------------------------------------------------------
 
-    const STATUS_AKTIF   = 'aktif';
-    const STATUS_ALUMNI  = 'alumni';
-    const STATUS_CUTI    = 'cuti';
-    const STATUS_DO      = 'drop_out';
+    const STATUS_AKTIF        = 'aktif';
+    const STATUS_ALUMNI       = 'alumni';
+    const STATUS_CUTI         = 'cuti';
+    const STATUS_DO           = 'drop_out';
+    const STATUS_PINDAH_STUDI = 'pindah_studi';
+    const STATUS_WAFAT        = 'wafat';
+    const STATUS_MANGKIR      = 'mangkir';
 
     const STATUS_LIST = [
         self::STATUS_AKTIF,
         self::STATUS_ALUMNI,
         self::STATUS_CUTI,
         self::STATUS_DO,
+        self::STATUS_PINDAH_STUDI,
+        self::STATUS_WAFAT,
+        self::STATUS_MANGKIR,
     ];
 
     // -------------------------------------------------------------------------
@@ -72,6 +78,16 @@ class Kemahasiswaan extends Model
     public function scopeAlumni(Builder $query): Builder
     {
         return $query->where('status', self::STATUS_ALUMNI);
+    }
+
+    public function scopeWafat(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_WAFAT);
+    }
+
+    public function scopeMangkir(Builder $query): Builder
+    {
+        return $query->where('status', self::STATUS_MANGKIR);
     }
 
     public function scopeByAngkatan(Builder $query, int $angkatan): Builder

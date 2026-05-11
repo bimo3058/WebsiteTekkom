@@ -24,7 +24,7 @@ class CommentService
      */
     public function listComments(int $threadId, int $perPage = 20): LengthAwarePaginator
     {
-        return Comment::with(['author', 'allReplies.author'])
+        return Comment::with(['author.roles', 'allReplies.author.roles'])
             ->where('thread_id', $threadId)
             ->whereNull('parent_id')
             ->orderByDesc('is_best_answer')
@@ -64,6 +64,21 @@ class CommentService
 
             return $comment->load('author');
         });
+    }
+
+    public function updateComment(int $commentId, int $userId, string $konten): Comment
+    {
+        $comment = Comment::findOrFail($commentId);
+
+        if ($comment->user_id !== $userId) {
+            throw new \RuntimeException('Tidak memiliki akses untuk mengedit komentar ini.');
+        }
+
+        $comment->update([
+            'konten' => $konten,
+        ]);
+
+        return $comment;
     }
 
     public function deleteComment(int $commentId, int $userId, bool $isAdmin = false): void
@@ -123,11 +138,6 @@ class CommentService
                         XpLog::ACTION_RECEIVE_UPVOTE,
                         $comment
                     );
-                }
-
-                // Penalti -1 XP untuk pemberi downvote
-                if ($value === -1) {
-                    $this->gamificationService->penalizeDownvote($userId, $comment);
                 }
             }
 

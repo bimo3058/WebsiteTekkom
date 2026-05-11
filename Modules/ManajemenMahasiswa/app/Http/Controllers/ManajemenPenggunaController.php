@@ -10,13 +10,14 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Modules\ManajemenMahasiswa\Models\PengurusHimaskom;
+use Modules\ManajemenMahasiswa\Models\Alumni;
+use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 
 class ManajemenPenggunaController extends Controller
 {
     // Semua role posisi himpunan (tidak termasuk pengurus_himpunan yang bersifat umbrella)
     private const HIMPUNAN_POSITION_ROLES = [
         'ketua_himpunan',
-        'wakil_ketua_himpunan',
         'ketua_bidang',
         'ketua_unit',
         'staff_himpunan',
@@ -24,11 +25,10 @@ class ManajemenPenggunaController extends Controller
 
     // Role yang dapat diassign oleh masing-masing level caller
     private const ASSIGNABLE_BY = [
-        'admin_kemahasiswaan' => ['ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'alumni'],
-        'admin'               => ['ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'alumni'],
-        'superadmin'          => ['ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'alumni'],
-        'ketua_himpunan'      => ['wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'],
-        'wakil_ketua_himpunan'=> ['ketua_bidang', 'ketua_unit', 'staff_himpunan'],
+        'admin_kemahasiswaan' => ['ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'alumni'],
+        'admin'               => ['ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'alumni'],
+        'superadmin'          => ['ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'alumni'],
+        'ketua_himpunan'      => ['ketua_bidang', 'ketua_unit', 'staff_himpunan'],
         'ketua_bidang'        => ['staff_himpunan'],
         'ketua_unit'          => ['staff_himpunan'],
     ];
@@ -170,6 +170,26 @@ class ManajemenPenggunaController extends Controller
 
             $newRoleIds = $this->resolveMultipleRoleIds($selectedRoles);
             $user->roles()->sync($newRoleIds);
+            
+            // Auto-create Alumni record jika diubah menjadi alumni
+            if (in_array('alumni', $selectedRoles) && !in_array('alumni', $oldRoleNames)) {
+                if (!Alumni::where('user_id', $user->id)->exists()) {
+                    $student = $user->student;
+                    Alumni::create([
+                        'user_id' => $user->id,
+                        'nim' => $student ? $student->student_number : '-',
+                        'angkatan' => $student ? $student->cohort_year : date('Y'),
+                        'tahun_lulus' => date('Y'),
+                        'program_studi' => 'S1 Teknik Komputer',
+                    ]);
+                }
+                
+                // Update juga status di mk_kemahasiswaan agar tidak dihapus oleh auto-sync Direktori Alumni
+                Kemahasiswaan::where('user_id', $user->id)->update([
+                    'status' => Kemahasiswaan::STATUS_ALUMNI,
+                    'tahun_lulus' => date('Y')
+                ]);
+            }
 
             $user->load('roles');
             $user->syncPermissionsFromRoles();
@@ -242,6 +262,23 @@ class ManajemenPenggunaController extends Controller
                 $newRoleIds = array_unique([...$keptRoles, $alumniRole->id]);
 
                 $user->roles()->sync($newRoleIds);
+                
+                // Auto-create Alumni record
+                if (!Alumni::where('user_id', $user->id)->exists()) {
+                    Alumni::create([
+                        'user_id' => $user->id,
+                        'nim' => $student->student_number,
+                        'angkatan' => $student->cohort_year,
+                        'tahun_lulus' => date('Y'),
+                        'program_studi' => 'S1 Teknik Komputer',
+                    ]);
+                }
+                
+                // Update status kemahasiswaan
+                Kemahasiswaan::where('user_id', $user->id)->update([
+                    'status' => Kemahasiswaan::STATUS_ALUMNI,
+                    'tahun_lulus' => date('Y')
+                ]);
                 $user->load('roles');
                 $user->syncPermissionsFromRoles();
                 $user->clearUserCache();
@@ -346,7 +383,6 @@ class ManajemenPenggunaController extends Controller
     {
         return match ($roleName) {
             'ketua_himpunan'       => 'Ketua Himpunan',
-            'wakil_ketua_himpunan' => 'Wakil Ketua Himpunan',
             'ketua_bidang'         => 'Ketua Bidang',
             'ketua_unit'           => 'Ketua Unit',
             'staff_himpunan'       => 'Staff Himpunan',

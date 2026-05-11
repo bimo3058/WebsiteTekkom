@@ -124,9 +124,11 @@
         display: inline-block;
     }
     .status-badge.aktif { background: #dcfce7; color: #166534; }
-    .status-badge.alumni { background: #dbeafe; color: #1e40af; }
     .status-badge.cuti { background: #fef3c7; color: #92400e; }
     .status-badge.drop_out { background: #fef2f2; color: #991b1b; }
+    .status-badge.pindah_studi { background: #f3f4f6; color: #374151; }
+    .status-badge.wafat { background: #ede9fe; color: #5b21b6; }
+    .status-badge.mangkir { background: #fff7ed; color: #9a3412; }
 
     .btn-action {
         padding: 6px 14px;
@@ -241,12 +243,12 @@
     </div>
 </div>
 
-<!-- Stat Cards -->
-<div class="row g-3 mb-4">
-    <div class="col-md-3">
-        <div class="stat-card">
+    <!-- Stat Cards -->
+<div class="row g-3 mb-4 row-cols-2 row-cols-md-5">
+    <div class="col">
+        <div class="stat-card p-3">
             <div class="stat-icon" style="background: #eef2ff;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                     <circle cx="9" cy="7" r="4"></circle>
                     <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -254,51 +256,98 @@
                 </svg>
             </div>
             <div>
-                <div class="stat-value">{{ $mahasiswa->total() }}</div>
-                <div class="stat-label">Total Mahasiswa</div>
+                <div class="stat-value" style="font-size: 18px;">{{ $mahasiswa->total() }}</div>
+                <div class="stat-label" style="font-size: 11px;">Total Mahasiswa</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="stat-card">
+    <div class="col">
+        <div class="stat-card p-3">
             <div class="stat-icon" style="background: #dcfce7;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
                 </svg>
             </div>
             <div>
-                <div class="stat-value">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','aktif')->count() }}</div>
-                <div class="stat-label">Aktif</div>
+                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','aktif')->count() }}</div>
+                <div class="stat-label" style="font-size: 11px;">Aktif</div>
             </div>
         </div>
     </div>
-    <div class="col-md-3">
-        <div class="stat-card">
-            <div class="stat-icon" style="background: #dbeafe;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
-                    <path d="M6 12v5c3 3 9 3 12 0v-5" />
-                </svg>
-            </div>
-            <div>
-                <div class="stat-value">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','alumni')->count() }}</div>
-                <div class="stat-label">Lulus</div>
-            </div>
-        </div>
-    </div>
-    <div class="col-md-3">
-        <div class="stat-card">
+    <div class="col">
+        <div class="stat-card p-3">
             <div class="stat-icon" style="background: #fef3c7;">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="8" x2="12" y2="12"></line>
                     <line x1="12" y1="16" x2="12.01" y2="16"></line>
                 </svg>
             </div>
             <div>
-                <div class="stat-value">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::whereIn('status',['cuti','drop_out'])->count() }}</div>
-                <div class="stat-label">Cuti / DO</div>
+                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','cuti')->count() }}</div>
+                <div class="stat-label" style="font-size: 11px;">Cuti</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card p-3">
+            <div class="stat-icon" style="background: #fef2f2;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="15" y1="9" x2="9" y2="15"></line>
+                    <line x1="9" y1="9" x2="15" y2="15"></line>
+                </svg>
+            </div>
+            <div>
+                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','drop_out')->count() }}</div>
+                <div class="stat-label" style="font-size: 11px;">DO</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card p-3">
+            <div class="stat-icon" style="background: #f3f4f6;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="16 16 12 20 8 16"></polyline>
+                    <line x1="12" y1="12" x2="12" y2="20"></line>
+                    <polyline points="8 8 12 4 16 8"></polyline>
+                    <line x1="12" y1="4" x2="12" y2="12"></line>
+                </svg>
+            </div>
+            <div>
+                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','pindah_studi')->count() }}</div>
+                <div class="stat-label" style="font-size: 11px;">Pindah Studi</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card p-3">
+            <div class="stat-icon" style="background: #ede9fe;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                    <circle cx="9" cy="7" r="4"></circle>
+                    <line x1="17" y1="11" x2="23" y2="11"></line>
+                </svg>
+            </div>
+            <div>
+                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','wafat')->count() }}</div>
+                <div class="stat-label" style="font-size: 11px;">Wafat</div>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="stat-card p-3">
+            <div class="stat-icon" style="background: #fff7ed;">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ea580c" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <line x1="12" y1="8" x2="12" y2="12"></line>
+                    <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                </svg>
+            </div>
+            <div>
+                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','mangkir')->count() }}</div>
+                <div class="stat-label" style="font-size: 11px;">Mangkir</div>
             </div>
         </div>
     </div>
@@ -328,9 +377,11 @@
                     style="min-width: 140px;" onchange="document.getElementById('filterForm').submit()">
                 <option value="semua">Semua Status</option>
                 <option value="aktif" {{ request('status') == 'aktif' ? 'selected' : '' }}>Aktif</option>
-                <option value="alumni" {{ request('status') == 'alumni' ? 'selected' : '' }}>Lulus</option>
                 <option value="cuti" {{ request('status') == 'cuti' ? 'selected' : '' }}>Cuti</option>
                 <option value="drop_out" {{ request('status') == 'drop_out' ? 'selected' : '' }}>DO</option>
+                <option value="pindah_studi" {{ request('status') == 'pindah_studi' ? 'selected' : '' }}>Pindah Studi</option>
+                <option value="wafat" {{ request('status') == 'wafat' ? 'selected' : '' }}>Wafat</option>
+                <option value="mangkir" {{ request('status') == 'mangkir' ? 'selected' : '' }}>Mangkir</option>
             </select>
         </div>
     </div>
@@ -383,9 +434,11 @@
                             <span class="status-badge {{ $mhs->status }}">
                                 @switch($mhs->status)
                                     @case('aktif') Aktif @break
-                                    @case('alumni') Lulus @break
                                     @case('cuti') Cuti @break
                                     @case('drop_out') DO @break
+                                    @case('pindah_studi') Pindah Studi @break
+                                    @case('wafat') Wafat @break
+                                    @case('mangkir') Mangkir @break
                                     @default {{ ucfirst($mhs->status) }}
                                 @endswitch
                             </span>

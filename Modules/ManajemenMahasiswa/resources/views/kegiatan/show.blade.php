@@ -79,15 +79,6 @@
         background: #eef2ff;
         color: #4f46e5;
     }
-    .badge-status {
-        font-size: 11px;
-        font-weight: 700;
-        padding: 4px 12px;
-        border-radius: 20px;
-    }
-    .badge-status.akan_datang { background: #fef3c7; color: #d97706; }
-    .badge-status.berlangsung { background: #dbeafe; color: #2563eb; }
-    .badge-status.selesai { background: #dcfce7; color: #16a34a; }
     .badge-kategori {
         font-size: 11px;
         font-weight: 700;
@@ -553,9 +544,6 @@
         @elseif($kegiatan->kategoriKegiatan)
             <span class="badge-kategori">{{ $kegiatan->kategoriKegiatan->nama_kategori }}</span>
         @endif
-        @if($kegiatan->status)
-            <span class="badge-status {{ $kegiatan->status }}">{{ $kegiatan->status_label }}</span>
-        @endif
     </div>
 
     <!-- Title -->
@@ -566,7 +554,7 @@
         <div class="meta-item">
             <div class="meta-item-label">Tanggal Pelaksanaan</div>
             <div class="meta-item-value">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg> {{ $kegiatan->tanggal_mulai->translatedFormat('d F Y') }}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg> {{ $kegiatan->tanggal_mulai ? $kegiatan->tanggal_mulai->translatedFormat('d F Y') : 'Belum ditentukan' }}
                 @if($kegiatan->jam_mulai)
                     pukul {{ $kegiatan->jam_mulai_formatted }}
                 @endif
@@ -618,12 +606,16 @@
 
         @if($kegiatan->target_peserta)
         <div class="meta-item">
-            <div class="meta-item-label">Target Peserta</div>
+            <div class="meta-item-label">Peserta</div>
             <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> {{ $kegiatan->target_peserta }} orang</div>
         </div>
         @endif
 
-        @if($kegiatan->anggaran)
+        @php
+            $userRoles = auth()->user()->roles->pluck('name');
+            $canViewRestricted = $userRoles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dosen_koordinator', 'dosen', 'pengurus_himpunan'])->isNotEmpty();
+        @endphp
+        @if($kegiatan->anggaran && $canViewRestricted)
         <div class="meta-item">
             <div class="meta-item-label">Anggaran</div>
             <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Rp {{ number_format($kegiatan->anggaran, 0, ',', '.') }}</div>
@@ -644,6 +636,9 @@
                 <span style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: #eef2ff; color: #4338ca; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #c7d2fe;">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     {{ $p->user->name ?? '-' }}
+                    @if($p->pivot->peran)
+                        <span style="font-weight: 700; color: #3730a3; margin-left: 2px;">- {{ $p->pivot->peran }}</span>
+                    @endif
                     <span style="font-size: 10px; color: #818cf8; font-weight: 400;">({{ $p->student_number }})</span>
                 </span>
             @endforeach
@@ -740,7 +735,7 @@
     @endif
 
     {{-- ─── Document Download Section ────────────────────────────────── --}}
-    @if($documents->count() > 0)
+    @if($documents->count() > 0 && isset($canViewRestricted) && $canViewRestricted)
     <div class="detail-card">
         <div class="gallery-header">
             <div class="detail-card-title" style="margin-bottom: 0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen & Laporan</div>
