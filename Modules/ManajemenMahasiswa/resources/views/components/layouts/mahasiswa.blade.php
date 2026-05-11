@@ -4,11 +4,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Portal Mahasiswa</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
         rel="stylesheet">
     
     {{-- Alpine.js --}}
@@ -30,6 +33,8 @@
             padding: 20px;
             transition: width 0.3s ease;
             z-index: 1000;
+            display: flex;
+            flex-direction: column;
         }
 
         /* Collapsed Sidebar */
@@ -140,16 +145,14 @@
         }
 
         .bottom-menu {
-            position: absolute;
-            bottom: 20px;
-            width: calc(100% - 40px);
-            left: 20px;
+            margin-top: auto;
+            padding-top: 10px;
+            width: 100%;
             transition: all 0.3s ease;
         }
 
         .sidebar-collapsed .bottom-menu {
-            width: calc(100% - 20px);
-            left: 10px;
+            width: 100%;
         }
 
         .content {
@@ -184,7 +187,7 @@
         }
 
         .sidebar-dropdown.open .sidebar-dropdown-menu {
-            max-height: 200px;
+            max-height: 300px;
         }
 
         .sidebar-dropdown.open .dropdown-arrow {
@@ -229,6 +232,26 @@
         .sidebar-toggle:hover {
             background: #f8fafc;
             color: #4f46e5;
+        }
+
+        /* Global Scrollbar Customization */
+        ::-webkit-scrollbar {
+            width: 10px;
+            height: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+            border: 2px solid #f1f5f9;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
         }
     </style>
 

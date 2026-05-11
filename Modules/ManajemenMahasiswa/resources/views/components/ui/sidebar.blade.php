@@ -14,7 +14,12 @@
     @php
         $sidebarRoles = auth()->user()->roles->pluck('name')->toArray();
         $showDashboardAnalitik = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm'])) > 0;
-        $showManajemenPengguna = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit'])) > 0;
+        $showManajemenPengguna = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit'])) > 0;
+
+        // Tentukan URL dashboard utama sesuai role
+        $mainDashboardUrl = in_array('superadmin', $sidebarRoles)
+            ? route('superadmin.dashboard')
+            : route('dashboard');
 
         if (array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan'])) {
             $portalLabel = 'Portal Admin';
@@ -22,6 +27,8 @@
             $portalLabel = 'Portal Dosen';
         } elseif (in_array('pengurus_himpunan', $sidebarRoles)) {
             $portalLabel = 'Portal Mahasiswa';
+        } elseif (in_array('alumni', $sidebarRoles)) {
+            $portalLabel = 'Portal Alumni';
         } else {
             $portalLabel = 'Portal Mahasiswa';
         }
@@ -43,9 +50,78 @@
         </div>
     </div>
 
-    <div class="menu-title mb-2" x-show="sidebarOpen">Main Menu</div>
+    <style>
+        .sidebar {
+            display: flex !important;
+            flex-direction: column !important;
+            height: 100vh !important;
+            padding-bottom: 24px !important; /* Spacing at the very bottom */
+        }
 
-    <nav class="sidebar-nav d-flex flex-column gap-1">
+        .sidebar-menu-container {
+            flex: 1;
+            overflow-y: auto;
+            overflow-x: hidden;
+            padding-right: 4px;
+            margin-right: -10px;
+            padding-right: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Custom Scrollbar */
+        .sidebar-menu-container::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .sidebar-menu-container::-webkit-scrollbar-track {
+            background: transparent;
+        }
+
+        .sidebar-menu-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 10px;
+            border: 1px solid transparent; /* Gives it a bit of breathing room */
+        }
+
+        .sidebar-menu-container::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
+        /* Adjust bottom menu for flex layout */
+        .bottom-menu {
+            position: static !important;
+            margin-top: auto !important;
+            width: 100% !important;
+            left: 0 !important;
+            bottom: 0 !important;
+        }
+        
+        .sidebar-collapsed .bottom-menu {
+            padding-right: 0 !important;
+        }
+    </style>
+
+    <div class="sidebar-menu-container">
+        <div class="menu-title mb-2" x-show="sidebarOpen">Main Menu</div>
+
+        <nav class="sidebar-nav d-flex flex-column gap-1">
+        {{-- Dashboard Utama — selalu tampil, link sesuai role --}}
+        <a href="{{ $mainDashboardUrl }}" class="nav-link-item" :class="{ 'justify-content-center': !sidebarOpen }"
+            style="border-bottom: 1px solid #e5e7eb; margin-bottom: 4px; padding-bottom: 10px;">
+            <span class="nav-icon d-inline-flex">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+            </span>
+            <span class="nav-label" x-show="sidebarOpen" style="flex-grow:1;">Dashboard Utama</span>
+            <svg x-show="sidebarOpen" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.4; flex-shrink:0;">
+                <path d="m9 18 6-6-6-6" />
+            </svg>
+        </a>
+
         @if($showDashboardAnalitik)
             <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.dashboard') }}"
                 routeName="manajemenmahasiswa.dashboard" label="Dashboard Analitik">
@@ -56,6 +132,24 @@
                         <path d="M18 17V9"></path>
                         <path d="M13 17V5"></path>
                         <path d="M8 17v-3"></path>
+                    </svg>
+                </x-slot:iconSlot>
+            </x-manajemenmahasiswa::ui.sidebar-item>
+        @endif
+
+
+        @if($showManajemenPengguna)
+            <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengguna.index') }}"
+                routeName="manajemenmahasiswa.pengguna" label="Manajemen Pengguna">
+                <x-slot:iconSlot>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="9" cy="7" r="4"></circle>
+                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+                        <line x1="19" y1="8" x2="23" y2="12"></line>
+                        <line x1="23" y1="8" x2="19" y2="12"></line>
                     </svg>
                 </x-slot:iconSlot>
             </x-manajemenmahasiswa::ui.sidebar-item>
@@ -97,7 +191,7 @@
                 @php
                     $userRoles = auth()->user()->roles->pluck('name')->toArray();
                     // Pengurus himpunan dan mahasiswa bisa lihat list tapi tidak bisa edit (dikontrol di routes)
-                    $canViewAll = (bool) array_intersect($userRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa']);
+                    $canViewAll = (bool) array_intersect($userRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dosen', 'dosen_koordinator', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa', 'alumni']);
                     $mahasiswaRoute = $canViewAll
                         ? route('manajemenmahasiswa.direktori.mahasiswa.index')
                         : route('manajemenmahasiswa.direktori.mahasiswa.profil');
@@ -130,18 +224,107 @@
             </div>
         </div>
 
-        <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.kegiatan.index') }}"
-            routeName="manajemenmahasiswa.kegiatan" label="Kegiatan">
-            <x-slot:iconSlot>
+        {{-- ── Manajemen Kegiatan (Dropdown 3 Subbab) ── --}}
+        @php
+            $kegiatanRoutes = [
+                'manajemenmahasiswa.proker.*',
+                'manajemenmahasiswa.persuratan.*',
+                'manajemenmahasiswa.pelaksanaan.*',
+                'manajemenmahasiswa.kegiatan.*',
+            ];
+            $kegiatanActive = collect($kegiatanRoutes)->contains(fn($r) => request()->routeIs($r));
+        @endphp
+        <div class="sidebar-dropdown {{ $kegiatanActive ? 'open' : '' }}">
+            <a href="javascript:void(0)"
+                class="nav-link-item sidebar-dropdown-toggle {{ $kegiatanActive ? 'active' : '' }}"
+                onclick="event.stopPropagation(); this.closest('.sidebar-dropdown').classList.toggle('open')"
+                :class="{ 'justify-content-center': !sidebarOpen }">
+                <span class="nav-icon d-inline-flex">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round" stroke-linejoin="round">
+                        <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
+                        <line x1="16" x2="16" y1="2" y2="6"></line>
+                        <line x1="8" x2="8" y1="2" y2="6"></line>
+                        <line x1="3" x2="21" y1="10" y2="10"></line>
+                    </svg>
+                </span>
+                <span class="nav-label" style="flex-grow: 1;" x-show="sidebarOpen">Manajemen Kegiatan</span>
+                <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;"
+                    x-show="sidebarOpen">
+                    <path d="m6 9 6 6 6-6" />
+                </svg>
+            </a>
+            <div class="sidebar-dropdown-menu" x-show="sidebarOpen">
+                {{-- Subbab 1: Rencana Proker --}}
+                <a href="{{ route('manajemenmahasiswa.proker.index') }}"
+                    class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.proker.*') ? 'active' : '' }}">
+                    <span class="nav-icon d-inline-flex">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M9 11l3 3L22 4"/>
+                            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Rencana Proker</span>
+                </a>
+                {{-- Subbab 2: Persuratan --}}
+                <a href="{{ route('manajemenmahasiswa.persuratan.index') }}"
+                    class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.persuratan.*') ? 'active' : '' }}">
+                    <span class="nav-icon d-inline-flex">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M12 20h9"/>
+                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Persuratan</span>
+                </a>
+                {{-- Subbab 3: Pelaksanaan Kegiatan --}}
+                <a href="{{ route('manajemenmahasiswa.pelaksanaan.index') }}"
+                    class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.pelaksanaan.*') ? 'active' : '' }}">
+                    <span class="nav-icon d-inline-flex">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" x2="8" y1="13" y2="13"/>
+                            <line x1="16" x2="8" y1="17" y2="17"/>
+                            <line x1="10" x2="8" y1="9" y2="9"/>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Pelaksanaan Kegiatan</span>
+                </a>
+                {{-- Subbab 3: Laporan & Arsip (manajemen kegiatan yang sudah ada) --}}
+                <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}"
+                    class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.kegiatan.*') ? 'active' : '' }}">
+                    <span class="nav-icon d-inline-flex">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>
+                            <line x1="12" x2="12" y1="11" y2="17"/>
+                            <line x1="9" x2="15" y1="14" y2="14"/>
+                        </svg>
+                    </span>
+                    <span class="nav-label">Laporan & Arsip</span>
+                </a>
+            </div>
+        </div>
+
+        @if(!array_intersect($sidebarRoles, ['dosen', 'dosen_koordinator']))
+        <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}"
+            class="nav-link-item {{ request()->routeIs('manajemenmahasiswa.verifikasi.*') ? 'active' : '' }}"
+            :class="{ 'justify-content-center': !sidebarOpen }">
+            <span class="nav-icon d-inline-flex">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
-                    <rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect>
-                    <line x1="16" x2="16" y1="2" y2="6"></line>
-                    <line x1="8" x2="8" y1="2" y2="6"></line>
-                    <line x1="3" x2="21" y1="10" y2="10"></line>
+                    <path d="M9 11l3 3L22 4"></path>
+                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
                 </svg>
-            </x-slot:iconSlot>
-        </x-manajemenmahasiswa::ui.sidebar-item>
+            </span>
+            <span class="nav-label" x-show="sidebarOpen" style="flex-grow: 1;">Verifikasi Data</span>
+        </a>
+        @endif
 
         <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.forum.index') }}"
             routeName="manajemenmahasiswa.forum" label="Forum Diskusi">
@@ -153,24 +336,8 @@
             </x-slot:iconSlot>
         </x-manajemenmahasiswa::ui.sidebar-item>
 
-        @if($showManajemenPengguna)
-            <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengguna.index') }}"
-                routeName="manajemenmahasiswa.pengguna" label="Manajemen Pengguna">
-                <x-slot:iconSlot>
-                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-                        <circle cx="9" cy="7" r="4"></circle>
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-                        <line x1="19" y1="8" x2="23" y2="12"></line>
-                        <line x1="23" y1="8" x2="19" y2="12"></line>
-                    </svg>
-                </x-slot:iconSlot>
-            </x-manajemenmahasiswa::ui.sidebar-item>
-        @endif
-
-        @if(!array_intersect($sidebarRoles, ['gpm', 'dosen_koordinator', 'dosen']))
+        {{-- LAYANAN PENGADUAN: Boleh dilihat oleh Mahasiswa, Pengurus Himpunan, Admin, dan GPM --}}
+        @if(array_intersect($sidebarRoles, ['mahasiswa', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
             <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengaduan.index') }}"
                 routeName="manajemenmahasiswa.pengaduan" label="Layanan Pengaduan">
                 <x-slot:iconSlot>
@@ -184,6 +351,7 @@
             </x-manajemenmahasiswa::ui.sidebar-item>
         @endif
     </nav>
+    </div>
 
     <div class="bottom-menu pe-4">
         <!-- User Profile Card -->
@@ -196,27 +364,31 @@
                 $currentInitials .= strtoupper(substr($currentName, $spIdx + 1, 1));
             }
         @endphp
-        <div class="d-flex align-items-center gap-3 px-3 py-2 mb-2 rounded"
-            style="background: #f8fafc; border: 1px solid #e5e7eb;"
-            :class="{ 'justify-content-center px-2': !sidebarOpen }">
-            <div class="d-flex align-items-center justify-content-center rounded-circle border border-2 border-white shadow-sm flex-shrink-0"
-                style="width: 36px; height: 36px; background: #e0e7ff; color: #4f46e5; font-weight: 600; font-size: 13px; overflow: hidden;">
-                @if(isset($currentUser->avatar_url) && $currentUser->avatar_url)
-                    <img src="{{ $currentUser->avatar_url }}" alt="Avatar"
-                        style="width: 100%; height: 100%; object-fit: cover;">
-                @else
-                    {{ $currentInitials }}
-                @endif
+        <a href="{{ route('profile.edit') }}" class="text-decoration-none w-100"
+            style="display: block; padding: 0; margin: 0;">
+            <div class="d-flex align-items-center gap-3 px-3 py-2 mb-2 rounded"
+                style="background: #f8fafc; border: 1px solid #e5e7eb; cursor: pointer;"
+                :class="{ 'justify-content-center px-2': !sidebarOpen }">
+                <div class="d-flex align-items-center justify-content-center rounded-circle border border-2 border-white shadow-sm flex-shrink-0"
+                    style="width: 36px; height: 36px; background: #e0e7ff; color: #4f46e5; font-weight: 600; font-size: 13px; overflow: hidden;">
+                    @if(isset($currentUser->avatar_url) && $currentUser->avatar_url)
+                        <img src="{{ $currentUser->avatar_url }}" alt="Avatar"
+                            style="width: 100%; height: 100%; object-fit: cover;">
+                    @else
+                        {{ $currentInitials }}
+                    @endif
+                </div>
+                <div class="user-info" style="min-width: 0; flex: 1;" x-show="sidebarOpen">
+                    <p class="mb-0 text-dark fw-bold text-truncate" style="font-size: 13px; letter-spacing: -0.01em;">
+                        {{ $currentName }}
+                    </p>
+                    <p class="mb-0 text-muted text-uppercase text-truncate"
+                        style="font-size: 10px; font-weight: 700; letter-spacing: 0.05em; line-height: 1.2;">
+                        {{ implode(' / ', array_map('ucfirst', $currentUser->roles->pluck('name')->toArray())) }}
+                    </p>
+                </div>
             </div>
-            <div class="user-info" style="min-width: 0; flex: 1;" x-show="sidebarOpen">
-                <p class="mb-0 text-dark fw-bold text-truncate" style="font-size: 13px; letter-spacing: -0.01em;">
-                    {{ $currentName }}</p>
-                <p class="mb-0 text-muted text-uppercase text-truncate"
-                    style="font-size: 10px; font-weight: 700; letter-spacing: 0.05em; line-height: 1.2;">
-                    {{ implode(' / ', array_map('ucfirst', $currentUser->roles->pluck('name')->toArray())) }}
-                </p>
-            </div>
-        </div>
+        </a>
 
         <form action="{{ route('logout') }}" method="POST">
             @csrf

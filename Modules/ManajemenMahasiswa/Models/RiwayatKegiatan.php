@@ -19,10 +19,15 @@ class RiwayatKegiatan extends Model
         'nama_kegiatan_manual',
         'peran_manual',
         'tanggal_kegiatan',
+        'verification_status',
+        'verified_by',
+        'verified_at',
+        'verification_note',
     ];
 
     protected $casts = [
         'tanggal_kegiatan' => 'date',
+        'verified_at'      => 'datetime',
     ];
 
     // -------------------------------------------------------------------------
@@ -41,6 +46,17 @@ class RiwayatKegiatan extends Model
         self::PERAN_PESERTA,
     ];
 
+    // Verification statuses
+    const VERIF_PENDING  = 'pending';
+    const VERIF_APPROVED = 'approved';
+    const VERIF_REJECTED = 'rejected';
+
+    const VERIF_LIST = [
+        self::VERIF_PENDING,
+        self::VERIF_APPROVED,
+        self::VERIF_REJECTED,
+    ];
+
     // -------------------------------------------------------------------------
     // Relations
     // -------------------------------------------------------------------------
@@ -53,6 +69,17 @@ class RiwayatKegiatan extends Model
     public function kegiatan(): BelongsTo
     {
         return $this->belongsTo(Kegiatan::class, 'kegiatan_id');
+    }
+
+    public function verifiedBy(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\User::class, 'verified_by');
+    }
+
+    public function buktiFiles()
+    {
+        return $this->hasMany(VerifikasiBukti::class, 'bukti_id')
+            ->where('bukti_type', VerifikasiBukti::TYPE_RIWAYAT);
     }
 
     // -------------------------------------------------------------------------
@@ -112,5 +139,25 @@ class RiwayatKegiatan extends Model
     public function scopeByStudent($query, int $studentId)
     {
         return $query->where('student_id', $studentId);
+    }
+
+    public function scopePending($query)
+    {
+        return $query->where('verification_status', self::VERIF_PENDING);
+    }
+
+    public function scopeApproved($query)
+    {
+        return $query->where('verification_status', self::VERIF_APPROVED);
+    }
+
+    public function scopeRejected($query)
+    {
+        return $query->where('verification_status', self::VERIF_REJECTED);
+    }
+
+    public function scopeManualOnly($query)
+    {
+        return $query->whereNull('kegiatan_id');
     }
 }

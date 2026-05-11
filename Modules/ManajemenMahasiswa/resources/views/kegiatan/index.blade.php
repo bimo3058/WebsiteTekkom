@@ -133,15 +133,6 @@
         background: #eef2ff;
         color: #4f46e5;
     }
-    .badge-status {
-        font-size: 11px;
-        font-weight: 700;
-        padding: 3px 10px;
-        border-radius: 20px;
-    }
-    .badge-status.akan_datang { background: #fef3c7; color: #d97706; }
-    .badge-status.berlangsung { background: #dbeafe; color: #2563eb; }
-    .badge-status.selesai { background: #dcfce7; color: #16a34a; }
 
     .kegiatan-card-title {
         font-weight: 700;
@@ -306,9 +297,6 @@
                                     <span class="badge-bidang" style="background: #fef3c7; color: #92400e;">{{ $kat->nama_kategori }}</span>
                                 @endforeach
                             @endif
-                            @if($item->status)
-                                <span class="badge-status {{ $item->status }}">{{ $item->status_label }}</span>
-                            @endif
                         </div>
 
                         <!-- Title -->
@@ -316,12 +304,12 @@
 
                         <!-- Description -->
                         <div class="kegiatan-card-desc">
-                            {{ Str::limit(strip_tags($item->deskripsi), 100) }}
+                            {{ Str::limit(html_entity_decode(strip_tags($item->deskripsi)), 100) }}
                         </div>
 
                         <!-- Meta -->
                         <div class="kegiatan-card-meta">
-                            <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg> {{ $item->tanggal_mulai->translatedFormat('d M Y') }}</span>
+                            <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg> {{ $item->tanggal_mulai ? $item->tanggal_mulai->translatedFormat('d M Y') : 'Belum ditentukan' }}</span>
                             @if($item->lokasi)
                                 <span><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg> {{ Str::limit($item->lokasi, 20) }}</span>
                             @endif

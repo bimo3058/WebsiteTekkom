@@ -28,7 +28,7 @@ class CheckAlumniStatus extends Command
 
         $himpunanRoles = Role::whereIn('name', [
             'mahasiswa', 'pengurus_himpunan',
-            'ketua_himpunan', 'wakil_ketua_himpunan',
+            'ketua_himpunan',
             'ketua_bidang', 'ketua_unit', 'staff_himpunan',
         ])->pluck('id')->toArray();
 
