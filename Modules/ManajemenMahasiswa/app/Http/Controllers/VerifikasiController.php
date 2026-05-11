@@ -124,10 +124,12 @@ class VerifikasiController extends Controller
         }
 
         if ($search) {
-            $riwayatQuery->whereHas('student.user', function ($q) use ($search) {
-                $q->where('name', 'like', "%{$search}%");
-            })->orWhereHas('student', function ($q) use ($search) {
-                $q->where('student_number', 'like', "%{$search}%");
+            $riwayatQuery->where(function ($query) use ($search) {
+                $query->whereHas('student.user', function ($q) use ($search) {
+                    $q->where('name', 'like', "%{$search}%");
+                })->orWhereHas('student', function ($q) use ($search) {
+                    $q->where('student_number', 'like', "%{$search}%");
+                });
             });
         }
 
@@ -148,8 +150,10 @@ class VerifikasiController extends Controller
 
         if ($search) {
             $prestasiQuery->whereHas('kemahasiswaan', function ($q) use ($search) {
-                $q->where('nama', 'like', "%{$search}%")
-                  ->orWhere('nim', 'like', "%{$search}%");
+                $q->where(function ($query) use ($search) {
+                    $query->where('nama', 'like', "%{$search}%")
+                          ->orWhere('nim', 'like', "%{$search}%");
+                });
             });
         }
 
@@ -309,6 +313,7 @@ class VerifikasiController extends Controller
             'nama_prestasi'       => $request->nama_prestasi,
             'tingkat'             => $request->tingkat,
             'tanggal'             => $request->tanggal,
+            'tahun'               => date('Y', strtotime($request->tanggal)),
             'verification_status' => 'pending',
         ]);
 

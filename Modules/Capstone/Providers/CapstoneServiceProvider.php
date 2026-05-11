@@ -3,27 +3,30 @@
 namespace Modules\Capstone\Providers;
 
 use Illuminate\Support\ServiceProvider;
-use Modules\Capstone\Services\BidService;
-use Modules\Capstone\Services\GroupService;
+use Modules\Capstone\Services\BiddingService;
+use Modules\Capstone\Services\ExpoEligibilityService;
+use Modules\Capstone\Services\ExpoService;
+use Modules\Capstone\Services\FinalizationService;
+use Modules\Capstone\Services\GroupStateMachine;
 use Modules\Capstone\Services\NotificationService;
-use Modules\Capstone\Services\PeriodService;
-use Modules\Capstone\Services\TitleService;
+use Modules\Capstone\Services\SchedulingService;
 
 class CapstoneServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        $this->app->singleton(BidService::class);
-        $this->app->singleton(GroupService::class);
+        $this->mergeConfigFrom(module_path('Capstone', 'config/config.php'), 'capstone');
+        $this->app->singleton(BiddingService::class);
+        $this->app->singleton(ExpoEligibilityService::class);
+        $this->app->singleton(ExpoService::class);
+        $this->app->singleton(FinalizationService::class);
+        $this->app->singleton(GroupStateMachine::class);
         $this->app->singleton(NotificationService::class);
-        $this->app->singleton(PeriodService::class);
-        $this->app->singleton(TitleService::class);
+        $this->app->singleton(SchedulingService::class);
     }
 
     public function boot(): void
     {
-        $this->loadMigrationsFrom(__DIR__ . '/database/migrations');
-        $this->loadRoutesFrom(__DIR__ . '/routes/api.php');
-        $this->loadRoutesFrom(__DIR__ . '/routes/web.php');
+        $this->loadMigrationsFrom(module_path('Capstone', 'database/migrations'));
     }
 }

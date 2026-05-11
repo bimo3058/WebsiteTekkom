@@ -1,0 +1,33 @@
+<?php
+
+namespace Modules\Capstone\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
+class TaDefenseEvaluation extends Model
+{
+    protected $table = 'capstone_ta_defense_evaluations';
+    protected $fillable = [
+        'schedule_id',
+        'examiner_id',
+        'rubric_json',
+        'score',
+        'status',
+    ];
+
+    protected $casts = [
+        'rubric_json' => 'array',
+        'score' => 'decimal:2',
+    ];
+
+    public function schedule(): BelongsTo
+    {
+        return $this->belongsTo(TaDefenseSchedule::class, 'schedule_id');
+    }
+
+    public function examiner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'examiner_id');
+    }
+}

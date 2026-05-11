@@ -15,6 +15,10 @@ class RedirectBasedOnRole
         'logout',
         'sso/password',
         'sso/verify',
+        'livewire*',
+        'capstone/launch',
+        'capstone*',
+        'api/capstone/*'
     ];
 
     // Role yang diarahkan ke dashboard global
@@ -24,6 +28,7 @@ class RedirectBasedOnRole
         'gpm',
         'pengurus_himpunan', // ← tambah
         'alumni',            // ← tambah
+        'dosen_koor'         // ← tambah
     ];
 
     public function handle(Request $request, Closure $next): Response
