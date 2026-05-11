@@ -117,7 +117,7 @@
     <div class="compare-panel">
         <div class="compare-col rencana">
             <div class="compare-col-title">&#128221; Rencana (Subbab 1)</div>
-            <div class="compare-item"><div class="compare-item-label">Tanggal Mulai</div><div class="compare-item-value">{{ $proker->tanggal_mulai->translatedFormat('d M Y') }}@if($proker->jam_mulai) pukul {{ $proker->jam_mulai_formatted }}@endif</div></div>
+            <div class="compare-item"><div class="compare-item-label">Tanggal Mulai</div><div class="compare-item-value">{{ $proker->tanggal_mulai ? $proker->tanggal_mulai->translatedFormat('d M Y') : 'Belum ditentukan' }}@if($proker->jam_mulai) pukul {{ $proker->jam_mulai_formatted }}@endif</div></div>
             @if($proker->tanggal_selesai)
                 <div class="compare-item"><div class="compare-item-label">Tanggal Selesai</div><div class="compare-item-value">{{ $proker->tanggal_selesai->translatedFormat('d M Y') }}</div></div>
             @endif

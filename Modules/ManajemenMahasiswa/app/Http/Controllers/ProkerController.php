@@ -170,9 +170,16 @@ class ProkerController extends Controller
         $proker->bidangs()->sync($bidangIds);
         $proker->panitia()->sync($panitiaSync);
 
+        // Jika user klik "Simpan Draft", redirect ke daftar proker
+        if ($request->input('save_as_draft') === '1') {
+            return redirect()
+                ->route('manajemenmahasiswa.proker.index')
+                ->with('success', 'Rencana proker berhasil disimpan sebagai draft.');
+        }
+
         return redirect()
-            ->route('manajemenmahasiswa.proker.show', $proker->id)
-            ->with('success', 'Rencana proker berhasil disimpan sebagai draft.');
+            ->route('manajemenmahasiswa.persuratan.show', $proker->id)
+            ->with('success', 'Rencana proker berhasil disimpan. Lengkapi persuratan dan upload surat proker.');
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -239,15 +246,11 @@ class ProkerController extends Controller
     {
         $proker = Kegiatan::where('status', Kegiatan::STATUS_DRAFT)->findOrFail($id);
 
-        if (!$proker->surat_proker) {
-            return back()->with('error', 'Harap upload surat proker (PDF) sebelum mengajukan.');
-        }
-
-        $proker->update(['status' => Kegiatan::STATUS_TTD_KETUA]);
+        $proker->update(['status' => Kegiatan::STATUS_DIAJUKAN]);
 
         return redirect()
-            ->route('manajemenmahasiswa.proker.show', $proker->id)
-            ->with('success', 'Proker berhasil diajukan. Menunggu tanda tangan Ketua Himpunan dan Bendahara.');
+            ->route('manajemenmahasiswa.persuratan.show', $proker->id)
+            ->with('success', 'Rencana Proker berhasil diajukan. Silakan lengkapi dokumen persuratan.');
     }
 
     /**
@@ -438,10 +441,10 @@ class ProkerController extends Controller
             'deskripsi'            => 'required|string|min:20',
             'kategori_kegiatan_id' => 'required|array|min:1|max:2',
             'kategori_kegiatan_id.*' => 'exists:mk_kategori_kegiatan,id',
-            'bidang_id'            => 'nullable|array',
+            'bidang_id'            => 'required|array|min:1',
             'bidang_id.*'          => 'exists:mk_bidang,id',
             'tahun'                => 'nullable|integer|min:2020',
-            'tanggal_mulai'        => 'required|date',
+            'tanggal_mulai'        => 'nullable|date',
             'jam_mulai'            => 'nullable|date_format:H:i',
             'tanggal_selesai'      => 'nullable|date|after_or_equal:tanggal_mulai',
             'jam_selesai'          => 'nullable|date_format:H:i',
