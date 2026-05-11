@@ -40,7 +40,9 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         # Admin Routes - Kontrol Umum
         Route::middleware('role:admin_banksoal')->prefix('admin/kontrol-umum')->name('banksoal.admin.kontrol-umum.')->group(function () {
             Route::get('/mata-kuliah', [MataKuliahController::class, 'index'])->name('mata-kuliah');
+            Route::get('/mata-kuliah/create', [MataKuliahController::class, 'create'])->name('mata-kuliah.create');
             Route::get('/cpl-cpmk', [CplCpmkController::class, 'index'])->name('cpl-cpmk');
+            Route::get('/cpl-cpmk/create', [CplCpmkController::class, 'create'])->name('cpl-cpmk.create');
             Route::get('/pemetaan', [PemetaanController::class, 'index'])->name('pemetaan');
         });
 

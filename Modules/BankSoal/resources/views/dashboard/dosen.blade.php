@@ -49,7 +49,7 @@
                         <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>Disetujui</span><span>{{ $approved }}</span>
                     </div>
                     <div class="flex items-center justify-between text-slate-700">
-                        <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-blue-500"></span>Diajukan</span><span>{{ $perluReview }}</span>
+                        <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-primary"></span>Diajukan</span><span>{{ $perluReview }}</span>
                     </div>
                     <div class="flex items-center justify-between text-slate-700">
                         <span class="flex items-center gap-1"><span class="h-1.5 w-1.5 rounded-full bg-amber-500"></span>Revisi</span><span>{{ $revisi }}</span>
@@ -71,7 +71,7 @@
                 <p class="mt-2 text-[10px] uppercase tracking-wider text-slate-500">Active Courses</p>
                 <div class="mt-1.5 flex justify-center gap-1.5 flex-wrap">
                     @foreach($mataKuliah as $mk)
-                        <span class="rounded-lg bg-blue-100 px-2 py-0.5 text-[11px] font-semibold text-blue-700">{{ $mk->kode }}</span>
+                        <span class="rounded-lg bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary">{{ $mk->kode }}</span>
                     @endforeach
                     @if($mataKuliah->isEmpty())
                         <span class="text-xs text-slate-400">Belum ada mata kuliah</span>
@@ -100,14 +100,14 @@
     <div class="grid grid-cols-1 gap-2 md:grid-cols-2">
         <x-banksoal::ui.panel title="Question Distribution per CPL" subtitle="Berdasarkan Capaian Pembelajaran (CPL)" padding="p-4">
             <x-slot:actions>
-                <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-xs font-medium text-blue-600 hover:text-blue-700">Details <i class="fas fa-arrow-up-right-from-square text-xs"></i></a>
+                <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-xs font-medium text-primary hover:text-primary/90">Details <i class="fas fa-arrow-up-right-from-square text-xs"></i></a>
             </x-slot:actions>
             <div class="h-64 flex items-end gap-4" id="cplChart"></div>
         </x-banksoal::ui.panel>
 
         <x-banksoal::ui.panel title="Question Count per MK" subtitle="Distribusi seluruh bank soal dosen" padding="p-4">
             <x-slot:actions>
-                <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-xs font-medium text-blue-600 hover:text-blue-700">Details <i class="fas fa-arrow-up-right-from-square text-xs"></i></a>
+                <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-xs font-medium text-primary hover:text-primary/90">Details <i class="fas fa-arrow-up-right-from-square text-xs"></i></a>
             </x-slot:actions>
             <div class="h-64 flex items-end gap-4" id="mkChart"></div>
         </x-banksoal::ui.panel>

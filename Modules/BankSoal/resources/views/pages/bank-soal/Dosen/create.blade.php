@@ -12,7 +12,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Waduh, Gagal...',
-                    text: '{{ session('error') }}',
+                    text: @json(session('error')),
                     confirmButtonColor: '#ef4444',
                     background: '#ffffff',
                     customClass: {
@@ -100,7 +100,7 @@
 
             <div class="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-4">
                 <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-sm font-semibold text-slate-600 hover:text-slate-700">Batalkan</a>
-                <div class="flex items-center gap-2"><button type="submit" name="submit_action" value="draft" class="rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-900">Simpan Draft</button><button type="submit" name="submit_action" value="publish" class="rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-900">Publikasi Soal</button></div>
+                <div class="flex items-center gap-2"><button type="submit" name="submit_action" value="draft" class="rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary transition-colors">Simpan Draft</button><button type="submit" name="submit_action" value="publish" class="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors">Publikasi Soal</button></div>
             </div>
         </form>
     </x-banksoal::ui.panel>

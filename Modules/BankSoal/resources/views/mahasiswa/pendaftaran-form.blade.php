@@ -183,7 +183,7 @@
                     </div>
 
                     <button type="submit"
-                        class="w-full h-12 inline-flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold tracking-widest uppercase transition-colors rounded-xl">
+                        class="w-full h-12 inline-flex items-center justify-center bg-primary hover:bg-primary/90 text-white text-xs font-bold tracking-widest uppercase transition-colors rounded-xl">
                         Submit Pendaftaran &rarr;
                     </button>
                 </form>

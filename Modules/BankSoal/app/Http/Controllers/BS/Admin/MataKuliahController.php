@@ -48,6 +48,16 @@ class MataKuliahController extends Controller
     }
 
     /**
+     * Show create form for Mata Kuliah
+     */
+    public function create()
+    {
+        $this->authorize('banksoal.edit');
+
+        return view('banksoal::pages.admin.kontrol-umum.mata-kuliah-create');
+    }
+
+    /**
      * Store new Mata Kuliah
      */
     public function store(Request $request): JsonResponse

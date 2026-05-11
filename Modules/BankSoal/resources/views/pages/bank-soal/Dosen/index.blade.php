@@ -1,5 +1,16 @@
 <x-banksoal::layouts.dosen-admin>
 
+<style>
+    @keyframes modalPopUp {
+        from { opacity: 0; transform: scale(0.95) translateY(10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .animate-popup {
+        animation: modalPopUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+</style>
+
 <x-banksoal::ui.page-header title="Manajemen Bank Soal" subtitle="Kelola dan organisir repositori pertanyaan Anda">
     <x-slot:actions>
         @can('banksoal.edit')
@@ -12,8 +23,8 @@
                     <a href="{{ route('banksoal.soal.dosen.export-csv') }}" class="flex items-center px-4 py-3 text-sm text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 transition-colors border-b border-slate-50">
                         <i class="fas fa-download w-5 text-center mr-2 text-emerald-500"></i> Unduh Template Excel
                     </a>
-                    <button type="button" onclick="openImportModal(); toggleUploadDropdown();" class="w-full flex items-center text-left px-4 py-3 text-sm text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors">
-                        <i class="fas fa-file-csv w-5 text-center mr-2 text-blue-500"></i> Import CSV
+                    <button type="button" onclick="openImportModal(); toggleUploadDropdown();" class="w-full flex items-center text-left px-4 py-3 text-sm text-slate-700 hover:bg-primary/10 hover:text-primary transition-colors">
+                        <i class="fas fa-file-csv w-5 text-center mr-2 text-primary"></i> Import CSV
                     </button>
                 </div>
             </div>
@@ -33,14 +44,31 @@
     </x-slot:actions>
 </x-banksoal::ui.page-header>
 
-@if(session('success'))
+<div
+    id="banksoal-dosen-page-data"
+    data-success="{{ e(session('success')) }}"
+    data-error="{{ e(session('error')) }}"
+    data-mk-json='{{ e($mataKuliahDosen->toJson()) }}'
+    hidden
+></div>
+
+@if(session('success') || session('error'))
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
+@endif
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const pageData = document.getElementById('banksoal-dosen-page-data');
+        if (!pageData) return;
+
+        const successMessage = pageData.dataset.success || '';
+        const errorMessage = pageData.dataset.error || '';
+
+        if (successMessage) {
             Swal.fire({
                 icon: 'success',
                 title: 'Berhasil!',
-                text: {!! json_encode(session('success')) !!},
+                text: successMessage,
                 confirmButtonColor: '#3b82f6',
                 background: '#ffffff',
                 customClass: {
@@ -49,18 +77,13 @@
                     confirmButton: 'rounded-xl px-5 py-2.5 font-semibold transition-colors'
                 }
             });
-        });
-    </script>
-@endif
+        }
 
-@if(session('error'))
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', function() {
+        if (errorMessage) {
             Swal.fire({
                 icon: 'error',
                 title: 'Oops...',
-                text: {!! json_encode(session('error')) !!},
+                text: errorMessage,
                 confirmButtonColor: '#ef4444',
                 background: '#ffffff',
                 customClass: {
@@ -69,16 +92,16 @@
                     confirmButton: 'rounded-xl px-5 py-2.5 font-semibold transition-colors'
                 }
             });
-        });
-    </script>
-@endif
+        }
+    });
+</script>
 
 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
     <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
         <h2 class="text-lg font-semibold text-slate-900">Daftar Soal</h2>
     </div>
 
-    <form action="{{ route('banksoal.soal.dosen.index') }}" method="GET" class="p-6 border-b border-slate-200 flex flex-col md:flex-row gap-3 flex-wrap items-center">
+    <form action="{{ route('banksoal.soal.dosen.index') }}" method="GET" class="p-6 border-b border-slate-200 flex flex-col md:flex-row gap-3 flex-wrap items-center" id="filterForm">
         <div class="relative flex-1 min-w-[250px] w-full">
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                 <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -90,20 +113,20 @@
                 @foreach($mataKuliahDosen as $mk)
                     <option value="{{ $mk->nama }}"></option>
                 @endforeach
-                {{-- Bisa dtambahkan list CPL atau Topik jika perlu --}}
             </datalist>
         </div>
 
-        <select name="status" onchange="this.form.submit()" class="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none cursor-pointer min-w-[140px] flex-shrink-0">
-            <option value="">Semua Status...</option>
-            <option value="draft" {{ request('status') == 'draft' ? 'selected' : '' }}>Draft</option>
-            <option value="diajukan" {{ request('status') == 'diajukan' ? 'selected' : '' }}>Diajukan</option>
-            <option value="disetujui" {{ request('status') == 'disetujui' ? 'selected' : '' }}>Disetujui</option>
-            <option value="revisi" {{ request('status') == 'revisi' ? 'selected' : '' }}>Perlu Revisi</option>
+        <input type="hidden" name="status" id="filterStatusInput" value="{{ request('status') }}">
+
+        <select name="sort" id="sortBy" class="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none cursor-pointer min-w-[140px] flex-shrink-0">
+            <option value="terbaru" {{ request('sort') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+            <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>Terlama</option>
+            <option value="nama-asc" {{ request('sort') == 'nama-asc' ? 'selected' : '' }}>Nama A-Z</option>
+            <option value="nama-desc" {{ request('sort') == 'nama-desc' ? 'selected' : '' }}>Nama Z-A</option>
         </select>
 
         <div class="flex items-center gap-2">
-            <button type="submit" class="inline-flex items-center gap-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-xl px-4 py-2.5 font-medium transition-colors border border-blue-200">
+            <button type="button" id="filterBtn" class="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl px-4 py-2.5 font-medium transition-colors border border-primary/20">
                 <i class="fas fa-filter"></i> Filter
             </button>
 
@@ -115,16 +138,48 @@
         </div>
     </form>
 
+    <!-- Filter Modal -->
+    <div id="filterModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-8 overflow-y-auto">
+        <div class="bg-white rounded-2xl shadow-lg w-full max-w-md mx-auto animate-popup">
+            <div class="border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+                <h3 class="text-lg font-semibold text-slate-900">Filter</h3>
+                <button type="button" id="closeFilterBtn" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <i class="fas fa-times text-xl"></i>
+                </button>
+            </div>
+            <div class="px-6 py-4 space-y-4">
+                <div>
+                    <label class="block text-sm font-semibold text-slate-700 mb-2">Status</label>
+                    <select id="filterStatus" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none cursor-pointer">
+                        <option value="">Semua Status</option>
+                        <option value="draft">Draft</option>
+                        <option value="diajukan">Diajukan</option>
+                        <option value="disetujui">Disetujui</option>
+                        <option value="revisi">Perlu Revisi</option>
+                    </select>
+                </div>
+            </div>
+            <div class="border-t border-slate-200 px-6 py-4 flex items-center gap-3">
+                <button type="button" id="applyFilterBtn" class="flex-1 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white rounded-xl px-4 py-2.5 font-medium transition-colors">
+                    <i class="fas fa-check"></i> Terapkan
+                </button>
+                <button type="button" id="resetFilterBtn" class="flex-1 inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl px-4 py-2.5 font-medium transition-colors">
+                    <i class="fas fa-redo"></i> Reset
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="overflow-x-auto" data-tab-panel="soal">
         <table class="w-full" id="tableSoal">
-            <thead class="bg-slate-50 border-b border-slate-200">
+            <thead class="bg-primary text-white border-b border-primary/20">
                 <tr>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">ID</th>
-                    <th class="px-2 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mata Kuliah</th>
-                    <th class="px-2 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Topik</th>
-                    <th class="px-3 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tingkat Kesulitan</th>
-                    <th class="px-3 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                    <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tindakan</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">ID</th>
+                    <th class="px-2 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
+                    <th class="px-2 py-4 text-left text-xs font-semibold uppercase tracking-wider">Topik</th>
+                    <th class="px-3 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tingkat Kesulitan</th>
+                    <th class="px-3 py-4 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
+                    <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tindakan</th>
                 </tr>
             </thead>
             <tbody class="divide-y divide-slate-100">
@@ -136,7 +191,7 @@
                                 @if(strtolower($soal->tipe_soal) === 'essay')
                                     <span class="px-2 py-0.5 bg-purple-50 text-purple-700 border border-purple-200 text-[10px] font-bold rounded uppercase whitespace-nowrap">Essay</span>
                                 @else
-                                    <span class="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold rounded uppercase whitespace-nowrap">Pilihan Ganda</span>
+                                    <span class="px-2 py-0.5 bg-primary/10 text-primary border border-primary/20 text-[10px] font-bold rounded uppercase whitespace-nowrap">Pilihan Ganda</span>
                                 @endif
                             </div>
                         </td>
@@ -157,7 +212,7 @@
                             @if($status === 'draft')
                                 <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-600 border border-slate-200"><i class="fas fa-file-alt mr-1 mt-0.5"></i> Draf</span>
                             @elseif($status === 'diajukan')
-                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-blue-50 text-blue-600 border border-blue-200"><i class="fas fa-paper-plane mr-1 mt-0.5"></i> Diajukan</span>
+                                <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary border border-primary/20"><i class="fas fa-paper-plane mr-1 mt-0.5"></i> Diajukan</span>
                             @elseif($status === 'disetujui')
                                 <span class="inline-flex px-2 py-0.5 rounded text-xs font-medium bg-emerald-50 text-emerald-600 border border-emerald-200"><i class="fas fa-check mr-1 mt-0.5"></i> Disetujui</span>
                             @elseif($status === 'revisi' || $status === 'ditolak')
@@ -221,7 +276,7 @@
                     @endforeach
                 </datalist>
             </div>
-            <button type="submit" class="inline-flex items-center gap-2 bg-blue-50 border border-blue-200 hover:bg-blue-100 rounded-xl px-4 py-2.5 font-medium text-blue-700 transition-colors">
+            <button type="submit" class="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 hover:bg-primary/20 rounded-xl px-4 py-2.5 font-medium text-primary transition-colors">
                 <i class="fas fa-filter"></i> Filter
             </button>
             @if(request('searchPackages'))
@@ -250,14 +305,14 @@
                             <td class="px-6 py-4 text-slate-600">{{ $pkg->nama }}</td>
                             <td class="px-6 py-4 text-slate-600">
                                 @if($pkg->str_cpls !== '-')
-                                    <span class="inline-flex px-2 py-1 rounded text-xs font-medium bg-blue-50 text-blue-700 whitespace-normal break-words max-w-[150px] leading-relaxed block">{{ $pkg->str_cpls }}</span>
+                                    <span class="inline-flex px-2 py-1 rounded text-xs font-medium bg-primary/10 text-primary whitespace-normal break-words max-w-[150px] leading-relaxed">{{ $pkg->str_cpls }}</span>
                                 @else
                                     <span class="text-slate-400 italic">Belum Dipetakan</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-slate-600">
                                 @if($pkg->str_cpmks !== '-')
-                                    <span class="inline-flex px-2 py-1 rounded text-xs font-medium bg-emerald-50 text-emerald-700 whitespace-normal break-words max-w-[150px] leading-relaxed block">{{ $pkg->str_cpmks }}</span>
+                                    <span class="inline-flex px-2 py-1 rounded text-xs font-medium bg-emerald-50 text-emerald-700 whitespace-normal break-words max-w-[150px] leading-relaxed">{{ $pkg->str_cpmks }}</span>
                                 @else
                                     <span class="text-slate-400 italic">Belum Dipetakan</span>
                                 @endif
@@ -267,8 +322,8 @@
                             </td>
                             <td class="px-6 py-4">
                                 <div class="flex items-center gap-2">
-                                    <button type="button" onclick="openLihatSoalModal({{ $pkg->id }}, '{{ addslashes($pkg->nama) }}')" class="inline-flex items-center justify-center w-8 h-8 text-slate-600 hover:bg-slate-100 hover:text-blue-600 rounded-lg transition-colors" title="Lihat Daftar Soal"><i class="fas fa-eye text-sm"></i></button>
-                                    <button type="button" onclick="openTarikModal({{ $pkg->id }})" class="inline-flex items-center justify-center w-8 h-8 text-slate-600 hover:bg-slate-100 hover:text-emerald-600 rounded-lg transition-colors" title="Tarik Paket Soal"><i class="fas fa-download text-sm"></i></button>
+                                    <button type="button" data-package-action="lihat" data-mk-id="{{ $pkg->id }}" data-mk-nama="{{ e($pkg->nama) }}" class="inline-flex items-center justify-center w-8 h-8 text-slate-600 hover:bg-slate-100 hover:text-primary rounded-lg transition-colors" title="Lihat Daftar Soal"><i class="fas fa-eye text-sm"></i></button>
+                                    <button type="button" data-package-action="tarik" data-mk-id="{{ $pkg->id }}" class="inline-flex items-center justify-center w-8 h-8 text-slate-600 hover:bg-slate-100 hover:text-emerald-600 rounded-lg transition-colors" title="Tarik Paket Soal"><i class="fas fa-download text-sm"></i></button>
                                 </div>
                             </td>
                         </tr>
@@ -413,7 +468,8 @@
 </div>
 
 <script>
-    const mkData = {!! $mataKuliahDosen->toJson() !!};
+    const pageData = document.getElementById('banksoal-dosen-page-data');
+    const mkData = pageData ? JSON.parse(pageData.dataset.mkJson || '[]') : [];
     window.tarikSoalsData = [];
     window.currentTarikMkId = null;
 
@@ -593,7 +649,7 @@
                     }
                     
                     const tipeLabel = soal.tipe_soal === 'essay' ? 'Essay' : 'Pilihan Ganda';
-                    const tipeColor = soal.tipe_soal === 'essay' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-blue-50 text-blue-700 border-blue-200';
+                    const tipeColor = soal.tipe_soal === 'essay' ? 'bg-purple-50 text-purple-700 border-purple-200' : 'bg-primary/10 text-primary border-primary/20';
                     badges += `<span class="px-2 py-0.5 ${tipeColor} border text-[10px] font-bold rounded uppercase">${tipeLabel}</span>`;
 
                     listDiv.innerHTML += `
@@ -715,7 +771,7 @@
         <!-- Body -->
         <div class="flex-1 overflow-y-auto bg-slate-50/50">
             <div id="lihatSoalLoading" class="hidden flex-col items-center justify-center py-16">
-                <i class="fas fa-circle-notch fa-spin text-4xl text-blue-600 mb-4"></i>
+                <i class="fas fa-circle-notch fa-spin text-4xl text-primary mb-4"></i>
                 <p class="text-sm font-medium text-slate-500">Memuat rincian soal...</p>
             </div>
             <div id="lihatSoalList" class="flex flex-col">
@@ -748,20 +804,20 @@
             </div>
 
             <div class="p-6">
-                <div class="mb-4 text-sm text-slate-600 bg-blue-50 border border-blue-200 rounded-xl p-4">
-                    <p class="mb-2"><i class="fas fa-info-circle text-blue-600 mr-1.5"></i> <strong>Langkah Import Baru:</strong></p>
+                <div class="mb-4 text-sm text-slate-600 bg-primary/10 border border-primary/20 rounded-xl p-4">
+                    <p class="mb-2"><i class="fas fa-info-circle text-primary mr-1.5"></i> <strong>Langkah Import Baru:</strong></p>
                     <ol class="list-decimal ml-6 space-y-1">
                         <li>Gunakan template impor standar (SOAL pada kolom Jenis).</li>
                         <li>Pastikan baris jawaban berada persis di bawah baris soal tersebut.</li>
-                        <li>Format yang didukung: <code class="bg-blue-100 px-1 py-0.5 rounded text-blue-800">.xls</code>, <code class="bg-blue-100 px-1 py-0.5 rounded text-blue-800">.xlsx</code>, <code class="bg-blue-100 px-1 py-0.5 rounded text-blue-800">.csv</code>.</li>
+                        <li>Format yang didukung: <code class="bg-primary/20 px-1 py-0.5 rounded text-primary">.xls</code>, <code class="bg-primary/20 px-1 py-0.5 rounded text-primary">.xlsx</code>, <code class="bg-primary/20 px-1 py-0.5 rounded text-primary">.csv</code>.</li>
                     </ol>
                 </div>
 
                 <label for="csv_file" class="block text-sm font-semibold text-slate-700 mb-2">Unggah File Target (Excel/CSV)</label>
                 <div class="relative group cursor-pointer">
                     <input type="file" name="csv_file" id="csv_file" accept=".csv, .txt, .xls, .xlsx" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" required onchange="document.getElementById('fileNameP').textContent = this.files[0]?.name || 'Pilih file excel/csv Anda';">
-                    <div class="w-full flex-col flex items-center justify-center border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 p-8 text-center group-hover:bg-slate-100 group-hover:border-blue-400 transition-all">
-                        <div class="w-12 h-12 mb-3 rounded-full bg-blue-100 flex items-center justify-center text-blue-600">
+                    <div class="w-full flex-col flex items-center justify-center border-2 border-dashed border-slate-300 rounded-xl bg-slate-50 p-8 text-center group-hover:bg-slate-100 group-hover:border-primary/20 transition-all">
+                        <div class="w-12 h-12 mb-3 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                             <i class="fas fa-file-excel text-xl"></i>
                         </div>
                         <p id="fileNameP" class="text-sm font-medium text-slate-700">Pilih file atau seret file .xls/.xlsx/.csv ke sini</p>
@@ -866,7 +922,7 @@
 
 
 <!-- Modal Ajukan Soal -->
-<div id="ajukanModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed inset-0 z-[100] flex justify-center items-center bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0">
+<div id="ajukanModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed inset-0 z-[100] justify-center items-center bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0">
     <div id="ajukanModalContent" class="relative p-4 w-full max-w-lg max-h-full transform transition-all duration-300 scale-95 opacity-0 translate-y-4">
         <form action="{{ route('banksoal.soal.dosen.ajukan-semua') }}" method="POST" class="relative bg-white rounded-2xl shadow-xl border border-slate-100 flex flex-col max-h-[90vh]">
             @csrf
@@ -970,6 +1026,22 @@
                 }
             });
 
+            document.querySelectorAll('[data-package-action]').forEach((button) => {
+                button.addEventListener('click', function () {
+                    const action = this.dataset.packageAction;
+                    const mkId = this.dataset.mkId;
+                    const mkNama = this.dataset.mkNama || '';
+
+                    if (action === 'lihat') {
+                        openLihatSoalModal(mkId, mkNama);
+                    }
+
+                    if (action === 'tarik') {
+                        openTarikModal(mkId);
+                    }
+                });
+            });
+
             const noResultsMsg = tabContent.querySelector('.no-results-message');
             if (noResultsMsg) {
                 if (visibleCount === 0) {
@@ -997,6 +1069,51 @@
                     searchTable(this, tabId); // Fallback ke client-side search
                 }
             }, 600));
+        });
+
+        // Filter Modal Handlers
+        const filterBtn = document.getElementById('filterBtn');
+        const closeFilterBtn = document.getElementById('closeFilterBtn');
+        const filterModal = document.getElementById('filterModal');
+        const applyFilterBtn = document.getElementById('applyFilterBtn');
+        const resetFilterBtn = document.getElementById('resetFilterBtn');
+        const filterStatus = document.getElementById('filterStatus');
+        const filterStatusInput = document.getElementById('filterStatusInput');
+        const filterForm = document.getElementById('filterForm');
+        const sortBy = document.getElementById('sortBy');
+
+        // Initialize filter modal with current status
+        if (filterStatusInput.value) {
+            filterStatus.value = filterStatusInput.value;
+        }
+
+        filterBtn.addEventListener('click', () => {
+            filterModal.classList.remove('hidden');
+        });
+
+        closeFilterBtn.addEventListener('click', () => {
+            filterModal.classList.add('hidden');
+        });
+
+        filterModal.addEventListener('click', (e) => {
+            if (e.target === filterModal) {
+                filterModal.classList.add('hidden');
+            }
+        });
+
+        applyFilterBtn.addEventListener('click', () => {
+            filterStatusInput.value = filterStatus.value;
+            filterForm.submit();
+            filterModal.classList.add('hidden');
+        });
+
+        resetFilterBtn.addEventListener('click', () => {
+            filterStatus.value = '';
+            filterStatusInput.value = '';
+        });
+
+        sortBy.addEventListener('change', function() {
+            filterForm.submit();
         });
     });
 </script>

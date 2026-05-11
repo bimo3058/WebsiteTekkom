@@ -74,7 +74,7 @@
                 <div class="px-6 py-5 bg-slate-50/80 flex-1">
                     <div class="flex items-center justify-between mb-4">
                         <h3 class="font-bold text-slate-900 text-sm"><i class="fas fa-list-ul mr-2 text-slate-400"></i>Daftar Soal</h3>
-                        <span class="bg-blue-100 text-blue-700 text-xs font-bold px-3 py-1 rounded-md shadow-sm" id="soalCountBadge">0 Soal</span>
+                        <span class="bg-primary/10 text-primary text-xs font-bold px-3 py-1 rounded-md shadow-sm" id="soalCountBadge">0 Soal</span>
                     </div>
 
                     <div class="space-y-3" id="soalListContainer">
@@ -82,8 +82,8 @@
                     </div>
 
                     <div class="mt-4 border-2 border-dashed border-slate-300 rounded-xl bg-white hover:bg-slate-50 transition-colors cursor-pointer text-center py-4 group" onclick="openManualInsertModal()">
-                        <span class="text-slate-500 text-sm font-semibold flex items-center justify-center gap-2 group-hover:text-blue-600 transition-colors">
-                            <i class="fas fa-plus bg-slate-100 group-hover:bg-blue-100 rounded-full w-6 h-6 flex items-center justify-center"></i> Tambah Soal Manual
+                        <span class="text-slate-500 text-sm font-semibold flex items-center justify-center gap-2 group-hover:text-primary transition-colors">
+                            <i class="fas fa-plus bg-slate-100 group-hover:bg-primary/10 rounded-full w-6 h-6 flex items-center justify-center"></i> Tambah Soal Manual
                         </span>
                     </div>
                 </div>
@@ -96,7 +96,7 @@
                 Batalkan
             </button>
             <div class="flex items-center gap-3">
-                <button type="button" onclick="ulangAcakSoal()" class="px-4 py-2.5 bg-blue-50 text-blue-600 font-semibold text-sm rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2 border border-blue-200">
+                <button type="button" onclick="ulangAcakSoal()" class="px-4 py-2.5 bg-primary/10 text-primary font-semibold text-sm rounded-lg hover:bg-primary/20 transition-colors flex items-center gap-2 border border-primary/20">
                     <i class="fas fa-sync-alt"></i> Buat Ulang Acak
                 </button>
                 <button type="button" id="finalizePrintBtn" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm rounded-lg shadow-md transition-colors flex items-center gap-2" onclick="finalizeAndAskArchive(event)">
@@ -125,7 +125,7 @@
 
         <!-- Body / Loading state -->
         <div id="manualInsertLoading" class="p-8 flex flex-col items-center justify-center space-y-3">
-             <i class="fas fa-circle-notch fa-spin text-3xl text-blue-600"></i>
+             <i class="fas fa-circle-notch fa-spin text-3xl text-primary"></i>
              <span class="text-sm font-medium text-slate-500 animate-pulse">Memuat bank soal...</span>
         </div>
 
@@ -414,7 +414,7 @@
                         const cleanSoalRaw = soal.soal.replace(/"/g, '&quot;');
 
                         listDiv.innerHTML += `
-                            <div class="card-soal overflow-hidden border border-slate-200 rounded-lg bg-white shadow-sm flex items-start p-3 hover:border-blue-300 transition-colors" id="manual-soal-${soal.id}">
+                            <div class="card-soal overflow-hidden border border-slate-200 rounded-lg bg-white shadow-sm flex items-start p-3 hover:border-primary/20 transition-colors" id="manual-soal-${soal.id}">
                                 <div class="flex-1 min-w-0 pr-3">
                                     <div class="flex items-center gap-2 mb-1">
                                         <span class="font-bold text-slate-800 text-sm">Q-${String(soal.id).padStart(3, '0')}</span>
@@ -422,7 +422,7 @@
                                     </div>
                                     <p class="text-sm text-slate-600 line-clamp-3">${cleanSoalRaw}</p>
                                 </div>
-                                <button type="button" onclick="insertManualSoal(${soal.id}, '${cleanSoalRaw}', '${soal.cpl || ''}', '${soal.cpmk || ''}')" class="flex-shrink-0 bg-blue-50 text-blue-600 hover:bg-blue-600 hover:text-white rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm transition-colors border border-blue-200 mt-0.5 flex items-center gap-1.5">
+                                <button type="button" onclick="insertManualSoal(${soal.id}, '${cleanSoalRaw}', '${soal.cpl || ''}', '${soal.cpmk || ''}')" class="flex-shrink-0 bg-primary/10 text-primary hover:bg-primary hover:text-white rounded-lg px-3 py-1.5 text-xs font-semibold shadow-sm transition-colors border border-primary/20 mt-0.5 flex items-center gap-1.5">
                                     <i class="fas fa-plus"></i> Tambah
                                 </button>
                             </div>
@@ -480,9 +480,9 @@
         }
 
         const domString = `
-            <div class="card-soal overflow-hidden border border-blue-300 rounded-xl bg-blue-50/50 shadow-sm flex items-start p-4 transition-all opacity-0 scale-95" id="soal-row-${soalId}">
+            <div class="card-soal overflow-hidden border border-primary/20 rounded-xl bg-primary/5 shadow-sm flex items-start p-4 transition-all opacity-0 scale-95" id="soal-row-${soalId}">
                 <input type="hidden" name="soal_ids[]" value="${soalId}">
-                <div class="flex-shrink-0 w-10 h-10 bg-white border border-slate-200 rounded-lg flex items-center justify-center font-bold text-blue-600 mr-4 number-badge text-sm">${index}</div>
+                <div class="flex-shrink-0 w-10 h-10 bg-white border border-slate-200 rounded-lg flex items-center justify-center font-bold text-primary mr-4 number-badge text-sm">${index}</div>
                 <div class="flex-1 min-w-0 pr-4">
                     <div class="flex items-center gap-2 mb-1.5">
                         <span class="font-bold text-slate-800 text-sm">Q-${fmtId}</span>

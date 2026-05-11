@@ -31,8 +31,8 @@
 
         .search-box input:focus {
             outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            border-color: rgb(11, 38, 110);
+            box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
         }
 
         .search-box svg {
@@ -106,13 +106,13 @@
         }
 
         .pagination-btn:hover:not(:disabled) {
-            border-color: #3b82f6;
-            color: #3b82f6;
+            border-color: rgb(11, 38, 110);
+            color: rgb(11, 38, 110);
         }
 
         .pagination-btn.active {
-            background: #3b82f6;
-            border-color: #3b82f6;
+            background: rgb(11, 38, 110);
+            border-color: rgb(11, 38, 110);
             color: #fff;
         }
 
@@ -138,7 +138,7 @@
     <div class="mb-6 flex items-center justify-end">
         <button
             type="button"
-            class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500/40 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:hover:bg-slate-300"
+            class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500 disabled:hover:bg-slate-300"
             onclick="openRpsUploadModal()"
             {{ !($isUploadOpen ?? false) ? 'disabled' : '' }}
             title="{{ !($isUploadOpen ?? false) ? 'Periode upload RPS saat ini tidak aktif' : 'Ajukan RPS baru' }}"

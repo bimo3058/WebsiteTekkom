@@ -41,7 +41,7 @@
             @forelse($soalList as $soal)
                 <div class="p-5">
                     <div class="flex items-start gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-700 font-bold flex items-center justify-center">{{ $soal['nomor'] ?? $loop->iteration }}</div>
+                        <div class="w-9 h-9 rounded-lg bg-primary/10 text-primary font-bold flex items-center justify-center">{{ $soal['nomor'] ?? $loop->iteration }}</div>
                         <div class="flex-1">
                             <div class="text-sm text-slate-800 leading-relaxed">
                                 {!! $soal['soal'] ?? '-' !!}

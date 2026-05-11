@@ -60,7 +60,7 @@
                             <div class="text-xs text-slate-500">{{ $firstItem->mk_kode ?? '-' }}</div>
                         </td>
                         <td class="table-cell text-center">
-                            <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                            <span class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
                                 {{ $rpsItems->count() }} {{ $rpsItems->count() == 1 ? 'versi' : 'versi' }}
                             </span>
                         </td>
@@ -94,7 +94,7 @@
                                         <div class="flex items-end gap-2">
                                             @if ($item->dokumen)
                                                 <button type="button"
-                                                        class="preview-dokumen-btn inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100"
+                                                        class="preview-dokumen-btn inline-flex items-center gap-1 rounded-lg border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20"
                                                         data-id="{{ $item->id }}"
                                                         data-title="{{ e($firstItem->mk_nama ?? 'Dokumen') }}"
                                                         title="Preview dokumen">

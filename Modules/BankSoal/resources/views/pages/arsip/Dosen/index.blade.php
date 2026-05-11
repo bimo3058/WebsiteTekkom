@@ -7,12 +7,12 @@
         <div class="flex flex-wrap items-center gap-2">
 
             <div class="relative">
-                <button id="arsipUploadTrigger" type="button" onclick="toggleArsipUploadMenu()" class="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-4 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-slate-900">
+                <button id="arsipUploadTrigger" type="button" onclick="toggleArsipUploadMenu()" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-primary/90">
                     <i class="fas fa-upload w-4"></i> Upload Arsip <i class="fas fa-chevron-down text-[10px] text-slate-300"></i>
                 </button>
 
                 <div id="arsipUploadMenu" class="pointer-events-none absolute right-0 top-[110%] z-50 w-52 translate-y-1 scale-95 overflow-hidden rounded-xl border border-slate-100 bg-white opacity-0 shadow-lg transition-all duration-200">
-                    <button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 transition-colors hover:bg-blue-50 hover:text-blue-700" onclick="openArsipUploadModal('uploadPdfModal')">
+                    <button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 transition-colors hover:bg-primary/10 hover:text-primary" onclick="openArsipUploadModal('uploadPdfModal')">
                         <i class="fas fa-file-pdf w-4 text-center text-rose-500"></i> Upload PDF
                     </button>
                     <button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-700" onclick="openArsipUploadModal('uploadCsvModal')">
@@ -23,6 +23,8 @@
         </div>
     </x-slot:actions>
 </x-banksoal::ui.page-header>
+
+<div id="arsip-dosen-page-data" data-initial-modal="{{ $errors->has('pdf_file') ? 'uploadPdfModal' : ($errors->has('csv_file') ? 'uploadCsvModal' : '') }}" hidden></div>
 
 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
     <x-banksoal::ui.stat-card label="Total Arsip" :value="$stats['total_arsip'] ?? 0" icon="fa-archive" tone="blue" />
@@ -168,7 +170,7 @@
                     <label class="text-xs font-semibold text-slate-600">File PDF <span class="text-rose-500">*</span></label>
                     <div id="pdfUploadZone" class="mt-2 cursor-pointer rounded-xl border-2 border-dashed border-slate-200 p-5 text-center transition-colors">
                         <i class="fas fa-cloud-upload-alt text-2xl text-slate-400"></i>
-                        <p class="mt-2 text-sm text-slate-500">Dragdrop file atau <span class="text-blue-600 underline">pilih file</span></p>
+                        <p class="mt-2 text-sm text-slate-500">Dragdrop file atau <span class="text-primary underline">pilih file</span></p>
                         <p class="text-xs text-slate-400">Format: .pdf (maksimal 50 MB)</p>
                         <input type="file" name="pdf_file" id="pdfFileInput" accept="application/pdf,.pdf" required class="hidden">
                         <div id="pdfFileSelected" class="mt-3 hidden">
@@ -182,14 +184,14 @@
                         <p class="mt-2 text-xs text-rose-600">{{ $message }}</p>
                     @enderror
                 </div>
-                <div class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+                <div class="rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-xs text-primary">
                     <i class="fas fa-info-circle mr-2"></i>
                     Upload PDF akan disimpan sebagai arsip terpisah untuk diproses lebih lanjut.
                 </div>
             </div>
             <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
                 <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="uploadPdfModal">Batal</button>
-                <button type="submit" class="rounded-lg bg-slate-800 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-900">Upload PDF</button>
+                <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90">Upload PDF</button>
             </div>
         </form>
     </div>
@@ -215,7 +217,7 @@
                         <p class="text-sm font-semibold text-slate-800">Template CSV</p>
                         <p class="text-xs text-slate-500">Unduh template sebelum unggah file CSV.</p>
                     </div>
-                    <a href="{{ route('banksoal.soal.dosen.export-csv') }}" target="_blank" class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-50">
+                    <a href="{{ route('banksoal.soal.dosen.export-csv') }}" target="_blank" class="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-white px-3 py-2 text-xs font-semibold text-primary transition-colors hover:bg-primary/10">
                         <i class="fas fa-download"></i> Unduh Template
                     </a>
                 </div>
@@ -223,7 +225,7 @@
                     <label class="text-xs font-semibold text-slate-600">File CSV <span class="text-rose-500">*</span></label>
                     <div id="csvUploadZone" class="mt-2 cursor-pointer rounded-xl border-2 border-dashed border-slate-200 p-5 text-center transition-colors">
                         <i class="fas fa-cloud-upload-alt text-2xl text-slate-400"></i>
-                        <p class="mt-2 text-sm text-slate-500">Dragdrop file atau <span class="text-blue-600 underline">pilih file</span></p>
+                        <p class="mt-2 text-sm text-slate-500">Dragdrop file atau <span class="text-primary underline">pilih file</span></p>
                         <p class="text-xs text-slate-400">Format: .csv, .txt, .xls, .xlsx (maksimal 50 MB)</p>
                         <input type="file" name="csv_file" id="csvFileInput" accept=".csv,.txt,.xls,.xlsx" required class="hidden">
                         <div id="csvFileSelected" class="mt-3 hidden">
@@ -237,14 +239,14 @@
                         <p class="mt-2 text-xs text-rose-600">{{ $message }}</p>
                     @enderror
                 </div>
-                <div class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+                <div class="rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-xs text-primary">
                     <i class="fas fa-info-circle mr-2"></i>
                     CSV akan diproses sesuai template yang diunduh dari tombol di atas.
                 </div>
             </div>
             <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
                 <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="uploadCsvModal">Batal</button>
-                <button type="submit" class="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700">Upload CSV</button>
+                <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90">Upload CSV</button>
             </div>
         </form>
     </div>
@@ -306,13 +308,13 @@
 
         ['dragenter', 'dragover'].forEach((eventName) => {
             zone.addEventListener(eventName, function () {
-                zone.classList.add('border-blue-300', 'bg-blue-50/50');
+                zone.classList.add('border-primary/30', 'bg-primary/10');
             });
         });
 
         ['dragleave', 'drop'].forEach((eventName) => {
             zone.addEventListener(eventName, function () {
-                zone.classList.remove('border-blue-300', 'bg-blue-50/50');
+                zone.classList.remove('border-primary/30', 'bg-primary/10');
             });
         });
 
@@ -366,11 +368,11 @@
         initUploadZone('pdfUploadZone', 'pdfFileInput', 'pdfFileSelected', 'pdfSelectedFileName');
         initUploadZone('csvUploadZone', 'csvFileInput', 'csvFileSelected', 'csvSelectedFileName');
 
-        @if ($errors->has('pdf_file'))
-            openArsipUploadModal('uploadPdfModal');
-        @elseif ($errors->has('csv_file'))
-            openArsipUploadModal('uploadCsvModal');
-        @endif
+        const pageData = document.getElementById('arsip-dosen-page-data');
+        const initialArsipUploadModal = pageData ? pageData.dataset.initialModal : '';
+        if (initialArsipUploadModal) {
+            openArsipUploadModal(initialArsipUploadModal);
+        }
     });
 </script>
 

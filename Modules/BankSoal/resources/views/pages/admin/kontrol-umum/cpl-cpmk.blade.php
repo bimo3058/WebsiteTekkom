@@ -1,4 +1,10 @@
 <x-banksoal::layouts.admin>
+    @section('breadcrumbs')
+    <a href="#" class="text-slate-500 hover:text-primary transition-colors">Kontrol Umum</a>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Manajemen CPL & CPMK</span>
+    @endsection
+
     @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
@@ -463,20 +469,12 @@
                 <p class="feature-subtitle">Format kode: CPL-1, CPL-2</p>
             </div>
             <div style="display: flex; gap: 8px;">
-                <a href="{{ route('banksoal.api.v1.admin.cpl.export-template') }}" class="btn-add" style="background: transparent; border-color: #cbd5e1; text-decoration: none; color: #1e293b;">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    Template
-                </a>
-                <button type="button" class="btn-add" style="background-color: var(--slate-100); border-color: var(--slate-300);" onclick="openImportModal('cpl')">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    Upload Data
-                </button>
-                <button type="button" class="btn-add" onclick="openAddModal('cpl')">
+                <a href="{{ route('banksoal.admin.kontrol-umum.cpl-cpmk.create') }}" class="btn-add" style="text-decoration: none;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                     Tambah CPL
-                </button>
+                </a>
             </div>
         </div>
 
@@ -521,20 +519,12 @@
                 <p class="feature-subtitle">Format kode: CPMK-1.1, CPMK 10.3</p>
             </div>
             <div style="display: flex; gap: 8px;">
-                <a href="{{ route('banksoal.api.v1.admin.cpmk.export-template') }}" class="btn-add" style="background: transparent; border-color: #cbd5e1; text-decoration: none; color: #1e293b;">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    Template
-                </a>
-                <button type="button" class="btn-add" style="background-color: var(--slate-100); border-color: var(--slate-300);" onclick="openImportModal('cpmk')">
-                    <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                    Upload Data
-                </button>
-                <button type="button" class="btn-add" onclick="openAddModal('cpmk')">
+                <a href="{{ route('banksoal.admin.kontrol-umum.cpl-cpmk.create') }}" class="btn-add" style="text-decoration: none;">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
                     Tambah CPMK
-                </button>
+                </a>
             </div>
         </div>
 
@@ -572,34 +562,12 @@
         </div>
     </section>
 
-    <div class="modal-overlay" id="importModal" onclick="closeImportModalOnBackdrop(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <h2 class="modal-title" id="importModalTitle">Upload Excel/CSV</h2>
-                <button type="button" class="modal-close" onclick="closeImportModal()">&times;</button>
-            </div>
-            <form id="importForm" action="" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="modal-body">
-                    <input type="hidden" id="importType" name="type">
-                    <div class="form-group">
-                        <label for="import_file">Pilih File (xls, xlsx, csv) *</label>
-                        <input type="file" id="import_file" name="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" required style="width: 100%; border: 1px solid var(--slate-300); padding: 10px; border-radius: 8px;">
-                    </div>
-                    <p style="font-size: 13px; color: var(--slate-600); margin-top: 8px;">Pastikan format file sesuai dengan template yang dapat diunduh.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-secondary" onclick="closeImportModal()">Batal</button>
-                    <button type="submit" class="btn-primary" id="btnSubmitImport">Upload Data</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
 
     <div class="modal-overlay" id="entityModal" onclick="closeModalOnBackdrop(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle">Tambah Data</h2>
+                <h2 class="modal-title" id="modalTitle">Edit Data</h2>
                 <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
             </div>
             <form id="entityForm" onsubmit="handleFormSubmit(event)">

@@ -17,7 +17,7 @@
 </head>
 <body>
     <div class="text-center no-print mb-6 space-x-4">
-        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-sans font-medium text-sm shadow-sm transition-colors">
+        <button onclick="window.print()" class="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-lg font-sans font-medium text-sm shadow-sm transition-colors">
             Cetak PDF / Print
         </button>
         <button onclick="window.close()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-6 py-2.5 rounded-lg font-sans font-medium text-sm transition-colors">

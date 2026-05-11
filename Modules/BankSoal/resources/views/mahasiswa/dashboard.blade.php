@@ -153,7 +153,7 @@
                                 </div>
                                 <div class="w-full sm:w-1/3">
                                     <button type="submit"
-                                        class="w-full h-12 px-5 {{ !$isUjianBerlangsung ? 'bg-slate-300 cursor-not-allowed text-slate-500' : 'bg-blue-600 hover:bg-blue-700 text-white' }} font-bold text-sm tracking-widest uppercase transition-colors flex items-center justify-center rounded-xl shadow-sm"
+                                        class="w-full h-12 px-5 {{ !$isUjianBerlangsung ? 'bg-slate-300 cursor-not-allowed text-slate-500' : 'bg-primary hover:bg-primary/90 text-white' }} font-bold text-sm tracking-widest uppercase transition-colors flex items-center justify-center rounded-xl shadow-sm"
                                         {{ !$isUjianBerlangsung ? 'disabled' : '' }}>
                                         Masuk Ujian →
                                     </button>
@@ -284,11 +284,11 @@
                         </div>
                     @else
                         <!-- STATE: ELIGIBLE & REGISTRATION OPEN -->
-                        <div class="flex flex-col border-2 border-blue-500 bg-white">
+                        <div class="flex flex-col border-2 border-primary bg-white">
                             <div class="p-8 sm:p-10 flex flex-col h-full">
                                 <div class="flex items-center gap-4 mb-6">
                                     <span
-                                        class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 border border-blue-200 text-[11px] font-bold tracking-widest uppercase">Terbuka</span>
+                                        class="inline-flex items-center px-3 py-1 bg-primary/10 text-primary border border-primary/20 text-[11px] font-bold tracking-widest uppercase">Terbuka</span>
                                 </div>
 
                                 <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-4 leading-tight">Pendaftaran
@@ -304,7 +304,7 @@
                                 <div
                                     class="mt-auto flex flex-col sm:flex-row sm:items-center justify-between border-t border-slate-200 pt-6 gap-6">
                                     <a href="{{ route('komprehensif.mahasiswa.pendaftaran.form') }}"
-                                        class="inline-block py-4 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm tracking-widest uppercase text-center transition-colors rounded-xl shadow-sm shadow-blue-500/25">
+                                        class="inline-block py-4 px-8 bg-primary hover:bg-primary/90 text-white font-bold text-sm tracking-widest uppercase text-center transition-colors rounded-xl shadow-sm shadow-primary/25">
                                         Daftar Ujian Komprehensif
                                     </a>
                                 </div>

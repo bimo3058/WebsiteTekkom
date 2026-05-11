@@ -12,7 +12,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Waduh, Gagal...',
-                    text: '{{ session('error') }}',
+                    text: @json(session('error')),
                     confirmButtonColor: '#ef4444',
                     background: '#ffffff',
                     customClass: {
@@ -89,7 +89,7 @@
                     @endforeach
                 </div>
             </div>
-            <div class="flex items-center justify-end border-t border-slate-200 bg-slate-50 px-6 py-4"><button type="submit" class="rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-900"><i class="fas fa-save mr-1"></i> Simpan Perubahan</button></div>
+            <div class="flex items-center justify-end border-t border-slate-200 bg-slate-50 px-6 py-4"><button type="submit" class="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"><i class="fas fa-save mr-1"></i> Simpan Perubahan</button></div>
         </form>
     </x-banksoal::ui.panel>
 
@@ -212,7 +212,7 @@
                 const cplId = this.value;
                 cpmkSelect.innerHTML = '<option value="">Memuat CPMK...</option>';
                 if (cplId) {
-                    fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${cplId}`)then(r => r.json()).then(data => {
+                    fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${cplId}`).then(r => r.json()).then(data => {
                         cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
                         data.forEach(c => { const selected = oldCpmkId == c.id ? 'selected' : ''; cpmkSelect.innerHTML += `<option value="${c.id}" ${selected}>${c.kode} - ${c.deskripsi.substring(0, 60)}...</option>`; });
                     }).catch(() => { cpmkSelect.innerHTML = '<option value="">Gagal memuat cpmk</option>'; });

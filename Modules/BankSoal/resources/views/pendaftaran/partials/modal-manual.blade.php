@@ -37,7 +37,7 @@
                     <div class="flex gap-2">
                         <input type="text" name="nim" id="input-nim" value="{{ old('nim') }}" required
                             placeholder="210101xxx"
-                            class="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-gray-900 @error('nim') border-red-500 @enderror">
+                            class="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-gray-900 @error('nim') border-red-500 @enderror">
                         <button type="button" onclick="lookupNIM()"
                             class="px-4 py-2 bg-gray-100 hover:bg-gray-200 border border-gray-300 rounded-md text-sm font-medium text-gray-700">
                             Cari
@@ -74,14 +74,14 @@
                             class="text-red-500">*</span></label>
                     <input type="text" name="target_wisuda" value="{{ old('target_wisuda') }}" required
                         placeholder="Contoh: Periode 183 (Apr-Jun '26)"
-                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 text-gray-900">
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary text-gray-900">
                 </div>
 
                 <!-- Dosen Pembimbing 1 -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Dosen Pembimbing 1</label>
                     <select name="dosen_pembimbing_1_id"
-                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
                         <option value="">— Pilih Dosen Pembimbing 1 —</option>
                         @foreach($dosenList as $dosen)
                             <option value="{{ $dosen->id }}">{{ $dosen->name }}</option>
@@ -93,7 +93,7 @@
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Dosen Pembimbing 2</label>
                     <select name="dosen_pembimbing_2_id"
-                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                        class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm text-gray-900 focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary">
                         <option value="">— Pilih Dosen Pembimbing 2 —</option>
                         @foreach($dosenList as $dosen)
                             <option value="{{ $dosen->id }}">{{ $dosen->name }}</option>
@@ -112,7 +112,7 @@
                 Batal
             </button>
             <button type="submit" form="form-tambah-manual"
-                class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700">
+                class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-primary rounded-md hover:bg-primary/90">
                 Simpan Peserta
             </button>
         </div>

@@ -98,7 +98,7 @@
 
         @can('banksoal.edit')
             <div class="mt-6 flex justify-end">
-                <a href="{{ route('banksoal.soal.dosen.edit', $soal->id) }}" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700">
+                <a href="{{ route('banksoal.soal.dosen.edit', $soal->id) }}" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90">
                     <i class="fas fa-pen"></i> Edit Soal
                 </a>
             </div>

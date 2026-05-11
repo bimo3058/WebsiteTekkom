@@ -18,10 +18,14 @@
         </div>
 
         <form action="{{ route('banksoal.rps.dosen.update', $rps->id) }}" method="POST" enctype="multipart/form-data" class="p-4 space-y-6"
+            id="rpsEditForm"
             data-route-dosen="{{ route('banksoal.rps.dosen.dosen') }}"
             data-route-cpl="{{ route('banksoal.rps.dosen.cpl') }}"
             data-route-cpmk="{{ route('banksoal.rps.dosen.cpmk') }}"
             data-route-cpmk-by-rps="{{ route('banksoal.rps.dosen.cpmk-by-rps', $rps->id) }}"
+            data-selected-dosen-id="{{ $selectedDosenIds[0] ?? '' }}"
+            data-selected-cpl-id="{{ $selectedCplIds[0] ?? '' }}"
+            data-selected-cpmk-id="{{ $selectedCpmkIds[0] ?? '' }}"
             data-rps-id="{{ $rps->id }}">
             @csrf
             @method('PUT')
@@ -201,7 +205,7 @@
     <div class="card overflow-hidden">
         <div class="card-header">
             <div class="flex items-center gap-2">
-                <i class="fas fa-history text-blue-600"></i>
+                <i class="fas fa-history text-primary"></i>
                 <h3 class="text-lg font-semibold text-slate-900">Riwayat Aktivitas RPS</h3>
             </div>
         </div>
@@ -211,8 +215,7 @@
                     @foreach($history as $item)
                     <div class="flex items-start gap-3 pb-3 {{ !$loop->last ? 'border-b border-slate-200' : '' }}">
                         <div class="flex-shrink-0">
-                            <div class="flex items-center justify-center w-8 h-8 rounded-full" 
-                                 style="background-color: {{ $loop->first ? '#3b82f6' : '#eab308' }}; color: white;">
+                            <div class="flex items-center justify-center w-8 h-8 rounded-full {{ $loop->first ? 'bg-primary' : 'bg-amber-500' }} text-white">
                                 <i class="fas {{ $loop->first ? 'fa-circle-check' : 'fa-edit' }} text-xs"></i>
                             </div>
                         </div>
@@ -249,9 +252,10 @@
             });
 
             // Pre-select existing data - now single values instead of arrays
-            const selectedDosenId = @json($selectedDosenIds[0] ?? null);
-            const selectedCplId = @json($selectedCplIds[0] ?? null);
-            const selectedCpmkId = @json($selectedCpmkIds[0] ?? null);
+            const rpsEditForm = document.getElementById('rpsEditForm');
+            const selectedDosenId = rpsEditForm?.dataset.selectedDosenId || null;
+            const selectedCplId = rpsEditForm?.dataset.selectedCplId || null;
+            const selectedCpmkId = rpsEditForm?.dataset.selectedCpmkId || null;
 
             // Initialize RPS Form
             const rpsForm = new RpsFormComponent();

@@ -18,14 +18,14 @@
             <span class="font-semibold">Review Progress:</span>
             Soal {{ $currentIndex ?? $soal->id }} dari {{ $totalSoalMK ?? '?' }}
             <div class="h-2 w-40 rounded-full bg-slate-200 overflow-hidden">
-                <div class="h-full bg-blue-600" style="width: {{ $progressPercentage ?? 0 }}%;"></div>
+                <div class="h-full bg-primary" data-progress="{{ (int) ($progressPercentage ?? 0) }}"></div>
             </div>
         </div>
     </div>
 
     <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div class="bg-slate-50 rounded-2xl border border-slate-200 p-5">
-            <div class="flex items-center gap-2 text-blue-700 font-semibold mb-4">
+            <div class="flex items-center gap-2 text-primary font-semibold mb-4">
                 <i class="far fa-dot-circle"></i>
                 Target Capaian Pembelajaran (CPL)
             </div>
@@ -38,7 +38,7 @@
 
             @if($soal->cpmk_kode)
                 <div class="h-px bg-slate-200 my-4"></div>
-                <div class="flex items-center gap-2 text-blue-700 font-semibold mb-4">
+                <div class="flex items-center gap-2 text-primary font-semibold mb-4">
                     <i class="far fa-dot-circle"></i>
                     Target Capaian Mata Kuliah (CPMK)
                 </div>
@@ -48,17 +48,8 @@
                 <p class="text-sm text-slate-600 leading-relaxed">{{ $soal->cpmk_deskripsi }}</p>
             @endif
 
-            @php
-                $kognitifMap = [
-                    'easy' => 'C1-C2 (Mengingat / Memahami)',
-                    'intermediate' => 'C3-C4 (Mengaplikasikan / Menganalisis)',
-                    'advanced' => 'C5-C6 (Mengevaluasi / Mencipta)',
-                ];
-                $kesulitanLabel = $soal->kesulitan ?? 'intermediate';
-                $levelKognitif = $kognitifMap[$kesulitanLabel] ?? 'C3-C4 (Sedang)';
-            @endphp
-            <span class="mt-4 inline-flex items-center rounded-full bg-blue-600 px-3 py-1 text-[11px] font-semibold text-white">
-                Level Kognitif: {{ $levelKognitif }} ({{ ucfirst($kesulitanLabel) }})
+            <span class="mt-4 inline-flex items-center rounded-full bg-primary px-3 py-1 text-[11px] font-semibold text-white">
+                Level Kognitif: C4 (Menganalisis)
             </span>
         </div>
 
@@ -118,10 +109,10 @@
                             @endphp
                             @foreach($dummyParams as $param)
                                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
-                                    <p class="text-sm font-semibold text-slate-700">{{ $param['parameter'] }} <span class="text-blue-600">({{ $param['bobot'] }}%)</span></p>
+                                    <p class="text-sm font-semibold text-slate-700">{{ $param['parameter'] }} <span class="text-primary">({{ $param['bobot'] }}%)</span></p>
                                     <div class="mt-3 flex gap-6 text-sm text-slate-600">
-                                        <label class="inline-flex items-center gap-2 cursor-pointer font-medium hover:text-blue-600 transition-colors">
-                                            <input type="radio" name="parameter_{{ $param['id'] }}" value="1" data-bobot="{{ $param['bobot'] }}" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-500" onchange="hitungSkor()" required> Sesuai
+                                        <label class="inline-flex items-center gap-2 cursor-pointer font-medium hover:text-primary transition-colors">
+                                            <input type="radio" name="parameter_{{ $param['id'] }}" value="1" data-bobot="{{ $param['bobot'] }}" class="w-4 h-4 text-primary border-slate-300 focus:ring-primary" onchange="hitungSkor()" required> Sesuai
                                         </label>
                                         <label class="inline-flex items-center gap-2 cursor-pointer font-medium hover:text-rose-600 transition-colors">
                                             <input type="radio" name="parameter_{{ $param['id'] }}" value="0" data-bobot="{{ $param['bobot'] }}" class="w-4 h-4 text-rose-600 border-slate-300 focus:ring-rose-500" onchange="hitungSkor()" required> Tidak Sesuai
@@ -138,14 +129,14 @@
 
                         <div class="mt-5">
                             <label for="catatan" class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 block">Catatan Revisi</label>
-                            <textarea id="catatan" name="catatan" placeholder="Masukkan feedback untuk dosen..." class="w-full min-h-[120px] rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-50/50 focus:border-blue-300 transition-colors"></textarea>
+                            <textarea id="catatan" name="catatan" placeholder="Masukkan feedback untuk dosen..." class="w-full min-h-[120px] rounded-xl border border-slate-200 px-4 py-3 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors"></textarea>
                         </div>
 
                         <div class="mt-6 flex flex-col sm:flex-row gap-3 pt-2">
                             <button type="submit" class="flex-1 rounded-xl border border-rose-200 px-4 py-3 text-sm font-bold text-rose-600 hover:bg-rose-50 transition-colors flex items-center justify-center gap-2" id="btnKembalikan" onclick="setKembalikan()">
                                 Kembalikan Ke Dosen <i class="fas fa-undo"></i>
                             </button>
-                            <button type="submit" class="flex-1 rounded-xl bg-blue-600 px-4 py-3 text-sm font-bold text-white hover:bg-blue-700 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" id="btnSetujui" onclick="setSetuju()">
+                            <button type="submit" class="flex-1 rounded-xl bg-primary px-4 py-3 text-sm font-bold text-white hover:bg-primary/90 disabled:bg-slate-200 disabled:text-slate-400 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2" id="btnSetujui" onclick="setSetuju()">
                                 Valid dan Lanjut <i class="fas fa-arrow-right"></i>
                             </button>
                         </div>
@@ -156,6 +147,11 @@
     </div>
 
     <script>
+        document.querySelectorAll('[data-progress]').forEach((bar) => {
+            const progress = Number(bar.getAttribute('data-progress') || 0);
+            bar.style.width = `${progress}%`;
+        });
+
         function hitungSkor() {
             const form = document.getElementById('validasiForm');
             const nilaiAkhirEl = document.getElementById('nilaiAkhir');

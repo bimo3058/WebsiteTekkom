@@ -1,10 +1,16 @@
 <x-banksoal::layouts.admin>
+    @section('breadcrumbs')
+    <a href="#" class="text-slate-500 hover:text-primary transition-colors">Kontrol Umum</a>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Manajemen Mata Kuliah</span>
+    @endsection
+
     @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary-blue: #3b82f6;
-            --primary-hover: #2563eb;
+            --primary-blue: rgb(11, 38, 110);
+            --primary-hover: rgb(8, 28, 82);
             --danger-red: #ef4444;
             --danger-hover: #dc2626;
             --slate-50: #f8fafc;
@@ -64,7 +70,7 @@
         .btn-add:hover {
             background: #f1f5f9;
             border-color: #94a3b8;
-            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.1);
+            box-shadow: 0 2px 4px rgba(11, 38, 110, 0.1);
         }
 
         .btn-add svg {
@@ -379,12 +385,13 @@
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(0, 0, 0, 0.5);
-            z-index: 50;
-            align-items: center;
+            backdrop-filter: blur(4px);
+            z-index: 100;
             justify-content: center;
+            align-items: center;
         }
 
         .modal-overlay.show {
@@ -587,20 +594,12 @@
             <p>Kelola data mata kuliah untuk program studi</p>
         </div>
         <div style="display: flex; gap: 8px;">
-            <a href="{{ route('banksoal.api.v1.admin.mata-kuliah.export-template') }}" class="btn-cancel-select" style="display: inline-flex; align-items: center; text-decoration: none; gap: 8px;">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                Template
-            </a>
-            <button type="button" onclick="openImportModal()" class="btn-add" style="background-color: var(--slate-100); border-color: var(--slate-300);">
-                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
-                Upload Data
-            </button>
-            <button type="button" onclick="openAddModal()" class="btn-add">
+            <a href="{{ route('banksoal.admin.kontrol-umum.mata-kuliah.create') }}" class="btn-add" style="text-decoration: none;">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
                 Tambah Mata Kuliah
-            </button>
+            </a>
         </div>
     </div>
 
@@ -672,33 +671,12 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="importModal" onclick="closeImportModalOnBackdrop(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <h2 class="modal-title">Upload Excel/CSV Mata Kuliah</h2>
-                <button type="button" class="modal-close" onclick="closeImportModal()">&times;</button>
-            </div>
-            <form id="importForm" action="{{ route('banksoal.api.v1.admin.mata-kuliah.import') }}" method="POST" enctype="multipart/form-data">
-                @csrf
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="import_file">Pilih File (xls, xlsx, csv) *</label>
-                        <input type="file" id="import_file" name="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" required style="width: 100%; border: 1px solid var(--slate-300); padding: 10px; border-radius: 8px;">
-                    </div>
-                    <p style="font-size: 13px; color: var(--slate-600); margin-top: 8px;">Pastikan format file sesuai dengan template yang dapat diunduh.</p>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn-secondary" onclick="closeImportModal()">Batal</button>
-                    <button type="submit" class="btn-primary" id="btnSubmitImport">Upload Data</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
 
     <div class="modal-overlay" id="mataKuliahModal" onclick="closeModalOnBackdrop(event)">
         <div class="modal-content" onclick="event.stopPropagation()">
             <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle">Tambah Mata Kuliah</h2>
+                <h2 class="modal-title" id="modalTitle">Edit Mata Kuliah</h2>
                 <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
             </div>
 

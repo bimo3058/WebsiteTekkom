@@ -5,7 +5,7 @@
             <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50" data-modal-open="modalUploadTemplate">
                 <i class="fas fa-file-upload"></i> Upload Template
             </button>
-            <button type="button" class="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-blue-700" data-modal-open="modalTambah">
+            <button type="button" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90" data-modal-open="modalTambah">
                 <i class="fas fa-plus"></i> Tambah Periode
             </button>
         </x-slot:actions>
@@ -51,7 +51,7 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <button type="button" class="inline-flex items-center justify-center rounded-lg border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50" data-modal-open="modalEdit{{ $periode->id }}">
+                                <button type="button" class="inline-flex items-center justify-center rounded-lg border border-primary/20 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/10" data-modal-open="modalEdit{{ $periode->id }}">
                                     <i class="fas fa-edit"></i>
                                 </button>
                                 <button type="button" class="inline-flex items-center justify-center rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50" data-modal-open="modalHapus{{ $periode->id }}">
@@ -66,7 +66,7 @@
                                     <i class="fas fa-calendar-times text-3xl text-slate-300"></i>
                                     <p class="text-sm font-semibold">Belum ada jadwal RPS</p>
                                     <p class="text-xs">Silakan tambah periode baru untuk mengaktifkan pengajuan RPS Dosen.</p>
-                                    <button class="mt-2 inline-flex items-center gap-2 rounded-lg border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50" data-modal-open="modalTambah">
+                                    <button class="mt-2 inline-flex items-center gap-2 rounded-lg border border-primary/20 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/10" data-modal-open="modalTambah">
                                         <i class="fas fa-plus"></i> Tambah Periode Pertama
                                     </button>
                                 </div>
@@ -132,7 +132,7 @@
                     </div>
                     <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
                         <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalEdit{{ $periode->id }}">Batal</button>
-                        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700">Simpan Perubahan</button>
+                        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90">Simpan Perubahan</button>
                     </div>
                 </form>
             </div>
@@ -210,7 +210,7 @@
                 </div>
                 <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
                     <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalTambah">Batal</button>
-                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700">Buat Periode</button>
+                    <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90">Buat Periode</button>
                 </div>
             </form>
         </div>
@@ -232,7 +232,7 @@
                         <label class="text-xs font-semibold text-slate-600">File Template (Word Format) <span class="text-rose-500">*</span></label>
                         <div id="uploadBoxTemplate" class="mt-2 rounded-xl border-2 border-dashed border-slate-200 p-4 text-center cursor-pointer">
                             <i class="fas fa-cloud-upload-alt text-slate-400 text-2xl mb-2"></i>
-                            <p class="text-sm text-slate-500">Dragdrop file atau <span class="text-blue-600 underline">pilih file</span></p>
+                            <p class="text-sm text-slate-500">Dragdrop file atau <span class="text-primary underline">pilih file</span></p>
                             <p class="text-xs text-slate-400">Format: .doc, .docx (Maksimal 1 MB)</p>
                             <input type="file" name="dokumen" id="fileTemplate" accept=".doc,.docx" required class="hidden">
                             <div id="fileSelected" class="mt-3 hidden">
@@ -247,14 +247,14 @@
                         <label class="text-xs font-semibold text-slate-600">Keterangan (Opsional)</label>
                         <textarea class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="keterangan" rows="3" placeholder="Misal: Update struktur template, tambahan BAB, dll..."></textarea>
                     </div>
-                    <div class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+                    <div class="rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-xs text-primary">
                         <i class="fas fa-info-circle mr-2"></i>
                         Template baru akan otomatis menjadi versi terbaru yang dapat diunduh dosen.
                     </div>
                 </div>
                 <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
                     <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalUploadTemplate">Batal</button>
-                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700">Upload Template</button>
+                    <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90">Upload Template</button>
                 </div>
             </form>
         </div>
@@ -280,13 +280,13 @@
 
             ['dragenter', 'dragover'].forEach(eventName => {
                 uploadBox.addEventListener(eventName, () => {
-                    uploadBox.classList.add('border-blue-300', 'bg-blue-50/40');
+                    uploadBox.classList.add('border-primary/30', 'bg-primary/10');
                 });
             });
 
             ['dragleave', 'drop'].forEach(eventName => {
                 uploadBox.addEventListener(eventName, () => {
-                    uploadBox.classList.remove('border-blue-300', 'bg-blue-50/40');
+                    uploadBox.classList.remove('border-primary/30', 'bg-primary/10');
                 });
             });
 

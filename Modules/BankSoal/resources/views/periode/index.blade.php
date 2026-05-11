@@ -1,5 +1,11 @@
 @section('hide_global_errors', true)
 <x-banksoal::layouts.admin>
+    @section('breadcrumbs')
+    <a href="#" class="text-slate-500 hover:text-primary transition-colors">Ujian Komprehensif</a>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Setup Periode</span>
+    @endsection
+
     <div x-data="{ 
         openModal: {{ $errors->any() && !old('_method') ? 'true' : 'false' }}, 
         editModal: {{ $errors->any() && old('_method') === 'PUT' ? 'true' : 'false' }}, 
@@ -21,7 +27,7 @@
             </div>
 
             <button @click="openModal = true"
-                class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 transition-colors rounded-xl px-5 py-2.5 text-white font-medium text-sm shadow-sm shadow-blue-500/20">
+                class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 transition-colors rounded-xl px-5 py-2.5 text-white font-medium text-sm shadow-sm shadow-primary/20">
                 <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"
                     xmlns="http://www.w3.org/2000/svg">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
@@ -141,7 +147,7 @@
                         Batal
                     </button>
                     <button type="button" onclick="document.getElementById('formPeriodeBaru').submit()"
-                        class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-all shadow-blue-500/25">
+                        class="px-6 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-sm transition-all shadow-primary/25">
                         Simpan Periode
                     </button>
                 </div>
@@ -268,7 +274,7 @@
                         Batal
                     </button>
                     <button type="button" onclick="document.getElementById('formEditPeriode').submit()"
-                        class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-all shadow-blue-500/25">
+                        class="px-6 py-3 bg-primary hover:bg-primary/90 text-white font-bold rounded-xl shadow-sm transition-all shadow-primary/25">
                         Simpan Perubahan
                     </button>
                 </div>

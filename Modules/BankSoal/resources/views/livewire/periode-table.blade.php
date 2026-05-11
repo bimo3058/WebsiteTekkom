@@ -7,7 +7,7 @@
         <!-- Show Entries (Kiri) -->
         <div class="flex items-center gap-2">
             <span>Show</span>
-            <select wire:model.live="perPage" class="pl-3 pr-8 py-1.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-600 cursor-pointer shadow-sm">
+            <select wire:model.live="perPage" class="pl-3 pr-8 py-1.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-600 cursor-pointer shadow-sm">
                 <option value="5">5</option>
                 <option value="10">10</option>
                 <option value="25">25</option>
@@ -23,7 +23,7 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
             </div>
-            <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search..." class="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all placeholder:text-slate-400 shadow-sm">
+            <input type="text" wire:model.live.debounce.300ms="search" placeholder="Search..." class="w-full pl-9 pr-4 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder:text-slate-400 shadow-sm">
         </div>
         
     </div>
@@ -74,7 +74,7 @@
                             @elseif($now->gt($tglSelesai))
                                 <span class="inline-flex items-center px-3 py-1.5 rounded-full text-[12px] font-bold bg-slate-100 text-slate-600 tracking-wide border border-slate-300">DAFTAR TUTUP</span>
                             @else
-                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-bold bg-blue-500 text-white tracking-wide">
+                                <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[12px] font-bold bg-primary text-white tracking-wide">
                                     <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
                                     AKTIF &middot; DAFTAR BUKA
                                 </span>

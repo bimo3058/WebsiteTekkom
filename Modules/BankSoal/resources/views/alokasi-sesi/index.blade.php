@@ -1,6 +1,15 @@
 <x-banksoal::layouts.admin>
+    @section('breadcrumbs')
+    <a href="#" class="text-slate-500 hover:text-primary transition-colors">Ujian Komprehensif</a>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Jadwal & Sesi</span>
+    @endsection
+
     @section('hide_global_errors', true)
-    <div x-data="alokasiSesiApp()" class="w-full relative">
+        <div id="alokasiSesiRoot" x-data="alokasiSesiApp()" class="w-full relative"
+            data-open-modal="{{ $errors->any() ? '1' : '0' }}"
+            data-jadwals='@json($jadwals ?? [])'
+            data-pendaftars='@json($pendaftars ?? [])'>
         
         <!-- Page Header -->
         <div class="mb-6">
@@ -48,8 +57,8 @@
                     <button type="button" @click="toggle()"
                             class="group inline-flex items-center gap-2.5 pl-4 pr-3 py-2 rounded-lg text-[13px] font-semibold border transition-all duration-200 shadow-sm
                                    {{ $selectedPeriode
-                                       ? 'bg-white text-slate-700 border-slate-300 hover:border-blue-400 hover:shadow-md'
-                                       : 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700' }}">
+                                       ? 'bg-white text-slate-700 border-slate-300 hover:border-primary/40 hover:shadow-md'
+                                       : 'bg-primary text-white border-primary hover:bg-primary/90' }}">
                         @if($selectedPeriode)
                             <span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
                             <span class="max-w-[220px] truncate">{{ $selectedPeriode->nama_periode }}</span>
@@ -84,7 +93,7 @@
                                        x-model="search"
                                        type="text"
                                        placeholder="Cari nama periode..."
-                                       class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400">
+                                       class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
                             </div>
                             <p class="text-[11px] text-slate-400 mt-2 pl-1">
                                 <span x-text="filtered.length"></span> dari {{ $periodes->count() }} periode
@@ -96,11 +105,11 @@
                             <template x-for="p in filtered" :key="p.id">
                                 <a :href="p.url"
                                    class="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors hover:bg-slate-50 group/item"
-                                   :class="p.id == {{ $selectedPeriodeId ?? 'null' }} ? 'bg-blue-50 text-blue-700' : 'text-slate-700'">
+                                   :class="p.id == {{ $selectedPeriodeId ?? 'null' }} ? 'bg-primary/10 text-primary' : 'text-slate-700'">
                                     <span class="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                          :class="p.id == {{ $selectedPeriodeId ?? 'null' }} ? 'bg-blue-600' : 'bg-slate-300'"></span>
+                                          :class="p.id == {{ $selectedPeriodeId ?? 'null' }} ? 'bg-primary' : 'bg-slate-300'"></span>
                                     <span x-text="p.nama" class="flex-1 truncate"></span>
-                                    <svg x-show="p.id == {{ $selectedPeriodeId ?? 'null' }}" class="w-3.5 h-3.5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                    <svg x-show="p.id == {{ $selectedPeriodeId ?? 'null' }}" class="w-3.5 h-3.5 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                 </a>
                             </template>
 
@@ -124,7 +133,7 @@
             <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
             <span class="text-[13px] text-slate-500 font-medium">Rentang Ujian:</span>
             @if($selectedPeriode->tanggal_mulai_ujian && $selectedPeriode->tanggal_selesai_ujian)
-                <span class="px-3 py-1 bg-blue-50 text-blue-700 text-[13px] font-semibold border border-blue-200 rounded-lg">
+                <span class="px-3 py-1 bg-primary/10 text-primary text-[13px] font-semibold border border-primary/20 rounded-lg">
                     {{ \Carbon\Carbon::parse($selectedPeriode->tanggal_mulai_ujian)->translatedFormat('d M Y') }} &ndash; {{ \Carbon\Carbon::parse($selectedPeriode->tanggal_selesai_ujian)->translatedFormat('d M Y') }}
                 </span>
             @else
@@ -133,11 +142,11 @@
         </div>
         @else
         <!-- Empty State: no periode selected -->
-        <div class="mb-6 bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex gap-3">
-            <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <div class="mb-6 bg-primary/5 border border-primary/10 rounded-xl p-4 flex gap-3">
+            <svg class="w-5 h-5 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
             </svg>
-            <p class="text-sm text-blue-800">
+            <p class="text-sm text-primary/80">
                 Data sesi ujian akan tampil setelah Anda memilih <strong>Periode Ujian</strong> di atas.
             </p>
         </div>
@@ -151,7 +160,7 @@
                     <h2 class="font-bold text-slate-800">Daftar Sesi Ujian</h2>
 
                 </div>
-                <button @click="openModal = true" @if(!$selectedPeriode) disabled @endif class="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-xl px-4 py-2 text-white font-semibold text-[13px] shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-600/30">
+                <button @click="openModal = true" @if(!$selectedPeriode) disabled @endif class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-xl px-4 py-2 text-white font-semibold text-[13px] shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
                     Tambah Sesi
                 </button>
@@ -171,7 +180,7 @@
                         @forelse($jadwals as $jadwal)
                         <tr class="hover:bg-slate-50/70 transition-colors cursor-pointer group" @click="openJadwalDrawer({{ $jadwal->id }})">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="font-semibold text-slate-800 group-hover:text-blue-600 transition-colors">{{ is_numeric($jadwal->nama_sesi) ? 'Sesi ' . $jadwal->nama_sesi : $jadwal->nama_sesi }}</span>
+                                <span class="font-semibold text-slate-800 group-hover:text-primary transition-colors">{{ is_numeric($jadwal->nama_sesi) ? 'Sesi ' . $jadwal->nama_sesi : $jadwal->nama_sesi }}</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-slate-600 font-medium">
                                 <div class="flex flex-col gap-1">
@@ -185,14 +194,14 @@
                                 @endphp
                                 <div class="flex items-center gap-3">
                                     <div class="w-full bg-slate-100 rounded-full h-2 max-w-[100px]">
-                                        <div class="h-2 rounded-full {{ $isFull ? 'bg-red-500' : 'bg-blue-600' }}" style="width: {{ min($percent, 100) }}%"></div>
+                                        <div class="h-2 rounded-full {{ $isFull ? 'bg-red-500' : 'bg-primary' }}" data-progress="{{ (int) min($percent, 100) }}"></div>
                                     </div>
                                     <span class="text-xs font-bold {{ $isFull ? 'text-red-600' : 'text-slate-600' }}">{{ $jadwal->terisi }} / {{ $jadwal->kuota }}</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
                                 <div class="flex items-center justify-center gap-2">
-                                    <button @click.stop="openJadwalDrawer({{ $jadwal->id }})" class="text-blue-700 bg-blue-50 border border-blue-200 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors text-[13px] font-bold shadow-sm">
+                                    <button @click.stop="openJadwalDrawer({{ $jadwal->id }})" class="text-primary bg-primary/10 border border-primary/20 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors text-[13px] font-bold shadow-sm">
                                         Kelola Peserta
                                     </button>
                                     
@@ -257,7 +266,7 @@
                                 <table class="w-full text-left text-sm text-slate-600">
                                     <thead class="bg-slate-50/80 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
                                         <tr>
-                                            <th scope="col" class="px-6 py-3.5 w-16 text-center">No.</th>
+                                            <th scope="col" class="px-6 py-3.5 w-12 text-center">No.</th>
                                             <th scope="col" class="px-6 py-3.5 w-48">NIM</th>
                                             <th scope="col" class="px-6 py-3.5">Nama Mahasiswa</th>
                                         </tr>
@@ -361,7 +370,7 @@
                                         
                                         <div class="flex justify-between items-center mb-3">
                                             <h3 class="font-bold text-slate-700 text-[13px]">Tambahkan ke sesi ini:</h3>
-                                            <button type="button" @click="document.getElementById('formAssign').submit()" class="bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors flex items-center gap-2" :disabled="selectedUnassignedIds.length === 0 || (selectedJadwal?.terisi + selectedUnassignedIds.length) > selectedJadwal?.kuota">
+                                            <button type="button" @click="document.getElementById('formAssign').submit()" class="bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition-colors flex items-center gap-2" :disabled="selectedUnassignedIds.length === 0 || (selectedJadwal?.terisi + selectedUnassignedIds.length) > selectedJadwal?.kuota">
                                                 Tambahkan (<span x-text="selectedUnassignedIds.length"></span>)
                                             </button>
                                         </div>
@@ -369,20 +378,15 @@
                                         <!-- Search filter -->
                                         <div class="relative mb-3">
                                             <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                                            <input x-model="drawerSearch" type="text" placeholder="Cari nama atau NIM..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400">
+                                            <input x-model="drawerSearch" type="text" placeholder="Cari nama atau NIM..." class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-lg text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
                                         </div>
                                         
-                                        <div x-show="selectedJadwal && (selectedJadwal.terisi + selectedUnassignedIds.length) > selectedJadwal.kuota" class="mb-3 text-[12px] font-bold text-red-600 bg-red-50 px-4 py-3 rounded-xl border border-red-100 flex items-center gap-2">
-                                            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" /></svg>
-                                            Jumlah pilihan melebih sisa kuota sesi ini!
-                                        </div>
-
                                         <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
                                             <table class="w-full text-left text-sm">
                                                 <thead class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
                                                     <tr>
                                                         <th class="px-5 py-3.5 w-12 text-center border-r border-slate-100">
-                                                            <input type="checkbox" x-model="checkAllUnassigned" @change="toggleAllUnassigned()" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
+                                                            <input type="checkbox" x-model="checkAllUnassigned" @change="toggleAllUnassigned()" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4">
                                                         </th>
                                                         <th class="px-5 py-3.5">Nama & NIM Mahasiswa</th>
                                                     </tr>
@@ -391,7 +395,7 @@
                                                     <template x-for="p in filteredUnassignedStudents" :key="p.id">
                                                         <tr class="hover:bg-slate-50/70 transition-colors">
                                                             <td class="px-5 py-3 text-center border-r border-slate-100">
-                                                                <input type="checkbox" name="pendaftar_ids[]" :value="p.id" x-model="selectedUnassignedIds" class="rounded border-slate-300 text-blue-600 focus:ring-blue-500 w-4 h-4">
+                                                                <input type="checkbox" name="pendaftar_ids[]" :value="p.id" x-model="selectedUnassignedIds" class="rounded border-slate-300 text-primary focus:ring-primary w-4 h-4">
                                                             </td>
                                                             <td class="px-5 py-3">
                                                                 <div class="font-bold text-slate-800" x-text="p.mahasiswa?.nama || p.nama_lengkap"></div>
@@ -509,7 +513,7 @@
                         
                         @if(session('error'))
                             <div class="p-3 mb-4 rounded-xl bg-red-50 border border-red-200 text-[13px] font-medium text-red-600 flex items-start gap-2">
-                                <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                                 <span>{{ session('error') }}</span>
                             </div>
                         @endif
@@ -517,10 +521,10 @@
                         <!-- Box 1: Nama Sesi -->
                         <div>
                             <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Sesi Ke-</label>
-                            <input type="number" name="nama_sesi" value="{{ old('nama_sesi') }}" placeholder="1" min="1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-shadow @error('nama_sesi') border-red-500 ring-red-500/20 @enderror">
+                            <input type="number" name="nama_sesi" value="{{ old('nama_sesi') }}" placeholder="1" min="1" required class="w-full px-4 py-2.5 bg-white rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 placeholder-slate-400 transition-shadow {{ $errors->has('nama_sesi') ? 'border-red-500 ring-red-500/20' : 'border border-slate-300' }}">
                             @error('nama_sesi')
                                 <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                                     {{ $message }}
                                 </p>
                             @enderror
@@ -530,7 +534,7 @@
                         <div>
                             <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Tanggal Ujian (Berdasarkan Rentang Periode)</label>
                             <div class="relative">
-                                <select name="tanggal_ujian" required class="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow cursor-pointer @error('tanggal_ujian') border-red-500 ring-red-500/20 @enderror">
+                                <select name="tanggal_ujian" required class="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow cursor-pointer">
                                     <option value="">Pilih Tanggal Ujian...</option>
                                     @if($selectedPeriode && $selectedPeriode->tanggal_mulai_ujian && $selectedPeriode->tanggal_selesai_ujian)
                                         @php
@@ -545,7 +549,7 @@
                             </div>
                             @error('tanggal_ujian')
                                 <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                                     {{ $message }}
                                 </p>
                             @enderror
@@ -555,36 +559,18 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Waktu Mulai</label>
-                                <input type="time" id="as_waktu_mulai" name="waktu_mulai" value="{{ old('waktu_mulai') }}" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow @error('waktu_mulai') border-red-500 ring-red-500/20 @enderror">
-                                @error('waktu_mulai')
-                                    <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
+                                <input type="time" name="waktu_mulai" value="{{ old('waktu_mulai') }}" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow">
                             </div>
                             <div>
                                 <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Waktu Selesai</label>
-                                <input type="time" id="as_waktu_selesai" name="waktu_selesai" value="{{ old('waktu_selesai') }}" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow @error('waktu_selesai') border-red-500 ring-red-500/20 @enderror">
-                                @error('waktu_selesai')
-                                    <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
-                                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                        {{ $message }}
-                                    </p>
-                                @enderror
+                                <input type="time" name="waktu_selesai" value="{{ old('waktu_selesai') }}" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow">
                             </div>
                         </div>
 
                         <!-- Box 4: Kapasitas -->
                         <div>
                             <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Kapasitas Maksimal</label>
-                            <input type="number" name="kuota" value="{{ old('kuota') }}" placeholder="50" min="1" step="1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-shadow @error('kuota') border-red-500 ring-red-500/20 @enderror">
-                            @error('kuota')
-                                <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                                    {{ $message }}
-                                </p>
-                            @enderror
+                            <input type="number" name="kuota" value="{{ old('kuota') }}" placeholder="50" min="1" step="1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 placeholder-slate-400 transition-shadow">
                         </div>
                     </form>
                 </div>
@@ -594,7 +580,7 @@
                     <button type="button" @click="openModal = false" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-slate-600 bg-white border border-slate-300 hover:bg-slate-50 hover:text-slate-800 shadow-sm rounded-xl focus:outline-none transition-colors">
                         Batal
                     </button>
-                    <button type="button" onclick="document.getElementById('formTambahSesi').submit()" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm rounded-xl focus:outline-none transition-colors">
+                    <button type="button" onclick="document.getElementById('formTambahSesi').submit()" class="w-full sm:w-auto px-5 py-2.5 text-sm font-bold text-white bg-primary hover:bg-primary/90 shadow-sm rounded-xl focus:outline-none transition-colors">
                         Simpan Sesi
                     </button>
                 </div>
@@ -649,16 +635,20 @@
     </div> <!-- end x-data -->
 
     <script>
+        document.querySelectorAll('[data-progress]').forEach((bar) => {
+            bar.style.width = `${Number(bar.getAttribute('data-progress') || 0)}%`;
+        });
+
         document.addEventListener('alpine:init', () => {
             Alpine.data('alokasiSesiApp', () => ({
-                openModal: {{ $errors->any() ? 'true' : 'false' }},
+                openModal: false,
                 openDrawer: false,
                 deleteConfirmModal: false,
                 jadwalToDeleteId: null,
                 drawerTab: 'unassigned', // unassigned | assigned
                 selectedJadwal: null,
-                jadwals: @json($jadwals ?? []),
-                pendaftars: @json($pendaftars ?? []),
+                jadwals: [],
+                pendaftars: [],
                 
                 checkAllUnassigned: false,
                 checkAllAssigned: false,
@@ -667,7 +657,10 @@
                 drawerSearch: '',
                 
                 init() {
-                    // console.log("Alpine init", this.jadwals, this.pendaftars);
+                    const root = document.getElementById('alokasiSesiRoot');
+                    this.openModal = root?.dataset.openModal === '1';
+                    this.jadwals = JSON.parse(root?.dataset.jadwals || '[]');
+                    this.pendaftars = JSON.parse(root?.dataset.pendaftars || '[]');
                 },
 
                 get unassignedStudents() {

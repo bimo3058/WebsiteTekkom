@@ -14,7 +14,7 @@
     <!-- Scripts -->
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="font-sans antialiased text-slate-900 bg-slate-50 selection:bg-blue-500 selection:text-white">
+<body class="font-sans antialiased text-slate-900 bg-slate-50 selection:bg-primary selection:text-white">
     <div class="flex h-screen bg-slate-50 font-sans text-slate-900 overflow-hidden">
         
         <!-- Sidebar -->

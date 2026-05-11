@@ -45,17 +45,17 @@
                         <td class="px-4 py-[14px] whitespace-nowrap">
                             <div class="flex items-center justify-center gap-2">
                                 {{-- Detail — selalu tampil --}}
-                                <button type="button" title="Lihat Detail" onclick="openDetailModal({
-                                                    nim: '{{ $item->nim }}',
-                                                    nama: '{{ addslashes($item->nama_lengkap) }}',
-                                                    semester: '{{ $item->semester_aktif }}',
-                                                    target_wisuda: '{{ addslashes($item->target_wisuda ?? '-') }}',
-                                                    status: '{{ $item->status_pendaftaran }}',
-                                                    tanggal: '{{ $item->created_at->translatedFormat('d F Y, H:i') }}',
-                                                    dosen1: '{{ addslashes($item->dosenPembimbing1->name ?? '-') }}',
-                                                    dosen2: '{{ addslashes($item->dosenPembimbing2->name ?? '-') }}'
-                                                })"
-                                    class="inline-flex items-center justify-center w-8 h-8 rounded-md bg-transparent text-slate-400 hover:text-blue-600 hover:bg-blue-50 transition-colors">
+                                <button type="button" title="Lihat Detail" onclick='openDetailModal(@json([
+                                                    'nim' => $item->nim,
+                                                    'nama' => $item->nama_lengkap,
+                                                    'semester' => $item->semester_aktif,
+                                                    'target_wisuda' => $item->target_wisuda ?? '-',
+                                                    'status' => $item->status_pendaftaran,
+                                                    'tanggal' => $item->created_at->translatedFormat('d F Y, H:i'),
+                                                    'dosen1' => $item->dosenPembimbing1->name ?? '-',
+                                                    'dosen2' => $item->dosenPembimbing2->name ?? '-',
+                                                ]))'
+                                    class="inline-flex items-center justify-center w-8 h-8 rounded-md bg-transparent text-slate-400 hover:text-primary hover:bg-primary/10 transition-colors">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                             d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>

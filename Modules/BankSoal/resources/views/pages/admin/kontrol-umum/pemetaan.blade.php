@@ -1,10 +1,17 @@
 <x-banksoal::layouts.admin>
+    @section('breadcrumbs')
+    <a href="#" class="text-slate-500 hover:text-primary transition-colors">Kontrol Umum</a>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Pemetaan</span>
+    @endsection
+
     @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/tom-select@2.3.1/dist/css/tom-select.css" rel="stylesheet">
     <style>
         :root {
-            --primary-blue: #3b82f6;
+            --primary-blue: rgb(11, 38, 110);
+            --primary-hover: rgb(8, 28, 82);
             --danger-red: #ef4444;
             --slate-50: #f8fafc;
             --slate-100: #f1f5f9;

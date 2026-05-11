@@ -78,7 +78,7 @@
         <div class="xl:col-span-2 space-y-6">
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
                 <div class="text-sm font-semibold text-slate-900 flex items-center gap-2 mb-4">
-                    <i class="fas fa-clipboard-check text-blue-600"></i> Form Penilaian GPM
+                    <i class="fas fa-clipboard-check text-primary"></i> Form Penilaian GPM
                 </div>
 
                 <form id="validasiForm" method="POST" class="flex-1 flex flex-col">
@@ -90,7 +90,7 @@
                             <div class="mb-4">
                                 <div class="flex items-center justify-between gap-3 text-sm text-slate-700 font-medium">
                                     <span>{{ $index + 1 }}. {{ $param->aspek }}</span>
-                                    <span class="inline-flex shrink-0 whitespace-nowrap items-center rounded-md bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-200">{{ $param->bobot }} poin</span>
+                                    <span class="inline-flex shrink-0 whitespace-nowrap items-center rounded-md bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/20">{{ $param->bobot }} poin</span>
                                 </div>
                                 <div class="mt-2 flex gap-4 text-xs text-slate-600">
                                     <label class="inline-flex items-center gap-2">
@@ -108,7 +108,7 @@
 
                     <div class="mt-4 border-y border-dashed border-slate-200 py-3 flex items-center justify-between">
                         <span class="text-xs font-semibold text-slate-500">Skor Evaluasi</span>
-                        <span class="text-lg font-bold text-blue-600" id="nilaiAkhir">{{ isset($existingReview) ? $existingReview->nilai_akhir : '0' }}/100</span>
+                        <span class="text-lg font-bold text-primary" id="nilaiAkhir">{{ isset($existingReview) ? $existingReview->nilai_akhir : '0' }}/100</span>
                     </div>
 
                     <div class="mt-4">
@@ -118,17 +118,17 @@
 
                     <div class="mt-4 flex gap-3">
                         <button type="button" class="flex-1 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50" id="btnKembalikan">Kembalikan</button>
-                        <button type="button" class="flex-1 rounded-lg bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed" id="btnSetujui">Setujui RPS</button>
+                        <button type="button" class="flex-1 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary/90 disabled:bg-slate-300 disabled:text-slate-500 disabled:cursor-not-allowed" id="btnSetujui">Setujui RPS</button>
                     </div>
                 </form>
             </div>
 
             <div class="bg-slate-50 rounded-2xl border border-slate-200 p-4">
-                <p class="text-[11px] font-semibold text-blue-700 uppercase tracking-wider mb-3">History Log</p>
+                <p class="text-[11px] font-semibold text-primary uppercase tracking-wider mb-3">History Log</p>
                 <div class="space-y-3">
                     @forelse($history as $item)
                         <div class="relative pl-4">
-                            <span class="absolute left-0 top-1.5 h-2 w-2 rounded-full {{ $loop->first ? 'bg-blue-500' : 'bg-amber-400' }}"></span>
+                            <span class="absolute left-0 top-1.5 h-2 w-2 rounded-full {{ $loop->first ? 'bg-primary' : 'bg-amber-400' }}"></span>
                             <p class="text-xs font-semibold text-slate-700">{{ ucfirst($item->action) }}</p>
                             <p class="text-[11px] text-slate-500">{{ \Carbon\Carbon::parse($item->created_at)->format('d M Y - H:i') }}</p>
                             @if($item->description)

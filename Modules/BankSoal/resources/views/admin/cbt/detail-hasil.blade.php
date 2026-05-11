@@ -1,10 +1,18 @@
 <x-banksoal::layouts.admin>
+    @section('breadcrumbs')
+    <a href="#" class="text-slate-500 hover:text-primary transition-colors">Ujian Komprehensif</a>
+    <span class="mx-2 text-slate-300">/</span>
+    <a href="{{ route('banksoal.admin.cbt.riwayat') }}" class="text-slate-500 hover:text-primary transition-colors">Riwayat Ujian</a>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Detail Hasil</span>
+    @endsection
+
     <div class="px-6 py-6 sm:px-8 sm:py-8 max-w-7xl mx-auto space-y-8">
         
         <!-- Header -->
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                <a href="{{ route('banksoal.admin.cbt.riwayat') }}" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-blue-600 mb-2">
+                <a href="{{ route('banksoal.admin.cbt.riwayat') }}" class="inline-flex items-center gap-1 text-sm text-slate-500 hover:text-primary mb-2">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path></svg>
                     Kembali ke Riwayat
                 </a>
@@ -20,7 +28,7 @@
                 <div>
                     <p class="text-xs font-medium text-slate-500 uppercase tracking-wider mb-1">Peserta</p>
                     <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-sm shrink-0">
+                        <div class="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm shrink-0">
                             {{ substr($session->user->name, 0, 1) }}
                         </div>
                         <div>

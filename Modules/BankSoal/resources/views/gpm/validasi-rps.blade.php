@@ -88,7 +88,7 @@
             </div>
         </div>
     @else
-        <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 border-l-4 border-amber-400">
+        <div class="mb-6 rounded-2xl border-l-4 border-amber-400 bg-amber-50 p-4">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex items-center gap-3">
                     <div class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600">
@@ -132,7 +132,7 @@
                                     <p class="text-xs text-slate-500">{{ \Carbon\Carbon::parse($periode->tanggal_mulai)->translatedFormat('d M Y H:i') }} s.d. {{ \Carbon\Carbon::parse($periode->tanggal_selesai)->translatedFormat('d M Y H:i') }}</p>
                                 </div>
                             </div>
-                            <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50" data-modal-open="modalOpenSession" data-periode-id="{{ $periode->id }}" data-periode-judul="{{ $periode->judul }}" onclick="setPeriodeData(this)">
+                            <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-primary/20 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/10" data-modal-open="modalOpenSession" data-periode-id="{{ $periode->id }}" data-periode-judul="{{ $periode->judul }}" onclick="setPeriodeData(this)">
                                 <i class="fas fa-power-off"></i> Nyalakan Sesi
                             </button>
                         </div>
@@ -145,9 +145,9 @@
     <div data-tabs>
         <div class="flex flex-col gap-4 border-b border-slate-200 pb-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex flex-wrap gap-6 text-sm font-semibold">
-                <button type="button" class="pb-2 border-b-2 border-blue-600 text-blue-600" data-tab-target="menunggu" data-tab-active>
+                <button type="button" class="pb-2 border-b-2 border-primary text-primary" data-tab-target="menunggu" data-tab-active>
                     Menunggu Validasi
-                    <span class="ml-2 inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-200">{{ $rpsDiajukan->total() }}</span>
+                    <span class="ml-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/20">{{ $rpsDiajukan->total() }}</span>
                 </button>
                 <button type="button" class="pb-2 border-b-2 border-transparent text-slate-500" data-tab-target="revisi">
                     Menunggu Revisi
@@ -178,13 +178,13 @@
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead class="bg-slate-50 border-b border-slate-200">
+                        <thead class="bg-primary text-white border-b border-primary/20">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mata Kuliah</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Dosen Pengampu</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanggal Diajukan</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Dosen Pengampu</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal Diajukan</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -204,7 +204,7 @@
                                                     $initials = strtoupper(substr($first, 0, 1) . substr($last, 0, 1));
                                                 @endphp
                                                 <div class="flex items-center gap-2">
-                                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ $initials }}</div>
+                                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">{{ $initials }}</div>
                                                     <span class="text-sm font-medium text-slate-700">{{ $dosen->name }}</span>
                                                 </div>
                                             @empty
@@ -249,7 +249,7 @@
                     </div>
                     <input type="text" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" data-search-tab="revisi" placeholder="Cari mata kuliah atau dosen...">
                 </div>
-                <button class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+                <button class="inline-flex items-center gap-2 rounded-xl border border-primary/20 px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10">
                     <i class="fas fa-filter"></i> Filter
                 </button>
             </div>
@@ -257,13 +257,13 @@
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead class="bg-slate-50 border-b border-slate-200">
+                        <thead class="bg-primary text-white border-b border-primary/20">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mata Kuliah</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Dosen Pengampu</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanggal Review</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Dosen Pengampu</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal Review</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -283,7 +283,7 @@
                                                     $initials = strtoupper(substr($first, 0, 1) . substr($last, 0, 1));
                                                 @endphp
                                                 <div class="flex items-center gap-2">
-                                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ $initials }}</div>
+                                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">{{ $initials }}</div>
                                                     <span class="text-sm font-medium text-slate-700">{{ $dosen->name }}</span>
                                                 </div>
                                             @empty
@@ -328,7 +328,7 @@
                     </div>
                     <input type="text" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" data-search-tab="disetujui" placeholder="Cari mata kuliah atau dosen...">
                 </div>
-                <button class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+                <button class="inline-flex items-center gap-2 rounded-xl border border-primary/20 px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10">
                     <i class="fas fa-filter"></i> Filter
                 </button>
             </div>
@@ -336,13 +336,13 @@
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead class="bg-slate-50 border-b border-slate-200">
+                        <thead class="bg-primary text-white border-b border-primary/20">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mata Kuliah</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Dosen Pengampu</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanggal Disetujui</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Dosen Pengampu</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal Disetujui</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -362,7 +362,7 @@
                                                     $initials = strtoupper(substr($first, 0, 1) . substr($last, 0, 1));
                                                 @endphp
                                                 <div class="flex items-center gap-2">
-                                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ $initials }}</div>
+                                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">{{ $initials }}</div>
                                                     <span class="text-sm font-medium text-slate-700">{{ $dosen->name }}</span>
                                                 </div>
                                             @empty
@@ -414,7 +414,7 @@
                         <label class="text-xs font-semibold text-slate-600">File Template (Word Format) <span class="text-rose-500">*</span></label>
                         <div class="upload-box-modal mt-2 rounded-xl border-2 border-dashed border-slate-200 p-4 text-center cursor-pointer">
                             <i class="fas fa-cloud-upload-alt text-slate-400 text-2xl mb-2"></i>
-                            <p class="text-sm text-slate-500">Dragdrop file atau <span class="text-blue-600 underline">pilih file</span></p>
+                            <p class="text-sm text-slate-500">Dragdrop file atau <span class="text-primary underline">pilih file</span></p>
                             <p class="text-xs text-slate-400">Format: .doc, .docx (Maksimal 1 MB)</p>
                             <input type="file" name="dokumen" id="fileInputModal" accept=".doc,.docx" required class="hidden">
                             <div class="file-selected-modal mt-3 hidden">
@@ -429,7 +429,7 @@
                         <label class="text-xs font-semibold text-slate-600">Keterangan (Opsional)</label>
                         <textarea class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="keterangan" rows="3" placeholder="Misal: Update struktur template, tambahan BAB, dll..."></textarea>
                     </div>
-                    <div class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
+                    <div class="rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-xs text-primary">
                         <i class="fas fa-info-circle mr-2"></i>
                         Template baru akan otomatis menjadi versi terbaru yang dapat diunduh dosen.
                     </div>
@@ -441,7 +441,7 @@
                     </button>
                     <div class="flex gap-2">
                         <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalUploadTemplate">Batal</button>
-                        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700" id="btnSubmitTemplate">Upload Template</button>
+                        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90" id="btnSubmitTemplate">Upload Template</button>
                     </div>
                 </div>
             </form>
@@ -500,7 +500,7 @@
                 </div>
                 <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
                     <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalTambah">Batal</button>
-                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700">Buat & Terapkan</button>
+                    <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90">Buat & Terapkan</button>
                 </div>
             </form>
         </div>
@@ -531,7 +531,7 @@
                 @csrf
                 <input type="hidden" name="periode_id" id="periodeId">
                 <div class="px-5 py-5 text-center">
-                    <div class="text-blue-500 mb-3"><i class="fas fa-info-circle text-3xl"></i></div>
+                    <div class="text-primary mb-3"><i class="fas fa-info-circle text-3xl"></i></div>
                     <h3 class="text-sm font-semibold text-slate-900">Nyalakan Sesi Pengajuan?</h3>
                     <p class="text-xs text-slate-500 mt-2">Sesi pengajuan <strong id="periodeJudul">RPS</strong> akan diaktifkan. Dosen akan bisa mengajukan RPS sesuai dengan jadwal periode.</p>
                     <div class="mt-4 flex gap-2">
@@ -634,13 +634,13 @@
 
             ['dragenter', 'dragover'].forEach(eventName => {
                 uploadBoxModal.addEventListener(eventName, () => {
-                    uploadBoxModal.classList.add('border-blue-500', 'bg-blue-50');
+                    uploadBoxModal.classList.add('border-primary', 'bg-primary/10');
                 }, false);
             });
 
             ['dragleave', 'drop'].forEach(eventName => {
                 uploadBoxModal.addEventListener(eventName, () => {
-                    uploadBoxModal.classList.remove('border-blue-500', 'bg-blue-50');
+                    uploadBoxModal.classList.remove('border-primary', 'bg-primary/10');
                 }, false);
             });
 
