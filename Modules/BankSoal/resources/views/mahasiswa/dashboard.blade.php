@@ -61,7 +61,7 @@
                     </div>
                 </div>
 
-            @elseif($pendaftar && $pendaftar->status_pendaftaran === 'approved')
+            @elseif($pendaftar && $pendaftar->status_pendaftaran->value === 'approved')
                 @php
                     $isUjianBerlangsung = false;
                     $tanggalWaktuTeks = "<strong>menunggu alokasi jadwal</strong>";
@@ -129,21 +129,33 @@
                         <div
                             class="border-t border-slate-200 pt-5 {{ !$isUjianBerlangsung ? 'opacity-50 pointer-events-none' : '' }}">
                             <form action="{{ route('komprehensif.mahasiswa.engine.validate') }}" method="POST"
-                                class="flex flex-col sm:flex-row items-end gap-3">
+                                class="flex flex-col sm:flex-row items-end gap-3 pb-2 sm:pb-4"
+                                onsubmit="return confirm('Anda akan langsung masuk ke ujian dan waktu 100 menit akan mulai berjalan.\n\nPastikan koneksi Anda stabil sebelum melanjutkan.\n\nSiap memulai ujian?')">
                                 @csrf
-                                <div class="w-full sm:w-2/3 space-y-2">
+                                @php
+                                    $hasTokenError = $errors->has('token') || session('error');
+                                    $tokenErrorMessage = $errors->first('token') ?: session('error');
+                                @endphp
+                                <div class="w-full sm:w-2/3 space-y-2 relative">
                                     <label for="token"
-                                        class="block text-[11px] font-bold text-slate-900 uppercase tracking-widest">Token
+                                        class="block text-[11px] font-bold uppercase tracking-widest {{ $hasTokenError ? 'text-red-600' : 'text-slate-900' }}">Token
                                         Sesi</label>
                                     <input type="text" id="token" name="token" required
-                                        class="w-full h-12 px-4 text-xl tracking-[0.5em] font-mono font-bold text-slate-900 bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-0 outline-none transition-colors uppercase placeholder:text-slate-300"
-                                        placeholder="XXXXXX" maxlength="6" {{ !$isUjianBerlangsung ? 'disabled' : '' }} />
+                                        class="w-full h-12 px-4 text-xl tracking-[0.5em] font-mono font-bold text-slate-900 border-2 focus:ring-0 outline-none transition-colors uppercase placeholder:text-slate-300 {{ $hasTokenError ? 'border-red-500 bg-red-50 focus:border-red-600' : 'bg-white border-slate-300 focus:border-slate-900' }}"
+                                        placeholder="XXXXXX" maxlength="6" {{ !$isUjianBerlangsung ? 'disabled' : '' }} value="{{ old('token') }}" />
+                                    
+                                    @if($hasTokenError)
+                                        <div class="absolute top-full left-0 flex items-center gap-1.5 mt-1 sm:mt-1.5">
+                                            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <p class="text-xs font-bold text-red-600 tracking-wide">{{ $tokenErrorMessage }}</p>
+                                        </div>
+                                    @endif
                                 </div>
                                 <div class="w-full sm:w-1/3">
                                     <button type="submit"
                                         class="w-full h-12 px-5 {{ !$isUjianBerlangsung ? 'bg-slate-300 cursor-not-allowed text-slate-500' : 'bg-blue-600 hover:bg-blue-700 text-white' }} font-bold text-sm tracking-widest uppercase transition-colors flex items-center justify-center rounded-xl shadow-sm"
                                         {{ !$isUjianBerlangsung ? 'disabled' : '' }}>
-                                        Mulai Ujian
+                                        Masuk Ujian →
                                     </button>
                                 </div>
                             </form>
@@ -151,7 +163,7 @@
                     </div>
                 </div>
 
-            @elseif($pendaftar && $pendaftar->status_pendaftaran === 'pending')
+            @elseif($pendaftar && $pendaftar->status_pendaftaran->value === 'pending')
                 <!-- STATE: PENDING -->
                 <div class="flex flex-col border border-amber-300 bg-white">
                     <div class="p-8 sm:p-10 flex flex-col items-start">
@@ -166,7 +178,7 @@
                         </p>
                     </div>
                 </div>
-            @elseif($pendaftar && $pendaftar->status_pendaftaran === 'rejected')
+            @elseif($pendaftar && $pendaftar->status_pendaftaran->value === 'rejected')
                 <!-- STATE: REJECTED -->
                 <div class="flex flex-col border-2 border-red-500 bg-red-50">
                     <div class="p-8 sm:p-10 flex flex-col items-start">

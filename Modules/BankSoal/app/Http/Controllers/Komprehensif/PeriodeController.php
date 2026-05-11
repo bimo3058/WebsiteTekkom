@@ -5,7 +5,7 @@ namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
-use Modules\BankSoal\Models\PeriodeUjian;
+use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
 use Illuminate\Support\Str;
 
 class PeriodeController extends Controller

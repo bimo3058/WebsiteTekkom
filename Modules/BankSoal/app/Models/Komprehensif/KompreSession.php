@@ -1,24 +1,26 @@
 <?php
 
-namespace Modules\BankSoal\Models;
+namespace Modules\BankSoal\Models\Komprehensif;
 
-use Illuminate\Database\Eloquent\Model;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-// use Modules\BankSoal\Database\Factories\KompreSessionFactory;
+use Illuminate\Database\Eloquent\Model;
+use Modules\BankSoal\Enums\KompreSessionStatus;
 
 class KompreSession extends Model
 {
     use HasFactory;
 
     protected $table = 'bs_kompre_session';
-    
+
     protected $fillable = [
-        'user_id', 'jadwal_id', 'title', 'started_at', 'finished_at', 'score', 'status'
+        'user_id', 'jadwal_id', 'title', 'started_at', 'finished_at', 'score', 'status',
     ];
 
     protected $casts = [
-        'started_at' => 'datetime',
+        'started_at'  => 'datetime',
         'finished_at' => 'datetime',
+        'status'      => KompreSessionStatus::class,
     ];
 
     public function jawabans()
@@ -28,21 +30,16 @@ class KompreSession extends Model
 
     public function user()
     {
-        return $this->belongsTo(\App\Models\User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     public function jadwal()
     {
-        return $this->belongsTo(\Modules\BankSoal\Models\JadwalUjian::class, 'jadwal_id');
+        return $this->belongsTo(JadwalUjian::class, 'jadwal_id');
     }
 
     public function cheatLogs()
     {
         return $this->hasMany(CheatLog::class, 'kompre_session_id');
     }
-
-    // protected static function newFactory(): KompreSessionFactory
-    // {
-    //     // return KompreSessionFactory::new();
-    // }
 }

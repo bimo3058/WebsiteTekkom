@@ -2,8 +2,14 @@
 
 namespace Modules\BankSoal\Providers;
 
+use Illuminate\Cache\RateLimiting\Limit;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Modules\BankSoal\Models\Komprehensif\KompreSession;
+use Modules\BankSoal\Policies\KompreSessionPolicy;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -27,6 +33,24 @@ class BankSoalServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->name, 'database/migrations'));
+
+        // Daftarkan Policy untuk model KompreSession.
+        // Policy ini mengamankan operasi sensitif admin secara eksplisit
+        // di level controller, melengkapi role middleware di route layer.
+        Gate::policy(KompreSession::class, KompreSessionPolicy::class);
+
+        // Rate limiter untuk validasi token ujian.
+        // Membatasi 5 percobaan per menit per user (fallback ke IP).
+        // Mencegah brute-force token 6 karakter oleh peserta tidak jujur.
+        RateLimiter::for('cbt-token-validation', function (Request $request) {
+            return Limit::perMinute(5)
+                ->by($request->user()?->id ?: $request->ip())
+                ->response(function () {
+                    return back()->withErrors([
+                        'token' => 'Terlalu banyak percobaan. Silakan tunggu 1 menit sebelum mencoba lagi.',
+                    ])->withInput();
+                });
+        });
     }
 
     /**
