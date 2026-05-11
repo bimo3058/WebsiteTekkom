@@ -12,6 +12,7 @@ use Modules\BankSoal\Http\Controllers\RPS\Gpm\RpsController as GpmRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Admin\RpsController as AdminRpsController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\TemplateRpsController;
 use Modules\BankSoal\Http\Controllers\BS\BankSoalController;
+use Modules\BankSoal\Http\Controllers\BS\Dosen\ArsipSoalController;
 use Modules\BankSoal\Http\Controllers\BS\GPM\ValidasiBankSoalController;
 use Modules\BankSoal\Http\Controllers\BS\GPM\RiwayatValidasiController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\PeriodeRpsController;
@@ -46,13 +47,20 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         Route::middleware('role:admin_banksoal')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
             Route::get('/cpl', [CplCpmkController::class, 'listCpl'])->name('cpl.index');
             Route::get('/cpl/next-code', [CplCpmkController::class, 'nextCplCode'])->name('cpl.next-code');
+            Route::get('/cpl/export-template', [CplCpmkController::class, 'exportCplTemplate'])->name('cpl.export-template');
+            Route::post('/cpl/import', [CplCpmkController::class, 'importCpl'])->name('cpl.import');
             Route::get('/cpl/{id}', [CplCpmkController::class, 'showCpl'])->name('cpl.show');
 
             Route::get('/rps/approved', [AdminRpsController::class, 'listApproved'])->name('rps.approved.index');
 
             Route::get('/cpmk', [CplCpmkController::class, 'listCpmk'])->name('cpmk.index');
             Route::get('/cpmk/next-code', [CplCpmkController::class, 'nextCpmkCode'])->name('cpmk.next-code');
+            Route::get('/cpmk/export-template', [CplCpmkController::class, 'exportCpmkTemplate'])->name('cpmk.export-template');
+            Route::post('/cpmk/import', [CplCpmkController::class, 'importCpmk'])->name('cpmk.import');
             Route::get('/cpmk/{id}', [CplCpmkController::class, 'showCpmk'])->name('cpmk.show');
+
+            Route::post('/mata-kuliah/import', [MataKuliahController::class, 'import'])->name('mata-kuliah.import');
+            Route::get('/mata-kuliah/export-template', [MataKuliahController::class, 'exportTemplate'])->name('mata-kuliah.export-template');
 
             Route::get('/pemetaan/options', [PemetaanController::class, 'options'])->name('pemetaan.options');
             Route::get('/pemetaan/cpmk-cpl', [PemetaanController::class, 'listCpmkCpl'])->name('pemetaan.cpmk-cpl.index');
@@ -65,7 +73,9 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::get('/rps', [AdminRpsController::class, 'index'])->name('rps');
             Route::get('/rps/{rpsId}/preview', [AdminRpsController::class, 'previewDokumen'])->name('rps.preview');
             Route::get('/rps/{rpsId}/download', [AdminRpsController::class, 'downloadDokumen'])->name('rps.download');
-            Route::get('/soal', fn() => view('banksoal::pages.admin.kontrol-banksoal.soal'))->name('soal');
+            Route::get('/soal', [\Modules\BankSoal\Http\Controllers\BS\Admin\ManajemenSoalController::class, 'index'])->name('soal');
+            Route::get('/soal/{id}/cetak', [\Modules\BankSoal\Http\Controllers\BS\Admin\ManajemenSoalController::class, 'cetakDokumen'])->name('soal.cetak');
+            Route::post('/soal/{id}/tandai-selesai', [\Modules\BankSoal\Http\Controllers\BS\Admin\ManajemenSoalController::class, 'tandaiSelesai'])->name('soal.tandai-selesai');
         });
 
         # RPS Routes - View Mode
@@ -137,7 +147,17 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
 
         # Arsip Routes - View Mode
         Route::prefix('arsip')->name('banksoal.arsip.')->group(function () {
-            Route::get('/dosen', fn() => view('banksoal::pages.arsip.Dosen.index'))->name('dosen.index')->middleware('role:dosen');
+            Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
+                Route::get('/', [ArsipSoalController::class, 'index'])->name('index');
+                Route::get('/{id}', [ArsipSoalController::class, 'show'])->name('show');
+                Route::get('/penarikan/{id}', [ArsipSoalController::class, 'showPenarikan'])->name('penarikan.show');
+                Route::get('/penarikan/{id}/edit', [ArsipSoalController::class, 'editPenarikan'])->name('penarikan.edit');
+                Route::put('/penarikan/{id}', [ArsipSoalController::class, 'convertPenarikan'])->name('penarikan.update');
+                Route::delete('/penarikan/{id}', [ArsipSoalController::class, 'destroyPenarikan'])->name('penarikan.destroy');
+                Route::delete('/{id}', [ArsipSoalController::class, 'destroy'])->name('destroy');
+                Route::post('/upload/pdf', [ArsipSoalController::class, 'uploadPdf'])->name('upload-pdf');
+                Route::post('/upload/csv', [ArsipSoalController::class, 'uploadCsv'])->name('upload-csv');
+            });
             Route::get('/gpm', fn() => view('banksoal::pages.arsip.Gpm.index'))->name('gpm.index')->middleware('role:gpm');
             Route::get('/admin', fn() => view('banksoal::pages.arsip.Admin.index'))->name('admin.index')->middleware('role:admin_banksoal');
         });
@@ -192,6 +212,10 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
                 Route::post('/validasi-bank-soal/store', [ValidasiBankSoalController::class, 'store'])->name('validasi-bank-soal.store');            
                 Route::put('/validasi-bank-soal/update/{id}', [ValidasiBankSoalController::class, 'update'])->name('validasi-bank-soal.update');
+            });
+
+            Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
+                Route::post('/arsip-soal', [ArsipSoalController::class, 'storeFromEkstraksi'])->name('arsip-soal.store');
             });
         });
     });

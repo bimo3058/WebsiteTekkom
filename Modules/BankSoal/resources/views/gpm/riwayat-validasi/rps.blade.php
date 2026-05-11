@@ -25,14 +25,12 @@
                     @forelse($riwayat_rps as $rps)
                         <tr>
                             <td class="px-6 py-4">
-                                <p class="text-sm font-semibold text-slate-900">{{ $rps->mk_nama }}</p>
-                                <p class="text-xs text-slate-500">{{ $rps->kode }} &bull; {{ $rps->semester }}</p>
+                                <p class="text-sm font-semibold text-slate-900">{{ $rps->mataKuliah->nama ?? '-' }}</p>
+                                <p class="text-xs text-slate-500">{{ $rps->mataKuliah->kode ?? '-' }} &bull; {{ $rps->semester }}</p>
                             </td>
                             <td class="px-6 py-4">
                                 @php
-                                    $dosens = collect(explode(', ', $rps->dosens_list ?? ''))
-                                        ->filter()
-                                        ->map(fn($d) => explode('|', $d)[1] ?? $d);
+                                    $dosens = $rps->dosens->pluck('name');
                                 @endphp
                                 @if($dosens->isNotEmpty())
                                     <span class="text-sm text-slate-600">{{ $dosens->join(', ') }}</span>
@@ -41,13 +39,13 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-sm text-slate-600">
-                                {{ $rps->tanggal_disetujui ? \Carbon\Carbon::parse($rps->tanggal_disetujui)->translatedFormat('d F Y') : '-' }}
+                                {{ $rps->updated_at ? $rps->updated_at->translatedFormat('d F Y') : '-' }}
                             </td>
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">Disetujui</span>
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->rps_id) }}" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
+                                <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
                                     <i class="far fa-eye"></i> Lihat Detail
                                 </a>
                             </td>

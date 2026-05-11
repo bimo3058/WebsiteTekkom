@@ -11,72 +11,101 @@
 @endphp
 
 @if(!$hideNav)
-<nav x-data="{ open: false }" class="bg-blue-700 border-b border-blue-800">
+<nav x-data="{ open: false }" style="background:#0B266E;border-bottom:1px solid #091958;font-family:'Inter Tight',system-ui,sans-serif;">
     <div class="w-full px-4 sm:px-6 lg:px-8">
-        <div class="flex justify-between h-16">
+        <div class="flex justify-between" style="height:64px;">
+
+            {{-- Left: brand + nav --}}
             <div class="flex">
                 <div class="shrink-0 flex items-center">
-                    <a href="{{ route('dashboard') }}">
-                        <x-application-logo class="block h-9 w-auto fill-current text-white" />
+                    <a href="{{ route('dashboard') }}" style="display:flex;align-items:center;gap:10px;text-decoration:none;">
+                        <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="SITKOM" style="width:32px;height:32px;object-fit:contain;">
+                        <span style="font-family:'Geist','Inter Tight',sans-serif;font-weight:700;color:#fff;font-size:16px;letter-spacing:-.01em;">SITKOM</span>
                     </a>
                 </div>
-                <div class="hidden space-x-8 sm:-my-px sm:ms-10 sm:flex">
-                    <x-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-white hover:text-blue-100">
+
+                <div class="hidden sm:flex sm:items-center" style="margin-left:32px;gap:4px;">
+                    <a href="{{ route('dashboard') }}" style="
+                        padding:8px 14px;border-radius:8px;font-size:13px;font-weight:600;
+                        color:#fff;text-decoration:none;
+                        background:{{ request()->routeIs('dashboard') ? 'rgba(255,255,255,0.12)' : 'transparent' }};
+                        transition:background .15s;"
+                        onmouseover="this.style.background='rgba(255,255,255,0.10)'"
+                        onmouseout="this.style.background='{{ request()->routeIs('dashboard') ? 'rgba(255,255,255,0.12)' : 'transparent' }}'">
                         {{ __('Dashboard') }}
-                    </x-nav-link>
+                    </a>
                 </div>
             </div>
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+
+            {{-- Right: user menu --}}
+            <div class="hidden sm:flex sm:items-center">
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
-                        <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-700 hover:bg-blue-600 focus:outline-none transition ease-in-out duration-150">
-                            <div>{{ Auth::user()->name }}</div>
-                            <div class="ms-1">
-                                <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
-                                    <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
-                                </svg>
+                        <button style="display:inline-flex;align-items:center;gap:8px;padding:6px 10px;border:1px solid rgba(255,255,255,.18);
+                            border-radius:8px;background:rgba(255,255,255,.06);color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s;"
+                            onmouseover="this.style.background='rgba(255,255,255,0.12)'"
+                            onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                            <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#8FA3D1,#5C78B8);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">
+                                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                             </div>
+                            <span>{{ Auth::user()->name }}</span>
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
                         </button>
                     </x-slot>
-                    <x-slot name="content">
-                        <x-dropdown-link :href="route('profile.edit')">{{ __('Profile') }}</x-dropdown-link>
-                        <form method="POST" action="{{ route('logout') }}">
-                            @csrf
-                            <x-dropdown-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();">
-                                {{ __('Log Out') }}
-                            </x-dropdown-link>
-                        </form>
+                    <x-slot name="trigger">
+                        <button style="display:inline-flex;align-items:center;justify-content:space-between;min-width:180px;padding:6px 10px;border:1px solid rgba(255,255,255,.18);
+                            border-radius:8px;background:rgba(255,255,255,.06);color:#fff;font-size:13px;font-weight:500;cursor:pointer;font-family:inherit;transition:background .15s;"
+                            onmouseover="this.style.background='rgba(255,255,255,0.12)'"
+                            onmouseout="this.style.background='rgba(255,255,255,0.06)'">
+                            
+                            {{-- Wrapper untuk Avatar dan Nama supaya tetap berdampingan di kiri --}}
+                            <div style="display:flex;align-items:center;gap:8px;">
+                                <div style="width:24px;height:24px;border-radius:50%;background:linear-gradient(135deg,#8FA3D1,#5C78B8);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;color:#fff;">
+                                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                                </div>
+                                <span>{{ Auth::user()->name }}</span>
+                            </div>
+
+                            {{-- Ikon panah otomatis terdorong ke ujung kanan --}}
+                            <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round">
+                                <path d="M6 9l6 6 6-6"/>
+                            </svg>
+                        </button>
                     </x-slot>
                 </x-dropdown>
             </div>
+
+            {{-- Mobile toggle --}}
             <div class="-me-2 flex items-center sm:hidden">
-                <button @click="open = ! open" class="inline-flex items-center justify-center p-2 rounded-md text-white hover:text-blue-100 hover:bg-blue-600 focus:outline-none transition duration-150 ease-in-out">
-                    <svg class="h-6 w-6" stroke="currentColor" fill="none" viewBox="0 0 24 24">
-                        <path :class="{'hidden': open, 'inline-flex': ! open }" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-                        <path :class="{'hidden': ! open, 'inline-flex': open }" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                <button @click="open = !open" style="padding:8px;border-radius:8px;color:#fff;background:transparent;border:none;cursor:pointer;">
+                    <svg style="width:24px;height:24px;" stroke="currentColor" fill="none" viewBox="0 0 24 24">
+                        <path :class="{'hidden': open, 'inline-flex': !open}" class="inline-flex" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
+                        <path :class="{'hidden': !open, 'inline-flex': open}" class="hidden" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
                     </svg>
                 </button>
             </div>
         </div>
     </div>
-    <div :class="{'block': open, 'hidden': ! open}" class="hidden sm:hidden bg-blue-700">
-        <div class="pt-2 pb-3 space-y-1">
-            <x-responsive-nav-link :href="route('dashboard')" :active="request()->routeIs('dashboard')" class="text-white hover:bg-blue-600">
+
+    {{-- Mobile menu --}}
+    <div :class="{'block': open, 'hidden': !open}" class="hidden sm:hidden" style="background:#091958;border-top:1px solid rgba(255,255,255,.08);">
+        <div style="padding:8px 16px;display:flex;flex-direction:column;gap:2px;">
+            <a href="{{ route('dashboard') }}" style="padding:10px 12px;border-radius:8px;font-size:13px;font-weight:500;color:#fff;text-decoration:none;background:{{ request()->routeIs('dashboard') ? 'rgba(255,255,255,0.12)' : 'transparent' }};">
                 {{ __('Dashboard') }}
-            </x-responsive-nav-link>
+            </a>
         </div>
-        <div class="pt-4 pb-1 border-t border-blue-600">
-            <div class="px-4">
-                <div class="font-medium text-base text-white">{{ Auth::user()->name }}</div>
-                <div class="font-medium text-sm text-blue-200">{{ Auth::user()->email }}</div>
-            </div>
-            <div class="mt-3 space-y-1">
-                <x-responsive-nav-link :href="route('profile.edit')" class="text-white hover:bg-blue-600">{{ __('Profile') }}</x-responsive-nav-link>
+        <div style="padding:12px 16px;border-top:1px solid rgba(255,255,255,.08);">
+            <div style="font-weight:600;color:#fff;font-size:14px;">{{ Auth::user()->name }}</div>
+            <div style="font-size:12px;color:#C2CEEA;margin-top:2px;">{{ Auth::user()->email }}</div>
+            <div style="margin-top:10px;display:flex;flex-direction:column;gap:2px;">
+                <a href="{{ route('profile.edit') }}" style="padding:8px 0;font-size:13px;color:#fff;text-decoration:none;">{{ __('Profile') }}</a>
                 <form method="POST" action="{{ route('logout') }}">
                     @csrf
-                    <x-responsive-nav-link :href="route('logout')" onclick="event.preventDefault(); this.closest('form').submit();" class="text-white hover:bg-blue-600">
+                    <a href="{{ route('logout') }}" onclick="event.preventDefault(); this.closest('form').submit();" style="padding:8px 0;font-size:13px;color:#fff;text-decoration:none;display:block;">
                         {{ __('Log Out') }}
-                    </x-responsive-nav-link>
+                    </a>
                 </form>
             </div>
         </div>
