@@ -3,6 +3,7 @@
 namespace Modules\BankSoal\Services;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Str;
 use Modules\BankSoal\Models\Pertanyaan;
 
 class ValidasiBankSoalService
@@ -36,9 +37,12 @@ class ValidasiBankSoalService
             ->where('bs_pertanyaan.status', Pertanyaan::STATUS_DIAJUKAN);
 
         if ($search) {
-            $query->where(function($q) use ($search) {
-                $q->where('bs_mata_kuliah.nama', 'ilike', '%' . $search . '%')
-                  ->orWhere('bs_mata_kuliah.kode', 'ilike', '%' . $search . '%');
+            $query->where(function ($q) use ($search) {
+                // Gunakan LOWER() + LIKE agar portabel di MySQL & PostgreSQL.
+                // Hindari 'ilike' yang hanya tersedia di PostgreSQL.
+                $term = $this->likePattern($search);
+                $q->whereRaw('LOWER(bs_mata_kuliah.nama) LIKE ?', [$term])
+                  ->orWhereRaw('LOWER(bs_mata_kuliah.kode) LIKE ?', [$term]);
             });
         }
 
@@ -46,7 +50,9 @@ class ValidasiBankSoalService
                 'bs_mata_kuliah.id as mk_id',
                 'bs_mata_kuliah.kode as mk_kode',
                 'bs_mata_kuliah.nama as mk_nama',
-                DB::raw('STRING_AGG(DISTINCT users.name, \', \') as dosen_pengampu'),
+                // STRING_AGG adalah fitur PostgreSQL — digunakan secara sadar (by design).
+                // Jika migrasi ke MySQL diperlukan, ganti dengan GROUP_CONCAT.
+                DB::raw("STRING_AGG(DISTINCT users.name, ', ') as dosen_pengampu"),
                 DB::raw('COUNT(DISTINCT bs_pertanyaan.id) as jumlah_soal')
             )
             ->groupBy('bs_mata_kuliah.id', 'bs_mata_kuliah.kode', 'bs_mata_kuliah.nama')
@@ -122,5 +128,15 @@ class ValidasiBankSoalService
             ->update(['status' => $statusPertanyaan, 'updated_at' => now()]);
             
         return true;
+    }
+    /**
+     * Buat pola pencarian case-insensitive yang portabel.
+     *
+     * Menggunakan LOWER() + LIKE standar SQL sebagai ganti 'ilike' (PostgreSQL-only).
+     * Input di-lowercase dan di-sanitasi agar aman untuk raw query.
+     */
+    private function likePattern(string $term): string
+    {
+        return '%' . Str::lower(addcslashes($term, '%_')) . '%';
     }
 }

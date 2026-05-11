@@ -15,6 +15,14 @@ use Modules\BankSoal\Http\Controllers\BS\BankSoalController;
 use Modules\BankSoal\Http\Controllers\BS\GPM\ValidasiBankSoalController;
 use Modules\BankSoal\Http\Controllers\BS\GPM\RiwayatValidasiController;
 use Modules\BankSoal\Http\Controllers\RPS\Gpm\PeriodeRpsController;
+use Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController;
+use Modules\BankSoal\Http\Controllers\Komprehensif\AktivasiSesiController;
+use Modules\BankSoal\Http\Controllers\Komprehensif\AlokasiSesiController;
+use Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController;
+use Modules\BankSoal\Http\Controllers\Komprehensif\JadwalController;
+use Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController;
+use Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController;
+use Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController;
 
 Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->group(function () {
 
@@ -229,35 +237,35 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
     # Periode Ujian Routes
     Route::prefix('admin/periode')->name('banksoal.periode.')->group(function () {
         Route::middleware('role:admin_banksoal,admin')->group(function () {
-            Route::get('/setup', [\Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController::class, 'index'])->name('setup');
-            Route::post('/setup', [\Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController::class, 'store'])->name('store');
-            Route::put('/setup/{id}', [\Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController::class, 'update'])->name('update');
-            Route::delete('/setup/{id}', [\Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController::class, 'destroy'])->name('destroy');
-            Route::patch('/setup/{id}/close-pendaftaran', [\Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController::class, 'closePendaftaran'])->name('close-pendaftaran');
+            Route::get('/setup',                         [PeriodeController::class, 'index'])->name('setup');
+            Route::post('/setup',                        [PeriodeController::class, 'store'])->name('store');
+            Route::put('/setup/{id}',                    [PeriodeController::class, 'update'])->name('update');
+            Route::delete('/setup/{id}',                 [PeriodeController::class, 'destroy'])->name('destroy');
+            Route::patch('/setup/{id}/close-pendaftaran',[PeriodeController::class, 'closePendaftaran'])->name('close-pendaftaran');
 
-            Route::get('/jadwal', [\Modules\BankSoal\Http\Controllers\Komprehensif\JadwalController::class, 'index'])->name('jadwal');
-            Route::post('/jadwal', [\Modules\BankSoal\Http\Controllers\Komprehensif\JadwalController::class, 'store'])->name('jadwal.store');
-            Route::delete('/jadwal/{id}', [\Modules\BankSoal\Http\Controllers\Komprehensif\JadwalController::class, 'destroy'])->name('jadwal.destroy');
+            Route::get('/jadwal',    [JadwalController::class, 'index'])->name('jadwal');
+            Route::post('/jadwal',   [JadwalController::class, 'store'])->name('jadwal.store');
+            Route::delete('/jadwal/{id}', [JadwalController::class, 'destroy'])->name('jadwal.destroy');
         });
     });
 
     # Manajemen Peserta Routes
     Route::prefix('admin/pendaftar')->name('banksoal.pendaftaran.')->group(function () {
         Route::middleware('role:admin_banksoal,admin')->group(function () {
-            Route::get('/', [\Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController::class, 'index'])->name('index');
-            Route::get('/lookup-nim', [\Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController::class, 'lookupNIM'])->name('lookupNIM');
-            Route::post('/', [\Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController::class, 'store'])->name('store');
-            Route::patch('/{id}/status', [\Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController::class, 'updateStatus'])->name('updateStatus');
-            Route::delete('/{id}', [\Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController::class, 'destroy'])->name('destroy');
+            Route::get('/',               [PendaftarAdminController::class, 'index'])->name('index');
+            Route::get('/lookup-nim',     [PendaftarAdminController::class, 'lookupNIM'])->name('lookupNIM');
+            Route::post('/',              [PendaftarAdminController::class, 'store'])->name('store');
+            Route::patch('/{id}/status',  [PendaftarAdminController::class, 'updateStatus'])->name('updateStatus');
+            Route::delete('/{id}',        [PendaftarAdminController::class, 'destroy'])->name('destroy');
         });
     });
 
     # Alokasi Sesi Routes
     Route::prefix('admin/alokasi-sesi')->name('banksoal.pendaftaran.alokasi-sesi.')->group(function () {
         Route::middleware('role:admin_banksoal,admin')->group(function () {
-            Route::get('/', [\Modules\BankSoal\Http\Controllers\Komprehensif\AlokasiSesiController::class, 'index'])->name('index');
-            Route::post('/', [\Modules\BankSoal\Http\Controllers\Komprehensif\AlokasiSesiController::class, 'store'])->name('store');
-            Route::post('/remove', [\Modules\BankSoal\Http\Controllers\Komprehensif\AlokasiSesiController::class, 'remove'])->name('remove');
+            Route::get('/',        [AlokasiSesiController::class, 'index'])->name('index');
+            Route::post('/',       [AlokasiSesiController::class, 'store'])->name('store');
+            Route::post('/remove', [AlokasiSesiController::class, 'remove'])->name('remove');
         });
     });
 
@@ -265,20 +273,20 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
     # Aktivasi Sesi Routes
     Route::prefix('admin/aktivasi-sesi')->name('banksoal.aktivasi.')->group(function () {
         Route::middleware('role:admin_banksoal,admin')->group(function () {
-            Route::get('/', [\Modules\BankSoal\Http\Controllers\Komprehensif\AktivasiSesiController::class, 'index'])->name('index');
-            Route::patch('/{id}/toggle', [\Modules\BankSoal\Http\Controllers\Komprehensif\AktivasiSesiController::class, 'toggle'])->name('toggle');
+            Route::get('/',            [AktivasiSesiController::class, 'index'])->name('index');
+            Route::patch('/{id}/toggle',[AktivasiSesiController::class, 'toggle'])->name('toggle');
         });
     });
 
     # Manajemen Ujian (Live Proctoring & Riwayat)
     Route::prefix('admin/cbt')->name('banksoal.admin.cbt.')->group(function () {
         Route::middleware('role:admin_banksoal,admin')->group(function () {
-            Route::get('/live-proctoring', [\Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController::class, 'liveProctoring'])->name('live-proctoring');
-            Route::post('/live-proctoring/{id}/force-submit', [\Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController::class, 'forceSubmit'])->name('force-submit');
-            Route::get('/riwayat', [\Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController::class, 'riwayat'])->name('riwayat');
-            Route::get('/analitik', [\Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController::class, 'analytics'])->name('analitik');
-            Route::get('/riwayat/{id}', [\Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController::class, 'detailHasil'])->name('detail');
-            Route::post('/reset-semua', [\Modules\BankSoal\Http\Controllers\Komprehensif\AdminCbtController::class, 'resetSemua'])->name('reset-semua');
+            Route::get('/live-proctoring',              [AdminCbtController::class, 'liveProctoring'])->name('live-proctoring');
+            Route::post('/live-proctoring/{id}/force-submit', [AdminCbtController::class, 'forceSubmit'])->name('force-submit');
+            Route::get('/riwayat',                      [AdminCbtController::class, 'riwayat'])->name('riwayat');
+            Route::get('/analitik',                     [AdminCbtController::class, 'analytics'])->name('analitik');
+            Route::get('/riwayat/{id}',                 [AdminCbtController::class, 'detailHasil'])->name('detail');
+            Route::post('/reset-semua',                 [AdminCbtController::class, 'resetSemua'])->name('reset-semua');
         });
     });
 
@@ -291,28 +299,31 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
     ->prefix('ujian-komprehensif')
     ->name('komprehensif.mahasiswa.')
     ->group(function () {
-        Route::get('/dashboard', [\Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController::class, 'dashboard'])->name('dashboard');
-        
+        Route::get('/dashboard',                      [MahasiswaController::class, 'dashboard'])->name('dashboard');
+
         // Route lama di-redirect langsung ke form (landing page tidak diperlukan)
         Route::get('/pengajuan-pendaftaran', function () {
             return redirect()->route('komprehensif.mahasiswa.pendaftaran.form');
         })->name('pendaftaran');
-        
-        Route::get('/pengajuan-pendaftaran/form', [\Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController::class, 'createPendaftaran'])->name('pendaftaran.form');
-        Route::post('/pengajuan-pendaftaran/form', [\Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController::class, 'storePendaftaran'])->name('pendaftaran.store');
-        
-        Route::get('/riwayat-ujian', [\Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController::class, 'riwayat'])->name('riwayat');
+
+        Route::get('/pengajuan-pendaftaran/form',  [MahasiswaController::class, 'createPendaftaran'])->name('pendaftaran.form');
+        Route::post('/pengajuan-pendaftaran/form', [MahasiswaController::class, 'storePendaftaran'])->name('pendaftaran.store');
+
+        Route::get('/riwayat-ujian', [MahasiswaController::class, 'riwayat'])->name('riwayat');
 
         // CBT Engine Routes
-        Route::post('/engine/validate-token', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'validateToken'])->name('engine.validate');
-        Route::get('/engine/waiting-room', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'waitingRoom'])->name('engine.waiting');
-        Route::post('/engine/start', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'startUjian'])->name('engine.start');
-        Route::get('/engine/run', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'run'])->name('engine.run');
-        
-        // CBT Engine API Routes
-        Route::post('/engine/save-answer', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'saveAnswer'])->name('engine.save-answer');
-        Route::post('/engine/toggle-ragu', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'toggleRagu'])->name('engine.toggle-ragu');
-        Route::post('/engine/log-violation', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'logViolation'])->name('engine.log-violation');
-        Route::get('/engine/finish', [\Modules\BankSoal\Http\Controllers\Komprehensif\CbtEngineController::class, 'finish'])->name('engine.finish');
-    });
+        // Flow: validate-token (generate soal + start sesi) → engine/run
+        Route::post('/engine/validate-token', [CbtEngineController::class, 'validateToken'])
+            ->middleware('throttle:cbt-token-validation')  // Max 5 percobaan/menit per user
+            ->name('engine.validate');
+        Route::get('/engine/run',             [CbtEngineController::class, 'run'])->name('engine.run');
 
+        // Waiting room dipertahankan sebagai fallback (tidak digunakan dalam flow normal)
+        Route::get('/engine/waiting-room',    [CbtEngineController::class, 'waitingRoom'])->name('engine.waiting');
+
+        // CBT Engine API Routes
+        Route::post('/engine/save-answer',  [CbtEngineController::class, 'saveAnswer'])->name('engine.save-answer');
+        Route::post('/engine/toggle-ragu',  [CbtEngineController::class, 'toggleRagu'])->name('engine.toggle-ragu');
+        Route::post('/engine/log-violation',[CbtEngineController::class, 'logViolation'])->name('engine.log-violation');
+        Route::get('/engine/finish',        [CbtEngineController::class, 'finish'])->name('engine.finish');
+    });

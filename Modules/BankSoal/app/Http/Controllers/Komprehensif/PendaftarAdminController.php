@@ -3,10 +3,13 @@
 namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
-use Modules\BankSoal\Models\PendaftarUjian;
-use Modules\BankSoal\Models\PeriodeUjian;
+use App\Models\Student;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Http\Request;
+use Modules\BankSoal\Enums\PendaftaranStatus;
+use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
+use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
 
 class PendaftarAdminController extends Controller
 {
@@ -37,7 +40,7 @@ class PendaftarAdminController extends Controller
             // Search NIM atau Nama
             if ($request->filled('search')) {
                 $search = $request->search;
-                $query->where(function (\Illuminate\Database\Eloquent\Builder $q) use ($search) {
+                $query->where(function (Builder $q) use ($search) {
                     $q->where('nim', 'like', "%{$search}%")
                         ->orWhere('nama_lengkap', 'like', "%{$search}%");
                 });
@@ -90,7 +93,7 @@ class PendaftarAdminController extends Controller
         }
 
         // Cari ID Mahasiswa dari tabel students (kolom student_number) beserta relasi usernya
-        $student = \App\Models\Student::with('user')->where('student_number', $request->nim)->first();
+        $student = Student::with('user')->where('student_number', $request->nim)->first();
 
         if (!$student || !$student->user) {
             return back()->withErrors(['nim' => 'Mahasiswa dengan NIM tersebut belum terdaftar di sistem.'])->withInput();
@@ -148,7 +151,7 @@ class PendaftarAdminController extends Controller
         $pendaftar = PendaftarUjian::findOrFail($id);
 
         // Guard: Pendaftar yang sudah disetujui tidak boleh dihapus
-        if ($pendaftar->status_pendaftaran === 'approved') {
+        if ($pendaftar->status_pendaftaran === PendaftaranStatus::Approved) {
             return back()->with('error', 'Pendaftar yang sudah disetujui tidak dapat ditolak atau dihapus.');
         }
 
@@ -176,7 +179,7 @@ class PendaftarAdminController extends Controller
         }
 
         // Cari dari tabel students beserta data user-nya
-        $student = \App\Models\Student::with('user')->where('student_number', $nim)->first();
+        $student = Student::with('user')->where('student_number', $nim)->first();
 
         if (!$student || !$student->user) {
             return response()->json(['found' => false, 'message' => 'Mahasiswa dengan NIM tersebut tidak ditemukan di sistem.']);

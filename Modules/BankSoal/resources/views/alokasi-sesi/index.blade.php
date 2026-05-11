@@ -196,10 +196,10 @@
                                         Kelola Peserta
                                     </button>
                                     
-                                    <form action="{{ route('banksoal.periode.jadwal.destroy', $jadwal->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus sesi ini? Semua alokasi mahasiswa di dalamnya akan dicabut.');" class="inline">
+                                    <form id="form-delete-{{ $jadwal->id }}" action="{{ route('banksoal.periode.jadwal.destroy', $jadwal->id) }}" method="POST" class="inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" @click.stop class="text-red-600 border border-transparent hover:border-red-200 hover:text-red-900 bg-transparent hover:bg-red-50 p-1.5 rounded-lg transition-colors" title="Hapus Jadwal">
+                                        <button type="button" @click.stop="openDeleteConfirm({{ $jadwal->id }})" class="text-red-600 border border-transparent hover:border-red-200 hover:text-red-900 bg-transparent hover:bg-red-50 p-1.5 rounded-lg transition-colors" title="Hapus Jadwal">
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                         </button>
                                     </form>
@@ -507,6 +507,13 @@
                         @csrf
                         <input type="hidden" name="periode_ujian_id" value="{{ $selectedPeriodeId }}">
                         
+                        @if(session('error'))
+                            <div class="p-3 mb-4 rounded-xl bg-red-50 border border-red-200 text-[13px] font-medium text-red-600 flex items-start gap-2">
+                                <svg class="w-4 h-4 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                <span>{{ session('error') }}</span>
+                            </div>
+                        @endif
+
                         <!-- Box 1: Nama Sesi -->
                         <div>
                             <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Sesi Ke-</label>
@@ -523,7 +530,7 @@
                         <div>
                             <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Tanggal Ujian (Berdasarkan Rentang Periode)</label>
                             <div class="relative">
-                                <select name="tanggal_ujian" required class="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow cursor-pointer">
+                                <select name="tanggal_ujian" required class="w-full appearance-none pl-4 pr-10 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow cursor-pointer @error('tanggal_ujian') border-red-500 ring-red-500/20 @enderror">
                                     <option value="">Pilih Tanggal Ujian...</option>
                                     @if($selectedPeriode && $selectedPeriode->tanggal_mulai_ujian && $selectedPeriode->tanggal_selesai_ujian)
                                         @php
@@ -536,24 +543,48 @@
                                     @endif
                                 </select>
                             </div>
+                            @error('tanggal_ujian')
+                                <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    {{ $message }}
+                                </p>
+                            @enderror
                         </div>
 
                         <!-- Box 2 & 3: Waktu Mulai & Selesai -->
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Waktu Mulai</label>
-                                <input type="time" name="waktu_mulai" value="{{ old('waktu_mulai') }}" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
+                                <input type="time" id="as_waktu_mulai" name="waktu_mulai" value="{{ old('waktu_mulai') }}" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow @error('waktu_mulai') border-red-500 ring-red-500/20 @enderror">
+                                @error('waktu_mulai')
+                                    <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
                             </div>
                             <div>
                                 <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Waktu Selesai</label>
-                                <input type="time" name="waktu_selesai" value="{{ old('waktu_selesai') }}" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
+                                <input type="time" id="as_waktu_selesai" name="waktu_selesai" value="{{ old('waktu_selesai') }}" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow @error('waktu_selesai') border-red-500 ring-red-500/20 @enderror">
+                                @error('waktu_selesai')
+                                    <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
+                                        <svg class="w-3.5 h-3.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                        {{ $message }}
+                                    </p>
+                                @enderror
                             </div>
                         </div>
 
                         <!-- Box 4: Kapasitas -->
                         <div>
                             <label class="block text-[13px] text-slate-700 mb-1.5 font-bold">Kapasitas Maksimal</label>
-                            <input type="number" name="kuota" value="{{ old('kuota') }}" placeholder="50" min="1" step="1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-shadow">
+                            <input type="number" name="kuota" value="{{ old('kuota') }}" placeholder="50" min="1" step="1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-shadow @error('kuota') border-red-500 ring-red-500/20 @enderror">
+                            @error('kuota')
+                                <p class="mt-1.5 text-[12px] text-red-500 font-medium flex items-center gap-1">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                    {{ $message }}
+                                </p>
+                            @enderror
                         </div>
                     </form>
                 </div>
@@ -570,6 +601,51 @@
             </div>
 
         </div>
+
+        <!-- Modal Popup: Konfirmasi Hapus Sesi -->
+        <div x-show="deleteConfirmModal" tabindex="-1" class="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6" style="display: none;">
+            <div x-show="deleteConfirmModal" 
+                 x-transition:enter="ease-out duration-300" 
+                 x-transition:enter-start="opacity-0" 
+                 x-transition:enter-end="opacity-100" 
+                 x-transition:leave="ease-in duration-200" 
+                 x-transition:leave-start="opacity-100" 
+                 x-transition:leave-end="opacity-0" 
+                 class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" 
+                 @click="closeDeleteConfirm()">
+            </div>
+
+            <div x-show="deleteConfirmModal" 
+                 x-transition:enter="ease-out duration-300" 
+                 x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                 x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" 
+                 x-transition:leave="ease-in duration-200" 
+                 x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" 
+                 x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" 
+                 class="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-full">
+                
+                <div class="px-6 pt-6 pb-4 text-center">
+                    <div class="w-16 h-16 rounded-full bg-red-50 flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    <h3 class="text-[17px] font-extrabold text-slate-800 tracking-tight mb-2">Hapus Sesi Ujian?</h3>
+                    <p class="text-[13px] text-slate-500 font-medium leading-relaxed">
+                        Apakah Anda yakin ingin menghapus sesi ini? Semua alokasi mahasiswa di dalamnya akan dicabut.
+                    </p>
+                </div>
+
+                <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex items-center gap-3">
+                    <button type="button" @click="closeDeleteConfirm()" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm rounded-xl focus:outline-none transition-colors">
+                        Batal
+                    </button>
+                    <button type="button" @click="submitDelete()" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-white bg-red-600 hover:bg-red-700 shadow-sm rounded-xl focus:outline-none transition-colors flex justify-center items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                        Hapus Sesi
+                    </button>
+                </div>
+            </div>
+        </div>
+
     </div> <!-- end x-data -->
 
     <script>
@@ -577,6 +653,8 @@
             Alpine.data('alokasiSesiApp', () => ({
                 openModal: {{ $errors->any() ? 'true' : 'false' }},
                 openDrawer: false,
+                deleteConfirmModal: false,
+                jadwalToDeleteId: null,
                 drawerTab: 'unassigned', // unassigned | assigned
                 selectedJadwal: null,
                 jadwals: @json($jadwals ?? []),
@@ -633,6 +711,25 @@
                     }, 300);
                 },
 
+                openDeleteConfirm(id) {
+                    this.jadwalToDeleteId = id;
+                    this.deleteConfirmModal = true;
+                },
+
+                closeDeleteConfirm() {
+                    this.deleteConfirmModal = false;
+                    setTimeout(() => {
+                        this.jadwalToDeleteId = null;
+                    }, 300);
+                },
+
+                submitDelete() {
+                    if (this.jadwalToDeleteId) {
+                        const form = document.getElementById('form-delete-' + this.jadwalToDeleteId);
+                        if(form) form.submit();
+                    }
+                },
+
                 toggleAllUnassigned() {
                     if (this.checkAllUnassigned) {
                         this.selectedUnassignedIds = this.unassignedStudents.map(p => p.id.toString());
@@ -657,4 +754,29 @@
             }));
         });
     </script>
+
+    <script>
+    // Validasi client-side: waktu_selesai minimal 100 menit setelah waktu_mulai
+    document.addEventListener('DOMContentLoaded', () => {
+        const mulaiEl   = document.getElementById('as_waktu_mulai');
+        const selesaiEl = document.getElementById('as_waktu_selesai');
+        if (!mulaiEl || !selesaiEl) return;
+
+        function updateMinSelesai() {
+            if (!mulaiEl.value) return;
+            const [h, m] = mulaiEl.value.split(':').map(Number);
+            const total  = h * 60 + m + 100;
+            const minH   = String(Math.floor(total / 60) % 24).padStart(2, '0');
+            const minM   = String(total % 60).padStart(2, '0');
+            selesaiEl.min = minH + ':' + minM;
+            if (selesaiEl.value && selesaiEl.value < selesaiEl.min) {
+                selesaiEl.value = selesaiEl.min;
+            }
+        }
+
+        mulaiEl.addEventListener('change', updateMinSelesai);
+        mulaiEl.addEventListener('input',  updateMinSelesai);
+    });
+    </script>
+
 </x-banksoal::layouts.admin>

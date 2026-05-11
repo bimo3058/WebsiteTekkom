@@ -4,8 +4,8 @@ namespace Modules\BankSoal\Livewire;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use Modules\BankSoal\Models\PeriodeUjian;
-use Modules\BankSoal\Models\PendaftarUjian;
+use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
+use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
 
 class PeriodeTable extends Component
 {

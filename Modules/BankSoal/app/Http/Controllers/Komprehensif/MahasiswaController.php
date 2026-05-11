@@ -3,9 +3,11 @@
 namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
-use Modules\BankSoal\Models\PeriodeUjian;
-use Modules\BankSoal\Models\PendaftarUjian;
+use Modules\BankSoal\Models\Komprehensif\KompreSession;
+use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
+use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
 
 class MahasiswaController extends Controller
 {
@@ -36,7 +38,7 @@ class MahasiswaController extends Controller
                 ->first();
                 
             if ($pendaftar && $pendaftar->jadwal) {
-                $finishedSession = \Modules\BankSoal\Models\KompreSession::where('user_id', auth()->id())
+                $finishedSession = KompreSession::where('user_id', auth()->id())
                     ->where('jadwal_id', $pendaftar->jadwal->id)
                     ->where('status', 'finished')
                     ->first();
@@ -88,7 +90,7 @@ class MahasiswaController extends Controller
             return redirect()->route('komprehensif.mahasiswa.dashboard')->with('info', $msg);
         }
 
-        $dosens = \App\Models\User::whereHas('roles', fn($q) => $q->where('name', 'dosen'))->orderBy('name')->get(['id', 'name']);
+        $dosens = User::whereHas('roles', fn($q) => $q->where('name', 'dosen'))->orderBy('name')->get(['id', 'name']);
         
         return view('banksoal::mahasiswa.pendaftaran-form', compact('activePeriode', 'dosens'));
     }
@@ -149,7 +151,7 @@ class MahasiswaController extends Controller
 
     public function riwayat()
     {
-        $sessions = \Modules\BankSoal\Models\KompreSession::where('user_id', auth()->id())
+        $sessions = KompreSession::where('user_id', auth()->id())
             ->where('status', 'finished')
             ->with(['jadwal.periode', 'jawabans'])
             ->orderBy('finished_at', 'desc')

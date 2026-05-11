@@ -5,6 +5,8 @@ namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
+use Modules\BankSoal\Models\Komprehensif\JadwalUjian;
+use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
 
 class AktivasiSesiController extends Controller
 {
@@ -13,7 +15,7 @@ class AktivasiSesiController extends Controller
      */
     public function index(Request $request)
     {
-        $periodes = \Modules\BankSoal\Models\PeriodeUjian::orderBy('tanggal_mulai', 'desc')->get();
+        $periodes = PeriodeUjian::orderBy('tanggal_mulai', 'desc')->get();
         $selectedPeriodeId = $request->query('periode_id');
 
         $selectedPeriode = null;
@@ -23,7 +25,7 @@ class AktivasiSesiController extends Controller
 
         $jadwals = [];
         if ($selectedPeriode) {
-            $jadwals = \Modules\BankSoal\Models\JadwalUjian::withCount('pendaftars')
+            $jadwals = JadwalUjian::withCount('pendaftars')
                 ->where('periode_ujian_id', $selectedPeriodeId)
                 ->orderBy('tanggal_ujian', 'asc')
                 ->orderBy('waktu_mulai', 'asc')
@@ -42,7 +44,7 @@ class AktivasiSesiController extends Controller
             'status' => 'required|in:menunggu_jadwal,aktif,selesai',
         ]);
 
-        $jadwal = \Modules\BankSoal\Models\JadwalUjian::findOrFail($id);
+        $jadwal = JadwalUjian::findOrFail($id);
 
         $token = null;
         if ($request->status === 'aktif') {

@@ -1,9 +1,11 @@
 <?php
 
-namespace Modules\BankSoal\Models;
+namespace Modules\BankSoal\Models\Komprehensif;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\BankSoal\Enums\JadwalStatus;
 
 class JadwalUjian extends Model
 {
@@ -23,6 +25,11 @@ class JadwalUjian extends Model
         'token',
     ];
 
+    protected $casts = [
+        'tanggal_ujian' => 'date',
+        'status'        => JadwalStatus::class,
+    ];
+
     public function periode()
     {
         return $this->belongsTo(PeriodeUjian::class, 'periode_ujian_id');
@@ -32,8 +39,4 @@ class JadwalUjian extends Model
     {
         return $this->hasMany(PendaftarUjian::class, 'jadwal_ujian_id');
     }
-
-    protected $casts = [
-        'tanggal_ujian' => 'date',
-    ];
 }
