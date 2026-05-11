@@ -17,7 +17,21 @@
         <div><span class="font-semibold">Tahun Akademik:</span> {{ $record->tahun_akademik ?? '-' }}</div>
         <div><span class="font-semibold">Semester:</span> {{ $record->semester ?? '-' }}</div>
         <div><span class="font-semibold">Tipe Ujian:</span> {{ strtoupper($record->tipe_ujian ?? '-') }}</div>
+        <div>
+            <span class="font-semibold">Metode Ujian:</span> 
+            @if(($record->metode_ujian ?? '') === 'offline')
+                <span class="inline-flex items-center rounded-md bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">Cetak Kertas (Offline)</span>
+            @else
+                <span class="inline-flex items-center rounded-md bg-green-50 px-2 py-0.5 text-xs font-medium text-green-700 ring-1 ring-inset ring-green-600/20">Online</span>
+            @endif
+        </div>
         <div><span class="font-semibold">Status:</span> {{ strtoupper($record->status ?? '-') }}</div>
+        @if(($record->metode_ujian ?? '') === 'offline' && $record->status_cetak)
+        <div>
+            <span class="font-semibold">Status Cetak:</span> 
+            <span class="inline-flex items-center rounded-md bg-blue-50 px-2 py-0.5 text-xs font-medium text-blue-700 ring-1 ring-inset ring-blue-600/20">{{ ucfirst($record->status_cetak) }}</span>
+        </div>
+        @endif
     </div>
 </x-banksoal::ui.panel>
 

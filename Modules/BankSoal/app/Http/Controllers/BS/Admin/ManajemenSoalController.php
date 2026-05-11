@@ -4,147 +4,77 @@ namespace Modules\BankSoal\Http\Controllers\BS\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Modules\BankSoal\Models\Pertanyaan;
+use Modules\BankSoal\Models\PenarikanSoal;
 use Modules\BankSoal\Models\MataKuliah;
+use Modules\BankSoal\Models\Pertanyaan;
 
 class ManajemenSoalController extends Controller
 {
     public function index(Request $request)
     {
-        $mataKuliahAll = MataKuliah::with(['cpl', 'pertanyaan.cpmk'])->get();
-
-        $query = Pertanyaan::with(['mataKuliah', 'cpl'])
-            ->join('bs_mata_kuliah', 'bs_pertanyaan.mk_id', '=', 'bs_mata_kuliah.id')
-            ->leftJoin('bs_cpl', 'bs_pertanyaan.cpl_id', '=', 'bs_cpl.id')
-            ->select('bs_pertanyaan.*');
+        $query = PenarikanSoal::with(['mataKuliah', 'dosen'])
+            ->where('metode_ujian', 'offline')
+            ->orderByRaw("CASE status_cetak WHEN 'pending' THEN 1 WHEN 'diproses' THEN 2 WHEN 'selesai' THEN 3 ELSE 4 END ASC")
+            ->orderBy('created_at', 'desc');
 
         if ($request->searchSoal) {
             $search = $request->searchSoal;
             $query->where(function($q) use ($search) {
-                $q->where('bs_pertanyaan.soal', 'like', "%{$search}%")
-                  ->orWhere('bs_mata_kuliah.nama', 'like', "%{$search}%")
-                  ->orWhere('bs_mata_kuliah.kode', 'like', "%{$search}%")
-                  ->orWhere('bs_cpl.kode', 'like', "%{$search}%");
+                $q->where('nama_ekstraksi', 'like', "%{$search}%")
+                  ->orWhereHas('mataKuliah', function($q) use ($search) {
+                      $q->where('nama', 'like', "%{$search}%")
+                        ->orWhere('kode', 'like', "%{$search}%");
+                  });
             });
         }
 
-        if ($request->filterMK) {
-            $query->where('bs_pertanyaan.mk_id', $request->filterMK);
-        }
-
-        if ($request->filterTipe) {
-            $query->where('bs_pertanyaan.tipe_soal', $request->filterTipe);
-        }
-
         if ($request->filterStatus) {
-            $query->where('bs_pertanyaan.status', $request->filterStatus);
+            $query->where('status_cetak', $request->filterStatus);
         }
 
-        $soals = $query->orderBy('bs_pertanyaan.created_at', 'desc')->paginate(10);
-        $soals->appends($request->query());
+        $antreanCetak = $query->paginate(10);
+        $antreanCetak->appends($request->query());
 
-        $mataKuliahAll->transform(function ($mk) {
-            $soalCpmks = $mk->pertanyaan ? $mk->pertanyaan->pluck('cpmk')->filter() : collect();
-            $mk->all_cpmks = $soalCpmks->unique('id')->sortBy('kode')->values();
-            return $mk;
-        });
-
-        return view('banksoal::pages.admin.kontrol-banksoal.soal', compact('soals', 'mataKuliahAll'));
+        return view('banksoal::pages.admin.kontrol-banksoal.soal', compact('antreanCetak'));
     }
 
-    public function ekstrak(Request $request)
+    public function cetakDokumen(Request $request, $id)
     {
-        $request->validate([
-            'mk_id' => 'required',
-            'jenis_soal' => 'nullable|array',
-            'cpl_id' => 'nullable',
-            'cpmk_id' => 'nullable',
-            'bobot_total' => 'nullable|numeric'
+        $penarikan = PenarikanSoal::where('metode_ujian', 'offline')->findOrFail($id);
+        
+        // Ubah status ke diproses jika masih pending
+        if ($penarikan->status_cetak === 'pending') {
+            $penarikan->update(['status_cetak' => 'diproses']);
+        }
+
+        $soalArray = $penarikan->getSoalArray();
+        $soalIds = collect($soalArray)->pluck('id')->toArray();
+
+        $soals = collect();
+        if (!empty($soalIds)) {
+            $soals = Pertanyaan::with(['cpl', 'cpmk', 'jawaban'])
+                ->whereIn('id', $soalIds)
+                ->get()
+                ->sortBy(function($model) use ($soalIds) {
+                    return array_search($model->id, $soalIds);
+                });
+        }
+
+        $mataKuliah = MataKuliah::find($penarikan->mk_id);
+        $request->merge([
+            'agenda' => explode(' - ', $penarikan->nama_ekstraksi)[1] ?? 'Ujian',
+            'tahun_ajaran' => $penarikan->tahun_akademik,
+            'semester' => $penarikan->semester
         ]);
-
-        $query = Pertanyaan::with(['mataKuliah', 'cpl', 'jawaban'])
-            ->where('mk_id', $request->mk_id);
-
-        if ($request->filled('jenis_soal')) {
-            $tipe_soal_map = collect($request->jenis_soal)->map(function ($tipe) {
-                return $tipe === 'Pilihan Ganda' ? 'pilihan_ganda' : 'essay';
-            })->toArray();
-            $query->whereIn('tipe_soal', $tipe_soal_map);
-        }
-
-        if ($request->filled('cpl_id')) {
-            $query->where('cpl_id', $request->cpl_id);
-        }
-
-        $soals = $query->inRandomOrder()->get();
-
-        if($soals->isEmpty()){
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Tidak ada soal yang sesuai dengan kriteria ekstraksi.']);
-            }
-            return back()->with('error', 'Tidak ada soal yang sesuai dengan kriteria ekstraksi.');
-        }
-
-        $mataKuliah = MataKuliah::find($request->mk_id);
-
-        if ($request->ajax() || $request->wantsJson()) {
-            return response()->json([
-                'success' => true,
-                'mataKuliah' => $mataKuliah,
-                'soals' => $soals->map(function ($soal) {
-                    return [
-                        'id' => $soal->id,
-                        'soal' => $soal->soal,
-                        'cpl' => $soal->cpl ? $soal->cpl->kode : null,
-                        'cpmk' => $soal->cpmk ? $soal->cpmk->kode : null,
-                    ];
-                }),
-                'request' => $request->all()
-            ]);
-        }
-
-        return view('banksoal::pages.admin.kontrol-banksoal.ekstrak-result', compact('soals', 'mataKuliah', 'request'));
-    }
-
-    public function cetakUjian(Request $request)
-    {
-        $request->validate([
-            'soal_ids' => 'required|array',
-            'mk_id' => 'required',
-            'agenda' => 'nullable',
-            'tahun_ajaran' => 'nullable',
-            'semester' => 'nullable'
-        ]);
-
-        $soals = Pertanyaan::with(['cpl', 'cpmk', 'jawaban'])
-            ->whereIn('id', $request->soal_ids)
-            ->get();
-            
-        // Urutkan soal sesuai soal_ids
-        $soals = $soals->sortBy(function($model) use ($request) {
-            return array_search($model->id, $request->soal_ids);
-        });
-
-        $mataKuliah = MataKuliah::find($request->mk_id);
 
         return view('banksoal::pages.bank-soal.Dosen.print-ujian', compact('soals', 'mataKuliah', 'request'));
     }
 
-    public function cetakSemua(Request $request)
+    public function tandaiSelesai(Request $request, $id)
     {
-        $request->validate([
-            'mk_id' => 'required',
-        ]);
+        $penarikan = PenarikanSoal::where('metode_ujian', 'offline')->findOrFail($id);
+        $penarikan->update(['status_cetak' => 'selesai']);
 
-        $mataKuliah = MataKuliah::find($request->mk_id);
-        $soals = Pertanyaan::with(['cpl', 'cpmk', 'jawaban'])
-            ->where('mk_id', $request->mk_id)
-            ->get();
-            
-        if ($soals->isEmpty()) {
-            return back()->with('error', 'Tidak ada soal untuk dicetak pada Mata Kuliah ini.');
-        }
-
-        return view('banksoal::pages.bank-soal.Dosen.print-ujian', compact('soals', 'mataKuliah', 'request'));
+        return back()->with('success', 'Status cetakan ujian telah ditandai Selesai.');
     }
 }

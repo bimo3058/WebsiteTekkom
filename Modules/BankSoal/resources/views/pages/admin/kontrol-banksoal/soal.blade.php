@@ -2,27 +2,37 @@
     <!-- Header Title -->
     <div class="mb-6 lg:mb-8 flex justify-between items-center">
         <div>
-            <h1 class="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tight">Manajemen Soal</h1>
-            <p class="text-slate-500 text-sm mt-2">Kelola dan organisir seluruh soal dari Dosen dalam bank soal</p>
-        </div>
-        <div class="flex gap-2">
-            <button type="button" onclick="openTarikModal()" class="inline-flex items-center gap-2 bg-[#059669] hover:bg-[#047857] text-white rounded-xl px-4 py-2.5 font-medium transition-colors shadow-sm">
-                <i class="fas fa-download"></i> Tarik Soal (Print)
-            </button>
+            <h1 class="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tight">Cetak Soal Ujian (Offline)</h1>
+            <p class="text-slate-500 text-sm mt-2">Daftar permintaan pencetakan lembar soal fisik dari Dosen</p>
         </div>
     </div>
 
     <!-- Filter Form -->
     <form action="{{ route('banksoal.admin.kontrol-banksoal.soal') }}" method="GET" class="mb-6 flex gap-3">
-        <input type="text" name="searchSoal" value="{{ request('searchSoal') }}" placeholder="Cari soal..." class="w-full rounded-xl border border-slate-300 text-sm px-4 py-2.5 outline-none focus:border-[#0f172a] focus:ring-1 focus:ring-[#0f172a]">
-        <select name="filterMK" class="w-full rounded-xl border border-slate-300 text-sm px-4 py-2.5 outline-none focus:border-[#0f172a] focus:ring-1 focus:ring-[#0f172a]">
-            <option value="">-- Semua Mata Kuliah --</option>
-            @foreach($mataKuliahAll as $mk)
-                <option value="{{ $mk->id }}" @selected(request('filterMK') == $mk->id)>{{ $mk->kode }} - {{ $mk->nama }}</option>
-            @endforeach
+        <input type="text" name="searchSoal" value="{{ request('searchSoal') }}" placeholder="Cari agenda atau mata kuliah..." class="w-full rounded-xl border border-slate-300 text-sm px-4 py-2.5 outline-none focus:border-[#0f172a] focus:ring-1 focus:ring-[#0f172a]">
+        
+        <select name="filterStatus" class="w-full md:w-64 rounded-xl border border-slate-300 text-sm px-4 py-2.5 outline-none focus:border-[#0f172a] focus:ring-1 focus:ring-[#0f172a]">
+            <option value="">-- Semua Status --</option>
+            <option value="pending" @selected(request('filterStatus') == 'pending')>🕒 Menunggu Dicetak</option>
+            <option value="diproses" @selected(request('filterStatus') == 'diproses')>⏳ Sedang Diproses</option>
+            <option value="selesai" @selected(request('filterStatus') == 'selesai')>✅ Sudah Dicetak</option>
         </select>
-        <button type="submit" class="bg-slate-800 text-white px-5 py-2.5 rounded-xl font-medium">Filter</button>
+        
+        <button type="submit" class="bg-slate-800 hover:bg-slate-700 transition lg:px-8 text-white px-5 py-2.5 rounded-xl font-medium">Filter</button>
     </form>
+
+    @if (session('success'))
+        <div class="mb-5 bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-xl relative flex items-center gap-3">
+            <i class="fas fa-check-circle text-green-500"></i>
+            <span class="text-sm font-medium">{{ session('success') }}</span>
+        </div>
+    @endif
+    @if (session('error'))
+        <div class="mb-5 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl relative flex items-center gap-3">
+            <i class="fas fa-exclamation-circle text-red-500"></i>
+            <span class="text-sm font-medium">{{ session('error') }}</span>
+        </div>
+    @endif
 
     <!-- Table -->
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
@@ -30,104 +40,76 @@
             <table class="w-full text-left text-sm text-slate-600">
                 <thead class="bg-slate-50 text-slate-900 border-b border-slate-200">
                     <tr>
-                        <th class="px-6 py-4 font-semibold">Tipe Soal</th>
-                        <th class="px-6 py-4 font-semibold">Soal</th>
-                        <th class="px-6 py-4 font-semibold">Mata Kuliah</th>
+                        <th class="px-6 py-4 font-semibold">Tgl / Waktu</th>
+                        <th class="px-6 py-4 font-semibold">Agenda Ujian</th>
+                        <th class="px-6 py-4 font-semibold">Mata Kuliah / Dosen</th>
+                        <th class="px-6 py-4 font-semibold text-center">Metode</th>
+                        <th class="px-6 py-4 font-semibold text-center">Status Cetak</th>
+                        <th class="px-6 py-4 font-semibold text-center">Aksi</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
-                    @forelse($soals as $soal)
+                    @forelse($antreanCetak as $item)
                     <tr class="hover:bg-slate-50/50 transition-colors">
-                        <td class="px-6 py-4 font-medium">{{ ucwords(str_replace('_', ' ', $soal->tipe_soal)) }}</td>
-                        <td class="px-6 py-4">{!! Str::limit(strip_tags($soal->soal), 80) !!}</td>
-                        <td class="px-6 py-4 text-xs font-semibold">{{ $soal->mataKuliah ? $soal->mataKuliah->nama : '-' }}</td>
+                        <td class="px-6 py-4 whitespace-nowrap text-xs font-medium text-slate-500">
+                            {{ $item->created_at->format('d M Y') }}<br>
+                            <span class="text-[10px]">{{ $item->created_at->format('H:i') }} WIB</span>
+                        </td>
+                        <td class="px-6 py-4 font-semibold text-slate-700">
+                            {{ $item->nama_ekstraksi }}<br>
+                            <span class="text-xs text-slate-500 font-normal">TA: {{ $item->tahun_akademik }} - Sem {{ ucfirst($item->semester) }}</span>
+                        </td>
+                        <td class="px-6 py-4 font-medium text-slate-800 text-xs leading-relaxed">
+                            <span class="font-bold text-[#0f172a]">{{ $item->mataKuliah ? $item->mataKuliah->nama : 'MK Tidak Ditemukan' }}</span><br>
+                            <span class="text-slate-500 italic">{{ $item->dosen ? $item->dosen->name : 'N/A' }}</span>
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            @if(strtolower($item->metode_ujian) == 'offline')
+                                <span class="bg-blue-100 text-blue-800 text-xs font-semibold px-2.5 py-1 rounded-full border border-blue-200 whitespace-nowrap">Kertas (Offline)</span>
+                            @else
+                                <span class="bg-purple-100 text-purple-800 text-xs font-semibold px-2.5 py-1 rounded-full border border-purple-200 whitespace-nowrap">Online</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4 text-center">
+                            @if($item->status_cetak == 'pending')
+                                <span class="bg-amber-100 text-amber-700 text-[11px] font-bold px-3 py-1.5 rounded-lg border border-amber-200 uppercase tracking-wider"><i class="fas fa-clock mr-1"></i> Menunggu</span>
+                            @elseif($item->status_cetak == 'diproses')
+                                <span class="bg-sky-100 text-sky-700 text-[11px] font-bold px-3 py-1.5 rounded-lg border border-sky-200 uppercase tracking-wider"><i class="fas fa-spinner fa-spin mr-1"></i> Diproses</span>
+                            @elseif($item->status_cetak == 'selesai')
+                                <span class="bg-emerald-100 text-emerald-700 text-[11px] font-bold px-3 py-1.5 rounded-lg border border-emerald-200 uppercase tracking-wider"><i class="fas fa-check mr-1"></i> Selesai</span>
+                            @else
+                                <span class="bg-slate-100 text-slate-700 text-[11px] font-bold px-3 py-1.5 rounded-lg border border-slate-200 uppercase tracking-wider">{{ $item->status_cetak }}</span>
+                            @endif
+                        </td>
+                        <td class="px-6 py-4">
+                            <div class="flex items-center justify-center gap-2">
+                                <a href="{{ route('banksoal.admin.kontrol-banksoal.soal.cetak', $item->id) }}" target="_blank" class="inline-flex items-center gap-1.5 bg-slate-800 hover:bg-slate-700 text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition" title="Print Dokumen PDF">
+                                    <i class="fas fa-print"></i> Cetak
+                                </a>
+                                @if($item->status_cetak != 'selesai')
+                                <form action="{{ route('banksoal.admin.kontrol-banksoal.soal.tandai-selesai', $item->id) }}" method="POST" onsubmit="return confirm('Tandai bahwa berkas fisik soal ini sudah tercetak dan siap dibagikan?');">
+                                    @csrf
+                                    <button type="submit" class="inline-flex items-center gap-1.5 bg-[#059669] hover:bg-[#047857] text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition shadow-sm" title="Tandai Selesai Dicetak">
+                                        <i class="fas fa-check-double"></i> Selesai
+                                    </button>
+                                </form>
+                                @endif
+                            </div>
+                        </td>
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="3" class="px-6 py-12 text-center text-slate-400 font-medium z-10">Belum ada soal tersedia.</td>
+                        <td colspan="6" class="px-6 py-16 text-center text-slate-400">
+                            <i class="fas fa-inbox text-4xl mb-3 text-slate-300"></i>
+                            <p class="font-medium text-slate-500">Belum ada antrean cetak ujian fisik dari Dosen saat ini.</p>
+                        </td>
                     </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
         <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/80">
-            {{ $soals->appends(request()->query())->links() }}
+            {{ $antreanCetak->links() }}
         </div>
     </div>
-
-
-<!-- Tarik Soal Modal -->
-<div id="tarikSoalModal" class="fixed inset-0 z-[100] hidden items-center justify-center overflow-y-auto overflow-x-hidden bg-slate-900/50 backdrop-blur-sm p-4 transition-opacity duration-300 opacity-0">
-    <div id="tarikSoalModalContent" class="relative w-full max-w-lg bg-white rounded-2xl shadow-xl border border-slate-200 transform transition-all duration-300 ease-out opacity-0 scale-95 translate-y-4 flex flex-col max-h-[90vh]">
-        
-        <!-- Header -->
-        <div class="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-            <div>
-                <h3 class="text-lg font-bold text-slate-900">Tarik Soal (Cetak)</h3>
-                <p class="text-sm text-slate-500 mt-0.5">Pilih mata kuliah yang soalnya ingin dicetak</p>
-            </div>
-            <button type="button" class="text-slate-400 hover:text-slate-600 rounded-lg p-2 transition-colors" onclick="closeTarikModal()">
-                <i class="fas fa-times text-lg"></i>
-            </button>
-        </div>
-
-        <!-- Body -->
-        <div class="px-6 py-5 overflow-y-auto w-full">
-            <form action="{{ route('banksoal.admin.kontrol-banksoal.soal.ekstrak') }}" method="POST" id="formTarikSoal">
-                @csrf
-                <div class="space-y-5">
-                    
-                    <!-- MK Selection -->
-                    <div>
-                        <label for="mkSelect" class="block text-sm font-medium text-slate-700 mb-1.5 flex justify-between">Mata Kuliah <span class="text-red-500">*</span></label>
-                        <select name="mk_id" id="mkSelect" required class="w-full rounded-xl border border-slate-300 px-4 py-2.5 text-sm bg-white focus:border-[#0f172a] focus:ring-1 focus:ring-[#0f172a] transition-shadow">
-                            <option value="">-- Pilih Mata Kuliah --</option>
-                            @foreach($mataKuliahAll as $mk)
-                            <option value="{{ $mk->id }}">{{ $mk->kode }} - {{ $mk->nama }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                </div>
-            </form>
-        </div>
-
-        <!-- Footer -->
-        <div class="px-6 py-4 border-t border-slate-100 bg-slate-50/80 rounded-b-2xl flex justify-end gap-3 mt-auto">
-            <button type="button" class="px-4 py-2.5 text-sm font-medium text-slate-600 transition-colors" onclick="closeTarikModal()">Batal</button>
-            <button type="submit" form="formTarikSoal" class="inline-flex items-center gap-2 bg-[#059669] hover:bg-[#047857] text-white rounded-lg px-5 py-2.5 text-sm font-medium transition-colors shadow-sm">
-                <i class="fas fa-check"></i> Proses Tarik Soal
-            </button>
-        </div>
-
-    </div>
-</div>
-
-<script>
-    function openTarikModal() {
-        const modal = document.getElementById('tarikSoalModal');
-        const modalContent = document.getElementById('tarikSoalModalContent');
-        modal.classList.remove('hidden');
-        modal.classList.add('flex');
-        
-        setTimeout(() => {
-            modal.classList.remove('opacity-0');
-            modalContent.classList.remove('opacity-0', 'scale-95', 'translate-y-4');
-            modalContent.classList.add('opacity-100', 'scale-100', 'translate-y-0');
-        }, 10);
-    }
-    
-    function closeTarikModal() {
-        const modal = document.getElementById('tarikSoalModal');
-        const modalContent = document.getElementById('tarikSoalModalContent');
-        
-        modalContent.classList.remove('opacity-100', 'scale-100', 'translate-y-0');
-        modalContent.classList.add('opacity-0', 'scale-95', 'translate-y-4');
-        modal.classList.add('opacity-0');
-        
-        setTimeout(() => {
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }, 300);
-    }
-</script>
 </x-banksoal::layouts.admin>

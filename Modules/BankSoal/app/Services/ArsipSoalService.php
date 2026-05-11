@@ -20,6 +20,8 @@ class ArsipSoalService
                 'mk_id' => $mkId,
                 'nama_ekstraksi' => $data['nama_ekstraksi'] ?? 'Ekstraksi Soal',
                 'tipe_ujian' => $data['tipe_ujian'] ?? 'lainnya',
+                'metode_ujian' => $data['metode_ujian'] ?? 'online',
+                'status_cetak' => $data['status_cetak'] ?? null,
                 'tahun_akademik' => $data['tahun_akademik'] ?? date('Y') . '/' . (date('Y') + 1),
                 'semester' => $data['semester'] ?? 'Genap',
                 'tanggal_ujian' => $data['tanggal_ujian'] ?? null,

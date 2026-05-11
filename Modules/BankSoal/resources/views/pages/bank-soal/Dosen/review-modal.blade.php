@@ -49,6 +49,23 @@
                             </select>
                         </div>
                     </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Metode Ujian</label>
+                            <div class="flex gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="metode_ujian" value="online" checked class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-600">
+                                    <span class="text-sm text-slate-600">Terkomputerisasi (Online)</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="metode_ujian" value="offline" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-600">
+                                    <span class="text-sm text-slate-600">Cetak Kertas (Offline)</span>
+                                </label>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">Jika mode <b>Cetak Kertas</b> dipilih, soal akan otomatis diteruskan ke antrean tugas Admin Cetak.</p>
+                        </div>
+                    </div>
 
                     <!-- Archive mode and note removed per UX: always save draft on finalize -->
                 </div>

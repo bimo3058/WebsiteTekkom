@@ -1,6 +1,12 @@
 <x-banksoal::layouts.gpm-master>
     <x-banksoal::notification.alerts />
-    <x-banksoal::ui.page-header title="Validasi Bank Soal" subtitle="Evaluasi kesesuaian butir soal dengan CPL" />
+    <x-banksoal::ui.page-header title="Validasi Bank Soal" subtitle="Evaluasi kesesuaian butir soal dengan CPL">
+        <x-slot name="actions">
+            <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}" class="inline-flex items-center gap-2 rounded-xl bg-white border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-700 hover:bg-slate-50 hover:text-slate-900 transition-colors shadow-sm">
+                <i class="fas fa-arrow-left"></i> Kembali
+            </a>
+        </x-slot>
+    </x-banksoal::ui.page-header>
 
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
         <div class="text-sm text-slate-700">
@@ -42,8 +48,17 @@
                 <p class="text-sm text-slate-600 leading-relaxed">{{ $soal->cpmk_deskripsi }}</p>
             @endif
 
+            @php
+                $kognitifMap = [
+                    'easy' => 'C1-C2 (Mengingat / Memahami)',
+                    'intermediate' => 'C3-C4 (Mengaplikasikan / Menganalisis)',
+                    'advanced' => 'C5-C6 (Mengevaluasi / Mencipta)',
+                ];
+                $kesulitanLabel = $soal->kesulitan ?? 'intermediate';
+                $levelKognitif = $kognitifMap[$kesulitanLabel] ?? 'C3-C4 (Sedang)';
+            @endphp
             <span class="mt-4 inline-flex items-center rounded-full bg-blue-600 px-3 py-1 text-[11px] font-semibold text-white">
-                Level Kognitif: C4 (Menganalisis)
+                Level Kognitif: {{ $levelKognitif }} ({{ ucfirst($kesulitanLabel) }})
             </span>
         </div>
 
@@ -97,8 +112,8 @@
                             @php
                                 $dummyParams = [
                                     ['id' => 1, 'parameter' => 'Kesesuaian materi soal dengan CPL/CPMK', 'bobot' => 40],
-                                    ['id' => 2, 'parameter' => 'Tingkat kesukaran dan tingkatan kognitif', 'bobot' => 30],
-                                    ['id' => 3, 'parameter' => 'Kejelasan redaksi dan tata bahasa', 'bobot' => 30],
+                                    ['id' => 2, 'parameter' => 'Tingkat kesulitan dan tingkatan kognitif', 'bobot' => 30],
+                                    ['id' => 3, 'parameter' => 'Kejelasan penyusunan kalimat dan tata bahasa', 'bobot' => 30],
                                 ];
                             @endphp
                             @foreach($dummyParams as $param)
