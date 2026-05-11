@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\BankSoal\Models;
+namespace Modules\BankSoal\Models\Komprehensif;
 
 use Illuminate\Database\Eloquent\Model;
 
@@ -9,7 +9,7 @@ class CheatLog extends Model
     protected $table = 'bs_cheat_logs';
 
     protected $fillable = [
-        'kompre_session_id', 'event_type', 'description', 'metadata'
+        'kompre_session_id', 'event_type', 'description', 'metadata',
     ];
 
     protected $casts = [

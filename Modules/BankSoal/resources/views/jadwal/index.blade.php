@@ -201,11 +201,11 @@
                         <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
                                 <label class="block text-sm text-slate-700 mb-2 font-medium">Waktu Mulai</label>
-                                <input type="time" name="waktu_mulai" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
+                                <input type="time" id="waktu_mulai_input" name="waktu_mulai" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
                             </div>
                             <div>
                                 <label class="block text-sm text-slate-700 mb-2 font-medium">Waktu Selesai</label>
-                                <input type="time" name="waktu_selesai" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
+                                <input type="time" id="waktu_selesai_input" name="waktu_selesai" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
                             </div>
                         </div>
 
@@ -237,3 +237,27 @@
         </div>
     </div>
 </x-banksoal::layouts.admin>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const mulaiEl   = document.getElementById('waktu_mulai_input');
+    const selesaiEl = document.getElementById('waktu_selesai_input');
+    if (!mulaiEl || !selesaiEl) return;
+
+    function updateMinSelesai() {
+        if (!mulaiEl.value) return;
+        const [h, m] = mulaiEl.value.split(':').map(Number);
+        const total  = h * 60 + m + 100;
+        const minH   = String(Math.floor(total / 60) % 24).padStart(2, '0');
+        const minM   = String(total % 60).padStart(2, '0');
+        selesaiEl.min = minH + ':' + minM;
+        // Reset nilai jika waktu selesai yang dipilih tidak lagi valid
+        if (selesaiEl.value && selesaiEl.value < selesaiEl.min) {
+            selesaiEl.value = selesaiEl.min;
+        }
+    }
+
+    mulaiEl.addEventListener('change', updateMinSelesai);
+    mulaiEl.addEventListener('input',  updateMinSelesai);
+});
+</script>

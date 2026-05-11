@@ -52,13 +52,33 @@
                 <span class="text-[13px]">Validasi Bank Soal</span>
             </a>
 
-            <!-- Riwayat Validasi -->
-            <a href="{{ route('banksoal.rps.gpm.index') }}" class="flex items-center gap-3 py-2.5 px-4 rounded-xl {{ request()->routeIs('banksoal.rps.gpm.index') || request()->routeIs('banksoal.rps.gpm.riwayat-validasi.*') || request()->routeIs('banksoal.soal.gpm.riwayat-validasi*') ? 'bg-[#EBF4FF] text-blue-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 font-medium' }} transition-all mt-1">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-                <span class="text-[13px]">Riwayat Validasi</span>
-            </a>
+            <!-- Riwayat Validasi (Dropdown) -->
+            @php
+                $isRiwayatActive = request()->routeIs('banksoal.rps.gpm.index') || request()->routeIs('banksoal.rps.gpm.riwayat-validasi.*') || request()->routeIs('banksoal.soal.gpm.riwayat-validasi*');
+            @endphp
+            <div x-data="{ expanded: {{ $isRiwayatActive ? 'true' : 'false' }} }" class="mt-1">
+                <button @click="expanded = !expanded" class="w-full flex items-center justify-between py-2.5 px-4 rounded-xl {{ $isRiwayatActive ? 'bg-[#EBF4FF] text-blue-600 font-semibold' : 'text-slate-600 hover:bg-slate-50 font-medium' }} transition-all">
+                    <div class="flex items-center gap-3">
+                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-[13px]">Riwayat Validasi</span>
+                    </div>
+                    <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': expanded }" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                </button>
+                <div x-show="expanded" x-collapse.duration.200ms style="display: {{ $isRiwayatActive ? 'block' : 'none' }};">
+                    <div class="mt-1 flex flex-col gap-1 pl-12 pr-4 text-[12px]">
+                        <a href="{{ route('banksoal.rps.gpm.riwayat-validasi.rps') }}" class="py-2 px-3 rounded-lg {{ request()->routeIs('banksoal.rps.gpm.index') || request()->routeIs('banksoal.rps.gpm.riwayat-validasi.rps') ? 'bg-blue-50 text-blue-700 font-medium' : 'text-slate-500 hover:text-slate-700 font-medium hover:bg-slate-50' }} transition-colors">
+                            Validasi RPS
+                        </a>
+                        <a href="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal') }}" class="py-2 px-3 rounded-lg {{ request()->routeIs('banksoal.soal.gpm.riwayat-validasi*') ? 'bg-blue-50 text-blue-700 font-medium' : 'text-slate-500 hover:text-slate-700 font-medium hover:bg-slate-50' }} transition-colors">
+                            Validasi Bank Soal
+                        </a>
+                    </div>
+                </div>
+            </div>
 
         </nav>
     </div>

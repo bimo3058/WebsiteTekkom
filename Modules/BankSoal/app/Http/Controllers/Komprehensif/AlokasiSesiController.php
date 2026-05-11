@@ -4,9 +4,9 @@ namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Modules\BankSoal\Models\PeriodeUjian;
-use Modules\BankSoal\Models\PendaftarUjian;
-use Modules\BankSoal\Models\JadwalUjian;
+use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
+use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
+use Modules\BankSoal\Models\Komprehensif\JadwalUjian;
 
 class AlokasiSesiController extends Controller
 {
