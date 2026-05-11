@@ -119,6 +119,9 @@
                             <div class="flex items-center gap-2">
                                 <p class="font-semibold text-slate-900">{{ $penarikan->nama_ekstraksi }}</p>
                                 <x-ui.badge variant="warning" class="text-[10px] py-0">Pending</x-ui.badge>
+                                @if(($penarikan->metode_ujian ?? '') === 'offline')
+                                    <span class="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">Offline Cetak</span>
+                                @endif
                             </div>
                             <p class="text-sm text-muted-foreground mt-1">{{ $penarikan->mataKuliah->nama ?? '-' }} · {{ $penarikan->semester }} · {{ $penarikan->tahun_akademik }}</p>
                         </div>

@@ -66,7 +66,8 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::get('/rps/{rpsId}/preview', [AdminRpsController::class, 'previewDokumen'])->name('rps.preview');
             Route::get('/rps/{rpsId}/download', [AdminRpsController::class, 'downloadDokumen'])->name('rps.download');
             Route::get('/soal', [\Modules\BankSoal\Http\Controllers\BS\Admin\ManajemenSoalController::class, 'index'])->name('soal');
-            Route::post('/soal/cetak-semua', [\Modules\BankSoal\Http\Controllers\BS\Admin\ManajemenSoalController::class, 'cetakSemua'])->name('soal.ekstrak');
+            Route::get('/soal/{id}/cetak', [\Modules\BankSoal\Http\Controllers\BS\Admin\ManajemenSoalController::class, 'cetakDokumen'])->name('soal.cetak');
+            Route::post('/soal/{id}/tandai-selesai', [\Modules\BankSoal\Http\Controllers\BS\Admin\ManajemenSoalController::class, 'tandaiSelesai'])->name('soal.tandai-selesai');
         });
 
         # RPS Routes - View Mode

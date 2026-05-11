@@ -20,6 +20,8 @@ class PenarikanSoal extends Model
         'mk_id',
         'nama_ekstraksi',
         'tipe_ujian',
+        'metode_ujian',
+        'status_cetak',
         'tahun_akademik',
         'semester',
         'tanggal_ujian',
