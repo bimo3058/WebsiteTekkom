@@ -1,417 +1,295 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
 
 <style>
-    .form-card { background:#fff; border-radius:12px; padding:24px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); margin-bottom:20px; }
-    .form-card-title { font-weight:700; font-size:16px; color:#1f2937; margin-bottom:20px; display:flex; align-items:center; gap:8px; padding-bottom:14px; border-bottom:1px solid #f3f4f6; }
-    .form-label-custom { font-weight:600; font-size:13px; color:#374151; margin-bottom:6px; display:block; }
+    .form-card { background:#fff; border-radius:14px; padding:28px; box-shadow:0 4px 16px -2px rgba(0,0,0,0.07); margin-bottom:24px; }
+    .form-card-title { font-weight:700; font-size:15px; color:#1f2937; margin-bottom:20px; display:flex; align-items:center; gap:9px; padding-bottom:14px; border-bottom:1px solid #f3f4f6; }
+    .form-label-custom { font-weight:600; font-size:13px; color:#374151; margin-bottom:7px; display:block; }
     .form-label-custom .required { color:#dc2626; }
-    .form-control-custom, .form-select-custom { border:1.5px solid #e5e7eb; border-radius:10px; padding:10px 14px; font-size:14px; font-weight:500; color:#1f2937; transition:all 0.2s; background:#fff; width:100%; }
-    .form-control-custom:focus, .form-select-custom:focus { border-color:#818cf8; box-shadow:0 0 0 3px rgba(99,102,241,0.1); outline:none; }
-    textarea.form-control-custom { min-height:140px; resize:vertical; }
-    .checkbox-card-group { display:flex; flex-wrap:wrap; gap:10px; }
-    .checkbox-card { position:relative; display:flex; align-items:center; gap:8px; padding:10px 16px; border:1.5px solid #e5e7eb; border-radius:10px; background:#fff; cursor:pointer; transition:all 0.2s; font-size:13px; font-weight:500; color:#374151; user-select:none; }
-    .checkbox-card:hover { border-color:#a5b4fc; background:#f5f3ff; }
-    .checkbox-card input[type="checkbox"] { width:16px; height:16px; accent-color:#4f46e5; cursor:pointer; }
-    .checkbox-card.checked { border-color:#4f46e5; background:#eef2ff; color:#4338ca; font-weight:600; }
-    .checkbox-hint { font-size:11px; color:#9ca3af; font-weight:400; margin-top:6px; }
-    .search-select-wrapper { position:relative; }
-    .search-select-dropdown { position:absolute; top:100%; left:0; right:0; background:#fff; border:1.5px solid #e5e7eb; border-top:none; border-radius:0 0 10px 10px; max-height:200px; overflow-y:auto; z-index:100; display:none; box-shadow:0 8px 25px rgba(0,0,0,0.1); }
-    .search-select-dropdown.show { display:block; }
-    .search-select-option { padding:10px 14px; cursor:pointer; font-size:13px; font-weight:500; color:#374151; transition:background 0.15s; border-bottom:1px solid #f9fafb; }
-    .search-select-option:hover { background:#eef2ff; color:#4f46e5; }
-    .search-select-option .sub-text { font-size:11px; color:#9ca3af; font-weight:400; }
+    .form-control-custom { border:1.5px solid #e5e7eb; border-radius:10px; padding:11px 14px; font-size:14px; font-weight:500; color:#1f2937; transition:all 0.2s; background:#fff; width:100%; }
+    .form-control-custom:focus { border-color:#818cf8; box-shadow:0 0 0 3px rgba(99,102,241,0.1); outline:none; }
+    textarea.form-control-custom { min-height:150px; resize:vertical; line-height:1.7; }
     .btn-back { width:40px; height:40px; border-radius:50%; background:#fff; border:1px solid #e5e7eb; display:flex; align-items:center; justify-content:center; text-decoration:none; color:#374151; font-size:18px; box-shadow:0 1px 3px rgba(0,0,0,0.06); transition:all 0.2s; flex-shrink:0; }
     .btn-back:hover { background:#f3f4f6; }
-    .btn-submit { background:#4f46e5; color:#fff; font-weight:600; font-size:14px; padding:12px 28px; border-radius:10px; border:none; cursor:pointer; transition:all 0.2s; }
-    .btn-submit:hover { background:#4338ca; transform:translateY(-1px); }
-    .btn-cancel { background:#f3f4f6; color:#374151; font-weight:600; font-size:14px; padding:12px 28px; border-radius:10px; border:none; cursor:pointer; text-decoration:none; transition:all 0.2s; }
-    .btn-cancel:hover { background:#e5e7eb; }
-    /* Panitia multi-select */
-    .panitia-chips-container { display:flex; flex-wrap:wrap; gap:8px; min-height:44px; padding:8px 12px; border:1.5px solid #e5e7eb; border-radius:10px; background:#fff; cursor:text; transition:all 0.2s; align-items:center; }
-    .panitia-chips-container:focus-within { border-color:#818cf8; box-shadow:0 0 0 3px rgba(99,102,241,0.1); }
-    .panitia-chip { display:inline-flex; align-items:center; gap:6px; padding:4px 10px; background:#eef2ff; color:#4338ca; border-radius:20px; font-size:12px; font-weight:600; border:1px solid #c7d2fe; }
-    .panitia-chip-remove { width:16px; height:16px; border-radius:50%; background:#c7d2fe; color:#4338ca; border:none; font-size:11px; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; }
-    .panitia-chip-remove:hover { background:#dc2626; color:#fff; }
-    .panitia-search-input { border:none; outline:none; font-size:13px; font-weight:500; color:#1f2937; flex:1; min-width:120px; background:transparent; }
-    .panitia-dropdown { position:absolute; top:100%; left:0; right:0; background:#fff; border:1.5px solid #e5e7eb; border-top:none; border-radius:0 0 10px 10px; max-height:220px; overflow-y:auto; z-index:200; display:none; box-shadow:0 8px 25px rgba(0,0,0,0.1); }
-    .panitia-dropdown.show { display:block; }
-    .panitia-option { padding:10px 14px; cursor:pointer; font-size:13px; font-weight:500; color:#374151; transition:background 0.15s; border-bottom:1px solid #f9fafb; }
-    .panitia-option:hover { background:#eef2ff; color:#4f46e5; }
-    .panitia-option.selected { background:#f0fdf4; color:#16a34a; pointer-events:none; opacity:0.6; }
-    .panitia-option .sub-text { font-size:11px; color:#9ca3af; font-weight:400; }
-    .banner-upload-area { border:2px dashed #d1d5db; border-radius:12px; padding:30px; text-align:center; cursor:pointer; transition:all 0.2s; background:#fafafa; }
-    .banner-upload-area:hover { border-color:#818cf8; background:#f5f3ff; }
-    .banner-preview { width:100%; max-height:220px; object-fit:cover; border-radius:10px; margin-top:12px; display:none; }
+    /* Draft button */
+    .btn-draft { background:#f3f4f6; color:#374151; font-weight:600; font-size:14px; padding:11px 26px; border-radius:10px; border:1.5px solid #d1d5db; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:7px; }
+    .btn-draft:hover { background:#e5e7eb; border-color:#9ca3af; }
+    .btn-submit { background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; font-weight:600; font-size:14px; padding:11px 28px; border-radius:10px; border:none; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:7px; box-shadow:0 4px 12px rgba(79,70,229,0.3); }
+    .btn-submit:hover { background:linear-gradient(135deg,#4338ca,#6d28d9); transform:translateY(-1px); box-shadow:0 6px 16px rgba(79,70,229,0.35); }
+    .btn-cancel { background:#fff; color:#6b7280; font-weight:600; font-size:14px; padding:11px 22px; border-radius:10px; border:1.5px solid #e5e7eb; cursor:pointer; text-decoration:none; transition:all 0.2s; display:inline-flex; align-items:center; }
+    .btn-cancel:hover { background:#f9fafb; color:#374151; }
+    /* Banner upload */
+    .banner-upload-area { border:2px dashed #d1d5db; border-radius:14px; padding:36px 20px; text-align:center; cursor:pointer; transition:all 0.25s; background:#fafafa; position:relative; overflow:hidden; }
+    .banner-upload-area:hover, .banner-upload-area.drag-over { border-color:#818cf8; background:#f5f3ff; }
+    .banner-upload-area input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+    .banner-upload-icon { width:52px; height:52px; border-radius:14px; background:linear-gradient(135deg,#eef2ff,#e0e7ff); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; }
+    .banner-upload-title { font-weight:600; font-size:14px; color:#374151; margin-bottom:4px; }
+    .banner-upload-hint { font-size:12px; color:#9ca3af; font-weight:400; }
+    .banner-preview-box { display:{{ $proker->banner ? 'block' : 'none' }}; border-radius:14px; overflow:hidden; position:relative; }
+    .banner-preview-img { width:100%; max-height:260px; object-fit:cover; display:block; border-radius:14px; }
+    .banner-preview-overlay { position:absolute; top:10px; right:10px; display:flex; gap:8px; }
+    .banner-preview-overlay button { background:rgba(0,0,0,0.55); color:#fff; border:none; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer; backdrop-filter:blur(4px); transition:all 0.15s; }
+    .banner-preview-overlay button:hover { background:rgba(0,0,0,0.75); }
+    /* Char counter */
+    .char-counter { font-size:11px; color:#9ca3af; text-align:right; margin-top:4px; font-weight:500; }
+    /* Action bar */
+    .action-bar { background:#fff; border-radius:14px; padding:18px 24px; box-shadow:0 4px 16px -2px rgba(0,0,0,0.07); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+    .action-bar-left { display:flex; align-items:center; gap:10px; }
+    .action-bar-right { display:flex; align-items:center; gap:10px; }
+    .draft-badge { background:#fef3c7; color:#92400e; border:1.5px solid #fde68a; border-radius:20px; padding:4px 14px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:5px; }
+    /* ── Lightbox Modal ── */
+    .lightbox-modal { display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(0, 0, 0, 0.92); align-items: center; justify-content: center; animation: lightboxFadeIn 0.25s ease; }
+    .lightbox-modal.active { display: flex; }
+    @keyframes lightboxFadeIn { from { opacity: 0; } to { opacity: 1; } }
+    .lightbox-content { position: relative; max-width: 90vw; max-height: 85vh; display: flex; align-items: center; justify-content: center; }
+    .lightbox-content img { max-width: 90vw; max-height: 82vh; object-fit: contain; border-radius: 8px; box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4); animation: lightboxZoomIn 0.3s ease; }
+    @keyframes lightboxZoomIn { from { transform: scale(0.9); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    .lightbox-close { position: fixed; top: 20px; right: 24px; width: 44px; height: 44px; border-radius: 50%; background: rgba(255,255,255,0.1); backdrop-filter: blur(8px); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; z-index: 10001; }
+    .lightbox-close:hover { background: rgba(255,255,255,0.2); transform: scale(1.05); }
+    .lightbox-info { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%); text-align: center; z-index: 10001; }
+    .lightbox-info .lightbox-title { color: #fff; font-size: 14px; font-weight: 600; margin-bottom: 4px; }
 </style>
 
 <div class="d-flex align-items-center gap-3 mb-4">
     <a href="{{ route('manajemenmahasiswa.proker.show', $proker->id) }}" class="btn-back">&larr;</a>
     <div>
         <h3 class="fw-bold mb-0 text-dark">Edit Rencana Proker</h3>
-        <p class="text-muted mb-0" style="font-size:14px;font-weight:500;">{{ $proker->judul }}</p>
+        <p class="text-muted mb-0" style="font-size:14px;font-weight:500;">Perbarui informasi program kerja</p>
     </div>
 </div>
 
 @if($errors->any())
-    <div class="alert alert-danger" style="border-radius:10px;border:none;background:#fee2e2;color:#991b1b;font-size:14px;">
+    <div class="alert alert-danger" style="border-radius:12px;border:none;background:#fee2e2;color:#991b1b;font-size:14px;padding:14px 18px;">
         <strong>Terjadi kesalahan:</strong>
         <ul class="mb-0 mt-1">@foreach($errors->all() as $error)<li>{{ $error }}</li>@endforeach</ul>
     </div>
 @endif
 
-<form action="{{ route('manajemenmahasiswa.proker.update', $proker->id) }}" method="POST" enctype="multipart/form-data">
-    @method('PUT')
+<form action="{{ route('manajemenmahasiswa.proker.update', $proker->id) }}" method="POST" enctype="multipart/form-data" id="prokerForm">
     @csrf
-
-    {{-- Info Utama --}}
+    @method('PUT')
+    {{-- ── Informasi Umum Proker ── --}}
     <div class="form-card">
         <div class="form-card-title">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
-            Informasi Proker
+            Informasi Umum Proker
         </div>
 
-        <div class="mb-3">
+        {{-- Judul --}}
+        <div class="mb-4">
             <label class="form-label-custom">Judul Program Kerja <span class="required">*</span></label>
-            <input type="text" name="judul" class="form-control form-control-custom"
-                   placeholder="Contoh: Seminar Nasional IT 2026" value="{{ old('judul', $proker->judul) }}" required maxlength="255">
+            <input type="text" name="judul" id="judulInput" class="form-control form-control-custom"
+                   placeholder="Contoh: Seminar Nasional Teknologi Informasi 2026"
+                   value="{{ old('judul', $proker->judul) }}" required maxlength="255"
+                   oninput="updateCharCount('judulInput','judulCount',255)">
+            <div class="char-counter"><span id="judulCount">0</span>/255 karakter</div>
         </div>
 
-        <div class="row g-3 mb-3">
-            <div class="col-md-4">
+        {{-- Deskripsi --}}
+        <div class="mb-2">
+            <label class="form-label-custom">Deskripsi Proker <span class="required">*</span></label>
+            <textarea name="deskripsi" id="deskripsiInput" class="form-control form-control-custom"
+                      placeholder="Jelaskan tujuan, sasaran, latar belakang, dan manfaat dari program kerja ini..."
+                      required oninput="updateCharCount('deskripsiInput','deskripsiCount',3000)">{{ old('deskripsi', $proker->deskripsi) }}</textarea>
+            <div class="char-counter"><span id="deskripsiCount">0</span>/3000 karakter</div>
+        </div>
+    </div>
+
+    {{-- ── Kategori & Klasifikasi ── --}}
+    <div class="form-card">
+        <div class="form-card-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+            Kategori & Klasifikasi
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
                 <label class="form-label-custom">Kategori <span class="required">*</span></label>
-                <div class="checkbox-card-group" id="kategoriGroup">
-                    @foreach($kategoriList as $kategori)
+                <div style="display:flex;flex-wrap:wrap;gap:9px;" id="kategoriGroup">
+                    @foreach($kategoriList->filter(fn($k) => stripos($k->nama_kategori, 'prodi') === false) as $kategori)
                         @php
                             $kat_old = old('kategori_kegiatan_id');
-                            $kat_checked = $kat_old ? in_array($kategori->id, $kat_old) : $proker->kategoris->contains('id',$kategori->id);
+                            $kat_checked = $kat_old ? in_array($kategori->id, $kat_old) : $proker->kategoris->contains('id', $kategori->id);
                         @endphp
-                        <label class="checkbox-card {{ $kat_checked ? 'checked' : '' }}" id="kategoriCard{{ $kategori->id }}">
+                        <label style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1.5px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;transition:all 0.2s;font-size:13px;font-weight:500;color:#374151;user-select:none;"
+                               id="kategoriCard{{ $kategori->id }}">
                             <input type="checkbox" name="kategori_kegiatan_id[]" value="{{ $kategori->id }}"
-                                   data-is-prodi="{{ stripos($kategori->nama_kategori, 'prodi') !== false ? '1' : '0' }}"
+                                   style="width:15px;height:15px;accent-color:#4f46e5;"
                                    onchange="handleKategoriChange()"
                                    {{ $kat_checked ? 'checked' : '' }}>
                             {{ $kategori->nama_kategori }}
                         </label>
                     @endforeach
                 </div>
-                <div class="checkbox-hint">Pilih maksimal 2 kategori</div>
+                <div style="font-size:11px;color:#9ca3af;margin-top:6px;">Pilih maksimal 2 kategori</div>
             </div>
-            <div class="col-md-4" id="bidangFieldWrapper">
-                <label class="form-label-custom">Bidang</label>
-                <div class="checkbox-card-group" id="bidangGroup">
+            <div class="col-md-6" id="bidangFieldWrapper">
+                <label class="form-label-custom">Bidang <span class="required">*</span></label>
+                <div style="display:flex;flex-wrap:wrap;gap:9px;" id="bidangGroup">
                     @foreach($bidangList as $bidang)
                         @php
                             $bid_old = old('bidang_id');
-                            $bid_checked = $bid_old ? in_array($bidang->id, $bid_old) : $proker->bidangs->contains('id',$bidang->id);
+                            $bid_checked = $bid_old ? in_array($bidang->id, $bid_old) : $proker->bidangs->contains('id', $bidang->id);
                         @endphp
-                        <label class="checkbox-card {{ $bid_checked ? 'checked' : '' }}" id="bidangCard{{ $bidang->id }}">
+                        <label style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1.5px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;transition:all 0.2s;font-size:13px;font-weight:500;color:#374151;user-select:none;"
+                               id="bidangCard{{ $bidang->id }}">
                             <input type="checkbox" name="bidang_id[]" value="{{ $bidang->id }}"
+                                   style="width:15px;height:15px;accent-color:#4f46e5;"
                                    {{ $bid_checked ? 'checked' : '' }}>
                             {{ $bidang->nama_bidang }}
                         </label>
                     @endforeach
                 </div>
-                <div class="checkbox-hint">Pilih satu atau lebih bidang (kosongkan jika Prodi)</div>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label-custom">Tahun</label>
-                <select name="tahun" class="form-select form-select-custom">
-                    <option value="">— Pilih Tahun —</option>
-                    @foreach($tahunList as $t)
-                        <option value="{{ $t }}" {{ old('tahun',$proker->tahun) == $t ? 'selected' : '' }}>{{ $t }}</option>
-                    @endforeach
-                </select>
-            </div>
-        </div>
-
-        <div class="mb-3">
-            <label class="form-label-custom">Deskripsi &amp; Latar Belakang <span class="required">*</span></label>
-            <textarea name="deskripsi" class="form-control form-control-custom"
-                      placeholder="Jelaskan tujuan, sasaran, dan latar belakang proker..." required>{{ old('deskripsi', $proker->deskripsi) }}</textarea>
-        </div>
-    </div>
-
-    {{-- Waktu & Lokasi --}}
-    <div class="form-card">
-        <div class="form-card-title">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-            Rencana Waktu &amp; Lokasi
-        </div>
-        <div class="row g-3 mb-3">
-            <div class="col-md-3">
-                <label class="form-label-custom">Rencana Tanggal Mulai <span class="required">*</span></label>
-                <input type="date" name="tanggal_mulai" class="form-control form-control-custom" value="{{ old('tanggal_mulai', $proker->tanggal_mulai?->format('Y-m-d')) }}" required>
-            </div>
-            <div class="col-md-3">
-                <label class="form-label-custom">Jam Mulai</label>
-                <input type="time" name="jam_mulai" class="form-control form-control-custom" value="{{ old('jam_mulai', $proker->jam_mulai) }}">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label-custom">Rencana Tanggal Selesai</label>
-                <input type="date" name="tanggal_selesai" class="form-control form-control-custom" value="{{ old('tanggal_selesai', $proker->tanggal_selesai?->format('Y-m-d')) }}">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label-custom">Jam Selesai</label>
-                <input type="time" name="jam_selesai" class="form-control form-control-custom" value="{{ old('jam_selesai', $proker->jam_selesai) }}">
-            </div>
-        </div>
-        <div class="row g-3">
-            <div class="col-md-6">
-                <label class="form-label-custom">Rencana Lokasi</label>
-                <input type="text" name="lokasi" class="form-control form-control-custom"
-                       placeholder="Contoh: Gedung A Lt. 3, Undip Tembalang" value="{{ old('lokasi', $proker->lokasi) }}">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label-custom">Target Peserta</label>
-                <input type="number" name="target_peserta" class="form-control form-control-custom"
-                       placeholder="Jml. orang" value="{{ old('target_peserta', $proker->target_peserta) }}" min="1">
-            </div>
-            <div class="col-md-3">
-                <label class="form-label-custom">Estimasi Anggaran (Rp)</label>
-                <input type="number" name="anggaran" class="form-control form-control-custom"
-                       placeholder="0" value="{{ old('anggaran', $proker->anggaran) }}" min="0">
+                <div style="font-size:11px;color:#9ca3af;margin-top:6px;">Pilih satu atau lebih bidang</div>
             </div>
         </div>
     </div>
 
-    {{-- Personel --}}
+    {{-- ── Upload Banner ── --}}
     <div class="form-card">
         <div class="form-card-title">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            Personel Kegiatan
-        </div>
-        <div class="row g-3 mb-3">
-            <div class="col-md-6">
-                <label class="form-label-custom">Rencana Ketua Pelaksana</label>
-                <div class="search-select-wrapper">
-                    <input type="hidden" name="ketua_pelaksana_id" id="ketuaPelaksanaId" value="{{ old('ketua_pelaksana_id') }}">
-                    <input type="text" class="form-control form-control-custom" id="ketuaPelaksanaSearch"
-                           placeholder="Cari nama mahasiswa..." autocomplete="off"
-                           onfocus="showDropdown('ketuaPelaksanaDropdown')"
-                           oninput="filterOptions('ketuaPelaksanaSearch','ketuaPelaksanaDropdown')">
-                    <div class="search-select-dropdown" id="ketuaPelaksanaDropdown">
-                        @foreach($mahasiswaList as $mhs)
-                            <div class="search-select-option"
-                                 onclick="selectOption('ketuaPelaksanaId','{{ $mhs->id }}','ketuaPelaksanaSearch','{{ $mhs->user->name ?? 'N/A' }}','ketuaPelaksanaDropdown')"
-                                 data-name="{{ strtolower($mhs->user->name ?? '') }}">
-                                {{ $mhs->user->name ?? 'N/A' }}
-                                <div class="sub-text">NIM: {{ $mhs->student_number }}</div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-6">
-                <label class="form-label-custom">Dosen Pendamping</label>
-                <div class="search-select-wrapper">
-                    <input type="hidden" name="dosen_pendamping_id" id="dosenPendampingId" value="{{ old('dosen_pendamping_id') }}">
-                    <input type="text" class="form-control form-control-custom" id="dosenPendampingSearch"
-                           placeholder="Cari nama dosen..." autocomplete="off"
-                           onfocus="showDropdown('dosenPendampingDropdown')"
-                           oninput="filterOptions('dosenPendampingSearch','dosenPendampingDropdown')">
-                    <div class="search-select-dropdown" id="dosenPendampingDropdown">
-                        @foreach($dosenList as $dosen)
-                            <div class="search-select-option"
-                                 onclick="selectOption('dosenPendampingId','{{ $dosen->id }}','dosenPendampingSearch','{{ $dosen->user->name ?? 'N/A' }}','dosenPendampingDropdown')"
-                                 data-name="{{ strtolower($dosen->user->name ?? '') }}">
-                                {{ $dosen->user->name ?? 'N/A' }}
-                                <div class="sub-text">NIP: {{ $dosen->employee_number }}</div>
-                            </div>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        {{-- Panitia --}}
-        <div>
-            <label class="form-label-custom">Rencana Panitia <span style="color:#9ca3af;font-weight:400;">(opsional)</span></label>
-            <div style="position:relative;" id="panitiaSelectWrapper">
-                <div class="panitia-chips-container" id="panitiaChipsContainer" onclick="focusPanitiaSearch()">
-                    <input type="text" class="panitia-search-input" id="panitiaSearchInput"
-                           placeholder="Cari dan tambah panitia..." autocomplete="off"
-                           oninput="filterPanitiaOptions(this.value)" onfocus="showPanitiaDropdown()">
-                </div>
-                <div class="panitia-dropdown" id="panitiaDropdown">
-                    @foreach($mahasiswaList as $mhs)
-                        <div class="panitia-option"
-                             data-id="{{ $mhs->id }}"
-                             data-name="{{ $mhs->user->name ?? 'N/A' }}"
-                             data-name-lower="{{ strtolower($mhs->user->name ?? '') }}"
-                             data-nim="{{ $mhs->student_number }}"
-                             onclick="addPanitia(this)">
-                            {{ $mhs->user->name ?? 'N/A' }}
-                            <div class="sub-text">NIM: {{ $mhs->student_number }}</div>
-                        </div>
-                    @endforeach
-                </div>
-            </div>
-            <div id="hiddenPanitiaInputs"></div>
-        </div>
-    </div>
-
-    {{-- Surat Proker PDF --}}
-    <div class="form-card">
-        <div class="form-card-title">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
-            Surat Proker (PDF)
-        </div>
-        @if($proker->surat_proker)
-            <div style="padding:12px;background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0;margin-bottom:14px;display:flex;align-items:center;gap:12px;">
-                <span style="font-size:24px;">📄</span>
-                <div style="flex:1;">
-                    <div style="font-weight:600;font-size:13px;color:#166534;">Surat proker sudah diupload</div>
-                    <a href="{{ $proker->surat_proker_url }}" target="_blank" style="font-size:12px;color:#0369a1;">Lihat file saat ini ↗</a>
-                </div>
-                <span style="font-size:12px;color:#6b7280;">Upload baru untuk mengganti</span>
-            </div>
-        @endif
-        <div class="banner-upload-area" id="suratUploadArea" onclick="document.getElementById('suratProkerInput').click()">
-            <div style="font-size:36px;margin-bottom:8px;opacity:0.5;">📄</div>
-            <p id="suratUploadText">{{ $proker->surat_proker ? 'Klik untuk ganti file PDF' : 'Klik untuk pilih file PDF surat proker' }}</p>
-            <small>Format PDF • Maks. 20MB</small>
-        </div>
-        <input type="file" name="surat_proker" id="suratProkerInput" accept=".pdf" style="display:none;" onchange="previewSurat(this)">
-        <div id="suratPreviewBox" style="display:none;margin-top:12px;padding:14px;background:#f0fdf4;border-radius:10px;border:1px solid #bbf7d0;">
-            <div style="display:flex;align-items:center;gap:10px;">
-                <span style="font-size:24px;">✅</span>
-                <div>
-                    <div style="font-weight:600;font-size:14px;color:#166534;" id="suratFileName">file.pdf</div>
-                    <div style="font-size:12px;color:#6b7280;" id="suratFileSize"></div>
-                </div>
-                <button type="button" onclick="clearSurat()" style="margin-left:auto;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;padding:4px 10px;font-size:12px;cursor:pointer;">✕ Hapus</button>
-            </div>
-        </div>
-    </div>
-
-    {{-- Banner --}}
-    <div class="form-card">
-        <div class="form-card-title">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="3" rx="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             Banner Proker
+            <span style="font-size:12px;font-weight:400;color:#9ca3af;margin-left:4px;">(opsional)</span>
         </div>
-        <div class="banner-upload-area" onclick="document.getElementById('bannerInput').click()">
-            <div style="font-size:36px;margin-bottom:8px;opacity:0.5;">&#128247;</div>
-            <p>Klik untuk pilih gambar banner</p>
-            <small>JPG, PNG, WEBP • Maks. 10MB</small>
-        </div>
-        <input type="file" name="banner" id="bannerInput" accept="image/*" style="display:none;" onchange="previewBanner(this)">
-        <img id="bannerPreview" class="banner-preview" alt="Preview Banner">
-    </div>
 
-    {{-- Submit --}}
-    <div class="d-flex gap-3 justify-content-end">
-        <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="btn-cancel">Batal</a>
-        <button type="submit" class="btn-submit">Simpan sebagai Draft</button>
+        {{-- Preview Box (shown if exists or uploaded) --}}
+        <div class="banner-preview-box" id="bannerPreviewBox" style="cursor:pointer;" onclick="openLightbox()">
+            <img id="bannerPreviewImg" src="{{ $proker->banner_url }}" alt="Preview banner" class="banner-preview-img">
+            <div class="banner-preview-overlay">
+                <button type="button" onclick="event.stopPropagation(); changeBanner()">&#128247; Ganti</button>
+                <button type="button" onclick="event.stopPropagation(); clearBanner()" style="background:rgba(220,38,38,0.75);">&#10005; Hapus</button>
+            </div>
+        </div>
+
+        {{-- Upload Area (hidden if exists) --}}
+        <div class="banner-upload-area" id="bannerUploadArea" style="display:{{ $proker->banner ? 'none' : 'block' }}"
+             ondragover="event.preventDefault();this.classList.add('drag-over')"
+             ondragleave="this.classList.remove('drag-over')"
+             ondrop="handleBannerDrop(event)">
+            <input type="file" name="banner" id="bannerInput" accept="image/*" onchange="previewBanner(this)">
+            <div class="banner-upload-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+            </div>
+            <div class="banner-upload-title">Klik atau drag & drop gambar banner</div>
+            <div class="banner-upload-hint">PNG, JPG, WEBP — Maks. 2 MB · Rasio ideal 16:9 (1280×720px)</div>
+        </div>
+    </div>
+    
+    {{-- ── Bottom Action Bar ── --}}
+    <div class="d-flex gap-3 justify-content-end mb-4">
+        <a href="{{ route('manajemenmahasiswa.proker.show', $proker->id) }}" class="btn-cancel">Batal</a>
+        <button type="submit" class="btn-submit">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            Simpan Perubahan
+        </button>
+    </div>
+    {{-- Lightbox Modal --}}
+    <div class="lightbox-modal" id="lightboxModal">
+        <button type="button" class="lightbox-close" onclick="closeLightbox()" title="Tutup">&#10005;</button>
+        <div class="lightbox-content">
+            <img src="" id="lightboxImg" alt="Preview">
+        </div>
+        <div class="lightbox-info">
+            <div class="lightbox-title">Banner Preview</div>
+        </div>
     </div>
 </form>
 
 <script>
-// ── Dropdown helpers ──────────────────────────────────────────────────────────
-function showDropdown(id) { document.getElementById(id).classList.add('show'); }
-function hideAllDropdowns() { document.querySelectorAll('.search-select-dropdown').forEach(d=>d.classList.remove('show')); }
-function filterOptions(inputId, dropdownId) {
-    const q = document.getElementById(inputId).value.toLowerCase();
-    document.querySelectorAll('#'+dropdownId+' .search-select-option').forEach(opt => {
-        opt.style.display = opt.dataset.name.includes(q) ? '' : 'none';
+// ── Lightbox ──────────────────────────────────────────────────────────────────
+function openLightbox() {
+    const src = document.getElementById('bannerPreviewImg').src;
+    if(src && src !== window.location.href) {
+        document.getElementById('lightboxImg').src = src;
+        document.getElementById('lightboxModal').classList.add('active');
+    }
+}
+function closeLightbox() {
+    document.getElementById('lightboxModal').classList.remove('active');
+}
+document.getElementById('lightboxModal')?.addEventListener('click', e => {
+    if (e.target.id === 'lightboxModal' || e.target.classList.contains('lightbox-content')) {
+        closeLightbox();
+    }
+});
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') closeLightbox();
+});
+
+// ── Char counter ──────────────────────────────────────────────────────────────
+function updateCharCount(inputId, countId, max) {
+    const len = document.getElementById(inputId).value.length;
+    const el  = document.getElementById(countId);
+    el.textContent = len;
+    el.style.color = len > max * 0.9 ? '#f59e0b' : (len >= max ? '#dc2626' : '#9ca3af');
+}
+// Init counters on load
+document.addEventListener('DOMContentLoaded', () => {
+    ['judulInput','deskripsiInput'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.dispatchEvent(new Event('input'));
     });
-    showDropdown(dropdownId);
+});
+
+// ── Banner upload ─────────────────────────────────────────────────────────────
+function previewBanner(input) {
+    if (!input.files || !input.files[0]) return;
+    const reader = new FileReader();
+    reader.onload = e => {
+        document.getElementById('bannerPreviewImg').src = e.target.result;
+        document.getElementById('bannerPreviewBox').style.display = 'block';
+        document.getElementById('bannerUploadArea').style.display = 'none';
+    };
+    reader.readAsDataURL(input.files[0]);
 }
-function selectOption(hiddenId, value, inputId, label, dropdownId) {
-    document.getElementById(hiddenId).value = value;
-    document.getElementById(inputId).value = label;
-    document.getElementById(dropdownId).classList.remove('show');
+function handleBannerDrop(event) {
+    event.preventDefault();
+    document.getElementById('bannerUploadArea').classList.remove('drag-over');
+    const file = event.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+        // Assign file to input and trigger preview
+        const dt = new DataTransfer();
+        dt.items.add(file);
+        document.getElementById('bannerInput').files = dt.files;
+        previewBanner(document.getElementById('bannerInput'));
+    }
 }
-document.addEventListener('click', e => { if (!e.target.closest('.search-select-wrapper')) hideAllDropdowns(); });
+function changeBanner() {
+    document.getElementById('bannerInput').click();
+}
+function clearBanner() {
+    document.getElementById('bannerInput').value = '';
+    document.getElementById('bannerPreviewBox').style.display = 'none';
+    document.getElementById('bannerUploadArea').style.display = 'block';
+}
 
 // ── Kategori checkbox ─────────────────────────────────────────────────────────
 function handleKategoriChange() {
     const checked = document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked');
-    document.querySelectorAll('#kategoriGroup .checkbox-card').forEach(c => {
-        c.classList.toggle('checked', c.querySelector('input').checked);
-        if (checked.length >= 2 && !c.querySelector('input').checked) { c.style.opacity='0.4'; c.style.pointerEvents='none'; }
-        else { c.style.opacity=''; c.style.pointerEvents=''; }
+    document.querySelectorAll('#kategoriGroup label').forEach(card => {
+        const inp = card.querySelector('input');
+        const isChecked = inp.checked;
+        card.style.borderColor    = isChecked ? '#4f46e5' : '#e5e7eb';
+        card.style.background     = isChecked ? '#eef2ff' : '#fff';
+        card.style.color          = isChecked ? '#4338ca' : '#374151';
+        card.style.fontWeight     = isChecked ? '600' : '500';
+        if (checked.length >= 2 && !isChecked) { card.style.opacity='0.4'; card.style.pointerEvents='none'; }
+        else { card.style.opacity=''; card.style.pointerEvents=''; }
     });
 }
 document.querySelectorAll('#bidangGroup input').forEach(inp => {
-    inp.addEventListener('change', () => inp.closest('.checkbox-card').classList.toggle('checked', inp.checked));
+    inp.addEventListener('change', () => {
+        const card = inp.closest('label');
+        card.style.borderColor = inp.checked ? '#4f46e5' : '#e5e7eb';
+        card.style.background  = inp.checked ? '#eef2ff' : '#fff';
+        card.style.color       = inp.checked ? '#4338ca' : '#374151';
+        card.style.fontWeight  = inp.checked ? '600' : '500';
+    });
 });
-
-// ── Banner preview ────────────────────────────────────────────────────────────
-function previewBanner(input) {
-    const preview = document.getElementById('bannerPreview');
-    if (input.files && input.files[0]) {
-        const reader = new FileReader();
-        reader.onload = e => { preview.src = e.target.result; preview.style.display = 'block'; };
-        reader.readAsDataURL(input.files[0]);
-    }
-}
-
-// ── Surat Proker PDF preview ──────────────────────────────────────────────────
-function previewSurat(input) {
-    if (input.files && input.files[0]) {
-        const file = input.files[0];
-        document.getElementById('suratFileName').textContent = file.name;
-        document.getElementById('suratFileSize').textContent = (file.size/1024/1024).toFixed(2) + ' MB';
-        document.getElementById('suratUploadArea').style.display = 'none';
-        document.getElementById('suratPreviewBox').style.display = 'block';
-    }
-}
-function clearSurat() {
-    document.getElementById('suratProkerInput').value = '';
-    document.getElementById('suratUploadArea').style.display = 'block';
-    document.getElementById('suratPreviewBox').style.display = 'none';
-}
-
-// ── Panitia multi-select ──────────────────────────────────────────────────────
-let selectedPanitia = {};
-function showPanitiaDropdown() { document.getElementById('panitiaDropdown').classList.add('show'); }
-function focusPanitiaSearch() { document.getElementById('panitiaSearchInput').focus(); showPanitiaDropdown(); }
-function filterPanitiaOptions(q) {
-    q = q.toLowerCase();
-    document.querySelectorAll('#panitiaDropdown .panitia-option').forEach(opt => {
-        opt.style.display = opt.dataset.nameLower.includes(q) ? '' : 'none';
-    });
-    showPanitiaDropdown();
-}
-function addPanitia(el) {
-    const id = el.dataset.id, name = el.dataset.name;
-    if (selectedPanitia[id]) return;
-    selectedPanitia[id] = name;
-    el.classList.add('selected');
-    document.getElementById('panitiaSearchInput').value = '';
-    renderPanitiaChips();
-}
-function removePanitia(id) {
-    delete selectedPanitia[id];
-    const opt = document.querySelector(`#panitiaDropdown .panitia-option[data-id="${id}"]`);
-    if (opt) opt.classList.remove('selected');
-    renderPanitiaChips();
-}
-function renderPanitiaChips() {
-    const container = document.getElementById('panitiaChipsContainer');
-    const searchInput = document.getElementById('panitiaSearchInput');
-    container.innerHTML = '';
-    Object.entries(selectedPanitia).forEach(([id, name]) => {
-        const chip = document.createElement('span');
-        chip.className = 'panitia-chip';
-        chip.innerHTML = `${name} <button type="button" class="panitia-chip-remove" onclick="removePanitia('${id}')">&times;</button>`;
-        container.appendChild(chip);
-    });
-    container.appendChild(searchInput);
-    renderHiddenPanitiaInputs();
-}
-function renderHiddenPanitiaInputs() {
-    const container = document.getElementById('hiddenPanitiaInputs');
-    container.innerHTML = '';
-    Object.keys(selectedPanitia).forEach(id => {
-        const inp = document.createElement('input');
-        inp.type = 'hidden'; inp.name = 'panitia_ids[]'; inp.value = id;
-        container.appendChild(inp);
-    });
-}
-document.addEventListener('click', e => {
-    if (!e.target.closest('#panitiaSelectWrapper')) document.getElementById('panitiaDropdown').classList.remove('show');
+// Restore old values visual state
+document.addEventListener('DOMContentLoaded', () => {
+    handleKategoriChange();
+    document.querySelectorAll('#bidangGroup input:checked').forEach(inp => inp.dispatchEvent(new Event('change')));
 });
 </script>
 

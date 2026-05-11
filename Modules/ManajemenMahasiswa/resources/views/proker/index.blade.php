@@ -207,7 +207,7 @@
                         <div class="proker-card-meta">
                             <span>
                                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                                {{ $proker->tanggal_mulai->translatedFormat('d M Y') }}
+                                {{ $proker->tanggal_mulai ? $proker->tanggal_mulai->translatedFormat('d M Y') : 'Belum ditentukan' }}
                             </span>
                             @if($proker->tahun)<span>{{ $proker->tahun }}</span>@endif
                             @if($proker->ketuaPelaksana && $proker->ketuaPelaksana->user)

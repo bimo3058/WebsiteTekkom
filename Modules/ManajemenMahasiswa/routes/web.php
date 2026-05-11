@@ -9,6 +9,7 @@ use Modules\ManajemenMahasiswa\Http\Controllers\GamificationController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PengaduanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\ProkerController;
+use Modules\ManajemenMahasiswa\Http\Controllers\PersuratanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PelaksanaanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\DirektoriMahasiswaController;
 use Modules\ManajemenMahasiswa\Http\Controllers\ManajemenPenggunaController;
@@ -185,7 +186,32 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             });
         });
 
-        // ── Pelaksanaan Kegiatan (Subbab 2 Manajemen Kegiatan) ────────────
+        // ── Persuratan (Subbab 2 Manajemen Kegiatan) ───────────────────────
+        Route::prefix('persuratan')->name('persuratan.')->group(function () {
+            Route::get('/', [PersuratanController::class, 'index'])->name('index');
+            Route::get('/{id}', [PersuratanController::class, 'show'])->name('show')->where('id', '[0-9]+');
+
+            // Ajukan (pengurus + admin)
+            Route::middleware('role:pengurus_himpunan,ketua_himpunan,wakil_ketua_himpunan,ketua_bidang,ketua_unit,staff_himpunan,admin_kemahasiswaan,superadmin')
+                ->group(function () {
+                Route::patch('/{id}/ajukan', [PersuratanController::class, 'ajukan'])->name('ajukan')->where('id', '[0-9]+');
+            });
+
+            // Tolak — admin
+            Route::middleware('role:admin_kemahasiswaan,superadmin,gpm,dpm')
+                ->group(function () {
+                Route::patch('/{id}/tolak', [PersuratanController::class, 'tolak'])->name('tolak')->where('id', '[0-9]+');
+            });
+
+            // Pasang / Batal TTD
+            Route::middleware('role:ketua_himpunan,bendahara,dpm,ketua_departemen,admin_kemahasiswaan,superadmin')
+                ->group(function () {
+                Route::post('/{id}/pasang-ttd', [PersuratanController::class, 'pasangTtd'])->name('pasang_ttd')->where('id', '[0-9]+');
+                Route::delete('/{id}/batal-ttd', [PersuratanController::class, 'batalTtd'])->name('batal_ttd')->where('id', '[0-9]+');
+            });
+        });
+
+        // ── Pelaksanaan Kegiatan (Subbab 3 Manajemen Kegiatan) ────────────
         Route::prefix('pelaksanaan')->name('pelaksanaan.')->group(function () {
             Route::get('/', [PelaksanaanController::class, 'index'])->name('index');
             Route::get('/{id}', [PelaksanaanController::class, 'show'])->name('show')->where('id', '[0-9]+');
