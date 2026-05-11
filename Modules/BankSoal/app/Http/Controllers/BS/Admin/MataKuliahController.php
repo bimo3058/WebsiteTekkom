@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Modules\BankSoal\Models\MataKuliah;
 use Modules\BankSoal\Services\MataKuliahService;
+use Maatwebsite\Excel\Facades\Excel;
+use Modules\BankSoal\Exports\MataKuliahTemplateExport;
+use Modules\BankSoal\Imports\MataKuliahImport;
 
 /**
  * [Admin] MataKuliahController - Manajemen Mata Kuliah
@@ -169,6 +172,38 @@ class MataKuliahController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menghapus Mata Kuliah: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function exportTemplate()
+    {
+        $this->authorize('banksoal.view');
+        return Excel::download(new MataKuliahTemplateExport, 'template_mata_kuliah.xlsx');
+    }
+
+    public function import(Request $request): JsonResponse
+    {
+        $this->authorize('banksoal.edit');
+
+        $request->validate([
+            'file' => 'required|mimes:xlsx,csv,xls|max:5120',
+        ]);
+
+        try {
+            Excel::import(new MataKuliahImport, $request->file('file'));
+            
+            // Flush cache
+            \Illuminate\Support\Facades\Cache::forget('bs.mk.all');
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Data Mata Kuliah berhasil diimpor'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengimpor data: ' . $e->getMessage()
             ], 500);
         }
     }

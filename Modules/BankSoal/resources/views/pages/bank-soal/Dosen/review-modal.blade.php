@@ -19,6 +19,8 @@
                 @csrf
                 <input type="hidden" name="mk_id" id="reviewMkId" value="">
                 <input type="hidden" name="bobot_total" id="reviewBobotTotal" value="">
+                <input type="hidden" name="soal_json" id="reviewSoalJson" value="[]">
+                <input type="hidden" name="nama_ekstraksi" id="reviewNamaEkstraksi" value="">
                 
                 <div class="px-6 py-5 border-b border-slate-200 bg-white sticky top-0 z-10">
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -47,6 +49,25 @@
                             </select>
                         </div>
                     </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Metode Ujian</label>
+                            <div class="flex gap-4">
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="metode_ujian" value="online" checked class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-600">
+                                    <span class="text-sm text-slate-600">Terkomputerisasi (Online)</span>
+                                </label>
+                                <label class="flex items-center gap-2 cursor-pointer">
+                                    <input type="radio" name="metode_ujian" value="offline" class="w-4 h-4 text-blue-600 border-slate-300 focus:ring-blue-600">
+                                    <span class="text-sm text-slate-600">Cetak Kertas (Offline)</span>
+                                </label>
+                            </div>
+                            <p class="text-xs text-slate-500 mt-1">Jika mode <b>Cetak Kertas</b> dipilih, soal akan otomatis diteruskan ke antrean tugas Admin Cetak.</p>
+                        </div>
+                    </div>
+
+                    <!-- Archive mode and note removed per UX: always save draft on finalize -->
                 </div>
 
                 <!-- List Soal -->
@@ -70,7 +91,7 @@
         </div>
 
         <!-- Footer -->
-        <div class="px-6 py-4 border-t border-slate-200 bg-white rounded-b-2xl flex items-center justify-between z-10">
+                <div class="px-6 py-4 border-t border-slate-200 bg-white rounded-b-2xl flex items-center justify-between z-10">
             <button type="button" onclick="closeReviewModal()" class="px-5 py-2.5 text-sm font-medium text-slate-600 hover:text-slate-800 hover:bg-slate-100 rounded-lg transition-colors">
                 Batalkan
             </button>
@@ -78,7 +99,7 @@
                 <button type="button" onclick="ulangAcakSoal()" class="px-4 py-2.5 bg-blue-50 text-blue-600 font-semibold text-sm rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2 border border-blue-200">
                     <i class="fas fa-sync-alt"></i> Buat Ulang Acak
                 </button>
-                <button type="submit" form="formCetakUjian" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm rounded-lg shadow-md transition-colors flex items-center gap-2" onclick="setTimeout(closeReviewModal, 500)">
+                <button type="button" id="finalizePrintBtn" class="px-6 py-2.5 bg-slate-800 hover:bg-slate-900 text-white font-semibold text-sm rounded-lg shadow-md transition-colors flex items-center gap-2" onclick="finalizeAndAskArchive(event)">
                     <i class="fas fa-print"></i> Simpan Ujian & Cetak
                 </button>
             </div>
@@ -123,6 +144,8 @@
 </div>
 
 <script>
+    let lastPenarikanId = null;
+
     function openReviewModal(data) {
         const modal = document.getElementById('reviewSoalModal');
         const modalContent = document.getElementById('reviewSoalModalContent');
@@ -131,6 +154,8 @@
         document.getElementById('reviewMkId').value = data.mataKuliah.id;
         document.getElementById('reviewBobotTotal').value = data.bobot_total || '';
         document.getElementById('reviewMkNama').value = data.mataKuliah.nama;
+        document.getElementById('reviewSoalJson').value = JSON.stringify(data.soals || []);
+        document.getElementById('reviewNamaEkstraksi').value = `${data.mataKuliah.nama} - ${document.querySelector('select[name="agenda"]')?.value || 'Ekstraksi'}`;
         
         // Build Soal List
         const container = document.getElementById('soalListContainer');
@@ -188,6 +213,35 @@
         }, 10);
     }
 
+    // Finalize (submit print form) then save draft and show archive confirmation after save
+    async function finalizeAndAskArchive(e) {
+        e?.preventDefault?.();
+        const form = document.getElementById('formCetakUjian');
+        if (!form) return;
+
+        // Submit form to new tab (finalize & print)
+        form.submit();
+
+        // Save as draft penarikan and wait for completion
+        let saved = false;
+        try {
+            saved = await handleSimpanKeArsip(null, '0');
+        } catch (err) {
+            console.error('Draft save failed', err);
+            saved = false;
+        }
+
+        // Close modal shortly after
+        setTimeout(() => closeReviewModal(), 500);
+
+        // Show confirmation only if draft saved successfully
+        if (saved) {
+            setTimeout(() => showArchiveConfirm(), 700);
+        } else {
+            showSnackbar('Gagal menyimpan draf penarikan. Silakan coba lagi.', 'error');
+        }
+    }
+
     function closeReviewModal() {
         const modal = document.getElementById('reviewSoalModal');
         const modalContent = document.getElementById('reviewSoalModalContent');
@@ -200,6 +254,66 @@
             modal.classList.add('hidden');
             modal.classList.remove('flex');
         }, 300);
+    }
+
+    async function handleSimpanKeArsip(event, forceDirect) {
+        event?.preventDefault?.();
+
+        const form = document.getElementById('formCetakUjian');
+        const formData = new FormData(form);
+        formData.set('soal_json', document.getElementById('reviewSoalJson').value || '[]');
+
+        // If forceDirect provided, override select value (used by confirmation dialog)
+        const arsipMode = typeof forceDirect !== 'undefined' ? String(forceDirect) : (document.getElementById('reviewDirectArchive')?.value || '0');
+        formData.set('direct_archive', arsipMode);
+        formData.set('nama_ekstraksi', document.getElementById('reviewNamaEkstraksi').value || 'Ekstraksi Soal');
+
+        if (arsipMode === '1' && lastPenarikanId) {
+            formData.set('penarikan_id', String(lastPenarikanId));
+        }
+
+        const arsipStoreUrl = "{{ route('banksoal.soal.dosen.arsip-soal.store') }}";
+
+        showLoading(arsipMode === '1' ? 'Mengarsipkan paket soal...' : 'Menyimpan draf penarikan...');
+
+        try {
+            const response = await fetch(arsipStoreUrl, {
+                method: 'POST',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: formData,
+            });
+
+            const data = await response.json();
+
+                if (data && data.success) {
+                    if (arsipMode === '0' && data.data && data.data.id) {
+                        lastPenarikanId = data.data.id;
+                    }
+                    showSnackbar(data.message || 'Soal tersimpan.', 'success');
+                    // If this was a draft save triggered by finalize, we intentionally do not close the modal here
+                    // because finalize already closes it. But if user invoked save from review, close it.
+                    if (!document.getElementById('reviewSoalModal')?.classList.contains('hidden')) {
+                        // modal is still open (user-triggered save)
+                        closeReviewModal();
+                    }
+                    return true;
+                } else {
+                    showSnackbar((data && data.message) ? data.message : 'Gagal menyimpan.', 'error');
+                    return false;
+                }
+        } catch (err) {
+            console.error('Save error', err);
+            showSnackbar('Gagal menyimpan. Periksa koneksi.', 'error');
+                return false;
+            } finally {
+            hideLoading();
+        }
+            // fallback
+            return false;
     }
     
     function removeSoal(id) {
@@ -407,5 +521,135 @@
 
         updateSoalCount();
         updateBadgeNumbers();
+    }
+
+    /* Archive confirmation modal handlers */
+    function showArchiveConfirm() {
+        const modal = document.getElementById('archiveConfirmModal');
+        const content = document.getElementById('archiveConfirmContent');
+        if (!modal) return;
+        modal.classList.remove('hidden');
+        modal.classList.add('flex');
+        setTimeout(() => {
+            modal.classList.remove('opacity-0');
+            content.classList.remove('opacity-0', 'scale-95');
+            content.classList.add('opacity-100', 'scale-100');
+        }, 10);
+    }
+
+    function hideArchiveConfirm() {
+        const modal = document.getElementById('archiveConfirmModal');
+        const content = document.getElementById('archiveConfirmContent');
+        if (!modal) return;
+        content.classList.remove('opacity-100', 'scale-100');
+        content.classList.add('opacity-0', 'scale-95');
+        modal.classList.add('opacity-0');
+        setTimeout(() => {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }, 220);
+    }
+
+    function onArchiveConfirmYes() {
+        hideArchiveConfirm();
+        // Force direct_archive = 1 and call save
+        handleSimpanKeArsip(null, /*forceDirect=*/ '1');
+    }
+
+    function onArchiveConfirmNo() {
+        hideArchiveConfirm();
+        // Draft already saved on finalize; no extra action needed
+        showSnackbar('Disimpan sebagai draf penarikan.', 'success');
+    }
+</script>
+
+<!-- Loading overlay (used during saving draft / archiving) -->
+<div id="reviewLoadingOverlay" class="hidden fixed inset-0 z-[130] flex items-center justify-center bg-black/40">
+    <div class="bg-white rounded-lg p-6 flex items-center gap-4 shadow-lg">
+        <i class="fas fa-circle-notch fa-spin text-2xl text-slate-700"></i>
+        <div>
+            <div id="reviewLoadingText" class="text-sm font-medium text-slate-800">Memproses...</div>
+            <div class="text-xs text-slate-500">Mohon tunggu—jangan tutup halaman.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function showLoading(message) {
+        const overlay = document.getElementById('reviewLoadingOverlay');
+        const text = document.getElementById('reviewLoadingText');
+        if (text && message) text.innerText = message;
+        if (overlay) overlay.classList.remove('hidden');
+    }
+
+    function hideLoading() {
+        const overlay = document.getElementById('reviewLoadingOverlay');
+        if (overlay) overlay.classList.add('hidden');
+    }
+
+</script>
+
+<!-- Archive confirmation modal -->
+<div id="archiveConfirmModal" class="hidden fixed inset-0 z-[120] items-center justify-center bg-black/40 p-4 opacity-0">
+    <div id="archiveConfirmContent" class="w-full max-w-md bg-white rounded-xl p-6 shadow-lg transform transition-all opacity-0 scale-95">
+        <h3 class="text-lg font-bold text-slate-900 mb-3">Kirim ke Arsip?</h3>
+        <p class="text-sm text-slate-600 mb-5">Apakah Anda ingin mengirim paket soal ini langsung ke Arsip? Pilih "Ya" untuk menyimpan di tabel arsip, atau "Tidak" untuk menyimpan sebagai draf penarikan.</p>
+        <div class="flex justify-end gap-3">
+            <button type="button" onclick="onArchiveConfirmNo()" class="px-4 py-2 rounded-lg bg-white border border-slate-200 text-slate-700">Tidak (Simpan Draf)</button>
+            <button type="button" onclick="onArchiveConfirmYes()" class="px-4 py-2 rounded-lg bg-emerald-600 text-white">Ya, Arsipkan</button>
+        </div>
+    </div>
+</div>
+
+<!-- Snackbar container -->
+<div id="snackbarContainer" class="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-2 pointer-events-none"></div>
+
+<style>
+    .snackbar {
+        @apply max-w-xs w-auto bg-white text-slate-800 rounded-lg shadow-lg px-4 py-3 border border-slate-200 flex items-center gap-3 pointer-events-auto;
+    }
+    .snackbar-success {
+        @apply border-emerald-200; 
+    }
+    .snackbar-error {
+        @apply border-rose-200; 
+    }
+</style>
+
+<script>
+    function showSnackbar(message, variant = 'success', duration = 3500) {
+        const container = document.getElementById('snackbarContainer');
+        if (!container) return;
+
+        const id = 'snackbar-' + Date.now();
+        const el = document.createElement('div');
+        el.id = id;
+        el.className = 'snackbar ' + (variant === 'error' ? 'snackbar-error' : 'snackbar-success');
+        el.innerHTML = `
+            <div class="flex items-center gap-3">
+                <div class="w-8 h-8 flex items-center justify-center rounded-full text-white" style="background:${variant === 'error' ? '#ef4444' : '#10b981'}">
+                    <i class="fas ${variant === 'error' ? 'fa-times' : 'fa-check'}"></i>
+                </div>
+                <div class="text-sm leading-snug text-slate-800">${message}</div>
+            </div>
+        `;
+
+        container.appendChild(el);
+
+        // Animate in
+        el.style.transform = 'translateY(12px)';
+        el.style.opacity = '0';
+        requestAnimationFrame(() => {
+            el.style.transition = 'transform 220ms ease, opacity 220ms ease';
+            el.style.transform = 'translateY(0)';
+            el.style.opacity = '1';
+        });
+
+        setTimeout(() => {
+            // Animate out
+            el.style.transform = 'translateY(12px)';
+            el.style.opacity = '0';
+            setTimeout(() => el.remove(), 240);
+        }, duration);
     }
 </script>

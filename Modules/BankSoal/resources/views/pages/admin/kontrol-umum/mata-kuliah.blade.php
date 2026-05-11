@@ -586,12 +586,22 @@
             <h1>Manajemen Mata Kuliah</h1>
             <p>Kelola data mata kuliah untuk program studi</p>
         </div>
-        <button type="button" onclick="openAddModal()" class="btn-add">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            Tambah Mata Kuliah
-        </button>
+        <div style="display: flex; gap: 8px;">
+            <a href="{{ route('banksoal.api.v1.admin.mata-kuliah.export-template') }}" class="btn-cancel-select" style="display: inline-flex; align-items: center; text-decoration: none; gap: 8px;">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Template
+            </a>
+            <button type="button" onclick="openImportModal()" class="btn-add" style="background-color: var(--slate-100); border-color: var(--slate-300);">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                Upload Data
+            </button>
+            <button type="button" onclick="openAddModal()" class="btn-add">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Tambah Mata Kuliah
+            </button>
+        </div>
     </div>
 
     <div class="bulk-delete-bar" id="bulkDeleteBar">
@@ -659,6 +669,29 @@
 
         <div class="pagination-section" id="paginationSection" style="display: none;">
             <div class="pagination-list" id="paginationList"></div>
+        </div>
+    </div>
+
+    <div class="modal-overlay" id="importModal" onclick="closeImportModalOnBackdrop(event)">
+        <div class="modal-content" onclick="event.stopPropagation()">
+            <div class="modal-header">
+                <h2 class="modal-title">Upload Excel/CSV Mata Kuliah</h2>
+                <button type="button" class="modal-close" onclick="closeImportModal()">&times;</button>
+            </div>
+            <form id="importForm" action="{{ route('banksoal.api.v1.admin.mata-kuliah.import') }}" method="POST" enctype="multipart/form-data">
+                @csrf
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label for="import_file">Pilih File (xls, xlsx, csv) *</label>
+                        <input type="file" id="import_file" name="file" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" required style="width: 100%; border: 1px solid var(--slate-300); padding: 10px; border-radius: 8px;">
+                    </div>
+                    <p style="font-size: 13px; color: var(--slate-600); margin-top: 8px;">Pastikan format file sesuai dengan template yang dapat diunduh.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" onclick="closeImportModal()">Batal</button>
+                    <button type="submit" class="btn-primary" id="btnSubmitImport">Upload Data</button>
+                </div>
+            </form>
         </div>
     </div>
 
@@ -954,6 +987,71 @@
                 el.textContent = '';
             });
         }
+
+        function openImportModal() {
+            document.getElementById('importForm').reset();
+            document.getElementById('importModal').classList.add('show');
+        }
+
+        function closeImportModal() {
+            document.getElementById('importModal').classList.remove('show');
+        }
+
+        function closeImportModalOnBackdrop(e) {
+            if (e.target.id === 'importModal') {
+                closeImportModal();
+            }
+        }
+
+        document.getElementById('importForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            const form = this;
+            const submitBtn = document.getElementById('btnSubmitImport');
+            const originalText = submitBtn.textContent;
+            
+            submitBtn.textContent = 'Mengunggah...';
+            submitBtn.disabled = true;
+
+            try {
+                const formData = new FormData(form);
+                const response = await fetch(form.action, {
+                    method: 'POST',
+                    body: formData,
+                    headers: {
+                        'X-CSRF-TOKEN': csrfToken,
+                        'Accept': 'application/json'
+                    }
+                });
+
+                const result = await readApiResponse(response);
+                if (result.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: result.message || 'Data berhasil diunggah',
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                    closeImportModal();
+                    loadAllMataKuliah();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Oops...',
+                        text: toFriendlyMessage(result.message, 'Gagal mengunggah data')
+                    });
+                }
+            } catch (error) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Terjadi kesalahan sistem'
+                });
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
+        });
 
         function incrementSKS() {
             const input = document.getElementById('sks');
