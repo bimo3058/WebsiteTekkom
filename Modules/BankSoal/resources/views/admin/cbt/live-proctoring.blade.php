@@ -67,9 +67,9 @@
                     <tbody class="divide-y divide-slate-100 text-sm">
                         @forelse($sessions as $session)
                             @php
-                                $totalSoal = $session->jawabans->count();
-                                $terjawab = $session->jawabans->whereNotNull('jawaban_dipilih')->count();
-                                $progres = $totalSoal > 0 ? round(($terjawab / $totalSoal) * 100) : 0;
+                                $totalSoal = $session->jawabans_count;
+                                $terjawab  = $session->terjawab_count;
+                                $progres   = $totalSoal > 0 ? round(($terjawab / $totalSoal) * 100) : 0;
                             @endphp
                             <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td class="px-6 py-4">
@@ -113,7 +113,7 @@
                                         Ongoing
                                     </span>
                                     <!-- Log pelanggaran (Tab Switch) -->
-                                    @php $totalPelanggaran = $session->cheatLogs->count(); @endphp
+                                    @php $totalPelanggaran = $session->cheat_logs_count; @endphp
                                     <div class="mt-1 text-xs text-slate-500 flex items-center gap-1">
                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"

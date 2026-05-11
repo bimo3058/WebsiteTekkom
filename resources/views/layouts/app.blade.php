@@ -94,6 +94,8 @@
             @else
                 @yield('content')
             @endisset
+
+            <x-ui.loader />
         </body>
     @else
         <body class="font-sans antialiased">
@@ -116,6 +118,8 @@
                     @endisset
                 </main>
             </div>
+
+            <x-ui.loader />
         </body>
     @endif
 </html>

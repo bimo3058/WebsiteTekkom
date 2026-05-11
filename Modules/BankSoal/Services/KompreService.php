@@ -3,8 +3,8 @@
 namespace Modules\BankSoal\Services;
 
 use Illuminate\Support\Facades\DB;
-use Modules\BankSoal\Models\KompreSession;
-use Modules\BankSoal\Models\KompreJawaban;
+use Modules\BankSoal\Models\Komprehensif\KompreSession;
+use Modules\BankSoal\Models\Komprehensif\KompreJawaban;
 use Modules\BankSoal\Models\Pertanyaan;
 
 class KompreService

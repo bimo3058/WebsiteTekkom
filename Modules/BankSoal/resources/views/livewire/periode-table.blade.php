@@ -128,7 +128,7 @@
                                 @endif
                                 
                                 @php
-                                    $hasPendaftar = \Modules\BankSoal\Models\PendaftarUjian::where('periode_ujian_id', $periode->id)->exists();
+                                    $hasPendaftar = \Modules\BankSoal\Models\Komprehensif\PendaftarUjian::where('periode_ujian_id', $periode->id)->exists();
                                 @endphp
                                 @if(!$hasPendaftar)
                                 <button type="button" wire:click="deletePeriode({{ $periode->id }})" wire:confirm="Apakah Anda yakin ingin menghapus periode ini? Aksi ini tidak dapat dibatalkan." class="inline-flex items-center justify-center w-8 h-8 rounded-md bg-[#EF4444] hover:bg-[#DC2626] text-white transition-all" title="Hapus">

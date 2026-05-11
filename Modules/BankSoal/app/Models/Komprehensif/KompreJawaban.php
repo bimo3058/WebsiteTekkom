@@ -1,25 +1,27 @@
 <?php
 
-namespace Modules\BankSoal\Models;
+namespace Modules\BankSoal\Models\Komprehensif;
 
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-// use Modules\BankSoal\Database\Factories\KompreJawabanFactory;
+use Illuminate\Database\Eloquent\Model;
+use Modules\BankSoal\Models\Jawaban;
+use Modules\BankSoal\Models\Pertanyaan;
 
 class KompreJawaban extends Model
 {
     use HasFactory;
 
     protected $table = 'bs_kompre_jawaban';
-    
+
     protected $fillable = [
-        'kompre_session_id', 'pertanyaan_id', 'jawaban_dipilih', 'urutan_soal', 'kesulitan_now', 'is_benar_now', 'urutan_opsi', 'is_ragu'
+        'kompre_session_id', 'pertanyaan_id', 'jawaban_dipilih',
+        'urutan_soal', 'kesulitan_now', 'is_benar_now', 'urutan_opsi', 'is_ragu',
     ];
 
     protected $casts = [
-        'urutan_opsi' => 'array',
+        'urutan_opsi'  => 'array',
         'is_benar_now' => 'boolean',
-        'is_ragu' => 'boolean'
+        'is_ragu'      => 'boolean',
     ];
 
     public function session()
@@ -38,15 +40,10 @@ class KompreJawaban extends Model
     }
 
     /**
-     * Alias untuk jawaban() — digunakan oleh CbtEngineController::finish()
+     * Alias untuk jawaban() — nama lebih deskriptif untuk context CBT scoring.
      */
     public function opsiTerpilih()
     {
         return $this->belongsTo(Jawaban::class, 'jawaban_dipilih');
     }
-
-    // protected static function newFactory(): KompreJawabanFactory
-    // {
-    //     // return KompreJawabanFactory::new();
-    // }
 }
