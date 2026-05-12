@@ -33,30 +33,30 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             ->prefix('pengurus')
             ->name('pengurus.')
             ->group(function () {
-                Route::get('/dashboard', function () {
-                    return view('manajemenmahasiswa::dashboard.pengurus');
-                })->name('dashboard');
-            });
+            Route::get('/dashboard', function () {
+                return view('manajemenmahasiswa::dashboard.pengurus');
+            })->name('dashboard');
+        });
 
         // ── Alumni ────────────────────────────────────────────────────────
         Route::middleware('role:alumni,gpm,admin,admin_kemahasiswaan,superadmin')
             ->prefix('alumni')
             ->name('alumni.')
             ->group(function () {
-                Route::get('/dashboard', function () {
-                    return view('manajemenmahasiswa::dashboard.alumni');
-                })->name('dashboard');
-            });
+            Route::get('/dashboard', function () {
+                return view('manajemenmahasiswa::dashboard.alumni');
+            })->name('dashboard');
+        });
 
         // ── Dosen ─────────────────────────────────────────────────────────
         Route::middleware('role:dosen,dosen_koordinator,dpm,gpm,admin,admin_kemahasiswaan,superadmin')
             ->prefix('dosen')
             ->name('dosen.')
             ->group(function () {
-                Route::get('/dashboard', function () {
-                    return redirect()->route('manajemenmahasiswa.pengumuman.index');
-                })->name('dashboard');
-            });
+            Route::get('/dashboard', function () {
+                return redirect()->route('manajemenmahasiswa.pengumuman.index');
+            })->name('dashboard');
+        });
 
         // ── Pengumuman ────────────────────────────────────────────────────
         Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
@@ -87,7 +87,6 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
         // ── Layanan Pengaduan ─────────────────────────────────────────────
         Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
-
             // Mahasiswa & pengurus himpunan membuat pengaduan
             // NOTE: HARUS didefinisikan sebelum /{pengaduan} agar tidak konflik dengan path seperti /create
             Route::middleware('role:mahasiswa,pengurus_himpunan,ketua_himpunan,ketua_bidang,ketua_unit,staff_himpunan')->group(function () {
