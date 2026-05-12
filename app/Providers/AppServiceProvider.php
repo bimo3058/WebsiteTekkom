@@ -2,28 +2,6 @@
 
 namespace App\Providers;
 
-<<<<<<< HEAD
-use Illuminate\Support\ServiceProvider;
-
-class AppServiceProvider extends ServiceProvider
-{
-    /**
-     * Register any application services.
-     */
-    public function register(): void
-    {
-        //
-    }
-
-    /**
-     * Bootstrap any application services.
-     */
-    public function boot(): void
-    {
-        //
-    }
-}
-=======
 use App\Models\User;
 use Illuminate\Auth\EloquentUserProvider;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -33,6 +11,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\ServiceProvider;
 use Livewire\Livewire;
 use App\Livewire\Pulse\RequestMonitor;
@@ -45,25 +24,28 @@ use Illuminate\Auth\Events\Logout;
 
 class AppServiceProvider extends ServiceProvider
 {
+    /**
+     * Register any application services.
+     */
     public function register(): void
     {
+        // Custom Provider untuk Caching User agar aplikasi lebih cepat
         Auth::resolved(function ($auth) {
             $auth->provider('cached-eloquent', function ($app, array $config) {
-                return new class($app['hash'], $config['model']) extends EloquentUserProvider {
+                return new class ($app['hash'], $config['model']) extends EloquentUserProvider {
                     public function retrieveById($identifier): ?Authenticatable
                     {
                         $cacheKey = "user:{$identifier}:data";
-                        $cached   = Cache::get($cacheKey);
+                        $cached = Cache::get($cacheKey);
 
                         if ($cached) {
                             $model = $this->createModel();
-                            $user  = $model->newFromBuilder($cached);
-                            
-                            // Kalau password tidak ada di cache, fetch fresh dari DB
+                            $user = $model->newFromBuilder($cached);
+
                             if (!isset($cached['password'])) {
                                 return parent::retrieveById($identifier);
                             }
-                            
+
                             return $user;
                         }
 
@@ -80,37 +62,35 @@ class AppServiceProvider extends ServiceProvider
         });
     }
 
+    /**
+     * Bootstrap any application services.
+     */
     public function boot(): void
     {
-        // =====================================================================
         // 1. SETUP PAGINATION & AUTO-STATUS ONLINE/OFFLINE
-        // =====================================================================
         Paginator::useTailwind();
 
-        // Saklar otomatis saat User Login
+        // Update status online saat Login
         Event::listen(function (Login $event) {
             $event->user->recordLogin();
         });
 
-        // Saklar otomatis saat User Logout
+        // Update status offline saat Logout
         Event::listen(function (Logout $event) {
             if ($event->user) {
-                // Gunakan Query Builder murni untuk menghindari cast PHP Object -> true
                 \App\Models\User::where('id', $event->user->id)->update([
-                    'is_online' => \Illuminate\Support\Facades\DB::raw('false')
+                    'is_online' => DB::raw('false')
                 ]);
             }
         });
 
-
-        // =====================================================================
-        // 2. SISTEM KEAMANAN & MONITORING BAWAAN
-        // =====================================================================
+        // 2. SISTEM KEAMANAN & MONITORING
         if (request()->header('X-Forwarded-Proto') === 'https') {
-            \Illuminate\Support\Facades\URL::forceScheme('https');
+            URL::forceScheme('https');
         }
 
-        Model::shouldBeStrict(! app()->isProduction());
+        // Ketat di mode development, santai di mode production
+        Model::shouldBeStrict(!app()->isProduction());
 
         if (app()->isProduction()) {
             DB::whenQueryingForLongerThan(1000, function () {
@@ -120,54 +100,51 @@ class AppServiceProvider extends ServiceProvider
             });
         }
 
+        // View Composer untuk status import (khusus Superadmin)
         view()->composer(['superadmin.*'], function ($view) {
             if (Auth::check()) {
                 $activeImport = \App\Models\ImportStatus::where('user_id', Auth::id())
                     ->whereIn('status', ['pending', 'processing'])
                     ->latest()
                     ->first();
-                    
+
                 $view->with('activeImportId', $activeImport?->id);
             }
         });
 
-
-        // =====================================================================
         // 3. GATE & PERMISSION SYSTEM
-        // FIX: Gate::before() — menghubungkan @can() / @cannot() di Blade
-        // dengan sistem permission custom kita (hasPermissionTo).
-        // =====================================================================
+        // Menghubungkan @can() di Blade dengan sistem hasPermissionTo di Model User
         Gate::before(function (User $user, string $ability) {
-            // Superadmin bypass semua
             if ($user->hasRole('superadmin')) {
                 return true;
             }
 
-            // Hanya intercept permission format "module.action" (berisi titik)
             if (str_contains($ability, '.')) {
                 return $user->hasPermissionTo($ability) ?: null;
             }
 
-            return null; // Biarkan Gate definition lain yang handle
+            return null;
         });
 
         Gate::define('viewPulse', function (User $user) {
             return $user->hasRole('superadmin');
         });
 
+        // Logging Slow Query di Local
         if (app()->environment('local')) {
             DB::listen(function ($query) {
                 if ($query->time > 100) {
                     Log::channel('daily')->warning('Slow query (>100ms)', [
-                        'sql'      => $query->sql,
+                        'sql' => $query->sql,
                         'bindings' => $query->bindings,
-                        'time'     => $query->time . 'ms',
+                        'time' => $query->time . 'ms',
                     ]);
                 }
             });
         }
-        
-        Livewire::component('pulse.request-monitor', RequestMonitor::class);
+
+        if (class_exists(Livewire::class)) {
+            Livewire::component('pulse.request-monitor', RequestMonitor::class);
+        }
     }
 }
->>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f

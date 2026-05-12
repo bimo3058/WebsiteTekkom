@@ -1,6 +1,4 @@
 import './bootstrap';
-<<<<<<< HEAD
-=======
 
 import Alpine from "alpinejs";
 
@@ -11,4 +9,3 @@ Alpine.start();
 // import Alpine from 'alpinejs';
 // window.Alpine = Alpine;
 // Alpine.start();
->>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f

@@ -3,24 +3,6 @@
     "name": "laravel/laravel",
     "type": "project",
     "description": "The skeleton application for the Laravel framework.",
-<<<<<<< HEAD
-    "keywords": ["laravel", "framework"],
-    "license": "MIT",
-    "require": {
-        "php": "^8.2",
-        "laravel/framework": "^12.0",
-        "laravel/sanctum": "^4.0",
-        "laravel/tinker": "^2.10.1"
-    },
-    "require-dev": {
-        "fakerphp/faker": "^1.23",
-        "laravel/pail": "^1.2.2",
-        "laravel/pint": "^1.24",
-        "laravel/sail": "^1.41",
-        "mockery/mockery": "^1.6",
-        "nunomaduro/collision": "^8.6",
-        "phpunit/phpunit": "^11.5.50"
-=======
     "keywords": [
         "laravel",
         "framework"
@@ -31,6 +13,7 @@
         "genealabs/laravel-model-caching": "*",
         "laravel/framework": "^12.0",
         "laravel/pulse": "*",
+        "laravel/sanctum": "^4.0",
         "laravel/socialite": "*",
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "*",
@@ -41,7 +24,7 @@
     "require-dev": {
         "cweagans/composer-patches": "*",
         "fakerphp/faker": "^1.23",
-        "laravel/boost": "2.0",
+        "laravel/boost": "^2.0",
         "laravel/breeze": "*",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.24",
@@ -50,15 +33,11 @@
         "mockery/mockery": "^1.6",
         "nunomaduro/collision": "^8.6",
         "phpunit/phpunit": "^11.5.3"
->>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f
     },
     "autoload": {
         "psr-4": {
             "App\\": "app/",
-<<<<<<< HEAD
-=======
             "Modules\\": "Modules/",
->>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
         }
@@ -69,37 +48,13 @@
         }
     },
     "scripts": {
-        "setup": [
-            "composer install",
-            "@php -r \"file_exists('.env') || copy('.env.example', '.env');\"",
-            "@php artisan key:generate",
-            "@php artisan migrate --force",
-            "npm install",
-            "npm run build"
-        ],
-        "dev": [
-            "Composer\\Config::disableProcessTimeout",
-<<<<<<< HEAD
-            "npx concurrently -c \"#93c5fd,#c4b5fd,#fb7185,#fdba74\" \"php artisan serve\" \"php artisan queue:listen --tries=1 --timeout=0\" \"php artisan pail --timeout=0\" \"npm run dev\" --names=server,queue,logs,vite --kill-others"
-=======
-            "npx concurrently \"php artisan serve\" \"npm run dev\""
->>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f
-        ],
-        "test": [
-            "@php artisan config:clear --ansi",
-            "@php artisan test"
-        ],
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
         ],
         "post-update-cmd": [
-<<<<<<< HEAD
-            "@php artisan vendor:publish --tag=laravel-assets --ansi --force"
-=======
             "@php artisan vendor:publish --tag=laravel-assets --ansi --force",
             "@php artisan boost:update --ansi"
->>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f
         ],
         "post-root-package-install": [
             "@php -r \"file_exists('.env') || copy('.env.example', '.env');\""
@@ -108,25 +63,11 @@
             "@php artisan key:generate --ansi",
             "@php -r \"file_exists('database/database.sqlite') || touch('database/database.sqlite');\"",
             "@php artisan migrate --graceful --ansi"
-        ],
-        "pre-package-uninstall": [
-            "Illuminate\\Foundation\\ComposerScripts::prePackageUninstall"
         ]
     },
     "extra": {
         "laravel": {
             "dont-discover": []
-<<<<<<< HEAD
-        }
-    },
-    "config": {
-        "optimize-autoloader": true,
-        "preferred-install": "dist",
-        "sort-packages": true,
-        "allow-plugins": {
-            "pestphp/pest-plugin": true,
-            "php-http/discovery": true
-=======
         },
         "merge-plugin": {
             "include": [
@@ -135,7 +76,7 @@
         }
     },
     "config": {
-        "optimize-autoloader": false,
+        "optimize-autoloader": true,
         "preferred-install": "dist",
         "sort-packages": true,
         "allow-plugins": {
@@ -143,7 +84,6 @@
             "pestphp/pest-plugin": true,
             "php-http/discovery": true,
             "wikimedia/composer-merge-plugin": true
->>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f
         }
     },
     "minimum-stability": "stable",

@@ -37,13 +37,16 @@ echo "════════════════════════�
 // ── Setup: Login users ──
 echo "── SETUP ──\n";
 $r = apiCall('POST', "$base/auth/login", ['email' => 'admin@praktikum.ac.id', 'password' => 'password123']);
+if ($r['status'] !== 200) die("❌ Admin login failed: " . $r['raw'] . "\n");
 $tokenAdmin = $r['body']['data']['token'];
 echo "  Admin token: OK\n";
 
 $r = apiCall('POST', "$base/auth/login", ['email' => 'ahmad.fauzi@praktikum.ac.id', 'password' => 'password123']);
+if ($r['status'] !== 200) die("❌ Dosen login failed: " . $r['raw'] . "\n");
 $tokenDosen = $r['body']['data']['token'];
 
 $r = apiCall('POST', "$base/auth/login", ['email' => 'citra@mhs.ac.id', 'password' => 'password123']);
+if ($r['status'] !== 200) die("❌ Mahasiswa login failed: " . $r['raw'] . "\n");
 $tokenMhs = $r['body']['data']['token'];
 
 $r = apiCall('GET', "$base/auth/me", null, $tokenMhs);
@@ -51,6 +54,7 @@ $mhsId = $r['body']['data']['user']['id'];
 echo "  Mahasiswa (Citra) ID: $mhsId\n";
 
 $r = apiCall('POST', "$base/auth/login", ['email' => 'andi@mhs.ac.id', 'password' => 'password123']);
+if ($r['status'] !== 200) die("❌ Koor login failed: " . $r['raw'] . "\n");
 $tokenAndi = $r['body']['data']['token'];
 $r = apiCall('GET', "$base/auth/me", null, $tokenAndi);
 $andiId = $r['body']['data']['user']['id'];
@@ -111,20 +115,18 @@ $r = apiCall('PUT', "$base/admin/praktikum/$praktikumId/assign-koor", ['pengguna
 test('PUT → 200 (replace existing koor & auto-grant role)', $r['status'] === 200, "status={$r['status']}");
 test('Response has NEW koordinator assigned', ($r['body']['data']['koordinator']['id'] ?? '') === $mhsId);
 
-// Verify role in DB
-$dbPath = __DIR__ . '/../database/database.sqlite';
-$pdo = new PDO("sqlite:$dbPath");
-$pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-$stmt = $pdo->prepare("SELECT COUNT(*) FROM pengguna_role pr JOIN role r ON pr.role_id = r.id WHERE pr.pengguna_id = :uid AND r.nama = 'koor_prak'");
-$stmt->execute([':uid' => $mhsId]);
-$hasRole = $stmt->fetchColumn() > 0;
+// Verify role in DB (Via Tinker)
+$tinkerCmd = "php artisan tinker --execute \"echo 'HasRole: ' . (\App\Models\Pengguna::find('$mhsId')->hasRole('koor_prak') ? 'YES' : 'NO');\"";
+$out = [];
+exec($tinkerCmd, $out);
+$hasRole = str_contains(implode("\n", $out), 'HasRole: YES');
 test('Database: User auto-granted koor_prak role', $hasRole);
 
-$stmt = $pdo->prepare("SELECT koor_id FROM praktikum WHERE id = :pid");
-$stmt->execute([':pid' => $praktikumId]);
-$dbKoorId = $stmt->fetchColumn();
-test('Database: koor_id updated', $dbKoorId === $mhsId);
-$pdo = null; // Close connection to release SQLite lock
+$tinkerCmd = "php artisan tinker --execute \"echo 'KoorID: ' . \App\Models\Praktikum::find('$praktikumId')->koor_id;\"";
+$out = [];
+exec($tinkerCmd, $out);
+$dbKoorId = str_contains(implode("\n", $out), "KoorID: $mhsId");
+test('Database: koor_id updated', $dbKoorId);
 
 // ═══════════════════════════════════════════════════
 // 4. READ & RESPONSE CONSISTENCY

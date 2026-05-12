@@ -3,13 +3,19 @@
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
     public function up(): void
     {
+        /**
+         * MODIFIKASI LOKAL:
+         * Menambahkan return untuk melewati sinkronisasi sequence pada tabel 
+         * 'bs_cpl' atau 'bs_cpmk' yang tidak ditemukan di repositori lokal.
+         */
+        return;
+
         if (DB::getDriverName() !== 'pgsql') {
             return;
         }

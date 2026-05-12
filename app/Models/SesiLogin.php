@@ -40,6 +40,6 @@ class SesiLogin extends Model
 
     public function roleAktif()
     {
-        return $this->belongsTo(Role::class, 'role_aktif_id');
+        return $this->belongsTo(SystemRole::class, 'role_aktif_id');
     }
 }

@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use App\Models\Pengguna;
-use App\Models\Role;
+use App\Models\SystemRole;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -11,9 +11,9 @@ class PenggunaSeeder extends Seeder
 {
     public function run(): void
     {
-        $roleAdmin    = Role::where('nama', 'admin')->first();
-        $roleDosen    = Role::where('nama', 'dosen')->first();
-        $roleMhs      = Role::where('nama', 'mahasiswa')->first();
+        $roleAdmin    = SystemRole::firstOrCreate(['nama' => 'admin']);
+        $roleDosen    = SystemRole::firstOrCreate(['nama' => 'dosen']);
+        $roleMhs      = SystemRole::firstOrCreate(['nama' => 'mahasiswa']);
 
         // ── 1 Admin ───────────────────────────────────────────────────────────
         $admin = Pengguna::firstOrCreate(

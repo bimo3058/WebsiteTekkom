@@ -7,7 +7,7 @@ use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\SwitchRoleRequest;
 use App\Http\Resources\Auth\PenggunaResource;
 use App\Models\Pengguna;
-use App\Models\Role;
+use App\Models\SystemRole;
 use App\Models\SesiLogin;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -60,7 +60,7 @@ class AuthController extends Controller
 
         // 5. Tentukan role aktif default = role tertinggi
         $roleTertinggi  = $pengguna->roleTertinggi();
-        $roleAktif      = Role::where('nama', $roleTertinggi)->first();
+        $roleAktif      = SystemRole::where('nama', $roleTertinggi)->first();
 
         // 6. Generate Sanctum token
         $tokenName  = "login_{$pengguna->id}_{$roleAktif->nama}";

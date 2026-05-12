@@ -46,10 +46,14 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'is_admin'])->group(function
     Route::apiResource('praktikum', \App\Http\Controllers\Api\Admin\PraktikumController::class);
     Route::put('/praktikum/{id}/assign-koor', [\App\Http\Controllers\Api\Admin\PraktikumController::class, 'assignKoor']);
 
-    // Step 6 — POST /admin/praktikum/{id}/praktikan/upload
-    // Step 7 — GET /admin/praktikum/{id}/asprak
-    // Step 8 — PUT /admin/pengguna/{id}/role-status
-    // Step 9 — GET /admin/pendaftaran/koor|asprak
+    // Step 6 — Praktikan Management
+    Route::get('/praktikum/{id}/praktikan', [\App\Http\Controllers\Api\Admin\PraktikumController::class, 'getPraktikans']);
+    Route::post('/praktikum/{id}/import-praktikan', [\App\Http\Controllers\Api\Admin\PraktikumController::class, 'uploadPraktikan']);
+    // Step 7 — Asprak Praktikum Management
+    Route::get('/praktikum/{id}/asparaks', [\App\Http\Controllers\Admin\AsprakPraktikumController::class, 'index']);
+    Route::post('/praktikum/{id}/assign-asprak', [\App\Http\Controllers\Admin\AsprakPraktikumController::class, 'store']);
+    Route::delete('/praktikum/{id}/asprak/{asprak_id}', [\App\Http\Controllers\Admin\AsprakPraktikumController::class, 'destroy']);
+
 });
 
 // ─── Dosen Routes (role:dosen + praktikum_access) ─────────────────────────────

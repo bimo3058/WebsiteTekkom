@@ -13,7 +13,7 @@ return new class extends Migration
             $table->string('nama');
             $table->string('kode')->nullable();
             $table->text('deskripsi')->nullable();
-            $table->uuid('dosen_id')->nullable();
+            $table->uuid('dosen_id');
             $table->uuid('koor_id')->nullable();   // field tambahan dari klarifikasi
             $table->integer('tahun_ajaran');
             $table->string('semester');              // ganjil, genap

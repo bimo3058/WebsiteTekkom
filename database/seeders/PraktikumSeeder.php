@@ -4,7 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Pengguna;
 use App\Models\Praktikum;
-use App\Models\Role;
+use App\Models\SystemRole;
 use Illuminate\Database\Seeder;
 
 class PraktikumSeeder extends Seeder
@@ -14,9 +14,9 @@ class PraktikumSeeder extends Seeder
         $dosen1 = Pengguna::where('nim_nip', 'NIP001')->first(); // Dr. Ahmad Fauzi
         $dosen2 = Pengguna::where('nim_nip', 'NIP002')->first(); // Dr. Siti Rahayu
 
-        $roleKoor   = Role::where('nama', 'koor_prak')->first();
-        $roleAsprak = Role::where('nama', 'asprak')->first();
-        $roleMhs    = Role::where('nama', 'mahasiswa')->first();
+        $roleKoor   = SystemRole::firstOrCreate(['nama' => 'koor_prak']);
+        $roleAsprak = SystemRole::firstOrCreate(['nama' => 'asprak']);
+        $roleMhs    = SystemRole::firstOrCreate(['nama' => 'mahasiswa']);
 
         // ── Praktikum Data ────────────────────────────────────────────────────
         $p1 = Praktikum::firstOrCreate(

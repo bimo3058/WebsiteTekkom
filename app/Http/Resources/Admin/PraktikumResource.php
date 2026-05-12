@@ -22,10 +22,10 @@ class PraktikumResource extends JsonResource
                     'nama' => $this->dosen->nama,
                 ];
             }),
-            'koordinator'  => $this->whenLoaded('koordinator', function () {
+            'koordinator'  => $this->whenLoaded('koor', function () {
                 return [
-                    'id'   => $this->koordinator->id,
-                    'nama' => $this->koordinator->nama,
+                    'id'   => $this->koor->id,
+                    'nama' => $this->koor->nama,
                 ];
             }),
             'created_at'   => $this->created_at,

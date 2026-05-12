@@ -6,17 +6,22 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
+    /**
+     * Run the migrations.
+     */
     public function up(): void
     {
-        Schema::create('bs_rps_dosen', function (Blueprint $table) {
+        Schema::create('asprak_praktikum', function (Blueprint $table) {
             $table->id();
-            $table->unsignedBigInteger('rps_id');
-            $table->unsignedBigInteger('dosen_id');
+            $table->timestamps();
         });
     }
 
+    /**
+     * Reverse the migrations.
+     */
     public function down(): void
     {
-        Schema::dropIfExists('bs_rps_dosen');
+        Schema::dropIfExists('asprak_praktikum');
     }
 };

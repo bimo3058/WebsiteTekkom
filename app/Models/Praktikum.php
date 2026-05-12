@@ -47,8 +47,29 @@ class Praktikum extends Model
     /**
      * Koordinator praktikum ini.
      */
-    public function koordinator()
+    public function koor()
     {
         return $this->belongsTo(Pengguna::class, 'koor_id');
+    }
+
+    /**
+     * Daftar praktikan yang terdaftar di praktikum ini.
+     */
+    public function praktikans()
+    {
+        return $this->belongsToMany(Pengguna::class, 'daftar_praktikan', 'praktikum_id', 'pengguna_id')
+                    ->withPivot('id', 'status')
+                    ->withTimestamps();
+    }
+
+    /**
+     * Daftar asprak/koor yang ditugaskan ke praktikum ini.
+     */
+    public function asparaks()
+    {
+        return $this->belongsToMany(User::class, 'asprak_praktikum', 'praktikum_id', 'user_id')
+                    ->withPivot('id', 'role', 'deskripsi', 'deleted_at')
+                    ->withTimestamps()
+                    ->whereNull('asprak_praktikum.deleted_at');
     }
 }

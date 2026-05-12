@@ -54,7 +54,7 @@ class Pengguna extends Authenticatable
      */
     public function roles()
     {
-        return $this->belongsToMany(Role::class, 'pengguna_role', 'pengguna_id', 'role_id')
+        return $this->belongsToMany(SystemRole::class, 'pengguna_role', 'pengguna_id', 'role_id')
                     ->withPivot('status', 'dibuat_pada')
                     ->withTimestamps();
     }
@@ -86,6 +86,17 @@ class Pengguna extends Authenticatable
     {
         return $this->roles()
                     ->where('nama', $roleName)
+                    ->where('pengguna_role.status', 'aktif')
+                    ->exists();
+    }
+
+    /**
+     * Cek apakah pengguna memiliki salah satu dari role yang diberikan.
+     */
+    public function hasAnyRole(array $roles): bool
+    {
+        return $this->roles()
+                    ->whereIn('nama', $roles)
                     ->where('pengguna_role.status', 'aktif')
                     ->exists();
     }

@@ -2,33 +2,6 @@
 
 namespace App\Http\Requests\Auth;
 
-<<<<<<< HEAD
-use Illuminate\Foundation\Http\FormRequest;
-
-class LoginRequest extends FormRequest
-{
-    public function authorize(): bool
-    {
-        return true; // semua orang boleh login
-    }
-
-    public function rules(): array
-    {
-        return [
-            'email'    => ['required', 'string', 'email'],
-            'password' => ['required', 'string', 'min:6'],
-        ];
-    }
-
-    public function messages(): array
-    {
-        return [
-            'email.required'    => 'Email wajib diisi.',
-            'email.email'       => 'Format email tidak valid.',
-            'password.required' => 'Password wajib diisi.',
-            'password.min'      => 'Password minimal 6 karakter.',
-        ];
-=======
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Auth;
@@ -39,7 +12,7 @@ use Illuminate\Validation\ValidationException;
 class LoginRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
+     * Tentukan apakah pengguna diizinkan membuat permintaan ini.
      */
     public function authorize(): bool
     {
@@ -47,9 +20,7 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * Aturan validasi untuk login.
      */
     public function rules(): array
     {
@@ -60,15 +31,25 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Attempt to authenticate the request's credentials.
-     *
-     * @throws \Illuminate\Validation\ValidationException
+     * Pesan error dalam Bahasa Indonesia.
+     */
+    public function messages(): array
+    {
+        return [
+            'email.required' => 'Email wajib diisi.',
+            'email.email' => 'Format email tidak valid.',
+            'password.required' => 'Password wajib diisi.',
+        ];
+    }
+
+    /**
+     * Mencoba melakukan autentikasi.
      */
     public function authenticate(): void
     {
         $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        if (!Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
             RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
@@ -80,13 +61,11 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Ensure the login request is not rate limited.
-     *
-     * @throws \Illuminate\Validation\ValidationException
+     * Pastikan permintaan login tidak dibatasi (rate limited).
      */
     public function ensureIsNotRateLimited(): void
     {
-        if (! RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
+        if (!RateLimiter::tooManyAttempts($this->throttleKey(), 5)) {
             return;
         }
 
@@ -103,11 +82,10 @@ class LoginRequest extends FormRequest
     }
 
     /**
-     * Get the rate limiting throttle key for the request.
+     * Kunci pembatas laju permintaan (throttle key).
      */
     public function throttleKey(): string
     {
-        return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
->>>>>>> 907aff17a69304925ed419e8a818c3b3b4292d9f
+        return Str::transliterate(Str::lower($this->string('email')) . '|' . $this->ip());
     }
 }
