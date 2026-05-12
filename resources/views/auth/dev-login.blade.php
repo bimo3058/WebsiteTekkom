@@ -1,4 +1,5 @@
-{{-- resources/views/auth/forgot-password.blade.php --}}
+{{-- resources/views/auth/dev-login.blade.php --}}
+{{-- Accessible only via direct URL: /dev/login (not linked anywhere in UI) --}}
 <x-guest-layout>
 <style>
     :root {
@@ -13,8 +14,6 @@
         --c-fg-placeholder:   #A4ABB8;
         --c-error:            #DF1C41;
         --c-error-subtle:     #FADAE1;
-        --c-success:          #287F6E;
-        --c-success-subtle:   #DDF2EE;
         --c-warning-subtle:   #F9ECCB;
         --c-warning-text:     #7A4E10;
     }
@@ -53,22 +52,24 @@
         margin-top: 12px; margin-bottom: 4px;
     }
     .sk-card-sub {
-        text-align: center; font-size: 14px; color: var(--c-fg-muted); line-height: 1.6;
+        text-align: center; font-size: 14px; color: var(--c-fg-muted);
     }
-    .sk-icon-wrap {
-        width: 52px; height: 52px; border-radius: 50%;
-        background: rgba(11,38,110,0.07);
-        border: 1px solid rgba(11,38,110,0.15);
-        display: flex; align-items: center; justify-content: center;
+    .sk-dev-badge {
+        display: inline-flex; align-items: center; gap: 6px;
         margin: 0 auto;
+        background: #FFF3CD; color: #7A4E10;
+        border: 1px solid rgba(211,156,61,0.35);
+        font-size: 11px; font-weight: 600;
+        padding: 4px 10px; border-radius: 9999px;
+        letter-spacing: .04em; text-transform: uppercase;
     }
     .sk-alert {
         padding: 12px 14px; border-radius: 10px;
         font-size: 13.5px; line-height: 1.5;
     }
     .sk-alert-error   { background: var(--c-error-subtle); color: var(--c-error); border: 1px solid rgba(223,28,65,0.2); }
-    .sk-alert-success { background: var(--c-success-subtle); color: var(--c-success); border: 1px solid rgba(40,127,110,0.2); }
     .sk-alert-warning { background: var(--c-warning-subtle); color: var(--c-warning-text); border: 1px solid rgba(211,156,61,0.3); }
+    .sk-field-group { display: flex; flex-direction: column; gap: 16px; }
     .sk-field { display: flex; flex-direction: column; gap: 6px; }
     .sk-label { font-size: 13px; font-weight: 500; color: var(--c-fg); letter-spacing: 0.01em; }
     .sk-label span { color: var(--c-error); }
@@ -125,49 +126,53 @@
     <div class="sk-bg-vignette"></div>
 
     <div class="sk-card">
-
-        {{-- Icon + heading --}}
-        <div style="display:flex;flex-direction:column;align-items:center;gap:2px;">
-            <div class="sk-icon-wrap">
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none"
-                     stroke="#0B266E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-                    <path d="M7 11V7a5 5 0 0110 0v4"/>
-                </svg>
-            </div>
+        <div style="display:flex;flex-direction:column;align-items:center;gap:10px;">
+            <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="Logo UNDIP"
+                 style="width:110px;height:110px;object-fit:contain;"/>
             <div>
-                <div class="sk-card-title">Lupa Password?</div>
-                <div class="sk-card-sub">Masukkan email kamu dan kami akan mengirimkan link untuk reset password.</div>
+                <div class="sk-card-title">Developer Login</div>
+                <div class="sk-card-sub">Akses khusus SUPERADMIN. Jangan disebarkan.</div>
             </div>
+            <span class="sk-dev-badge">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 9v4M12 17h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+                SUPERADMIN Only
+            </span>
         </div>
 
-        {{-- Alerts --}}
         @if (session('status'))
-            <div class="sk-alert sk-alert-success">
-                <strong style="display:block;margin-bottom:2px;">Email terkirim!</strong>
-                {{ session('status') }}
-            </div>
+            <div class="sk-alert sk-alert-warning">{{ session('status') }}</div>
         @endif
         @if ($errors->any())
             <div class="sk-alert sk-alert-error">{{ $errors->first() }}</div>
         @endif
 
-        {{-- Form --}}
-        <form method="POST" action="{{ route('password.email') }}">
+        <form method="POST" action="{{ route('login') }}">
             @csrf
-            <div style="display:flex;flex-direction:column;gap:16px;">
+            <div class="sk-field-group">
                 <div class="sk-field">
                     <label class="sk-label" for="email">Email Address <span>*</span></label>
                     <input id="email" class="sk-input" type="email" name="email"
                            value="{{ old('email') }}" placeholder="nama@undip.ac.id"
                            required autofocus autocomplete="username"/>
                 </div>
-                <button type="submit" class="sk-btn-submit">Kirim Link Reset Password</button>
+                <div class="sk-field">
+                    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px;">
+                        <label class="sk-label" for="password" style="margin-bottom:0;">Password <span>*</span></label>
+                        <a href="{{ route('password.request') }}"
+                           style="font-size:12px;font-weight:500;color:var(--c-primary);text-decoration:none;opacity:0.8;transition:opacity 0.15s;"
+                           onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                            Forgot Password?
+                        </a>
+                    </div>
+                    <input id="password" class="sk-input" type="password" name="password"
+                           placeholder="••••••••" required autocomplete="current-password"/>
+                </div>
+                <button type="submit" class="sk-btn-submit">Login</button>
             </div>
         </form>
 
         <div class="sk-back-link">
-            Ingat password kamu? <a href="{{ route('login') }}">Kembali ke login</a>
+            Kembali ke <a href="{{ route('login') }}">halaman login utama</a>
         </div>
     </div>
 

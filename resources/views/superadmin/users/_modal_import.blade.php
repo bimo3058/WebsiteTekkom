@@ -57,15 +57,23 @@
                 </p>
             </div>
 
-            {{-- Info Format --}}
+            {{-- Info Format + Download Template --}}
             <div class="bg-amber-50 rounded-xl p-4 mb-6 border border-amber-100">
                 <div class="flex gap-3">
                     <span class="material-symbols-outlined text-amber-600 shrink-0" style="font-size:18px">warning</span>
-                    <div class="text-xs text-amber-700 leading-relaxed">
-                        <strong>Penting:</strong><br>
-                        - Gunakan pemisah koma (,)<br>
-                        - Nama Role harus sesuai dengan di sistem (dosen, mahasiswa, dll)<br>
-                        - Jika email sudah ada, upload akan ditolak otomatis.
+                    <div class="flex-1 min-w-0">
+                        <div class="text-xs text-amber-700 leading-relaxed mb-3">
+                            <strong>Penting:</strong><br>
+                            - Gunakan pemisah koma (,)<br>
+                            - Nama Role harus sesuai dengan di sistem (dosen, mahasiswa, dll)<br>
+                            - Jika email sudah ada, upload akan ditolak otomatis.
+                        </div>
+                        {{-- Tombol Download Template --}}
+                        <a href="{{ route('superadmin.users.downloadImportTemplate') }}"
+                           class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-amber-300 text-amber-700 hover:bg-amber-100 hover:border-amber-400 transition-all rounded-lg text-xs font-semibold shadow-sm">
+                            <span class="material-symbols-outlined" style="font-size:15px">download</span>
+                            Unduh Template CSV
+                        </a>
                     </div>
                 </div>
             </div>

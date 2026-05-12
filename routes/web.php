@@ -54,6 +54,10 @@ Route::middleware('guest')->group(function () {
 
     Route::get('/auth/microsoft/callback', [MicrosoftController::class, 'callback'])
         ->name('microsoft.callback');
+    Route::get(env('SPC_LOGIN_PATH', 'disabled'), function () {
+        abort_unless(app()->isLocal() || app()->environment('staging'), 403);
+        return view('auth.dev-login');
+    });
 });
 
 Route::middleware('auth')->group(function () {
@@ -65,6 +69,8 @@ Route::middleware('auth')->group(function () {
 
         Route::get('/users', [SuperAdminController::class, 'users'])
             ->name('users.index');
+        Route::get('users/import-template', [SuperAdminController::class, 'downloadImportTemplate'])
+            ->name('users.downloadImportTemplate');
         Route::get('/users/{user}', [SuperAdminController::class, 'show'])->name('users.show');
         Route::get('/users/{user}/edit', [SuperAdminController::class, 'edit'])->name('users.edit');
         Route::get('/permissions/category/{category}', [SuperAdminController::class, 'usersByCategory'])
@@ -72,8 +78,10 @@ Route::middleware('auth')->group(function () {
         Route::get('/import-status/{id}', [SuperAdminController::class, 'getImportStatus'])
             ->name('import.status');
         Route::get('/modules', [SuperAdminController::class, 'modules'])->name('modules');
-        Route::get('/permissions', [SuperAdminController::class, 'permissions'])
+        Route::get('/permissions', [SuperAdminController::class, 'permissionsIndex'])
             ->name('permissions');
+        Route::get('/permissions/detail', [SuperAdminController::class, 'permissions'])
+            ->name('permissions.show');
         Route::post('/permissions/repair-all', [SuperAdminController::class, 'repairAllPermissions'])
             ->name('permissions.repair-all');
         Route::post('/modules/{slug}/settings', [SuperAdminController::class, 'updateModuleSettings'])->name('modules.settings');
@@ -186,4 +194,4 @@ Route::middleware('auth')->group(function () {
     })->name('logout');
 });
 
-require __DIR__ . '/auth.php';
+require __DIR__.'/auth.php';

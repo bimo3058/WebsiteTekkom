@@ -178,8 +178,8 @@ class SuperAdminController extends Controller
         $roles    = Cache::remember('sa:roles_list', self::TTL_ROLES, fn() => Role::orderBy('name')->get());
         $cacheKey = $this->userListCacheKey($search, $role, $page, $perPage, $sortBy, $sortDir);
 
-        // EAGER LOADING: Tambahkan 'directPermissions' untuk mendukung desain tabel baru
-        $query = User::with(['roles', 'directPermissions']) 
+        // EAGER LOADING: 'permissions' = direct permissions via Spatie model_has_permissions
+        $query = User::with(['roles', 'permissions'])
             ->whereNull('deleted_at')
             ->select('id', 'name', 'email', 'avatar_url', 'created_at', 'last_login', 'deleted_at', 'suspended_at', 'suspension_reason', 'is_online');
 
@@ -187,9 +187,10 @@ class SuperAdminController extends Controller
         if ($role !== 'all') {
             $query->whereExists(function ($sub) use ($role) {
                 $sub->select(DB::raw(1))
-                    ->from('user_roles')
-                    ->join('roles', 'roles.id', '=', 'user_roles.role_id')
-                    ->whereColumn('user_roles.user_id', 'users.id')
+                    ->from('model_has_roles')
+                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                    ->whereColumn('model_has_roles.model_id', 'users.id')
+                    ->where('model_has_roles.model_type', 'App\\Models\\User')
                     ->where('roles.name', $role);
             });
         }
@@ -208,8 +209,9 @@ class SuperAdminController extends Controller
             // Sort berdasarkan nama role pertama via subquery
             $query->orderBy(
                 Role::select('name')
-                    ->join('user_roles', 'roles.id', '=', 'user_roles.role_id')
-                    ->whereColumn('user_roles.user_id', 'users.id')
+                    ->join('model_has_roles', 'roles.id', '=', 'model_has_roles.role_id')
+                    ->whereColumn('model_has_roles.model_id', 'users.id')
+                    ->where('model_has_roles.model_type', 'App\\Models\\User')
                     ->orderBy('name')
                     ->limit(1),
                 $sortDir
@@ -256,7 +258,7 @@ class SuperAdminController extends Controller
         // 2. Ambil daftar role untuk dropdown
         $roles = \Illuminate\Support\Facades\Cache::remember('sa:roles_list', 3600, fn() => Role::orderBy('name')->get());
 
-        $query = \App\Models\User::with(['roles', 'directPermissions'])
+        $query = \App\Models\User::with(['roles', 'permissions'])
             ->whereNull('deleted_at')
             ->where('is_online', \Illuminate\Support\Facades\DB::raw('true'));
 
@@ -264,9 +266,10 @@ class SuperAdminController extends Controller
         if ($role !== 'all') {
             $query->whereExists(function ($sub) use ($role) {
                 $sub->select(\Illuminate\Support\Facades\DB::raw(1))
-                    ->from('user_roles')
-                    ->join('roles', 'roles.id', '=', 'user_roles.role_id')
-                    ->whereColumn('user_roles.user_id', 'users.id')
+                    ->from('model_has_roles')
+                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                    ->whereColumn('model_has_roles.model_id', 'users.id')
+                    ->where('model_has_roles.model_type', 'App\\Models\\User')
                     ->where('roles.name', $role);
             });
         }
@@ -295,16 +298,17 @@ class SuperAdminController extends Controller
 
         $roles = \Illuminate\Support\Facades\Cache::remember('sa:roles_list', 3600, fn() => Role::orderBy('name')->get());
 
-        $query = \App\Models\User::with(['roles', 'directPermissions'])
+        $query = \App\Models\User::with(['roles', 'permissions'])
             ->whereNull('deleted_at')
             ->whereNotNull('suspended_at');
 
         if ($role !== 'all') {
             $query->whereExists(function ($sub) use ($role) {
                 $sub->select(\Illuminate\Support\Facades\DB::raw(1))
-                    ->from('user_roles')
-                    ->join('roles', 'roles.id', '=', 'user_roles.role_id')
-                    ->whereColumn('user_roles.user_id', 'users.id')
+                    ->from('model_has_roles')
+                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                    ->whereColumn('model_has_roles.model_id', 'users.id')
+                    ->where('model_has_roles.model_type', 'App\\Models\\User')
                     ->where('roles.name', $role);
             });
         }
@@ -324,7 +328,7 @@ class SuperAdminController extends Controller
     public function show(User $user)
     {
         // Eager load relasi untuk menghindari N+1 query
-        $user->load(['roles', 'directPermissions']);
+        $user->load(['roles', 'permissions']);
 
         // Ambil semua daftar role untuk keperluan dropdown edit di halaman detail
         $roles = \App\Models\Role::orderBy('name')->get();
@@ -334,7 +338,7 @@ class SuperAdminController extends Controller
 
     public function edit(User $user)
     {
-        $user->load(['roles', 'directPermissions']);
+        $user->load(['roles', 'permissions']);
         $roles = \App\Models\Role::orderBy('name')->get();
         return view('superadmin.users.edit', compact('user', 'roles'));
     }
@@ -444,7 +448,7 @@ class SuperAdminController extends Controller
 
             // SYNC: hapus semua yang lama, pasang yang baru
             // Ini otomatis handle grant + revoke sekaligus
-            $user->directPermissions()->sync($grantIds);
+            $user->permissions()->sync($grantIds);
 
             // ── 3. Bersihkan cache ────────────────────────────────────────────
             $user->clearUserCache();
@@ -665,14 +669,14 @@ class SuperAdminController extends Controller
 
             $updatedUsersCount = 0;
 
-            // Jika ada user_ids yang dikirimkan, update secara massal directPermissions mereka
+            // Jika ada user_ids yang dikirimkan, update secara massal permissions mereka
             if (!empty($userIds)) {
                 $users = User::whereIn('id', $userIds)->get();
 
                 foreach ($users as $user) {
                     // Proteksi agar permission Superadmin tidak ter-override
                     if (!$user->hasRole('superadmin')) {
-                        $user->directPermissions()->sync($permIds);
+                        $user->permissions()->sync($permIds);
                         $user->clearUserCache();
                         $updatedUsersCount++;
                     }
@@ -822,7 +826,7 @@ class SuperAdminController extends Controller
                 'name'        => $user->name,
                 'email'       => $user->email,
                 'roles'       => $user->roles->pluck('name')->toArray(),
-                'permissions' => $user->directPermissions->pluck('name')->toArray(),
+                'permissions' => $user->permissions->pluck('name')->toArray(),
             ];
             
             // 2. Update Info Dasar
@@ -889,7 +893,7 @@ class SuperAdminController extends Controller
                 ->values()
                 ->toArray();
 
-            $user->directPermissions()->sync($grantIds);
+            $user->permissions()->sync($grantIds);
 
             // Bersihkan Cache
             $user->clearUserCache();
@@ -1033,13 +1037,13 @@ class SuperAdminController extends Controller
                         ->orWhere('email', 'ILIKE', "%{$search}%");
                 });
             })
-            ->with(['roles.permissions', 'directPermissions'])
+            ->with(['roles.permissions', 'permissions'])
             ->select('id', 'name', 'email', 'avatar_url', 'suspended_at')
             ->orderByRaw("
                 CASE WHEN EXISTS (
-                    SELECT 1 FROM user_roles ur
-                    JOIN roles r ON r.id = ur.role_id
-                    WHERE ur.user_id = users.id AND r.name = 'superadmin'
+                    SELECT 1 FROM model_has_roles mhr
+                    JOIN roles r ON r.id = mhr.role_id
+                    WHERE mhr.model_id = users.id AND mhr.model_type = 'App\\\\Models\\\\User' AND r.name = 'superadmin'
                 ) THEN 0 ELSE 1 END ASC
             ")
             ->orderBy('name')
@@ -1053,6 +1057,70 @@ class SuperAdminController extends Controller
     }
     
     // ── Users — Bulk Import ─────────────────────────────────────────────────
+    public function downloadImportTemplate()
+    {
+        $roles = [
+            'superadmin', 'admin', 'dosen', 'mahasiswa', 'gpm', 'alumni',
+            'admin_banksoal', 'admin_capstone', 'admin_eoffice', 'admin_kemahasiswaan',
+            'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+            'staff_himpunan', 'dpm', 'ketua_departemen', 'bendahara',
+        ];
+
+        $permissions = [
+            'banksoal.view', 'banksoal.edit', 'banksoal.delete',
+            'kemahasiswaan.view', 'kemahasiswaan.edit', 'kemahasiswaan.delete',
+            'capstone.view', 'capstone.edit', 'capstone.delete',
+            'eoffice.view', 'eoffice.edit', 'eoffice.delete',
+        ];
+
+        $divider = '# ' . str_repeat('=', 131);
+
+        $lines = [];
+
+        // ── Header Block ──────────────────────────────────────────────────────
+        $lines[] = $divider;
+        $lines[] = '# TEMPLATE BULK IMPORT USER — Sistem Informasi Akademik';
+        $lines[] = $divider;
+        $lines[] = '#';
+        $lines[] = '# PETUNJUK : Hapus semua baris berawalan "#" sebelum diupload | Gunakan pemisah koma (,) | Satu baris = satu user';
+        $lines[] = '#';
+
+        // ── Legend Kolom ──────────────────────────────────────────────────────
+        $lines[] = '# KOLOM    : name              | email                        | password        | role            | external_id      | student_number   | cohort_year | permissions';
+        $lines[] = '# KETERANGAN name=Nama lengkap | email=Harus unik di sistem   | password=Min 8  | role=Lihat list | external_id=SSO  | NIM (mahasiswa)  | Thn angktn  | Permission tambahan (opsional)';
+        $lines[] = '#';
+
+        // ── Legend Role (horizontal) ──────────────────────────────────────────
+        $lines[] = '# ROLE     : ' . implode(' | ', $roles);
+        $lines[] = '# Multi-role: pisahkan dengan koma dan bungkus tanda kutip, contoh: "dosen,gpm"';
+        $lines[] = '#';
+
+        // ── Legend Permission (horizontal) ────────────────────────────────────
+        $lines[] = '# PERMISSION: ' . implode(' | ', $permissions);
+        $lines[] = '# Multi-permission: pisahkan dengan koma dan bungkus tanda kutip, contoh: "banksoal.view,capstone.view,eoffice.edit"';
+        $lines[] = '# Catatan: student_number & cohort_year WAJIB diisi jika role=mahasiswa, kosongkan jika bukan mahasiswa';
+        $lines[] = '#';
+        $lines[] = $divider;
+
+        // ── Header CSV ────────────────────────────────────────────────────────
+        $lines[] = 'name,email,password,role,external_id,student_number,cohort_year,permissions';
+
+        // ── Contoh Data (multi-value dibungkus quote) ─────────────────────────
+        $lines[] = 'Budi Santoso,budi.santoso@student.undip.ac.id,password123,mahasiswa,SSO-M1001,23060122140001,2023,"banksoal.view,capstone.view"';
+        $lines[] = 'Dr. Siti Rahayu,siti.rahayu@undip.ac.id,password123,dosen,NIP-198501012010011001,,,';
+        $lines[] = 'Ahmad Fauzi,ahmad.fauzi@undip.ac.id,password123,dosen,NIP-199001012015011002,,,"banksoal.view,banksoal.edit"';
+        $lines[] = 'Rina Wati,rina.wati@student.undip.ac.id,password123,mahasiswa,SSO-M1002,22060122140002,2022,';
+        $lines[] = 'Koordinator GPM,koordinator.gpm@undip.ac.id,password123,"dosen,gpm",NIP-197501012000011001,,,"banksoal.view,banksoal.edit,banksoal.delete"';
+
+        $csvContent = implode("\n", $lines) . "\n";
+
+        return response($csvContent, 200, [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="template_bulk_import_user.csv"',
+            'Cache-Control'       => 'no-cache, no-store, must-revalidate',
+        ]);
+    }
+    
     public function bulkImport(Request $request)
     {
         $request->validate([
@@ -1324,7 +1392,7 @@ class SuperAdminController extends Controller
     {
         $search = $request->input('search');
 
-        $query = User::with(['roles.permissions', 'directPermissions']) 
+        $query = User::with(['roles.permissions', 'permissions']) 
             ->whereNull('deleted_at');
 
         // Tambahkan Logika Search agar filter berfungsi
@@ -1341,6 +1409,35 @@ class SuperAdminController extends Controller
 
         $permissions = \App\Models\Permission::all()->groupBy('module');
         $roles = Role::with('permissions')->get();
+
+        return view('superadmin.permission.permissions', compact('users', 'permissions', 'roles'));
+    }
+
+    public function permissionsIndex(Request $request)
+    {
+        // Reuse query sama seperti permissions() tapi untuk index table
+        $roles = \App\Models\Role::withCount('users')->with('permissions')->orderBy('name')->get();
+        $dbModules = \App\Models\SystemModule::all();
+
+        return view('superadmin.permission.index', compact('roles', 'dbModules'));
+    }
+
+    public function permissionsShow(Request $request, string $role)
+    {
+        // Reuse query persis seperti permissions()
+        $search = $request->input('search');
+
+        $users = User::with(['roles.permissions', 'permissions'])
+            ->whereNull('deleted_at')
+            ->when($search, fn($q) => $q->where(function($q) use ($search) {
+                $q->where('name', 'ILIKE', "%{$search}%")
+                ->orWhere('email', 'ILIKE', "%{$search}%");
+            }))
+            ->orderBy('name')
+            ->get();
+
+        $permissions = \App\Models\Permission::all()->groupBy('module');
+        $roles       = Role::with('permissions')->get();
 
         return view('superadmin.permission.permissions', compact('users', 'permissions', 'roles'));
     }
