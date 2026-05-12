@@ -32,10 +32,13 @@ class RouteServiceProvider extends ServiceProvider
      * Define the "web" routes for the application.
      *
      * These routes all receive session state, CSRF protection, etc.
+     * Routes ter-organize berdasarkan fitur (RPS, Arsip, BankSoal) dan role
      */
     protected function mapWebRoutes(): void
     {
+        // Base routes
         Route::middleware('web')->group(module_path($this->name, '/routes/web.php'));
+        
     }
 
     /**

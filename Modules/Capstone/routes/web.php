@@ -1,8 +1,10 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Capstone\Http\Controllers\CapstoneController;
+use Modules\Capstone\Http\Controllers\LaunchController;
 
-Route::middleware(['auth', 'verified'])->group(function () {
-    Route::resource('capstones', CapstoneController::class)->names('capstone');
+Route::middleware(['auth', 'module.active:capstone'])->group(function () {
+    // Klik card "Capstone & TA" â†’ generate OTT â†’ redirect ke FE Next.js
+    Route::get('/capstone/launch', [LaunchController::class, 'launch'])
+        ->name('capstone.dashboard');
 });
