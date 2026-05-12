@@ -66,6 +66,7 @@ class ManajemenMahasiswaServiceProvider extends ServiceProvider
     {
         $this->commands([
             \Modules\ManajemenMahasiswa\Console\Commands\CheckAlumniStatus::class,
+            \Modules\ManajemenMahasiswa\Console\Commands\DetectAlumniCandidates::class,
         ]);
     }
 

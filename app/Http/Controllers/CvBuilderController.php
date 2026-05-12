@@ -141,7 +141,7 @@ class CvBuilderController extends Controller
                     if (!in_array($kg->id, $existingKegiatanIds)) {
                         $peran = 'Panitia';
                         $panitiaCurrent = $kg->panitia->first();
-                        if ($panitiaCurrent && $panitiaCurrent->pivot->peran) {
+                        if ($panitiaCurrent && !empty($panitiaCurrent->pivot?->peran)) {
                             $peran = ucfirst($panitiaCurrent->pivot->peran);
                         }
                         $kegiatanSync[] = [
@@ -379,7 +379,7 @@ class CvBuilderController extends Controller
                 if (!in_array($kg->id, $existingKegiatanIds)) {
                     $peran = 'Panitia';
                     $panitiaCurrent = $kg->panitia->first();
-                    if ($panitiaCurrent && $panitiaCurrent->pivot->peran) {
+                    if ($panitiaCurrent && !empty($panitiaCurrent->pivot?->peran)) {
                         $peran = ucfirst($panitiaCurrent->pivot->peran);
                     }
                     $data['kegiatan'][] = [

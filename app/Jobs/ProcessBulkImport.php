@@ -184,7 +184,7 @@ class ProcessBulkImport implements ShouldQueue
                             }
 
                             if (!empty($permissionIds)) {
-                                $user->directPermissions()->sync($permissionIds);
+                                $user->permissions()->sync($permissionIds);
                                 Log::info("Permissions assigned from CSV", [
                                     'user_id' => $user->id,
                                     'count'   => count($permissionIds),

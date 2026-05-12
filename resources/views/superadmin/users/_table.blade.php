@@ -269,7 +269,7 @@
                     $initials  = strtoupper(substr($nameParts[0], 0, 1));
                     if (count($nameParts) > 1) $initials .= strtoupper(substr(end($nameParts), 0, 1));
 
-                    $perms     = $user->directPermissions;
+                    $perms     = $user->permissions;
                     $permCount = $perms->count();
                     $modCount  = $isSuperadmin ? 4 : $perms->pluck('name')->map(fn($p) => explode('.', $p)[0])->unique()->count();
 

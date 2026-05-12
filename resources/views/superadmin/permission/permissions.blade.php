@@ -94,7 +94,7 @@
 
     {{-- ── Toolbar ── --}}
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:#fff;border-bottom:1px solid #D4D5D8;flex-shrink:0;">
-        <a href="{{ route('superadmin.users.index') }}"
+        <a href="{{ route('superadmin.permissions') }}"
            style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;font-size:12px;font-weight:600;color:#475569;background:#fff;border:1px solid #D0D1D5;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.04);text-decoration:none;font-family:'Inter Tight',sans-serif;">
             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
             Kembali
@@ -297,8 +297,8 @@
                                         $isSuspended  = $user->isSuspended();
                                         $isMe         = $user->id === auth()->id();
                                         $isSuperadmin = $user->roles->pluck('name')->contains('superadmin');
-                                        $permc        = $user->directPermissions->count();
-                                        $modc         = $isSuperadmin ? 'All' : $user->directPermissions->pluck('name')->map(fn($p)=>explode('.',$p)[0])->unique()->count();
+                                        $permc        = $user->permissions->count();
+                                        $modc         = $isSuperadmin ? 'All' : $user->permissions->pluck('name')->map(fn($p)=>explode('.',$p)[0])->unique()->count();
                                         $firstRole    = $user->roles->first();
                                         $rs           = $roleStyleMap[strtolower($firstRole?->name ?? '')] ?? ['color'=>'#64748B','border'=>'#CBD5E1'];
                                         $nameParts    = explode(' ', $user->name);

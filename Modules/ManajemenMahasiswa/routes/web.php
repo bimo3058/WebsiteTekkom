@@ -10,6 +10,7 @@ use Modules\ManajemenMahasiswa\Http\Controllers\PengaduanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\DirektoriMahasiswaController;
 use Modules\ManajemenMahasiswa\Http\Controllers\ManajemenPenggunaController;
+use Modules\ManajemenMahasiswa\Http\Controllers\AlumniCandidateController;
 
 Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
     ->prefix('manajemen-mahasiswa')
@@ -29,30 +30,30 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             ->prefix('pengurus')
             ->name('pengurus.')
             ->group(function () {
-            Route::get('/dashboard', function () {
-                return view('manajemenmahasiswa::dashboard.pengurus');
-            })->name('dashboard');
-        });
+                Route::get('/dashboard', function () {
+                    return view('manajemenmahasiswa::dashboard.pengurus');
+                })->name('dashboard');
+            });
 
         // ── Alumni ────────────────────────────────────────────────────────
         Route::middleware('role:alumni,gpm,admin,admin_kemahasiswaan,superadmin')
             ->prefix('alumni')
             ->name('alumni.')
             ->group(function () {
-            Route::get('/dashboard', function () {
-                return view('manajemenmahasiswa::dashboard.alumni');
-            })->name('dashboard');
-        });
+                Route::get('/dashboard', function () {
+                    return view('manajemenmahasiswa::dashboard.alumni');
+                })->name('dashboard');
+            });
 
         // ── Dosen ─────────────────────────────────────────────────────────
         Route::middleware('role:dosen,dosen_koordinator,gpm,admin,admin_kemahasiswaan,superadmin')
             ->prefix('dosen')
             ->name('dosen.')
             ->group(function () {
-            Route::get('/dashboard', function () {
-                return redirect()->route('manajemenmahasiswa.pengumuman.index');
-            })->name('dashboard');
-        });
+                Route::get('/dashboard', function () {
+                    return redirect()->route('manajemenmahasiswa.pengumuman.index');
+                })->name('dashboard');
+            });
 
         // ── Pengumuman ────────────────────────────────────────────────────
         Route::prefix('pengumuman')->name('pengumuman.')->group(function () {
@@ -83,6 +84,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
         // ── Layanan Pengaduan ─────────────────────────────────────────────
         Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
+
             // Mahasiswa & pengurus himpunan membuat pengaduan
             // NOTE: HARUS didefinisikan sebelum /{pengaduan} agar tidak konflik dengan path seperti /create
             Route::middleware('role:mahasiswa,pengurus_himpunan,ketua_himpunan,wakil_ketua_himpunan,ketua_bidang,ketua_unit,staff_himpunan')->group(function () {
@@ -153,7 +155,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             });
         });
 
-        // ── Manajemen Pengguna (Role Assignment) ─────────────────────────
+        // ── Manajemen Pengguna ────────────────────────────────────────────
         Route::middleware('role:admin_kemahasiswaan,admin,superadmin,ketua_himpunan,wakil_ketua_himpunan,ketua_bidang,ketua_unit')
             ->prefix('pengguna')
             ->name('pengguna.')
@@ -218,8 +220,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
             // Subbab: Alumni
             Route::prefix('alumni')->name('alumni.')->group(function () {
-                // Profil karir sendiri (role mahasiswa)
-                Route::middleware('role:mahasiswa')->group(function () {
+                // Profil karir sendiri (role alumni)
+                Route::middleware('role:alumni')->group(function () {
                     Route::get('/profil', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'profil'])
                         ->name('profil');
                     Route::put('/profil', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'updateProfil'])
