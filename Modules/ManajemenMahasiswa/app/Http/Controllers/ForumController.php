@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Modules\ManajemenMahasiswa\Models\Thread;
+use Modules\ManajemenMahasiswa\Models\ThreadPoll;
+use Modules\ManajemenMahasiswa\Models\ThreadPollOption;
+use Modules\ManajemenMahasiswa\Models\ThreadPollVote;
 use Modules\ManajemenMahasiswa\Services\ThreadService;
 use Modules\ManajemenMahasiswa\Services\CommentService;
 use Modules\ManajemenMahasiswa\Services\GamificationService;
@@ -40,7 +43,7 @@ class ForumController extends Controller
             ->where('voteable_type', Thread::class)
             ->whereIn('voteable_id', $threads->pluck('id'))
             ->get()
-            ->keyBy(function($v) {
+            ->keyBy(function ($v) {
                 return $v->voteable_type . '_' . $v->voteable_id;
             });
 
@@ -50,17 +53,23 @@ class ForumController extends Controller
             $authorId = $thread->user_id;
             if (!isset($authorTiers[$authorId])) {
                 $totalXp = $this->gamificationService->getTotalXp($authorId);
-                $level   = $this->gamificationService->calculateLevel($totalXp);
-                $tier    = $this->gamificationService->getTierInfo($level);
+                $level = $this->gamificationService->calculateLevel($totalXp);
+                $tier = $this->gamificationService->getTierInfo($level);
                 $authorTiers[$authorId] = [
-                    'level'     => $level,
+                    'level' => $level,
                     'tier_name' => $tier['name'],
                     'tier_icon' => $tier['icon'],
                 ];
             }
         }
 
-        $viewData = compact('threads', 'leaderboard', 'userStats', 'categories', 'user', 'userVotes', 'authorTiers');
+        // Load reports for admin
+        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
+        $forumReports = $isAdmin
+            ? \Modules\ManajemenMahasiswa\Models\ForumReport::with(['reporter', 'thread.author'])->latest()->get()
+            : collect();
+
+        $viewData = compact('threads', 'leaderboard', 'userStats', 'categories', 'user', 'userVotes', 'authorTiers', 'forumReports');
 
         return view('manajemenmahasiswa::forum.index', $viewData);
     }
@@ -84,46 +93,46 @@ class ForumController extends Controller
     {
         $request->validate([
             'draft_id' => 'nullable|integer',
-            'judul'    => 'nullable|string|max:255',
+            'judul' => 'nullable|string|max:255',
             'kategori' => 'nullable|array',
             'kategori.*' => 'string',
-            'konten'   => 'nullable|string',
+            'konten' => 'nullable|string',
         ]);
 
         $draftId = $request->input('draft_id');
-        
+
         if ($draftId) {
             $draft = \Modules\ManajemenMahasiswa\Models\ThreadDraft::where('id', $draftId)
                 ->where('user_id', Auth::id())
                 ->first();
-                
+
             if ($draft) {
                 $draft->update([
-                    'judul'    => $request->input('judul'),
+                    'judul' => $request->input('judul'),
                     'kategori' => $request->input('kategori'),
-                    'konten'   => $request->input('konten'),
+                    'konten' => $request->input('konten'),
                 ]);
             } else {
                 $draft = \Modules\ManajemenMahasiswa\Models\ThreadDraft::create([
-                    'user_id'  => Auth::id(),
-                    'judul'    => $request->input('judul'),
+                    'user_id' => Auth::id(),
+                    'judul' => $request->input('judul'),
                     'kategori' => $request->input('kategori'),
-                    'konten'   => $request->input('konten'),
+                    'konten' => $request->input('konten'),
                 ]);
             }
         } else {
             $draft = \Modules\ManajemenMahasiswa\Models\ThreadDraft::create([
-                'user_id'  => Auth::id(),
-                'judul'    => $request->input('judul'),
+                'user_id' => Auth::id(),
+                'judul' => $request->input('judul'),
                 'kategori' => $request->input('kategori'),
-                'konten'   => $request->input('konten'),
+                'konten' => $request->input('konten'),
             ]);
         }
 
         return response()->json([
-            'success'  => true,
+            'success' => true,
             'draft_id' => $draft->id,
-            'message'  => 'Draf berhasil disimpan.'
+            'message' => 'Draf berhasil disimpan.'
         ]);
     }
 
@@ -145,13 +154,17 @@ class ForumController extends Controller
     public function store(Request $request)
     {
         $rules = [
-            'judul'         => 'required|string|max:255',
-            'kategori'      => 'required|array|min:1',
-            'kategori.*'    => 'string|in:' . implode(',', Thread::KATEGORI_LIST),
-            'konten'        => 'nullable|string',
-            'media_files'   => 'nullable|array|max:5',
+            'judul' => 'required|string|max:255',
+            'kategori' => 'required|array|min:1',
+            'kategori.*' => 'string|in:' . implode(',', Thread::KATEGORI_LIST),
+            'konten' => 'nullable|string',
+            'media_files' => 'nullable|array|max:5',
             'media_files.*' => 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:10240',
-            'link_url'      => 'nullable|url|max:2000',
+            'link_url' => 'nullable|url|max:2000',
+            'has_poll' => 'nullable|boolean',
+            'poll_options' => 'nullable|array|max:6',
+            'poll_options.*' => 'nullable|string|max:150',
+            'poll_expires_at' => 'nullable|date|after:now',
         ];
 
         $validated = $request->validate($rules);
@@ -165,22 +178,22 @@ class ForumController extends Controller
                 $mime = $file->getMimeType();
                 $isImage = str_starts_with($mime, 'image/');
                 $folder = $isImage ? 'mk_mulmed/image' : 'mk_mulmed/video';
-                
+
                 // Gunakan bucket default dari config (storage_web)
                 $path = $this->supabaseStorage->upload($file, $folder);
-                
+
                 if ($path) {
-                    $url  = $this->supabaseStorage->getPublicUrl($path);
-                    
+                    $url = $this->supabaseStorage->getPublicUrl($path);
+
                     // Simpan data file ke tabel mk_repo_mulmed
                     RepoMulmed::create([
-                        'nama_file'         => $file->getClientOriginalName(),
-                        'path_file'         => $path,
-                        'tipe_file'         => $isImage ? RepoMulmed::TIPE_IMAGE : RepoMulmed::TIPE_VIDEO,
-                        'judul_file'        => 'Forum Media: ' . $validated['judul'],
-                        'deskripsi_meta'    => 'Diunggah pada forum mahasiswa',
+                        'nama_file' => $file->getClientOriginalName(),
+                        'path_file' => $path,
+                        'tipe_file' => $isImage ? RepoMulmed::TIPE_IMAGE : RepoMulmed::TIPE_VIDEO,
+                        'judul_file' => 'Forum Media: ' . $validated['judul'],
+                        'deskripsi_meta' => 'Diunggah pada forum mahasiswa',
                         'visibility_status' => RepoMulmed::VISIBILITY_PUBLIC,
-                        'status_arsip'      => RepoMulmed::ARSIP_AKTIF,
+                        'status_arsip' => RepoMulmed::ARSIP_AKTIF,
                     ]);
 
                     if ($isImage) {
@@ -215,11 +228,25 @@ class ForumController extends Controller
             $this->gamificationService->getTotalXp(Auth::id())
         );
 
-        $this->threadService->createThread(Auth::id(), [
-            'judul'    => $validated['judul'],
-            'konten'   => $konten,
+        $thread = $this->threadService->createThread(Auth::id(), [
+            'judul' => $validated['judul'],
+            'konten' => $konten,
             'kategori' => $validated['kategori'],
         ]);
+
+        // Buat poll jika dipilih
+        if ($request->boolean('has_poll') && !empty($validated['poll_options'])) {
+            $options = array_values(array_filter($validated['poll_options'], fn($o) => trim($o) !== ''));
+            if (count($options) >= 2) {
+                $poll = ThreadPoll::create([
+                    'thread_id'  => $thread->id,
+                    'expires_at' => $validated['poll_expires_at'] ?? null,
+                ]);
+                foreach ($options as $optText) {
+                    ThreadPollOption::create(['poll_id' => $poll->id, 'text' => trim($optText)]);
+                }
+            }
+        }
 
         // Check level after
         $newLevel = $this->gamificationService->calculateLevel(
@@ -234,7 +261,7 @@ class ForumController extends Controller
         }
 
         $redirect = redirect()->route('manajemenmahasiswa.forum.index')
-            ->with('success', 'Thread berhasil dibuat! +10 XP 🎉');
+            ->with('success', 'Thread berhasil dibuat! +10 XP');
 
         if ($newLevel > $oldLevel) {
             $tier = $this->gamificationService->getTierInfo($newLevel);
@@ -257,11 +284,12 @@ class ForumController extends Controller
         $user = Auth::user();
 
         $thread = $this->threadService->findThread($id);
+        $thread->load(['poll.options', 'poll.votes']);
         $comments = $this->commentService->listComments($id);
-        
+
         $userVotes = \Modules\ManajemenMahasiswa\Models\Vote::where('user_id', $user->id)
             ->get()
-            ->keyBy(function($v) {
+            ->keyBy(function ($v) {
                 return $v->voteable_type . '_' . $v->voteable_id;
             });
 
@@ -282,10 +310,10 @@ class ForumController extends Controller
         }
         foreach ($allUserIds->unique() as $authorId) {
             $totalXp = $this->gamificationService->getTotalXp($authorId);
-            $level   = $this->gamificationService->calculateLevel($totalXp);
-            $tier    = $this->gamificationService->getTierInfo($level);
+            $level = $this->gamificationService->calculateLevel($totalXp);
+            $tier = $this->gamificationService->getTierInfo($level);
             $authorTiers[$authorId] = [
-                'level'     => $level,
+                'level' => $level,
                 'tier_name' => $tier['name'],
                 'tier_icon' => $tier['icon'],
             ];
@@ -298,18 +326,80 @@ class ForumController extends Controller
     }
 
     /**
+     * Vote pada poll (AJAX).
+     */
+    public function votePoll(int $threadId, Request $request)
+    {
+        $request->validate(['option_id' => 'required|integer']);
+
+        $thread = $this->threadService->findThread($threadId);
+        $poll   = $thread->poll;
+
+        if (!$poll) {
+            return response()->json(['error' => 'Poll tidak ditemukan.'], 404);
+        }
+
+        if ($poll->isClosed()) {
+            return response()->json(['error' => 'Poll sudah ditutup.'], 403);
+        }
+
+        $option = ThreadPollOption::where('poll_id', $poll->id)
+            ->where('id', $request->option_id)
+            ->firstOrFail();
+
+        $userId = Auth::id();
+
+        // Cek apakah sudah pernah vote
+        $existing = ThreadPollVote::where('poll_id', $poll->id)->where('user_id', $userId)->first();
+
+        if ($existing) {
+            if ($existing->option_id === $option->id) {
+                return response()->json(['error' => 'Kamu sudah memilih opsi ini.'], 422);
+            }
+            // Kurangi votes_count opsi lama
+            ThreadPollOption::where('id', $existing->option_id)->decrement('votes_count');
+            $existing->update(['option_id' => $option->id]);
+        } else {
+            ThreadPollVote::create([
+                'poll_id'   => $poll->id,
+                'option_id' => $option->id,
+                'user_id'   => $userId,
+            ]);
+        }
+
+        // Tambah votes_count opsi baru
+        $option->increment('votes_count');
+
+        // Reload poll options dengan total terbaru
+        $poll->load('options');
+        $total = $poll->totalVotes();
+
+        return response()->json([
+            'success'        => true,
+            'voted_option_id'=> $option->id,
+            'total_votes'    => $total,
+            'options'        => $poll->options->map(fn($o) => [
+                'id'          => $o->id,
+                'votes_count' => $o->votes_count,
+                'percentage'  => $o->percentage($total),
+            ]),
+        ]);
+    }
+
+    /**
      * Form edit thread.
      */
     public function edit(int $id)
     {
-        $user   = Auth::user();
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
         $thread = $this->threadService->findThread($id);
-        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
 
-        if (!$isAdmin && $thread->user_id !== $user->id) {
+        if ($thread->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk mengedit thread ini.');
         }
 
+        $thread->load(['poll.options']);
         $categories = Thread::KATEGORI_LABELS;
 
         return view('manajemenmahasiswa::forum.edit', compact('thread', 'categories', 'user'));
@@ -320,14 +410,18 @@ class ForumController extends Controller
      */
     public function update(int $id, Request $request)
     {
-        $user    = Auth::user();
-        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
-        $thread  = $this->threadService->findThread($id);
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        $thread = $this->threadService->findThread($id);
+
+        if ($thread->user_id !== $user->id) {
+            abort(403, 'Anda tidak memiliki akses untuk mengedit thread ini.');
+        }
 
         // Hitung media existing yang dipertahankan
-        $removeMedia   = $request->input('remove_media', []);
+        $removeMedia = $request->input('remove_media', []);
         $existingMedia = $thread->extractMediaUrls();
-        $keptCount     = 0;
+        $keptCount = 0;
         foreach ($existingMedia as $media) {
             if (!in_array($media['url'], $removeMedia)) {
                 $keptCount++;
@@ -336,22 +430,34 @@ class ForumController extends Controller
 
         // Hitung total media (kept + new uploads)
         $newFileCount = $request->hasFile('media_files') ? count($request->file('media_files')) : 0;
-        $totalMedia   = $keptCount + $newFileCount;
+        $totalMedia = $keptCount + $newFileCount;
 
         if ($totalMedia > 5) {
             return back()->withErrors(['media_files' => 'Maksimal 5 gambar/video per post. Saat ini: ' . $keptCount . ' existing + ' . $newFileCount . ' baru.'])->withInput();
         }
 
         $validated = $request->validate([
-            'judul'         => 'required|string|max:255',
-            'kategori'      => 'required|array|min:1',
-            'kategori.*'    => 'string|in:' . implode(',', Thread::KATEGORI_LIST),
-            'konten'        => 'nullable|string',
-            'media_files'   => 'nullable|array|max:5',
+            'judul' => 'required|string|max:255',
+            'kategori' => 'required|array|min:1',
+            'kategori.*' => 'string|in:' . implode(',', Thread::KATEGORI_LIST),
+            'konten' => 'nullable|string',
+            'media_files' => 'nullable|array|max:5',
             'media_files.*' => 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:10240',
-            'link_url'      => 'nullable|url|max:2000',
-            'remove_media'  => 'nullable|array',
-            'remove_media.*'=> 'string',
+            'link_url' => 'nullable|url|max:2000',
+            'remove_media' => 'nullable|array',
+            'remove_media.*' => 'string',
+            // Poll fields
+            'has_poll' => 'nullable|boolean',
+            'poll_options' => 'nullable|array|min:2|max:6',
+            'poll_options.*' => 'nullable|string|max:150',
+            'poll_expires_at' => 'nullable|date|after:now',
+            'poll_is_closed' => 'nullable|boolean',
+            'poll_option_text' => 'nullable|array',
+            'poll_option_text.*' => 'nullable|string|max:150',
+            'poll_delete_options' => 'nullable|array',
+            'poll_delete_options.*' => 'integer',
+            'poll_new_options' => 'nullable|array|max:4',
+            'poll_new_options.*' => 'nullable|string|max:150',
         ]);
 
         // Rebuild konten HTML
@@ -375,22 +481,22 @@ class ForumController extends Controller
                 $mime = $file->getMimeType();
                 $isImage = str_starts_with($mime, 'image/');
                 $folder = $isImage ? 'mk_mulmed/image' : 'mk_mulmed/video';
-                
+
                 // Gunakan bucket default dari config
                 $path = $this->supabaseStorage->upload($file, $folder);
-                
+
                 if ($path) {
-                    $url  = $this->supabaseStorage->getPublicUrl($path);
-                    
+                    $url = $this->supabaseStorage->getPublicUrl($path);
+
                     // Simpan data file ke tabel mk_repo_mulmed
                     RepoMulmed::create([
-                        'nama_file'         => $file->getClientOriginalName(),
-                        'path_file'         => $path,
-                        'tipe_file'         => $isImage ? RepoMulmed::TIPE_IMAGE : RepoMulmed::TIPE_VIDEO,
-                        'judul_file'        => 'Forum Media: ' . $validated['judul'],
-                        'deskripsi_meta'    => 'Diunggah pada edit forum mahasiswa',
+                        'nama_file' => $file->getClientOriginalName(),
+                        'path_file' => $path,
+                        'tipe_file' => $isImage ? RepoMulmed::TIPE_IMAGE : RepoMulmed::TIPE_VIDEO,
+                        'judul_file' => 'Forum Media: ' . $validated['judul'],
+                        'deskripsi_meta' => 'Diunggah pada edit forum mahasiswa',
                         'visibility_status' => RepoMulmed::VISIBILITY_PUBLIC,
-                        'status_arsip'      => RepoMulmed::ARSIP_AKTIF,
+                        'status_arsip' => RepoMulmed::ARSIP_AKTIF,
                     ]);
 
                     if ($isImage) {
@@ -420,15 +526,81 @@ class ForumController extends Controller
         }
 
         $this->threadService->updateThread($id, $user->id, [
-            'judul'        => $validated['judul'],
-            'konten'       => $konten,
-            'kategori'     => $validated['kategori'],
+            'judul' => $validated['judul'],
+            'konten' => $konten,
+            'kategori' => $validated['kategori'],
             'remove_media' => $removeMedia,
-        ], $isAdmin);
+        ]);
+
+        // ── Sinkronisasi Poll ──────────────────────────────────────────────
+        $thread->load('poll.options');
+        $existingPoll = $thread->poll;
+
+        if ($existingPoll) {
+            // Update teks opsi yang ada
+            if (!empty($validated['poll_option_text'])) {
+                foreach ($validated['poll_option_text'] as $optId => $text) {
+                    $opt = $existingPoll->options->firstWhere('id', (int) $optId);
+                    if ($opt && trim($text) !== '') {
+                        $opt->update(['text' => trim($text)]);
+                    }
+                }
+            }
+
+            // Hapus opsi yang dipilih (hanya yang votes_count = 0)
+            if (!empty($validated['poll_delete_options'])) {
+                foreach ($validated['poll_delete_options'] as $optId) {
+                    $opt = $existingPoll->options->firstWhere('id', (int) $optId);
+                    if ($opt && $opt->votes_count === 0) {
+                        // Pastikan minimal 2 opsi tersisa setelah hapus
+                        $remainingCount = $existingPoll->options->where('id', '!=', $opt->id)->count();
+                        if ($remainingCount >= 2) {
+                            $opt->delete();
+                        }
+                    }
+                }
+            }
+
+            // Tambah opsi baru
+            if (!empty($validated['poll_new_options'])) {
+                $existingPoll->load('options'); // reload setelah delete
+                $currentCount = $existingPoll->options->count();
+                foreach ($validated['poll_new_options'] as $text) {
+                    if ($currentCount >= 6 || trim($text ?? '') === '') continue;
+                    ThreadPollOption::create(['poll_id' => $existingPoll->id, 'text' => trim($text)]);
+                    $currentCount++;
+                }
+            }
+
+            // Update status tutup & expiry
+            $updatePollData = [];
+            if ($request->boolean('poll_is_closed') !== $existingPoll->is_closed) {
+                $updatePollData['is_closed'] = $request->boolean('poll_is_closed');
+            }
+            if (array_key_exists('poll_expires_at', $validated)) {
+                $updatePollData['expires_at'] = $validated['poll_expires_at'] ?? null;
+            }
+            if (!empty($updatePollData)) {
+                $existingPoll->update($updatePollData);
+            }
+
+        } elseif ($request->boolean('has_poll') && !empty($validated['poll_options'])) {
+            // Thread belum punya poll — buat baru
+            $options = array_values(array_filter($validated['poll_options'], fn($o) => trim($o ?? '') !== ''));
+            if (count($options) >= 2) {
+                $newPoll = ThreadPoll::create([
+                    'thread_id'  => $thread->id,
+                    'expires_at' => $validated['poll_expires_at'] ?? null,
+                ]);
+                foreach ($options as $optText) {
+                    ThreadPollOption::create(['poll_id' => $newPoll->id, 'text' => trim($optText)]);
+                }
+            }
+        }
 
         return redirect()
             ->route('manajemenmahasiswa.forum.show', $id)
-            ->with('success', 'Thread berhasil diperbarui! ✏️');
+            ->with('success', 'Thread berhasil diperbarui!');
     }
 
     /**
@@ -438,7 +610,7 @@ class ForumController extends Controller
     {
         $value = (int) $request->input('value', 1);
         $result = $this->threadService->vote(Auth::id(), $id, $value);
-        
+
         return response()->json($result);
     }
 
@@ -447,7 +619,7 @@ class ForumController extends Controller
      */
     public function destroy(int $id)
     {
-        $isAdmin = Auth::user()->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+        $isAdmin = Auth::user()->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
         $this->threadService->deleteThread($id, Auth::id(), $isAdmin);
 
         return redirect()->route('manajemenmahasiswa.forum.index')
@@ -459,14 +631,34 @@ class ForumController extends Controller
      */
     public function pin(int $id)
     {
-        $isAdmin = Auth::user()->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+        $isAdmin = Auth::user()->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
         if (!$isAdmin) {
             abort(403, 'Akses ditolak.');
         }
 
         $thread = $this->threadService->pinThread($id);
-        
+
         $status = $thread->is_pinned ? 'dipin' : 'di-unpin';
+        return back()->with('success', "Thread berhasil {$status}.");
+    }
+
+    /**
+     * Lock / Unlock thread (admin only).
+     */
+    public function lockThread(int $id)
+    {
+        /** @var \App\Models\User $user */
+        $user = Auth::user();
+        if (!$user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan'])) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $thread = Thread::findOrFail($id);
+        $newLocked = !$thread->is_locked;
+        // Use query builder to avoid touching updated_at
+        Thread::where('id', $id)->update(['is_locked' => $newLocked]);
+
+        $status = $newLocked ? 'dikunci' : 'dibuka kuncinya';
         return back()->with('success', "Thread berhasil {$status}.");
     }
 
@@ -540,8 +732,23 @@ class ForumController extends Controller
     {
         $value = (int) $request->input('value', 1);
         $result = $this->commentService->voteComment(Auth::id(), $commentId, $value);
-        
+
         return response()->json($result);
+    }
+
+    /**
+     * Update komentar.
+     */
+    public function updateComment(int $commentId, Request $request)
+    {
+        $request->validate(['konten' => 'required|string|min:3']);
+
+        try {
+            $this->commentService->updateComment($commentId, Auth::id(), $request->konten);
+            return back()->with('success', 'Komentar berhasil diperbarui.');
+        } catch (\RuntimeException $e) {
+            return back()->withErrors(['konten' => $e->getMessage()]);
+        }
     }
 
     /**
@@ -549,7 +756,7 @@ class ForumController extends Controller
      */
     public function destroyComment(int $commentId)
     {
-        $isAdmin = Auth::user()->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+        $isAdmin = Auth::user()->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
         $this->commentService->deleteComment($commentId, Auth::id(), $isAdmin);
 
         return back()->with('success', 'Komentar berhasil dihapus.');
@@ -594,13 +801,65 @@ class ForumController extends Controller
     public function markBestAnswer(int $threadId, int $commentId)
     {
         $user = Auth::user();
-        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
 
         try {
             $this->threadService->markBestAnswer($threadId, $commentId, $user->id);
-            return back()->with('success', 'Komentar ditandai sebagai Jawaban Terbaik! ✅ Penulis mendapat +15 XP 🎉');
+            return back()->with('success', 'Komentar ditandai sebagai Jawaban Terbaik! Penulis mendapat +15 XP');
         } catch (\RuntimeException $e) {
             return back()->withErrors(['best_answer' => $e->getMessage()]);
         }
+    }
+
+    // =========================================================================
+    // Report Management (Admin)
+    // =========================================================================
+
+    /**
+     * Dismiss (hapus) sebuah laporan.
+     */
+    public function dismissReport(int $reportId)
+    {
+        $report = \Modules\ManajemenMahasiswa\Models\ForumReport::findOrFail($reportId);
+        $report->delete();
+
+        return back()->with('success', 'Laporan berhasil dihapus.');
+    }
+
+    /**
+     * Hapus thread yang dilaporkan + semua laporannya.
+     */
+    public function deleteReportedThread(int $reportId)
+    {
+        $report = \Modules\ManajemenMahasiswa\Models\ForumReport::findOrFail($reportId);
+        $thread = $report->thread;
+
+        if ($thread) {
+            \Modules\ManajemenMahasiswa\Models\ForumReport::where('thread_id', $thread->id)->delete();
+            $thread->delete();
+        } else {
+            $report->delete();
+        }
+
+        return back()->with('success', 'Thread yang dilaporkan berhasil dihapus.');
+    }
+
+    /**
+     * Kunci thread yang dilaporkan + hapus laporannya.
+     */
+    public function lockReportedThread(int $reportId)
+    {
+        $report = \Modules\ManajemenMahasiswa\Models\ForumReport::findOrFail($reportId);
+        $thread = $report->thread;
+
+        if ($thread) {
+            // Use query builder to avoid touching updated_at
+            Thread::where('id', $thread->id)->update(['is_locked' => true]);
+            \Modules\ManajemenMahasiswa\Models\ForumReport::where('thread_id', $thread->id)->delete();
+        } else {
+            $report->delete();
+        }
+
+        return back()->with('success', 'Thread berhasil dikunci dan laporan dihapus.');
     }
 }

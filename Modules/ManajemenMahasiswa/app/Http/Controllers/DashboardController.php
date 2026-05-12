@@ -20,7 +20,7 @@ class DashboardController extends Controller
         $user = Auth::user();
         $roles = $user->roles->pluck('name')->toArray();
 
-        $pengurusRoles = ['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
+        $pengurusRoles = ['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
         if (!empty(array_intersect($roles, $pengurusRoles))) {
             return redirect()->route('manajemenmahasiswa.pengumuman.index');
         }

@@ -383,46 +383,48 @@
         }
 
         /* Pagination */
-        .pengumuman-pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            margin-top: 32px;
-        }
-
-        .pagination-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 42px;
-            height: 42px;
-            border: 1px solid #e5e7eb;
-            border-radius: 50%;
-            background: #fff;
-            color: #6b7280;
-            font-size: 1.1rem;
-            cursor: pointer;
+        .pagination .page-link {
+            color: #6B4FF4;
+            border-color: #e5e7eb;
+            border-radius: 8px;
+            margin: 0 2px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 8px 14px;
             transition: all 0.2s ease;
-            text-decoration: none;
         }
 
-        .pagination-btn:hover:not(.disabled) {
+        .pagination .page-link:hover {
+            background-color: #F5F3FF;
             border-color: #6B4FF4;
             color: #6B4FF4;
-            background: #F5F3FF;
         }
 
-        .pagination-btn.disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            pointer-events: none;
+        .pagination .page-item.active .page-link {
+            background-color: #6B4FF4;
+            border-color: #6B4FF4;
+            color: #fff;
         }
 
-        .pagination-info {
+        .pagination .page-item.disabled .page-link {
+            color: #d1d5db;
+            border-color: #e5e7eb;
+            background: #fff;
+        }
+
+        .pagination-info-text {
             font-size: 0.82rem;
             color: #9ca3af;
             font-weight: 500;
+        }
+
+        .pagination-container nav > .d-sm-flex {
+            flex-direction: column-reverse;
+            align-items: center !important;
+            gap: 0.75rem;
+        }
+        .pagination-container .pagination {
+            margin-bottom: 0;
         }
 
         /* Empty State */
@@ -527,6 +529,16 @@
                 </div>
             </div>
 
+            <!-- Per Page Selector -->
+            <select name="per_page" onchange="document.getElementById('pengumumanFilterForm').submit()"
+                style="height:44px;padding:0 12px;border:1px solid #e5e7eb;border-radius:12px;background:#f3f0ff;font-size:0.85rem;font-weight:600;color:#4b5563;cursor:pointer;outline:none;transition:all .2s;">
+                @foreach([5, 10, 20, 50] as $opt)
+                    <option value="{{ $opt }}" {{ request('per_page', 10) == $opt ? 'selected' : '' }}>
+                        {{ $opt }} / hal
+                    </option>
+                @endforeach
+            </select>
+
             <!-- Buat Post Button -->
             <a href="{{ route('manajemenmahasiswa.pengumuman.create') }}" class="btn-buat-post">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -571,7 +583,7 @@
                             <h6>{{ $item->judul }}</h6>
                         </div>
                         <p class="pengumuman-card-desc">
-                            {{ Str::limit(strip_tags($item->konten), 150) }}
+                            {{ Str::limit(html_entity_decode(strip_tags($item->konten)), 150) }}
                         </p>
                         <div class="pengumuman-card-tags">
                             @if($item->status_publish && $item->status_publish !== 'published')
@@ -612,43 +624,17 @@
     </div>
 
     <!-- Pagination -->
-    @if($pengumuman->hasPages())
-        <div class="pengumuman-pagination">
-            @if($pengumuman->onFirstPage())
-                <span class="pagination-btn disabled">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m15 18-6-6 6-6" />
-                    </svg>
-                </span>
-            @else
-                <a href="{{ $pengumuman->previousPageUrl() }}" class="pagination-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m15 18-6-6 6-6" />
-                    </svg>
-                </a>
-            @endif
-
-            <span class="pagination-info">
-                Halaman {{ $pengumuman->currentPage() }} dari {{ $pengumuman->lastPage() }}
+    @if($pengumuman->total() > 0)
+        <div class="mt-4 mb-2">
+            <span class="pagination-info-text">
+                Menampilkan {{ $pengumuman->firstItem() }}–{{ $pengumuman->lastItem() }}
+                dari {{ $pengumuman->total() }} pengumuman
             </span>
-
-            @if($pengumuman->hasMorePages())
-                <a href="{{ $pengumuman->nextPageUrl() }}" class="pagination-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m9 18 6-6-6-6" />
-                    </svg>
-                </a>
-            @else
-                <span class="pagination-btn disabled">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m9 18 6-6-6-6" />
-                    </svg>
-                </span>
-            @endif
+        </div>
+    @endif
+    @if($pengumuman->hasPages())
+        <div class="d-flex justify-content-center mt-2 mb-4 pagination-container">
+            {{ $pengumuman->appends(request()->query())->links('pagination::bootstrap-5') }}
         </div>
     @endif
 

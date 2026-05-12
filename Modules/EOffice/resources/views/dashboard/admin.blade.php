@@ -310,13 +310,14 @@
                     {{-- Rows --}}
                     <div class="overflow-y-auto flex-1">
                         @forelse($praktikums ?? [] as $p)
+                            @php /** @var object $p */ @endphp
                         <div class="flex items-center px-5 py-[11px] border-b border-[#F8F9FB] cursor-pointer transition-colors hover:bg-[#FAFAFC] last:border-0">
                             <div class="text-[12px] font-semibold tracking-[.01em]" style="width:90px; color:#0B266E;">{{ $p->kode ?? '—' }}</div>
-                            <div class="flex-1 text-[13px] font-medium text-[#0D0D12] overflow-hidden text-ellipsis whitespace-nowrap pr-3">{{ $p->nama }}</div>
+                            <div class="flex-1 text-[13px] font-medium text-[#0D0D12] overflow-hidden text-ellipsis whitespace-nowrap pr-3">{{ $p->nama ?? '' }}</div>
                             <div class="text-[12px] text-[#666D80] overflow-hidden text-ellipsis whitespace-nowrap" style="width:170px;">{{ $p->dosen?->name ?? '—' }}</div>
-                            <div class="text-[13px] font-semibold text-[#0D0D12]" style="width:65px;">{{ $p->status === 'aktif' ? ($p->peserta_count ?? 0) : '—' }}</div>
+                            <div class="text-[13px] font-semibold text-[#0D0D12]" style="width:65px;">{{ ($p->status ?? '') === 'aktif' ? ($p->peserta_count ?? 0) : '—' }}</div>
                             <div style="width:90px;">
-                                @if($p->status === 'aktif')
+                                @if(($p->status ?? '') === 'aktif')
                                     <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-[9px] py-[3px] rounded-full bg-[#DDF2EE] text-[#174E43]">
                                         <span class="w-[6px] h-[6px] rounded-full bg-[#40C4AA] flex-shrink-0"></span>Aktif
                                     </span>

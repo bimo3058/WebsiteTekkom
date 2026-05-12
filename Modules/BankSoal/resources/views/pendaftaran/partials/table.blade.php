@@ -30,7 +30,7 @@
                         </td>
                         <td class="px-4 py-[14px] text-slate-500 whitespace-nowrap">{{ $item->target_wisuda ?? '-' }}</td>
                         <td class="px-4 py-[14px] whitespace-nowrap">
-                            @if ($item->status_pendaftaran === 'approved')
+                            @if ($item->status_pendaftaran->value === 'approved')
                                 <span
                                     class="inline-flex items-center justify-center px-3 py-1 rounded-full text-[11px] font-bold border border-emerald-200 bg-emerald-50 text-emerald-700 shadow-[0_1px_2px_rgba(0,0,0,0.05)] uppercase tracking-wider">
                                     DISETUJUI
@@ -65,7 +65,7 @@
                                     </svg>
                                 </button>
 
-                                @if ($item->status_pendaftaran !== 'approved')
+                                @if ($item->status_pendaftaran->value !== 'approved')
                                     {{-- Approve — hanya tampil jika belum approved --}}
                                     <form method="POST" action="{{ route('banksoal.pendaftaran.updateStatus', $item->id) }}"
                                         class="inline"

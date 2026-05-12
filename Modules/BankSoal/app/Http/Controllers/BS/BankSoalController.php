@@ -116,7 +116,7 @@ class BankSoalController extends Controller
             'bobot_total' => 'nullable|numeric'
         ]);
 
-        $query = \Modules\BankSoal\Models\Pertanyaan::with(['mataKuliah', 'cpl', 'jawaban'])
+        $query = \Modules\BankSoal\Models\Pertanyaan::with(['mataKuliah', 'cpl', 'cpmk', 'jawaban'])
             ->where('mk_id', $request->mk_id);
 
         if ($request->filled('jenis_soal')) {

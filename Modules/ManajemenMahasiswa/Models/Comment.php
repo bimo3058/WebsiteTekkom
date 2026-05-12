@@ -59,7 +59,7 @@ class Comment extends Model
      */
     public function allReplies(): HasMany
     {
-        return $this->hasMany(self::class, 'parent_id')->with('allReplies.author');
+        return $this->hasMany(self::class, 'parent_id')->with(['allReplies.author', 'parent.author']);
     }
 
     public function votes(): MorphMany
@@ -74,7 +74,51 @@ class Comment extends Model
     public function syncVoteCount(): void
     {
         $this->update([
-            'vote_count' => $this->votes()->sum('value'),
+            'vote_count' => $this->votes()->where('value', 1)->count(),
         ]);
+    }
+
+    /**
+     * Get all nested replies flattened into a single collection, sorted by creation date.
+     */
+    public function getFlattenedReplies(): \Illuminate\Support\Collection
+    {
+        $flattened = collect();
+
+        $traverse = function ($replies) use (&$traverse, &$flattened) {
+            foreach ($replies as $reply) {
+                $flattened->push($reply);
+                if ($reply->allReplies && $reply->allReplies->isNotEmpty()) {
+                    $traverse($reply->allReplies);
+                }
+            }
+        };
+
+        if ($this->allReplies) {
+            $traverse($this->allReplies);
+        }
+
+        return $flattened->sortBy('created_at')->values();
+    }
+
+    /**
+     * Get the username of the parent comment's author, if this is a reply to a nested comment.
+     * Returns null if this is a reply directly to a top-level comment.
+     */
+    public function getRepliedToUsername(): ?string
+    {
+        if (!$this->parent_id) {
+            return null; // This is a top-level comment
+        }
+
+        $parent = $this->parent;
+        
+        // If the parent has no parent, it's a top-level comment.
+        // In YouTube style, we only explicitly mention the user if replying to a reply.
+        if (!$parent || !$parent->parent_id) {
+            return null;
+        }
+
+        return $parent->author->name ?? 'Unknown';
     }
 }

@@ -328,10 +328,15 @@ class RpsController extends Controller
     public function getCplByMk(int $mkId = null): JsonResponse
     {
         try {
-            // Always return all CPL from bs_cpl table (regardless of mkId)
-            // MK parameter is ignored - CPL selection is independent of MK choice
-            $cpls = Cpl::orderBy('kode')
-                ->get()
+            $query = Cpl::orderBy('kode');
+            
+            if ($mkId) {
+                $query->whereHas('mataKuliahs', function ($q) use ($mkId) {
+                    $q->where('bs_mata_kuliah.id', $mkId);
+                });
+            }
+
+            $cpls = $query->get()
                 ->map(function ($cpl) {
                     return [
                         'id' => $cpl->id,
