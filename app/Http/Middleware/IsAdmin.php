@@ -42,6 +42,8 @@ class IsAdmin
 
     /**
      * Ambil nama role aktif dari SESI_LOGIN terbaru.
+     * Jika tidak ada sesi aktif (mis. token API langsung), fallback ke role
+     * tertinggi yang dimiliki pengguna dari tabel pengguna_role.
      */
     private function getRoleAktif($pengguna): ?string
     {
@@ -51,6 +53,16 @@ class IsAdmin
             ->latest('login_pada')
             ->first();
 
-        return $sesi?->roleAktif?->nama;
+        if ($sesi?->roleAktif?->nama) {
+            return $sesi->roleAktif->nama;
+        }
+
+        // Fallback: tidak ada sesi aktif — gunakan role tertinggi dari pengguna_role
+        // Ini terjadi jika token dibuat langsung (mis. createToken() tanpa login flow)
+        if (method_exists($pengguna, 'roleTertinggi')) {
+            return $pengguna->roleTertinggi();
+        }
+
+        return null;
     }
 }

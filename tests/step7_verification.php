@@ -78,13 +78,23 @@ test('GET → 200 (list asparaks)', $r['status'] === 200, "status={$r['status']}
 test('List is initially an array', is_array($r['body']['data'] ?? null));
 
 // ═══════════════════════════════════════════════════
-// 2. ASSIGN Asprak
+// 2. ASSIGN Asprak (cleanup first if exists)
 // ═══════════════════════════════════════════════════
 echo "\n── 2. Assign Asprak ──\n";
+
+// Cleanup: find & delete existing assignment for userId1 to get a clean slate
+$existingList = apiCall('GET', "$base/admin/praktikum/$praktikumId/asparaks", null, $tokenAdmin);
+foreach (($existingList['body']['data'] ?? []) as $item) {
+    if ($item['user']['id'] === $userId1) {
+        apiCall('DELETE', "$base/admin/praktikum/$praktikumId/asprak/{$item['id']}", null, $tokenAdmin);
+    }
+}
+
 $r = apiCall('POST', "$base/admin/praktikum/$praktikumId/assign-asprak", ['user_id' => $userId1, 'role' => 'asprak'], $tokenAdmin);
 test('POST → 201 (assign valid asprak)', $r['status'] === 201, "status={$r['status']}");
 $asprakRecordId = $r['body']['data']['id'] ?? null;
 test('Response format valid', $asprakRecordId !== null);
+
 
 // ═══════════════════════════════════════════════════
 // 3. LIST Asparaks (After Assign)

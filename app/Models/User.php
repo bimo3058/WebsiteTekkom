@@ -11,10 +11,11 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Laravel\Sanctum\HasApiTokens;
 
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, Notifiable, SoftDeletes, HasApiTokens;
 
     /**
      * Mass assignable attributes.
@@ -120,9 +121,9 @@ class User extends Authenticatable
     public function praktikumAsparaks()
     {
         return $this->belongsToMany(Praktikum::class, 'asprak_praktikum', 'user_id', 'praktikum_id')
-                    ->withPivot('id', 'role', 'deskripsi', 'deleted_at')
-                    ->withTimestamps()
-                    ->whereNull('asprak_praktikum.deleted_at');
+            ->withPivot('id', 'role', 'deskripsi', 'deleted_at')
+            ->withTimestamps()
+            ->whereNull('asprak_praktikum.deleted_at');
     }
 
     public function directPermissions()
@@ -244,7 +245,7 @@ class User extends Authenticatable
      */
     public function isSuspended(): bool
     {
-        return ! is_null($this->suspended_at);
+        return !is_null($this->suspended_at);
     }
 
     /**
@@ -253,8 +254,8 @@ class User extends Authenticatable
     public function cacheUserData(): void
     {
         Cache::put("user:{$this->id}:data", [
-            'id'    => $this->id,
-            'name'  => $this->name,
+            'id' => $this->id,
+            'name' => $this->name,
             'email' => $this->email,
         ], now()->addHours(8));
     }

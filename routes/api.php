@@ -16,9 +16,9 @@ Route::prefix('auth')->group(function () {
 
 // ─── Auth (Protected — perlu token) ──────────────────────────────────────────
 Route::prefix('auth')->middleware('auth:sanctum')->group(function () {
-    Route::get('/me',           [AuthController::class, 'me']);
+    Route::get('/me', [AuthController::class, 'me']);
     Route::post('/switch-role', [AuthController::class, 'switchRole']);
-    Route::post('/logout',      [AuthController::class, 'logout']);
+    Route::post('/logout', [AuthController::class, 'logout']);
 });
 
 // ─── Admin Routes (is_admin — strict, harus tepat admin) ──────────────────────
@@ -50,9 +50,9 @@ Route::prefix('admin')->middleware(['auth:sanctum', 'is_admin'])->group(function
     Route::get('/praktikum/{id}/praktikan', [\App\Http\Controllers\Api\Admin\PraktikumController::class, 'getPraktikans']);
     Route::post('/praktikum/{id}/import-praktikan', [\App\Http\Controllers\Api\Admin\PraktikumController::class, 'uploadPraktikan']);
     // Step 7 — Asprak Praktikum Management
-    Route::get('/praktikum/{id}/asparaks', [\App\Http\Controllers\Admin\AsprakPraktikumController::class, 'index']);
-    Route::post('/praktikum/{id}/assign-asprak', [\App\Http\Controllers\Admin\AsprakPraktikumController::class, 'store']);
-    Route::delete('/praktikum/{id}/asprak/{asprak_id}', [\App\Http\Controllers\Admin\AsprakPraktikumController::class, 'destroy']);
+    Route::get('/praktikum/{praktikum_id}/asparaks', [\App\Http\Controllers\Admin\AsprakPraktikumController::class, 'index']);
+    Route::post('/praktikum/{praktikum_id}/assign-asprak', [\App\Http\Controllers\Admin\AsprakPraktikumController::class, 'store']);
+    Route::delete('/praktikum/{praktikum_id}/asprak/{asprak_id}', [\App\Http\Controllers\Admin\AsprakPraktikumController::class, 'destroy']);
 
 });
 

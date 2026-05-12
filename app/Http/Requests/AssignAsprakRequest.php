@@ -27,7 +27,10 @@ class AssignAsprakRequest extends FormRequest
                 'integer',
                 Rule::exists('users', 'id'),
                 function ($attribute, $value, $fail) {
-                    $user = User::find($value);
+                    if (! is_numeric($value)) {
+                        return; // already caught by 'integer' rule
+                    }
+                    $user = User::find((int) $value);
                     if ($user && $user->suspended_at !== null) {
                         $fail('The selected user is suspended and cannot be assigned.');
                     }

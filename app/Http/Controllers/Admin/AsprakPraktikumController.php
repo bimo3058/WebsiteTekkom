@@ -16,6 +16,10 @@ class AsprakPraktikumController extends Controller
      */
     public function index(string $praktikum_id): JsonResponse
     {
+        if (! \Illuminate\Support\Str::isUuid($praktikum_id)) {
+            return response()->json(['success' => false, 'message' => 'Praktikum not found', 'errors' => null], 404);
+        }
+
         $praktikum = Praktikum::find($praktikum_id);
 
         if (!$praktikum) {
@@ -47,6 +51,10 @@ class AsprakPraktikumController extends Controller
      */
     public function store(AssignAsprakRequest $request, string $praktikum_id): JsonResponse
     {
+        if (! \Illuminate\Support\Str::isUuid($praktikum_id)) {
+            return response()->json(['success' => false, 'message' => 'Praktikum not found', 'errors' => null], 404);
+        }
+
         $praktikum = Praktikum::find($praktikum_id);
 
         if (!$praktikum) {
