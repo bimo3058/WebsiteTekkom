@@ -22,3 +22,19 @@
 Homestead.json
 Homestead.yaml
 Thumbs.db
+package-lock.json
+boost.json
+composer.json
+Modules/BankSoal/node_modules
+/bootstrap/*
+composer.json
+composer.lock
+bootstrap/providers.php
+
+# AI assistant files — jangan push ke repo
+CLAUDE.md
+PLAN_*.md
+AI_*.md
+.gemini/
+.cursor/
+.copilot/

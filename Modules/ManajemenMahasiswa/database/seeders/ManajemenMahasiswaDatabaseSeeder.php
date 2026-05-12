@@ -11,6 +11,9 @@ class ManajemenMahasiswaDatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // $this->call([]);
+        $this->call([
+            BadgeSeeder::class,
+            KategoriBidangSeeder::class,
+        ]);
     }
 }
