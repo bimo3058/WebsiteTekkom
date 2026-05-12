@@ -145,6 +145,7 @@
 
 <script>
     let lastPenarikanId = null;
+    let archiveConfirmPending = false;
 
     function openReviewModal(data) {
         const modal = document.getElementById('reviewSoalModal');
@@ -213,33 +214,18 @@
         }, 10);
     }
 
-    // Finalize (submit print form) then save draft and show archive confirmation after save
+    // Finalize: open print tab, then show archive confirmation when user returns to the app
     async function finalizeAndAskArchive(e) {
         e?.preventDefault?.();
         const form = document.getElementById('formCetakUjian');
         if (!form) return;
 
         // Submit form to new tab (finalize & print)
+        archiveConfirmPending = true;
         form.submit();
-
-        // Save as draft penarikan and wait for completion
-        let saved = false;
-        try {
-            saved = await handleSimpanKeArsip(null, '0');
-        } catch (err) {
-            console.error('Draft save failed', err);
-            saved = false;
-        }
 
         // Close modal shortly after
         setTimeout(() => closeReviewModal(), 500);
-
-        // Show confirmation only if draft saved successfully
-        if (saved) {
-            setTimeout(() => showArchiveConfirm(), 700);
-        } else {
-            showSnackbar('Gagal menyimpan draf penarikan. Silakan coba lagi.', 'error');
-        }
     }
 
     function closeReviewModal() {
@@ -290,6 +276,7 @@
             const data = await response.json();
 
                 if (data && data.success) {
+                    archiveConfirmPending = false;
                     if (arsipMode === '0' && data.data && data.data.id) {
                         lastPenarikanId = data.data.id;
                     }
@@ -552,19 +539,29 @@
 
     function onArchiveConfirmYes() {
         hideArchiveConfirm();
-        // Force direct_archive = 1 and call save
-        handleSimpanKeArsip(null, /*forceDirect=*/ '1');
+        handleSimpanKeArsip(null, '1');
     }
 
     function onArchiveConfirmNo() {
         hideArchiveConfirm();
-        // Draft already saved on finalize; no extra action needed
-        showSnackbar('Disimpan sebagai draf penarikan.', 'success');
+        handleSimpanKeArsip(null, '0');
     }
+
+    function maybeShowArchiveConfirmAfterReturn() {
+        if (!archiveConfirmPending || document.hidden) {
+            return;
+        }
+
+        archiveConfirmPending = false;
+        showArchiveConfirm();
+    }
+
+    window.addEventListener('focus', maybeShowArchiveConfirmAfterReturn);
+    document.addEventListener('visibilitychange', maybeShowArchiveConfirmAfterReturn);
 </script>
 
 <!-- Loading overlay (used during saving draft / archiving) -->
-<div id="reviewLoadingOverlay" class="hidden fixed inset-0 z-[130] flex items-center justify-center bg-black/40">
+<div id="reviewLoadingOverlay" class="hidden fixed inset-0 z-[130] items-center justify-center bg-black/40">
     <div class="bg-white rounded-lg p-6 flex items-center gap-4 shadow-lg">
         <i class="fas fa-circle-notch fa-spin text-2xl text-slate-700"></i>
         <div>
@@ -579,12 +576,18 @@
         const overlay = document.getElementById('reviewLoadingOverlay');
         const text = document.getElementById('reviewLoadingText');
         if (text && message) text.innerText = message;
-        if (overlay) overlay.classList.remove('hidden');
+        if (overlay) {
+            overlay.classList.remove('hidden');
+            overlay.classList.add('flex');
+        }
     }
 
     function hideLoading() {
         const overlay = document.getElementById('reviewLoadingOverlay');
-        if (overlay) overlay.classList.add('hidden');
+        if (overlay) {
+            overlay.classList.add('hidden');
+            overlay.classList.remove('flex');
+        }
     }
 
 </script>

@@ -53,7 +53,7 @@
                     <!-- Kontrol Umum (Accordion) -->
                     @php $isKontrolUmumActive = request()->routeIs('banksoal.admin.kontrol-umum.*'); @endphp
                     <div x-data="{ open: {{ $isKontrolUmumActive ? 'true' : 'false' }} }" class="space-y-1">
-                        <button @click="open = !open"
+                        <button @click="if (!sidebarOpen) { sidebarOpen = true; open = true } else { open = !open }"
                             class="group w-full relative flex items-center justify-between py-2.5 px-4 rounded-xl transition-all {{ $isKontrolUmumActive ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}">
                             @if($isKontrolUmumActive)
                                 <div class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1.5 bg-primary rounded-r-full"></div>
@@ -82,14 +82,14 @@
                             <a href="{{ route('banksoal.admin.kontrol-umum.cpl-cpmk') }}"
                                 class="block text-sm {{ request()->routeIs('banksoal.admin.kontrol-umum.cpl-cpmk') ? 'text-primary font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Manajemen CPL & CPMK</a>
                             <a href="{{ route('banksoal.admin.kontrol-umum.pemetaan') }}"
-                                class="block text-sm {{ request()->routeIs('banksoal.admin.kontrol-umum.pemetaan') ? 'text-primary font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Pemetaan</a>
+                                class="block text-sm {{ request()->routeIs('banksoal.admin.kontrol-umum.pemetaan') || request()->routeIs('banksoal.admin.kontrol-umum.pemetaan.*') ? 'text-primary font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Pemetaan</a>
                         </div>
                     </div>
 
                     <!-- Kontrol BankSoal (Accordion) -->
                     @php $isKontrolBankSoalActive = request()->routeIs('banksoal.admin.kontrol-banksoal.*'); @endphp
                     <div x-data="{ open: {{ $isKontrolBankSoalActive ? 'true' : 'false' }} }" class="space-y-1">
-                        <button @click="open = !open"
+                        <button @click="if (!sidebarOpen) { sidebarOpen = true; open = true } else { open = !open }"
                             class="group w-full relative flex items-center justify-between py-2.5 px-4 rounded-xl transition-all {{ $isKontrolBankSoalActive ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}">
                             @if($isKontrolBankSoalActive)
                                 <div class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1.5 bg-primary rounded-r-full"></div>
@@ -125,7 +125,7 @@
                 <div class="space-y-1">
                     @php $isKontrolUjianActive = request()->routeIs('banksoal.periode.*') || request()->routeIs('banksoal.pendaftaran.*') || request()->routeIs('banksoal.aktivasi.*'); @endphp
                     <div x-data="{ open: {{ $isKontrolUjianActive ? 'true' : 'false' }} }" class="space-y-1">
-                        <button @click="open = !open"
+                        <button @click="if (!sidebarOpen) { sidebarOpen = true; open = true } else { open = !open }"
                             class="group w-full relative flex items-center justify-between py-2.5 px-4 rounded-xl transition-all {{ $isKontrolUjianActive ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}">
                             @if($isKontrolUjianActive)
                                 <div class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1.5 bg-primary rounded-r-full"></div>

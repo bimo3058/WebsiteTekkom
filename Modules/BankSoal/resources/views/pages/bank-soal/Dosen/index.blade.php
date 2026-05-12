@@ -48,7 +48,7 @@
     id="banksoal-dosen-page-data"
     data-success="{{ e(session('success')) }}"
     data-error="{{ e(session('error')) }}"
-    data-mk-json='{{ e($mataKuliahDosen->toJson()) }}'
+    data-mk-json="{{ base64_encode($mataKuliahDosen->toJson()) }}"
     hidden
 ></div>
 
@@ -469,7 +469,17 @@
 
 <script>
     const pageData = document.getElementById('banksoal-dosen-page-data');
-    const mkData = pageData ? JSON.parse(pageData.dataset.mkJson || '[]') : [];
+    let mkData = [];
+
+    try {
+        if (pageData?.dataset.mkJson) {
+            mkData = JSON.parse(atob(pageData.dataset.mkJson));
+        }
+    } catch (error) {
+        console.error('Gagal memuat data mata kuliah dosen', error);
+        mkData = [];
+    }
+
     window.tarikSoalsData = [];
     window.currentTarikMkId = null;
 
@@ -510,7 +520,7 @@
         if (!selectedMk) return;
 
         if (typesChecked.length === 0) {
-            renderCplCpmk(selectedMk, [], []);
+            renderCplCpmk(selectedMk, null, null);
         } else {
             const validCplIds = window.tarikSoalsData
                 .filter(soal => typesChecked.includes(soal.tipe_soal))
@@ -539,7 +549,7 @@
             cb.checked = false;
         });
 
-        renderCplCpmk(selectedMk, [], []);
+        renderCplCpmk(selectedMk, null, null);
 
         // Fetch questions exactly for this MK to drive the filtering
         fetch(`/bank-soal/soal/dosen/get-by-mk/${mk_id}`, {
@@ -555,9 +565,12 @@
             } else {
                 window.tarikSoalsData = [];
             }
+
+            filterCplCpmk();
         })
         .catch(() => {
             window.tarikSoalsData = [];
+            renderCplCpmk(selectedMk, null, null);
         });
     }
 

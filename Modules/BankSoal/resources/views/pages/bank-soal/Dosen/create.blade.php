@@ -52,9 +52,9 @@
                 <div>
                     <label for="kesulitan" class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label>
                     <select name="kesulitan" id="kesulitan" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required>
-                        <option value="easy" {{ old('kesulitan') == 'easy' ? 'selected' : '' }}>Mudah (Easy)</option>
-                        <option value="intermediate" {{ old('kesulitan') == 'intermediate' ? 'selected' : '' }}>Sedang (Medium)</option>
-                        <option value="advanced" {{ old('kesulitan') == 'advanced' ? 'selected' : '' }}>Sulit (Hard)</option>
+                        <option value="easy" {{ old('kesulitan') == 'easy' ? 'selected' : '' }}>Mudah (easy)</option>
+                        <option value="intermediate" {{ old('kesulitan') == 'intermediate' ? 'selected' : '' }}>Sedang (intermediate)</option>
+                        <option value="advanced" {{ old('kesulitan') == 'advanced' ? 'selected' : '' }}>Sulit (advanced)</option>
                     </select>
                 </div>
                 <div>

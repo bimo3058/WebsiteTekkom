@@ -217,64 +217,60 @@
             border-bottom: none;
         }
 
-        .kode-badge {
-            display: inline-block;
-            padding: 4px 10px;
-            border-radius: 999px;
-            font-size: 11px;
-            font-weight: 700;
-            background: #dbeafe;
-            color: #1d4ed8;
-            border: 1px solid #bfdbfe;
-            white-space: nowrap;
-        }
 
-        .mapping-pill {
-            display: inline-flex;
-            align-items: center;
-            padding: 5px 11px;
-            border-radius: 999px;
-            font-size: 12px;
-            font-weight: 700;
-            background: #dbeafe;
-            color: #1d4ed8;
-            border: 1px solid #bfdbfe;
-            max-width: 100%;
-        }
+        /* ── Checkbox column ── */
+        .cb-col { width: 40px; padding: 0 8px 0 16px !important; }
+        .cb-col input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-blue); }
 
-        .desc-cell {
-            color: #0f172a;
-            line-height: 1.4;
-            max-width: 520px;
-        }
+        /* ── Table symmetry ── */
+        .col-key  { width: 150px; font-weight: 600; color: #1e293b; }
+        .col-val  { color: var(--slate-700); }
+        .col-act  { width: 56px; text-align: center; }
 
-        .action-cell {
-            display: flex;
-            gap: 8px;
+        /* ── 3-dot dropdown ── */
+        .dots-wrap { position: relative; display: inline-block; }
+        .btn-dots {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; border-radius: 6px;
+            border: 1px solid var(--slate-200); background: #fff;
+            font-size: 18px; cursor: pointer; color: var(--slate-600);
+            transition: all 0.15s; line-height: 1;
         }
+        .btn-dots:hover { border-color: var(--primary-blue); color: var(--primary-blue); background: #f0f4ff; }
+        .dots-menu {
+            display: none; position: absolute; right: 0; top: 38px;
+            background: #fff; border: 1px solid var(--slate-200);
+            border-radius: 8px; box-shadow: 0 4px 16px rgba(15,23,42,0.1);
+            min-width: 140px; z-index: 50; overflow: hidden;
+        }
+        .dots-menu.open { display: block; }
+        .dots-menu a, .dots-menu button {
+            display: flex; align-items: center; gap: 8px;
+            width: 100%; padding: 9px 14px;
+            background: none; border: none; border-bottom: 1px solid var(--slate-100);
+            font-size: 13px; font-weight: 500; color: var(--slate-700);
+            cursor: pointer; text-decoration: none; text-align: left;
+        }
+        .dots-menu a:last-child, .dots-menu button:last-child { border-bottom: none; }
+        .dots-menu a:hover, .dots-menu button:hover { background: var(--slate-50); }
+        .dots-menu .menu-delete { color: var(--danger-red); }
+        .dots-menu .menu-delete:hover { background: #fef2f2; }
 
-        .btn-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            border: 1px solid currentColor;
-            border-radius: 6px;
-            cursor: pointer;
-            background: transparent;
-            transition: all 0.2s;
+        /* ── Bulk action bar ── */
+        .bulk-bar {
+            display: none; align-items: center; gap: 10px;
+            padding: 10px 16px; background: #eff6ff;
+            border-bottom: 1px solid #bfdbfe;
+            font-size: 13px; color: var(--primary-blue); font-weight: 600;
         }
-
-        .btn-icon-delete {
-            color: var(--danger-red);
+        .bulk-bar.show { display: flex; }
+        .btn-bulk-delete {
+            margin-left: auto; display: inline-flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 8px; border: none;
+            background: var(--danger-red); color: #fff;
+            font-size: 12px; font-weight: 700; cursor: pointer;
         }
-
-        .btn-icon-delete:hover {
-            background: var(--danger-red);
-            border-color: var(--danger-red);
-            color: #fff;
-        }
+        .btn-bulk-delete:hover { background: #dc2626; }
 
         .empty-state {
             text-align: center;
@@ -285,11 +281,13 @@
 
         .pagination-section {
             display: flex;
-            justify-content: flex-end;
+            justify-content: space-between;
+            align-items: center;
             padding: 12px 14px 16px;
             border-top: 1px solid var(--slate-200);
             background: #fff;
         }
+        .pg-info-label { font-size: 12px; color: var(--slate-400); }
 
         .pagination-list {
             display: flex;
@@ -457,6 +455,23 @@
             .filter-group { width: 100%; margin-left: 0; }
             .filter-group select { flex: 1; }
         }
+
+        /* ── Table loading spinner ── */
+        .tbl-loading {
+            display: none; align-items: center; justify-content: center;
+            gap: 10px; padding: 40px 20px;
+            color: var(--slate-600); font-size: 13px;
+        }
+        .tbl-loading.show { display: flex; }
+        .tbl-spinner {
+            width: 22px; height: 22px;
+            border: 3px solid var(--slate-200);
+            border-top-color: rgb(11, 38, 110);
+            border-radius: 50%;
+            animation: tbl-spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+        @keyframes tbl-spin { to { transform: rotate(360deg); } }
     </style>
     @endpush
 
@@ -473,12 +488,12 @@
             <div>
                 <h2 class="feature-title">Pemetaan CPMK ke CPL</h2>
             </div>
-            <button type="button" class="btn-add" onclick="openModal('cpmkCpl')">
+            <a href="{{ route('banksoal.admin.kontrol-umum.pemetaan.cpmk-cpl.create') }}" class="btn-add">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
                 Tambah Pemetaan
-            </button>
+            </a>
         </div>
 
         <div class="controls-section">
@@ -497,19 +512,30 @@
             </div>
         </div>
 
-        <div class="table-wrapper">
+        <div class="tbl-loading" id="cpmkCplSpinner"><div class="tbl-spinner"></div> Memuat data...</div>
+        <div class="table-wrapper" id="cpmkCplWrapper">
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 180px;">CPL</th>
-                        <th>CPMK</th>
+                        <th class="cb-col"><input type="checkbox" id="cpmkCplSelAll" onchange="toggleSelectAll('cpmkCpl',this)"></th>
+                        <th class="col-key">CPL</th>
+                        <th class="col-val">CPMK</th>
+                        <th class="col-act"></th>
                     </tr>
                 </thead>
                 <tbody id="cpmkCplTableBody"></tbody>
             </table>
         </div>
+        <div id="cpmkCplBulkBar" class="bulk-bar">
+            <span id="cpmkCplBulkCount">0 item dipilih</span>
+            <button class="btn-bulk-delete" onclick="bulkDelete('cpmkCpl')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                Hapus Terpilih
+            </button>
+        </div>
         <div id="cpmkCplEmptyState" class="empty-state" style="display:none;">Tidak ada data pemetaan CPMK ke CPL</div>
         <div id="cpmkCplPagination" class="pagination-section" style="display:none;">
+            <span class="pg-info-label" id="cpmkCplPgInfo"></span>
             <div class="pagination-list" id="cpmkCplPaginationList"></div>
         </div>
     </section>
@@ -519,12 +545,12 @@
             <div>
                 <h2 class="feature-title">Pemetaan Mata Kuliah ke CPL</h2>
             </div>
-            <button type="button" class="btn-add" onclick="openModal('mkCpl')">
+            <a href="{{ route('banksoal.admin.kontrol-umum.pemetaan.mk-cpl.create') }}" class="btn-add">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
                 Tambah Pemetaan
-            </button>
+            </a>
         </div>
 
         <div class="controls-section">
@@ -543,19 +569,30 @@
             </div>
         </div>
 
-        <div class="table-wrapper">
+        <div class="tbl-loading" id="mkCplSpinner"><div class="tbl-spinner"></div> Memuat data...</div>
+        <div class="table-wrapper" id="mkCplWrapper">
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 240px;">Mata Kuliah</th>
-                        <th>CPL</th>
+                        <th class="cb-col"><input type="checkbox" id="mkCplSelAll" onchange="toggleSelectAll('mkCpl',this)"></th>
+                        <th class="col-key">Mata Kuliah</th>
+                        <th class="col-val">CPL</th>
+                        <th class="col-act"></th>
                     </tr>
                 </thead>
                 <tbody id="mkCplTableBody"></tbody>
             </table>
         </div>
+        <div id="mkCplBulkBar" class="bulk-bar">
+            <span id="mkCplBulkCount">0 item dipilih</span>
+            <button class="btn-bulk-delete" onclick="bulkDelete('mkCpl')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                Hapus Terpilih
+            </button>
+        </div>
         <div id="mkCplEmptyState" class="empty-state" style="display:none;">Tidak ada data pemetaan Mata Kuliah ke CPL</div>
         <div id="mkCplPagination" class="pagination-section" style="display:none;">
+            <span class="pg-info-label" id="mkCplPgInfo"></span>
             <div class="pagination-list" id="mkCplPaginationList"></div>
         </div>
     </section>
@@ -565,12 +602,12 @@
             <div>
                 <h2 class="feature-title">Pemetaan Dosen ke Mata Kuliah</h2>
             </div>
-            <button type="button" class="btn-add" onclick="openModal('dosenMk')">
+            <a href="{{ route('banksoal.admin.kontrol-umum.pemetaan.mk-dosen.create') }}" class="btn-add">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                 </svg>
                 Tambah Pemetaan
-            </button>
+            </a>
         </div>
 
         <div class="controls-section">
@@ -589,19 +626,30 @@
             </div>
         </div>
 
-        <div class="table-wrapper">
+        <div class="tbl-loading" id="dosenMkSpinner"><div class="tbl-spinner"></div> Memuat data...</div>
+        <div class="table-wrapper" id="dosenMkWrapper">
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 240px;">Mata Kuliah</th>
-                        <th>Dosen Pengampu</th>
+                        <th class="cb-col"><input type="checkbox" id="dosenMkSelAll" onchange="toggleSelectAll('dosenMk',this)"></th>
+                        <th class="col-key">Mata Kuliah</th>
+                        <th class="col-val">Dosen Pengampu</th>
+                        <th class="col-act"></th>
                     </tr>
                 </thead>
                 <tbody id="dosenMkTableBody"></tbody>
             </table>
         </div>
+        <div id="dosenMkBulkBar" class="bulk-bar">
+            <span id="dosenMkBulkCount">0 item dipilih</span>
+            <button class="btn-bulk-delete" onclick="bulkDelete('dosenMk')">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                Hapus Terpilih
+            </button>
+        </div>
         <div id="dosenMkEmptyState" class="empty-state" style="display:none;">Tidak ada data pemetaan Dosen ke Mata Kuliah</div>
         <div id="dosenMkPagination" class="pagination-section" style="display:none;">
+            <span class="pg-info-label" id="dosenMkPgInfo"></span>
             <div class="pagination-list" id="dosenMkPaginationList"></div>
         </div>
     </section>
@@ -736,10 +784,33 @@
 
         const state = {
             options: { cpl: [], cpmk: [], mata_kuliah: [], dosen: [] },
-            cpmkCpl: { all: [], filtered: [], currentPage: 1, timer: null },
-            mkCpl: { all: [], filtered: [], currentPage: 1, timer: null },
-            dosenMk: { all: [], filtered: [], currentPage: 1, timer: null },
+            cpmkCpl: { all: [], filtered: [], currentPage: 1, timer: null, selected: new Set() },
+            mkCpl:   { all: [], filtered: [], currentPage: 1, timer: null, selected: new Set() },
+            dosenMk: { all: [], filtered: [], currentPage: 1, timer: null, selected: new Set() },
         };
+
+        // key field per table (the primary anchor for the row)
+        const ROW_KEY = { cpmkCpl: 'cpl_id', mkCpl: 'mk_id', dosenMk: 'mk_id' };
+        // edit URL builders
+        const EDIT_URL = {
+            cpmkCpl: (id) => `{{ url('/bank-soal/admin/kontrol-umum/pemetaan/cpmk-cpl') }}/${id}/edit`,
+            mkCpl:   (id) => `{{ url('/bank-soal/admin/kontrol-umum/pemetaan/mk-cpl') }}/${id}/edit`,
+            dosenMk: (id) => `{{ url('/bank-soal/admin/kontrol-umum/pemetaan/mk-dosen') }}/${id}/edit`,
+        };
+        // delete-all API URLs
+        const DEL_ALL_URL = {
+            cpmkCpl: (id) => `${BASE_API}/cpmk-cpl/${id}/all`,
+            mkCpl:   (id) => `${BASE_API}/mk-cpl/${id}/all`,
+            dosenMk: (id) => `${BASE_API}/dosen-mk/${id}/all`,
+        };
+        // bulk delete API URLs
+        const BULK_DEL_URL = {
+            cpmkCpl: `${BASE_API}/cpmk-cpl/bulk`,
+            mkCpl:   `${BASE_API}/mk-cpl/bulk`,
+            dosenMk: `${BASE_API}/dosen-mk/bulk`,
+        };
+        // bulk body key
+        const BULK_KEY = { cpmkCpl: 'cpl_ids', mkCpl: 'mk_ids', dosenMk: 'mk_ids' };
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadOptions();
@@ -900,6 +971,10 @@
         }
 
         async function loadList(key) {
+            const spinnerId = { cpmkCpl: 'cpmkCplSpinner', mkCpl: 'mkCplSpinner', dosenMk: 'dosenMkSpinner' }[key];
+            const wrapperId = { cpmkCpl: 'cpmkCplWrapper', mkCpl: 'mkCplWrapper', dosenMk: 'dosenMkWrapper' }[key];
+            if (spinnerId) { document.getElementById(spinnerId).classList.add('show'); }
+            if (wrapperId) { document.getElementById(wrapperId).style.opacity = '0.4'; }
             try {
                 const response = await fetch(mappingConfig[key].listApi, {
                     headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken },
@@ -913,6 +988,9 @@
                 applyFilterSort(key, false);
             } catch (error) {
                 showError(toFriendlyMessage(error.message, 'Gagal memuat data pemetaan'));
+            } finally {
+                if (spinnerId) { document.getElementById(spinnerId).classList.remove('show'); }
+                if (wrapperId) { document.getElementById(wrapperId).style.opacity = '1'; }
             }
         }
 
@@ -962,13 +1040,12 @@
             const empty = document.getElementById(cfg.emptyId);
             const pagination = document.getElementById(cfg.paginationId);
             const paginationList = document.getElementById(cfg.paginationListId);
+            const pgInfo = document.getElementById(key + 'PgInfo');
 
             const totalItems = state[key].filtered.length;
             const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
 
-            if (state[key].currentPage > totalPages) {
-                state[key].currentPage = totalPages;
-            }
+            if (state[key].currentPage > totalPages) state[key].currentPage = totalPages;
 
             const start = (state[key].currentPage - 1) * PAGE_SIZE;
             const pageItems = state[key].filtered.slice(start, start + PAGE_SIZE);
@@ -981,58 +1058,170 @@
             }
 
             empty.style.display = 'none';
-            pagination.style.display = totalPages > 1 ? 'flex' : 'none';
+            pagination.style.display = 'flex';
+            if (pgInfo) pgInfo.textContent = `${start + 1}–${Math.min(start + PAGE_SIZE, totalItems)} / ${totalItems}`;
             body.innerHTML = renderRows(key, pageItems);
             paginationList.innerHTML = renderPaginationButtons(key, totalPages);
+            updateBulkBar(key);
         }
 
+        // SVG icons
+        const ICON_EDIT   = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`;
+        const ICON_DELETE = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>`;
+
         function renderRows(key, pageItems) {
+            const rk = ROW_KEY[key];
             if (key === 'cpmkCpl') {
-                return pageItems.map((item) => `
-                    <tr>
-                        <td><span class="mapping-pill">${escapeHtml(item.cpl_kode)}</span></td>
-                        <td class="desc-cell">
-                            ${(item.cpmk_items || []).map((cpmk) => `<span class="kode-badge" style="margin-right:6px;margin-bottom:6px;display:inline-flex;align-items:center;gap:6px;">${escapeHtml(cpmk.cpmk_kode)} <button type="button" class="btn-icon btn-icon-delete" style="width:20px;height:20px;border-radius:999px;padding:0;" title="Hapus CPMK dari CPL" onclick="deleteCpmkCpl(${item.cpl_id}, ${cpmk.cpmk_id})"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:12px;height:12px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></span>`).join('')}
-                        </td>
-                    </tr>
-                `).join('');
+                return pageItems.map((item) => {
+                    const id = item.cpl_id;
+                    const chk = state[key].selected.has(id);
+                    const valText = (item.cpmk_items || []).map(c => escapeHtml(c.cpmk_kode)).join(', ') || '<span style="color:#94a3b8">Tidak ada pemetaan CPMK</span>';
+                    return `<tr>
+                        <td class="cb-col"><input type="checkbox" ${chk?'checked':''} onchange="toggleRow('cpmkCpl',${id},this)"></td>
+                        <td class="col-key">${escapeHtml(item.cpl_kode)}</td>
+                        <td class="col-val">${valText}</td>
+                        <td class="col-act"><div class="dots-wrap">
+                            <button class="btn-dots" onclick="toggleDots(this)" title="Aksi">⋯</button>
+                            <div class="dots-menu">
+                                <a href="${EDIT_URL.cpmkCpl(id)}">${ICON_EDIT} Edit</a>
+                                <button class="menu-delete" onclick="deleteAllMapping('cpmkCpl',${id},'${escapeHtml(item.cpl_kode)}')">  ${ICON_DELETE} Hapus Semua</button>
+                            </div>
+                        </div></td>
+                    </tr>`;
+                }).join('');
             }
-
             if (key === 'mkCpl') {
-                return pageItems.map((item) => `
-                    <tr>
-                        <td class="desc-cell">${escapeHtml(item.mk_nama)}</td>
-                        <td class="desc-cell">
-                            ${(item.cpl_items || []).map((cpl) => `<span class="kode-badge" style="margin-right:6px;margin-bottom:6px;display:inline-flex;align-items:center;gap:6px;">${escapeHtml(cpl.cpl_kode)} <button type="button" class="btn-icon btn-icon-delete" style="width:20px;height:20px;border-radius:999px;padding:0;" title="Hapus CPL dari MK" onclick="deleteMkCpl(${item.mk_id}, ${cpl.cpl_id})"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:12px;height:12px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></span>`).join('')}
-                        </td>
-                    </tr>
-                `).join('');
+                return pageItems.map((item) => {
+                    const id = item.mk_id;
+                    const chk = state[key].selected.has(id);
+                    const valText = (item.cpl_items || []).map(c => escapeHtml(c.cpl_kode)).join(', ') || '<span style="color:#94a3b8">Tidak ada pemetaan CPL</span>';
+                    return `<tr>
+                        <td class="cb-col"><input type="checkbox" ${chk?'checked':''} onchange="toggleRow('mkCpl',${id},this)"></td>
+                        <td class="col-key">${escapeHtml(item.mk_kode)}<br><span style="font-size:12px;color:#64748b;font-weight:400">${escapeHtml(item.mk_nama)}</span></td>
+                        <td class="col-val">${valText}</td>
+                        <td class="col-act"><div class="dots-wrap">
+                            <button class="btn-dots" onclick="toggleDots(this)" title="Aksi">⋯</button>
+                            <div class="dots-menu">
+                                <a href="${EDIT_URL.mkCpl(id)}">${ICON_EDIT} Edit</a>
+                                <button class="menu-delete" onclick="deleteAllMapping('mkCpl',${id},'${escapeHtml(item.mk_kode)}')">  ${ICON_DELETE} Hapus Semua</button>
+                            </div>
+                        </div></td>
+                    </tr>`;
+                }).join('');
             }
-
-            return pageItems.map((item) => `
-                <tr>
-                    <td class="desc-cell">${escapeHtml(item.mk_nama)}</td>
-                    <td class="desc-cell">
-                        ${(item.dosen_items || []).map((dosen) => `<span class="kode-badge" style="margin-right:6px;margin-bottom:6px;display:inline-flex;align-items:center;gap:6px;">${escapeHtml(dosen.dosen_nama)} <button type="button" class="btn-icon btn-icon-delete" style="width:20px;height:20px;border-radius:999px;padding:0;" title="Hapus dosen dari MK" onclick="deleteDosenMk(${dosen.id})"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:12px;height:12px;"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button></span>`).join('')}
-                    </td>
-                </tr>
-            `).join('');
+            // dosenMk
+            return pageItems.map((item) => {
+                const id = item.mk_id;
+                const chk = state[key].selected.has(id);
+                const valText = (item.dosen_items || []).map(d => escapeHtml(d.dosen_nama)).join(', ') || '<span style="color:#94a3b8">Tidak ada pemetaan Dosen</span>';
+                return `<tr>
+                    <td class="cb-col"><input type="checkbox" ${chk?'checked':''} onchange="toggleRow('dosenMk',${id},this)"></td>
+                    <td class="col-key">${escapeHtml(item.mk_kode)}<br><span style="font-size:12px;color:#64748b;font-weight:400">${escapeHtml(item.mk_nama)}</span></td>
+                    <td class="col-val">${valText}</td>
+                    <td class="col-act"><div class="dots-wrap">
+                        <button class="btn-dots" onclick="toggleDots(this)" title="Aksi">⋯</button>
+                        <div class="dots-menu">
+                            <a href="${EDIT_URL.dosenMk(id)}">${ICON_EDIT} Edit</a>
+                            <button class="menu-delete" onclick="deleteAllMapping('dosenMk',${id},'${escapeHtml(item.mk_kode)}')">  ${ICON_DELETE} Hapus Semua</button>
+                        </div>
+                    </div></td>
+                </tr>`;
+            }).join('');
         }
 
         function renderPaginationButtons(key, totalPages) {
             const page = state[key].currentPage;
-            const buttons = [];
-            buttons.push(`<button type="button" class="pagination-btn" onclick="goToPage('${key}', ${Math.max(1, page - 1)})" ${page === 1 ? 'disabled' : ''}>&lsaquo;</button>`);
-            for (let i = 1; i <= totalPages; i++) {
-                buttons.push(`<button type="button" class="pagination-btn ${i === page ? 'active' : ''}" onclick="goToPage('${key}', ${i})">${i}</button>`);
-            }
-            buttons.push(`<button type="button" class="pagination-btn" onclick="goToPage('${key}', ${Math.min(totalPages, page + 1)})" ${page === totalPages ? 'disabled' : ''}>&rsaquo;</button>`);
-            return buttons.join('');
+            const wS = Math.max(1, Math.min(page - 2, totalPages - 4));
+            const wE = Math.min(totalPages, wS + 4);
+            let b = `<button type="button" class="pagination-btn" onclick="goToPage('${key}',${page-1})" ${page===1?'disabled':''}>‹</button>`;
+            for (let i = wS; i <= wE; i++)
+                b += `<button type="button" class="pagination-btn ${i===page?'active':''}" onclick="goToPage('${key}',${i})">${i}</button>`;
+            b += `<button type="button" class="pagination-btn" onclick="goToPage('${key}',${page+1})" ${page===totalPages?'disabled':''}>›</button>`;
+            return b;
         }
 
-        function goToPage(key, page) {
-            state[key].currentPage = page;
+        function goToPage(key, page) { state[key].currentPage = page; renderTable(key); }
+
+        /* ── Dropdown toggle ── */
+        function toggleDots(btn) {
+            const menu = btn.nextElementSibling;
+            const isOpen = menu.classList.contains('open');
+            // close all others first
+            document.querySelectorAll('.dots-menu.open').forEach(m => m.classList.remove('open'));
+            if (!isOpen) menu.classList.add('open');
+        }
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dots-wrap')) document.querySelectorAll('.dots-menu.open').forEach(m => m.classList.remove('open'));
+        });
+
+        /* ── Checkbox logic ── */
+        function toggleRow(key, id, cb) {
+            cb.checked ? state[key].selected.add(id) : state[key].selected.delete(id);
+            updateBulkBar(key);
+            updateSelectAllHeader(key);
+        }
+        function toggleSelectAll(key, cb) {
+            const rk = ROW_KEY[key];
+            const page = state[key].filtered.slice((state[key].currentPage-1)*PAGE_SIZE, state[key].currentPage*PAGE_SIZE);
+            page.forEach(item => cb.checked ? state[key].selected.add(item[rk]) : state[key].selected.delete(item[rk]));
             renderTable(key);
+        }
+        function updateSelectAllHeader(key) {
+            const rk = ROW_KEY[key];
+            const page = state[key].filtered.slice((state[key].currentPage-1)*PAGE_SIZE, state[key].currentPage*PAGE_SIZE);
+            const allChk = page.length > 0 && page.every(item => state[key].selected.has(item[rk]));
+            const el = document.getElementById(key+'SelAll');
+            if (el) el.checked = allChk;
+        }
+        function updateBulkBar(key) {
+            const bar = document.getElementById(key+'BulkBar');
+            const cnt = document.getElementById(key+'BulkCount');
+            const n = state[key].selected.size;
+            bar.classList.toggle('show', n > 0);
+            if (cnt) cnt.textContent = n + ' item dipilih';
+        }
+
+        /* ── Delete all for one row ── */
+        async function deleteAllMapping(key, id, label) {
+            const result = await Swal.fire({
+                icon: 'warning',
+                title: 'Hapus semua pemetaan?',
+                html: `Semua pemetaan untuk <strong>${label}</strong> akan dihapus. Baris tetap ada dengan nilai kosong.`,
+                showCancelButton: true, confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal', confirmButtonColor: '#ef4444',
+            });
+            if (!result.isConfirmed) return;
+            try {
+                const r = await fetch(DEL_ALL_URL[key](id), { method: 'DELETE', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken } });
+                const d = await readApiResponse(r);
+                if (r.ok && d.success) {
+                    await Swal.fire({ icon: 'success', title: 'Berhasil', text: d.message, timer: 1400, showConfirmButton: false });
+                    loadList(key);
+                } else Swal.fire({ icon: 'error', title: 'Gagal', text: d.message || 'Terjadi kesalahan' });
+            } catch(e) { Swal.fire({ icon: 'error', title: 'Error', text: e.message }); }
+        }
+
+        /* ── Bulk delete ── */
+        async function bulkDelete(key) {
+            const ids = [...state[key].selected];
+            if (!ids.length) return;
+            const result = await Swal.fire({
+                icon: 'warning', title: `Hapus ${ids.length} pemetaan?`,
+                text: 'Semua pemetaan pada baris terpilih akan dihapus.',
+                showCancelButton: true, confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal', confirmButtonColor: '#ef4444',
+            });
+            if (!result.isConfirmed) return;
+            try {
+                const body = {}; body[BULK_KEY[key]] = ids;
+                const r = await fetch(BULK_DEL_URL[key], { method: 'DELETE', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken }, body: JSON.stringify(body) });
+                const d = await readApiResponse(r);
+                if (r.ok && d.success) {
+                    state[key].selected.clear();
+                    await Swal.fire({ icon: 'success', title: 'Berhasil', text: d.message, timer: 1400, showConfirmButton: false });
+                    loadList(key);
+                } else Swal.fire({ icon: 'error', title: 'Gagal', text: d.message || 'Terjadi kesalahan' });
+            } catch(e) { Swal.fire({ icon: 'error', title: 'Error', text: e.message }); }
         }
 
         function openModal(type) {

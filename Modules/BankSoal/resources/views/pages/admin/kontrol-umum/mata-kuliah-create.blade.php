@@ -421,7 +421,7 @@
                 <label for="sks">Jumlah SKS <span style="color: var(--danger-red)">*</span></label>
                 <div class="sks-counter">
                     <button type="button" onclick="decrementSKS()">-</button>
-                    <input type="number" id="sks" name="sks" value="2" min="1" max="6" readonly>
+                    <input type="number" id="sks" name="sks" value="2" min="1" max="3" readonly>
                     <button type="button" onclick="incrementSKS()">+</button>
                 </div>
                 <div class="form-error" id="error-sks"></div>
@@ -503,7 +503,7 @@
         // SKS Counter Logic
         function incrementSKS() {
             const input = document.getElementById('sks');
-            if (parseInt(input.value) < 6) {
+            if (parseInt(input.value) < 3) {
                 input.value = parseInt(input.value) + 1;
             }
         }

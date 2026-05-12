@@ -269,53 +269,50 @@
             accent-color: var(--primary-blue);
         }
 
-        .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            background: var(--primary-blue);
-            color: #fff;
+        /* ── 3-dot dropdown ── */
+        .dots-wrap { position: relative; display: inline-block; }
+        .btn-dots {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; border-radius: 6px;
+            border: 1px solid var(--slate-200); background: #fff;
+            font-size: 18px; cursor: pointer; color: var(--slate-600);
+            transition: all 0.15s; line-height: 1;
         }
+        .btn-dots:hover { border-color: var(--primary-blue); color: var(--primary-blue); background: #f0f4ff; }
+        .dots-menu {
+            display: none; position: absolute; right: 0; top: 38px;
+            background: #fff; border: 1px solid var(--slate-200);
+            border-radius: 8px; box-shadow: 0 4px 16px rgba(15,23,42,0.1);
+            min-width: 140px; z-index: 50; overflow: hidden;
+        }
+        .dots-menu.open { display: block; }
+        .dots-menu button {
+            display: flex; align-items: center; gap: 8px;
+            width: 100%; padding: 9px 14px;
+            background: none; border: none; border-bottom: 1px solid var(--slate-100);
+            font-size: 13px; font-weight: 500; color: var(--slate-700);
+            cursor: pointer; text-align: left;
+        }
+        .dots-menu button:last-child { border-bottom: none; }
+        .dots-menu button:hover { background: var(--slate-50); }
+        .dots-menu .menu-delete { color: var(--danger-red); }
+        .dots-menu .menu-delete:hover { background: #fef2f2; }
 
-        .action-cell {
-            display: flex;
-            gap: 8px;
+        /* ── Table loading ── */
+        .tbl-loading {
+            display: none; align-items: center; justify-content: center;
+            gap: 10px; padding: 48px 20px; color: var(--slate-400);
+            font-size: 14px;
         }
-
-        .btn-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            border: 1px solid currentColor;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: transparent;
+        .tbl-loading.show { display: flex; }
+        .tbl-spinner {
+            width: 24px; height: 24px;
+            border: 3px solid var(--slate-200);
+            border-top-color: var(--primary-blue);
+            border-radius: 50%;
+            animation: tbl-spin 0.7s linear infinite; flex-shrink: 0;
         }
-
-        .btn-icon-edit {
-            color: var(--primary-blue);
-        }
-
-        .btn-icon-edit:hover {
-            background: var(--primary-blue);
-            border-color: var(--primary-blue);
-            color: #fff;
-        }
-
-        .btn-icon-delete {
-            color: var(--danger-red);
-        }
-
-        .btn-icon-delete:hover {
-            background: var(--danger-red);
-            border-color: var(--danger-red);
-            color: #fff;
-        }
+        @keyframes tbl-spin { to { transform: rotate(360deg); } }
 
         .empty-state {
             text-align: center;
@@ -641,7 +638,11 @@
     </div>
 
     <div class="table-section">
-        <div class="table-wrapper">
+        <div class="tbl-loading" id="tblLoading">
+            <div class="tbl-spinner"></div>
+            Memuat data...
+        </div>
+        <div class="table-wrapper" id="tblWrapper" style="display:none;">
             <table>
                 <thead>
                     <tr>
@@ -652,7 +653,7 @@
                         <th>Nama</th>
                         <th>SKS</th>
                         <th>Semester</th>
-                        <th>Aksi</th>
+                        <th style="width:56px;"></th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -792,6 +793,9 @@
         document.addEventListener('DOMContentLoaded', loadAllMataKuliah);
 
         async function loadAllMataKuliah() {
+            document.getElementById('tblLoading').classList.add('show');
+            document.getElementById('tblWrapper').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'none';
             try {
                 const response = await fetch(API_URL, {
                     headers: {
@@ -811,6 +815,9 @@
                 }
             } catch (error) {
                 showError(toFriendlyMessage(error.message, 'Gagal memuat data mata kuliah'));
+            } finally {
+                document.getElementById('tblLoading').classList.remove('show');
+                document.getElementById('tblWrapper').style.display = 'block';
             }
         }
 
@@ -858,6 +865,20 @@
             renderTable();
         }
 
+        // ── 3-dot dropdown ──────────────────────────────────────────
+        function toggleDots(btn) {
+            const menu = btn.nextElementSibling;
+            const isOpen = menu.classList.contains('open');
+            document.querySelectorAll('.dots-menu.open').forEach(m => m.classList.remove('open'));
+            if (!isOpen) menu.classList.add('open');
+        }
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dots-wrap')) document.querySelectorAll('.dots-menu.open').forEach(m => m.classList.remove('open'));
+        });
+
+        const ICON_EDIT   = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`;
+        const ICON_DEL    = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>`;
+
         function renderTable() {
             const tableBody = document.getElementById('tableBody');
             const emptyState = document.getElementById('emptyState');
@@ -865,9 +886,7 @@
 
             const totalItems = filteredMataKuliah.length;
             const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
-            if (currentPage > totalPages) {
-                currentPage = totalPages;
-            }
+            if (currentPage > totalPages) currentPage = totalPages;
 
             const startIndex = (currentPage - 1) * PAGE_SIZE;
             const pageItems = filteredMataKuliah.slice(startIndex, startIndex + PAGE_SIZE);
@@ -881,35 +900,24 @@
 
             emptyState.style.display = 'none';
             paginationSection.style.display = totalPages > 1 ? 'flex' : 'none';
-            tableBody.innerHTML = pageItems
-                .map(
-                    (mk) => `
+            tableBody.innerHTML = pageItems.map((mk) => `
                 <tr>
-                    <td>
-                        <input type="checkbox" class="mk-checkbox" value="${mk.id}" onchange="updateBulkDeleteUI()">
-                    </td>
-                    <td><span class="badge">${escapeHtml(mk.kode)}</span></td>
+                    <td><input type="checkbox" class="mk-checkbox" value="${mk.id}" onchange="updateBulkDeleteUI()"></td>
+                    <td><span style="font-weight:700;color:#1e293b">${escapeHtml(mk.kode)}</span></td>
                     <td>${escapeHtml(mk.nama)}</td>
                     <td>${mk.sks} SKS</td>
                     <td>Semester ${mk.semester}</td>
-                    <td>
-                        <div class="action-cell">
-                            <button type="button" class="btn-icon btn-icon-edit" title="Edit" onclick="editMataKuliah(${mk.id})">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                </svg>
-                            </button>
-                            <button type="button" class="btn-icon btn-icon-delete" title="Hapus" onclick="deleteMataKuliah(${mk.id})">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
+                    <td style="text-align:center">
+                        <div class="dots-wrap">
+                            <button class="btn-dots" onclick="toggleDots(this)" title="Aksi">&#8943;</button>
+                            <div class="dots-menu">
+                                <button onclick="editMataKuliah(${mk.id})">${ICON_EDIT} Edit</button>
+                                <button class="menu-delete" onclick="deleteMataKuliah(${mk.id})">${ICON_DEL} Hapus</button>
+                            </div>
                         </div>
                     </td>
                 </tr>
-            `
-                )
-                .join('');
+            `).join('');
 
             renderPagination(totalPages);
         }

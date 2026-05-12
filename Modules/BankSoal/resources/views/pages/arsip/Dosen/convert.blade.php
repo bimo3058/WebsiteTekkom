@@ -1,42 +1,42 @@
 <x-banksoal::layouts.dosen-admin>
 
-<x-banksoal::ui.page-header title="Konversi Penarikan ke Arsip" subtitle="Lengkapi detail arsip sebelum memindahkan penarikan menjadi arsip final.">
-    <x-slot:actions>
-        <a href="{{ route('banksoal.arsip.dosen.index') }}" class="inline-flex items-center gap-2 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl px-4 py-2.5 font-medium text-slate-700 transition-colors">
-            <i class="fas fa-arrow-left w-4"></i> Kembali
-        </a>
-    </x-slot:actions>
-</x-banksoal::ui.page-header>
+<!-- Modal Konfirmasi Arsipkan -->
+<div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+    <div class="bg-white rounded-2xl shadow-xl max-w-md w-full mx-4 p-8">
+        <!-- Icon -->
+        <div class="flex justify-center mb-4">
+            <div class="w-16 h-16 bg-emerald-100 rounded-full flex items-center justify-center">
+                <i class="fas fa-archive text-emerald-600 text-2xl"></i>
+            </div>
+        </div>
 
-<x-banksoal::ui.panel title="Konversi" padding="p-6">
-    <form action="{{ route('banksoal.arsip.dosen.penarikan.update', $penarikan->id) }}" method="POST" class="space-y-4">
-        @csrf
-        @method('PUT')
-        <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Nama Arsip</label>
-            <input type="text" name="nama_arsip" value="{{ $penarikan->nama_ekstraksi }}" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">
-        </div>
-        <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Deskripsi</label>
-            <textarea name="deskripsi" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">{{ $penarikan->deskripsi }}</textarea>
-        </div>
-        <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Catatan Internal</label>
-            <textarea name="catatan_internal" rows="4" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm">{{ $penarikan->catatan_internal }}</textarea>
-        </div>
-        <div>
-            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Catatan Konversi</label>
-            <textarea name="catatan_konversi" rows="3" class="w-full rounded-lg border border-slate-300 px-3 py-2.5 text-sm"></textarea>
-        </div>
-        <div class="flex items-center gap-3 pt-2">
-            <button type="submit" class="inline-flex items-center gap-2 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors">
-                <i class="fas fa-archive"></i> Konversi Sekarang
-            </button>
-            <a href="{{ route('banksoal.arsip.dosen.index') }}" class="rounded-lg border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
+        <!-- Title -->
+        <h2 class="text-center text-xl font-bold text-slate-900 mb-2">Arsipkan Penarikan?</h2>
+
+        <!-- Message -->
+        <p class="text-center text-slate-600 text-sm mb-6">
+            Anda akan memindahkan <strong>{{ $penarikan->nama_ekstraksi }}</strong> ke arsip final. Tindakan ini tidak dapat dibatalkan.
+        </p>
+
+        <!-- Form & Actions -->
+        <form action="{{ route('banksoal.arsip.dosen.penarikan.update', $penarikan->id) }}" method="POST" class="flex items-center gap-3">
+            @csrf
+            @method('PUT')
+            
+            <!-- Hidden fields with default values -->
+            <input type="hidden" name="nama_arsip" value="{{ $penarikan->nama_ekstraksi }}">
+            <input type="hidden" name="deskripsi" value="{{ $penarikan->deskripsi ?? '' }}">
+            <input type="hidden" name="catatan_internal" value="{{ $penarikan->catatan_internal ?? '' }}">
+            <input type="hidden" name="catatan_konversi" value="">
+            
+            <a href="{{ route('banksoal.arsip.dosen.index') }}" class="flex-1 rounded-lg border border-slate-300 px-4 py-2.5 text-center text-sm font-semibold text-slate-700 hover:bg-slate-50 transition-colors">
                 Batal
             </a>
-        </div>
-    </form>
-</x-banksoal::ui.panel>
+            <button type="submit" class="flex-1 rounded-lg bg-emerald-600 px-4 py-2.5 text-sm font-semibold text-white hover:bg-emerald-700 transition-colors">
+                Arsipkan
+            </button>
+        </form>
+    </div>
+</div>
 
 </x-banksoal::layouts.dosen-admin>

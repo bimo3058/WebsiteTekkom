@@ -44,6 +44,12 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::get('/cpl-cpmk', [CplCpmkController::class, 'index'])->name('cpl-cpmk');
             Route::get('/cpl-cpmk/create', [CplCpmkController::class, 'create'])->name('cpl-cpmk.create');
             Route::get('/pemetaan', [PemetaanController::class, 'index'])->name('pemetaan');
+            Route::get('/pemetaan/cpmk-cpl/create', [PemetaanController::class, 'createCpmkCpl'])->name('pemetaan.cpmk-cpl.create');
+            Route::get('/pemetaan/mk-cpl/create', [PemetaanController::class, 'createMkCpl'])->name('pemetaan.mk-cpl.create');
+            Route::get('/pemetaan/mk-dosen/create', [PemetaanController::class, 'createMkDosen'])->name('pemetaan.mk-dosen.create');
+            Route::get('/pemetaan/cpmk-cpl/{cpl_id}/edit', [PemetaanController::class, 'editCpmkCpl'])->name('pemetaan.cpmk-cpl.edit');
+            Route::get('/pemetaan/mk-cpl/{mk_id}/edit', [PemetaanController::class, 'editMkCpl'])->name('pemetaan.mk-cpl.edit');
+            Route::get('/pemetaan/mk-dosen/{mk_id}/edit', [PemetaanController::class, 'editMkDosen'])->name('pemetaan.mk-dosen.edit');
         });
 
         Route::middleware('role:admin_banksoal')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
@@ -67,7 +73,9 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::get('/pemetaan/options', [PemetaanController::class, 'options'])->name('pemetaan.options');
             Route::get('/pemetaan/cpmk-cpl', [PemetaanController::class, 'listCpmkCpl'])->name('pemetaan.cpmk-cpl.index');
             Route::get('/pemetaan/mk-cpl', [PemetaanController::class, 'listMkCpl'])->name('pemetaan.mk-cpl.index');
+            Route::get('/pemetaan/cpl-mk', [PemetaanController::class, 'listCplMk'])->name('pemetaan.cpl-mk.index');
             Route::get('/pemetaan/dosen-mk', [PemetaanController::class, 'listDosenMk'])->name('pemetaan.dosen-mk.index');
+            Route::get('/pemetaan/dosen-by-dosen', [PemetaanController::class, 'listDosenByDosen'])->name('pemetaan.dosen-by-dosen.index');
         });
 
         # Admin Routes - Kontrol BankSoal
@@ -186,8 +194,13 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::put('/cpmk/{id}', [CplCpmkController::class, 'updateCpmk'])->name('cpmk.update');
 
             Route::post('/pemetaan/cpmk-cpl', [PemetaanController::class, 'storeCpmkCpl'])->name('pemetaan.cpmk-cpl.store');
+            Route::post('/pemetaan/cpmk-cpl/sync', [PemetaanController::class, 'syncCpmkCpl'])->name('pemetaan.cpmk-cpl.sync');
             Route::post('/pemetaan/mk-cpl', [PemetaanController::class, 'storeMkCpl'])->name('pemetaan.mk-cpl.store');
+            Route::post('/pemetaan/mk-cpl/sync', [PemetaanController::class, 'syncMkCpl'])->name('pemetaan.mk-cpl.sync');
+            Route::post('/pemetaan/cpl-mk', [PemetaanController::class, 'storeCplMk'])->name('pemetaan.cpl-mk.store');
             Route::post('/pemetaan/dosen-mk', [PemetaanController::class, 'storeDosenMk'])->name('pemetaan.dosen-mk.store');
+            Route::post('/pemetaan/dosen-mk/sync', [PemetaanController::class, 'syncMkDosen'])->name('pemetaan.dosen-mk.sync');
+            Route::post('/pemetaan/dosen-mk-by-dosen', [PemetaanController::class, 'storeDosenMkByDosen'])->name('pemetaan.dosen-mk-by-dosen.store');
         });
 
         // 1. Blok RPS
@@ -238,8 +251,16 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::delete('/cpmk/{id}', [CplCpmkController::class, 'destroyCpmk'])->name('cpmk.destroy');
 
             Route::delete('/pemetaan/cpmk-cpl', [PemetaanController::class, 'destroyCpmkCpl'])->name('pemetaan.cpmk-cpl.destroy');
+            Route::delete('/pemetaan/cpmk-cpl/{cpl_id}/all', [PemetaanController::class, 'destroyAllCpmkByCpl'])->name('pemetaan.cpmk-cpl.destroy-all');
+            Route::delete('/pemetaan/cpmk-cpl/bulk', [PemetaanController::class, 'bulkDestroyCpmkCpl'])->name('pemetaan.cpmk-cpl.bulk-destroy');
+
             Route::delete('/pemetaan/mk-cpl', [PemetaanController::class, 'destroyMkCpl'])->name('pemetaan.mk-cpl.destroy');
+            Route::delete('/pemetaan/mk-cpl/{mk_id}/all', [PemetaanController::class, 'destroyAllCplByMk'])->name('pemetaan.mk-cpl.destroy-all');
+            Route::delete('/pemetaan/mk-cpl/bulk', [PemetaanController::class, 'bulkDestroyMkCpl'])->name('pemetaan.mk-cpl.bulk-destroy');
+
             Route::delete('/pemetaan/dosen-mk/{id}', [PemetaanController::class, 'destroyDosenMk'])->name('pemetaan.dosen-mk.destroy');
+            Route::delete('/pemetaan/dosen-mk/{mk_id}/all', [PemetaanController::class, 'destroyAllDosenByMk'])->name('pemetaan.dosen-mk.destroy-all');
+            Route::delete('/pemetaan/dosen-mk/bulk', [PemetaanController::class, 'bulkDestroyDosenMk'])->name('pemetaan.dosen-mk.bulk-destroy');
         });
         
         // RPS Dosen Delete

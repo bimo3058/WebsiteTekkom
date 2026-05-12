@@ -130,9 +130,9 @@
                     </div>
                     
                     <div class="flex items-center gap-2 mt-3 sm:mt-0 w-full sm:w-auto">
-                        <x-ui.button as="a" href="{{ route('banksoal.arsip.dosen.penarikan.edit', $penarikan->id) }}" variant="default" size="sm" class="w-full sm:w-auto text-xs bg-emerald-600 hover:bg-emerald-700 text-white border-transparent">
-                            <i class="fas fa-archive mr-1.5"></i> Konversi
-                        </x-ui.button>
+                        <a href="{{ route('banksoal.arsip.dosen.penarikan.edit', $penarikan->id) }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 text-xs font-medium transition-colors">
+                            <i class="fas fa-archive"></i> Arsipkan
+                        </a>
                         <form action="{{ route('banksoal.arsip.dosen.penarikan.destroy', $penarikan->id) }}" method="POST" onsubmit="return confirm('Hapus riwayat penarikan ini?')" class="w-full sm:w-auto">
                             @csrf
                             @method('DELETE')
