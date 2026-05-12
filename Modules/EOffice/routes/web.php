@@ -3,7 +3,10 @@
 use Illuminate\Support\Facades\Route;
 use Modules\EOffice\Http\Controllers\DashboardController;
 use Modules\EOffice\Http\Controllers\EOfficeController;
-use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\DosenController;
+use Modules\EOffice\Http\Controllers\KerjaPraktikController;
+use Modules\EOffice\Http\Controllers\DosenController;
+use Modules\EOffice\Http\Controllers\KoordinatorController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\DosenController as AdminDosenPrakController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PraktikumController;
 
 Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
@@ -19,64 +22,61 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
     // MANAJEMEN PRAKTIKUM
     // ══════════════════════════════════════════════════════════════════════════
     Route::prefix('eoffice/manprak')->name('eoffice.manprak.')->group(function () {
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-        // Dashboard manprak (sementara redirect ke dashboard utama)
-        Route::get('/dashboard', [DashboardController::class, 'index'])
-            ->name('dashboard');
-
-        // ── Admin ──────────────────────────────────────────────────────────────
+        // Admin Manprak
         Route::middleware(['role:superadmin,admin_eoffice'])
             ->prefix('admin')->name('admin.')
             ->group(function () {
-
-                // Daftar dosen
-                Route::get('dosen', [DosenController::class, 'index'])
-                    ->name('dosen.index');
-
-                // CRUD Praktikum
-                Route::resource('praktikum', PraktikumController::class)
-                    ->names('praktikum');
-
-                // Assign koordinator
-                Route::put('praktikum/{id}/assign-koor', [PraktikumController::class, 'assignKoor'])
-                    ->name('praktikum.assign-koor');
+                Route::get('dosen', [AdminDosenPrakController::class, 'index'])->name('dosen.index');
+                Route::resource('praktikum', PraktikumController::class)->names('praktikum');
+                Route::put('praktikum/{id}/assign-koor', [PraktikumController::class, 'assignKoor'])->name('praktikum.assign-koor');
             });
 
-        // ── Dosen ──────────────────────────────────────────────────────────────
-        Route::middleware(['role:dosen'])
-            ->prefix('dosen')->name('dosen.')
-            ->group(function () {
-                // TODO: routes dosen manprak
-            });
-
-        // ── Koor ───────────────────────────────────────────────────────────────
-        Route::middleware(['role:koor_prak,admin_eoffice,superadmin'])
-            ->prefix('koor')->name('koor.')
-            ->group(function () {
-                // TODO: routes koor
-            });
-
-        // ── Asprak ─────────────────────────────────────────────────────────────
-        Route::middleware(['role:asprak,koor_prak,admin_eoffice,superadmin'])
-            ->prefix('asprak')->name('asprak.')
-            ->group(function () {
-                // TODO: routes asprak
-            });
+        // Placeholder Dosen, Koor, Asprak Manprak
+        Route::middleware(['role:dosen'])->prefix('dosen')->name('dosen.')->group(function () { /* TODO */});
+        Route::middleware(['role:koor_prak,admin_eoffice,superadmin'])->prefix('koor')->name('koor.')->group(function () { /* TODO */});
+        Route::middleware(['role:asprak,koor_prak,admin_eoffice,superadmin'])->prefix('asprak')->name('asprak.')->group(function () { /* TODO */});
     });
 
     // ══════════════════════════════════════════════════════════════════════════
-    // KERJA PRAKTIK (KP) — stub, diisi saat modul KP selesai
+    // KERJA PRAKTIK (KP)
     // ══════════════════════════════════════════════════════════════════════════
     Route::prefix('eoffice/kp')->name('eoffice.kp.')->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])
-            ->name('dashboard');
+
+        // Route Mahasiswa
+        Route::get('/daftar', [KerjaPraktikController::class, 'create'])->name('register');
+        Route::post('/daftar', [KerjaPraktikController::class, 'store'])->name('store');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // Route Dosen Pembimbing KP
+        Route::prefix('dosen')->name('dosen.')->group(function () {
+            Route::get('/dashboard', [DosenController::class, 'dashboard'])->name('dashboard');
+            Route::get('/bimbingan/{id}', [DosenController::class, 'show'])->name('bimbingan.show');
+            Route::post('/bimbingan/{id}/approve-pra-kp', [DosenController::class, 'approvePraKp'])->name('bimbingan.approve_pra_kp');
+            Route::post('/bimbingan/{id}/dokumen/{dokumenId}/approve', [DosenController::class, 'approveDokumen'])->name('bimbingan.dokumen.approve');
+            Route::post('/bimbingan/{id}/dokumen/{dokumenId}/reject', [DosenController::class, 'rejectDokumen'])->name('bimbingan.dokumen.reject');
+            Route::get('/bimbingan/{id}/penilaian', [DosenController::class, 'showPenilaian'])->name('bimbingan.penilaian');
+            Route::post('/bimbingan/{id}/penilaian', [DosenController::class, 'storePenilaian'])->name('bimbingan.penilaian.store');
+            Route::get('/validasi-berkas', [DosenController::class, 'validasiBerkas'])->name('validasi_berkas');
+        });
+
+        // Route Koordinator KP
+        Route::prefix('koordinator')->name('koordinator.')->group(function () {
+            Route::get('/dashboard', [KoordinatorController::class, 'dashboard'])->name('dashboard');
+            Route::get('/balancing', [KoordinatorController::class, 'balancingDosen'])->name('balancing');
+            Route::post('/balancing', [KoordinatorController::class, 'storeBalancing'])->name('balancing.store');
+            Route::get('/pengumuman', [KoordinatorController::class, 'pengumuman'])->name('pengumuman');
+            Route::post('/pengumuman', [KoordinatorController::class, 'storePengumuman'])->name('pengumuman.store');
+            Route::delete('/pengumuman/{id}', [KoordinatorController::class, 'destroyPengumuman'])->name('pengumuman.destroy');
+            Route::get('/validasi-berkas', [KoordinatorController::class, 'validasiBerkas'])->name('validasi_berkas');
+        });
     });
 
     // ══════════════════════════════════════════════════════════════════════════
-    // MANAJEMEN PEMINJAMAN — stub, diisi saat modul Peminjaman selesai
+    // MANAJEMEN PEMINJAMAN
     // ══════════════════════════════════════════════════════════════════════════
     Route::prefix('eoffice/peminjaman')->name('eoffice.peminjaman.')->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])
-            ->name('dashboard');
+        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
     });
 });
