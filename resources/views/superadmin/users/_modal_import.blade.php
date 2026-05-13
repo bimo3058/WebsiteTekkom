@@ -229,7 +229,7 @@ function renderDuplicateList(duplicates) {
             : `<span class="text-[10px] text-slate-400 italic">No Role</span>`;
 
         const avatarHtml = u.avatar_url
-            ? `<img src="${u.avatar_url}" class="w-full h-full object-cover" alt="avatar">`
+            ? `<img src="${u.avatar_url}" loading="lazy" decoding="async" class="w-full h-full object-cover" alt="avatar">`
             : `<span class="text-[10px] font-semibold">${initials}</span>`;
 
         return `

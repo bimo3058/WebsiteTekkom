@@ -37,8 +37,37 @@
 
     .rp-tr:hover td { background: #FAFBFC !important; }
 
-    .badge-active   { display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;background:#ECFDF5;color:#059669;border:1px solid #A7F3D0; }
-    .badge-inactive { display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:99px;font-size:10px;font-weight:700;background:#F8FAFC;color:#94A3B8;border:1px solid #E2E8F0; }
+    /* ── Mobile: scroll natively ── */
+    @media (max-width: 767px) {
+        .sitkom-content {
+            padding: 8px 8px 80px !important;
+            display: block !important;
+            overflow: visible !important;
+        }
+        .rp-wrap {
+            height: auto !important;
+            min-height: 0 !important;
+            padding: 0;
+        }
+        .rp-box {
+            flex: none !important;
+            min-height: 0 !important;
+            overflow: visible !important;
+            border-radius: 10px;
+        }
+        .rp-box-header {
+            padding: 12px 14px;
+            position: sticky;
+            top: 52px;
+            z-index: 10;
+        }
+        .rp-box-body {
+            overflow-y: visible !important;
+            flex: none !important;
+            padding: 12px 14px;
+        }
+    }
+
 </style>
 
 @php
@@ -55,21 +84,6 @@
     $sortDir = in_array($sortDir, ['asc','desc']) ? $sortDir : 'asc';
 
     $roles = $rolesQuery->orderBy($sortBy, $sortDir)->paginate($perPage)->withQueryString();
-
-    $roleColors = [
-        'superadmin'          => '#DC2626', // merah
-        'kadep'               => '#DC2626',
-        'dosen'               => '#10B981',
-        'mahasiswa'           => '#D97706',
-        'gpm'                 => '#0EA5E9',
-        'pengurus_himpunan'   => '#8B5CF6',
-        'alumni'              => '#64748B',
-        'admin_banksoal'      => '#595d63', // sama semua admin modul
-        'admin_capstone'      => '#595d63',
-        'admin_eoffice'       => '#595d63',
-        'admin_kemahasiswaan' => '#595d63',
-        'dosen_koor'          => '#F59E0B',
-    ];
 
     $dbModules = \App\Models\SystemModule::all();
 @endphp
@@ -200,8 +214,6 @@
                     <tbody>
                         @forelse($roles as $i => $role)
                         @php
-                            $color    = $roleColors[$role->name] ?? '#94A3B8';
-                            $label    = \Illuminate\Support\Str::title(str_replace('_', ' ', $role->name));
                             $permCount = $role->permissions->count();
                             $modCount  = $dbModules->count();
                             $rowNum    = ($roles->currentPage()-1) * $roles->perPage() + $i + 1;
@@ -214,12 +226,10 @@
                             </td>
                             <td style="padding:10px 12px;font-size:12px;font-weight:600;color:var(--c-fg-muted);">{{ $rowNum }}</td>
 
-                            {{-- Nama Role — soft pastel badge --}}
+                            {{-- Nama Role --}}
                             <td style="padding:10px 12px;">
-                                <a href="{{ route('superadmin.permissions.show') . '?role=' . $role->name }}"
-                                   style="display:inline-flex;align-items:center;padding:3px 10px;border-radius:99px;background:{{ $color }}18;text-decoration:none;transition:background .15s;"
-                                   onmouseover="this.style.background='{{ $color }}28'" onmouseout="this.style.background='{{ $color }}18'">
-                                    <span style="font-size:12px;font-weight:600;color:{{ $color }};white-space:nowrap;">{{ $label }}</span>
+                                <a href="{{ route('superadmin.permissions.show') . '?role=' . $role->name }}" style="text-decoration:none;">
+                                    <x-ui.role-badge :role="$role->name" size="xs" />
                                 </a>
                             </td>
 
@@ -227,11 +237,7 @@
                             <td style="padding:10px 12px;font-size:12px;font-weight:600;color:var(--c-fg-sec);">{{ $permCount }} Permissions</td>
 
                             <td style="padding:10px 12px;">
-                                @if($isActive)
-                                    <span class="badge-active"><span style="width:5px;height:5px;border-radius:50%;background:#10B981;display:inline-block;"></span>Active</span>
-                                @else
-                                    <span class="badge-inactive"><span style="width:5px;height:5px;border-radius:50%;background:#94A3B8;display:inline-block;"></span>Nonaktif</span>
-                                @endif
+                                <x-ui.status-badge :status="$isActive ? 'active' : 'nonaktif'" />
                             </td>
 
                             {{-- Action --}}

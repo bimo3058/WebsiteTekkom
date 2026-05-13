@@ -25,7 +25,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         // Admin Manprak
-        Route::middleware(['role:superadmin,admin_eoffice'])
+        Route::middleware(['role:superadmin|admin_eoffice'])
             ->prefix('admin')->name('admin.')
             ->group(function () {
                 Route::get('dosen', [AdminDosenPrakController::class, 'index'])->name('dosen.index');
@@ -35,8 +35,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
         // Placeholder Dosen, Koor, Asprak Manprak
         Route::middleware(['role:dosen'])->prefix('dosen')->name('dosen.')->group(function () { /* TODO */});
-        Route::middleware(['role:koor_prak,admin_eoffice,superadmin'])->prefix('koor')->name('koor.')->group(function () { /* TODO */});
-        Route::middleware(['role:asprak,koor_prak,admin_eoffice,superadmin'])->prefix('asprak')->name('asprak.')->group(function () { /* TODO */});
+        Route::middleware(['role:koor_prak|admin_eoffice|superadmin'])->prefix('koor')->name('koor.')->group(function () { /* TODO */});
+        Route::middleware(['role:asprak|koor_prak|admin_eoffice|superadmin'])->prefix('asprak')->name('asprak.')->group(function () { /* TODO */});
     });
 
     // ══════════════════════════════════════════════════════════════════════════

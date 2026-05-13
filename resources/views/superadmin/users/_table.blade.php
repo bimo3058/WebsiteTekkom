@@ -31,10 +31,10 @@
 <div style="background:#fff; border:1px solid var(--c-border); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column;">
 
     {{-- Table Toolbar --}}
-    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border); gap:12px; flex-wrap:wrap;">
-        <h2 style="font-size:14px; font-weight:700; color:var(--c-fg); margin:0;">User Table</h2>
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border); gap:10px; flex-wrap:wrap;">
+        <h2 style="font-size:14px; font-weight:700; color:var(--c-fg); margin:0; flex-shrink:0;">User Table</h2>
 
-        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; min-width:0;">
 
             {{-- ── SEARCH + FILTER FORM ── --}}
             <form method="GET" action="{{ route('superadmin.users.index') }}" id="searchForm"
@@ -47,7 +47,7 @@
                 <input type="hidden" name="role"     value="{{ request('role', 'all') }}">
 
                 {{-- Search --}}
-                <div style="position:relative; width:220px;">
+                <div style="position:relative; width:min(220px, calc(100vw - 200px)); min-width:120px;">
                     <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); color:var(--c-fg-placeholder); pointer-events:none;"
                          width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
                         <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
@@ -265,25 +265,10 @@
 
                     $rowNo = ($users->currentPage() - 1) * $users->perPage() + $index + 1;
 
-                    $nameParts = explode(' ', $user->name);
-                    $initials  = strtoupper(substr($nameParts[0], 0, 1));
-                    if (count($nameParts) > 1) $initials .= strtoupper(substr(end($nameParts), 0, 1));
-
                     $perms     = $user->permissions;
                     $permCount = $perms->count();
                     $modCount  = $isSuperadmin ? 4 : $perms->pluck('name')->map(fn($p) => explode('.', $p)[0])->unique()->count();
 
-                    $roleStyleMap = [
-                        'superadmin'         => ['color' => '#7C3AED', 'border' => '#C4B5FD'],
-                        'dosen'              => ['color' => '#059669', 'border' => '#6EE7B7'],
-                        'mahasiswa'          => ['color' => '#D97706', 'border' => '#FCD34D'],
-                        'gpm'                => ['color' => '#0284C7', 'border' => '#7DD3FC'],
-                        'alumni'             => ['color' => '#7C3AED', 'border' => '#C4B5FD'],
-                        'admin_banksoal'     => ['color' => '#92400E', 'border' => '#FCD34D'],
-                        'admin_capstone'     => ['color' => '#1D4ED8', 'border' => '#93C5FD'],
-                        'admin_eoffice'      => ['color' => '#047857', 'border' => '#6EE7B7'],
-                        'admin_kemahasiswaan'=> ['color' => '#9D174D', 'border' => '#F9A8D4'],
-                    ];
                     $firstRole      = $userRoles->first();
                     $extraRoleCount = max(0, $userRoles->count() - 1);
                 @endphp
@@ -315,24 +300,9 @@
                     {{-- User Name --}}
                     <td style="padding:14px 16px; min-width:200px;">
                         <div style="display:flex; align-items:center; gap:12px;">
-                            <div style="position:relative; flex-shrink:0;">
-                                <div style="width:36px; height:36px; border-radius:50%; overflow:hidden; display:flex; align-items:center; justify-content:center; border:1.5px solid #E5E7EB; font-size:12px; font-weight:700;
-                                    {{ $isSuspended ? 'filter:grayscale(0.5); opacity:0.75;' : '' }}
-                                    {{ $isSuperadmin ? 'background:rgba(11,38,110,0.07); color:#0B266E; border-color:rgba(11,38,110,0.15);' : 'background:#F3F4F6; color:#6B7280;' }}">
-                                    @if($user->avatar_url)
-                                        <img src="{{ $user->avatar_url }}" alt="avatar" style="width:100%; height:100%; object-fit:cover;">
-                                    @elseif($isSuperadmin)
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linejoin="round">
-                                            <path d="M3.00059 7.59352C3.20646 13.6197 5.53308 19.0699 11.1059 20.8601C11.6866 21.0466 12.3134 21.0466 12.8941 20.8601C18.4669 19.0699 20.7935 13.6197 20.9994 7.59352C21.0169 7.08167 20.6467 6.65046 20.1578 6.55081C17.5104 6.01123 15.4106 4.85537 13.1163 3.3374C12.4363 2.88753 11.5637 2.88753 10.8837 3.3374C8.58942 4.85537 6.48962 6.01123 3.8422 6.55081C3.35327 6.65046 2.98311 7.08167 3.00059 7.59352Z"/>
-                                        </svg>
-                                    @else
-                                        {{ $initials }}
-                                    @endif
-                                </div>
-                                @if($user->is_online && !$isSuspended)
-                                <span style="position:absolute; bottom:-1px; right:-1px; width:9px; height:9px; border-radius:50%; background:#22C55E; border:2px solid #fff;"></span>
-                                @endif
-                            </div>
+                            <x-ui.user-avatar :user="$user" size="md"
+                                :online-dot="$user->is_online && !$isSuspended"
+                                :suspended="$isSuspended" />
                             <div style="min-width:0;">
                                 <div style="display:flex; align-items:center; gap:5px;">
                                     <a href="{{ route('superadmin.users.show', $user->id) }}" style="text-decoration:none; outline:none;">
@@ -357,27 +327,14 @@
                     <td style="padding:14px 16px; min-width:140px;">
                         <div style="display:flex; align-items:center; gap:4px; flex-wrap:nowrap;">
                             @if($firstRole)
-                            @php
-                                $rs = $roleStyleMap[strtolower($firstRole->name)] ?? ['color' => '#0B266E', 'border' => '#93C5FD'];
-                                $displayName = match(strtolower($firstRole->name)) {
-                                    'superadmin'         => 'Super Admin',
-                                    'admin_banksoal'     => 'Admin SIBASO',
-                                    'admin_capstone'     => 'Admin SICATA',
-                                    'admin_eoffice'      => 'Admin SIMENMA',
-                                    'admin_kemahasiswaan'=> 'Admin SIPERKOM',
-                                    default              => ucfirst(str_replace('_', ' ', $firstRole->name)),
-                                };
-                            @endphp
-                            <span style="font-size:11px; font-weight:500; color:{{ $rs['color'] }}; background:transparent; border:1px solid {{ $rs['border'] }}; padding:3px 12px; border-radius:9999px; white-space:nowrap; letter-spacing:0.01em;">
-                                {{ $displayName }}
-                            </span>
-                            @if($extraRoleCount > 0)
-                            <span style="font-size:11px; font-weight:500; color:var(--c-fg-muted); background:transparent; border:1px solid var(--c-border); padding:3px 9px; border-radius:9999px; white-space:nowrap;">
-                                +{{ $extraRoleCount }}
-                            </span>
-                            @endif
+                                <x-ui.role-badge :role="$firstRole->name" />
+                                @if($extraRoleCount > 0)
+                                <span style="font-size:11px; font-weight:500; color:var(--c-fg-muted); border:1px solid var(--c-border); padding:3px 9px; border-radius:9999px; white-space:nowrap;">
+                                    +{{ $extraRoleCount }}
+                                </span>
+                                @endif
                             @else
-                            <span style="font-size:10px; color:var(--c-fg-muted); font-style:italic;">No Role</span>
+                                <span style="font-size:10px; color:var(--c-fg-muted); font-style:italic;">No Role</span>
                             @endif
                         </div>
                     </td>
@@ -398,17 +355,7 @@
 
                     {{-- Status --}}
                     <td style="padding:12px 16px;">
-                        @if($isSuspended)
-                        <span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:500; color:#DC2626; background:transparent; border:1px solid #FCA5A5; padding:3px 12px; border-radius:9999px; white-space:nowrap;">
-                            <span style="width:6px; height:6px; border-radius:50%; background:#DC2626; flex-shrink:0;"></span>
-                            Suspend
-                        </span>
-                        @else
-                        <span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:500; color:#059669; background:transparent; border:1px solid #6EE7B7; padding:3px 12px; border-radius:9999px; white-space:nowrap;">
-                            <span style="width:6px; height:6px; border-radius:50%; background:#22C55E; flex-shrink:0;"></span>
-                            Active
-                        </span>
-                        @endif
+                        <x-ui.status-badge :status="$isSuspended ? 'suspended' : 'active'" />
                     </td>
 
                     {{-- Action --}}

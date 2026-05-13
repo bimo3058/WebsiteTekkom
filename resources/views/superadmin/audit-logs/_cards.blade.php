@@ -64,7 +64,12 @@
 </div>
 
 {{-- ── Cards Grid ── --}}
-<div style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
+<style>
+@media (max-width: 767px) {
+    .audit-cards-grid { grid-template-columns: 1fr !important; }
+}
+</style>
+<div class="audit-cards-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:16px;">
 
     {{-- ── Online Users Card ── --}}
     <div style="background:#fff; border:1px solid var(--c-border); border-radius:12px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column;">
@@ -127,7 +132,7 @@
                                 <div style="position:relative; flex-shrink:0;">
                                     <div style="width:32px; height:32px; border-radius:50%; background:{{ $isSA ? 'rgba(11,38,110,0.07)' : '#F3F4F6' }}; color:{{ $isSA ? '#0B266E' : '#6B7280' }}; display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:11px; font-weight:700; border:1.5px solid {{ $isSA ? 'rgba(11,38,110,0.15)' : '#E5E7EB' }};">
                                         @if($onlineUser->avatar_url)
-                                            <img src="{{ $onlineUser->avatar_url }}" style="width:100%;height:100%;object-fit:cover;">
+                                            <img src="{{ $onlineUser->avatar_url }}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;">
                                         @elseif($isSA)
                                             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M3.00059 7.59352C3.20646 13.6197 5.53308 19.0699 11.1059 20.8601C11.6866 21.0466 12.3134 21.0466 12.8941 20.8601C18.4669 19.0699 20.7935 13.6197 20.9994 7.59352C21.0169 7.08167 20.6467 6.65046 20.1578 6.55081C17.5104 6.01123 15.4106 4.85537 13.1163 3.3374C12.4363 2.88753 11.5637 2.88753 10.8837 3.3374C8.58942 4.85537 6.48962 6.01123 3.8422 6.55081C3.35327 6.65046 2.98311 7.08167 3.00059 7.59352Z"/></svg>
                                         @else
@@ -266,7 +271,7 @@
                                 <div style="flex-shrink:0;">
                                     <div style="width:32px; height:32px; border-radius:50%; background:#FEF2F2; color:#DC2626; display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:11px; font-weight:700; border:1.5px solid #FECACA; opacity:0.8;">
                                         @if($su->avatar_url)
-                                            <img src="{{ $su->avatar_url }}" style="width:100%;height:100%;object-fit:cover;">
+                                            <img src="{{ $su->avatar_url }}" loading="lazy" decoding="async" style="width:100%;height:100%;object-fit:cover;">
                                         @else
                                             {{ $initials2 }}
                                         @endif

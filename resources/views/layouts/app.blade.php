@@ -7,17 +7,32 @@
 
         <title>{{ config('app.name', 'SITKOM') }}</title>
 
-        {{-- Cropper.js --}}
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
-
-        {{-- Fonts: Inter Tight (UI) + Geist (brand) --}}
+        {{-- Preconnect ke external origins (font + icon CDN) --}}
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+        <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
 
-        {{-- Material Symbols Outlined --}}
-        <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet"/>
+        {{-- Fonts: Inter Tight (UI) + Geist (brand) — only weights actually used --}}
+        <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Geist:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+        {{-- Material Symbols: non-blocking async load (icons bukan critical path render) --}}
+        <link rel="preload" as="style"
+              onload="this.onload=null;this.rel='stylesheet'"
+              href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block">
+        <noscript>
+            <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200&display=block" rel="stylesheet"/>
+        </noscript>
+
+        {{-- Cropper.js: hanya load di halaman profile (avatar upload) --}}
+        @if(request()->routeIs('profile.*'))
+        <link rel="preload" as="style"
+              onload="this.onload=null;this.rel='stylesheet'"
+              href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+        <noscript>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css">
+        </noscript>
+        <script defer src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+        @endif
         <style>
             .material-symbols-outlined {
                 font-family: 'Material Symbols Outlined' !important;

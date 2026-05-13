@@ -18,7 +18,9 @@ class RedirectBasedOnRole
         'livewire*',
         'capstone/launch',
         'capstone*',
-        'api/capstone/*'
+        'api/capstone/*',
+        'error',
+        'error/*',
     ];
 
     // Role yang diarahkan ke dashboard global

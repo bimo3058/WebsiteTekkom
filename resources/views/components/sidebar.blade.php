@@ -133,7 +133,7 @@
                 </svg>
                 <span x-show="open">Help &amp; Center</span>
             </a>
-            <form method="POST" action="{{ route('logout') }}" style="margin:0;">
+            <form method="POST" action="{{ route('logout') }}" style="margin:0;" data-no-loader>
                 @csrf
                 <button type="submit" class="sb-link sb-link-danger">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
@@ -540,5 +540,61 @@
     /* Content */
     .sitkom-content {
         padding: 24px 28px 48px;
+    }
+
+    /* ═══════════════════════════════════════════
+       MOBILE RESPONSIVE (<768px)
+       Sidebar disembunyikan, bottom nav aktif
+       ═══════════════════════════════════════════ */
+    @media (max-width: 767px) {
+        /* Sembunyikan sidebar desktop sepenuhnya */
+        .sitkom-sidebar {
+            display: none !important;
+        }
+
+        /* Biarkan main area scroll secara native */
+        .sitkom-main {
+            overflow-y: auto !important;
+            height: auto !important;
+            min-height: 100dvh;
+        }
+
+        /* Compact topbar di mobile */
+        .sitkom-topbar {
+            padding: 0 14px;
+            height: 52px;
+            gap: 10px;
+        }
+
+        /* Sembunyikan teks nama & role di topbar — avatar tetap tampil */
+        .sitkom-topbar-meta {
+            display: none;
+        }
+
+        /* Kurangi gap di area user topbar */
+        .sitkom-topbar-user {
+            padding-left: 8px;
+            gap: 6px;
+        }
+
+        /* Avatar sedikit lebih kecil */
+        .sitkom-topbar-avatar {
+            width: 30px;
+            height: 30px;
+            font-size: 10px;
+        }
+
+        /* Tambah padding-bottom untuk bottom nav (16px konten + 64px nav) */
+        .sitkom-content {
+            padding: 16px 14px 80px !important;
+            display: block !important;
+            overflow-y: visible !important;
+        }
+
+        /* Notification button ukuran yang lebih compact */
+        .sitkom-icon-btn {
+            width: 30px;
+            height: 30px;
+        }
     }
 </style>
