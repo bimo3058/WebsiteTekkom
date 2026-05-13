@@ -119,6 +119,12 @@
                     <div class="flex-1">
                         <div class="text-justify prose prose-sm max-w-none">{!! $soal->soal !!}</div>
                         
+                        @if($soal->gambar)
+                        <div class="mt-3 mb-2">
+                            <img src="{{ asset('storage/' . $soal->gambar) }}" alt="Gambar Soal" style="max-width: 100%; max-height: 250px; border-radius: 8px;">
+                        </div>
+                        @endif
+                        
                         @if($soal->jawaban && $soal->jawaban->count() > 0)
                         <div class="mt-3 space-y-1">
                             @foreach($soal->jawaban as $idx => $jawab)

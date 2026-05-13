@@ -309,6 +309,13 @@
             row.style.opacity = '0';
             row.style.transform = 'scale(0.95)';
             
+            let jsonVal = document.getElementById('reviewSoalJson').value;
+            try {
+                let arr = JSON.parse(jsonVal);
+                arr = arr.filter(s => String(s.id) !== String(id));
+                document.getElementById('reviewSoalJson').value = JSON.stringify(arr);
+            } catch(e){}
+
             setTimeout(() => {
                 row.remove();
                 updateSoalCount();
@@ -487,6 +494,20 @@
         // Append
         container.insertAdjacentHTML('beforeend', domString);
         
+        let jsonVal = document.getElementById('reviewSoalJson').value;
+        let soalDataArr = [];
+        try {
+            soalDataArr = JSON.parse(jsonVal);
+        } catch(e) {}
+        soalDataArr.push({
+            id: soalId,
+            soal: text,
+            cpl: cpl,
+            cpmk: cpmk,
+            bobot: 1
+        });
+        document.getElementById('reviewSoalJson').value = JSON.stringify(soalDataArr);
+
         // Setup row transition
         const newRow = document.getElementById('soal-row-' + soalId);
         setTimeout(() => {

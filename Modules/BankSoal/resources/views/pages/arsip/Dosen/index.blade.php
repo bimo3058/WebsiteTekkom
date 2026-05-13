@@ -54,23 +54,23 @@
                     <div class="divide-y divide-border">
                         @foreach($mkGroups as $mkId => $arsips)
                             @php($first = $arsips->first())
-                            <div class="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white hover:bg-slate-50/50 transition-colors">
-                                <div class="flex items-center gap-4">
+                            <div class="p-5 flex flex-col xl:flex-row xl:items-center gap-4 bg-white hover:bg-slate-50/50 transition-colors">
+                                <div class="flex items-center gap-4 w-full xl:w-2/5 shrink-0 min-w-0">
                                     <div class="flex-shrink-0">
                                         <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
                                             <i class="fas fa-book text-sm"></i>
                                         </div>
                                     </div>
-                                    <div>
-                                        <p class="font-semibold text-slate-900">{{ $first->mataKuliah->nama ?? 'Mata Kuliah' }}</p>
+                                    <div class="min-w-0">
+                                        <p class="font-semibold text-slate-900 truncate">{{ $first->mataKuliah->nama ?? 'Mata Kuliah' }}</p>
                                         <p class="text-sm text-muted-foreground">{{ $first->mataKuliah->kode ?? '-' }}</p>
                                     </div>
                                 </div>
-                                <div class="flex items-center justify-between sm:justify-end gap-6 flex-1">
-                                    <div class="flex flex-wrap gap-1.5">
+                                <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full xl:w-auto xl:flex-1">
+                                    <div class="flex flex-wrap gap-1.5 w-full sm:w-auto xl:px-2">
                                         @foreach($arsips->take(3) as $arsip)
-                                            <x-ui.badge variant="sky" class="font-medium text-[10px]">
-                                                {{ Str::limit($arsip->nama_arsip, 12) }}
+                                            <x-ui.badge variant="sky" class="font-medium text-[10px] whitespace-nowrap">
+                                                {{ Str::limit($arsip->nama_arsip, 12, '..') }}
                                             </x-ui.badge>
                                         @endforeach
                                         @if($arsips->count() > 3)
@@ -79,13 +79,13 @@
                                             </x-ui.badge>
                                         @endif
                                     </div>
-                                    <div class="flex items-center gap-3">
+                                    <div class="flex items-center shrink-0 gap-3 justify-end w-full sm:w-auto">
                                         <div class="flex -space-x-2">
                                             @foreach($arsips->unique('user_id')->take(3) as $a)
                                                 <x-ui.avatar size="sm" fallback="{{ substr($a->user->name ?? 'D', 0, 2) }}" class="border-2 border-white" />
                                             @endforeach
                                         </div>
-                                        <x-ui.button as="a" href="{{ route('banksoal.arsip.dosen.show', $first->id) }}" variant="outline" size="sm" class="text-xs">
+                                        <x-ui.button as="a" href="{{ route('banksoal.arsip.dosen.show', $first->id) }}" variant="outline" size="sm" class="text-xs whitespace-nowrap min-w-max">
                                             Buka
                                         </x-ui.button>
                                     </div>
@@ -110,25 +110,30 @@
         </div>
         <div class="p-5 space-y-4">
             @forelse($penarikanPending as $penarikan)
-                <x-ui.card class="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white hover:bg-slate-50/50 transition-colors border-border shadow-none">
-                    <div class="flex items-start gap-4">
-                        <div class="flex-shrink-0 mt-1 sm:mt-0">
+                <x-ui.card class="p-5 flex flex-col xl:flex-row xl:items-center justify-between gap-4 bg-white hover:bg-slate-50/50 transition-colors border-border shadow-none">
+                    <div class="flex items-start gap-4 flex-1 min-w-0">
+                        <div class="flex-shrink-0 mt-1 xl:mt-0">
                             <div class="flex h-10 w-10 items-center justify-center rounded-full bg-warning-50 text-warning-500">
                                 <i class="fas fa-clock-rotate-left text-sm"></i>
                             </div>
                         </div>
                         <div>
-                            <div class="flex items-center gap-2">
-                                <p class="font-semibold text-slate-900">{{ $penarikan->nama_ekstraksi }}</p>
-                                <x-ui.badge variant="warning" class="text-[10px] py-0">Pending</x-ui.badge>
+                            <div class="flex flex-wrap items-center gap-2">
+                                <p class="font-semibold text-slate-900 break-words line-clamp-2 min-w-0">{{ $penarikan->nama_ekstraksi }}</p>
+                                <x-ui.badge variant="warning" class="text-[10px] py-0 whitespace-nowrap">Pending</x-ui.badge>
                                 @if(($penarikan->metode_ujian ?? '') === 'offline')
-                                    <span class="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">Offline Cetak</span>
+                                    <span class="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20 whitespace-nowrap">Offline Cetak</span>
                                 @endif
                             </div>
                             <p class="text-sm text-muted-foreground mt-1">{{ $penarikan->mataKuliah->nama ?? '-' }} · {{ $penarikan->semester }} · {{ $penarikan->tahun_akademik }}</p>
                         </div>
                     </div>
                     
+                    <div class="flex items-center gap-2 mt-3 xl:mt-0 w-full xl:w-auto shrink-0 justify-end">
+                        <x-ui.button as="a" href="{{ route('banksoal.arsip.dosen.penarikan.edit', $penarikan->id) }}" variant="default" size="sm" class="flex-1 xl:flex-none text-xs bg-emerald-600 hover:bg-emerald-700 text-white border-transparent whitespace-nowrap justify-center">
+                            <i class="fas fa-archive mr-1.5"></i> Konversi
+                        </x-ui.button>
+                        <form action="{{ route('banksoal.arsip.dosen.penarikan.destroy', $penarikan->id) }}" method="POST" onsubmit="return confirm('Hapus riwayat penarikan ini?')" class="flex-1 xl:flex-none flex">
                     <div class="flex items-center gap-2 mt-3 sm:mt-0 w-full sm:w-auto">
                         <a href="{{ route('banksoal.arsip.dosen.penarikan.edit', $penarikan->id) }}" class="flex-1 sm:flex-none inline-flex items-center justify-center gap-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 text-xs font-medium transition-colors">
                             <i class="fas fa-archive"></i> Arsipkan
@@ -136,7 +141,7 @@
                         <form action="{{ route('banksoal.arsip.dosen.penarikan.destroy', $penarikan->id) }}" method="POST" onsubmit="return confirm('Hapus riwayat penarikan ini?')" class="w-full sm:w-auto">
                             @csrf
                             @method('DELETE')
-                            <x-ui.button type="submit" variant="outline" size="sm" class="w-full sm:w-auto text-xs">
+                            <x-ui.button type="submit" variant="outline" size="sm" class="w-full text-xs justify-center whitespace-nowrap">
                                 <i class="fas fa-trash text-muted-foreground mr-1.5"></i> Discard
                             </x-ui.button>
                         </form>
