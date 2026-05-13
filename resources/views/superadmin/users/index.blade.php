@@ -36,6 +36,37 @@
         .user-box-body {
             flex: 1; overflow-y: auto; padding: 20px 24px; display: flex; flex-direction: column; gap: 16px;
         }
+
+        /* ── Mobile: scroll natively ── */
+        @media (max-width: 767px) {
+            .sitkom-content {
+                padding: 8px 8px 80px !important;
+                display: block !important;
+                overflow: visible !important;
+            }
+            .user-wrap {
+                height: auto !important;
+                min-height: 0 !important;
+                padding: 0;
+            }
+            .user-box {
+                flex: none !important;
+                min-height: 0 !important;
+                overflow: visible !important;
+                border-radius: 10px;
+            }
+            .user-box-header {
+                padding: 12px 14px;
+                position: sticky;
+                top: 52px;
+                z-index: 10;
+            }
+            .user-box-body {
+                overflow-y: visible !important;
+                flex: none !important;
+                padding: 12px 14px;
+            }
+        }
     </style>
 
     <div class="user-wrap">

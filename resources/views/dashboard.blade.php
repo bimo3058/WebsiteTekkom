@@ -77,7 +77,7 @@
 
                 <div class="border-t border-[#F0F1F4] my-1"></div>
 
-                <form method="POST" action="{{ route('logout') }}">
+                <form method="POST" action="{{ route('logout') }}" data-no-loader>
                     @csrf
                     <button type="submit"
                             class="w-full flex items-center gap-2.5 px-3 py-2 text-[12px] text-[#DF1C41] hover:bg-[#FADAE1] transition-colors">
@@ -92,7 +92,7 @@
     </header>
 
     {{-- ── BODY ─────────────────────────────────────────────────────────── --}}
-    <div class="max-w-7xl mx-auto px-6 py-8">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8 pb-24 sm:pb-8">
 
         {{-- Greeting --}}
         <div class="mb-7">
@@ -198,14 +198,14 @@
             </div>
 
             {{-- Tab bar --}}
-            <div class="flex items-end gap-0 border-b border-[#DFE1E7]">
+            <div class="flex items-end gap-0 border-b border-[#DFE1E7] overflow-x-auto" style="scrollbar-width:none;-ms-overflow-style:none;" onscroll="this.style.webkitScrollbarDisplay='none'">
                 @foreach($tabs as $tab)
                 <button
                     @click="activeTab = '{{ $tab['key'] }}'"
                     :class="activeTab === '{{ $tab['key'] }}'
                         ? 'border-b-2 border-[#0B266E] text-[#0B266E] font-semibold bg-white'
                         : 'text-[#A4ABB8] hover:text-[#666D80] border-b-2 border-transparent hover:bg-[#F6F8FA]'"
-                    class="px-4 py-2.5 text-[12px] transition-all duration-150 -mb-px whitespace-nowrap rounded-t-lg">
+                    class="px-4 py-2.5 text-[12px] transition-all duration-150 -mb-px whitespace-nowrap rounded-t-lg flex-shrink-0">
                     {{ $tab['label'] }}
                     @if($tab['key'] !== 'all')
                     <span x-show="activeTab !== '{{ $tab['key'] }}'"
@@ -318,6 +318,101 @@
             <p class="text-[10px] text-[#C1C7CF] font-semibold uppercase tracking-widest">SITKOM · Teknik Komputer UNDIP</p>
         </div>
 
+    </div>
+</div>
+
+{{-- ── MOBILE BOTTOM NAV (untuk halaman dashboard utama) ── --}}
+@php
+    $dashUser     = auth()->user();
+    $dashRoles    = $dashUser->roles->pluck('name')->toArray();
+    $dashIsSA     = in_array('superadmin', $dashRoles);
+    $dashInitials = strtoupper(substr($dashUser->name, 0, 1));
+    $spDash = strpos($dashUser->name, ' ');
+    if ($spDash !== false) $dashInitials .= strtoupper(substr($dashUser->name, $spDash + 1, 1));
+@endphp
+
+<div x-data="{ show: window.innerWidth < 768, openMenu: false }"
+    x-init="window.addEventListener('resize', () => show = window.innerWidth < 768)"
+    x-show="show" style="display:none;"
+    class="fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-slate-200 shadow-[0_-4px_24px_rgba(0,0,0,0.06)] font-['Inter_Tight']">
+
+    {{-- More Menu Drawer --}}
+    <div x-show="openMenu" class="fixed inset-0 z-[60]" style="display:none;">
+        <div @click="openMenu = false" x-show="openMenu"
+            x-transition:enter="transition-opacity ease-linear duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100"
+            x-transition:leave="transition-opacity ease-linear duration-300" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0"
+            class="absolute inset-0 bg-slate-900/40"></div>
+
+        <div x-show="openMenu" x-transition:enter="transition ease-out duration-300 transform"
+            x-transition:enter-start="translate-y-full" x-transition:enter-end="translate-y-0"
+            x-transition:leave="transition ease-in duration-200 transform" x-transition:leave-start="translate-y-0" x-transition:leave-end="translate-y-full"
+            class="absolute bottom-0 left-0 right-0 bg-white rounded-t-2xl shadow-2xl max-h-[70vh] flex flex-col">
+
+            <div class="flex justify-center pt-3 pb-2 shrink-0">
+                <div class="w-10 h-1.5 bg-slate-200 rounded-full"></div>
+            </div>
+
+            <div class="flex items-center gap-3 px-5 pb-4 border-b border-slate-100 shrink-0">
+                <div class="w-10 h-10 rounded-full flex-shrink-0 flex items-center justify-center font-bold text-sm bg-gradient-to-br from-[#3C518B] to-[#0B266E] text-white overflow-hidden">
+                    @if($dashUser->avatar_url)
+                        <img src="{{ $dashUser->avatar_url }}" alt="Avatar" class="w-full h-full object-cover">
+                    @else
+                        {{ $dashInitials }}
+                    @endif
+                </div>
+                <div class="min-w-0">
+                    <p class="text-[14px] font-bold text-slate-800 truncate">{{ $dashUser->name }}</p>
+                    <p class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">{{ ucfirst($dashUser->roles->first()->name ?? 'User') }}</p>
+                </div>
+            </div>
+
+            <div class="overflow-y-auto px-4 py-3 space-y-1">
+                <a href="{{ route('profile.edit') }}" @click="openMenu = false"
+                   class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 hover:bg-slate-50 transition-colors">
+                    <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                    </svg>
+                    <span class="text-[13px] font-semibold">Profil Saya</span>
+                </a>
+                <form method="POST" action="{{ route('logout') }}" data-no-loader>
+                    @csrf
+                    <button type="submit" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-rose-600 hover:bg-rose-50 transition-colors">
+                        <svg class="w-5 h-5 text-rose-500" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+                        </svg>
+                        <span class="text-[13px] font-semibold">Keluar</span>
+                    </button>
+                </form>
+                <div class="h-4"></div>
+            </div>
+        </div>
+    </div>
+
+    {{-- Bottom Bar --}}
+    <div class="flex items-center justify-around px-2 py-1.5">
+        {{-- Home (aktif) --}}
+        <a href="{{ route('dashboard') }}" class="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl text-[#0B266E]">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/>
+            </svg>
+            <span class="text-[9px] font-extrabold uppercase tracking-tight">Home</span>
+        </a>
+
+        {{-- Profil --}}
+        <a href="{{ route('profile.edit') }}" class="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl text-[#ADB5BD]">
+            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+            </svg>
+            <span class="text-[9px] font-extrabold uppercase tracking-tight">Profil</span>
+        </a>
+
+        {{-- Menu (drawer) --}}
+        <button @click="openMenu = true" class="flex flex-col items-center gap-1 px-4 py-1.5 rounded-xl text-[#ADB5BD]">
+            <svg class="w-5 h-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16"/>
+            </svg>
+            <span class="text-[9px] font-extrabold uppercase tracking-tight">Menu</span>
+        </button>
     </div>
 </div>
 </x-app-layout>

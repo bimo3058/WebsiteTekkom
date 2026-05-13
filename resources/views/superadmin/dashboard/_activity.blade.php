@@ -6,13 +6,8 @@
 </div>
 
 @php
-    // Eager load missing relationships
-    if (isset($new_registrations)) {
-        $new_registrations->loadMissing('roles');
-    }
-    if (isset($recent_logs)) {
-        $recent_logs->loadMissing('user.roles');
-    }
+    if (isset($new_registrations)) $new_registrations->loadMissing('roles');
+    if (isset($recent_logs))       $recent_logs->loadMissing('user.roles');
 
     $avatarGradients = [
         'linear-gradient(135deg,#D39C3D,#956321)',
@@ -20,18 +15,6 @@
         'linear-gradient(135deg,#40C4AA,#287F6E)',
         'linear-gradient(135deg,#ED8296,#95122B)',
     ];
-
-    // UPDATED: RoleStyle sekarang menggunakan warna border untuk outline
-    $roleStyle = function($role) {
-        $r = strtolower($role ?? '');
-        return match(true) {
-            str_contains($r, 'mahasiswa')   => ['border' => '#D39C3D', 'color' => '#956321'],
-            str_contains($r, 'dosen')       => ['border' => '#5C78B8', 'color' => '#0C4D6E'],
-            str_contains($r, 'gpm')         => ['border' => '#40C4AA', 'color' => '#287F6E'],
-            str_contains($r, 'admin')       => ['border' => 'var(--c-primary)', 'color' => 'var(--c-primary)'],
-            default                         => ['border' => 'var(--c-border)', 'color' => 'var(--c-fg-muted)'],
-        };
-    };
 
     $online_users = \App\Models\User::where('is_online', \Illuminate\Support\Facades\DB::raw('true'))
         ->with('roles')->latest('last_login')->take(5)->get();
@@ -48,7 +31,8 @@
                 <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M20 12H4M20 12L14 6M20 12L14 18"/></svg>
             </a>
         </div>
-        <table style="width:100%;border-collapse:collapse;">
+        <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;min-width:380px;">
             <thead>
                 <tr>
                     <th style="text-align:left;font-size:11px;font-weight:500;color:var(--c-fg-muted);padding:10px 18px;border-bottom:1px solid var(--c-border);background:#FBFBFC;">Name</th>
@@ -59,17 +43,13 @@
             <tbody>
             @forelse($online_users as $i => $onlineUser)
                 @php
-                    $role  = $onlineUser->roles->first()->name ?? 'User';
-                    $rs    = $roleStyle($role);
-                    $grad  = $avatarGradients[$onlineUser->id % count($avatarGradients)];
-                    $init  = strtoupper(substr($onlineUser->name, 0, 2));
+                    $role = $onlineUser->roles->first()->name ?? 'user';
+                    $grad = $avatarGradients[$onlineUser->id % count($avatarGradients)];
                 @endphp
                 <tr>
                     <td style="padding:12px 18px;border-bottom:1px solid var(--c-border);font-size:13px;">
                         <div style="display:flex;align-items:center;gap:10px;">
-                            <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;background:{{ $grad }};overflow:hidden;">
-                                @if($onlineUser->avatar_url)<img src="{{ $onlineUser->avatar_url }}" style="width:100%;height:100%;object-fit:cover;">@else{{ $init }}@endif
-                            </div>
+                            <x-ui.user-avatar :user="$onlineUser" size="sm" :gradient="$grad" />
                             <div>
                                 <div style="font-size:13px;font-weight:600;color:var(--c-fg);line-height:1.2;">{{ $onlineUser->name }}</div>
                                 <div style="font-size:11px;color:var(--c-fg-muted);margin-top:2px;">{{ $onlineUser->nim ?? $onlineUser->id }}</div>
@@ -77,13 +57,10 @@
                         </div>
                     </td>
                     <td style="padding:12px 18px;border-bottom:1px solid var(--c-border);">
-                        <span style="display:inline-flex;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.02em;background:transparent;border:1px solid {{ $rs['border'] }};color:{{ $rs['color'] }};">{{ $role }}</span>
+                        <x-ui.role-badge :role="$role" size="xs" />
                     </td>
                     <td style="padding:12px 18px;border-bottom:1px solid var(--c-border);">
-                        <span style="display:inline-flex;align-items:center;gap:5px;padding:2px 9px;border-radius:9999px;background:transparent;color:var(--c-success);font-size:11px;font-weight:600;border:1px solid var(--c-success);">
-                            <span style="width:6px;height:6px;border-radius:50%;background:var(--c-success);"></span>
-                            {{ $onlineUser->last_login?->diffForHumans(null, true) ?? 'Active' }}
-                        </span>
+                        <x-ui.status-badge status="online" />
                     </td>
                 </tr>
             @empty
@@ -91,6 +68,7 @@
             @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
     {{-- ② User Baru Terdaftar --}}
@@ -102,7 +80,8 @@
                 <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M20 12H4M20 12L14 6M20 12L14 18"/></svg>
             </a>
         </div>
-        <table style="width:100%;border-collapse:collapse;">
+        <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;min-width:380px;">
             <thead>
                 <tr>
                     <th style="text-align:left;font-size:11px;font-weight:500;color:var(--c-fg-muted);padding:10px 18px;border-bottom:1px solid var(--c-border);background:#FBFBFC;">Name</th>
@@ -113,17 +92,13 @@
             <tbody>
             @forelse($new_registrations->take(5) as $newUser)
                 @php
-                    $role = $newUser->roles->first()->name ?? 'User';
-                    $rs   = $roleStyle($role);
+                    $role = $newUser->roles->first()->name ?? 'user';
                     $grad = $avatarGradients[$newUser->id % count($avatarGradients)];
-                    $init = strtoupper(substr($newUser->name, 0, 2));
                 @endphp
                 <tr>
                     <td style="padding:12px 18px;border-bottom:1px solid var(--c-border);">
                         <div style="display:flex;align-items:center;gap:10px;">
-                            <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;background:{{ $grad }};overflow:hidden;">
-                                @if($newUser->avatar_url)<img src="{{ $newUser->avatar_url }}" style="width:100%;height:100%;object-fit:cover;">@else{{ $init }}@endif
-                            </div>
+                            <x-ui.user-avatar :user="$newUser" size="sm" :gradient="$grad" />
                             <div>
                                 <div style="font-size:13px;font-weight:600;color:var(--c-fg);line-height:1.2;">{{ $newUser->name }}</div>
                                 <div style="font-size:11px;color:var(--c-fg-muted);margin-top:2px;">{{ $newUser->nim ?? $newUser->id }}</div>
@@ -131,7 +106,7 @@
                         </div>
                     </td>
                     <td style="padding:12px 18px;border-bottom:1px solid var(--c-border);">
-                        <span style="display:inline-flex;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.02em;background:transparent;border:1px solid {{ $rs['border'] }};color:{{ $rs['color'] }};">{{ $role }}</span>
+                        <x-ui.role-badge :role="$role" size="xs" />
                     </td>
                     <td style="padding:12px 18px;border-bottom:1px solid var(--c-border);font-size:12px;color:var(--c-fg-sec);">
                         {{ $newUser->created_at->translatedFormat('F d, Y') }}
@@ -142,6 +117,7 @@
             @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
     {{-- ③ Log Aktivitas Terbaru (full width) --}}
@@ -153,7 +129,8 @@
                 <svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M20 12H4M20 12L14 6M20 12L14 18"/></svg>
             </a>
         </div>
-        <table style="width:100%;border-collapse:collapse;">
+        <div style="overflow-x:auto;">
+        <table style="width:100%;border-collapse:collapse;min-width:480px;">
             <thead>
                 <tr>
                     <th style="text-align:left;font-size:11px;font-weight:500;color:var(--c-fg-muted);padding:10px 18px;border-bottom:1px solid var(--c-border);background:#FBFBFC;width:32%;">Name</th>
@@ -165,29 +142,23 @@
             <tbody>
             @forelse($recent_logs->take(8) as $log)
                 @php
-                    $role = $log->user?->roles->first()->name ?? 'System';
-                    $rs   = $roleStyle($role);
-                    $uid  = $log->user?->id ?? 0;
-                    $grad = $avatarGradients[$uid % count($avatarGradients)];
-                    $name = $log->user->name ?? 'System';
-                    $init = strtoupper(substr($name, 0, 2));
-                    // UPDATED: Log Color untuk Outline
-                    $logBorder = match(strtoupper($log->action)) {
-                        'CREATE' => '#287F6E',
-                        'UPDATE' => '#0C4D6E',
-                        'DELETE' => 'var(--c-error)',
-                        'LOGIN'  => 'var(--c-primary)',
-                        'LOGOUT' => 'var(--c-error)',
-                        default  => 'var(--c-border)',
+                    $role         = $log->user?->roles->first()->name ?? 'system';
+                    $uid          = $log->user?->id ?? 0;
+                    $grad         = $avatarGradients[$uid % count($avatarGradients)];
+                    $name         = $log->user?->name ?? 'System';
+                    $actionVariant = match(strtoupper($log->action)) {
+                        'CREATE' => 'action-create',
+                        'UPDATE' => 'action-update',
+                        'DELETE' => 'action-delete',
+                        'LOGIN'  => 'action-login',
+                        'LOGOUT' => 'action-logout',
+                        default  => 'action-default',
                     };
-                    $logColor = $logBorder;
                 @endphp
                 <tr>
                     <td style="padding:12px 18px;border-bottom:1px solid var(--c-border);">
                         <div style="display:flex;align-items:center;gap:10px;">
-                            <div style="width:32px;height:32px;border-radius:50%;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:12px;color:#fff;background:{{ $grad }};overflow:hidden;">
-                                @if($log->user?->avatar_url)<img src="{{ $log->user->avatar_url }}" style="width:100%;height:100%;object-fit:cover;">@else{{ $init }}@endif
-                            </div>
+                            <x-ui.user-avatar :user="$log->user" size="sm" :gradient="$grad" />
                             <div>
                                 <div style="font-size:13px;font-weight:600;color:var(--c-fg);line-height:1.2;">{{ $name }}</div>
                                 <div style="font-size:11px;color:var(--c-fg-muted);margin-top:2px;">{{ $log->user?->nim ?? $uid }}</div>
@@ -195,10 +166,10 @@
                         </div>
                     </td>
                     <td style="padding:12px 18px;border-bottom:1px solid var(--c-border);">
-                        <span style="display:inline-flex;padding:2px 8px;border-radius:9999px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.02em;background:transparent;border:1px solid {{ $rs['border'] }};color:{{ $rs['color'] }};">{{ $role }}</span>
+                        <x-ui.role-badge :role="$role" size="xs" />
                     </td>
                     <td style="padding:12px 18px;border-bottom:1px solid var(--c-border);">
-                        <span style="display:inline-flex;padding:2px 8px;border-radius:6px;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.02em;background:transparent;border:1px solid {{ $logBorder }};color:{{ $logColor }};">{{ $log->action }}</span>
+                        <x-ui.badge :variant="$actionVariant" size="xs">{{ $log->action }}</x-ui.badge>
                     </td>
                     <td style="padding:12px 18px;border-bottom:1px solid var(--c-border);">
                         <span style="display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--c-fg-muted);">
@@ -212,6 +183,7 @@
             @endforelse
             </tbody>
         </table>
+        </div>
     </div>
 
 </div>

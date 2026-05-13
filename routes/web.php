@@ -159,7 +159,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 
     // CV Builder — hanya mahasiswa & alumni
-    Route::middleware('role:mahasiswa,alumni')
+    Route::middleware('role:mahasiswa|alumni')
         ->prefix('profile/cv')
         ->name('profile.cv.')
         ->group(function () {

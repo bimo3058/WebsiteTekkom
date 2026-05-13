@@ -27,13 +27,7 @@
          onclick="toggleCard('{{ $cardKey }}')">
 
         {{-- Avatar --}}
-        <div class="w-10 h-10 rounded-full bg-gradient-to-br from-slate-300 to-slate-400 flex items-center justify-center shrink-0 overflow-hidden border-2 border-white shadow-sm">
-            @if($user->profile_photo_url ?? false)
-                <img src="{{ $user->profile_photo_url }}" alt="" class="w-full h-full object-cover">
-            @else
-                <span class="text-sm font-bold text-white">{{ strtoupper(substr($user->name, 0, 1)) }}</span>
-            @endif
-        </div>
+        <x-ui.user-avatar :user="$user" size="lg" :suspended="!$isActive" />
 
         {{-- Info --}}
         <div class="flex-1 min-w-0">
@@ -44,10 +38,7 @@
         {{-- Roles --}}
         <div class="flex items-center gap-1.5 flex-wrap">
             @foreach($user->roles->take(3) as $role)
-                <span class="role-pill inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border"
-                      style="border-color: var(--accent, #CBD5E1); color: var(--accent, #64748B); background: color-mix(in srgb, var(--accent, #CBD5E1) 12%, white)">
-                    {{ Str::title(str_replace('_', ' ', $role->name)) }}
-                </span>
+                <x-ui.role-badge :role="$role->name" size="xs" />
             @endforeach
         </div>
 
@@ -59,15 +50,7 @@
         </div>
 
         {{-- Status --}}
-        @if($isActive)
-            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-600 border border-emerald-200 shrink-0">
-                <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Active
-            </span>
-        @else
-            <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold bg-red-50 text-red-500 border border-red-200 shrink-0">
-                <span class="w-1.5 h-1.5 rounded-full bg-red-500"></span> Suspend
-            </span>
-        @endif
+        <x-ui.status-badge :status="$isActive ? 'active' : 'suspended'" />
 
         {{-- Chevron --}}
         <svg class="card-chevron-{{ $cardKey }} w-4 h-4 text-slate-400 shrink-0 transition-transform duration-200"
