@@ -17,7 +17,7 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16 items-center">
                 <div class="flex items-center gap-4">
-                    <a href="{{ route('kp.dosen.dashboard') }}" class="text-slate-400 hover:text-slate-600 transition-colors">
+                    <a href="{{ route('eoffice.kp.dosen.dashboard') }}" class="text-slate-400 hover:text-slate-600 transition-colors">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     </a>
                     <div class="h-6 w-px bg-slate-300"></div>
@@ -66,7 +66,7 @@
                 
                 <!-- Action Panel Berdasarkan Fase -->
                 @if($kp->status_kp == 'pending' || !$kp->status_kp)
-                    <form action="{{ route('kp.dosen.bimbingan.approve_pra_kp', $kp->id) }}" method="POST">
+                    <form action="{{ route('eoffice.kp.dosen.bimbingan.approve_pra_kp', $kp->id) }}" method="POST">
                         @csrf
                         <button type="submit" class="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 border border-transparent text-sm font-semibold rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none transition-colors">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -74,12 +74,12 @@
                         </button>
                     </form>
                 @elseif($kp->status_kp == 'active')
-                    <a href="{{ route('kp.dosen.bimbingan.penilaian', $kp->id) }}" class="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
+                    <a href="{{ route('eoffice.kp.dosen.bimbingan.penilaian', $kp->id) }}" class="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-lg shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                         Beri Nilai KP
                     </a>
                 @elseif($kp->status_kp == 'completed')
-                    <a href="{{ route('kp.dosen.bimbingan.penilaian', $kp->id) }}" class="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-lg shadow-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors">
+                    <a href="{{ route('eoffice.kp.dosen.bimbingan.penilaian', $kp->id) }}" class="w-full md:w-auto inline-flex items-center justify-center px-4 py-2 text-sm font-semibold rounded-lg shadow-sm text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 transition-colors">
                         <svg class="w-4 h-4 mr-2 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                         Edit Nilai KP
                     </a>
@@ -155,11 +155,11 @@
                                         <div class="w-full sm:w-auto flex items-center gap-2">
                                             @if($dok->status_validasi == 'pending')
                                                 <!-- Action Buttons for Dosen -->
-                                                <form action="{{ route('kp.dosen.bimbingan.dokumen.reject', [$kp->id, $dok->id]) }}" method="POST" class="w-1/2 sm:w-auto">
+                                                <form action="{{ route('eoffice.kp.dosen.bimbingan.dokumen.reject', [$kp->id, $dok->id]) }}" method="POST" class="w-1/2 sm:w-auto">
                                                     @csrf
                                                     <button type="submit" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-red-600 bg-red-50 hover:bg-red-100 rounded-lg transition-colors border border-red-200">Revisi</button>
                                                 </form>
-                                                <form action="{{ route('kp.dosen.bimbingan.dokumen.approve', [$kp->id, $dok->id]) }}" method="POST" class="w-1/2 sm:w-auto">
+                                                <form action="{{ route('eoffice.kp.dosen.bimbingan.dokumen.approve', [$kp->id, $dok->id]) }}" method="POST" class="w-1/2 sm:w-auto">
                                                     @csrf
                                                     <button type="submit" class="w-full sm:w-auto px-4 py-2 text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg shadow-sm transition-colors flex items-center justify-center">
                                                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>

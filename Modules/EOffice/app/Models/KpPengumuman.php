@@ -10,15 +10,16 @@ class KpPengumuman extends Model
     
     protected $fillable = [
         'judul',
-        'konten',
-        'tipe',
-        'is_active',
-        'created_by',
+        'deskripsi',
+        'tanggal_mulai',
+        'tanggal_selesai',
+        'is_published',
+        'user_id',
     ];
 
     // Relasi ke tabel users (untuk mengetahui siapa yang membuat pengumuman)
     public function pembuat()
     {
-        return $this->belongsTo(\App\Models\User::class, 'created_by');
+        return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 }
