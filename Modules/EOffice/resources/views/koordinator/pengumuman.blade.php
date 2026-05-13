@@ -28,21 +28,21 @@
         </div>
         <div class="flex-1 overflow-y-auto py-4">
             <div class="px-6 mb-2"><p class="text-[11px] font-semibold text-slate-400">Main Menu</p></div>
-            <a href="{{ route('kp.koordinator.dashboard') }}" class="flex items-center px-6 py-2.5 border-l-4 border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors text-sm font-medium">
+            <a href="{{ route('eoffice.kp.koordinator.dashboard') }}" class="flex items-center px-6 py-2.5 border-l-4 border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors text-sm font-medium">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
                 Dashboard
             </a>
             <div class="px-6 mt-6 mb-2"><p class="text-[11px] font-semibold text-slate-400">Koordinator</p></div>
             <!-- Active Menu -->
-            <a href="{{ route('kp.koordinator.pengumuman') }}" class="flex items-center px-6 py-2.5 bg-slate-50 border-l-4 border-slate-900 text-slate-900 font-semibold text-sm">
+            <a href="{{ route('eoffice.kp.koordinator.pengumuman') }}" class="flex items-center px-6 py-2.5 bg-slate-50 border-l-4 border-slate-900 text-slate-900 font-semibold text-sm">
                 <svg class="w-5 h-5 mr-3 text-slate-700" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"/></svg>
                 Membuat Pengumuman
             </a>
-            <a href="{{ route('kp.koordinator.balancing') }}" class="flex items-center px-6 py-2.5 border-l-4 border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors text-sm font-medium">
+            <a href="{{ route('eoffice.kp.koordinator.balancing') }}" class="flex items-center px-6 py-2.5 border-l-4 border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors text-sm font-medium">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                 Balancing Dosen
             </a>
-            <a href="{{ route('kp.koordinator.validasi_berkas') }}" class="flex items-center px-6 py-2.5 border-l-4 border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors text-sm font-medium">
+            <a href="{{ route('eoffice.kp.koordinator.validasi_berkas') }}" class="flex items-center px-6 py-2.5 border-l-4 border-transparent text-slate-500 hover:text-slate-900 hover:bg-slate-50 transition-colors text-sm font-medium">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 Validasi & Approval Berkas
             </a>
@@ -122,7 +122,7 @@
                             @forelse($pengumumen as $item)
                             <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td class="px-5 py-4 whitespace-nowrap text-center">
-                                    @if($item->is_active)
+                                    @if($item->is_published)
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 text-emerald-800">Aktif</span>
                                     @else
                                         <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-slate-100 text-slate-800">Draft</span>
@@ -130,16 +130,15 @@
                                 </td>
                                 <td class="px-5 py-4 whitespace-nowrap">
                                     <p class="text-sm font-semibold text-slate-900">{{ $item->judul }}</p>
-                                    <p class="text-xs text-slate-500 capitalize mt-0.5">{{ $item->tipe }}</p>
                                 </td>
                                 <td class="px-5 py-4">
-                                    <p class="text-sm text-slate-600 line-clamp-1 max-w-md" title="{{ $item->konten }}">{{ Str::limit($item->konten, 60) }}</p>
+                                    <p class="text-sm text-slate-600 line-clamp-1 max-w-md" title="{{ $item->deskripsi }}">{{ Str::limit($item->deskripsi, 60) }}</p>
                                 </td>
                                 <td class="px-5 py-4 whitespace-nowrap text-sm text-slate-500">
                                     {{ $item->created_at->format('d M Y') }}
                                 </td>
                                 <td class="px-5 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                    <form action="{{ route('kp.koordinator.pengumuman.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus ini?');">
+                                    <form action="{{ route('eoffice.kp.koordinator.pengumuman.destroy', $item->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus ini?');">
                                         @csrf
                                         @method('DELETE')
                                         <button type="submit" class="text-red-500 hover:text-red-700 transition-colors">
@@ -173,7 +172,7 @@
         <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
             <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
                 <div x-show="modalOpen" @click.away="modalOpen = false" x-transition.duration.300ms class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg">
-                    <form action="{{ route('kp.koordinator.pengumuman.store') }}" method="POST">
+                    <form action="{{ route('eoffice.kp.koordinator.pengumuman.store') }}" method="POST">
                         @csrf
                         <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4 border-b border-slate-100">
                             <div class="flex items-center justify-between mb-5">

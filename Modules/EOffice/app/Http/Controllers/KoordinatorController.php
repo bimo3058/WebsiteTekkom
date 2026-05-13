@@ -86,7 +86,7 @@ class KoordinatorController extends Controller
             }
         }
 
-        return redirect()->route('kp.koordinator.balancing')
+        return redirect()->route('eoffice.kp.koordinator.balancing')
             ->with('success', "Berhasil menetapkan Dosen Pembimbing untuk $assignedCount mahasiswa!");
     }
 
@@ -110,12 +110,16 @@ class KoordinatorController extends Controller
             'konten' => 'required|string',
         ]);
 
-        $validated['is_active'] = $request->has('is_active');
-        $validated['created_by'] = auth()->id() ?? 1;
+        $dataToSave = [
+            'judul' => strtoupper($validated['tipe']) . ' - ' . $validated['judul'],
+            'deskripsi' => $validated['konten'],
+            'is_published' => $request->has('is_active'),
+            'user_id' => auth()->id() ?? 1,
+        ];
 
-        \Modules\EOffice\Models\KpPengumuman::create($validated);
+        \Modules\EOffice\Models\KpPengumuman::create($dataToSave);
 
-        return redirect()->route('kp.koordinator.pengumuman')->with('success', 'Informasi berhasil dipublikasikan!');
+        return redirect()->route('eoffice.kp.koordinator.pengumuman')->with('success', 'Informasi berhasil dipublikasikan!');
     }
 
     /**
@@ -124,7 +128,7 @@ class KoordinatorController extends Controller
     public function destroyPengumuman($id)
     {
         \Modules\EOffice\Models\KpPengumuman::findOrFail($id)->delete();
-        return redirect()->route('kp.koordinator.pengumuman')->with('success', 'Informasi berhasil dihapus!');
+        return redirect()->route('eoffice.kp.koordinator.pengumuman')->with('success', 'Informasi berhasil dihapus!');
     }
 
     public function validasiBerkas()
