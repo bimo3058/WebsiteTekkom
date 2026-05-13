@@ -107,22 +107,13 @@
                 </thead>
                 <tbody>
                     @forelse($users as $user)
-                    @php
-                        $isSA     = $user->roles->pluck('name')->contains('superadmin');
-                        $initials = strtoupper(substr($user->name, 0, 1));
-                        $sp = strpos($user->name, ' ');
-                        if ($sp !== false) $initials .= strtoupper(substr($user->name, $sp+1, 1));
-                    @endphp
+                    @php $isSA = $user->roles->pluck('name')->contains('superadmin'); @endphp
                     <tr style="border-bottom:1px solid #F6F8FA; background:rgba(223,28,65,0.02); transition:background .12s;"
                         onmouseover="this.style.background='rgba(223,28,65,0.04)'" onmouseout="this.style.background='rgba(223,28,65,0.02)'">
 
                         <td style="padding:12px 16px;">
                             <div style="display:flex; align-items:center; gap:10px;">
-                                <div style="width:32px; height:32px; border-radius:50%; background:var(--c-error-subtle); color:var(--c-error); display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:11px; font-weight:700; border:1px solid #ED8296; opacity:0.7; flex-shrink:0;">
-                                    @if($user->avatar_url)
-                                        <img src="{{ $user->avatar_url }}" style="width:100%;height:100%;object-fit:cover;">
-                                    @else {{ $initials }} @endif
-                                </div>
+                                <x-ui.user-avatar :user="$user" size="sm" :suspended="true" />
                                 <div style="min-width:0;">
                                     <div style="display:flex; align-items:center; gap:6px; margin-bottom:2px;">
                                         <p style="font-size:13px; font-weight:600; color:var(--c-error); text-decoration:line-through; text-decoration-color:var(--c-error-subtle); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:160px;">{{ $user->name }}</p>
@@ -135,19 +126,9 @@
 
                         <td style="padding:12px 16px;">
                             @forelse($user->roles as $role)
-                            @php
-                                [$rBg, $rColor] = match(strtolower($role->name)) {
-                                    'superadmin' => ['rgba(11,38,110,0.08)', 'var(--c-primary)'],
-                                    'dosen'      => ['#DDF2EE', '#287F6E'],
-                                    'mahasiswa'  => ['#F9ECCB', '#956321'],
-                                    default      => ['var(--c-bg)', 'var(--c-fg-muted)'],
-                                };
-                            @endphp
-                            <span style="font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.05em; padding:3px 8px; border-radius:9999px; background:{{ $rBg }}; color:{{ $rColor }}; display:inline-block; margin-right:3px;">
-                                {{ str_replace('_', ' ', $role->name) }}
-                            </span>
+                                <x-ui.role-badge :role="$role->name" size="xs" style="margin-right:3px;" />
                             @empty
-                            <span style="font-size:10px; color:var(--c-fg-placeholder); font-style:italic;">No Role</span>
+                                <span style="font-size:10px; color:var(--c-fg-placeholder); font-style:italic;">No Role</span>
                             @endforelse
                         </td>
 

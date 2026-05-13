@@ -125,12 +125,12 @@
 
                     <!-- Status Badge -->
                     <div class="absolute top-4 right-4">
-                        @if($jadwal->status === 'aktif')
+                        @if($jadwal->status->value === 'aktif')
                             <span
                                 class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700 border border-green-200 shadow-sm animate-pulse">
                                 <span class="w-1.5 h-1.5 rounded-full bg-green-500"></span> AKTIF
                             </span>
-                        @elseif($jadwal->status === 'selesai')
+                        @elseif($jadwal->status->value === 'selesai')
                             <span
                                 class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-slate-100 text-slate-700">
                                 Selesai
@@ -181,7 +181,7 @@
 
                     <!-- Action Bar -->
                     <div class="bg-slate-50 border-t border-slate-200 px-5 py-3">
-                        @if($jadwal->status === 'menunggu_jadwal')
+                        @if($jadwal->status->value === 'menunggu_jadwal')
                             <form action="{{ route('banksoal.aktivasi.toggle', $jadwal->id) }}" method="POST">
                                 @csrf
                                 @method('PATCH')
@@ -191,7 +191,7 @@
                                     Aktifkan Sesi & Generate Token
                                 </button>
                             </form>
-                        @elseif($jadwal->status === 'aktif')
+                        @elseif($jadwal->status->value === 'aktif')
                             <form action="{{ route('banksoal.aktivasi.toggle', $jadwal->id) }}" method="POST">
                                 @csrf
                                 @method('PATCH')

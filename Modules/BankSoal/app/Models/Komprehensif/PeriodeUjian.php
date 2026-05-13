@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\BankSoal\Models;
+namespace Modules\BankSoal\Models\Komprehensif;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
@@ -51,11 +51,10 @@ class PeriodeUjian extends Model
     public function getPendaftaranTerbukaAttribute(): bool
     {
         return $this->status !== 'selesai'
-            && !$this->pendaftaran_ditutup_paksa
+            && ! $this->pendaftaran_ditutup_paksa
             && now()->between(
                 Carbon::parse($this->tanggal_mulai)->startOfDay(),
                 Carbon::parse($this->tanggal_selesai)->endOfDay()
             );
     }
 }
-

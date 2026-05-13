@@ -1,10 +1,11 @@
 <?php
 
-namespace Modules\BankSoal\Models;
+namespace Modules\BankSoal\Models\Komprehensif;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\User;
+use Modules\BankSoal\Enums\PendaftaranStatus;
 
 class PendaftarUjian extends Model
 {
@@ -13,29 +14,33 @@ class PendaftarUjian extends Model
     protected $table = 'bs_pendaftar_ujians';
 
     protected $fillable = [
-        'periode_ujian_id', 
-        'mahasiswa_id', 
-        'nim', 
-        'nama_lengkap', 
+        'periode_ujian_id',
+        'mahasiswa_id',
+        'nim',
+        'nama_lengkap',
         'kontak_wa',
         'semester_aktif',
-        'target_wisuda', 
-        'dosen_pembimbing_1_id', 
+        'target_wisuda',
+        'dosen_pembimbing_1_id',
         'dosen_pembimbing_2_id',
-        'status_pendaftaran', 
-        'jadwal_ujian_id', 
+        'status_pendaftaran',
+        'jadwal_ujian_id',
         'catatan_admin',
-        'ditambahkan_oleh'
+        'ditambahkan_oleh',
     ];
 
-    public function mahasiswa() 
-    { 
-        return $this->belongsTo(User::class, 'mahasiswa_id'); 
+    protected $casts = [
+        'status_pendaftaran' => PendaftaranStatus::class,
+    ];
+
+    public function mahasiswa()
+    {
+        return $this->belongsTo(User::class, 'mahasiswa_id');
     }
-    
-    public function periode() 
-    { 
-        return $this->belongsTo(PeriodeUjian::class, 'periode_ujian_id'); 
+
+    public function periode()
+    {
+        return $this->belongsTo(PeriodeUjian::class, 'periode_ujian_id');
     }
 
     public function jadwal()

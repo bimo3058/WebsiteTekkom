@@ -14,6 +14,8 @@ class DatabaseSeeder extends Seeder
             UserSeeder::class,
             BankSoalDatabaseSeeder::class,
             PermissionSeeder::class,
+            DosenPembimbingSeeder::class,
+            MahasiswaSeeder::class,
             SystemModuleSeeder::class,
         ]);
     }

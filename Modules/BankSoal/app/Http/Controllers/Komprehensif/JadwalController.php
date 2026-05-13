@@ -4,8 +4,9 @@ namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Modules\BankSoal\Models\PeriodeUjian;
-use Modules\BankSoal\Models\JadwalUjian;
+use Illuminate\Validation\Rule;
+use Modules\BankSoal\Models\Komprehensif\JadwalUjian;
+use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
 
 class JadwalController extends Controller
 {
@@ -35,17 +36,39 @@ class JadwalController extends Controller
                 'required',
                 'numeric',
                 'min:1',
-                \Illuminate\Validation\Rule::unique('bs_jadwal_ujians', 'nama_sesi')->where(function ($query) use ($request) {
+                Rule::unique('bs_jadwal_ujians', 'nama_sesi')->where(function ($query) use ($request) {
                     return $query->where('periode_ujian_id', $request->periode_ujian_id)
                                  ->where('tanggal_ujian', $request->tanggal_ujian)
                                  ->whereNull('deleted_at');
                 })
             ],
             'tanggal_ujian' => 'required|date',
-            'waktu_mulai' => 'required|date_format:H:i',
-            'waktu_selesai' => 'required|date_format:H:i|after:waktu_mulai',
-            'kuota' => 'required|integer|min:1',
-            'ruangan' => 'nullable|string|max:255',
+            'waktu_mulai'   => 'required|date_format:H:i',
+            'waktu_selesai' => [
+                'required',
+                'date_format:H:i',
+                function ($attribute, $value, $fail) use ($request) {
+                    if (! $request->waktu_mulai) return;
+
+                    $mulai      = \Carbon\Carbon::createFromFormat('H:i', $request->waktu_mulai);
+                    $selesai    = \Carbon\Carbon::createFromFormat('H:i', $value);
+                    $minSelesai = $mulai->copy()->addMinutes(100);
+
+                    if ($selesai->lte($mulai)) {
+                        $fail('Waktu selesai harus lebih dari waktu mulai.');
+                        return;
+                    }
+
+                    if ($selesai->lt($minSelesai)) {
+                        $fail(
+                            'Waktu selesai harus minimal 100 menit setelah waktu mulai. ' .
+                            'Minimum: pukul ' . $minSelesai->format('H:i') . ' WIB.'
+                        );
+                    }
+                },
+            ],
+            'kuota'    => 'required|integer|min:1',
+            'ruangan'  => 'nullable|string|max:255',
         ], [
             'nama_sesi.unique' => 'Sesi ke-' . $request->nama_sesi . ' sudah ada pada tanggal ini.',
         ]);

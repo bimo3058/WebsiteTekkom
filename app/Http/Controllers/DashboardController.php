@@ -15,48 +15,83 @@ class DashboardController extends Controller
             return redirect()->route('superadmin.dashboard');
         }
 
-        $isMahasiswa = $user->hasRole('mahasiswa');
-        $isDosen = $user->hasRole('dosen');
-        // $isDosen     = $user->hasRole('dosen') && !$user->hasRole('gpm');
+        // Admin module roles are redirected by RedirectBasedOnRole middleware,
+        // but guard here in case middleware is bypassed.
+        if ($user->hasRole('admin_banksoal'))      return redirect()->route('banksoal.dashboard');
+        if ($user->hasRole('admin_capstone'))      return redirect()->route('capstone.dashboard');
+        if ($user->hasRole('admin_eoffice'))       return redirect()->route('eoffice.dashboard');
+        if ($user->hasRole('admin_kemahasiswaan')) return redirect()->route('manajemenmahasiswa.dashboard');
+
+        $isMahasiswa       = $user->hasRole('mahasiswa');
+        $isDosen           = $user->hasRole('dosen') || $user->hasRole('dosen_koor');
+        $isAlumni          = $user->hasRole('alumni');
+        $isPengurusHimpunan = $user->hasRole('pengurus_himpunan');
+
+        // Bank Soal card — mahasiswa goes to komprehensif, alumni sees riwayat only
+        if ($isMahasiswa) {
+            $bankSoalCard = [
+                'icon'        => 'quiz',
+                'title'       => 'Ujian Komprehensif',
+                'description' => 'Ikuti ujian komprehensif online.',
+                'route'       => 'komprehensif.mahasiswa.dashboard',
+                'color'       => 'blue',
+            ];
+        } elseif ($isDosen) {
+            $bankSoalCard = [
+                'icon'        => 'description',
+                'title'       => 'Manajemen RPS / Bank Soal',
+                'description' => 'Buat dan kelola RPS mata kuliah.',
+                'route'       => 'banksoal.dashboard',
+                'color'       => 'blue',
+            ];
+        } else {
+            $bankSoalCard = [
+                'icon'        => 'menu_book',
+                'title'       => 'Bank Soal',
+                'description' => 'Akses soal dan riwayat ujian.',
+                'route'       => 'banksoal.dashboard',
+                'color'       => 'blue',
+            ];
+        }
+
+        // Manajemen Mahasiswa card
+        if ($isMahasiswa || $isPengurusHimpunan) {
+            $manajemenTitle = $isPengurusHimpunan ? 'Forum & Kegiatan' : 'Forum Mahasiswa';
+            $manajemenDesc  = 'Kegiatan, prestasi, dan forum mahasiswa.';
+        } elseif ($isAlumni) {
+            $manajemenTitle = 'Portal Alumni';
+            $manajemenDesc  = 'Informasi alumni dan jaringan.';
+        } else {
+            $manajemenTitle = 'Manajemen Mahasiswa';
+            $manajemenDesc  = 'Kegiatan, alumni, dan forum mahasiswa.';
+        }
 
         $cards = [
+            $bankSoalCard,
             [
-                'icon' => $isMahasiswa ? 'quiz' : ($isDosen ? 'description' : 'menu_book'),
-                'title' => $isMahasiswa ? 'Ujian Komprehensif' : ($isDosen ? 'Manajemen RPS / Bank Soal' : 'Bank Soal'),
-                'description' => $isMahasiswa
-                    ? 'Ikuti ujian komprehensif online.'
-                    : ($isDosen
-                        ? 'Buat dan kelola RPS mata kuliah.'
-                        : 'Kelola soal, RPS, dan kompre.'),
-                'route' => $isMahasiswa ? 'komprehensif.mahasiswa.dashboard' : 'banksoal.dashboard',
-                'color' => 'blue',
-            ],
-            [
-                'icon' => 'school',
-                'title' => 'Capstone & TA',
+                'icon'        => 'school',
+                'title'       => 'Capstone & TA',
                 'description' => $isMahasiswa
                     ? 'Lihat progress capstone dan tugas akhir.'
                     : 'Manajemen capstone dan tugas akhir.',
-                'route' => 'capstone.dashboard',
-                'color' => 'purple',
+                'route'       => 'capstone.dashboard',
+                'color'       => 'purple',
             ],
             [
-                'icon' => 'groups',
-                'title' => $isMahasiswa ? 'Forum Mahasiswa' : 'Manajemen Mahasiswa',
-                'description' => $isMahasiswa
-                    ? 'Kegiatan, prestasi, dan forum mahasiswa.'
-                    : 'Kegiatan, alumni, dan forum mahasiswa.',
-                'route' => 'manajemenmahasiswa.dashboard',
-                'color' => 'green',
+                'icon'        => 'groups',
+                'title'       => $manajemenTitle,
+                'description' => $manajemenDesc,
+                'route'       => 'manajemenmahasiswa.dashboard',
+                'color'       => 'green',
             ],
             [
-                'icon' => 'folder_open',
-                'title' => 'E-Office',
+                'icon'        => 'folder_open',
+                'title'       => 'E-Office',
                 'description' => $isMahasiswa
                     ? 'Lihat pengumuman dan dokumen.'
                     : 'Manajemen dokumen dan workflow.',
-                'route' => 'eoffice.dashboard',
-                'color' => 'orange',
+                'route'       => 'eoffice.dashboard',
+                'color'       => 'orange',
             ],
         ];
 

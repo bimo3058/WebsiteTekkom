@@ -328,10 +328,15 @@ class RpsController extends Controller
     public function getCplByMk(int $mkId = null): JsonResponse
     {
         try {
-            // Always return all CPL from bs_cpl table (regardless of mkId)
-            // MK parameter is ignored - CPL selection is independent of MK choice
-            $cpls = Cpl::orderBy('kode')
-                ->get()
+            $query = Cpl::orderBy('kode');
+            
+            if ($mkId) {
+                $query->whereHas('mataKuliahs', function ($q) use ($mkId) {
+                    $q->where('bs_mata_kuliah.id', $mkId);
+                });
+            }
+
+            $cpls = $query->get()
                 ->map(function ($cpl) {
                     return [
                         'id' => $cpl->id,
@@ -425,13 +430,8 @@ class RpsController extends Controller
     public function getDosenByMk(Request $request): JsonResponse
     {
         try {
-            // Query semua user dengan role "dosen" (role_id = 3)
-            // Menggunakan direct join ke user_roles table untuk fetch all dosen
-            $dosenList = User::whereIn('id', function($query) {
-                    $query->select('user_id')
-                        ->from('user_roles')
-                        ->where('role_id', 3); // role_id = 3 is "dosen"
-                })
+            // Query semua user dengan role "dosen" via Spatie model_has_roles
+            $dosenList = User::whereHas('roles', fn($q) => $q->where('name', 'dosen'))
                 ->where('id', '!=', Auth::id())
                 ->whereNull('suspended_at')
                 ->orderBy('name')

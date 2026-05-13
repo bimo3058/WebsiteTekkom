@@ -201,11 +201,11 @@
                                         <span style="font-size:9px; font-weight:700; color:#94A3B8; text-transform:uppercase; letter-spacing:0.05em;">View Only</span>
                                     </div>
 
-                                    {{-- Daftar permission — pakai directPermissions yang sudah eager-loaded, bukan hasPermissionTo() agar tidak N+1 --}}
+                                    {{-- Daftar permission — pakai permissions yang sudah eager-loaded, bukan hasPermissionTo() agar tidak N+1 --}}
                                     <div style="padding:14px; display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
                                         @forelse($perms as $perm)
                                             @php
-                                                $hasPerm = $user->directPermissions->contains('name', $perm->name);
+                                                $hasPerm = $user->permissions->contains('name', $perm->name);
                                             @endphp
                                             <div style="display:flex; align-items:center; gap:8px; opacity: {{ $hasPerm ? '1' : '0.3' }}">
                                                 <input type="checkbox" {{ $hasPerm ? 'checked' : '' }} disabled

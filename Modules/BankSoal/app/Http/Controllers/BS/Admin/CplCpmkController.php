@@ -9,6 +9,11 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Models\Cpl;
 use Modules\BankSoal\Models\Cpmk;
+use Maatwebsite\Excel\Facades\Excel;
+use Modules\BankSoal\Exports\CplTemplateExport;
+use Modules\BankSoal\Exports\CpmkTemplateExport;
+use Modules\BankSoal\Imports\CplImport;
+use Modules\BankSoal\Imports\CpmkImport;
 
 class CplCpmkController extends Controller
 {
@@ -44,6 +49,44 @@ class CplCpmkController extends Controller
             'success' => true,
             'data' => Cpmk::query()->orderBy('kode')->get(),
         ]);
+    }
+
+    public function exportCplTemplate()
+    {
+        $this->authorize('banksoal.view');
+        return Excel::download(new CplTemplateExport, 'template_cpl.xlsx');
+    }
+
+    public function importCpl(Request $request): JsonResponse
+    {
+        $this->authorize('banksoal.edit');
+        $request->validate(['file' => 'required|mimes:xlsx,csv,xls|max:5120']);
+
+        try {
+            Excel::import(new CplImport, $request->file('file'));
+            return response()->json(['success' => true, 'message' => 'Data CPL berhasil diimpor']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal mengimpor data CSV/Excel: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function exportCpmkTemplate()
+    {
+        $this->authorize('banksoal.view');
+        return Excel::download(new CpmkTemplateExport, 'template_cpmk.xlsx');
+    }
+
+    public function importCpmk(Request $request): JsonResponse
+    {
+        $this->authorize('banksoal.edit');
+        $request->validate(['file' => 'required|mimes:xlsx,csv,xls|max:5120']);
+
+        try {
+            Excel::import(new CpmkImport, $request->file('file'));
+            return response()->json(['success' => true, 'message' => 'Data CPMK berhasil diimpor']);
+        } catch (\Exception $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal mengimpor data CSV/Excel: ' . $e->getMessage()], 500);
+        }
     }
 
     public function showCpl(int $id): JsonResponse
