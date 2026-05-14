@@ -148,7 +148,7 @@
                         <div class="space-y-1">
                             <label
                                 class="block text-[10px] text-slate-900 font-bold uppercase tracking-widest">Pembimbing
-                                Utama <span class="text-red-500">*</span></label>
+                                1 <span class="text-red-500">*</span></label>
                             <select name="dosen_pembimbing_1_id" required
                                 class="w-full h-11 bg-white border border-slate-300 focus:border-slate-900 focus:ring-0 text-slate-900 font-medium text-sm px-3 transition-colors outline-none cursor-pointer @error('dosen_pembimbing_1_id') border-red-500 @enderror">
                                 <option value="" disabled selected>PILIH DOSEN</option>

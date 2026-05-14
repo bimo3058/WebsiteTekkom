@@ -4,15 +4,32 @@ namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
+use Modules\BankSoal\Models\Komprehensif\KompreJawaban;
+use Modules\BankSoal\Models\Komprehensif\KompreSession;
+use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
+use Modules\BankSoal\Services\CbtSessionService;
 
 class AdminCbtController extends Controller
 {
+    public function __construct(private CbtSessionService $cbtService) {}
     /**
      * Fitur Live Proctoring untuk memantau mahasiswa yang sedang ujian.
      */
     public function liveProctoring()
     {
-        $sessions = \Modules\BankSoal\Models\KompreSession::with(['user', 'jawabans', 'cheatLogs'])
+        $this->authorize('viewAny', KompreSession::class);
+
+        $sessions = KompreSession::with('user')
+            ->withCount([
+                // Total soal dalam sesi
+                'jawabans',
+                // Soal yang sudah dijawab (tidak null)
+                'jawabans as terjawab_count' => fn($q) => $q->whereNotNull('jawaban_dipilih'),
+                // Jumlah pelanggaran
+                'cheatLogs',
+            ])
             ->where('status', 'ongoing')
             ->orderBy('started_at', 'desc')
             ->get();
@@ -23,20 +40,20 @@ class AdminCbtController extends Controller
     /**
      * Laporan Riwayat Hasil Ujian yang sudah selesai.
      */
-    public function riwayat(\Illuminate\Http\Request $request)
+    public function riwayat(Request $request)
     {
-        $query = \Modules\BankSoal\Models\KompreSession::with(['user', 'jadwal.periode'])
+        $this->authorize('viewAny', KompreSession::class);
+
+        $query = KompreSession::with(['user', 'jadwal.periode'])
             ->where('status', 'finished')
             ->orderBy('finished_at', 'desc');
 
         if ($request->filled('periode_id')) {
-            $query->whereHas('jadwal', function($q) use ($request) {
-                $q->where('periode_id', $request->periode_id);
-            });
+            $query->whereHas('jadwal', fn($q) => $q->where('periode_id', $request->periode_id));
         }
 
         $sessions = $query->get();
-        $periodes = \Modules\BankSoal\Models\PeriodeUjian::orderBy('created_at', 'desc')->get();
+        $periodes = PeriodeUjian::orderBy('created_at', 'desc')->get();
 
         return view('banksoal::admin.cbt.riwayat', compact('sessions', 'periodes'));
     }
@@ -46,12 +63,14 @@ class AdminCbtController extends Controller
      */
     public function detailHasil($id)
     {
-        $session = \Modules\BankSoal\Models\KompreSession::with([
-            'user.student', 
+        $session = KompreSession::with([
+            'user.student',
             'jadwal',
             'jawabans.pertanyaan.jawabans',
-            'jawabans.opsiTerpilih'
+            'jawabans.opsiTerpilih',
         ])->findOrFail($id);
+
+        $this->authorize('view', $session);
 
         return view('banksoal::admin.cbt.detail-hasil', compact('session'));
     }
@@ -61,83 +80,64 @@ class AdminCbtController extends Controller
      */
     public function forceSubmit($id)
     {
-        $session = \Modules\BankSoal\Models\KompreSession::findOrFail($id);
-        
-        if ($session->status === 'ongoing') {
-            // Kalkulasi skor
-            $jawabans = \Modules\BankSoal\Models\KompreJawaban::where('kompre_session_id', $session->id)
-                ->with('opsiTerpilih')->get();
-            $benar = $jawabans->filter(fn($j) => $j->opsiTerpilih && $j->opsiTerpilih->is_benar)->count();
-            $total = $jawabans->count();
-            $skor = $total > 0 ? round(($benar / $total) * 100, 2) : 0;
+        $session = KompreSession::findOrFail($id);
 
-            $session->update([
-                'status' => 'finished',
-                'finished_at' => now(),
-                'score' => $skor,
-            ]);
+        // Policy memverifikasi role admin DAN status === 'ongoing' sekaligus.
+        // Jika sesi sudah selesai, authorize() akan throw AuthorizationException (403).
+        $this->authorize('forceSubmit', $session);
 
-            return back()->with('success', 'Sesi ujian berhasil diakhiri paksa. Skor: ' . $skor);
-        }
+        $this->cbtService->finishSession($session);
 
-        return back()->with('error', 'Sesi ujian sudah selesai sebelumnya.');
+        return back()->with('success', 'Sesi ujian berhasil diakhiri paksa. Skor: ' . $session->fresh()->score);
     }
 
     public function analytics()
     {
-        // 1. Matriks Umum (Total Peserta, Rata-rata, Tertinggi, Terendah)
-        $sessions = \Modules\BankSoal\Models\KompreSession::where('status', 'finished')->get();
-        
-        $totalPeserta = $sessions->count();
-        $rataRata = $totalPeserta > 0 ? round($sessions->avg('score'), 2) : 0;
-        $tertinggi = $totalPeserta > 0 ? $sessions->max('score') : 0;
-        $terendah = $totalPeserta > 0 ? $sessions->min('score') : 0;
-        
-        // Distribusi Lulus / Tidak Lulus (Minimal 60)
-        $lulus = $sessions->where('score', '>=', 60)->count();
-        $tidakLulus = $totalPeserta - $lulus;
+        $this->authorize('viewAny', KompreSession::class);
 
-        // Ambil semua jawaban ujian yang sudah selesai
-        $jawabans = \Modules\BankSoal\Models\KompreJawaban::whereHas('session', function($q) {
-            $q->where('status', 'finished');
-        })->with(['pertanyaan.cpl', 'opsiTerpilih'])->get();
+        // 1. Matriks Umum — query agregasi langsung dari DB, tidak memuat ke RAM
+        $stats = KompreSession::where('status', 'finished')
+            ->selectRaw('COUNT(*) as total, AVG(score) as rata_rata, MAX(score) as tertinggi, MIN(score) as terendah, SUM(CASE WHEN score >= 60 THEN 1 ELSE 0 END) as lulus')
+            ->first();
 
-        // 2. Soal Tersulit (Top 10 yang paling banyak dijawab salah)
-        $kesalahanPerSoal = $jawabans->filter(function($j) {
-            // Salah = tidak dijawab (null) atau dijawab tapi salah
-            return !$j->opsiTerpilih || !$j->opsiTerpilih->is_benar;
-        })->groupBy('pertanyaan_id')->map(function($g) {
-            return [
-                'pertanyaan' => $g->first()->pertanyaan,
-                'salah_count' => $g->count()
-            ];
-        })->sortByDesc('salah_count')->take(10);
+        $totalPeserta = (int) $stats->total;
+        $rataRata     = $totalPeserta > 0 ? round($stats->rata_rata, 2) : 0;
+        $tertinggi    = $totalPeserta > 0 ? $stats->tertinggi : 0;
+        $terendah     = $totalPeserta > 0 ? $stats->terendah : 0;
+        $lulus        = (int) $stats->lulus;
+        $tidakLulus   = $totalPeserta - $lulus;
 
-        // 3. Pemetaan Capaian CPL
-        $cplStats = collect();
-        if ($jawabans->count() > 0) {
-            $cplStats = $jawabans->groupBy(function($j) {
-                return $j->pertanyaan && $j->pertanyaan->cpl ? $j->pertanyaan->cpl->id : 'Unknown';
-            })->map(function($g, $key) {
-                if ($key === 'Unknown') return null;
+        // 2. Soal Tersulit — agregasi di DB, bukan di PHP collection
+        $kesalahanPerSoal = KompreJawaban::whereHas('session', fn($q) => $q->where('status', 'finished'))
+            ->whereDoesntHave('opsiTerpilih', fn($q) => $q->where('is_benar', true))
+            ->with('pertanyaan.cpl')  // eager-load cpl agar view tidak lazy-load
+            ->selectRaw('pertanyaan_id, COUNT(*) as salah_count')
+            ->groupBy('pertanyaan_id')
+            ->orderByDesc('salah_count')
+            ->limit(10)
+            ->get()
+            ->map(fn($row) => [
+                'pertanyaan'  => $row->pertanyaan,
+                'salah_count' => $row->salah_count,
+            ]);
 
-                $total = $g->count();
-                $benar = $g->filter(function($j) {
-                    return $j->opsiTerpilih && $j->opsiTerpilih->is_benar;
-                })->count();
-                
-                $cpl = $g->first()->pertanyaan->cpl;
-                
-                return [
-                    'cpl_kode' => $cpl ? $cpl->kode : 'CPL-?',
-                    'deskripsi' => $cpl ? $cpl->deskripsi : '',
-                    'persentase' => $total > 0 ? round(($benar / $total) * 100, 2) : 0
-                ];
-            })->filter()->sortBy('cpl_kode')->values();
-        }
+        // 3. Pemetaan Capaian CPL — agregasi di DB
+        $cplStats = KompreJawaban::whereHas('session', fn($q) => $q->where('status', 'finished'))
+            ->join('bs_pertanyaan', 'bs_kompre_jawaban.pertanyaan_id', '=', 'bs_pertanyaan.id')
+            ->join('bs_cpl', 'bs_pertanyaan.cpl_id', '=', 'bs_cpl.id')
+            ->leftJoin('bs_jawaban', 'bs_kompre_jawaban.jawaban_dipilih', '=', 'bs_jawaban.id')
+            ->selectRaw('bs_cpl.id, bs_cpl.kode as cpl_kode, bs_cpl.deskripsi, COUNT(*) as total, SUM(CASE WHEN bs_jawaban.is_benar = true THEN 1 ELSE 0 END) as benar')
+            ->groupBy('bs_cpl.id', 'bs_cpl.kode', 'bs_cpl.deskripsi')
+            ->orderBy('bs_cpl.kode')
+            ->get()
+            ->map(fn($row) => [
+                'cpl_kode'   => $row->cpl_kode,
+                'deskripsi'  => $row->deskripsi,
+                'persentase' => $row->total > 0 ? round(($row->benar / $row->total) * 100, 2) : 0,
+            ]);
 
         return view('banksoal::admin.cbt.analitik', compact(
-            'totalPeserta', 'rataRata', 'tertinggi', 'terendah', 
+            'totalPeserta', 'rataRata', 'tertinggi', 'terendah',
             'lulus', 'tidakLulus', 'kesalahanPerSoal', 'cplStats'
         ));
     }
@@ -148,19 +148,23 @@ class AdminCbtController extends Controller
      */
     public function resetSemua(Request $request)
     {
+        // Hanya admin_banksoal (super admin modul) yang boleh reset.
+        // Dibedakan dari 'admin' biasa karena operasi ini bersifat destruktif.
+        $this->authorize('resetAll', KompreSession::class);
+
         $request->validate([
             'konfirmasi_password' => 'required|string',
         ]);
 
         // Verifikasi password admin yang sedang login
-        if (!\Illuminate\Support\Facades\Hash::check($request->konfirmasi_password, auth()->user()->password)) {
+        if (! Hash::check($request->konfirmasi_password, auth()->user()->password)) {
             return redirect()->back()->withErrors([
                 'konfirmasi_password' => 'Password yang Anda masukkan salah. Reset dibatalkan.',
             ])->withFragment('reset-section');
         }
 
         // Pastikan tidak ada sesi ujian yang sedang berlangsung
-        $ongoingSessions = \Modules\BankSoal\Models\KompreSession::where('status', 'ongoing')->count();
+        $ongoingSessions = KompreSession::where('status', 'ongoing')->count();
         if ($ongoingSessions > 0) {
             return redirect()->back()->with(
                 'error',
@@ -169,12 +173,12 @@ class AdminCbtController extends Controller
         }
 
         // Hapus urut dari tabel turunan ke tabel induk
-        \DB::table('bs_cheat_logs')->delete();
-        \DB::table('bs_kompre_jawaban')->delete();
-        \DB::table('bs_kompre_session')->delete();
-        \DB::table('bs_pendaftar_ujians')->delete();
-        \DB::table('bs_jadwal_ujians')->delete();
-        \DB::table('bs_periode_ujians')->delete();
+        DB::table('bs_cheat_logs')->delete();
+        DB::table('bs_kompre_jawaban')->delete();
+        DB::table('bs_kompre_session')->delete();
+        DB::table('bs_pendaftar_ujians')->delete();
+        DB::table('bs_jadwal_ujians')->delete();
+        DB::table('bs_periode_ujians')->delete();
 
         return redirect()->route('banksoal.admin.cbt.riwayat')
             ->with('success', '✅ Semua data ujian komprehensif berhasil direset. Sistem siap digunakan dari awal.');

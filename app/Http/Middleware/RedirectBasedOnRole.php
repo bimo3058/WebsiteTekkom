@@ -18,7 +18,9 @@ class RedirectBasedOnRole
         'livewire*',
         'capstone/launch',
         'capstone*',
-        'api/capstone/*'
+        'api/capstone/*',
+        'error',
+        'error/*',
     ];
 
     // Role yang diarahkan ke dashboard global
@@ -49,7 +51,7 @@ class RedirectBasedOnRole
             }
         }
 
-        $roleNames = $user->getCachedRoles()->pluck('name')->map(fn($r) => strtolower($r));
+        $roleNames = $user->roles->pluck('name')->map(fn($r) => strtolower($r));
 
         // 1. Superadmin — lock ke area /superadmin
         if ($roleNames->contains('superadmin') && $request->is('dashboard')) {

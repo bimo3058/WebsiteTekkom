@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SIKP - Validasi & Approval Berkas</title>
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>body { font-family: 'Inter', sans-serif; }</style>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+</head>
+<body class="bg-slate-50 text-slate-800 antialiased" x-data="{ sidebarOpen: false }">
+<div class="flex h-screen w-full">
+
+    <!-- Mobile Overlay -->
+    <div x-show="sidebarOpen" class="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden" @click="sidebarOpen = false"></div>
+
+    <!-- Sidebar -->
+    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 lg:static lg:translate-x-0">
+        <div class="flex items-center gap-3 px-6 h-16 border-b border-slate-200">
+            <div class="w-9 h-9 bg-slate-900 rounded-lg flex items-center justify-center text-white">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/></svg>
+            </div>
+            <div>
+                <p class="font-bold text-slate-900 text-sm">SIKP</p>
+                <p class="text-[10px] text-slate-500">Sistem Informasi KP</p>
+            </div>
+        </div>
+        <nav class="flex-1 px-4 py-4 space-y-1">
+            <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 mt-2">Menu Dosen</p>
+            <a href="{{ route('eoffice.kp.dosen.dashboard') }}" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+                <svg class="w-5 h-5 mr-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
+                List Anak Bimbingan
+            </a>
+            <a href="{{ route('eoffice.kp.dosen.validasi_berkas') }}" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-blue-50 text-blue-700 transition-colors">
+                <svg class="w-5 h-5 mr-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Validasi & Approval Berkas
+            </a>
+            <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors">
+                <svg class="w-5 h-5 mr-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Berkas B4
+            </a>
+        </nav>
+        <div class="p-4 border-t border-slate-200">
+            <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-red-600 hover:bg-red-50 transition-colors">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+                Logout
+            </a>
+        </div>
+    </aside>
+
+    <!-- Main -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <!-- Topbar -->
+        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6">
+            <div class="flex items-center gap-4">
+                <button @click="sidebarOpen = true" class="lg:hidden text-slate-500">
+                    <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+                </button>
+                <p class="text-sm text-slate-500">SIKP <span class="mx-2">/</span> <span class="text-slate-900 font-medium">Validasi & Approval Berkas</span></p>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600">
+                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+                </div>
+            </div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+
+            <!-- Flash Messages -->
+            @if(session('success'))
+            <div class="mb-6 bg-emerald-50 border border-emerald-200 text-emerald-700 px-4 py-3 rounded-xl flex items-center gap-3">
+                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="font-medium text-sm">{{ session('success') }}</p>
+            </div>
+            @endif
+            @if(session('error'))
+            <div class="mb-6 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-xl flex items-center gap-3">
+                <svg class="w-5 h-5 text-red-500 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <p class="font-medium text-sm">{{ session('error') }}</p>
+            </div>
+            @endif
+
+            <!-- Page Header -->
+            <div class="mb-6">
+                <h1 class="text-2xl font-bold text-slate-900">Validasi & Approval Berkas</h1>
+                <p class="text-sm text-slate-500 mt-1">Tinjau dan setujui laporan serta makalah KP mahasiswa bimbingan Anda.</p>
+            </div>
+
+            <!-- Stats Cards -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                    <p class="text-xs font-medium text-slate-500">Total Dokumen</p>
+                    <p class="text-2xl font-bold text-slate-900 mt-1">{{ $stats['total'] }}</p>
+                </div>
+                <div class="bg-amber-50 rounded-xl border border-amber-200 p-4 shadow-sm">
+                    <p class="text-xs font-medium text-amber-600">Menunggu Review</p>
+                    <p class="text-2xl font-bold text-amber-700 mt-1">{{ $stats['pending'] }}</p>
+                </div>
+                <div class="bg-emerald-50 rounded-xl border border-emerald-200 p-4 shadow-sm">
+                    <p class="text-xs font-medium text-emerald-600">Disetujui (ACC)</p>
+                    <p class="text-2xl font-bold text-emerald-700 mt-1">{{ $stats['approved'] }}</p>
+                </div>
+                <div class="bg-red-50 rounded-xl border border-red-200 p-4 shadow-sm">
+                    <p class="text-xs font-medium text-red-600">Perlu Revisi</p>
+                    <p class="text-2xl font-bold text-red-700 mt-1">{{ $stats['rejected'] }}</p>
+                </div>
+            </div>
+
+            <!-- Table -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+                <div class="px-5 py-4 border-b border-slate-200 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                    <h2 class="text-base font-semibold text-slate-800">Daftar Dokumen Masuk</h2>
+                    <div class="flex items-center gap-2 w-full sm:w-auto">
+                        <div class="relative w-full sm:w-56">
+                            <input type="text" id="searchInput" placeholder="Cari mahasiswa..."
+                                class="w-full pl-9 pr-3 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                oninput="filterTable()">
+                            <svg class="absolute left-3 top-2.5 h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                        </div>
+                    </div>
+                </div>
+
+                @if($dokumens->isEmpty())
+                <div class="p-12 text-center">
+                    <svg class="mx-auto h-12 w-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    <p class="text-sm font-medium text-slate-900">Belum ada dokumen yang diunggah</p>
+                    <p class="text-xs text-slate-500 mt-1">Mahasiswa bimbingan Anda belum mengunggah Laporan atau Makalah KP.</p>
+                </div>
+                @else
+                <!-- Desktop Table -->
+                <div class="hidden md:block overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200" id="dokumenTable">
+                        <thead class="bg-slate-50">
+                            <tr>
+                                <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mahasiswa</th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Jenis Dokumen</th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">File</th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tgl Upload</th>
+                                <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
+                                <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-100">
+                            @foreach($dokumens as $dok)
+                            <tr class="hover:bg-slate-50 transition-colors dok-row" data-name="{{ strtolower($dok->nama_mahasiswa ?? '') }} {{ strtolower($dok->nim ?? '') }}">
+                                <td class="px-5 py-4 whitespace-nowrap">
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-8 w-8 rounded bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">
+                                            {{ strtoupper(substr($dok->nama_mahasiswa ?? 'M', 0, 2)) }}
+                                        </div>
+                                        <div>
+                                            <p class="text-sm font-medium text-slate-900">{{ $dok->nama_mahasiswa ?? 'Mahasiswa' }}</p>
+                                            <p class="text-xs text-slate-500">{{ $dok->nim }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-5 py-4 whitespace-nowrap">
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-semibold
+                                        {{ $dok->jenis_dokumen == 'Laporan' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800' }}">
+                                        {{ $dok->jenis_dokumen }}
+                                    </span>
+                                </td>
+                                <td class="px-5 py-4">
+                                    @if($dok->file_path)
+                                        <a href="/storage/{{ $dok->file_path }}" target="_blank"
+                                           class="text-xs text-blue-600 hover:text-blue-800 underline font-medium flex items-center gap-1">
+                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                            {{ basename($dok->file_path) }}
+                                        </a>
+                                    @else
+                                        <span class="text-xs text-slate-400">—</span>
+                                    @endif
+                                </td>
+                                <td class="px-5 py-4 whitespace-nowrap text-xs text-slate-500">
+                                    {{ $dok->tanggal_upload ? \Carbon\Carbon::parse($dok->tanggal_upload)->format('d M Y') : '—' }}
+                                </td>
+                                <td class="px-5 py-4 whitespace-nowrap">
+                                    @if($dok->status_validasi == 'pending')
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-800">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-400 mr-1.5"></span>Menunggu Review
+                                        </span>
+                                    @elseif($dok->status_validasi == 'approved')
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-800">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 mr-1.5"></span>Disetujui
+                                        </span>
+                                    @elseif($dok->status_validasi == 'rejected')
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-800">
+                                            <span class="w-1.5 h-1.5 rounded-full bg-red-400 mr-1.5"></span>Perlu Revisi
+                                        </span>
+                                    @endif
+                                </td>
+                                <td class="px-5 py-4 whitespace-nowrap text-right">
+                                    @if($dok->status_validasi == 'pending')
+                                    <div class="flex items-center justify-end gap-2">
+                                        <form action="{{ route('eoffice.kp.dosen.bimbingan.dokumen.reject', [$dok->kp_id, $dok->id]) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors">
+                                                Revisi
+                                            </button>
+                                        </form>
+                                        <form action="{{ route('eoffice.kp.dosen.bimbingan.dokumen.approve', [$dok->kp_id, $dok->id]) }}" method="POST">
+                                            @csrf
+                                            <button type="submit" class="px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors flex items-center gap-1">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                                ACC
+                                            </button>
+                                        </form>
+                                    </div>
+                                    @elseif($dok->status_validasi == 'approved')
+                                        <span class="text-xs text-slate-400">Sudah di-ACC</span>
+                                    @else
+                                        <span class="text-xs text-slate-400">Menunggu revisi</span>
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Mobile Card List -->
+                <div class="md:hidden divide-y divide-slate-100" id="mobileList">
+                    @foreach($dokumens as $dok)
+                    <div class="p-4 dok-row" data-name="{{ strtolower($dok->nama_mahasiswa ?? '') }} {{ strtolower($dok->nim ?? '') }}">
+                        <div class="flex justify-between items-start mb-3">
+                            <div class="flex items-center gap-3">
+                                <div class="h-9 w-9 rounded bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs">
+                                    {{ strtoupper(substr($dok->nama_mahasiswa ?? 'M', 0, 2)) }}
+                                </div>
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-900">{{ $dok->nama_mahasiswa ?? 'Mahasiswa' }}</p>
+                                    <p class="text-xs text-slate-500">{{ $dok->nim }} · {{ $dok->jenis_dokumen }}</p>
+                                </div>
+                            </div>
+                            @if($dok->status_validasi == 'pending')
+                                <span class="px-2 py-1 text-[10px] font-bold rounded-full bg-amber-100 text-amber-700">Pending</span>
+                            @elseif($dok->status_validasi == 'approved')
+                                <span class="px-2 py-1 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-700">ACC</span>
+                            @else
+                                <span class="px-2 py-1 text-[10px] font-bold rounded-full bg-red-100 text-red-700">Revisi</span>
+                            @endif
+                        </div>
+                        @if($dok->file_path)
+                        <a href="/storage/{{ $dok->file_path }}" target="_blank" class="text-xs text-blue-600 underline mb-3 block">
+                            {{ basename($dok->file_path) }}
+                        </a>
+                        @endif
+                        @if($dok->status_validasi == 'pending')
+                        <div class="flex gap-2 mt-2">
+                            <form action="{{ route('eoffice.kp.dosen.bimbingan.dokumen.reject', [$dok->kp_id, $dok->id]) }}" method="POST" class="flex-1">
+                                @csrf
+                                <button class="w-full py-2 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg">Revisi</button>
+                            </form>
+                            <form action="{{ route('eoffice.kp.dosen.bimbingan.dokumen.approve', [$dok->kp_id, $dok->id]) }}" method="POST" class="flex-1">
+                                @csrf
+                                <button class="w-full py-2 text-xs font-medium text-white bg-emerald-600 rounded-lg">ACC</button>
+                            </form>
+                        </div>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+
+                <!-- Footer -->
+                <div class="px-5 py-3 border-t border-slate-200 bg-slate-50">
+                    <p class="text-xs text-slate-500">Total {{ $dokumens->count() }} dokumen ditemukan</p>
+                </div>
+                @endif
+            </div>
+        </main>
+    </div>
+</div>
+
+<script>
+function filterTable() {
+    const keyword = document.getElementById('searchInput').value.toLowerCase();
+    document.querySelectorAll('.dok-row').forEach(row => {
+        row.style.display = row.dataset.name.includes(keyword) ? '' : 'none';
+    });
+}
+</script>
+</body>
+</html>

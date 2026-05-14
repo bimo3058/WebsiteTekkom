@@ -74,19 +74,6 @@
         ['path' => request()->url(), 'query' => request()->query()]
     );
 
-    // 6. Mapping Badge Warna untuk Label di Tabel User
-    $roleStyleMap = [
-        'superadmin'          => ['color'=>'#7C3AED','border'=>'#C4B5FD'],
-        'dosen'               => ['color'=>'#059669','border'=>'#6EE7B7'],
-        'mahasiswa'           => ['color'=>'#D97706','border'=>'#FCD34D'],
-        'gpm'                 => ['color'=>'#0284C7','border'=>'#7DD3FC'],
-        'alumni'              => ['color'=>'#7C3AED','border'=>'#C4B5FD'],
-        'pengurus_himpunan'   => ['color'=>'#7C3AED','border'=>'#C4B5FD'],
-        'admin_banksoal'      => ['color'=>'#92400E','border'=>'#FCD34D'],
-        'admin_capstone'      => ['color'=>'#1D4ED8','border'=>'#93C5FD'],
-        'admin_eoffice'       => ['color'=>'#047857','border'=>'#6EE7B7'],
-        'admin_kemahasiswaan' => ['color'=>'#9D174D','border'=>'#F9A8D4'],
-    ];
 @endphp
 
 <div class="perm-wrap">
@@ -94,7 +81,7 @@
 
     {{-- ── Toolbar ── --}}
     <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 24px;background:#fff;border-bottom:1px solid #D4D5D8;flex-shrink:0;">
-        <a href="{{ route('superadmin.users.index') }}"
+        <a href="{{ route('superadmin.permissions') }}"
            style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;font-size:12px;font-weight:600;color:#475569;background:#fff;border:1px solid #D0D1D5;border-radius:6px;box-shadow:0 1px 2px rgba(0,0,0,.04);text-decoration:none;font-family:'Inter Tight',sans-serif;">
             <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M15 18l-6-6 6-6"/></svg>
             Kembali
@@ -297,12 +284,9 @@
                                         $isSuspended  = $user->isSuspended();
                                         $isMe         = $user->id === auth()->id();
                                         $isSuperadmin = $user->roles->pluck('name')->contains('superadmin');
-                                        $permc        = $user->directPermissions->count();
-                                        $modc         = $isSuperadmin ? 'All' : $user->directPermissions->pluck('name')->map(fn($p)=>explode('.',$p)[0])->unique()->count();
+                                        $permc        = $user->permissions->count();
+                                        $modc         = $isSuperadmin ? 'All' : $user->permissions->pluck('name')->map(fn($p)=>explode('.',$p)[0])->unique()->count();
                                         $firstRole    = $user->roles->first();
-                                        $rs           = $roleStyleMap[strtolower($firstRole?->name ?? '')] ?? ['color'=>'#64748B','border'=>'#CBD5E1'];
-                                        $nameParts    = explode(' ', $user->name);
-                                        $initials     = strtoupper(substr($nameParts[0],0,1)).(count($nameParts)>1 ? strtoupper(substr(end($nameParts),0,1)) : '');
                                     @endphp
                                     <tr style="border-bottom:1px solid #F3F4F6;transition:background .1s;{{ $isSuspended ? 'background:#FFF9F9;' : '' }}"
                                         onmouseover="this.style.background='{{ $isSuspended ? '#FFF5F5' : '#FAFAFA' }}'"
@@ -327,13 +311,9 @@
                                         {{-- User Name --}}
                                         <td style="padding:12px 14px;">
                                             <div style="display:flex;align-items:center;gap:10px;">
-                                                <div style="width:32px;height:32px;border-radius:8px;border:1px solid #E2E8F0;background:#E2E8F0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:#64748B;flex-shrink:0;overflow:hidden;">
-                                                    @if($user->avatar_url)
-                                                        <img src="{{ $user->avatar_url }}" style="width:100%;height:100%;object-fit:cover;" alt="">
-                                                    @else
-                                                        {{ $initials }}
-                                                    @endif
-                                                </div>
+                                                <x-ui.user-avatar :user="$user" size="sm"
+                                                    :online-dot="$user->is_online && !$isSuspended"
+                                                    :suspended="$isSuspended" />
                                                 <div>
                                                     <div style="display:flex;align-items:center;gap:6px;">
                                                         <a href="{{ route('superadmin.users.show', $user->id) }}"
@@ -351,9 +331,7 @@
                                         {{-- Access Role --}}
                                         <td style="padding:12px 14px;">
                                             @if($firstRole)
-                                                <span style="font-size:11px;font-weight:500;color:{{ $rs['color'] }};border:1px solid {{ $rs['border'] }};padding:3px 10px;border-radius:9999px;white-space:nowrap;">
-                                                    {{ Str::title(str_replace('_',' ',$firstRole->name)) }}
-                                                </span>
+                                                <x-ui.role-badge :role="$firstRole->name" size="xs" />
                                             @else
                                                 <span style="font-size:10px;color:#94A3B8;font-style:italic;">No Role</span>
                                             @endif
@@ -367,15 +345,7 @@
 
                                         {{-- Status --}}
                                         <td style="padding:12px 14px;">
-                                            @if($isSuspended)
-                                                <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:#DC2626;border:1px solid #FCA5A5;padding:3px 10px;border-radius:9999px;white-space:nowrap;">
-                                                    <span style="width:6px;height:6px;border-radius:50%;background:#DC2626;flex-shrink:0;"></span>Suspend
-                                                </span>
-                                            @else
-                                                <span style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:500;color:#059669;border:1px solid #6EE7B7;padding:3px 10px;border-radius:9999px;white-space:nowrap;">
-                                                    <span style="width:6px;height:6px;border-radius:50%;background:#22C55E;flex-shrink:0;"></span>Active
-                                                </span>
-                                            @endif
+                                            <x-ui.status-badge :status="$isSuspended ? 'suspended' : 'active'" />
                                         </td>
 
                                         {{-- Action — same dropdown as user management --}}

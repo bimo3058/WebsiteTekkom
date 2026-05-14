@@ -53,6 +53,37 @@
             gap: 16px;
             background: #FAFAFA;
         }
+
+        /* ── Mobile: scroll natively ── */
+        @media (max-width: 767px) {
+            .sitkom-content {
+                padding: 8px 8px 80px !important;
+                display: block !important;
+                overflow: visible !important;
+            }
+            .audit-wrap {
+                height: auto !important;
+                min-height: 0 !important;
+                padding: 0;
+            }
+            .audit-box {
+                flex: none !important;
+                min-height: 0 !important;
+                overflow: visible !important;
+                border-radius: 10px;
+            }
+            .audit-box-header {
+                padding: 12px 14px;
+                position: sticky;
+                top: 52px;
+                z-index: 10;
+            }
+            .audit-box-body {
+                overflow-y: visible !important;
+                flex: none !important;
+                padding: 12px 14px;
+            }
+        }
     </style>
 
     <div class="audit-wrap">

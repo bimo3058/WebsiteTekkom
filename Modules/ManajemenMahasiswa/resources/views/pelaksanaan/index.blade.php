@@ -142,7 +142,7 @@
                         <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:8px;">Rencana vs Realisasi</div>
                         <div class="compare-row">
                             <span class="compare-label">Tanggal:</span>
-                            <span class="compare-rencana">{{ $item->tanggal_mulai->translatedFormat('d M') }}</span>
+                            <span class="compare-rencana">{{ $item->tanggal_mulai ? $item->tanggal_mulai->translatedFormat('d M') : 'Blm ada' }}</span>
                             <span style="color:#d1d5db;">→</span>
                             @if($item->realisasi_tanggal_mulai)
                                 <span class="compare-realisasi">{{ $item->realisasi_tanggal_mulai->translatedFormat('d M Y') }}</span>

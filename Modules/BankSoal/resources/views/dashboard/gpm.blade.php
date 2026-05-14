@@ -12,9 +12,6 @@
                     <p class="text-xs text-amber-800">Segera lakukan peninjauan untuk menjaga kualitas akademik.</p>
                 </div>
             </div>
-            <button class="inline-flex items-center justify-center rounded-xl bg-amber-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-amber-700">
-                Lihat Detail
-            </button>
         </div>
     </div>
 

@@ -6,32 +6,32 @@
     <style>
         /* Hilangkan padding default agar wrap bisa full 100vh */
         .sitkom-content { padding: 0 !important; display: flex; flex-direction: column; flex: 1; overflow: hidden; }
-        
+
         /* Container luar */
-        .dash-wrap { 
-            display: flex; flex-direction: column; height: calc(100vh - 60px); 
-            padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif; 
+        .dash-wrap {
+            display: flex; flex-direction: column; height: calc(100vh - 60px);
+            padding: 10px; box-sizing: border-box; font-family: 'Inter Tight', sans-serif;
         }
-        
+
         /* Kotak utama (Box) */
-        .dash-box { 
-            display: flex; flex-direction: column; flex: 1; min-height: 0; 
-            background: #fff; border: 1px solid var(--c-border); 
-            border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06); 
+        .dash-box {
+            display: flex; flex-direction: column; flex: 1; min-height: 0;
+            background: #fff; border: 1px solid var(--c-border);
+            border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
             overflow: hidden; width: 100%; box-sizing: border-box;
         }
 
         /* Area Header Box (Fixed di atas kotak) */
         .dash-box-header {
-            background: #fff; 
-            border-bottom: 1px solid var(--c-border); 
-            flex-shrink: 0; width: 100%; box-sizing: border-box; 
-            padding: 16px 24px; 
+            background: #fff;
+            border-bottom: 1px solid var(--c-border);
+            flex-shrink: 0; width: 100%; box-sizing: border-box;
+            padding: 16px 24px;
         }
 
         /* Area Konten Box (Scrollable) */
         .dash-box-body {
-            flex: 1; overflow-y: auto; padding: 20px 24px; 
+            flex: 1; overflow-y: auto; padding: 20px 24px;
             display: flex; flex-direction: column; gap: 2px;
         }
 
@@ -43,9 +43,40 @@
 
         /* Opsional: Percantik scrollbar agar senada dengan desain SITKOM kamu */
         .dash-box-body::-webkit-scrollbar { width: 6px; }
-        .dash-box-body::-webkit-scrollbar-thumb { 
-            background: var(--c-border-strong); 
-            border-radius: 10px; 
+        .dash-box-body::-webkit-scrollbar-thumb {
+            background: var(--c-border-strong);
+            border-radius: 10px;
+        }
+
+        /* ── Mobile: scroll natively, bukan inner-scroll ── */
+        @media (max-width: 767px) {
+            .sitkom-content {
+                padding: 8px 8px 80px !important;
+                display: block !important;
+                overflow: visible !important;
+            }
+            .dash-wrap {
+                height: auto !important;
+                min-height: 0 !important;
+                padding: 0;
+            }
+            .dash-box {
+                flex: none !important;
+                min-height: 0 !important;
+                overflow: visible !important;
+                border-radius: 10px;
+            }
+            .dash-box-header {
+                padding: 12px 14px;
+                position: sticky;
+                top: 52px; /* tinggi topbar mobile */
+                z-index: 10;
+            }
+            .dash-box-body {
+                overflow-y: visible !important;
+                flex: none !important;
+                padding: 14px;
+            }
         }
     </style>
 

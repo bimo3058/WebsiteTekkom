@@ -58,6 +58,37 @@
                 min-height: 0;
             }
 
+            /* ── Mobile: scroll natively ── */
+            @media (max-width: 767px) {
+                .sitkom-content {
+                    padding: 8px 8px 80px !important;
+                    display: block !important;
+                    overflow: visible !important;
+                }
+                .settings-wrap {
+                    height: auto !important;
+                    min-height: 0 !important;
+                    padding: 0;
+                }
+                .settings-box {
+                    flex: none !important;
+                    min-height: 0 !important;
+                    overflow: visible !important;
+                    border-radius: 10px;
+                }
+                .settings-box-header {
+                    padding: 10px 14px;
+                    position: sticky;
+                    top: 52px;
+                    z-index: 10;
+                }
+                .settings-box-body {
+                    overflow-y: visible !important;
+                    flex-direction: column !important;
+                    display: block !important;
+                }
+            }
+
             .settings-nav {
                 width: 200px;
                 flex-shrink: 0;
