@@ -2,48 +2,26 @@
 
 namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin;
 
-use App\Models\User;
-use Illuminate\Http\JsonResponse;
+use App\Models\Lecturer;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Modules\EOffice\Http\Resources\ManajemenPraktikum\Admin\DosenResource;
 
 class DosenController extends Controller
 {
-    /**
-     * GET /api/eoffice/manprak/admin/dosen
-     *
-     * Ambil daftar user yang memiliki role 'dosen' di module eoffice.
-     */
-    public function index(Request $request): JsonResponse
+    public function index(Request $request)
     {
-        $perPage = min($request->input('per_page', 10), 50);
-
-        // Pakai sistem role global superapp: Role.module = 'eoffice', Role.name = 'dosen'
-        $query = User::whereHas('roles', function ($q) {
-                $q->where('name', 'dosen')
-                  ->where('module', 'eoffice');
-            })
-            ->orderBy('name', 'asc');
+        // Ambil langsung dari tabel lecturers JOIN users
+        $query = Lecturer::with('user')->orderBy('created_at', 'desc');
 
         if ($search = $request->input('search')) {
-            $query->where(function ($q) use ($search) {
+            $query->whereHas('user', fn($q) =>
                 $q->where('name', 'like', "%{$search}%")
-                  ->orWhere('email', 'like', "%{$search}%");
-            });
+                  ->orWhere('email', 'like', "%{$search}%")
+            )->orWhere('employee_number', 'like', "%{$search}%");
         }
 
-        $dosens = $query->paginate($perPage);
+        $dosens = $query->paginate(15)->withQueryString();
 
-        return response()->json([
-            'success' => true,
-            'data'    => DosenResource::collection($dosens),
-            'pagination' => [
-                'current_page' => $dosens->currentPage(),
-                'per_page'     => $dosens->perPage(),
-                'total'        => $dosens->total(),
-                'last_page'    => $dosens->lastPage(),
-            ],
-        ]);
+        return view('eoffice::manajemen-praktikum.admin.dosen', compact('dosens'));
     }
 }
