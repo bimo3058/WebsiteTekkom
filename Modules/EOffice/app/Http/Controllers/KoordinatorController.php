@@ -47,17 +47,26 @@ class KoordinatorController extends Controller
             ->orderBy('eo_kerja_praktik.created_at', 'asc')
             ->get();
 
-        // 2. Ambil semua dosen (JOIN dari tabel global)
-        $dosens = \Illuminate\Support\Facades\DB::table('users')
-            ->join('user_roles', 'users.id', '=', 'user_roles.user_id')
-            ->join('roles', 'user_roles.role_id', '=', 'roles.id')
-            ->where('roles.name', 'dosen')
-            ->select('users.id', 'users.name')
-            ->get();
+        // 2. Ambil semua dosen (menggunakan scope dari Spatie Permission)
+        $dosens = \App\Models\User::role('dosen')->select('id', 'name')->get();
 
-        // 3. Hitung jumlah mahasiswa bimbingan yang saat ini dipegang masing-masing dosen
+        // 3. Hitung jumlah mahasiswa bimbingan dan ambil daftar mahasiswa untuk masing-masing dosen
         foreach ($dosens as $dosen) {
-            $dosen->jumlah_bimbingan = KerjaPraktik::where('dosen_pembimbing_id', $dosen->id)->count();
+            $assigned = KerjaPraktik::select(
+                    'eo_kerja_praktik.id',
+                    'eo_kerja_praktik.nim',
+                    'eo_kerja_praktik.rencana_judul',
+                    'u.name as nama_mahasiswa'
+                )
+                ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
+                ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
+                ->where('eo_kerja_praktik.dosen_pembimbing_id', $dosen->id)
+                ->get();
+            
+            $dosen->jumlah_bimbingan = $assigned->count();
+            $dosen->mahasiswas = $assigned;
+            // Dummy kuota maksimal (karena belum ada di tabel users/dosen)
+            $dosen->kuota_maksimal = 10;
         }
 
         // Urutkan dosen berdasarkan jumlah bimbingan (paling sedikit di atas untuk prioritas)
