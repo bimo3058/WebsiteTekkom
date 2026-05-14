@@ -136,4 +136,81 @@ class KoordinatorController extends Controller
         // Nanti kita isi logika untuk validasi transkrip, kartu hijau, dll
         return view('eoffice::koordinator.validasi_berkas');
     }
+
+    /**
+     * Halaman FAQ & Dokumen Panduan
+     */
+    public function faq()
+    {
+        // Menggunakan dummy collections agar UI bisa di-render meskipun database belum ada
+        // Info untuk developer: Perlu dibuat tabel eo_faq dan eo_dokumen_panduan di Supabase
+        
+        $dokumens = collect([
+            (object) [
+                'id' => 1,
+                'judul' => 'Panduan Penulisan Kerja Praktik 2026',
+                'file_name' => 'Buku_Panduan_KP_2026.pdf',
+                'file_size' => '2.4 MB',
+                'version' => 'v1.2',
+                'is_active' => true,
+                'created_at' => now()->subDays(2),
+                'pembuat' => (object) ['name' => 'Koordinator KP']
+            ],
+            (object) [
+                'id' => 2,
+                'judul' => 'Formulir Penilaian Pembimbing Lapangan',
+                'file_name' => 'Form_Nilai_Instansi.docx',
+                'file_size' => '156 KB',
+                'version' => 'v1.0',
+                'is_active' => true,
+                'created_at' => now()->subDays(5),
+                'pembuat' => (object) ['name' => 'Koordinator KP']
+            ]
+        ]);
+
+        $faqs = collect([
+            (object) [
+                'id' => 1,
+                'pertanyaan' => 'Bagaimana alur pendaftaran Kerja Praktik?',
+                'jawaban' => 'Mahasiswa harus mencari instansi terlebih dahulu, meminta surat pengantar ke tata usaha, lalu mendaftar melalui SIKP.',
+                'created_at' => now()->subDays(10),
+                'updated_at' => now()->subDays(1),
+                'pembuat' => (object) ['name' => 'Koordinator KP']
+            ],
+            (object) [
+                'id' => 2,
+                'pertanyaan' => 'Apakah boleh kerja praktik di startup?',
+                'jawaban' => 'Boleh, asalkan startup tersebut sudah berbadan hukum (PT/CV) dan memiliki tim IT/engineer yang bisa membimbing.',
+                'created_at' => now()->subDays(12),
+                'updated_at' => now()->subDays(12),
+                'pembuat' => (object) ['name' => 'Koordinator KP']
+            ]
+        ]);
+
+        return view('eoffice::koordinator.faq', compact('dokumens', 'faqs'));
+    }
+
+    public function storeDokumenPanduan(Request $request)
+    {
+        // Dummy logic: Karena tabel eo_dokumen_panduan belum ada.
+        return redirect()->route('eoffice.kp.koordinator.faq')->with('success', 'Dokumen Panduan berhasil diupload!');
+    }
+
+    public function destroyDokumenPanduan($id)
+    {
+        // Dummy logic: Karena tabel eo_dokumen_panduan belum ada.
+        return redirect()->route('eoffice.kp.koordinator.faq')->with('success', 'Dokumen Panduan berhasil dihapus!');
+    }
+
+    public function storeFaq(Request $request)
+    {
+        // Dummy logic: Karena tabel eo_faq belum ada.
+        return redirect()->route('eoffice.kp.koordinator.faq')->with('success', 'FAQ berhasil ditambahkan!');
+    }
+
+    public function destroyFaq($id)
+    {
+        // Dummy logic: Karena tabel eo_faq belum ada.
+        return redirect()->route('eoffice.kp.koordinator.faq')->with('success', 'FAQ berhasil dihapus!');
+    }
 }
