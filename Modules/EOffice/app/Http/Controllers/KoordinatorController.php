@@ -318,4 +318,115 @@ class KoordinatorController extends Controller
         // Dummy logic: Karena tabel eo_faq belum ada.
         return redirect()->route('eoffice.kp.koordinator.faq')->with('success', 'FAQ berhasil dihapus!');
     }
+
+    /**
+     * Halaman Data Mahasiswa
+     */
+    public function dataMahasiswa()
+    {
+        // Dummy data untuk desain UI/UX Data Mahasiswa
+        $mahasiswas = collect([
+            (object) [
+                'id' => 1,
+                'nama' => 'Ahmad Fathanah',
+                'nim' => '2100018112',
+                'prodi' => 'Informatika',
+                'tempat_kp' => 'PT GoTo Gojek Tokopedia',
+                'judul_kp' => 'Pengembangan Sistem Microservice Backend',
+                'dosen_pembimbing' => 'Dr. Budi Santoso, M.Kom',
+                'status_kp' => 'Selesai',
+                'semester' => 'Genap',
+                'tahun_kp' => '2026',
+                'nilai_seminar' => 88,
+                'nilai_lapangan' => 90,
+                'nilai_akhir' => 89, // (88+90)/2
+                'status_dokumen' => 'Lengkap',
+                'riwayat_approval' => [
+                    ['tanggal' => '2026-06-15', 'status' => 'Disetujui', 'keterangan' => 'Laporan akhir disetujui pembimbing.'],
+                    ['tanggal' => '2026-06-10', 'status' => 'Revisi', 'keterangan' => 'Revisi bab 4 dan 5.'],
+                ],
+                'status_seminar' => 'Lulus',
+            ],
+            (object) [
+                'id' => 2,
+                'nama' => 'Siti Nurhaliza',
+                'nim' => '2100018199',
+                'prodi' => 'Informatika',
+                'tempat_kp' => 'PT Telkom Indonesia',
+                'judul_kp' => 'Analisis Jaringan Fiber Optic Regional 5',
+                'dosen_pembimbing' => 'Ir. Cipto Mangunkusumo, M.T',
+                'status_kp' => 'Aktif KP',
+                'semester' => 'Genap',
+                'tahun_kp' => '2026',
+                'nilai_seminar' => null,
+                'nilai_lapangan' => null,
+                'nilai_akhir' => null,
+                'status_dokumen' => 'Tidak Lengkap',
+                'riwayat_approval' => [
+                    ['tanggal' => '2026-06-20', 'status' => 'Ditolak', 'keterangan' => 'Laporan progress 1 format tidak sesuai.'],
+                ],
+                'status_seminar' => 'Belum Daftar',
+            ],
+            (object) [
+                'id' => 3,
+                'nama' => 'Bima Sakti',
+                'nim' => '2100018155',
+                'prodi' => 'Informatika',
+                'tempat_kp' => 'Bank Mandiri IT Group',
+                'judul_kp' => 'Implementasi Fraud Detection System',
+                'dosen_pembimbing' => 'Prof. Dian Sastro, Ph.D',
+                'status_kp' => 'Seminar',
+                'semester' => 'Genap',
+                'tahun_kp' => '2026',
+                'nilai_seminar' => null,
+                'nilai_lapangan' => 85,
+                'nilai_akhir' => null,
+                'status_dokumen' => 'Lengkap',
+                'riwayat_approval' => [
+                    ['tanggal' => '2026-05-12', 'status' => 'Disetujui', 'keterangan' => 'Laporan siap diseminarkan.'],
+                ],
+                'status_seminar' => 'Menunggu Jadwal',
+            ],
+            (object) [
+                'id' => 4,
+                'nama' => 'Joko Widodo',
+                'nim' => '2100018101',
+                'prodi' => 'Informatika',
+                'tempat_kp' => 'PT PLN (Persero)',
+                'judul_kp' => 'Sistem Informasi Manajemen Aset',
+                'dosen_pembimbing' => 'Dr. Budi Santoso, M.Kom',
+                'status_kp' => 'Menunggu Nilai',
+                'semester' => 'Genap',
+                'tahun_kp' => '2026',
+                'nilai_seminar' => 85,
+                'nilai_lapangan' => null,
+                'nilai_akhir' => null,
+                'status_dokumen' => 'Lengkap',
+                'riwayat_approval' => [
+                    ['tanggal' => '2026-05-20', 'status' => 'Disetujui', 'keterangan' => 'Seminar selesai, menunggu nilai lapangan.'],
+                ],
+                'status_seminar' => 'Lulus',
+            ],
+            (object) [
+                'id' => 5,
+                'nama' => 'Rina Gunawan',
+                'nim' => '2100018202',
+                'prodi' => 'Informatika',
+                'tempat_kp' => 'Kementerian Kominfo',
+                'judul_kp' => 'Audit Keamanan Aplikasi E-Government',
+                'dosen_pembimbing' => null,
+                'status_kp' => 'Pending',
+                'semester' => 'Genap',
+                'tahun_kp' => '2026',
+                'nilai_seminar' => null,
+                'nilai_lapangan' => null,
+                'nilai_akhir' => null,
+                'status_dokumen' => 'Tidak Lengkap',
+                'riwayat_approval' => [],
+                'status_seminar' => 'Belum Daftar',
+            ],
+        ]);
+
+        return view('eoffice::koordinator.data_mahasiswa', compact('mahasiswas'));
+    }
 }
