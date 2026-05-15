@@ -63,8 +63,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             // Index — semua role boleh
             Route::get('/', [PengumumanController::class, 'index'])->name('index');
 
-            // Create/Edit/Delete — hanya pengurus + admin
-            Route::middleware('role:pengurus_himpunan|dosen|gpm|admin|admin_kemahasiswaan|superadmin')->group(function () {
+            // Create/Edit/Delete — pengurus + admin + staff_himpunan
+            Route::middleware('role:pengurus_himpunan|staff_himpunan|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit|dosen|gpm|admin|admin_kemahasiswaan|superadmin')->group(function () {
                 Route::get('/create', [PengumumanController::class, 'create'])->name('create');
                 Route::post('/drafts', [PengumumanController::class, 'saveDraft'])->name('drafts.store');
                 Route::delete('/drafts/{id}', [PengumumanController::class, 'deleteDraft'])->name('drafts.destroy');
@@ -76,6 +76,43 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 Route::patch('/{pengumuman}/publish', [PengumumanController::class, 'publish'])->name('publish');
                 Route::delete('/{pengumuman}/lampiran/{lampiran}', [PengumumanController::class, 'removeLampiran'])->name('lampiran.remove');
             });
+
+            // Verification Request — staff himpunan yang ingin publish
+            Route::middleware('role:staff_himpunan|superadmin')->group(function () {
+                Route::get('/{pengumuman}/verification-request', [PengumumanController::class, 'verificationRequest'])
+                    ->name('verification.request')->whereNumber('pengumuman');
+                Route::post('/{pengumuman}/verification-request', [PengumumanController::class, 'submitVerificationRequest'])
+                    ->name('verification.submit')->whereNumber('pengumuman');
+                Route::delete('/{pengumuman}/verification-request', [PengumumanController::class, 'cancelVerificationRequest'])
+                    ->name('verification.cancel')->whereNumber('pengumuman');
+            });
+
+            // Riwayat & Status Verifikasi — untuk staff himpunan melihat request yang pernah diajukan
+            Route::middleware('role:staff_himpunan|superadmin')
+                ->get('/riwayat-verifikasi', [PengumumanController::class, 'riwayatVerifikasiStaff'])
+                ->name('riwayat.verifikasi');
+
+            // Verifikasi Dashboard — hanya ketua-ketua himpunan
+            Route::middleware('role:ketua_unit|ketua_bidang|ketua_himpunan|wakil_ketua_himpunan')
+                ->group(function () {
+                Route::get('/verifikasi', [PengumumanController::class, 'verifikasiIndex'])
+                    ->name('verifikasi.index');
+                Route::patch('/verifikasi/{requestId}/approve', [PengumumanController::class, 'approveVerifikasi'])
+                    ->name('verifikasi.approve')->whereNumber('requestId');
+                Route::patch('/verifikasi/{requestId}/reject', [PengumumanController::class, 'rejectVerifikasi'])
+                    ->name('verifikasi.reject')->whereNumber('requestId');
+            });
+
+            // Pin Global — hanya admin, superadmin, admin_kemahasiswaan, gpm
+            Route::patch('/{pengumuman}/pin', [PengumumanController::class, 'pin'])
+                ->name('pin')
+                ->whereNumber('pengumuman')
+                ->middleware('role:superadmin|admin|admin_kemahasiswaan|gpm');
+
+            // Pin Pribadi — semua user terautentikasi (dilindungi auth di level parent)
+            Route::post('/{pengumuman}/personal-pin', [PengumumanController::class, 'personalPin'])
+                ->name('personal_pin')
+                ->whereNumber('pengumuman');
 
             // Download lampiran — semua role boleh
             Route::get('/lampiran/{lampiran}/download', [PengumumanController::class, 'downloadLampiran'])->name('lampiran.download');

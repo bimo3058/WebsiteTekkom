@@ -5,8 +5,10 @@ namespace Modules\ManajemenMahasiswa\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class Pengumuman extends Model
 {
@@ -23,11 +25,13 @@ class Pengumuman extends Model
         'status_publish',
         'scheduled_at',
         'published_at',
+        'is_pinned',
     ];
 
     protected $casts = [
         'scheduled_at' => 'datetime',
         'published_at' => 'datetime',
+        'is_pinned'    => 'boolean',
     ];
 
     // -------------------------------------------------------------------------
@@ -38,12 +42,14 @@ class Pengumuman extends Model
     const STATUS_PUBLISHED = 'published';
     const STATUS_SCHEDULED = 'scheduled';
     const STATUS_ARCHIVED = 'archived';
+    const STATUS_PENDING_REVIEW = 'pending_review';
 
     const STATUS_LIST = [
         self::STATUS_DRAFT,
         self::STATUS_PUBLISHED,
         self::STATUS_SCHEDULED,
         self::STATUS_ARCHIVED,
+        self::STATUS_PENDING_REVIEW,
     ];
 
     const AUDIENCE_ALL = 'all';
@@ -80,9 +86,30 @@ class Pengumuman extends Model
         return $this->belongsTo(\App\Models\User::class, 'user_id');
     }
 
-    public function repoMulmed(): HasMany 
+    public function repoMulmed(): HasMany
     {
         return $this->hasMany(RepoMulmed::class, 'pengumuman_id');
+    }
+
+    public function personalPins(): HasMany
+    {
+        return $this->hasMany(PengumumanPersonalPin::class, 'pengumuman_id');
+    }
+
+    /**
+     * Semua approval request untuk pengumuman ini.
+     */
+    public function approvalRequests(): HasMany
+    {
+        return $this->hasMany(PengumumanApprovalRequest::class, 'pengumuman_id');
+    }
+
+    /**
+     * Approval request terbaru (paling relevan).
+     */
+    public function latestApprovalRequest(): HasOne
+    {
+        return $this->hasOne(PengumumanApprovalRequest::class, 'pengumuman_id')->latestOfMany();
     }
 
     // -------------------------------------------------------------------------
@@ -116,6 +143,11 @@ class Pengumuman extends Model
         return $query->where('status_publish', self::STATUS_PUBLISHED);
     }
 
+    public function scopePinned(Builder $query): Builder
+    {
+        return $query->where('is_pinned', true);
+    }
+
     public function scopeForAudience(Builder $query, string $audience): Builder
     {
         return $query->where(function ($q) use ($audience) {
@@ -142,5 +174,10 @@ class Pengumuman extends Model
     public function isDraft(): bool
     {
         return $this->status_publish === self::STATUS_DRAFT;
+    }
+
+    public function isPendingReview(): bool
+    {
+        return $this->status_publish === self::STATUS_PENDING_REVIEW;
     }
 }
