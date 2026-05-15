@@ -30,6 +30,22 @@ class KerjaPraktik extends Model
     ];
 
     /**
+     * Relasi ke profil mahasiswa KP (eo_kp_mahasiswa)
+     */
+    public function mahasiswa()
+    {
+        return $this->belongsTo(KpMahasiswa::class, 'mahasiswa_id');
+    }
+
+    /**
+     * Relasi ke user dosen pembimbing (READ ONLY dari tabel global users)
+     */
+    public function dosenPembimbing()
+    {
+        return $this->belongsTo(\App\Models\User::class, 'dosen_pembimbing_id');
+    }
+
+    /**
      * Relasi ke tabel dokumen KP
      */
     public function dokumen()
@@ -38,11 +54,31 @@ class KerjaPraktik extends Model
     }
 
     /**
+     * Relasi ke tabel seminar KP (hasOne karena 1 KP punya 1 seminar)
+     */
+    public function seminar()
+    {
+        return $this->hasOne(KpSeminar::class, 'kp_id');
+    }
+
+    /**
      * Relasi ke tabel penilaian KP (hasOne karena 1 KP punya 1 nilai)
      */
     public function penilaian()
     {
         return $this->hasOne(KpPenilaian::class, 'kp_id');
+    }
+
+    /**
+     * Scope: ambil KP milik user yang sedang login
+     */
+    public function scopeForCurrentUser($query)
+    {
+        $mahasiswa = KpMahasiswa::where('user_id', auth()->id())->first();
+        if ($mahasiswa) {
+            return $query->where('mahasiswa_id', $mahasiswa->id);
+        }
+        return $query->whereRaw('1 = 0'); // return empty jika belum ada profil
     }
 
     // protected static function newFactory(): KerjaPraktikFactory

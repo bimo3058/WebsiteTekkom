@@ -6,6 +6,7 @@ use Modules\EOffice\Http\Controllers\EOfficeController;
 use Modules\EOffice\Http\Controllers\KerjaPraktikController;
 use Modules\EOffice\Http\Controllers\DosenController;
 use Modules\EOffice\Http\Controllers\KoordinatorController;
+use Modules\EOffice\Http\Controllers\MahasiswaKpController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\DosenController as AdminDosenPrakController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PraktikumController;
 
@@ -44,10 +45,25 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
     // ══════════════════════════════════════════════════════════════════════════
     Route::prefix('eoffice/kp')->name('eoffice.kp.')->group(function () {
 
-        // Route Mahasiswa
+        // Route Mahasiswa (legacy)
         Route::get('/daftar', [KerjaPraktikController::class, 'create'])->name('register');
         Route::post('/daftar', [KerjaPraktikController::class, 'store'])->name('store');
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+        // ── Route Mahasiswa KP (baru) ──────────────────────────────────────
+        Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
+            Route::get('/dashboard',                [MahasiswaKpController::class, 'dashboard'])->name('dashboard');
+            Route::get('/informasi',                [MahasiswaKpController::class, 'informasi'])->name('informasi');
+            Route::get('/faq',                      [MahasiswaKpController::class, 'faq'])->name('faq');
+            Route::get('/pendaftaran',              [MahasiswaKpController::class, 'pendaftaran'])->name('pendaftaran');
+            Route::post('/pendaftaran',             [MahasiswaKpController::class, 'storePendaftaran'])->name('pendaftaran.store');
+            Route::get('/dokumen',                  [MahasiswaKpController::class, 'dokumen'])->name('dokumen');
+            Route::post('/dokumen',                 [MahasiswaKpController::class, 'storeDokumen'])->name('dokumen.store');
+            Route::put('/dokumen/update-data',      [MahasiswaKpController::class, 'updateDataKp'])->name('dokumen.update_data');
+            Route::get('/dokumen/template/{type}',  [MahasiswaKpController::class, 'downloadTemplate'])->name('dokumen.template');
+            Route::get('/seminar',                  [MahasiswaKpController::class, 'seminar'])->name('seminar');
+            Route::post('/seminar',                 [MahasiswaKpController::class, 'storeSeminar'])->name('seminar.store');
+        });
 
         // Route Dosen Pembimbing KP
         Route::prefix('dosen')->name('dosen.')->group(function () {
