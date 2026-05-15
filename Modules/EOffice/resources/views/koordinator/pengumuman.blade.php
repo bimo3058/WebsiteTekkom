@@ -17,7 +17,7 @@
     </style>
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
-<body class="bg-slate-50 text-slate-800 antialiased" x-data="{ sidebarOpen: false, modalOpen: false, deleteModalOpen: false, deleteId: null }">
+<body class="bg-slate-50 text-slate-800 antialiased" x-data="{ sidebarOpen: false, modalOpen: false, editModalOpen: false, editFormAction: '', editData: { judul: '', konten: '', is_active: true }, deleteModalOpen: false, deleteId: null }">
 <div class="flex h-screen w-full overflow-hidden">
 
     <!-- Mobile Overlay -->
@@ -206,7 +206,7 @@
                             </div>
                             
                             <h3 class="text-lg font-bold text-slate-900 mb-2 truncate group-hover:text-indigo-700 transition-colors">{{ $item->judul }}</h3>
-                            <p class="text-sm text-slate-600 line-clamp-2 leading-relaxed mb-4">{{ $item->deskripsi }}</p>
+                            <p class="text-sm text-slate-600 line-clamp-2 leading-relaxed mb-4">{{ $item->konten }}</p>
                             
                             <!-- Attachment Mock (Optional visual) -->
                             <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 cursor-pointer transition-colors">
@@ -216,7 +216,7 @@
                         </div>
                         
                         <div class="flex flex-row md:flex-col items-center justify-end gap-2 shrink-0 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-5">
-                            <button type="button" class="flex-1 md:flex-none inline-flex items-center justify-center px-4 md:px-3 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
+                            <button type="button" @click='editData = { judul: @json($item->judul), konten: @json($item->konten), is_active: {{ $item->is_published ? "true" : "false" }} }; editFormAction = `/eoffice/kp/koordinator/pengumuman/{{ $item->id }}`; editModalOpen = true;' class="flex-1 md:flex-none inline-flex items-center justify-center px-4 md:px-3 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
                                 <svg class="w-4 h-4 mr-2 md:mr-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                 <span class="md:hidden">Edit</span>
                             </button>
@@ -367,6 +367,116 @@
                             <button type="submit" class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200 focus:ring-4 focus:ring-indigo-100 outline-none flex items-center justify-center">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                                 Submit Pengumuman
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Modal Form Alpine.js -->
+    <div x-show="editModalOpen" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="display: none;">
+        <div x-show="editModalOpen" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/40 backdrop-blur-sm transition-opacity"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div x-show="editModalOpen" @click.away="editModalOpen = false" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-2xl border border-slate-100">
+                    
+                    <form x-bind:action="editFormAction" method="POST" enctype="multipart/form-data" x-data="{ dragging: false, fileName: '' }">
+                        @csrf
+                        @method('PUT')
+                        
+                        <!-- Modal Header -->
+                        <div class="px-6 py-5 border-b border-slate-100 bg-white flex items-center justify-between">
+                            <div>
+                                <h3 class="text-xl font-bold text-slate-900" id="modal-title">Edit Pengumuman</h3>
+                                <p class="text-sm text-slate-500 mt-0.5">Perbarui informasi pengumuman untuk mahasiswa.</p>
+                            </div>
+                            <button type="button" @click="editModalOpen = false" class="text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 p-2 rounded-lg transition-colors">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12"/></svg>
+                            </button>
+                        </div>
+                        
+                        <!-- Modal Body -->
+                        <div class="px-6 py-6 space-y-5 bg-white">
+                            
+                            <!-- Judul -->
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-1.5">Judul Pengumuman <span class="text-red-500">*</span></label>
+                                <input type="text" name="judul" x-model="editData.judul" required class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border bg-white hover:border-slate-300 transition-all outline-none" placeholder="Masukkan judul yang jelas dan deskriptif">
+                            </div>
+                            
+                            <!-- Tipe (Hidden for this specific UX, assuming all in this form are announcements, but keeping for logic compatibility) -->
+                            <input type="hidden" name="tipe" value="pengumuman">
+
+                            <!-- Deskripsi -->
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-1.5">Deskripsi Pengumuman <span class="text-red-500">*</span></label>
+                                <textarea name="konten" x-model="editData.konten" required rows="5" class="block w-full rounded-xl border-slate-200 py-3 px-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border bg-white hover:border-slate-300 transition-all outline-none resize-y" placeholder="Tuliskan isi pengumuman secara lengkap di sini..."></textarea>
+                            </div>
+
+                            <!-- Upload Area -->
+                            <div>
+                                <label class="block text-sm font-bold text-slate-700 mb-1.5">Upload File / Lampiran <span class="text-slate-400 font-normal">(Opsional)</span></label>
+                                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-200 border-dashed rounded-xl relative hover:bg-slate-50 transition-colors group cursor-pointer"
+                                     :class="{ 'drag-active': dragging }"
+                                     @dragover.prevent="dragging = true"
+                                     @dragleave.prevent="dragging = false"
+                                     @drop.prevent="dragging = false; $refs.fileInputEdit.files = $event.dataTransfer.files; fileName = $refs.fileInputEdit.files[0].name">
+                                    
+                                    <input type="file" name="attachment" x-ref="fileInputEdit" @change="fileName = $refs.fileInputEdit.files[0] ? $refs.fileInputEdit.files[0].name : ''" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept=".pdf,.doc,.docx">
+                                    
+                                    <div class="space-y-2 text-center" x-show="!fileName">
+                                        <div class="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
+                                        </div>
+                                        <div class="flex text-sm text-slate-600 justify-center">
+                                            <span class="relative cursor-pointer rounded-md font-semibold text-indigo-600 focus-within:outline-none focus-within:ring-2 focus-within:ring-indigo-500 focus-within:ring-offset-2 hover:text-indigo-500">
+                                                <span>Upload a file</span>
+                                            </span>
+                                            <p class="pl-1">or drag and drop</p>
+                                        </div>
+                                        <p class="text-xs text-slate-500">PDF, DOC, DOCX up to 10MB</p>
+                                    </div>
+
+                                    <!-- File Preview -->
+                                    <div class="flex items-center gap-3 text-left w-full" x-show="fileName" style="display: none;">
+                                        <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center shrink-0">
+                                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
+                                        </div>
+                                        <div class="flex-1 min-w-0">
+                                            <p class="text-sm font-semibold text-slate-900 truncate" x-text="fileName"></p>
+                                            <p class="text-xs text-slate-500">File siap diupload</p>
+                                        </div>
+                                        <button type="button" @click.stop.prevent="$refs.fileInputEdit.value = ''; fileName = ''" class="text-slate-400 hover:text-red-500 p-1 rounded-md transition-colors z-20 relative">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Publish Toggle -->
+                            <div class="flex items-center justify-between p-4 bg-slate-50 rounded-xl border border-slate-100">
+                                <div>
+                                    <p class="text-sm font-bold text-slate-900">Status Publikasi</p>
+                                    <p class="text-xs text-slate-500">Tentukan apakah pengumuman langsung tampil.</p>
+                                </div>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" name="is_active" value="1" x-model="editData.is_active" class="sr-only peer">
+                                    <div class="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-indigo-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-indigo-600"></div>
+                                </label>
+                            </div>
+
+                        </div>
+                        
+                        <!-- Modal Footer -->
+                        <div class="bg-slate-50 px-6 py-4 border-t border-slate-100 flex flex-col-reverse sm:flex-row sm:justify-end gap-3 rounded-b-2xl">
+                            <button type="button" @click="editModalOpen = false" class="w-full sm:w-auto px-5 py-2.5 bg-white border border-slate-300 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50 transition-colors shadow-sm focus:ring-4 focus:ring-slate-100 outline-none">
+                                Batal
+                            </button>
+                            <button type="submit" class="w-full sm:w-auto px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200 focus:ring-4 focus:ring-indigo-100 outline-none flex items-center justify-center">
+                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                Simpan Perubahan
                             </button>
                         </div>
                     </form>

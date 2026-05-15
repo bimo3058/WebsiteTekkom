@@ -68,6 +68,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::post('/balancing', [KoordinatorController::class, 'storeBalancing'])->name('balancing.store');
             Route::get('/pengumuman', [KoordinatorController::class, 'pengumuman'])->name('pengumuman');
             Route::post('/pengumuman', [KoordinatorController::class, 'storePengumuman'])->name('pengumuman.store');
+            Route::put('/pengumuman/{id}', [KoordinatorController::class, 'updatePengumuman'])->name('pengumuman.update');
             Route::delete('/pengumuman/{id}', [KoordinatorController::class, 'destroyPengumuman'])->name('pengumuman.destroy');
             Route::get('/faq', [KoordinatorController::class, 'faq'])->name('faq');
             Route::post('/faq/dokumen', [KoordinatorController::class, 'storeDokumenPanduan'])->name('faq.dokumen.store');
