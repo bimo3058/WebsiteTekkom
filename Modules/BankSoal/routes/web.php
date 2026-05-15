@@ -93,6 +93,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             // RPS - Dosen
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::get('/', [DosenRpsController::class, 'index'])->name('index');
+                Route::get('/create', [DosenRpsController::class, 'create'])->name('create');
                 Route::get('/preview/{rpsId}', [DosenRpsController::class, 'previewDokumen'])->name('preview');
                 Route::get('/download/{rpsId}', [DosenRpsController::class, 'downloadDokumen'])->name('download');
                 Route::get('/{rpsId}/edit', [DosenRpsController::class, 'edit'])->name('edit');
@@ -111,6 +112,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::get('/validasi-rps/preview/{rpsId}', [GpmRpsController::class, 'previewDokumen'])->name('validasi-rps.preview');
                 Route::get('/riwayat-validasi/rps', [RiwayatValidasiController::class, 'rps'])->name('riwayat-validasi.rps');
                 Route::get('/periode-rps', [PeriodeRpsController::class, 'index'])->name('periode-rps.index');
+                Route::get('/periode-rps/create', [PeriodeRpsController::class, 'create'])->name('periode-rps.create');
                 
                 // Delete routes for GPM
                 Route::middleware('permission:banksoal.delete')->group(function () {
@@ -149,6 +151,9 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::get('/validasi-bank-soal/review', [ValidasiBankSoalController::class, 'review'])->name('validasi-bank-soal.review');
                 Route::get('/riwayat-validasi/bank-soal', [RiwayatValidasiController::class, 'bankSoal'])->name('riwayat-validasi.bank-soal');
                 Route::get('/riwayat-validasi/bank-soal/{id}/detail', [RiwayatValidasiController::class, 'detailBankSoal'])->name('riwayat-validasi.bank-soal.detail');
+                
+                // Parameter Management - Moved to block below for consolidation
+
             });
 
             // Banksoal - Admin
@@ -227,6 +232,18 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
                 Route::post('/validasi-bank-soal/store', [ValidasiBankSoalController::class, 'store'])->name('validasi-bank-soal.store');            
                 Route::put('/validasi-bank-soal/update/{id}', [ValidasiBankSoalController::class, 'update'])->name('validasi-bank-soal.update');
+                
+                // Parameter Management (Full CRUD)
+                Route::prefix('parameter')->name('parameter.')->group(function () {
+                    Route::get('/', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'index'])->name('index');
+                    Route::get('/create', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'create'])->name('create');
+                    Route::post('/', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'store'])->name('store');
+                    Route::get('/{id}', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'show'])->name('show');
+                    Route::get('/{id}/edit', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'edit'])->name('edit');
+                    Route::put('/{id}', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'update'])->name('update');
+                    Route::delete('/{id}', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'destroy'])->name('destroy');
+                    Route::post('/skor', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'updateSkor'])->name('skor.update');
+                });
             });
 
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
@@ -269,6 +286,9 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::delete('/{rpsId}', [DosenRpsController::class, 'destroy'])->name('destroy');
             });
         });
+
+        // GPM Delete - Parameter already handled in consolidated block above
+
     });
 
     // -------------------------------------------------------------------------

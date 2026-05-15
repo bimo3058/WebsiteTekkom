@@ -1,4 +1,9 @@
 <x-banksoal::layouts.gpm-master>
+    @section('breadcrumbs')
+    <span class="text-slate-500 hover:text-primary transition-colors">Manajemen Modul</span>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Validasi RPS</span>
+    @endsection
     <style>
         /* Animasi untuk background gelap (fade in) */
         @keyframes modalFadeIn {
@@ -45,17 +50,25 @@
             padding: 0.625rem 1rem;
             font-size: 0.875rem;
         }
+
+        .gpm-rps-btn-primary {
+            background: rgb(11, 38, 110) !important;
+            border-color: rgb(11, 38, 110) !important;
+            color: white !important;
+        }
+
+        .gpm-rps-btn-primary:hover {
+            background: rgb(9, 31, 90) !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
     </style>
 
     <x-banksoal::notification.alerts />
     <x-banksoal::ui.page-header title="Validasi RPS" subtitle="Pantau riwayat dokumen RPS yang telah direview">
         <x-slot:actions>
-            <button type="button" class="gpm-rps-action-btn gpm-rps-action-btn-lg" data-modal-open="modalUploadTemplate">
-                <i class="fas fa-file-upload"></i> Upload Template
-            </button>
-            <button type="button" class="gpm-rps-action-btn gpm-rps-action-btn-lg" data-modal-open="modalTambah">
-                <i class="fas fa-calendar-plus"></i> Buat Periode
-            </button>
+            <a href="{{ route('banksoal.rps.gpm.periode-rps.create') }}" class="gpm-rps-action-btn gpm-rps-action-btn-lg gpm-rps-btn-primary">
+                <i class="fas fa-calendar-alt"></i> Atur Periode Pengajuan
+            </a>
         </x-slot:actions>
     </x-banksoal::ui.page-header>
 
@@ -398,113 +411,7 @@
         </div>
     </div>
 
-    <div id="modalUploadTemplate" class="fixed inset-0 z-50 hidden" aria-hidden="true">
-        <div class="absolute inset-0 bg-slate-900/40 animate-backdrop" data-modal-overlay="modalUploadTemplate"></div>
-        <div class="relative mx-auto mt-16 w-full max-w-xl rounded-2xl bg-white shadow-xl animate-popup">
-            <form id="formUploadTemplate" enctype="multipart/form-data">
-                @csrf
-                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-                    <h2 class="text-sm font-semibold text-slate-900">Upload Template RPS</h2>
-                    <button type="button" class="text-slate-400 hover:text-slate-600" data-modal-close="modalUploadTemplate">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="px-5 py-4 space-y-4">
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600">File Template (Word Format) <span class="text-rose-500">*</span></label>
-                        <div class="upload-box-modal mt-2 rounded-xl border-2 border-dashed border-slate-200 p-4 text-center cursor-pointer">
-                            <i class="fas fa-cloud-upload-alt text-slate-400 text-2xl mb-2"></i>
-                            <p class="text-sm text-slate-500">Dragdrop file atau <span class="text-primary underline">pilih file</span></p>
-                            <p class="text-xs text-slate-400">Format: .doc, .docx (Maksimal 1 MB)</p>
-                            <input type="file" name="dokumen" id="fileInputModal" accept=".doc,.docx" required class="hidden">
-                            <div class="file-selected-modal mt-3 hidden">
-                                <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-                                    <i class="fas fa-check-circle mr-2"></i>
-                                    <span class="file-name-modal"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600">Keterangan (Opsional)</label>
-                        <textarea class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="keterangan" rows="3" placeholder="Misal: Update struktur template, tambahan BAB, dll..."></textarea>
-                    </div>
-                    <div class="rounded-lg border border-primary/20 bg-primary/10 px-3 py-2 text-xs text-primary">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        Template baru akan otomatis menjadi versi terbaru yang dapat diunduh dosen.
-                    </div>
-                    <div id="uploadStatusMessage"></div>
-                </div>
-                <div class="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                    <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50" id="btnDeleteInactive">
-                        <i class="fas fa-trash"></i> Hapus Versi Lama
-                    </button>
-                    <div class="flex gap-2">
-                        <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalUploadTemplate">Batal</button>
-                        <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90" id="btnSubmitTemplate">Upload Template</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
 
-    <div id="modalTambah" class="fixed inset-0 z-50 hidden" aria-hidden="true">
-        <div class="absolute inset-0 bg-slate-900/40 animate-backdrop" data-modal-overlay="modalTambah"></div>
-        <div class="relative mx-auto mt-16 w-full max-w-xl rounded-2xl bg-white shadow-xl animate-popup">
-            <form action="{{ route('banksoal.rps.gpm.periode-rps.store') }}" method="POST">
-                @csrf
-                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-                    <h2 class="text-sm font-semibold text-slate-900">Buat Jadwal RPS Baru</h2>
-                    <button type="button" class="text-slate-400 hover:text-slate-600" data-modal-close="modalTambah">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="px-5 py-4 space-y-4">
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600">Judul Periode <span class="text-rose-500">*</span></label>
-                        <input type="text" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="judul" required placeholder="Contoh: Pengajuan RPS Genap 2025/2026">
-                    </div>
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div>
-                            <label class="text-xs font-semibold text-slate-600">Semester <span class="text-rose-500">*</span></label>
-                            <select class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="semester" required>
-                                <option value="Ganjil" {{ $currentSemester == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
-                                <option value="Genap" {{ $currentSemester == 'Genap' ? 'selected' : '' }}>Genap</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-xs font-semibold text-slate-600">Tahun Ajaran <span class="text-rose-500">*</span></label>
-                            <select class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="tahun_ajaran" required>
-                                <option value="" disabled selected>Pilih Tahun Ajaran</option>
-                                @foreach($tahunAjarans as $ta)
-                                    <option value="{{ $ta }}">{{ $ta }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600">Tanggal Mulai <span class="text-rose-500">*</span></label>
-                        <input type="date" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="tanggal_mulai" required>
-                    </div>
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600">Tanggal Selesai (Tenggat) <span class="text-rose-500">*</span></label>
-                        <input type="date" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="tanggal_selesai" required>
-                    </div>
-                    <label class="flex items-start gap-3 rounded-lg border border-slate-200 p-3 text-xs text-slate-600">
-                        <input class="mt-1" type="checkbox" name="is_active" value="1" checked>
-                        <span>
-                            <span class="font-semibold text-slate-700">Otomatis aktifkan jadwal ini</span>
-                            <span class="block text-[11px] text-slate-500">GPM hanya bisa membuka 1 sesi pengajuan dalam satu waktu. Mencentang ini akan membatalkan sesi lain yang masih aktif.</span>
-                        </span>
-                    </label>
-                </div>
-                <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
-                    <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalTambah">Batal</button>
-                    <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90">Buat & Terapkan</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <div id="modalCloseSession" class="fixed inset-0 z-50 hidden" aria-hidden="true">
         <div class="absolute inset-0 bg-slate-900/40 animate-backdrop" data-modal-overlay="modalCloseSession"></div>
@@ -614,139 +521,6 @@
             document.body.classList.remove('overflow-hidden');
         }
 
-        const uploadBoxModal = document.querySelector('.upload-box-modal');
-        const fileInputModal = document.getElementById('fileInputModal');
-        const fileSelectedModal = document.querySelector('.file-selected-modal');
-        const fileNameModal = document.querySelector('.file-name-modal');
-        const formUploadTemplate = document.getElementById('formUploadTemplate');
-        const btnSubmitTemplate = document.getElementById('btnSubmitTemplate');
-        const uploadStatusMessage = document.getElementById('uploadStatusMessage');
 
-        function preventDefaultsModal(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        if (uploadBoxModal && fileInputModal) {
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                uploadBoxModal.addEventListener(eventName, preventDefaultsModal, false);
-            });
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-                uploadBoxModal.addEventListener(eventName, () => {
-                    uploadBoxModal.classList.add('border-primary', 'bg-primary/10');
-                }, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                uploadBoxModal.addEventListener(eventName, () => {
-                    uploadBoxModal.classList.remove('border-primary', 'bg-primary/10');
-                }, false);
-            });
-
-            uploadBoxModal.addEventListener('drop', (e) => {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                fileInputModal.files = files;
-                updateFileDisplayModal();
-            }, false);
-
-            uploadBoxModal.addEventListener('click', () => {
-                fileInputModal.click();
-            });
-
-            fileInputModal.addEventListener('change', updateFileDisplayModal);
-        }
-
-        function updateFileDisplayModal() {
-            if (fileInputModal?.files && fileInputModal.files.length > 0) {
-                if (fileNameModal) fileNameModal.textContent = fileInputModal.files[0].name;
-                fileSelectedModal?.classList.remove('hidden');
-            } else {
-                fileSelectedModal?.classList.add('hidden');
-            }
-        }
-
-        if (formUploadTemplate) {
-            formUploadTemplate.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const formData = new FormData(formUploadTemplate);
-                uploadStatusMessage.innerHTML = '';
-                if (btnSubmitTemplate) {
-                    btnSubmitTemplate.disabled = true;
-                    btnSubmitTemplate.textContent = 'Uploading...';
-                }
-
-                try {
-                    const response = await fetch("{{ route('banksoal.rps.gpm.template.store') }}", {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                        }
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok && data.success) {
-                        uploadStatusMessage.innerHTML = `<div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700"><i class="fas fa-check-circle mr-2"></i>${data.message}</div>`;
-                        formUploadTemplate.reset();
-                        fileSelectedModal?.classList.add('hidden');
-                        setTimeout(() => {
-                            closeModalById('modalUploadTemplate');
-                            uploadStatusMessage.innerHTML = '';
-                        }, 2000);
-                    } else {
-                        throw new Error(data.message || 'Terjadi kesalahan');
-                    }
-                } catch (error) {
-                    uploadStatusMessage.innerHTML = `<div class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><i class="fas fa-exclamation-triangle mr-2"></i>${error.message}</div>`;
-                } finally {
-                    if (btnSubmitTemplate) {
-                        btnSubmitTemplate.disabled = false;
-                        btnSubmitTemplate.textContent = 'Upload Template';
-                    }
-                }
-            });
-        }
-
-        const btnDeleteInactive = document.getElementById('btnDeleteInactive');
-        if (btnDeleteInactive) {
-            btnDeleteInactive.addEventListener('click', async () => {
-                if (!confirm('Apakah Anda yakin ingin menghapus semua versi template yang tidak aktif?\n\nAksi ini tidak dapat dibatalkan.')) {
-                    return;
-                }
-
-                btnDeleteInactive.disabled = true;
-                const originalHTML = btnDeleteInactive.innerHTML;
-                btnDeleteInactive.textContent = 'Menghapus...';
-
-                try {
-                    const response = await fetch("{{ route('banksoal.rps.gpm.template.delete-inactive') }}", {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value,
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({})
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok && data.success) {
-                        uploadStatusMessage.innerHTML = `<div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700"><i class="fas fa-check-circle mr-2"></i>${data.message}</div>`;
-                    } else {
-                        throw new Error(data.message || 'Terjadi kesalahan');
-                    }
-                } catch (error) {
-                    uploadStatusMessage.innerHTML = `<div class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><i class="fas fa-exclamation-triangle mr-2"></i>${error.message}</div>`;
-                } finally {
-                    btnDeleteInactive.disabled = false;
-                    btnDeleteInactive.innerHTML = originalHTML;
-                }
-            });
-        }
     </script>
 </x-banksoal::layouts.gpm-master>

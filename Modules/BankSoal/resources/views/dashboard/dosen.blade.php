@@ -1,4 +1,7 @@
 <x-banksoal::layouts.dosen-admin>
+    @section('breadcrumbs')
+        <span class="text-slate-800 font-semibold">Dashboard</span>
+    @endsection
     <x-banksoal::ui.page-header title="Dashboard Dosen" subtitle="Ringkasan performa bank soal, RPS, dan distribusi soal aktif." />
 
     {{-- Alert RPS --}}

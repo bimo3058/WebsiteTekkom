@@ -1,4 +1,9 @@
 <x-banksoal::layouts.dosen-admin>
+    @section('breadcrumbs')
+        <a href="{{ route('banksoal.arsip.dosen.index') }}" class="text-slate-500 hover:text-primary transition-colors">Arsip Soal</a>
+        <span class="mx-2 text-slate-300">/</span>
+        <span class="text-slate-800 font-semibold">Konfirmasi Arsipkan</span>
+    @endsection
 
 <!-- Modal Konfirmasi Arsipkan -->
 <div class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">

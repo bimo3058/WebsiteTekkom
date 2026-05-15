@@ -2,7 +2,7 @@
     @section('breadcrumbs')
         <a href="{{ route('banksoal.rps.dosen.index') }}" class="text-slate-500 hover:text-primary transition-colors">Manajemen RPS</a>
         <span class="mx-2 text-slate-300">/</span>
-        <span class="text-slate-800 font-semibold">Edit RPS</span>
+        <span class="text-slate-800 font-semibold">Ajukan RPS Baru</span>
     @endsection
     @push('styles')
     <style>
@@ -86,18 +86,13 @@
     @section('breadcrumbs')
     <a href="{{ route('banksoal.rps.dosen.index') }}" class="text-slate-500 hover:text-primary transition-colors">Manajemen RPS</a>
     <span class="mx-2 text-slate-300">/</span>
-    <span class="text-slate-800 font-semibold">Revisi RPS</span>
+    <span class="text-slate-800 font-semibold">Buat RPS Baru</span>
     @endsection
 
     <div class="page-header">
         <div class="header-content">
-            <h1>Revisi RPS</h1>
-            <p>Perbarui Rencana Pembelajaran Semester. Status saat ini: <span class="badge {{ match($rps->status->value) {
-                'diajukan' => 'bg-amber-100 text-amber-800 border-amber-200',
-                'revisi' => 'bg-rose-100 text-rose-800 border-rose-200',
-                'disetujui' => 'bg-emerald-100 text-emerald-800 border-emerald-200',
-                default => 'bg-slate-100 text-slate-800 border-slate-200'
-            } }}" style="padding: 2px 8px; border-radius: 999px; font-size: 12px; font-weight: 600;">{{ $rps->status->label() }}</span></p>
+            <h1>Buat RPS Baru</h1>
+            <p>Lengkapi formulir di bawah untuk mengajukan Rencana Pembelajaran Semester.</p>
         </div>
         <a href="{{ route('banksoal.rps.dosen.index') }}" class="btn btn-secondary">
             <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
@@ -109,18 +104,14 @@
     <div class="alert-closed">
         <i class="fas fa-lock"></i>
         <div>
-            <strong>Periode upload RPS saat ini tidak aktif.</strong> Anda tidak dapat menyimpan perubahan.
+            <strong>Periode upload RPS saat ini tidak aktif.</strong>
+            @if($activePeriode)
+                Periode aktif: <strong>{{ \Carbon\Carbon::parse($activePeriode->tanggal_mulai)->format('d M Y') }}</strong> – <strong>{{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->format('d M Y') }}</strong>
+            @else
+                Belum ada periode upload yang dijadwalkan.
+            @endif
         </div>
     </div>
-    @endif
-
-    @if($rps->status->value === 'revisi')
-        <div style="display:flex;align-items:flex-start;gap:12px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:13px;color:#92400e;">
-            <i class="fas fa-exclamation-circle" style="font-size:16px;flex-shrink:0;margin-top:1px;"></i>
-            <div>
-                <strong>Status Revisi:</strong> RPS Anda dikembalikan untuk revisi. Silakan perbaiki sesuai masukan dan submit kembali.
-            </div>
-        </div>
     @endif
 
     @php
@@ -129,20 +120,17 @@
         'P1'=>'Meniru','P2'=>'Menyesuaikan','P3'=>'Membiasakan','P4'=>'Menguasai','P5'=>'Mahir',
         'A1'=>'Menerima','A2'=>'Merespon','A3'=>'Menilai','A4'=>'Mengorganisasi','A5'=>'Menghayati',
     ];
+    $cpmkRows = old('cpmk_rows', [['cpl_id'=>'','kode'=>'','kko'=>'','objek'=>'','konteks'=>'']]);
     @endphp
 
     <x-banksoal::notification.alerts />
 
-    <form action="{{ route('banksoal.rps.dosen.update', $rps->id) }}" method="POST" enctype="multipart/form-data"
-        id="rpsEditForm"
+    <form action="{{ route('banksoal.rps.dosen.store') }}" method="POST" enctype="multipart/form-data"
+        id="rpsCreateForm"
         data-route-cpl="{{ route('banksoal.rps.dosen.cpl') }}"
         data-route-dosen="{{ route('banksoal.rps.dosen.dosen') }}"
-        data-selected-dosen-ids='{{ json_encode($selectedDosenIds) }}'
-        data-cpmk-row-builder="1"
-        data-edit-mode="1"
-        data-rps-id="{{ $rps->id }}">
+        data-cpmk-row-builder="1">
         @csrf
-        @method('PUT')
 
         {{-- Informasi Mata Kuliah --}}
         <div class="form-card">
@@ -150,18 +138,24 @@
 
             <div class="form-row">
                 <div class="form-group">
-                    <label class="field-label">Mata Kuliah</label>
-                    <div class="mk-badge">
-                        <i class="fas fa-book"></i>
-                        {{ $rps->mataKuliah->kode }} – {{ $rps->mataKuliah->nama }} ({{ $rps->mataKuliah->sks }} SKS)
-                    </div>
-                    <input type="hidden" id="mkSelect" name="mata_kuliah_id" value="{{ $rps->mk_id }}">
-                    <p class="field-hint">Mata kuliah tidak dapat diubah pada saat revisi.</p>
+                    <label class="field-label">Mata Kuliah <span class="req">*</span></label>
+                    <select name="mata_kuliah_id" id="mkSelect" class="field-control" required {{ !$isUploadOpen ? 'disabled' : '' }}>
+                        <option value="" disabled selected>-- Pilih Mata Kuliah --</option>
+                        @foreach($mataKuliahs as $mk)
+                            <option value="{{ $mk->id }}" {{ old('mata_kuliah_id') == $mk->id ? 'selected' : '' }}>
+                                {{ $mk->kode }} – {{ $mk->nama }} ({{ $mk->sks }} SKS)
+                            </option>
+                        @endforeach
+                    </select>
+                    @error('mata_kuliah_id')<p class="field-error">{{ $message }}</p>@enderror
+                    @if($mataKuliahs->isEmpty())
+                        <p class="field-hint">Tidak ada mata kuliah yang tersedia. Semua MK yang Anda ampu sudah memiliki RPS aktif di semester ini.</p>
+                    @endif
                 </div>
 
                 <div class="form-group">
                     <label class="field-label">Dosen Pengampu Lain</label>
-                    <select name="dosen_lain[]" id="dosenSelect" class="field-control" multiple data-selected-dosen-ids='{{ json_encode($selectedDosenIds) }}' {{ !$isUploadOpen ? 'disabled' : '' }}></select>
+                    <select name="dosen_lain[]" id="dosenSelect" class="field-control" multiple {{ !$isUploadOpen ? 'disabled' : '' }}></select>
                     <p class="field-hint">Opsional. Pilih satu atau lebih dosen pengampu tambahan.</p>
                 </div>
             </div>
@@ -170,15 +164,15 @@
                 <div class="form-group">
                     <label class="field-label">Semester <span class="req">*</span></label>
                     <select name="semester" id="semester" class="field-control" required {{ !$isUploadOpen ? 'disabled' : '' }}>
-                        <option value="Ganjil" {{ old('semester', $rps->semester) == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
-                        <option value="Genap"  {{ old('semester', $rps->semester) == 'Genap'  ? 'selected' : '' }}>Genap</option>
+                        <option value="Ganjil" {{ $semester == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
+                        <option value="Genap"  {{ $semester == 'Genap'  ? 'selected' : '' }}>Genap</option>
                     </select>
                 </div>
                 <div class="form-group">
                     <label class="field-label">Tahun Ajaran <span class="req">*</span></label>
                     <select name="tahun_ajaran" id="tahun_ajaran" class="field-control" required {{ !$isUploadOpen ? 'disabled' : '' }}>
                         @foreach($tahunAjarans as $ta)
-                            <option value="{{ $ta }}" {{ old('tahun_ajaran', $rps->tahun_ajaran) == $ta ? 'selected' : '' }}>{{ $ta }}</option>
+                            <option value="{{ $ta }}" {{ $ta == $academicYear ? 'selected' : '' }}>{{ $ta }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -205,11 +199,11 @@
                 </div>
 
                 <div id="cpmkRows" class="cpmk-rows" data-cpmk-rows>
-                    @foreach($existingCpmkRows as $index => $row)
+                    @foreach($cpmkRows as $index => $row)
                     <div class="cpmk-row" data-cpmk-row data-row-index="{{ $index }}">
                         <div>
                             <label class="field-label" style="font-size:11px;">CPL <span class="req">*</span></label>
-                            <select name="cpmk_rows[{{ $index }}][cpl_id]" class="field-control" style="font-size:13px;" data-cpmk-cpl-select data-selected-value="{{ $row['cpl_id'] ?? '' }}" required {{ !$isUploadOpen ? 'disabled' : '' }}>
+                            <select name="cpmk_rows[{{ $index }}][cpl_id]" class="field-control" style="font-size:13px;" data-cpmk-cpl-select data-selected-value="{{ $row['cpl_id'] }}" required {{ !$isUploadOpen ? 'disabled' : '' }}>
                                 <option value="">Pilih CPL</option>
                             </select>
                             @error('cpmk_rows.'.$index.'.cpl_id')<p class="field-error">{{ $message }}</p>@enderror
@@ -219,7 +213,7 @@
                             <label class="field-label" style="font-size:11px;">Kode <span class="req">*</span></label>
                             <div style="display:flex;align-items:center;gap:6px;">
                                 <span style="font-size:12px;font-weight:600;color:var(--slate-500);white-space:nowrap;padding:10px 8px;background:var(--slate-50);border:1px solid var(--slate-200);border-radius:8px;">CPMK</span>
-                                <input type="text" name="cpmk_rows[{{ $index }}][kode]" value="{{ $row['kode'] ?? '' }}" class="field-control" style="font-size:13px;" placeholder="1.1" required {{ !$isUploadOpen ? 'disabled' : '' }}>
+                                <input type="text" name="cpmk_rows[{{ $index }}][kode]" value="{{ $row['kode'] }}" class="field-control" style="font-size:13px;" placeholder="1.1" required {{ !$isUploadOpen ? 'disabled' : '' }}>
                             </div>
                             @error('cpmk_rows.'.$index.'.kode')<p class="field-error">{{ $message }}</p>@enderror
                         </div>
@@ -228,19 +222,19 @@
                             <select name="cpmk_rows[{{ $index }}][kko]" class="field-control" style="font-size:13px;" required {{ !$isUploadOpen ? 'disabled' : '' }}>
                                 <option value="">Pilih KKO</option>
                                 @foreach($kkoOptions as $val => $lbl)
-                                    <option value="{{ $val }}" {{ ($row['kko'] ?? '') === $val ? 'selected' : '' }}>{{ $val }} – {{ $lbl }}</option>
+                                    <option value="{{ $val }}" {{ $row['kko'] === $val ? 'selected' : '' }}>{{ $val }} – {{ $lbl }}</option>
                                 @endforeach
                             </select>
                             @error('cpmk_rows.'.$index.'.kko')<p class="field-error">{{ $message }}</p>@enderror
                         </div>
                         <div>
                             <label class="field-label" style="font-size:11px;">Objek <span class="req">*</span></label>
-                            <input type="text" name="cpmk_rows[{{ $index }}][objek]" value="{{ $row['objek'] ?? '' }}" class="field-control" style="font-size:13px;" placeholder="merancang sistem IoT" required {{ !$isUploadOpen ? 'disabled' : '' }}>
+                            <input type="text" name="cpmk_rows[{{ $index }}][objek]" value="{{ $row['objek'] }}" class="field-control" style="font-size:13px;" placeholder="merancang sistem IoT" required {{ !$isUploadOpen ? 'disabled' : '' }}>
                             @error('cpmk_rows.'.$index.'.objek')<p class="field-error">{{ $message }}</p>@enderror
                         </div>
                         <div>
                             <label class="field-label" style="font-size:11px;">Konteks</label>
-                            <input type="text" name="cpmk_rows[{{ $index }}][konteks]" value="{{ $row['konteks'] ?? '' }}" class="field-control" style="font-size:13px;" placeholder="sesuai kebutuhan pengguna" {{ !$isUploadOpen ? 'disabled' : '' }}>
+                            <input type="text" name="cpmk_rows[{{ $index }}][konteks]" value="{{ $row['konteks'] }}" class="field-control" style="font-size:13px;" placeholder="sesuai kebutuhan pengguna" {{ !$isUploadOpen ? 'disabled' : '' }}>
                         </div>
                         <div style="display:flex;align-items:flex-end;padding-bottom:1px;">
                             <button type="button" class="btn-danger-sm" data-remove-cpmk-row aria-label="Hapus baris" {{ !$isUploadOpen ? 'disabled' : '' }}>
@@ -294,23 +288,6 @@
             </template>
         </div>
 
-        <div class="form-card">
-            <div class="form-card-title"><i class="fas fa-pen-to-square"></i> Catatan Revisi</div>
-            <div class="form-group">
-                <label class="field-label">Deskripsi Revisi {!! $rps->status->value === 'revisi' ? '<span class="req">*</span>' : '' !!}</label>
-                <textarea
-                    name="catatan"
-                    class="field-control"
-                    rows="3"
-                    placeholder="Jelaskan bagian RPS yang diubah, misalnya CPL, CPMK, dosen pengampu, atau dokumen yang diperbarui."
-                    {{ !$isUploadOpen ? 'disabled' : '' }}
-                    {{ $rps->status->value === 'revisi' ? 'required' : '' }}
-                >{{ old('catatan', $rps->catatan ?? '') }}</textarea>
-                <p class="field-hint">Catatan ini akan tersimpan di detail RPS dan audit log.</p>
-                @error('catatan')<p class="field-error">{{ $message }}</p>@enderror
-            </div>
-        </div>
-
         {{-- Dokumen Upload --}}
         <div class="form-card">
             <div class="form-card-title"><i class="fas fa-file-pdf"></i> Dokumen RPS</div>
@@ -321,10 +298,10 @@
                 </a>
             </div>
             <label class="upload-zone {{ !$isUploadOpen ? 'closed' : '' }}" id="uploadZone">
-                <input type="file" name="dokumen" id="fileInput" accept=".pdf" {{ (!$isUploadOpen || $rps->status->value === 'revisi') ? 'required' : '' }} {{ !$isUploadOpen ? 'disabled' : '' }}>
+                <input type="file" name="dokumen" id="fileInput" accept=".pdf" required {{ !$isUploadOpen ? 'disabled' : '' }}>
                 <i class="fas fa-cloud-upload-alt" id="uploadIcon" style="{{ !$isUploadOpen ? 'color:#ababba;' : '' }}"></i>
-                <strong id="uploadText">{{ !$isUploadOpen ? 'Upload ditutup' : ($rps->status->value === 'revisi' ? 'Upload file revisi baru' : 'Klik untuk unggah atau seret file ke sini') }}</strong>
-                <span id="uploadSub">PDF (Maks. 1MB) - File lama akan diganti jika ada</span>
+                <strong id="uploadText">{{ !$isUploadOpen ? 'Upload ditutup' : 'Klik untuk unggah atau seret file ke sini' }}</strong>
+                <span id="uploadSub">PDF (Maks. 1MB)</span>
             </label>
             @error('dokumen')<p class="field-error" style="margin-top:8px;">{{ $message }}</p>@enderror
         </div>
@@ -333,30 +310,10 @@
         <div class="form-actions">
             <a href="{{ route('banksoal.rps.dosen.index') }}" class="btn btn-secondary">Batal</a>
             <button type="submit" class="btn btn-primary" id="submitBtn" {{ !$isUploadOpen ? 'disabled' : '' }}>
-                <i class="fas fa-save"></i> Simpan Perubahan
+                <i class="fas fa-paper-plane"></i> Ajukan RPS
             </button>
         </div>
     </form>
-
-    {{-- History Section (Optional, but good to have) --}}
-    @if(isset($history) && $history->isNotEmpty())
-    <div class="form-card" style="margin-top:24px;">
-        <div class="form-card-title"><i class="fas fa-history"></i> Riwayat Aktivitas</div>
-        <div style="display:flex;flex-direction:column;gap:16px;">
-            @foreach($history as $log)
-                <div style="display:flex;align-items:flex-start;gap:16px;padding:16px;border-radius:12px;border:1px solid var(--slate-200);background:var(--slate-50);">
-                    <div style="width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid var(--slate-200);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--slate-500);">
-                        <i class="fas fa-user"></i>
-                    </div>
-                    <div>
-                        <p style="font-size:14px;font-weight:600;color:var(--slate-800);margin:0 0 4px 0;">{{ $log->description }}</p>
-                        <p style="font-size:12px;color:var(--slate-500);margin:0;">{{ \Carbon\Carbon::parse($log->created_at)->translatedFormat('d F Y, H:i') }} WIB</p>
-                    </div>
-                </div>
-            @endforeach
-        </div>
-    </div>
-    @endif
 
     @push('scripts')
     <script src="{{ asset('modules/banksoal/js/Banksoal/components/RpsCpmkRows.js') }}"></script>

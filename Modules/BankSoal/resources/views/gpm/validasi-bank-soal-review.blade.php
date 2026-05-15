@@ -1,4 +1,11 @@
 <x-banksoal::layouts.gpm-master>
+    @section('breadcrumbs')
+    <span class="text-slate-500 hover:text-primary transition-colors">Manajemen Modul</span>
+    <span class="mx-2 text-slate-300">/</span>
+    <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}" class="text-slate-500 hover:text-primary transition-colors">Validasi Soal</a>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Review Soal</span>
+    @endsection
     <x-banksoal::notification.alerts />
     <x-banksoal::ui.page-header title="Validasi Bank Soal" subtitle="Evaluasi kesesuaian butir soal dengan CPL">
         <x-slot name="actions">
@@ -96,35 +103,30 @@
                     <div class="border-t border-dashed border-slate-200 pt-6">
                         <div class="flex items-center justify-between mb-4">
                             <p class="text-xs font-semibold uppercase tracking-wider text-slate-500">Parameter Penilaian</p>
-                            <span class="text-[11px] font-medium text-slate-400">Total 100%</span>
+                            <span class="text-[11px] font-medium text-slate-400">Total {{ $totalBobot }} Poin</span>
                         </div>
 
                         <div class="space-y-3 max-h-[300px] overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-slate-200">
-                            @php
-                                $dummyParams = [
-                                    ['id' => 1, 'parameter' => 'Kesesuaian materi soal dengan CPL/CPMK', 'bobot' => 40],
-                                    ['id' => 2, 'parameter' => 'Tingkat kesulitan dan tingkatan kognitif', 'bobot' => 30],
-                                    ['id' => 3, 'parameter' => 'Kejelasan penyusunan kalimat dan tata bahasa', 'bobot' => 30],
-                                ];
-                            @endphp
-                            @foreach($dummyParams as $param)
+                            @forelse($parameters as $index => $param)
                                 <div class="rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
-                                    <p class="text-sm font-semibold text-slate-700">{{ $param['parameter'] }} <span class="text-primary">({{ $param['bobot'] }}%)</span></p>
+                                    <p class="text-sm font-semibold text-slate-700">{{ $index + 1 }}. {{ $param->aspek }} <span class="text-primary">({{ $param->bobot }} poin)</span></p>
                                     <div class="mt-3 flex gap-6 text-sm text-slate-600">
                                         <label class="inline-flex items-center gap-2 cursor-pointer font-medium hover:text-primary transition-colors">
-                                            <input type="radio" name="parameter_{{ $param['id'] }}" value="1" data-bobot="{{ $param['bobot'] }}" class="w-4 h-4 text-primary border-slate-300 focus:ring-primary" onchange="hitungSkor()" required> Sesuai
+                                            <input type="radio" name="parameter_{{ $param->id }}" value="1" data-bobot="{{ $param->bobot }}" class="w-4 h-4 text-primary border-slate-300 focus:ring-primary" onchange="hitungSkor()" required> Sesuai
                                         </label>
                                         <label class="inline-flex items-center gap-2 cursor-pointer font-medium hover:text-rose-600 transition-colors">
-                                            <input type="radio" name="parameter_{{ $param['id'] }}" value="0" data-bobot="{{ $param['bobot'] }}" class="w-4 h-4 text-rose-600 border-slate-300 focus:ring-rose-500" onchange="hitungSkor()" required> Tidak Sesuai
+                                            <input type="radio" name="parameter_{{ $param->id }}" value="0" data-bobot="{{ $param->bobot }}" class="w-4 h-4 text-rose-600 border-slate-300 focus:ring-rose-500" onchange="hitungSkor()" required> Tidak Sesuai
                                         </label>
                                     </div>
                                 </div>
-                            @endforeach
+                            @empty
+                                <div class="rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">Tidak ada parameter penilaian yang tersedia</div>
+                            @endforelse
                         </div>
 
                         <div class="mt-5 border-y border-dashed border-slate-200 py-4 flex items-center justify-between bg-white">
                             <span class="text-sm font-bold text-slate-700">Skor Evaluasi (Otomatis)</span>
-                            <span class="text-2xl font-black text-slate-300" id="nilaiAkhir">0/100</span>
+                            <span class="text-2xl font-black text-slate-300" id="nilaiAkhir">0/{{ $totalBobot }}</span>
                         </div>
 
                         <div class="mt-5">
@@ -164,10 +166,11 @@
                 }
             });
 
-            nilaiAkhirEl.textContent = totalNilai + '/100';
+            nilaiAkhirEl.textContent = totalNilai + '/{{ $totalBobot }}';
             
             // Ubah warna skor mengikuti nilai
-            if (totalNilai >= 60) {
+            const MIN_SCORE = {{ $skorMinimum }};
+            if (totalNilai >= MIN_SCORE) {
                 nilaiAkhirEl.classList.remove('text-slate-300', 'text-rose-600');
                 nilaiAkhirEl.classList.add('text-emerald-600');
             } else if (totalNilai > 0) {
@@ -182,15 +185,16 @@
         }
 
         function updateButtonState(score) {
-            const MIN_SCORE = 60;
+            const MIN_SCORE = {{ $skorMinimum }};
             const btnSetujui = document.getElementById('btnSetujui');
             if (!btnSetujui) return;
 
-            const allAnswered = document.querySelectorAll('input[type="radio"]:checked').length === 3; // Total parameter is 3
+            const totalParams = {{ $parameters->count() }};
+            const allAnswered = document.querySelectorAll('input[type="radio"]:checked').length === totalParams;
             
             if (!allAnswered || score < MIN_SCORE) {
                 btnSetujui.disabled = true;
-                btnSetujui.setAttribute('title', 'Seluruh parameter wajib diisi. Nilai < 60 silakan kembalikan soal.');
+                btnSetujui.setAttribute('title', `Seluruh parameter wajib diisi. Nilai < ${MIN_SCORE} silakan kembalikan soal.`);
             } else {
                 btnSetujui.disabled = false;
                 btnSetujui.setAttribute('title', '');
@@ -205,7 +209,8 @@
 
         function setSetuju() {
             const form = document.getElementById('validasiForm');
-            const allAnswered = document.querySelectorAll('input[type="radio"]:checked').length === 3;
+            const totalParams = {{ $parameters->count() }};
+            const allAnswered = document.querySelectorAll('input[type="radio"]:checked').length === totalParams;
             if(!allAnswered) {
                 // Biarkan validasi HTML5 handle prevent form submission
                 return;
@@ -224,13 +229,15 @@
         }
 
         document.getElementById('btnSetujui').addEventListener('mousedown', function (e) {
-            const allAnswered = document.querySelectorAll('input[type="radio"]:checked').length === 3;
+            const totalParams = {{ $parameters->count() }};
+            const allAnswered = document.querySelectorAll('input[type="radio"]:checked').length === totalParams;
             if(!allAnswered) {
                 return;
             }
             if (this.disabled) {
                 e.preventDefault();
-                alert('Nilai di bawah standar (< 60). Silakan kembalikan soal ini dengan menyertakan catatan revisi.');
+                const MIN_SCORE = {{ $skorMinimum }};
+                alert(`Nilai di bawah standar (< ${MIN_SCORE}). Silakan kembalikan soal ini dengan menyertakan catatan revisi.`);
             }
         });
         

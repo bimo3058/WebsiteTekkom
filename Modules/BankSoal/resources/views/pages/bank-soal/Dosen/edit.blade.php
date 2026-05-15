@@ -1,4 +1,9 @@
 <x-banksoal::layouts.dosen-admin>
+    @section('breadcrumbs')
+        <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-slate-500 hover:text-primary transition-colors">Bank Soal</a>
+        <span class="mx-2 text-slate-300">/</span>
+        <span class="text-slate-800 font-semibold">Edit Soal</span>
+    @endsection
     <x-banksoal::ui.page-header title="Edit Soal" subtitle="Perbarui detail pertanyaan dan opsi jawaban.">
         <x-slot:actions>
             <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"><i class="fas fa-arrow-left"></i> Kembali</a>

@@ -50,33 +50,40 @@
                         <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap" x-transition.opacity.duration.300ms>Dashboard</span>
                     </a>
 
-                    <!-- Validasi RPS -->
-                    @php $isValidasiRps = request()->routeIs('banksoal.rps.gpm.validasi-rps*'); @endphp
-                    <a href="{{ route('banksoal.rps.gpm.validasi-rps') }}"
-                        class="group relative flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all {{ $isValidasiRps ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}">
-                        @if($isValidasiRps)
-                            <div class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1.5 bg-primary rounded-r-full"></div>
-                        @endif
-                        <svg class="w-5 h-5 flex-shrink-0 {{ $isValidasiRps ? 'text-primary' : 'text-slate-400 group-hover:text-slate-500' }}"
-                             fill="{{ $isValidasiRps ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                        </svg>
-                        <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap" x-transition.opacity.duration.300ms>Validasi RPS</span>
-                    </a>
-
-                    <!-- Validasi Bank Soal -->
-                    @php $isValidasiSoal = request()->routeIs('banksoal.soal.gpm.validasi-bank-soal*'); @endphp
-                    <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}"
-                        class="group relative flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all {{ $isValidasiSoal ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}">
-                        @if($isValidasiSoal)
-                            <div class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1.5 bg-primary rounded-r-full"></div>
-                        @endif
-                        <svg class="w-5 h-5 flex-shrink-0 {{ $isValidasiSoal ? 'text-primary' : 'text-slate-400 group-hover:text-slate-500' }}"
-                             fill="{{ $isValidasiSoal ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10a2 2 0 002 2h12a2 2 0 002-2V9a2 2 0 00-2-2h-6.586a1 1 0 01-.707-.293l-3.414-3.414A2 2 0 008.586 2H6a2 2 0 00-2 2v3z"/>
-                        </svg>
-                        <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap" x-transition.opacity.duration.300ms>Validasi Bank Soal</span>
-                    </a>
+                    <!-- Manajemen Modul (Accordion) -->
+                    @php $isManajemenModulActive = request()->routeIs('banksoal.rps.gpm.validasi-rps*') || request()->routeIs('banksoal.soal.gpm.validasi-bank-soal*') || request()->routeIs('banksoal.soal.gpm.parameter*'); @endphp
+                    <div x-data="{ open: {{ $isManajemenModulActive ? 'true' : 'false' }} }" class="space-y-1">
+                        <button @click="if (!sidebarOpen) { sidebarOpen = true; open = true } else { open = !open }"
+                            class="group w-full relative flex items-center justify-between py-2.5 px-4 rounded-xl transition-all {{ $isManajemenModulActive ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}">
+                            @if($isManajemenModulActive)
+                                <div class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1.5 bg-primary rounded-r-full"></div>
+                            @endif
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 flex-shrink-0 {{ $isManajemenModulActive ? 'text-primary' : 'text-slate-400 group-hover:text-slate-500' }}"
+                                    fill="{{ $isManajemenModulActive ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                                    </path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z">
+                                    </path>
+                                </svg>
+                                <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap" x-transition.opacity.duration.300ms>Manajemen Modul</span>
+                            </div>
+                            <svg x-show="sidebarOpen" class="w-4 h-4 flex-shrink-0 transition-transform duration-200 {{ $isManajemenModulActive ? 'text-slate-900' : 'text-slate-400' }}"
+                                :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="open && sidebarOpen" x-cloak class="pl-12 pr-4 py-1 space-y-1">
+                            <a href="{{ route('banksoal.soal.gpm.parameter.index') }}"
+                                class="block text-sm {{ request()->routeIs('banksoal.soal.gpm.parameter*') ? 'text-primary font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Kontrol Umum</a>
+                            <a href="{{ route('banksoal.rps.gpm.validasi-rps') }}"
+                                class="block text-sm {{ request()->routeIs('banksoal.rps.gpm.validasi-rps*') ? 'text-primary font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Validasi RPS</a>
+                            <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}"
+                                class="block text-sm {{ request()->routeIs('banksoal.soal.gpm.validasi-bank-soal*') ? 'text-primary font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Validasi Soal</a>
+                        </div>
+                    </div>
 
                     <!-- Riwayat Validasi -->
                     @php $isRiwayat = request()->routeIs('banksoal.rps.gpm.index') || request()->routeIs('banksoal.rps.gpm.riwayat-validasi.*') || request()->routeIs('banksoal.soal.gpm.riwayat-validasi*'); @endphp

@@ -1,4 +1,9 @@
 <x-banksoal::layouts.gpm-master>
+    @section('breadcrumbs')
+    <span class="text-slate-500 hover:text-primary transition-colors">Manajemen Modul</span>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Validasi Soal</span>
+    @endsection
     <style>
         @keyframes modalPopUp {
             from { opacity: 0; transform: scale(0.95) translateY(10px); }

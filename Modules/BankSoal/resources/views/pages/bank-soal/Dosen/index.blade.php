@@ -1,4 +1,7 @@
 <x-banksoal::layouts.dosen-admin>
+    @section('breadcrumbs')
+        <span class="text-slate-800 font-semibold">Bank Soal</span>
+    @endsection
 
 <style>
     @keyframes modalPopUp {
@@ -139,7 +142,7 @@
     </form>
 
     <!-- Filter Modal -->
-    <div id="filterModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-8 overflow-y-auto">
+    <div id="filterModal" class="hidden fixed inset-0 bg-black/50 z-50 items-start justify-center pt-8 overflow-y-auto">
         <div class="bg-white rounded-2xl shadow-lg w-full max-w-md mx-auto animate-popup">
             <div class="border-b border-slate-200 px-6 py-4 flex items-center justify-between">
                 <h3 class="text-lg font-semibold text-slate-900">Filter</h3>
