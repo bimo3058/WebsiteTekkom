@@ -131,17 +131,17 @@
 </div>
 @endif
 
-{{-- Banner link ke Persuratan --}}
+{{-- Banner link ke Pelaksanaan Kegiatan --}}
 @if(in_array($proker->status, ['diajukan','menunggu_ttd_ketua','menunggu_ttd_dpm','menunggu_ttd_dept','disetujui']))
 <div class="detail-card" style="background:linear-gradient(135deg,#fef3c7,#fffbeb);border:1.5px solid #fde68a;">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
         <div>
             <div style="font-weight:700;color:#92400e;margin-bottom:4px;">&#9998; Proker Telah Diajukan</div>
-            <div style="font-size:14px;color:#78350f;">Proker ini sedang dalam proses persuratan dan tanda tangan digital.</div>
+            <div style="font-size:14px;color:#78350f;">Proker ini sedang diproses. Pantau progres di halaman Pelaksanaan Kegiatan.</div>
         </div>
-        <a href="{{ route('manajemenmahasiswa.persuratan.show', $proker->id) }}"
+        <a href="{{ route('manajemenmahasiswa.pelaksanaan.show', $proker->id) }}"
            class="btn" style="background:#f59e0b;color:#fff;font-weight:600;padding:10px 22px;border-radius:10px;font-size:14px;white-space:nowrap;">
-            Lihat di Persuratan &rarr;
+            Lihat di Pelaksanaan &rarr;
         </a>
     </div>
 </div>

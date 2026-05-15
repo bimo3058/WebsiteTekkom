@@ -625,34 +625,14 @@
     }
 </style>
 
-@php
-    $ketuaNama = '';
-    if ($kegiatan->ketua_pelaksana_id) {
-        $ketua = $kegiatan->ketuaPelaksana;
-        $ketuaNama = $ketua?->user?->name ?? '';
-    }
-    $dosenNama = '';
-    if ($kegiatan->dosen_pendamping_id) {
-        $dosen = $kegiatan->dosenPendamping;
-        $dosenNama = $dosen?->user?->name ?? '';
-    }
-    $existingFoto = $kegiatan->repoMulmed->where('tipe_file', 'image');
-    $existingDokumen = $kegiatan->repoMulmed->where('tipe_file', 'document');
-    $selectedKategoriIds = old('kategori_kegiatan_id', $kegiatan->kategoris->pluck('id')->toArray());
-    $selectedBidangIds = old('bidang_id', $kegiatan->bidangs->pluck('id')->toArray());
-    // Panitia yang sudah ada — untuk pre-populate chips
-    $existingPanitia = $kegiatan->panitia ?? collect();
-    $existingPanitiaIds = old('panitia_ids', $existingPanitia->pluck('id')->toArray());
-@endphp
-
 <!-- Header -->
 <div class="detail-header">
-    <a href="{{ route('manajemenmahasiswa.kegiatan.show', $kegiatan->id) }}" class="btn-back">
+    <a href="{{ route('manajemenmahasiswa.pelaksanaan.show', $proker->id) }}" class="btn-back">
         &larr;
     </a>
     <div>
-        <h3 class="fw-bold mb-0 text-dark">Edit Kegiatan</h3>
-        <p class="text-muted mb-0" style="font-size: 14px; font-weight: 500;">Perbarui informasi kegiatan <strong>{{ $kegiatan->judul }}</strong></p>
+        <h3 class="fw-bold mb-0 text-dark">Edit Pelaksanaan Kegiatan</h3>
+        <p class="text-muted mb-0" style="font-size: 14px; font-weight: 500;">Perbarui informasi kegiatan <strong>{{ $proker->judul }}</strong></p>
     </div>
 </div>
 
@@ -668,7 +648,7 @@
     </div>
 @endif
 
-<form action="{{ route('manajemenmahasiswa.kegiatan.update', $kegiatan->id) }}" method="POST" enctype="multipart/form-data">
+<form action="{{ route('manajemenmahasiswa.pelaksanaan.update', $proker->id) }}" method="POST" enctype="multipart/form-data">
     @csrf
     @method('PUT')
 
@@ -679,7 +659,7 @@
         <div class="mb-3">
             <label class="form-label-custom">Judul Kegiatan <span class="required">*</span></label>
             <input type="text" name="judul" class="form-control form-control-custom"
-                   value="{{ old('judul', $kegiatan->judul) }}" required maxlength="255">
+                   value="{{ old('judul', $proker->judul) }}" required maxlength="255">
         </div>
 
         <div class="row g-3 mb-3">
@@ -717,7 +697,7 @@
 
         <div class="mb-3">
             <label class="form-label-custom">Deskripsi <span class="required">*</span></label>
-            <textarea name="deskripsi" class="form-control form-control-custom" required>{{ old('deskripsi', $kegiatan->deskripsi) }}</textarea>
+            <textarea name="deskripsi" class="form-control form-control-custom" required>{{ old('deskripsi', $proker->deskripsi) }}</textarea>
         </div>
 
     </div>
@@ -730,31 +710,44 @@
             <div class="col-md-3">
                 <label class="form-label-custom">Tanggal Mulai <span class="required">*</span></label>
                 <input type="date" name="tanggal_mulai" class="form-control form-control-custom"
-                       value="{{ old('tanggal_mulai', $kegiatan->tanggal_mulai?->format('Y-m-d')) }}" required>
+                       value="{{ old('tanggal_mulai', $proker->tanggal_mulai?->format('Y-m-d')) }}" required>
             </div>
             <div class="col-md-3">
                 <label class="form-label-custom">Jam Mulai</label>
                 <input type="time" name="jam_mulai" class="form-control form-control-custom"
-                       value="{{ old('jam_mulai', $kegiatan->jam_mulai_formatted) }}">
+                       value="{{ old('jam_mulai', $proker->jam_mulai_formatted) }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label-custom">Tanggal Selesai</label>
                 <input type="date" name="tanggal_selesai" class="form-control form-control-custom"
-                       value="{{ old('tanggal_selesai', $kegiatan->tanggal_selesai?->format('Y-m-d')) }}">
+                       value="{{ old('tanggal_selesai', $proker->tanggal_selesai?->format('Y-m-d')) }}">
             </div>
             <div class="col-md-3">
                 <label class="form-label-custom">Jam Selesai</label>
                 <input type="time" name="jam_selesai" class="form-control form-control-custom"
-                       value="{{ old('jam_selesai', $kegiatan->jam_selesai_formatted) }}">
+                       value="{{ old('jam_selesai', $proker->jam_selesai_formatted) }}">
             </div>
         </div>
 
         <div class="mb-3">
             <label class="form-label-custom">Lokasi</label>
             <input type="text" name="lokasi" class="form-control form-control-custom"
-                   value="{{ old('lokasi', $kegiatan->lokasi) }}">
+                   value="{{ old('lokasi', $proker->lokasi) }}">
         </div>
     </div>
+
+    @php
+        $ketuaNama = '';
+        if ($proker->ketua_pelaksana_id) {
+            $ketua = $proker->ketuaPelaksana;
+            $ketuaNama = $ketua?->user?->name ?? '';
+        }
+        $dosenNama = '';
+        if ($proker->dosen_pendamping_id) {
+            $dosen = $proker->dosenPendamping;
+            $dosenNama = $dosen?->user?->name ?? '';
+        }
+    @endphp
 
     <!-- Personel -->
     <div class="form-card">
@@ -765,7 +758,7 @@
                 <label class="form-label-custom">Ketua Pelaksana</label>
                 <div class="search-select-wrapper">
                     <input type="hidden" name="ketua_pelaksana_id" id="ketuaPelaksanaId"
-                           value="{{ old('ketua_pelaksana_id', $kegiatan->ketua_pelaksana_id) }}">
+                           value="{{ old('ketua_pelaksana_id', $proker->ketua_pelaksana_id) }}">
                     <input type="text" class="form-control form-control-custom" id="ketuaPelaksanaSearch"
                            placeholder="Cari nama mahasiswa..."
                            value="{{ $ketuaNama }}"
@@ -790,7 +783,7 @@
                 <label class="form-label-custom">Dosen Pendamping <span style="color: #9ca3af; font-weight: 400;">(opsional)</span></label>
                 <div class="search-select-wrapper">
                     <input type="hidden" name="dosen_pendamping_id" id="dosenPendampingId"
-                           value="{{ old('dosen_pendamping_id', $kegiatan->dosen_pendamping_id) }}">
+                           value="{{ old('dosen_pendamping_id', $proker->dosen_pendamping_id) }}">
                     <input type="text" class="form-control form-control-custom" id="dosenPendampingSearch"
                            placeholder="Cari nama dosen..."
                            value="{{ $dosenNama }}"
@@ -849,7 +842,7 @@
                 <div id="panitiaHiddenInputs"></div>
             </div>
             <div class="checkbox-hint">Pilih satu atau lebih mahasiswa sebagai panitia. Ketik nama untuk mencari.</div>
-            
+
             {{-- Container for Jabatan Inputs --}}
             <div id="panitiaRolesContainer" class="mt-3 d-flex flex-column gap-2"></div>
         </div>
@@ -863,12 +856,12 @@
             <div class="col-md-6">
                 <label class="form-label-custom">Peserta</label>
                 <input type="number" name="target_peserta" class="form-control form-control-custom"
-                       value="{{ old('target_peserta', $kegiatan->target_peserta) }}" min="1">
+                       value="{{ old('target_peserta', $proker->target_peserta) }}" min="1">
             </div>
             <div class="col-md-6">
                 <label class="form-label-custom">Anggaran (Rp)</label>
                 <input type="number" name="anggaran" class="form-control form-control-custom"
-                       value="{{ old('anggaran', $kegiatan->anggaran) }}" min="0" max="9999999999999" step="1000">
+                       value="{{ old('anggaran', $proker->anggaran) }}" min="0" max="9999999999999" step="1000">
             </div>
         </div>
     </div>
@@ -877,17 +870,17 @@
     <div class="form-card">
         <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg> Banner Kegiatan</div>
 
-        @if($kegiatan->banner)
+        @if($proker->banner)
             <div class="banner-current">
                 <span class="badge-current">Banner Saat Ini</span>
-                <img src="{{ $kegiatan->banner_url }}" alt="Banner saat ini" class="banner-preview" style="display: block;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
+                <img src="{{ $proker->banner_url }}" alt="Banner saat ini" class="banner-preview" style="display: block;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
             </div>
             <p style="font-size: 13px; color: #6b7280; margin-bottom: 12px;">Upload gambar baru untuk mengganti banner saat ini.</p>
         @endif
 
         <div class="banner-upload-area" onclick="document.getElementById('bannerInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
-            <p>Klik untuk upload banner {{ $kegiatan->banner ? 'baru' : 'kegiatan' }}</p>
+            <p>Klik untuk upload banner {{ $proker->banner ? 'baru' : 'kegiatan' }}</p>
             <small>Format: JPG, PNG, WebP • Maks: 10MB<br><span style="color: #4f46e5; font-weight: 500;">Rekomendasi: Resolusi 1280 x 720 (Rasio 16:9)</span></small>
         </div>
         <input type="file" name="banner" id="bannerInput" accept="image/jpeg,image/png,image/webp"
@@ -963,7 +956,7 @@
 
     <!-- Action Buttons -->
     <div class="d-flex gap-3 justify-content-end mt-2">
-        <a href="{{ route('manajemenmahasiswa.kegiatan.show', $kegiatan->id) }}" class="btn-cancel">Batal</a>
+        <a href="{{ route('manajemenmahasiswa.pelaksanaan.show', $proker->id) }}" class="btn-cancel">Batal</a>
         <button type="submit" class="btn-submit">
             💾 Simpan Perubahan
         </button>
@@ -1184,10 +1177,9 @@ function formatFileSize(bytes) {
 });
 
 // ── Panitia Multi-Select ──
-let selectedPanitia = {}; // { id: name }
-let initialRoles = {}; // { id: role }
+let selectedPanitia = {};
+let initialRoles = {};
 
-// Pre-populate dari data yang ada di database
 @foreach($existingPanitia as $pan)
 selectedPanitia['{{ $pan->id }}'] = '{{ addslashes($pan->user->name ?? '') }}';
 initialRoles['{{ $pan->id }}'] = '{{ addslashes($pan->pivot->peran ?? '') }}';
@@ -1278,15 +1270,14 @@ function renderPanitiaChips() {
 function updatePanitiaHiddenInputs() {
     const container = document.getElementById('panitiaHiddenInputs');
     const rolesContainer = document.getElementById('panitiaRolesContainer');
-    
+
     container.innerHTML = '';
-    
-    // Simpan nilai peran yang sudah diinput sebelum me-render ulang
+
     const existingRoles = {};
     rolesContainer.querySelectorAll('input[type="text"]').forEach(input => {
         existingRoles[input.dataset.id] = input.value;
     });
-    
+
     rolesContainer.innerHTML = '';
 
     Object.keys(selectedPanitia).forEach(id => {
@@ -1295,12 +1286,10 @@ function updatePanitiaHiddenInputs() {
         input.name  = 'panitia_ids[]';
         input.value = id;
         container.appendChild(input);
-        
-        // Input untuk Jabatan/Peran
+
         const name = selectedPanitia[id];
-        // Jika user belum pernah ngetik di UI, ambil dari initialRoles
         const currentRole = existingRoles[id] !== undefined ? existingRoles[id] : (initialRoles[id] || '');
-        
+
         const roleDiv = document.createElement('div');
         roleDiv.className = 'd-flex align-items-center gap-3 p-2 border rounded bg-light';
         roleDiv.innerHTML = `
@@ -1313,7 +1302,6 @@ function updatePanitiaHiddenInputs() {
     });
 }
 
-// Tutup dropdown panitia saat klik di luar
 document.addEventListener('click', function(e) {
     const wrapper = document.getElementById('panitiaSelectWrapper');
     if (wrapper && !wrapper.contains(e.target)) {
@@ -1327,7 +1315,6 @@ function handleKategoriChange() {
     const checked = document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked');
     const maxKategori = 2;
 
-    // Enforce max 2 selections
     checkboxes.forEach(cb => {
         const card = cb.closest('.checkbox-card');
         if (cb.checked) {
@@ -1351,7 +1338,6 @@ function handleKategoriChange() {
         });
     }
 
-    // Toggle bidang visibility
     toggleBidangField();
 }
 
@@ -1392,7 +1378,6 @@ document.addEventListener('DOMContentLoaded', function() {
     handleKategoriChange();
 
     // Pre-populate panitia chips dan hidden inputs dari data existing
-    // Tandai options yang sudah dipilih di dropdown
     Object.keys(selectedPanitia).forEach(id => {
         const opt = document.querySelector(`#panitiaDropdown .panitia-option[data-id="${id}"]`);
         if (opt) opt.classList.add('selected');
