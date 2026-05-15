@@ -30,9 +30,21 @@ class KegiatanController extends Controller
     {
         $bidangList       = Bidang::orderBy('nama_bidang')->get();
         $kategoriList     = KategoriKegiatan::orderBy('nama_kategori')->get();
-        $tahunList        = range(date('Y') + 1, 2008);
+        
+        $tahunList = Kegiatan::select('tahun')
+            ->whereNotNull('tahun')
+            ->where('status', Kegiatan::STATUS_SELESAI)
+            ->distinct()
+            ->orderBy('tahun', 'desc')
+            ->pluck('tahun')
+            ->toArray();
+            
+        if (empty($tahunList)) {
+            $tahunList = [date('Y')];
+        }
 
         $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'ketuaPelaksana.user', 'dosenPendamping.user'])
+            ->where('status', Kegiatan::STATUS_SELESAI)
             ->orderBy('tanggal_mulai', 'desc');
 
         // Filter by bidang or prodi
@@ -85,7 +97,7 @@ class KegiatanController extends Controller
             'ketuaPelaksana.user',
             'dosenPendamping.user',
             'panitia.user',
-        ])->findOrFail($id);
+        ])->where('status', Kegiatan::STATUS_SELESAI)->findOrFail($id);
 
         // Cek apakah user adalah admin/pengurus (untuk tombol Edit/Hapus)
         $user  = Auth::user();
@@ -200,7 +212,9 @@ class KegiatanController extends Controller
      */
     public function edit($id)
     {
-        $kegiatan         = Kegiatan::with(['repoMulmed', 'kategoris', 'bidangs', 'panitia.user'])->findOrFail($id);
+        $kegiatan         = Kegiatan::with(['repoMulmed', 'kategoris', 'bidangs', 'panitia.user'])
+            ->where('status', Kegiatan::STATUS_SELESAI)
+            ->findOrFail($id);
         $bidangList       = Bidang::orderBy('nama_bidang')->get();
         $kategoriList     = KategoriKegiatan::orderBy('nama_kategori')->get();
         $tahunList        = range(date('Y') + 1, 2008);
@@ -222,7 +236,7 @@ class KegiatanController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $kegiatan = Kegiatan::findOrFail($id);
+        $kegiatan = Kegiatan::where('status', Kegiatan::STATUS_SELESAI)->findOrFail($id);
 
         // Check if all selected kategori are "Kegiatan Prodi" (bidang not needed)
         $validated = $request->validate([
@@ -319,7 +333,9 @@ class KegiatanController extends Controller
      */
     public function destroy($id)
     {
-        $kegiatan = Kegiatan::with('repoMulmed')->findOrFail($id);
+        $kegiatan = Kegiatan::with('repoMulmed')
+            ->where('status', Kegiatan::STATUS_SELESAI)
+            ->findOrFail($id);
 
         if ($kegiatan->banner) {
             $this->supabase->delete($kegiatan->banner);

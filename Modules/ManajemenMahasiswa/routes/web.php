@@ -200,6 +200,12 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 Route::put('/{id}/realisasi', [PelaksanaanController::class, 'updateRealisasi'])->name('realisasi.update')->where('id', '[0-9]+');
                 Route::post('/{id}/publish', [PelaksanaanController::class, 'publishToArsip'])->name('publish')->where('id', '[0-9]+');
             });
+
+            // Hapus — admin kemahasiswaan, superadmin, gpm
+            Route::middleware('role:admin_kemahasiswaan|superadmin|gpm')
+                ->group(function () {
+                Route::delete('/{id}', [PelaksanaanController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
+            });
         });
 
         // ── Kegiatan / Laporan & Arsip (Subbab 3 Manajemen Kegiatan) ──────

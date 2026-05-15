@@ -19,6 +19,8 @@
     .card-body { padding:16px 18px 18px;display:flex;flex-direction:column;flex:1; }
     .badge-bidang { font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#eef2ff;color:#4f46e5; }
     .card-title { font-weight:700;font-size:15px;color:#1f2937;margin:8px 0 10px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+    .card-meta { display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:#9ca3af;font-weight:500;padding-top:10px;border-top:1px solid #f3f4f6;margin-top:auto; }
+    .card-meta span { display:inline-flex;align-items:center;gap:4px; }
     /* Rencana vs Realisasi compare */
     .compare-row { display:flex;gap:8px;font-size:12px;color:#6b7280;margin-bottom:4px; }
     .compare-label { font-weight:600;width:100px;flex-shrink:0; }
@@ -108,6 +110,12 @@
                                 </span>
                             </div>
                         @endif
+                        <div class="card-meta">
+                            <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> {{ $item->tanggal_mulai ? $item->tanggal_mulai->translatedFormat('d M Y') : 'Belum ditentukan' }}</span>
+                            @if($item->jam_mulai)
+                                <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {{ $item->jam_mulai_formatted }}{{ $item->jam_selesai_formatted ? ' - ' . $item->jam_selesai_formatted : '' }} WIB</span>
+                            @endif
+                        </div>
                     </div>
                 </a>
             </div>

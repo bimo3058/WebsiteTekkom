@@ -28,7 +28,16 @@ class PelaksanaanController extends Controller
     public function index(Request $request)
     {
         $bidangList = Bidang::orderBy('nama_bidang')->get();
-        $tahunList  = range(date('Y') + 1, 2020);
+        $tahunList = Kegiatan::select('tahun')
+            ->whereNotNull('tahun')
+            ->distinct()
+            ->orderBy('tahun', 'desc')
+            ->pluck('tahun')
+            ->toArray();
+
+        if (empty($tahunList)) {
+            $tahunList = [date('Y')];
+        }
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
@@ -224,6 +233,8 @@ class PelaksanaanController extends Controller
             'anggaran'           => $validated['anggaran'] ?? null,
             'ketua_pelaksana_id' => $validated['ketua_pelaksana_id'] ?? null,
             'dosen_pendamping_id'=> $validated['dosen_pendamping_id'] ?? null,
+            'realisasi_tanggal_mulai' => $validated['tanggal_mulai'],
+            'catatan_pelaksanaan' => $validated['deskripsi'],
         ]);
 
         // Set penanggung_jawab from ketua pelaksana name for backward compatibility
@@ -395,6 +406,41 @@ class PelaksanaanController extends Controller
         return redirect()
             ->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
             ->with('success', 'Data realisasi berhasil diperbarui.');
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Hapus — Hapus pelaksanaan kegiatan (termasuk foto/dokumen)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function destroy($id)
+    {
+        $proker = Kegiatan::with('repoMulmed')->whereIn('status', [
+            Kegiatan::STATUS_DIAJUKAN,
+            Kegiatan::STATUS_DISETUJUI,
+            Kegiatan::STATUS_AKAN_DATANG,
+            Kegiatan::STATUS_BERLANGSUNG,
+            Kegiatan::STATUS_SELESAI,
+        ])->findOrFail($id);
+
+        if ($proker->banner) {
+            $this->supabase->delete($proker->banner);
+        }
+        if ($proker->surat_proker) {
+            $this->supabase->delete($proker->surat_proker);
+        }
+
+        // Hapus semua file foto & dokumen dari repo
+        if ($proker->repoMulmed) {
+            foreach ($proker->repoMulmed as $file) {
+                $this->repoMulmedService->deletePermanent($file->id);
+            }
+        }
+
+        $proker->delete();
+
+        return redirect()
+            ->route('manajemenmahasiswa.pelaksanaan.index')
+            ->with('success', 'Data pelaksanaan kegiatan berhasil dihapus.');
     }
 
     // ─────────────────────────────────────────────────────────────────────────

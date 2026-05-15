@@ -128,7 +128,9 @@ class ProkerController extends Controller
         $validated = $this->validateProker($request);
 
         $validated['user_id'] = Auth::id();
-        $validated['status']  = $request->input('save_as_draft') === '1' ? Kegiatan::STATUS_DRAFT : Kegiatan::STATUS_DISETUJUI;
+        // Proker baru SELALU dimulai sebagai draft (Subbab 1).
+        // Untuk maju ke Subbab 2, user harus klik "Ajukan Proker" di halaman detail.
+        $validated['status'] = Kegiatan::STATUS_DRAFT;
 
         // Set backward-compat fields
         $this->setCompatFields($validated, $request);
@@ -146,16 +148,14 @@ class ProkerController extends Controller
         $proker->bidangs()->sync($bidangIds);
         $proker->panitia()->sync($panitiaSync);
 
-        // Jika user klik "Simpan Draft", redirect ke daftar proker
-        if ($request->input('save_as_draft') === '1') {
-            return redirect()
-                ->route('manajemenmahasiswa.proker.index')
-                ->with('success', 'Rencana proker berhasil disimpan sebagai draft.');
-        }
+        // Selalu redirect ke detail proker (Subbab 1) setelah dibuat
+        $message = $request->input('save_as_draft') === '1'
+            ? 'Rencana proker berhasil disimpan sebagai draft.'
+            : 'Rencana proker berhasil dibuat. Klik "Ajukan Proker" untuk melanjutkan ke tahap pelaksanaan.';
 
         return redirect()
-            ->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
-            ->with('success', 'Rencana proker berhasil disimpan. Silakan lanjutkan ke pelaksanaan kegiatan.');
+            ->route('manajemenmahasiswa.proker.show', $proker->id)
+            ->with('success', $message);
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -225,7 +225,7 @@ class ProkerController extends Controller
         $proker->update(['status' => Kegiatan::STATUS_DISETUJUI]);
 
         return redirect()
-            ->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
+            ->route('manajemenmahasiswa.pelaksanaan.index')
             ->with('success', 'Rencana Proker berhasil diajukan dan masuk ke tahap pelaksanaan kegiatan.');
     }
 
