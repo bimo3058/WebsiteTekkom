@@ -107,7 +107,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
             // Mahasiswa membuat pengaduan
             // NOTE: HARUS didefinisikan sebelum /{pengaduan} agar tidak konflik dengan path seperti /create
-            Route::middleware('role:mahasiswa,pengurus_himpunan,ketua_himpunan,ketua_bidang,ketua_unit,staff_himpunan')->group(function () {
+            Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan')->group(function () {
                 Route::get('/jalur', [PengaduanController::class, 'jalur'])->name('jalur');
                 Route::get('/create', [PengaduanController::class, 'create'])->name('create');
                 Route::post('/confirm', [PengaduanController::class, 'confirm'])->name('confirm');
@@ -129,7 +129,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             });
 
             // Admin: jawab langsung, delegasi, forward, tutup paksa
-            Route::middleware('role:admin,superadmin,admin_kemahasiswaan,gpm')->group(function () {
+            Route::middleware('role:admin|superadmin|admin_kemahasiswaan|gpm')->group(function () {
                 Route::post('/{pengaduan}/reply', [PengaduanController::class, 'reply'])
                     ->name('reply')->whereNumber('pengaduan');
                 Route::post('/{pengaduan}/delegate', [PengaduanController::class, 'delegate'])
@@ -144,10 +144,10 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::delete('/{pengaduan}', [PengaduanController::class, 'destroy'])
                 ->name('destroy')
                 ->whereNumber('pengaduan')
-                ->middleware('role:admin,superadmin,admin_kemahasiswaan,gpm');
+                ->middleware('role:admin|superadmin|admin_kemahasiswaan|gpm');
 
             // ── Delegasi (khusus Dosen) ────────────────────────────────────
-            Route::prefix('delegasi')->name('delegasi.')->middleware('role:dosen,dosen_koordinator')->group(function () {
+            Route::prefix('delegasi')->name('delegasi.')->middleware('role:dosen|dosen_koordinator')->group(function () {
                 Route::get('/', [PengaduanDelegasiController::class, 'index'])->name('index');
                 Route::get('/{delegasi}', [PengaduanDelegasiController::class, 'show'])
                     ->name('show')->whereNumber('delegasi');
@@ -376,7 +376,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 });
 
                 // Riwayat kegiatan & prestasi alumni — admin only (tambahkan role di sini jika diperlukan)
-                Route::middleware('role:superadmin,admin,admin_kemahasiswaan')
+                Route::middleware('role:superadmin|admin|admin_kemahasiswaan')
                     ->group(function () {
                     // Riwayat kegiatan
                     Route::post('/{id}/riwayat', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'storeRiwayat'])
