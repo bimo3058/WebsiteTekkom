@@ -129,7 +129,7 @@
             <div class="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="p-6 border-b border-slate-100">
                     <h3 class="text-base font-semibold text-slate-800">Capaian Pembelajaran Lulusan (CPL)</h3>
-                    <p class="text-xs text-slate-500 mt-1">Persentase jawaban benar agregat berdasarkan pemetaan CPL pada soal ujian.</p>
+                    <p class="text-xs text-slate-500 mt-1">Persentase jawaban benar berdasarkan pemetaan CPL pada soal ujian.</p>
                 </div>
                 <div class="p-6">
                     @if($cplStats && count($cplStats) > 0)

@@ -31,7 +31,7 @@ composer.json
 composer.lock
 bootstrap/providers.php
 
-# AI assistant files — jangan push ke repo
+# AI assistant files
 CLAUDE.md
 PLAN_*.md
 AI_*.md

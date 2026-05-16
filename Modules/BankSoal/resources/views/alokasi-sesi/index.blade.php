@@ -247,7 +247,7 @@
             <!-- Table Peserta Terjadwal -->
             <div class="mt-8 bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                 <div class="px-6 py-5 flex items-center justify-between border-b border-slate-200 bg-slate-50">
-                    <h2 class="font-bold text-slate-800">Daftar Peserta Ujian Komprehensif ({{ $activePeriode->tanggal_mulai_ujian ? \Carbon\Carbon::parse($activePeriode->tanggal_mulai_ujian)->translatedFormat('F Y') : 'Jadwal Belum Diatur' }})</h2>
+                    <h2 class="font-bold text-slate-800">Daftar Peserta {{ $activePeriode->nama_periode }}</h2>
                 </div>
                 <div class="p-6 space-y-8">
                     @foreach($allocatedGroups as $jadwalId => $pesertas)
@@ -541,7 +541,7 @@
                                             $startDate = \Carbon\Carbon::parse($selectedPeriode->tanggal_mulai_ujian);
                                             $endDate = \Carbon\Carbon::parse($selectedPeriode->tanggal_selesai_ujian);
                                             for($d = $startDate; $d->lte($endDate); $d->addDay()) {
-                                                echo '<option value="' . $d->format('Y-m-d') . '"' . (old('tanggal_ujian') == $d->format('Y-m-d') ? ' selected' : '') . '>' . $d->format('d F Y') . '</option>';
+                                                echo '<option value="' . $d->format('Y-m-d') . '"' . (old('tanggal_ujian') == $d->format('Y-m-d') ? ' selected' : '') . '>' . $d->translatedFormat('d F Y') . '</option>';
                                             }
                                         @endphp
                                     @endif

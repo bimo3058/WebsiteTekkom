@@ -131,9 +131,19 @@
                         <div class="space-y-1">
                             <label class="block text-[10px] text-slate-900 font-bold uppercase tracking-widest">Target
                                 Lulus <span class="text-red-500">*</span></label>
-                            <input type="text" name="target_wisuda" required value="{{ old('target_wisuda') }}"
-                                class="w-full h-11 bg-white border border-slate-300 focus:border-slate-900 focus:ring-0 text-slate-900 font-medium text-sm px-3 transition-colors outline-none @error('target_wisuda') border-red-500 @enderror"
-                                placeholder="Contoh: Periode 183 (Apr-Jun '26)" />
+                            @if($activePeriode->target_wisuda_options && count($activePeriode->target_wisuda_options) > 0)
+                                <select name="target_wisuda" required
+                                    class="w-full h-11 bg-white border border-slate-300 focus:border-slate-900 focus:ring-0 text-slate-900 font-medium text-sm px-3 transition-colors outline-none cursor-pointer @error('target_wisuda') border-red-500 @enderror">
+                                    <option value="" disabled {{ old('target_wisuda') ? '' : 'selected' }}>PILIH TARGET WISUDA</option>
+                                    @foreach($activePeriode->target_wisuda_options as $opt)
+                                        <option value="{{ $opt }}" {{ old('target_wisuda') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
+                                    @endforeach
+                                </select>
+                            @else
+                                <input type="text" name="target_wisuda" required value="{{ old('target_wisuda') }}"
+                                    class="w-full h-11 bg-white border border-slate-300 focus:border-slate-900 focus:ring-0 text-slate-900 font-medium text-sm px-3 transition-colors outline-none @error('target_wisuda') border-red-500 @enderror"
+                                    placeholder="Contoh: Periode 183 (Apr-Jun '26)" />
+                            @endif
                             @error('target_wisuda')
                                 <p class="text-[11px] text-red-600 font-bold">{{ $message }}</p>
                             @enderror

@@ -12,8 +12,8 @@
         <div x-init="addToast({ type: 'error', message: '{{ addslashes(session('error')) }}' })"></div>
     @endif
 
-    @if($errors->any() && !View::hasSection('hide_global_errors'))
-        <div x-init="addToast({ type: 'error', message: '{{ addslashes($errors->first()) }}' })"></div>
+    @if($errors->getBag('default')->any() && !View::hasSection('hide_global_errors'))
+        <div x-init="addToast({ type: 'error', message: '{{ addslashes($errors->getBag('default')->first()) }}' })"></div>
     @endif
 
     @if(session('warning'))

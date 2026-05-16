@@ -210,8 +210,8 @@
         @include('banksoal::pendaftaran.partials.modal-detail')
     </div>
 
-    {{-- Auto-reopen modal jika ada validation error --}}
-    @if($errors->any())
+    {{-- Auto-reopen modal jika ada validation error di bag 'pendaftar' --}}
+    @if($errors->hasBag('pendaftar') && $errors->getBag('pendaftar')->any())
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('modal-tambah-manual').classList.remove('hidden');

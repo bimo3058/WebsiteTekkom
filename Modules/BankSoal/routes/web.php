@@ -309,6 +309,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::put('/setup/{id}',                    [PeriodeController::class, 'update'])->name('update');
             Route::delete('/setup/{id}',                 [PeriodeController::class, 'destroy'])->name('destroy');
             Route::patch('/setup/{id}/close-pendaftaran',[PeriodeController::class, 'closePendaftaran'])->name('close-pendaftaran');
+            Route::patch('/setup/{id}/open-pendaftaran', [PeriodeController::class, 'openPendaftaran'])->name('open-pendaftaran');
 
             Route::get('/jadwal',    [JadwalController::class, 'index'])->name('jadwal');
             Route::post('/jadwal',   [JadwalController::class, 'store'])->name('jadwal.store');
@@ -323,6 +324,8 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::get('/lookup-nim',     [PendaftarAdminController::class, 'lookupNIM'])->name('lookupNIM');
             Route::post('/',              [PendaftarAdminController::class, 'store'])->name('store');
             Route::patch('/{id}/status',  [PendaftarAdminController::class, 'updateStatus'])->name('updateStatus');
+            Route::post('/bulk-approve',  [PendaftarAdminController::class, 'bulkApprove'])->name('bulkApprove');
+            Route::post('/bulk-reject',   [PendaftarAdminController::class, 'bulkReject'])->name('bulkReject');
             Route::delete('/{id}',        [PendaftarAdminController::class, 'destroy'])->name('destroy');
         });
     });
@@ -379,7 +382,8 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
         Route::get('/riwayat-ujian', [MahasiswaController::class, 'riwayat'])->name('riwayat');
 
         // CBT Engine Routes
-        // Flow: validate-token (generate soal + start sesi) → engine/run
+        // Flow: validate-token (generate soal + start sesi) -> engine/run
+        Route::post('/engine/check-token', [CbtEngineController::class, 'checkToken'])->name('engine.check-token');
         Route::post('/engine/validate-token', [CbtEngineController::class, 'validateToken'])
             ->middleware('throttle:cbt-token-validation')  // Max 5 percobaan/menit per user
             ->name('engine.validate');
@@ -394,3 +398,4 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
         Route::post('/engine/log-violation',[CbtEngineController::class, 'logViolation'])->name('engine.log-violation');
         Route::get('/engine/finish',        [CbtEngineController::class, 'finish'])->name('engine.finish');
     });
+
