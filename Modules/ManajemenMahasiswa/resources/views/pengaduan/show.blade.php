@@ -581,7 +581,36 @@
                         <strong>Catatan Admin:</strong> {{ $pengaduan->delegasiAktif->notes_admin }}
                     </div>
 
-                    @if($pengaduan->status === \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_DITANGGAPI_DOSEN)
+                    @if($isDelegatedToMe)
+                        <hr style="border-color: #fde68a; margin: 16px 0;">
+                        <h6 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2" style="font-size: 14px; color: #16a34a !important;">
+                            <span class="material-symbols-outlined" style="font-size: 18px;">edit_square</span> Berikan Tanggapan
+                        </h6>
+                        
+                        <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.delegasi.respond', $pengaduan->delegasiAktif->id) }}">
+                            @csrf
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted" style="font-size: 12px;">Tanggapan (Dikirim ke Mahasiswa via Admin)</label>
+                                <textarea class="form-control form-control-custom w-100" name="tanggapan" rows="5" required
+                                    placeholder="Tulis jawaban lengkap atas pengaduan ini. Pesan ini akan diteruskan ke mahasiswa..."></textarea>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted" style="font-size: 12px;">Catatan Internal untuk Admin (Opsional)</label>
+                                <textarea class="form-control form-control-custom w-100" name="notes_balik" rows="2"
+                                    placeholder="Pesan tambahan hanya untuk Admin..."></textarea>
+                            </div>
+                            
+                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top" style="border-color: #fde68a !important;">
+                                <button type="button" class="btn btn-outline-danger fw-bold px-3 py-2" data-bs-toggle="modal" data-bs-target="#rejectModal" style="border-radius: 8px; font-size: 13px;">
+                                    Tolak Delegasi
+                                </button>
+                                <button type="submit" class="btn btn-success fw-bold px-4 py-2" style="border-radius: 8px; font-size: 13px;">
+                                    Kirim Tanggapan
+                                </button>
+                            </div>
+                        </form>
+                    @elseif($pengaduan->status === \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_DITANGGAPI_DOSEN)
                         <hr style="border-color: #fde68a; margin: 16px 0;">
                         <h6 class="fw-bold text-dark mb-2" style="font-size: 14px; color: #4338ca !important;">Tanggapan Dosen:</h6>
                         <div class="p-3 bg-white rounded border" style="border-color: #e0e7ff !important;">
@@ -811,6 +840,34 @@
                         <div class="modal-footer border-0 pt-0 px-4 pb-4">
                             <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 8px;">Batal</button>
                             <button type="submit" class="btn btn-warning fw-bold" style="border-radius: 8px;">Ajukan Ulang</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    @endif
+
+    {{-- Reject Modal (Dosen) --}}
+    @if($isDelegatedToMe)
+        <div class="modal fade modal-custom" id="rejectModal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header border-0 pb-0 px-4 pt-4">
+                        <h5 class="fw-bold text-dark d-flex align-items-center gap-2 mb-0">
+                            <span class="material-symbols-outlined" style="color: #dc2626;">cancel</span> Tolak Delegasi
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.delegasi.reject', $pengaduan->delegasiAktif->id) }}">
+                        @csrf
+                        <div class="modal-body px-4 py-4">
+                            <p class="text-muted" style="font-size: 14px;">Apakah Anda yakin ingin menolak tiket ini? Silakan berikan alasan penolakan untuk Admin.</p>
+                            <textarea class="form-control" name="alasan_tolak" rows="3" required
+                                placeholder="Alasan menolak delegasi ini..." style="border-radius: 8px;"></textarea>
+                        </div>
+                        <div class="modal-footer border-0 pt-0 px-4 pb-4">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 8px;">Batal</button>
+                            <button type="submit" class="btn btn-danger fw-bold" style="border-radius: 8px; background: #dc2626;">Tolak Delegasi</button>
                         </div>
                     </form>
                 </div>

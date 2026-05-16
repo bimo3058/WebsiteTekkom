@@ -105,7 +105,7 @@
             <div class="col-md-6">
                 <label class="form-label-custom">Kategori <span class="required">*</span></label>
                 <div style="display:flex;flex-wrap:wrap;gap:9px;" id="kategoriGroup">
-                    @foreach($kategoriList->filter(fn($k) => stripos($k->nama_kategori, 'prodi') === false) as $kategori)
+                    @foreach($kategoriList as $kategori)
                         <label style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1.5px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;transition:all 0.2s;font-size:13px;font-weight:500;color:#374151;user-select:none;"
                                id="kategoriCard{{ $kategori->id }}">
                             <input type="checkbox" name="kategori_kegiatan_id[]" value="{{ $kategori->id }}"
@@ -178,7 +178,7 @@
         </button>
         <button type="submit" class="btn-submit">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            Simpan & Lanjut ke Persuratan →
+            Simpan & Lanjut ke Pelaksanaan →
         </button>
     </div>
     {{-- Lightbox Modal --}}
@@ -270,9 +270,21 @@ function clearBanner() {
 // ── Kategori checkbox ─────────────────────────────────────────────────────────
 function handleKategoriChange() {
     const checked = document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked');
+    let isOnlyProdi = false;
+    let prodiChecked = false;
+    let otherChecked = false;
+
     document.querySelectorAll('#kategoriGroup label').forEach(card => {
         const inp = card.querySelector('input');
         const isChecked = inp.checked;
+        const text = card.textContent.trim().toLowerCase();
+        
+        if (text.includes('prodi')) {
+            if (isChecked) prodiChecked = true;
+        } else {
+            if (isChecked) otherChecked = true;
+        }
+
         card.style.borderColor    = isChecked ? '#4f46e5' : '#e5e7eb';
         card.style.background     = isChecked ? '#eef2ff' : '#fff';
         card.style.color          = isChecked ? '#4338ca' : '#374151';
@@ -280,6 +292,22 @@ function handleKategoriChange() {
         if (checked.length >= 2 && !isChecked) { card.style.opacity='0.4'; card.style.pointerEvents='none'; }
         else { card.style.opacity=''; card.style.pointerEvents=''; }
     });
+
+    isOnlyProdi = prodiChecked && !otherChecked;
+    const bidangWrapper = document.getElementById('bidangFieldWrapper');
+    if (bidangWrapper) {
+        if (isOnlyProdi) {
+            bidangWrapper.style.display = 'none';
+            document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(inp => {
+                if (inp.checked) {
+                    inp.checked = false;
+                    inp.dispatchEvent(new Event('change'));
+                }
+            });
+        } else {
+            bidangWrapper.style.display = 'block';
+        }
+    }
 }
 document.querySelectorAll('#bidangGroup input').forEach(inp => {
     inp.addEventListener('change', () => {

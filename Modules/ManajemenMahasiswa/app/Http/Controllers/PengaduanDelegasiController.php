@@ -13,38 +13,6 @@ class PengaduanDelegasiController extends Controller
     {
     }
 
-    /**
-     * Daftar delegasi yang ditujukan ke dosen yang sedang login.
-     */
-    public function index(Request $request)
-    {
-        $user = $request->user();
-
-        $delegasi = PengaduanDelegasi::query()
-            ->where('delegated_to', $user->id)
-            ->with(['pengaduan', 'delegatedBy'])
-            ->orderByDesc('delegated_at')
-            ->paginate(20);
-
-        return view('manajemenmahasiswa::pengaduan.delegasi.index', compact('delegasi'));
-    }
-
-    /**
-     * Detail satu delegasi — dosen lihat isi tiket.
-     * Identitas pelapor disembunyikan jika is_anonim = true.
-     */
-    public function show(Request $request, PengaduanDelegasi $delegasi)
-    {
-        $user = $request->user();
-
-        if ($delegasi->delegated_to !== $user->id) {
-            abort(403, 'Anda tidak memiliki akses ke delegasi ini.');
-        }
-
-        $delegasi->load(['pengaduan.delegasiAktif', 'delegatedBy']);
-
-        return view('manajemenmahasiswa::pengaduan.delegasi.show', compact('delegasi'));
-    }
 
     /**
      * Dosen kirim tanggapan balik ke admin.
@@ -95,7 +63,7 @@ class PengaduanDelegasiController extends Controller
         $this->pengaduanService->dosenReject($delegasi, $validated['alasan_tolak']);
 
         return redirect()
-            ->route('manajemenmahasiswa.pengaduan.delegasi.index')
+            ->route('manajemenmahasiswa.pengaduan.index')
             ->with('success', 'Delegasi berhasil ditolak. Tiket dikembalikan ke Admin.');
     }
 }

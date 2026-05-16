@@ -27,7 +27,6 @@ class ProkerController extends Controller
     {
         $bidangList   = Bidang::orderBy('nama_bidang')->get();
         $kategoriList = KategoriKegiatan::orderBy('nama_kategori')->get();
-        $tahunList    = range(date('Y') + 1, 2020);
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
@@ -39,11 +38,6 @@ class ProkerController extends Controller
         $query = Kegiatan::with(['bidangs', 'kategoris', 'ketuaPelaksana.user'])
             ->whereIn('status', [
                 Kegiatan::STATUS_DRAFT,
-                Kegiatan::STATUS_DIAJUKAN,
-                Kegiatan::STATUS_TTD_KETUA,
-                Kegiatan::STATUS_TTD_DPM,
-                Kegiatan::STATUS_TTD_DEPT,
-                Kegiatan::STATUS_DISETUJUI,
                 Kegiatan::STATUS_DITOLAK,
             ])
             ->orderBy('created_at', 'desc');
@@ -51,21 +45,15 @@ class ProkerController extends Controller
         // Filter bidang
         if ($request->filled('bidang') && $request->bidang !== 'semua') {
             if ($request->bidang === 'prodi') {
-                $query->whereDoesntHave('bidangs');
+                $query->where(function($q) {
+                    $q->whereDoesntHave('bidangs')
+                      ->orWhereHas('kategoris', fn($k) => $k->where('nama_kategori', 'like', '%Prodi%'));
+                });
             } else {
                 $query->whereHas('bidangs', fn($q) => $q->where('mk_bidang.id', $request->bidang));
             }
         }
 
-        // Filter tahun
-        if ($request->filled('tahun') && $request->tahun !== 'semua') {
-            $query->where('tahun', $request->tahun);
-        }
-
-        // Filter status
-        if ($request->filled('status') && $request->status !== 'semua') {
-            $query->where('status', $request->status);
-        }
 
         // Search
         if ($request->filled('search')) {
@@ -74,17 +62,10 @@ class ProkerController extends Controller
 
         $prokerList = $query->paginate(12);
 
-        // Statistik per status
-        $stats = [
-            'draft'     => Kegiatan::where('status', Kegiatan::STATUS_DRAFT)->count(),
-            'diajukan'  => Kegiatan::whereIn('status', [Kegiatan::STATUS_DIAJUKAN, Kegiatan::STATUS_TTD_KETUA, Kegiatan::STATUS_TTD_DPM, Kegiatan::STATUS_TTD_DEPT])->count(),
-            'disetujui' => Kegiatan::where('status', Kegiatan::STATUS_DISETUJUI)->count(),
-            'ditolak'   => Kegiatan::where('status', Kegiatan::STATUS_DITOLAK)->count(),
-        ];
 
         return view('manajemenmahasiswa::proker.index', compact(
-            'prokerList', 'bidangList', 'tahunList', 'kategoriList',
-            'isAdmin', 'isPengurus', 'canManage', 'stats'
+            'prokerList', 'bidangList', 'kategoriList',
+            'isAdmin', 'isPengurus', 'canManage'
         ));
     }
 
@@ -101,11 +82,6 @@ class ProkerController extends Controller
             'prokerTtd.signedBy',
         ])->whereIn('status', [
             Kegiatan::STATUS_DRAFT,
-            Kegiatan::STATUS_DIAJUKAN,
-            Kegiatan::STATUS_TTD_KETUA,
-            Kegiatan::STATUS_TTD_DPM,
-            Kegiatan::STATUS_TTD_DEPT,
-            Kegiatan::STATUS_DISETUJUI,
             Kegiatan::STATUS_DITOLAK,
         ])->findOrFail($id);
 
@@ -152,7 +128,7 @@ class ProkerController extends Controller
         $validated = $this->validateProker($request);
 
         $validated['user_id'] = Auth::id();
-        $validated['status']  = Kegiatan::STATUS_DRAFT;
+        $validated['status']  = $request->input('save_as_draft') === '1' ? Kegiatan::STATUS_DRAFT : Kegiatan::STATUS_DISETUJUI;
 
         // Set backward-compat fields
         $this->setCompatFields($validated, $request);
@@ -178,8 +154,8 @@ class ProkerController extends Controller
         }
 
         return redirect()
-            ->route('manajemenmahasiswa.persuratan.show', $proker->id)
-            ->with('success', 'Rencana proker berhasil disimpan. Lengkapi persuratan dan upload surat proker.');
+            ->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
+            ->with('success', 'Rencana proker berhasil disimpan. Silakan lanjutkan ke pelaksanaan kegiatan.');
     }
 
     // ─────────────────────────────────────────────────────────────────────────
@@ -246,11 +222,11 @@ class ProkerController extends Controller
     {
         $proker = Kegiatan::where('status', Kegiatan::STATUS_DRAFT)->findOrFail($id);
 
-        $proker->update(['status' => Kegiatan::STATUS_DIAJUKAN]);
+        $proker->update(['status' => Kegiatan::STATUS_DISETUJUI]);
 
         return redirect()
-            ->route('manajemenmahasiswa.persuratan.show', $proker->id)
-            ->with('success', 'Rencana Proker berhasil diajukan. Silakan lengkapi dokumen persuratan.');
+            ->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
+            ->with('success', 'Rencana Proker berhasil diajukan dan masuk ke tahap pelaksanaan kegiatan.');
     }
 
     /**
@@ -436,12 +412,24 @@ class ProkerController extends Controller
 
     private function validateProker(Request $request): array
     {
+        $kategoriDipilih = $request->input('kategori_kegiatan_id', []);
+        $isOnlyProdi = false;
+        
+        if (is_array($kategoriDipilih) && count($kategoriDipilih) > 0) {
+            $prodiId = KategoriKegiatan::where('nama_kategori', 'like', '%Prodi%')->value('id');
+            if (count($kategoriDipilih) === 1 && in_array($prodiId, $kategoriDipilih)) {
+                $isOnlyProdi = true;
+            }
+        }
+
+        $bidangRule = $isOnlyProdi ? 'nullable|array' : 'required|array|min:1';
+
         return $request->validate([
             'judul'                => 'required|string|max:255',
             'deskripsi'            => 'required|string|min:20',
             'kategori_kegiatan_id' => 'required|array|min:1|max:2',
             'kategori_kegiatan_id.*' => 'exists:mk_kategori_kegiatan,id',
-            'bidang_id'            => 'required|array|min:1',
+            'bidang_id'            => $bidangRule,
             'bidang_id.*'          => 'exists:mk_bidang,id',
             'tahun'                => 'nullable|integer|min:2020',
             'tanggal_mulai'        => 'nullable|date',

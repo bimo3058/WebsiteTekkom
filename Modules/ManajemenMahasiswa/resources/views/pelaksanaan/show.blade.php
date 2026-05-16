@@ -9,18 +9,6 @@
     .meta-label{font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:4px}
     .meta-value{font-size:14px;font-weight:600;color:#1f2937}
     .badge-bidang{font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;background:#eef2ff;color:#4f46e5}
-    /* Compare panel */
-    .compare-panel{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-    @media(max-width:768px){.compare-panel{grid-template-columns:1fr}}
-    .compare-col{border-radius:12px;padding:20px}
-    .compare-col.rencana{background:#f9fafb;border:1.5px solid #e5e7eb}
-    .compare-col.realisasi{background:#f0fdf4;border:1.5px solid #bbf7d0}
-    .compare-col-title{font-weight:700;font-size:13px;margin-bottom:14px;display:flex;align-items:center;gap:6px}
-    .compare-col.rencana .compare-col-title{color:#6b7280}
-    .compare-col.realisasi .compare-col-title{color:#16a34a}
-    .compare-item{margin-bottom:10px}
-    .compare-item-label{font-size:11px;color:#9ca3af;font-weight:600;text-transform:uppercase;margin-bottom:2px}
-    .compare-item-value{font-size:14px;font-weight:600;color:#1f2937}
     /* Form realisasi */
     .form-card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 4px 6px -1px rgba(0,0,0,.05);margin-bottom:20px;border:1.5px solid #bbf7d0}
     .form-label-custom{font-weight:600;font-size:13px;color:#374151;margin-bottom:6px;display:block}
@@ -60,11 +48,27 @@
             <p class="text-muted mb-0" style="font-size:14px;font-weight:500;">{{ $proker->judul }}</p>
         </div>
     </div>
-    <div class="d-flex align-items-center gap-2">
-        <span class="status-pill s-{{ $proker->status }}">{{ $proker->status_label }}</span>
+    <div class="d-flex gap-2 flex-wrap align-items-center">
+        @if($canManage)
+            <a href="{{ route('manajemenmahasiswa.pelaksanaan.edit', $proker->id) }}"
+               class="btn" style="background:#f3f4f6;color:#374151;font-weight:600;font-size:13px;padding:8px 18px;border-radius:10px;height:38px;display:inline-flex;align-items:center;">
+                &#9998; Edit
+            </a>
+        @endif
+        @if($canManage && $proker->status !== 'selesai')
+            <form action="{{ route('manajemenmahasiswa.pelaksanaan.publish', $proker->id) }}" method="POST"
+                  style="display:inline;" onsubmit="return confirm('Unggah kegiatan ini ke Laporan & Arsip?\n\nSemua data akan tersinkron ke subbab 3. Kegiatan akan ditandai sebagai Selesai.')">
+                @csrf
+                <button type="submit" class="btn"
+                        style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:600;font-size:13px;padding:8px 18px;border-radius:10px;height:38px;display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(79,70,229,.25);">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                    Unggah ke Arsip
+                </button>
+            </form>
+        @endif
         @if($proker->status === 'selesai')
             <a href="{{ route('manajemenmahasiswa.kegiatan.show', $proker->id) }}"
-               class="btn" style="background:#4f46e5;color:#fff;font-weight:600;font-size:13px;padding:8px 18px;border-radius:10px;">
+               class="btn" style="background:#4f46e5;color:#fff;font-weight:600;font-size:13px;padding:8px 18px;border-radius:10px;height:38px;display:inline-flex;align-items:center;">
                 Lihat di Arsip &rarr;
             </a>
         @endif
@@ -92,12 +96,32 @@
         @endforeach
     </div>
     <h4 class="fw-bold text-dark mb-3">{{ $proker->judul }}</h4>
+
+    @if($proker->deskripsi)
+        <div style="font-size:14px;color:#374151;line-height:1.7;margin-bottom:20px;white-space:pre-line;">{{ $proker->deskripsi }}</div>
+    @endif
+
     <div class="meta-grid">
+        @if($proker->tanggal_mulai)
+            <div class="meta-item"><div class="meta-label">Tanggal Mulai</div><div class="meta-value">{{ $proker->tanggal_mulai->format('d M Y') }}@if($proker->jam_mulai_formatted) • {{ $proker->jam_mulai_formatted }}@endif</div></div>
+        @endif
+        @if($proker->tanggal_selesai)
+            <div class="meta-item"><div class="meta-label">Tanggal Selesai</div><div class="meta-value">{{ $proker->tanggal_selesai->format('d M Y') }}@if($proker->jam_selesai_formatted) • {{ $proker->jam_selesai_formatted }}@endif</div></div>
+        @endif
+        @if($proker->lokasi)
+            <div class="meta-item"><div class="meta-label">Lokasi</div><div class="meta-value">{{ $proker->lokasi }}</div></div>
+        @endif
         @if($proker->ketuaPelaksana)
             <div class="meta-item"><div class="meta-label">Ketua Pelaksana</div><div class="meta-value">{{ $proker->ketuaPelaksana->user->name ?? '-' }}</div></div>
         @endif
         @if($proker->dosenPendamping)
             <div class="meta-item"><div class="meta-label">Dosen Pendamping</div><div class="meta-value">{{ $proker->dosenPendamping->user->name ?? '-' }}</div></div>
+        @endif
+        @if($proker->target_peserta)
+            <div class="meta-item"><div class="meta-label">Target Peserta</div><div class="meta-value">{{ number_format($proker->target_peserta) }} orang</div></div>
+        @endif
+        @if($proker->anggaran)
+            <div class="meta-item"><div class="meta-label">Anggaran</div><div class="meta-value">Rp {{ number_format($proker->anggaran, 0, ',', '.') }}</div></div>
         @endif
         @if($proker->tahun)
             <div class="meta-item"><div class="meta-label">Tahun</div><div class="meta-value">{{ $proker->tahun }}</div></div>
@@ -106,71 +130,24 @@
             <div class="meta-item"><div class="meta-label">Disetujui Oleh</div><div class="meta-value">{{ $proker->disetujuiOleh->name }}</div></div>
         @endif
     </div>
-</div>
 
-{{-- Perbandingan Rencana vs Realisasi --}}
-<div class="detail-card">
-    <div class="section-title">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-        Rencana vs Realisasi
-    </div>
-    <div class="compare-panel">
-        <div class="compare-col rencana">
-            <div class="compare-col-title">&#128221; Rencana (Subbab 1)</div>
-            <div class="compare-item"><div class="compare-item-label">Tanggal Mulai</div><div class="compare-item-value">{{ $proker->tanggal_mulai ? $proker->tanggal_mulai->translatedFormat('d M Y') : 'Belum ditentukan' }}@if($proker->jam_mulai) pukul {{ $proker->jam_mulai_formatted }}@endif</div></div>
-            @if($proker->tanggal_selesai)
-                <div class="compare-item"><div class="compare-item-label">Tanggal Selesai</div><div class="compare-item-value">{{ $proker->tanggal_selesai->translatedFormat('d M Y') }}</div></div>
-            @endif
-            @if($proker->lokasi)
-                <div class="compare-item"><div class="compare-item-label">Lokasi</div><div class="compare-item-value">{{ $proker->lokasi }}</div></div>
-            @endif
-            @if($proker->target_peserta)
-                <div class="compare-item"><div class="compare-item-label">Target Peserta</div><div class="compare-item-value">{{ number_format($proker->target_peserta) }} orang</div></div>
-            @endif
-            @if($proker->anggaran && $canViewRestricted)
-                <div class="compare-item"><div class="compare-item-label">Est. Anggaran</div><div class="compare-item-value">Rp {{ number_format($proker->anggaran,0,',','.') }}</div></div>
-            @endif
-        </div>
-        <div class="compare-col realisasi">
-            <div class="compare-col-title">&#10003; Realisasi (Subbab 2)</div>
-            <div class="compare-item">
-                <div class="compare-item-label">Tanggal Aktual</div>
-                <div class="compare-item-value" style="{{ !$proker->realisasi_tanggal_mulai ? 'color:#f59e0b;font-style:italic' : '' }}">
-                    {{ $proker->realisasi_tanggal_mulai ? $proker->realisasi_tanggal_mulai->translatedFormat('d M Y') : 'Belum diisi' }}
-                </div>
+    @if($proker->panitia && $proker->panitia->count() > 0)
+        <div style="margin-top:20px;">
+            <div class="meta-label" style="margin-bottom:10px;">Panitia Kegiatan</div>
+            <div style="display:flex;flex-wrap:wrap;gap:8px;">
+                @foreach($proker->panitia as $pan)
+                    <span style="font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;background:#eef2ff;color:#4f46e5;border:1px solid #c7d2fe;">
+                        {{ $pan->user->name ?? 'N/A' }}
+                        @if($pan->pivot->peran)
+                            <span style="font-weight:400;color:#6b7280;">• {{ $pan->pivot->peran }}</span>
+                        @endif
+                    </span>
+                @endforeach
             </div>
-            @if($proker->realisasi_tanggal_selesai)
-                <div class="compare-item"><div class="compare-item-label">Selesai Aktual</div><div class="compare-item-value">{{ $proker->realisasi_tanggal_selesai->translatedFormat('d M Y') }}</div></div>
-            @endif
-            <div class="compare-item">
-                <div class="compare-item-label">Lokasi Aktual</div>
-                <div class="compare-item-value" style="{{ !$proker->realisasi_lokasi ? 'color:#f59e0b;font-style:italic' : '' }}">
-                    {{ $proker->realisasi_lokasi ?? 'Belum diisi' }}
-                </div>
-            </div>
-            <div class="compare-item">
-                <div class="compare-item-label">Peserta Hadir</div>
-                <div class="compare-item-value" style="{{ $proker->realisasi_peserta === null ? 'color:#f59e0b;font-style:italic' : '' }}">
-                    {{ $proker->realisasi_peserta !== null ? number_format($proker->realisasi_peserta).' orang' : 'Belum diisi' }}
-                </div>
-            </div>
-            @if($canViewRestricted)
-                <div class="compare-item">
-                    <div class="compare-item-label">Pengeluaran Aktual</div>
-                    <div class="compare-item-value" style="{{ $proker->realisasi_anggaran === null ? 'color:#f59e0b;font-style:italic' : '' }}">
-                        {{ $proker->realisasi_anggaran !== null ? 'Rp '.number_format($proker->realisasi_anggaran,0,',','.') : 'Belum diisi' }}
-                    </div>
-                </div>
-            @endif
-        </div>
-    </div>
-    @if($proker->catatan_pelaksanaan)
-        <div style="margin-top:20px;padding-top:16px;border-top:1px solid #f3f4f6;">
-            <div class="meta-label" style="margin-bottom:8px;">CATATAN PELAKSANAAN</div>
-            <div style="font-size:14px;color:#374151;line-height:1.75;white-space:pre-line;">{{ $proker->catatan_pelaksanaan }}</div>
         </div>
     @endif
 </div>
+
 
 {{-- Form Input / Update Realisasi --}}
 @if($canManage && in_array($proker->status, ['disetujui','berlangsung']))

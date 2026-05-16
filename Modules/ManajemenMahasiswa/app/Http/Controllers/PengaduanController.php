@@ -75,9 +75,17 @@ class PengaduanController extends Controller
             Pengaduan::STATUS_SELESAI,
         ];
 
+        $isDosenOnly = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['dosen', 'dosen_koordinator']) && !$user->hasAnyRole(['admin', 'superadmin', 'admin_kemahasiswaan', 'gpm']);
+
         $query = Pengaduan::query();
         if ($isStaff) {
             $query->with(['pelapor']);
+            if ($isDosenOnly) {
+                // Dosen hanya bisa melihat tiket yang didelegasikan ke mereka
+                $query->whereHas('delegasi', function($q) use ($user) {
+                    $q->where('delegated_to', $user->id);
+                });
+            }
         } else {
             // Mahasiswa hanya bisa melihat tiket non-anonim di daftar ini
             $query->where('user_id', $user->id)
@@ -171,28 +179,10 @@ class PengaduanController extends Controller
 
         $kategoriList = $this->kategoriMetaNew();
 
-        $dosenList = [
-            'Prof. Dr. Adian Fatchur Rochim, S.T., M.T.',
-            'Prof. Dr. Ir. R. Rizal Isnanto, S.T., M.M., M.T., IPU, ASEAN Eng.',
-            'Dr. Oky Dwi Nurhayati, S.T., M.T.',
-            'Agung Budi Prasetijo, S.T., M.I.T., Ph.D.',
-            'Dr. Maman Somantri, S.T., M.T.',
-            'Rinta Kridalukmana, S.Kom., M.T., Ph.D.',
-            'Kuntoro Adi Nugroho, S.T., M.Eng., Ph.D.',
-            'Yudi Eko Windarto, S.T., M.Kom.',
-            'Dr. Delphi Hanggoro, S.T., M.T.',
-            'Dania Eridani, S.T., M.Eng.',
-            'Ike Pertiwi Windasari, S.T., M.T.',
-            'Eko Didik Widianto, S.T., M.T.',
-            'Kurniawan Teguh Martono, S.T., M.T.',
-            'Risma Septiana, S.T., M.Eng.',
-            'Adnan Fauzi, S.T., M.Kom.',
-            'Patricia Evericho Mountaines, S.T., M.Cs.',
-            'Bellia Dwi Cahya Putri, S.T., M.T.',
-            'Ilmam Fauzi Hashbil Alim, S.T., M.Kom.',
-            'Erwin Adriono, S.T., M.T.',
-            'Arseto Satriyo Nugroho, S.T., M.Eng.',
-        ];
+        $dosenList = User::whereHas('roles', fn($q) => $q->whereIn('name', ['dosen', 'dosen_koordinator']))
+            ->orderBy('name')
+            ->pluck('name')
+            ->toArray();
 
         $frekuensiList = [
             'Sekali' => 'Sekali',
@@ -265,6 +255,14 @@ class PengaduanController extends Controller
             abort(403, 'Anda tidak memiliki akses ke pengaduan ini.');
         }
 
+        $isDosenOnly = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['dosen', 'dosen_koordinator']) && !$user->hasAnyRole(['admin', 'superadmin', 'admin_kemahasiswaan', 'gpm']);
+        if ($isDosenOnly) {
+            $hasDelegation = $pengaduan->delegasi()->where('delegated_to', $user->id)->exists();
+            if (!$hasDelegation) {
+                abort(403, 'Anda tidak memiliki akses ke pengaduan ini.');
+            }
+        }
+
         if ($isStaff) {
             $this->pengaduanService->markRead($pengaduan, $user->id);
         }
@@ -283,8 +281,10 @@ class PengaduanController extends Controller
 
         $pengaduan->load(['delegasi.delegatedBy', 'delegasi.delegatedTo', 'logs.actor', 'delegasiAktif']);
 
+        $isDelegatedToMe = $pengaduan->delegasiAktif && $pengaduan->delegasiAktif->delegated_to === $user->id && $pengaduan->delegasiAktif->status === 'aktif';
+
         return view('manajemenmahasiswa::pengaduan.show', compact(
-            'pengaduan', 'isStaff', 'canReply', 'canDelete', 'kategoriLabel', 'dosenList'
+            'pengaduan', 'isStaff', 'canReply', 'canDelete', 'kategoriLabel', 'dosenList', 'isDelegatedToMe'
         ));
     }
 

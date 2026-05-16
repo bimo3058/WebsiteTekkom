@@ -3,6 +3,7 @@
 namespace Modules\ManajemenMahasiswa\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Modules\ManajemenMahasiswa\Models\Pengaduan;
 use Modules\ManajemenMahasiswa\Models\PengaduanLog;
@@ -43,28 +44,10 @@ class AnonPengaduanController extends Controller
                 'lainnya' => ['label' => 'Lainnya', 'example' => 'Masalah di luar kategori di atas'],
             ];
 
-            $dosenList = [
-                'Prof. Dr. Adian Fatchur Rochim, S.T., M.T.',
-                'Prof. Dr. Ir. R. Rizal Isnanto, S.T., M.M., M.T., IPU, ASEAN Eng.',
-                'Dr. Oky Dwi Nurhayati, S.T., M.T.',
-                'Agung Budi Prasetijo, S.T., M.I.T., Ph.D.',
-                'Dr. Maman Somantri, S.T., M.T.',
-                'Rinta Kridalukmana, S.Kom., M.T., Ph.D.',
-                'Kuntoro Adi Nugroho, S.T., M.Eng., Ph.D.',
-                'Yudi Eko Windarto, S.T., M.Kom.',
-                'Dr. Delphi Hanggoro, S.T., M.T.',
-                'Dania Eridani, S.T., M.Eng.',
-                'Ike Pertiwi Windasari, S.T., M.T.',
-                'Eko Didik Widianto, S.T., M.T.',
-                'Kurniawan Teguh Martono, S.T., M.T.',
-                'Risma Septiana, S.T., M.Eng.',
-                'Adnan Fauzi, S.T., M.Kom.',
-                'Patricia Evericho Mountaines, S.T., M.Cs.',
-                'Bellia Dwi Cahya Putri, S.T., M.T.',
-                'Ilmam Fauzi Hashbil Alim, S.T., M.Kom.',
-                'Erwin Adriono, S.T., M.T.',
-                'Arseto Satriyo Nugroho, S.T., M.Eng.',
-            ];
+            $dosenList = User::whereHas('roles', fn($q) => $q->whereIn('name', ['dosen', 'dosen_koordinator']))
+                ->orderBy('name')
+                ->pluck('name')
+                ->toArray();
 
             $frekuensiList = [
                 'Sekali' => 'Sekali',

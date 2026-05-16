@@ -228,7 +228,6 @@
         @php
             $kegiatanRoutes = [
                 'manajemenmahasiswa.proker.*',
-                'manajemenmahasiswa.persuratan.*',
                 'manajemenmahasiswa.pelaksanaan.*',
                 'manajemenmahasiswa.kegiatan.*',
             ];
@@ -268,19 +267,7 @@
                     </span>
                     <span class="nav-label">Rencana Proker</span>
                 </a>
-                {{-- Subbab 2: Persuratan --}}
-                <a href="{{ route('manajemenmahasiswa.persuratan.index') }}"
-                    class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.persuratan.*') ? 'active' : '' }}">
-                    <span class="nav-icon d-inline-flex">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                            stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M12 20h9"/>
-                            <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
-                        </svg>
-                    </span>
-                    <span class="nav-label">Persuratan</span>
-                </a>
-                {{-- Subbab 3: Pelaksanaan Kegiatan --}}
+                {{-- Subbab 2: Pelaksanaan Kegiatan --}}
                 <a href="{{ route('manajemenmahasiswa.pelaksanaan.index') }}"
                     class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.pelaksanaan.*') ? 'active' : '' }}">
                     <span class="nav-icon d-inline-flex">
@@ -337,7 +324,7 @@
         </x-manajemenmahasiswa::ui.sidebar-item>
 
         {{-- LAYANAN PENGADUAN: Boleh dilihat oleh Mahasiswa, Pengurus Himpunan, Admin, dan GPM --}}
-        @if(array_intersect($sidebarRoles, ['mahasiswa', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
+        @if(array_intersect($sidebarRoles, ['mahasiswa', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dosen', 'dosen_koordinator']))
             <x-manajemenmahasiswa::ui.sidebar-item route="{{ route('manajemenmahasiswa.pengaduan.index') }}"
                 routeName="manajemenmahasiswa.pengaduan" label="Layanan Pengaduan">
                 <x-slot:iconSlot>

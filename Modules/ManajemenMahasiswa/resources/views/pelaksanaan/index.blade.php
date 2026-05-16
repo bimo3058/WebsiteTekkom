@@ -10,13 +10,7 @@
     .search-input { background:#f3f4f6;border:none;border-radius:8px;height:42px;padding-left:36px;font-size:13px;width:100%; }
     .search-input:focus { background:#fff;box-shadow:0 0 0 2px #e0e7ff;outline:none; }
     .filter-section { display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;align-items:center; }
-    /* Stats */
-    .stats-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:24px; }
-    @media (max-width:768px) { .stats-grid { grid-template-columns:repeat(1,1fr); } }
-    .stat-card { background:#fff;border-radius:12px;padding:18px 20px;box-shadow:0 2px 8px rgba(0,0,0,0.05);border:1px solid #f3f4f6;display:flex;align-items:center;gap:14px; }
-    .stat-icon { width:44px;height:44px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0; }
-    .stat-value { font-size:22px;font-weight:800;color:#1f2937;line-height:1; }
-    .stat-label { font-size:11px;color:#9ca3af;font-weight:600;margin-top:2px; }
+
     /* Cards */
     .pelaksanaan-card { background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);transition:all 0.25s;text-decoration:none !important;display:flex;flex-direction:column;border:1px solid #f3f4f6; }
     .pelaksanaan-card:hover { transform:translateY(-3px);box-shadow:0 12px 24px -4px rgba(79,70,229,0.12);border-color:#c7d2fe; }
@@ -53,21 +47,6 @@
     </div>
 </div>
 
-{{-- Stats --}}
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-icon" style="background:#dcfce7;">&#10003;</div>
-        <div><div class="stat-value">{{ $stats['disetujui'] }}</div><div class="stat-label">Siap Dilaksanakan</div></div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon" style="background:#dbeafe;">&#9654;</div>
-        <div><div class="stat-value">{{ $stats['berlangsung'] }}</div><div class="stat-label">Sedang Berlangsung</div></div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon" style="background:#f3f4f6;">&#128196;</div>
-        <div><div class="stat-value">{{ $stats['selesai'] }}</div><div class="stat-label">Selesai (Pindah ke Arsip)</div></div>
-    </div>
-</div>
 
 {{-- Filter --}}
 <form method="GET" action="{{ route('manajemenmahasiswa.pelaksanaan.index') }}" id="filterForm">
@@ -78,12 +57,6 @@
                    placeholder="Cari kegiatan..." value="{{ request('search') }}">
         </div>
         <div class="d-flex gap-2">
-            <select name="status" class="filter-select-custom" style="min-width:170px;" onchange="document.getElementById('filterForm').submit()">
-                <option value="semua">Semua Status</option>
-                <option value="disetujui" {{ request('status')==='disetujui'?'selected':'' }}>Siap Dilaksanakan</option>
-                <option value="berlangsung" {{ request('status')==='berlangsung'?'selected':'' }}>Berlangsung</option>
-                <option value="selesai" {{ request('status')==='selesai'?'selected':'' }}>Selesai</option>
-            </select>
             <select name="tahun" class="filter-select-custom" style="min-width:130px;" onchange="document.getElementById('filterForm').submit()">
                 <option value="semua">Semua Tahun</option>
                 @foreach($tahunList as $t)
@@ -116,16 +89,6 @@
                         @else
                             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
                         @endif
-                        {{-- Status overlay --}}
-                        <div style="position:absolute;top:10px;right:10px;">
-                            @if($item->status === 'selesai')
-                                <span class="status-badge" style="background:rgba(255,255,255,0.9);color:#374151;font-size:10px;">&#10003; Selesai</span>
-                            @elseif($item->status === 'berlangsung')
-                                <span class="status-badge" style="background:rgba(29,78,216,0.9);color:#fff;font-size:10px;">&#9654; Berlangsung</span>
-                            @else
-                                <span class="status-badge" style="background:rgba(22,163,74,0.9);color:#fff;font-size:10px;">Siap Dilaksanakan</span>
-                            @endif
-                        </div>
                     </div>
                     <div class="card-body">
                         <div class="d-flex flex-wrap gap-2">
@@ -138,30 +101,6 @@
                             @endif
                         </div>
                         <div class="card-title">{{ $item->judul }}</div>
-                        {{-- Perbandingan Rencana vs Realisasi --}}
-                        <div style="font-size:11px;font-weight:700;color:#9ca3af;text-transform:uppercase;margin-bottom:8px;">Rencana vs Realisasi</div>
-                        <div class="compare-row">
-                            <span class="compare-label">Tanggal:</span>
-                            <span class="compare-rencana">{{ $item->tanggal_mulai ? $item->tanggal_mulai->translatedFormat('d M') : 'Blm ada' }}</span>
-                            <span style="color:#d1d5db;">→</span>
-                            @if($item->realisasi_tanggal_mulai)
-                                <span class="compare-realisasi">{{ $item->realisasi_tanggal_mulai->translatedFormat('d M Y') }}</span>
-                            @else
-                                <span class="compare-realisasi missing">Belum diisi</span>
-                            @endif
-                        </div>
-                        @if($item->target_peserta || $item->realisasi_peserta)
-                        <div class="compare-row">
-                            <span class="compare-label">Peserta:</span>
-                            <span class="compare-rencana">{{ $item->target_peserta ? number_format($item->target_peserta).' org' : '-' }}</span>
-                            <span style="color:#d1d5db;">→</span>
-                            @if($item->realisasi_peserta !== null)
-                                <span class="compare-realisasi">{{ number_format($item->realisasi_peserta) }} org</span>
-                            @else
-                                <span class="compare-realisasi missing">Belum diisi</span>
-                            @endif
-                        </div>
-                        @endif
                         @if($canManage && $item->status === 'disetujui' && !$item->has_realisasi)
                             <div style="margin-top:10px;">
                                 <span style="display:inline-flex;align-items:center;gap:6px;background:#fef3c7;color:#92400e;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;">
