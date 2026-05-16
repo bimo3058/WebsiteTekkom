@@ -13,6 +13,7 @@ class KpPengumuman extends Model
         'konten',
         'tipe',
         'is_active',
+        'is_published',
         'created_by',
     ];
 

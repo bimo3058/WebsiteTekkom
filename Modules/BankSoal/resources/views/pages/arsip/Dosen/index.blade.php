@@ -1,377 +1,472 @@
 <x-banksoal::layouts.dosen-admin>
+    @section('breadcrumbs')
+        <span class="text-slate-800 font-semibold">Arsip Soal</span>
+    @endsection
 
-<x-banksoal::notification.alerts />
+    <style>
+        :root {
+            --navy: #0B266E;
+            --navy-light: rgba(11, 38, 110, 0.1);
+        }
+        .bg-navy { background-color: var(--navy); }
+        .text-navy { color: var(--navy); }
+        .border-navy { border-color: var(--navy); }
+        .shadow-navy { --tw-shadow-color: rgba(11, 38, 110, 0.2); }
+        
+        @keyframes popup {
+            0% { opacity: 0; transform: scale(0.95) translateY(10px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+        }
+        .animate-popup {
+            animation: popup 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+        }
 
-<x-banksoal::ui.page-header title="Arsip Soal" subtitle="Kelola arsip final dan riwayat penarikan soal dosen.">
-    <x-slot:actions>
-        <div class="flex flex-wrap items-center gap-2">
+        /* Loading Spinner */
+        #global-loader {
+            position: fixed;
+            inset: 0;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(4px);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--navy-light);
+            border-top: 4px solid var(--navy);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
 
-            <div class="relative">
-                <button id="arsipUploadTrigger" type="button" onclick="toggleArsipUploadMenu()" class="inline-flex items-center gap-2 rounded-xl bg-slate-800 px-4 py-2.5 font-medium text-white shadow-sm transition-colors hover:bg-slate-900">
-                    <i class="fas fa-upload w-4"></i> Upload Arsip <i class="fas fa-chevron-down text-[10px] text-slate-300"></i>
-                </button>
+    <!-- Global Loader Overlay -->
+    <div id="global-loader">
+        <div class="flex flex-col items-center gap-3">
+            <div class="spinner"></div>
+            <p class="text-sm font-bold text-navy">Memproses data...</p>
+        </div>
+    </div>
 
-                <div id="arsipUploadMenu" class="pointer-events-none absolute right-0 top-[110%] z-50 w-52 translate-y-1 scale-95 overflow-hidden rounded-xl border border-slate-100 bg-white opacity-0 shadow-lg transition-all duration-200">
-                    <button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 transition-colors hover:bg-blue-50 hover:text-blue-700" onclick="openArsipUploadModal('uploadPdfModal')">
-                        <i class="fas fa-file-pdf w-4 text-center text-rose-500"></i> Upload PDF
+    <x-banksoal::notification.alerts />
+
+    <x-banksoal::ui.page-header title="Arsip Soal Dosen" subtitle="Kelola riwayat penarikan dan arsip final dokumen ujian Anda.">
+        <x-slot:actions>
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="relative" x-data="{ open: false }" @click.away="open = false">
+                    <button @click="open = !open" type="button" class="inline-flex items-center gap-2 rounded-xl bg-navy px-5 py-2.5 font-bold text-white shadow-lg shadow-navy/20 transition-all hover:opacity-90 active:scale-95">
+                        <i class="fas fa-plus-circle"></i> Tambah Arsip <i class="fas fa-chevron-down text-[10px] ml-1 transition-transform" :class="open ? 'rotate-180' : ''"></i>
                     </button>
-                    <button type="button" class="flex w-full items-center gap-3 px-4 py-3 text-left text-sm text-slate-700 transition-colors hover:bg-emerald-50 hover:text-emerald-700" onclick="openArsipUploadModal('uploadCsvModal')">
-                        <i class="fas fa-file-csv w-4 text-center text-emerald-500"></i> Upload CSV
-                    </button>
+
+                    <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" class="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-slate-100 rounded-2xl border border-slate-100 bg-white shadow-xl z-50 overflow-hidden">
+                        <div class="py-1">
+                            <button type="button" class="group flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-navy" onclick="openModal('uploadPdfModal')">
+                                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-500 group-hover:bg-rose-100">
+                                    <i class="fas fa-file-pdf"></i>
+                                </span>
+                                <div>
+                                    <p>Upload PDF</p>
+                                    <p class="text-[10px] text-slate-400 font-normal">Format .pdf standar</p>
+                                </div>
+                            </button>
+                            <button type="button" class="group flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-emerald-700" onclick="openModal('uploadCsvModal')">
+                                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500 group-hover:bg-emerald-100">
+                                    <i class="fas fa-file-csv"></i>
+                                </span>
+                                <div>
+                                    <p>Upload CSV/Excel</p>
+                                    <p class="text-[10px] text-slate-400 font-normal">Import massal soal</p>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
-    </x-slot:actions>
-</x-banksoal::ui.page-header>
+        </x-slot:actions>
+    </x-banksoal::ui.page-header>
 
-<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-    <x-banksoal::ui.stat-card label="Total Arsip" :value="$stats['total_arsip'] ?? 0" icon="fa-archive" tone="blue" />
-    <x-banksoal::ui.stat-card label="Riwayat Penarikan" :value="$stats['total_penarikan'] ?? 0" icon="fa-clock-rotate-left" tone="amber" />
-    <x-banksoal::ui.stat-card label="Mata Kuliah" :value="$stats['mata_kuliah'] ?? 0" icon="fa-book-open" tone="green" />
-    <x-banksoal::ui.stat-card label="Semester Aktif" :value="max(1, ($arsipGrouped ?? collect())->count())" icon="fa-calendar-alt" tone="slate" />
-</div>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <x-banksoal::ui.stat-card label="Total Arsip" :value="$stats['total_arsip']" icon="fa-archive" tone="blue" />
+        <x-banksoal::ui.stat-card label="Riwayat Penarikan" :value="$stats['total_penarikan']" icon="fa-history" tone="amber" />
+        <x-banksoal::ui.stat-card label="Mata Kuliah" :value="$stats['mata_kuliah']" icon="fa-book" tone="indigo" />
+    </div>
 
-<div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-    <!-- Tab Diarsipkan -->
-    <x-ui.card class="overflow-hidden shadow-sm">
-        <div class="px-5 py-4 border-b border-border bg-slate-50 flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-slate-900">Diarsipkan</h3>
-            <span class="text-xs font-medium text-muted-foreground">{{ max(1, ($arsipGrouped ?? collect())->count()) }} Semester</span>
-        </div>
-        <div id="arsipTab" class="p-5 space-y-6">
-            @forelse(($arsipGrouped ?? collect()) as $semesterKey => $mkGroups)
-                @php([$tahun, $semester] = explode('|', $semesterKey . '|'))
-                <x-ui.card class="overflow-hidden shadow-none border-border">
-                    <div class="px-5 py-3 bg-slate-50/50 border-b border-border flex items-center justify-between">
+    <div class="space-y-8 flex flex-col">
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden order-1" x-data="{ expandedGroups: [] }">
+            <div class="px-8 py-6 border-b border-slate-100 bg-white">
+                <div class="flex flex-col gap-6">
+                    <div class="flex items-center justify-between">
                         <div>
-                            <p class="text-sm font-semibold text-slate-800">{{ $semester ?? '-' }}</p>
-                            <p class="text-xs text-muted-foreground">Tahun Akademik {{ $tahun ?? '-' }}</p>
+                            <h3 class="text-xl font-bold text-slate-900 flex items-center gap-3">
+                                <span class="flex h-10 w-10 items-center justify-center rounded-2xl bg-navy text-white shadow-lg shadow-navy/20">
+                                    <i class="fas fa-archive text-sm"></i>
+                                </span>
+                                Daftar Arsip Final
+                            </h3>
                         </div>
-                        <x-ui.badge variant="secondary">{{ $mkGroups->flatten()->count() }} arsip</x-ui.badge>
+                        <span class="px-3 py-1 rounded-full bg-navy/5 text-navy text-xs font-bold">{{ $stats['total_arsip'] }} Arsip</span>
                     </div>
-                    <div class="divide-y divide-border">
-                        @foreach($mkGroups as $mkId => $arsips)
-                            @php($first = $arsips->first())
-                            <div class="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white hover:bg-slate-50/50 transition-colors">
-                                <div class="flex items-center gap-4">
-                                    <div class="flex-shrink-0">
-                                        <div class="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                                            <i class="fas fa-book text-sm"></i>
-                                        </div>
-                                    </div>
+
+                    <div class="flex flex-col md:flex-row items-center justify-between gap-4">
+                        <form action="{{ route('banksoal.arsip.dosen.index') }}" method="GET" class="flex flex-col md:flex-row items-center gap-3 w-full" id="filterForm">
+                            <div class="relative w-full md:w-96">
+                                <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></i>
+                                <input type="text" name="search" value="{{ $filters['search'] }}" placeholder="Cari nama arsip atau MK..." class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-4 focus:ring-navy/5 focus:border-navy transition-all outline-none">
+                            </div>
+
+                            <div class="relative w-full md:w-auto" x-data="{ filterOpen: false }" @click.away="filterOpen = false">
+                                <button @click="filterOpen = !filterOpen" type="button" class="flex items-center justify-center gap-2 w-full md:w-auto px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all">
+                                    <i class="fas fa-filter text-slate-400"></i>
+                                    Filter
+                                    <i class="fas fa-chevron-down text-[10px] transition-transform" :class="filterOpen ? 'rotate-180' : ''"></i>
+                                </button>
+
+                                <div x-show="filterOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" class="absolute left-0 md:right-0 md:left-auto mt-2 w-72 origin-top-right rounded-2xl border border-slate-100 bg-white shadow-xl z-50 p-5 space-y-4">
                                     <div>
-                                        <p class="font-semibold text-slate-900">{{ $first->mataKuliah->nama ?? 'Mata Kuliah' }}</p>
-                                        <p class="text-sm text-muted-foreground">{{ $first->mataKuliah->kode ?? '-' }}</p>
-                                    </div>
-                                </div>
-                                <div class="flex items-center justify-between sm:justify-end gap-6 flex-1">
-                                    <div class="flex flex-wrap gap-1.5">
-                                        @foreach($arsips->take(3) as $arsip)
-                                            <x-ui.badge variant="sky" class="font-medium text-[10px]">
-                                                {{ Str::limit($arsip->nama_arsip, 12) }}
-                                            </x-ui.badge>
-                                        @endforeach
-                                        @if($arsips->count() > 3)
-                                            <x-ui.badge variant="secondary" class="font-medium text-[10px]">
-                                                +{{ $arsips->count() - 3 }}
-                                            </x-ui.badge>
-                                        @endif
-                                    </div>
-                                    <div class="flex items-center gap-3">
-                                        <div class="flex -space-x-2">
-                                            @foreach($arsips->unique('user_id')->take(3) as $a)
-                                                <x-ui.avatar size="sm" fallback="{{ substr($a->user->name ?? 'D', 0, 2) }}" class="border-2 border-white" />
+                                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Tahun Ajaran</label>
+                                        <div class="space-y-2 max-h-40 overflow-y-auto pr-2">
+                                            @foreach($availableYears as $year)
+                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer group">
+                                                <input type="checkbox" name="years[]" value="{{ $year }}" {{ in_array($year, (array)request('years')) ? 'checked' : '' }} class="w-4 h-4 rounded border-slate-300 text-navy focus:ring-navy transition-all">
+                                                <span class="text-sm text-slate-700 group-hover:text-navy transition-colors">{{ $year }}</span>
+                                            </label>
                                             @endforeach
                                         </div>
-                                        <x-ui.button as="a" href="{{ route('banksoal.arsip.dosen.show', $first->id) }}" variant="outline" size="sm" class="text-xs">
-                                            Buka
-                                        </x-ui.button>
+                                    </div>
+                                    <div class="pt-3 border-t border-slate-100">
+                                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Semester</label>
+                                        <div class="space-y-2">
+                                            @foreach(['Ganjil', 'Genap'] as $sem)
+                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer group">
+                                                <input type="checkbox" name="semesters[]" value="{{ $sem }}" {{ in_array($sem, (array)request('semesters')) ? 'checked' : '' }} class="w-4 h-4 rounded border-slate-300 text-navy focus:ring-navy transition-all">
+                                                <span class="text-sm text-slate-700 group-hover:text-navy transition-colors">{{ $sem }}</span>
+                                            </label>
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                    <div class="flex gap-2 pt-2">
+                                        <button type="button" @click="filterOpen = false" class="flex-1 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors">Tutup</button>
+                                        <button type="submit" class="flex-1 py-2 rounded-lg bg-navy text-white text-xs font-bold hover:opacity-90 shadow-md shadow-navy/20 transition-all">Terapkan</button>
                                     </div>
                                 </div>
                             </div>
-                        @endforeach
-                    </div>
-                </x-ui.card>
-            @empty
-                <div class="rounded-xl border border-dashed border-border bg-slate-50 p-8 text-center text-muted-foreground text-sm">
-                    Belum ada arsip soal.
-                </div>
-            @endforelse
-        </div>
-    </x-ui.card>
 
-    <!-- Tab Riwayat Penarikan -->
-    <x-ui.card class="overflow-hidden shadow-sm">
-        <div class="px-5 py-4 border-b border-border bg-slate-50 flex items-center justify-between">
-            <h3 class="text-sm font-semibold text-slate-900">Riwayat Penarikan</h3>
-            <span class="text-xs font-medium text-muted-foreground">{{ count($penarikanPending ?? []) }} Pending</span>
-        </div>
-        <div class="p-5 space-y-4">
-            @forelse($penarikanPending as $penarikan)
-                <x-ui.card class="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white hover:bg-slate-50/50 transition-colors border-border shadow-none">
-                    <div class="flex items-start gap-4">
-                        <div class="flex-shrink-0 mt-1 sm:mt-0">
-                            <div class="flex h-10 w-10 items-center justify-center rounded-full bg-warning-50 text-warning-500">
-                                <i class="fas fa-clock-rotate-left text-sm"></i>
-                            </div>
-                        </div>
-                        <div>
-                            <div class="flex items-center gap-2">
-                                <p class="font-semibold text-slate-900">{{ $penarikan->nama_ekstraksi }}</p>
-                                <x-ui.badge variant="warning" class="text-[10px] py-0">Pending</x-ui.badge>
-                                @if(($penarikan->metode_ujian ?? '') === 'offline')
-                                    <span class="inline-flex items-center rounded bg-amber-50 px-1.5 py-0.5 text-[10px] font-medium text-amber-700 ring-1 ring-inset ring-amber-600/20">Offline Cetak</span>
-                                @endif
-                            </div>
-                            <p class="text-sm text-muted-foreground mt-1">{{ $penarikan->mataKuliah->nama ?? '-' }} · {{ $penarikan->semester }} · {{ $penarikan->tahun_akademik }}</p>
-                        </div>
-                    </div>
-                    
-                    <div class="flex items-center gap-2 mt-3 sm:mt-0 w-full sm:w-auto">
-                        <x-ui.button as="a" href="{{ route('banksoal.arsip.dosen.penarikan.edit', $penarikan->id) }}" variant="default" size="sm" class="w-full sm:w-auto text-xs bg-emerald-600 hover:bg-emerald-700 text-white border-transparent">
-                            <i class="fas fa-archive mr-1.5"></i> Konversi
-                        </x-ui.button>
-                        <form action="{{ route('banksoal.arsip.dosen.penarikan.destroy', $penarikan->id) }}" method="POST" onsubmit="return confirm('Hapus riwayat penarikan ini?')" class="w-full sm:w-auto">
-                            @csrf
-                            @method('DELETE')
-                            <x-ui.button type="submit" variant="outline" size="sm" class="w-full sm:w-auto text-xs">
-                                <i class="fas fa-trash text-muted-foreground mr-1.5"></i> Discard
-                            </x-ui.button>
+                            @if($filters['search'] || request('years') || request('semesters'))
+                            <a href="{{ route('banksoal.arsip.dosen.index') }}" class="text-rose-500 hover:text-rose-700 text-xs font-bold underline px-2">Reset</a>
+                            @endif
                         </form>
                     </div>
-                </x-ui.card>
-            @empty
-                <div class="rounded-xl border border-dashed border-border bg-slate-50 p-8 text-center text-muted-foreground text-sm">
-                    Belum ada riwayat penarikan.
                 </div>
-            @endforelse
-        </div>
-    </x-ui.card>
-</div>
+            </div>
 
-<div id="uploadPdfModal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
-    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px]" data-modal-overlay="uploadPdfModal"></div>
-    <div class="relative mx-auto mt-16 w-full max-w-xl rounded-2xl bg-white shadow-xl">
-        <form action="{{ route('banksoal.arsip.dosen.upload-pdf') }}" method="POST" enctype="multipart/form-data">
+            <div class="p-0">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                <th class="w-12 px-8 py-4"></th>
+                                <th class="px-4 py-4">Mata Kuliah</th>
+                                <th class="px-8 py-4">Jumlah Arsip</th>
+                                <th class="px-8 py-4">Status</th>
+                                <th class="px-8 py-4 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            <?php $arsipGroups = $arsipPaginated->groupBy('mk_id'); ?>
+                            <?php if($arsipGroups->isNotEmpty()): ?>
+                                <?php foreach($arsipGroups as $mkId => $items): ?>
+                                <?php $first = $items->first(); ?>
+                                <tr class="hover:bg-slate-50/50 cursor-pointer transition-colors group" @click="expandedGroups.includes({{ $mkId }}) ? expandedGroups = expandedGroups.filter(i => i !== {{ $mkId }}) : expandedGroups.push({{ $mkId }})">
+                                    <td class="px-8 py-5 text-center">
+                                        <i class="fas fa-chevron-right text-slate-300 transition-transform duration-300" :class="expandedGroups.includes({{ $mkId }}) ? 'rotate-90 text-navy' : ''"></i>
+                                    </td>
+                                    <td class="px-4 py-5">
+                                        <div class="flex items-center gap-4">
+                                            <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-slate-50 text-slate-400 group-hover:bg-navy group-hover:text-white transition-all shadow-sm">
+                                                <i class="fas fa-book text-sm"></i>
+                                            </div>
+                                            <div class="flex flex-col">
+                                                <span class="font-bold text-slate-900 text-base">{{ $first->mataKuliah->nama }}</span>
+                                                <span class="text-xs text-slate-400 font-medium tracking-wide uppercase">{{ $first->mataKuliah->kode }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <div class="flex items-center gap-2">
+                                            <span class="px-3 py-1 rounded-full bg-navy/5 text-navy text-xs font-bold">{{ $items->count() }} Versi</span>
+                                        </div>
+                                    </td>
+                                    <td class="px-8 py-5">
+                                        <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 text-[10px] font-bold text-emerald-600 border border-emerald-100 uppercase tracking-wider">
+                                            <i class="fas fa-check-circle text-[8px]"></i> Aktif
+                                        </span>
+                                    </td>
+                                    <td class="px-8 py-5 text-right">
+                                        <div class="flex items-center justify-end gap-3">
+                                            <div class="flex -space-x-2">
+                                                <?php foreach($items->unique('dosen_id')->take(3) as $a): ?>
+                                                    <div class="h-8 w-8 rounded-full border-2 border-white bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 overflow-hidden shadow-sm" title="{{ $a->dosen->name ?? 'Dosen' }}">
+                                                        {{ substr($a->dosen->name ?? 'D', 0, 1) }}
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                            <i class="fas fa-ellipsis-v text-slate-300 group-hover:text-slate-600 transition-colors p-2"></i>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <?php foreach($items as $arsip): ?>
+                                <?php
+                                    preg_match('/\((.*?)\)/', $arsip->nama_arsip, $matches);
+                                    $categoryAbbr = $matches[1] ?? (strpos($arsip->nama_arsip, 'UTS') !== false ? 'UTS' : (strpos($arsip->nama_arsip, 'UAS') !== false ? 'UAS' : 'Arsip'));
+                                ?>
+                                <tr x-show="expandedGroups.includes({{ $mkId }})" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 -translate-y-2" x-transition:enter-end="opacity-100 translate-y-0" class="bg-slate-50/30">
+                                    <td class="px-8 py-0"></td>
+                                    <td colspan="4" class="px-4 py-3">
+                                        <div class="bg-white rounded-2xl border border-slate-200 p-4 shadow-sm hover:border-navy/30 transition-colors">
+                                            <div class="grid grid-cols-1 md:grid-cols-5 gap-4 items-center">
+                                                <div class="flex flex-col">
+                                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Pengarsip</p>
+                                                    <div class="flex items-center gap-2">
+                                                        <div class="h-6 w-6 rounded-full bg-slate-100 flex items-center justify-center text-[10px] font-bold text-slate-500 shadow-inner">
+                                                            {{ substr($arsip->dosen->name ?? 'D', 0, 1) }}
+                                                        </div>
+                                                        <p class="text-sm font-bold text-slate-800 truncate" title="{{ $arsip->dosen->name ?? '-' }}">
+                                                            {{ $arsip->dosen->name ?? '-' }}
+                                                        </p>
+                                                    </div>
+                                                </div>
+                                                <div class="flex flex-col border-l border-slate-100 pl-4">
+                                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Kategori</p>
+                                                    <span class="inline-flex w-fit px-2.5 py-0.5 rounded-lg bg-navy/5 text-navy text-[10px] font-bold border border-navy/10">
+                                                        {{ $categoryAbbr }}
+                                                    </span>
+                                                </div>
+                                                <div class="flex flex-col border-l border-slate-100 pl-4">
+                                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Periode</p>
+                                                    <p class="text-sm text-slate-700 font-medium">{{ $arsip->tahun_akademik }} - <span class="text-navy text-xs">{{ $arsip->semester }}</span></p>
+                                                </div>
+                                                <div class="flex flex-col border-l border-slate-100 pl-4">
+                                                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1">Statistik</p>
+                                                    <div class="flex items-center gap-3">
+                                                        <span class="text-xs text-slate-600 flex items-center gap-1"><i class="fas fa-list-ol text-[10px] text-slate-300"></i> {{ $arsip->jumlah_soal }}</span>
+                                                        <span class="text-xs text-slate-600 flex items-center gap-1"><i class="fas fa-star text-[10px] text-slate-300"></i> {{ number_format($arsip->total_bobot, 1) }}</span>
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center justify-end gap-2 relative" x-data="{ menuOpen: false }">
+                                                    <button @click="menuOpen = !menuOpen" class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-navy transition-all">
+                                                        <i class="fas fa-ellipsis-h"></i>
+                                                    </button>
+                                                    <div x-show="menuOpen" @click.away="menuOpen = false" class="absolute right-0 top-12 w-48 bg-white rounded-xl border border-slate-100 shadow-xl z-50 p-2 space-y-1 text-left">
+                                                        <a href="{{ route('banksoal.arsip.dosen.show', $arsip->id) }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-navy transition-all">
+                                                            <i class="fas fa-external-link-alt w-4"></i> Buka Detail
+                                                        </a>
+                                                        <form action="{{ route('banksoal.arsip.dosen.destroy', $arsip->id) }}" method="POST" onsubmit="return confirm('Hapus arsip ini?')" class="block">
+                                                            @csrf @method('DELETE')
+                                                            <button type="submit" class="flex w-full items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-rose-500 hover:bg-rose-50 transition-all">
+                                                                <i class="fas fa-trash-alt w-4"></i> Hapus Arsip
+                                                            </button>
+                                                        </form>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                <?php endforeach; ?>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                            <tr>
+                                <td colspan="5" class="px-8 py-20 text-center text-slate-500">
+                                    Tidak ada data arsip yang ditemukan.
+                                </td>
+                            </tr>
+                            <?php endif; ?>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="px-8 py-6 border-t border-slate-100 bg-slate-50/30">
+                    {{ $arsipPaginated->appends(request()->all())->links() }}
+                </div>
+            </div>
+        </div>
+
+        @if($penarikanPending->isNotEmpty())
+        <div class="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden order-2 mt-8">
+            <div class="px-8 py-5 border-b border-slate-100 bg-slate-50/50 flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-600">
+                        <i class="fas fa-clock-rotate-left text-sm"></i>
+                    </span>
+                    <h3 class="font-bold text-slate-900">Riwayat Penarikan (Pending)</h3>
+                </div>
+                <span class="px-3 py-1 rounded-full bg-amber-100 text-amber-700 text-xs font-bold">{{ $penarikanPending->count() }} Item</span>
+            </div>
+            <div class="p-0">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/30 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                                <th class="px-8 py-4">Detail Penarikan</th>
+                                <th class="px-8 py-4">Mata Kuliah</th>
+                                <th class="px-8 py-4">Waktu</th>
+                                <th class="px-8 py-4 text-right">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100">
+                            @foreach($penarikanPending as $penarikan)
+                            <tr class="hover:bg-slate-50/50 transition-colors group">
+                                <td class="px-8 py-5">
+                                    <div class="flex flex-col">
+                                        <span class="font-bold text-slate-900 group-hover:text-navy transition-colors">{{ $penarikan->nama_ekstraksi }}</span>
+                                        <div class="flex items-center gap-2 mt-1">
+                                            <span class="px-2 py-0.5 rounded-md bg-amber-50 text-[10px] font-bold text-amber-600 border border-amber-100 uppercase">{{ $penarikan->tipe_ujian }}</span>
+                                            @if($penarikan->metode_ujian === 'offline')
+                                            <span class="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-bold text-slate-600 border border-slate-200 uppercase">Offline</span>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-5">
+                                    <div class="flex flex-col">
+                                        <span class="text-sm font-medium text-slate-700">{{ $penarikan->mataKuliah->nama }}</span>
+                                        <span class="text-xs text-slate-400">{{ $penarikan->mataKuliah->kode }}</span>
+                                    </div>
+                                </td>
+                                <td class="px-8 py-5">
+                                    <span class="text-sm text-slate-600">{{ $penarikan->created_at->diffForHumans() }}</span>
+                                </td>
+                                <td class="px-8 py-5 text-right">
+                                    <div class="flex items-center justify-end gap-2 relative" x-data="{ menuOpen: false }">
+                                        <button @click="menuOpen = !menuOpen" class="p-2 rounded-xl border border-slate-200 text-slate-400 hover:text-navy transition-all">
+                                            <i class="fas fa-ellipsis-h"></i>
+                                        </button>
+                                        <div x-show="menuOpen" @click.away="menuOpen = false" class="absolute right-0 top-12 w-48 bg-white rounded-xl border border-slate-100 shadow-xl z-50 p-2 space-y-1 text-left">
+                                            <a href="{{ route('banksoal.arsip.dosen.penarikan.edit', $penarikan->id) }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-navy hover:bg-slate-50 transition-all">
+                                                <i class="fas fa-file-export w-4"></i> Konversi
+                                            </a>
+                                            <form action="{{ route('banksoal.arsip.dosen.penarikan.destroy', $penarikan->id) }}" method="POST" onsubmit="return confirm('Hapus riwayat penarikan ini?')" class="block">
+                                                @csrf @method('DELETE')
+                                                <button type="submit" class="flex w-full items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-rose-500 hover:bg-rose-50 transition-all">
+                                                    <i class="fas fa-trash-alt w-4"></i> Hapus
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        @endif
+    </div>
+
+    <!-- Modals -->
+    <x-banksoal::ui.modal id="uploadPdfModal" title="Unggah PDF Arsip" subtitle="Dokumen akan diarsipkan sebagai format PDF standar.">
+        <form action="{{ route('banksoal.arsip.dosen.upload-pdf') }}" method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
             @csrf
-            <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-                <div>
-                    <h2 class="text-sm font-semibold text-slate-900">Upload PDF Arsip</h2>
-                    <p class="text-xs text-slate-500">Seret file PDF ke area upload atau pilih file dari perangkat.</p>
-                </div>
-                <button type="button" class="text-slate-400 hover:text-slate-600" data-modal-close="uploadPdfModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="px-5 py-4 space-y-4">
-                <div>
-                    <label class="text-xs font-semibold text-slate-600">File PDF <span class="text-rose-500">*</span></label>
-                    <div id="pdfUploadZone" class="mt-2 cursor-pointer rounded-xl border-2 border-dashed border-slate-200 p-5 text-center transition-colors">
-                        <i class="fas fa-cloud-upload-alt text-2xl text-slate-400"></i>
-                        <p class="mt-2 text-sm text-slate-500">Dragdrop file atau <span class="text-blue-600 underline">pilih file</span></p>
-                        <p class="text-xs text-slate-400">Format: .pdf (maksimal 50 MB)</p>
-                        <input type="file" name="pdf_file" id="pdfFileInput" accept="application/pdf,.pdf" required class="hidden">
-                        <div id="pdfFileSelected" class="mt-3 hidden">
-                            <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-                                <i class="fas fa-check-circle mr-2"></i>
-                                File terpilih: <span id="pdfSelectedFileName"></span>
-                            </div>
-                        </div>
+            <div class="space-y-5">
+                <div class="p-6 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 text-center hover:border-navy transition-all cursor-pointer group" onclick="document.getElementById('pdf_file').click()">
+                    <div class="h-16 w-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-file-pdf text-3xl text-rose-500"></i>
                     </div>
-                    @error('pdf_file')
-                        <p class="mt-2 text-xs text-rose-600">{{ $message }}</p>
-                    @enderror
+                    <p class="text-sm font-bold text-slate-800">Klik atau Tarik File PDF</p>
+                    <p class="text-xs text-slate-400 mt-1 uppercase tracking-widest">Maksimal 50MB</p>
+                    <input type="file" id="pdf_file" name="pdf_file" class="hidden" accept="application/pdf" onchange="updateFileName(this, 'pdf_name_display')">
                 </div>
-                <div class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
-                    <i class="fas fa-info-circle mr-2"></i>
-                    Upload PDF akan disimpan sebagai arsip terpisah untuk diproses lebih lanjut.
+                <div id="pdf_name_display" class="hidden animate-popup">
+                    <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold">
+                        <i class="fas fa-check-circle"></i>
+                        <span class="file-name"></span>
+                    </div>
                 </div>
             </div>
-            <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
-                <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="uploadPdfModal">Batal</button>
-                <button type="submit" class="rounded-lg bg-slate-800 px-4 py-2 text-xs font-semibold text-white hover:bg-slate-900">Upload PDF</button>
+            <div class="mt-8 flex justify-end gap-3">
+                <button type="button" class="px-6 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-500 hover:bg-slate-50" onclick="closeModal('uploadPdfModal')">Batal</button>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-navy text-white text-sm font-bold hover:opacity-90 shadow-lg shadow-navy/20 transition-all">Upload Sekarang</button>
             </div>
         </form>
-    </div>
-</div>
+    </x-banksoal::ui.modal>
 
-<div id="uploadCsvModal" class="fixed inset-0 z-50 hidden" aria-hidden="true">
-    <div class="absolute inset-0 bg-slate-900/40 backdrop-blur-[1px]" data-modal-overlay="uploadCsvModal"></div>
-    <div class="relative mx-auto mt-16 w-full max-w-xl rounded-2xl bg-white shadow-xl">
-        <form action="{{ route('banksoal.arsip.dosen.upload-csv') }}" method="POST" enctype="multipart/form-data">
+    <x-banksoal::ui.modal id="uploadCsvModal" title="Import Massal via CSV/Excel" subtitle="Gunakan template resmi untuk menghindari kesalahan format data.">
+        <form action="{{ route('banksoal.arsip.dosen.upload-csv') }}" method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
             @csrf
-            <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-                <div>
-                    <h2 class="text-sm font-semibold text-slate-900">Upload CSV Arsip</h2>
-                    <p class="text-xs text-slate-500">Gunakan template CSV agar format data sesuai.</p>
-                </div>
-                <button type="button" class="text-slate-400 hover:text-slate-600" data-modal-close="uploadCsvModal">
-                    <i class="fas fa-times"></i>
-                </button>
-            </div>
-            <div class="px-5 py-4 space-y-4">
-                <div class="flex items-start justify-between gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                    <div>
-                        <p class="text-sm font-semibold text-slate-800">Template CSV</p>
-                        <p class="text-xs text-slate-500">Unduh template sebelum unggah file CSV.</p>
+            <div class="space-y-6">
+                <div class="flex items-center justify-between p-4 rounded-2xl bg-amber-50 border border-amber-100">
+                    <div class="flex items-center gap-3">
+                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
+                            <i class="fas fa-download text-sm"></i>
+                        </span>
+                        <div>
+                            <p class="text-sm font-bold text-amber-900">Unduh Template</p>
+                            <p class="text-[10px] text-amber-700">Pastikan data sesuai kolom yang tersedia.</p>
+                        </div>
                     </div>
-                    <a href="{{ route('banksoal.soal.dosen.export-csv') }}" target="_blank" class="inline-flex items-center gap-2 rounded-lg border border-emerald-200 bg-white px-3 py-2 text-xs font-semibold text-emerald-700 transition-colors hover:bg-emerald-50">
-                        <i class="fas fa-download"></i> Unduh Template
+                    <a href="{{ route('banksoal.soal.dosen.export-csv') }}" class="px-4 py-2 rounded-xl bg-white border border-amber-200 text-amber-700 text-xs font-bold hover:bg-amber-100 transition-all shadow-sm">
+                        Download .xlsx
                     </a>
                 </div>
-                <div>
-                    <label class="text-xs font-semibold text-slate-600">File CSV <span class="text-rose-500">*</span></label>
-                    <div id="csvUploadZone" class="mt-2 cursor-pointer rounded-xl border-2 border-dashed border-slate-200 p-5 text-center transition-colors">
-                        <i class="fas fa-cloud-upload-alt text-2xl text-slate-400"></i>
-                        <p class="mt-2 text-sm text-slate-500">Dragdrop file atau <span class="text-blue-600 underline">pilih file</span></p>
-                        <p class="text-xs text-slate-400">Format: .csv, .txt, .xls, .xlsx (maksimal 50 MB)</p>
-                        <input type="file" name="csv_file" id="csvFileInput" accept=".csv,.txt,.xls,.xlsx" required class="hidden">
-                        <div id="csvFileSelected" class="mt-3 hidden">
-                            <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-                                <i class="fas fa-check-circle mr-2"></i>
-                                File terpilih: <span id="csvSelectedFileName"></span>
-                            </div>
-                        </div>
+
+                <div class="p-6 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 text-center hover:border-navy transition-all cursor-pointer group" onclick="document.getElementById('csv_file').click()">
+                    <div class="h-16 w-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                        <i class="fas fa-file-excel text-3xl text-emerald-500"></i>
                     </div>
-                    @error('csv_file')
-                        <p class="mt-2 text-xs text-rose-600">{{ $message }}</p>
-                    @enderror
+                    <p class="text-sm font-bold text-slate-800">Klik atau Tarik File Spreadsheet</p>
+                    <p class="text-xs text-slate-400 mt-1 uppercase tracking-widest">Format: CSV, XLS, XLSX • Maks 50MB</p>
+                    <input type="file" id="csv_file" name="csv_file" class="hidden" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" onchange="updateFileName(this, 'csv_name_display')">
                 </div>
-                <div class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
-                    <i class="fas fa-info-circle mr-2"></i>
-                    CSV akan diproses sesuai template yang diunduh dari tombol di atas.
+                <div id="csv_name_display" class="hidden animate-popup">
+                    <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold">
+                        <i class="fas fa-check-circle"></i>
+                        <span class="file-name"></span>
+                    </div>
                 </div>
             </div>
-            <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
-                <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="uploadCsvModal">Batal</button>
-                <button type="submit" class="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700">Upload CSV</button>
+            <div class="mt-8 flex justify-end gap-3">
+                <button type="button" class="px-6 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-500 hover:bg-slate-50" onclick="closeModal('uploadCsvModal')">Batal</button>
+                <button type="submit" class="px-6 py-2.5 rounded-xl bg-navy text-white text-sm font-bold hover:opacity-90 shadow-lg shadow-navy/20 transition-all">Import Sekarang</button>
             </div>
         </form>
-    </div>
-</div>
+    </x-banksoal::ui.modal>
 
-<script>
-    function toggleArsipUploadMenu() {
-        const menu = document.getElementById('arsipUploadMenu');
-        if (!menu) return;
-
-        const isOpen = menu.dataset.open === 'true';
-        menu.dataset.open = isOpen ? 'false' : 'true';
-        menu.classList.toggle('opacity-0', isOpen);
-        menu.classList.toggle('scale-95', isOpen);
-        menu.classList.toggle('translate-y-1', isOpen);
-        menu.classList.toggle('pointer-events-none', isOpen);
-        menu.classList.toggle('opacity-100', !isOpen);
-        menu.classList.toggle('scale-100', !isOpen);
-        menu.classList.toggle('translate-y-0', !isOpen);
-    }
-
-    function openArsipUploadModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (!modal) return;
-
-        const menu = document.getElementById('arsipUploadMenu');
-        if (menu) {
-            menu.dataset.open = 'false';
-            menu.classList.add('opacity-0', 'scale-95', 'translate-y-1', 'pointer-events-none');
-            menu.classList.remove('opacity-100', 'scale-100', 'translate-y-0');
+    <script>
+        function openModal(id) {
+            document.getElementById(id).classList.remove('hidden');
+            document.body.classList.add('overflow-hidden');
         }
-
-        modal.classList.remove('hidden');
-        document.body.classList.add('overflow-hidden');
-    }
-
-    function closeArsipUploadModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (!modal) return;
-
-        modal.classList.add('hidden');
-        document.body.classList.remove('overflow-hidden');
-    }
-
-    function initUploadZone(zoneId, inputId, selectedId, fileNameId) {
-        const zone = document.getElementById(zoneId);
-        const input = document.getElementById(inputId);
-        const selected = document.getElementById(selectedId);
-        const fileName = document.getElementById(fileNameId);
-
-        if (!zone || !input || !selected || !fileName) return;
-
-        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach((eventName) => {
-            zone.addEventListener(eventName, function (event) {
-                event.preventDefault();
-                event.stopPropagation();
-            });
-        });
-
-        ['dragenter', 'dragover'].forEach((eventName) => {
-            zone.addEventListener(eventName, function () {
-                zone.classList.add('border-blue-300', 'bg-blue-50/50');
-            });
-        });
-
-        ['dragleave', 'drop'].forEach((eventName) => {
-            zone.addEventListener(eventName, function () {
-                zone.classList.remove('border-blue-300', 'bg-blue-50/50');
-            });
-        });
-
-        zone.addEventListener('click', function () {
-            input.click();
-        });
-
-        zone.addEventListener('drop', function (event) {
-            if (!event.dataTransfer.files.length) return;
-            input.files = event.dataTransfer.files;
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+            document.body.classList.remove('overflow-hidden');
+        }
+        function updateFileName(input, displayId) {
+            const display = document.getElementById(displayId);
+            const nameSpan = display.querySelector('.file-name');
             if (input.files.length > 0) {
-                fileName.textContent = input.files[0].name;
-                selected.classList.remove('hidden');
-            }
-        });
-
-        input.addEventListener('change', function () {
-            if (input.files.length > 0) {
-                fileName.textContent = input.files[0].name;
-                selected.classList.remove('hidden');
+                nameSpan.textContent = input.files[0].name;
+                display.classList.remove('hidden');
             } else {
-                selected.classList.add('hidden');
+                display.classList.add('hidden');
             }
+        }
+        function showLoader() {
+            document.getElementById('global-loader').style.display = 'flex';
+        }
+        function hideLoader() {
+            document.getElementById('global-loader').style.display = 'none';
+        }
+        document.getElementById('filterForm').addEventListener('submit', showLoader);
+        document.querySelectorAll('.pagination a').forEach(link => {
+            link.addEventListener('click', showLoader);
         });
-    }
-
-    document.addEventListener('click', function (event) {
-        const menu = document.getElementById('arsipUploadMenu');
-        const trigger = event.target.closest('#arsipUploadTrigger');
-        if (!menu || trigger || menu.contains(event.target)) return;
-
-        menu.dataset.open = 'false';
-        menu.classList.add('opacity-0', 'scale-95', 'translate-y-1', 'pointer-events-none');
-        menu.classList.remove('opacity-100', 'scale-100', 'translate-y-0');
-    });
-
-    document.addEventListener('click', function (event) {
-        const closeButton = event.target.closest('[data-modal-close]');
-        if (closeButton) {
-            closeArsipUploadModal(closeButton.getAttribute('data-modal-close'));
-            return;
-        }
-
-        const overlay = event.target.closest('[data-modal-overlay]');
-        if (overlay) {
-            closeArsipUploadModal(overlay.getAttribute('data-modal-overlay'));
-        }
-    });
-
-    document.addEventListener('DOMContentLoaded', function () {
-        initUploadZone('pdfUploadZone', 'pdfFileInput', 'pdfFileSelected', 'pdfSelectedFileName');
-        initUploadZone('csvUploadZone', 'csvFileInput', 'csvFileSelected', 'csvSelectedFileName');
-
-        @if ($errors->has('pdf_file'))
-            openArsipUploadModal('uploadPdfModal');
-        @elseif ($errors->has('csv_file'))
-            openArsipUploadModal('uploadCsvModal');
-        @endif
-    });
-</script>
-
+    </script>
 </x-banksoal::layouts.dosen-admin>

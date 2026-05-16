@@ -40,8 +40,9 @@
                     <th class="table-header-cell">Tahun/Semester</th>
                     <th class="table-header-cell">Mata Kuliah</th>
                     <th class="table-header-cell">Tanggal Upload</th>
+                    <th class="table-header-cell">Diunggah Oleh</th>
                     <th class="table-header-cell">Status</th>
-                    <th class="table-header-cell w-[280px]">Aksi</th>
+                    <th class="table-header-cell w-[80px]">Aksi</th>
                 </tr>
             </thead>
             <tbody class="table-body">
@@ -50,6 +51,30 @@
                         <td class="table-cell-strong">{{ $item->tahun_ajaran }} - {{ $item->semester }}</td>
                         <td class="table-cell">{{ $item->mataKuliah?->nama ?? 'N/A' }} <span class="text-xs text-slate-500">({{ $item->mataKuliah?->kode ?? 'N/A' }})</span></td>
                         <td class="table-cell">{{ $item->created_at->format('d M Y') }}</td>
+                        <td class="table-cell">
+                            @php
+                                $fallbackUser = null;
+                                if (!$item->uploader_id) {
+                                    $fallbackUser = DB::table('bs_rps_dosen')
+                                        ->where('rps_id', $item->id)
+                                        ->join('users', 'users.id', '=', 'bs_rps_dosen.dosen_id')
+                                        ->orderBy('bs_rps_dosen.id', 'asc')
+                                        ->select('users.id', 'users.name')
+                                        ->first();
+                                }
+                                $uploaderId = $item->uploader_id ?? $fallbackUser?->id;
+                                $uploaderName = $item->uploader_name ?? $fallbackUser?->name ?? 'Tidak diketahui';
+                            @endphp
+                            <div class="flex items-center gap-2">
+                                <div class="h-6 w-6 rounded-full bg-slate-200 flex items-center justify-center text-xs font-bold text-slate-600">
+                                    {{ substr($uploaderName, 0, 1) }}
+                                </div>
+                                <span class="text-sm font-medium text-slate-700">{{ $uploaderName }}</span>
+                                @if($uploaderId == Auth::id())
+                                    <span class="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-semibold text-primary">Anda</span>
+                                @endif
+                            </div>
+                        </td>
                         <td class="table-cell">
                             @php
                                 $status = $item->status->label() ?? 'Unknown';
@@ -62,64 +87,58 @@
                             @endphp
                             <span class="badge {{ $statusClass }}">{{ $status }}</span>
                         </td>
-                        <td class="table-cell align-top">
-                            <div class="flex flex-wrap items-center gap-2 max-w-full">
-                                @if ($item->dokumen)
-                                    <button type="button"
-                                            class="preview-dokumen-btn inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100"
-                                            data-id="{{ $item->id }}"
-                                            data-title="{{ e($item->mataKuliah?->nama ?? 'Dokumen') }}"
-                                            title="Preview dokumen">
-                                        Preview
-                                    </button>
-                                @else
-                                    <span class="text-slate-400 text-sm">-</span>
-                                @endif
-                                
-                                @php
-                                    $canEdit = in_array($item->status->value, ['diajukan', 'revisi']);
-                                    $canDelete = in_array($item->status->value, ['diajukan']);
-                                @endphp
-                                
-                                @if($canEdit)
-                                    <button type="button"
-                                            class="edit-rps-btn inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-3 py-1.5 text-xs font-semibold text-amber-700 hover:bg-amber-100"
-                                            data-rpsid="{{ $item->id }}"
-                                            title="Edit RPS">
-                                        Edit
-                                    </button>
-                                @else
-                                    <button type="button"
-                                            class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-400 cursor-not-allowed"
-                                            disabled
-                                            title="RPS tidak dapat diedit dengan status {{ $item->status->label() }}">
-                                        Edit
-                                    </button>
-                                @endif
+                        <td class="table-cell">
+                            <div class="dots-wrap" id="dots-{{ $item->id }}">
+                                <button type="button" class="btn-dots" onclick="toggleMenu({{ $item->id }}, event)">⋮</button>
+                                <div class="dots-menu" id="menu-{{ $item->id }}">
+                                    @if ($item->dokumen)
+                                        <button type="button"
+                                                class="preview-dokumen-btn"
+                                                data-id="{{ $item->id }}"
+                                                data-title="{{ e($item->mataKuliah?->nama ?? 'Dokumen') }}">
+                                            <i class="fas fa-eye w-4"></i> Preview
+                                        </button>
+                                    @endif
+                                    
+                                    @php
+                                        $isUploader = $uploaderId == Auth::id();
+                                        $canEdit = $isUploader && in_array($item->status->value, ['diajukan', 'revisi']);
+                                        $canDelete = $isUploader && in_array($item->status->value, ['diajukan']);
+                                    @endphp
+                                    
+                                    @if($canEdit)
+                                        <a href="{{ route('banksoal.rps.dosen.edit', $item->id) }}"
+                                           class="edit-rps-btn">
+                                            <i class="fas fa-edit w-4"></i> Edit
+                                        </a>
+                                    @else
+                                        <button type="button" class="cursor-not-allowed text-slate-400" disabled 
+                                                title="{{ !$isUploader ? 'Hanya pengunggah yang dapat mengubah RPS ini' : 'RPS tidak dapat diedit dengan status ' . $item->status->label() }}">
+                                            <i class="fas fa-edit w-4"></i> Edit
+                                        </button>
+                                    @endif
 
-                                @if($canDelete)
-                                    <button type="button"
-                                            class="delete-rps-btn inline-flex items-center gap-1 rounded-lg border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100"
-                                            data-id="{{ $item->id }}"
-                                            data-mk="{{ e($item->mataKuliah?->nama ?? 'RPS') }}"
-                                            data-destroy-url="{{ route('banksoal.rps.dosen.destroy', $item->id) }}"
-                                            title="Hapus RPS">
-                                        Hapus
-                                    </button>
-                                @else
-                                    <button type="button"
-                                            class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-semibold text-slate-400 cursor-not-allowed"
-                                            disabled
-                                            title="RPS tidak dapat dihapus dengan status {{ $item->status->label() }}">
-                                        Hapus
-                                    </button>
-                                @endif
+                                    @if($canDelete)
+                                        <button type="button"
+                                                class="delete-rps-btn menu-delete"
+                                                data-id="{{ $item->id }}"
+                                                data-mk="{{ e($item->mataKuliah?->nama ?? 'RPS') }}"
+                                                data-destroy-url="{{ route('banksoal.rps.dosen.destroy', $item->id) }}">
+                                            <i class="fas fa-trash w-4"></i> Hapus
+                                        </button>
+                                    @else
+                                        <button type="button" class="cursor-not-allowed text-slate-400" disabled
+                                                title="{{ !$isUploader ? 'Hanya pengunggah yang dapat menghapus RPS ini' : 'RPS tidak dapat dihapus dengan status ' . $item->status->label() }}">
+                                            <i class="fas fa-trash w-4"></i> Hapus
+                                        </button>
+                                    @endif
+                                </div>
                             </div>
                         </td>
                     </tr>
                 @empty
                     <tr data-empty-state="1">
-                        <td colspan="5" class="px-6 py-12 text-center text-slate-600">
+                        <td colspan="6" class="px-6 py-12 text-center text-slate-600">
                             <div class="flex flex-col items-center justify-center">
                                 <i class="fas fa-inbox text-4xl text-slate-300 mb-3"></i>
                                 <p class="font-medium">Belum ada riwayat pengunggahan</p>

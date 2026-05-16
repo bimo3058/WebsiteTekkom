@@ -39,12 +39,12 @@ AI_*.md
 .gemini/
 .cursor/
 .copilot/
+/Modules/BankSoal/Skills
+*.md
 *.sql
 
-# Temporary design system export
 _design_system_tmp/
 _ds_tmp/
 
 # Zip export
 *.zip
-app.zip

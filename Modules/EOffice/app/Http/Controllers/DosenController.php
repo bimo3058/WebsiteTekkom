@@ -35,6 +35,94 @@ class DosenController extends Controller
     }
 
     /**
+     * Halaman Daftar Bimbingan Mahasiswa
+     */
+    public function bimbingan()
+    {
+        $bimbingan = KerjaPraktik::select(
+            'eo_kerja_praktik.*',
+            'u.name as nama_mahasiswa',
+            'm.nim as nim_user',
+            'u.email as email_mahasiswa',
+            'ud.name as nama_dosen',
+            'p.nilai_seminar_pembimbing'
+        )
+            ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
+            ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
+            ->leftJoin('users as ud', 'eo_kerja_praktik.dosen_pembimbing_id', '=', 'ud.id')
+            ->leftJoin('eo_kp_penilaian as p', 'eo_kerja_praktik.id', '=', 'p.kp_id')
+            // Dummy limit for current user ID context if needed, but keeping global for now
+            // ->where('eo_kerja_praktik.dosen_pembimbing_id', auth()->id())
+            ->orderBy('eo_kerja_praktik.created_at', 'desc')
+            ->get();
+            
+        // Map data dummy buat UI supaya lengkap
+        $mahasiswas = $bimbingan->map(function ($kp) {
+            return (object) [
+                'id' => $kp->id,
+                'nama' => $kp->nama_mahasiswa ?? 'Unknown',
+                'nim' => $kp->nim ?? $kp->nim_user ?? '2100018000',
+                'prodi' => 'Informatika',
+                'judul_kp' => $kp->rencana_judul ?? 'Belum ada judul',
+                'tempat_kp' => $kp->rencana_tempat ?? 'Belum ada tempat',
+                'durasi_kp' => 'Feb 2026 - Mei 2026',
+                'status_kp' => $kp->status_kp,
+                'status_dokumen' => 'Lengkap',
+                'nilai_seminar' => $kp->nilai_seminar_pembimbing,
+                'nilai_laporan' => null, // Column doesn't exist yet in DB
+                'progress' => rand(40, 100), // dummy progress
+            ];
+        });
+
+        // Add dummy data jika kosong
+        if ($mahasiswas->isEmpty()) {
+            $mahasiswas = collect([
+                (object) [
+                    'id' => 101,
+                    'nama' => 'Ahmad Fathanah',
+                    'nim' => '2100018112',
+                    'prodi' => 'Informatika',
+                    'judul_kp' => 'Pengembangan Sistem Microservice Backend',
+                    'tempat_kp' => 'PT GoTo Gojek Tokopedia',
+                    'durasi_kp' => '1 Juni 2026 - 31 Agustus 2026',
+                    'status_kp' => 'active',
+                    'status_dokumen' => 'Lengkap',
+                    'nilai_seminar' => null,
+                    'progress' => 60,
+                ],
+                (object) [
+                    'id' => 102,
+                    'nama' => 'Siti Nurhaliza',
+                    'nim' => '2100018199',
+                    'prodi' => 'Informatika',
+                    'judul_kp' => 'Analisis Jaringan Fiber Optic',
+                    'tempat_kp' => 'PT Telkom Indonesia',
+                    'durasi_kp' => '15 Mei 2026 - 15 Agustus 2026',
+                    'status_kp' => 'pending',
+                    'status_dokumen' => 'Kurang',
+                    'nilai_seminar' => null,
+                    'progress' => 30,
+                ],
+                (object) [
+                    'id' => 103,
+                    'nama' => 'Bima Sakti',
+                    'nim' => '2100018155',
+                    'prodi' => 'Informatika',
+                    'judul_kp' => 'Implementasi Fraud Detection System',
+                    'tempat_kp' => 'Bank Mandiri IT Group',
+                    'durasi_kp' => '1 Februari 2026 - 30 April 2026',
+                    'status_kp' => 'completed',
+                    'status_dokumen' => 'Lengkap',
+                    'nilai_seminar' => 85,
+                    'progress' => 100,
+                ]
+            ]);
+        }
+
+        return view('eoffice::dosen.bimbingan', compact('mahasiswas'));
+    }
+
+    /**
      * Menampilkan detail pengajuan dan progres KP Mahasiswa
      */
     public function show($id)
@@ -160,7 +248,7 @@ class DosenController extends Controller
         $kp->status_kp = 'completed';
         $kp->save();
 
-        return redirect()->route('kp.dosen.bimbingan.show', $kp->id)
+        return redirect()->route('eoffice.kp.dosen.bimbingan.show', $kp->id)
             ->with('success', 'Nilai Seminar berhasil disimpan!');
     }
 }

@@ -1,7 +1,8 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
 <style>
+.detail-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
 .btn-back{width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#374151;font-size:18px;transition:all 0.2s;flex-shrink:0}
-.btn-back:hover{background:#f3f4f6}
+.btn-back:hover{background:#f3f4f6;border-color:#d1d5db;color:#1f2937}
 .detail-card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);margin-bottom:20px}
 .detail-card-title{font-weight:700;font-size:16px;color:#1f2937;margin-bottom:16px;display:flex;align-items:center;gap:8px}
 .badge-bidang{font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;background:#eef2ff;color:#4f46e5}
@@ -40,24 +41,36 @@
 @endif
 
 {{-- Header --}}
-<div class="d-flex justify-content-between align-items-start mb-4">
-    <div class="d-flex align-items-center gap-3">
+<div class="d-flex justify-content-between align-items-start">
+    <div class="detail-header">
         <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="btn-back">&larr;</a>
         <div>
             <h3 class="fw-bold mb-0 text-dark">Detail Rencana Proker</h3>
             <p class="text-muted mb-0" style="font-size:14px;font-weight:500;">{{ $proker->judul }}</p>
         </div>
     </div>
-    <div class="d-flex gap-2 flex-wrap align-items-center">
+    <div class="d-flex gap-2 flex-wrap align-items-start">
         @if(($isCreator || $isAdmin) && in_array($proker->status, ['draft','ditolak']))
             <a href="{{ route('manajemenmahasiswa.proker.edit', $proker->id) }}"
-               class="btn" style="background:#f3f4f6;color:#374151;font-weight:600;font-size:13px;padding:8px 18px;border-radius:10px;height:38px;display:inline-flex;align-items:center;">
-                &#9998; Edit
+               class="btn d-flex align-items-center gap-2"
+               style="background: #4f46e5; color: #fff; font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: 10px;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Edit
             </a>
         @endif
         @if($isAdmin && in_array($proker->status, ['draft','ditolak']))
-            <button class="btn btn-danger" style="font-size:13px;padding:8px 18px;border-radius:10px;height:38px;display:inline-flex;align-items:center;"
-                    onclick="document.getElementById('deleteModal').style.display='flex'">Hapus</button>
+            <button type="button" class="btn d-flex align-items-center gap-2"
+                    style="background: #fee2e2; color: #dc2626; font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: 10px; border: none;"
+                    onclick="document.getElementById('deleteModal').style.display='flex'">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="3 6 5 6 21 6"></polyline>
+                    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                </svg>
+                Hapus
+            </button>
         @endif
         @if($proker->status === 'draft' && ($isCreator || $isPengurus))
             <form action="{{ route('manajemenmahasiswa.proker.ajukan', $proker->id) }}" method="POST" style="margin:0;">
@@ -123,25 +136,30 @@
     @if($isCreator || $isPengurus)
         <div style="margin-top:12px;">
             <a href="{{ route('manajemenmahasiswa.proker.edit', $proker->id) }}"
-               class="btn" style="background:#4f46e5;color:#fff;font-size:13px;padding:8px 18px;border-radius:10px;font-weight:600;">
-                &#9998; Revisi &amp; Ajukan Ulang
+               class="btn d-flex align-items-center gap-2"
+               style="background: #4f46e5; color: #fff; font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: 10px; width: fit-content;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                Revisi &amp; Ajukan Ulang
             </a>
         </div>
     @endif
 </div>
 @endif
 
-{{-- Banner link ke Persuratan --}}
+{{-- Banner link ke Pelaksanaan Kegiatan --}}
 @if(in_array($proker->status, ['diajukan','menunggu_ttd_ketua','menunggu_ttd_dpm','menunggu_ttd_dept','disetujui']))
 <div class="detail-card" style="background:linear-gradient(135deg,#fef3c7,#fffbeb);border:1.5px solid #fde68a;">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
         <div>
             <div style="font-weight:700;color:#92400e;margin-bottom:4px;">&#9998; Proker Telah Diajukan</div>
-            <div style="font-size:14px;color:#78350f;">Proker ini sedang dalam proses persuratan dan tanda tangan digital.</div>
+            <div style="font-size:14px;color:#78350f;">Proker ini sedang diproses. Pantau progres di halaman Pelaksanaan Kegiatan.</div>
         </div>
-        <a href="{{ route('manajemenmahasiswa.persuratan.show', $proker->id) }}"
+        <a href="{{ route('manajemenmahasiswa.pelaksanaan.show', $proker->id) }}"
            class="btn" style="background:#f59e0b;color:#fff;font-weight:600;padding:10px 22px;border-radius:10px;font-size:14px;white-space:nowrap;">
-            Lihat di Persuratan &rarr;
+            Lihat di Pelaksanaan &rarr;
         </a>
     </div>
 </div>

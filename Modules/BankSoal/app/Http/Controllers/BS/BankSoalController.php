@@ -134,18 +134,12 @@ class BankSoalController extends Controller
 
         $soals = $query->inRandomOrder()->get();
 
-        if($soals->isEmpty()){
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Tidak ada soal yang sesuai dengan kriteria ekstraksi.']);
-            }
-            return back()->with('error', 'Tidak ada soal yang sesuai dengan kriteria ekstraksi.');
-        }
-
         $mataKuliah = \Modules\BankSoal\Models\MataKuliah::find($request->mk_id);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
+                'message' => $soals->isEmpty() ? 'Tidak ada soal yang sesuai dengan kriteria ekstraksi. Anda masih bisa melanjutkan ke konfirmasi.' : 'Soal berhasil ditarik.',
                 'mataKuliah' => $mataKuliah,
                 'soals' => $soals->map(function ($soal) {
                     // Sertakan cpmk_id jika ada relasi CPMK
@@ -160,7 +154,7 @@ class BankSoalController extends Controller
             ]);
         }
 
-        return view('banksoal::pages.bank-soal.Dosen.ekstrak-result', compact('soals', 'mataKuliah', 'request'));
+        return redirect()->route('banksoal.soal.dosen.index')->with('warning', 'Gunakan tombol Tarik Soal untuk membuka konfirmasi tarik.');
     }
 
     public function cetakUjian(Request $request)

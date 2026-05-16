@@ -2,9 +2,9 @@
     'required' => false,
 ])
 
-<label {{ $attributes->merge(['class' => 'text-sm font-semibold leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-800']) }}>
+<label {{ $attributes->merge(['class' => 'text-sm font-semibold text-slate-900 peer-disabled:cursor-not-allowed peer-disabled:opacity-50']) }}>
     {{ $slot }}
     @if($required)
-        <span class="text-destructive ml-0.5">*</span>
+        <span class="text-red-500 ml-0.5">*</span>
     @endif
 </label>

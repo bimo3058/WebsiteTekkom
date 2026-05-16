@@ -19,7 +19,7 @@
                 <!-- Jenis Soal -->
                 <div class="mb-5">
                     <label class="block text-sm font-medium text-slate-700 mb-2">Jenis Soal</label>
-                    <select multiple class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2 px-3 shadow-sm h-32" name="jenis_soal[]">
+                    <select multiple class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary py-2 px-3 shadow-sm h-32" name="jenis_soal[]">
                         <option value="Pilihan Ganda">Pilihan Ganda</option>
                         <option value="Essay">Essay</option>
                         <option value="Benar/Salah">Benar/Salah</option>
@@ -33,7 +33,7 @@
                 <div class="mb-5">
                     <label class="block text-sm font-medium text-slate-700 mb-2">CPL (Capaian Pembelajaran Lulusan)</label>
                     <div class="relative">
-                        <select class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="cpl_id">
+                        <select class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="cpl_id">
                             <option value="">Pilih CPL</option>
                             <option value="1">CPL-1</option>
                             <option value="2">CPL-2</option>
@@ -48,7 +48,7 @@
                 <div class="mb-5">
                     <label class="block text-sm font-medium text-slate-700 mb-2">CPMK (Capaian Pembelajaran Mata Kuliah)</label>
                     <div class="relative">
-                        <select class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="cpmk_id">
+                        <select class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="cpmk_id">
                             <option value="">Pilih CPMK</option>
                             <option value="1">CPMK-1</option>
                             <option value="2">CPMK-2</option>
@@ -63,7 +63,7 @@
                 <div class="mb-2">
                     <label class="block text-sm font-medium text-slate-700 mb-2">Bobot Total</label>
                     <div class="relative">
-                        <input type="number" name="bobot_total" class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 py-2.5 pl-4 pr-12 shadow-sm" placeholder="Contoh: 100">
+                        <input type="number" name="bobot_total" class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary py-2.5 pl-4 pr-12 shadow-sm" placeholder="Contoh: 100">
                         <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
                             <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">Pts</span>
                         </div>

@@ -129,6 +129,51 @@
             </button>
         </div>
 
+        <!-- ============================================================ -->
+        <!-- OVERLAY 4: Submit Konfirmasi (kustom, tidak keluar fullscreen) -->
+        <!-- ============================================================ -->
+        <div x-show="showSubmitModal"
+             x-cloak
+             class="fixed inset-0 z-[9997] bg-black/75 flex items-center justify-center p-8">
+            <div class="bg-white border-2 border-black max-w-md w-full p-8 shadow-2xl">
+                <div class="text-center mb-6">
+                    <div class="text-5xl mb-4">📋</div>
+                    <h3 class="text-xl font-black uppercase tracking-tight mb-3">Selesaikan Ujian?</h3>
+                    <p class="text-sm text-slate-600 leading-relaxed" x-text="submitMessage"></p>
+                </div>
+                <div class="grid grid-cols-2 gap-3 mt-6">
+                    <button @click="showSubmitModal = false"
+                            class="border-2 border-black px-4 py-3 text-sm font-black uppercase tracking-tight hover:bg-zinc-100 active:translate-y-0.5 transition-none">
+                        Kembali
+                    </button>
+                    <button @click="confirmSubmit()"
+                            class="bg-black text-white border-2 border-black px-4 py-3 text-sm font-black uppercase tracking-tight hover:bg-zinc-800 active:translate-y-0.5 transition-none flex items-center justify-center gap-2">
+                        <span class="material-symbols-outlined" style="font-size:18px">done_all</span>
+                        Ya, Selesaikan
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ============================================================ -->
+        <!-- OVERLAY 5: Alert / Notifikasi (ganti browser alert)          -->
+        <!-- ============================================================ -->
+        <div x-show="showAlertModal"
+             x-cloak
+             class="fixed inset-0 z-[9996] bg-black/75 flex items-center justify-center p-8">
+            <div class="bg-white border-2 border-black max-w-md w-full p-8 shadow-2xl">
+                <div class="text-center mb-6">
+                    <div class="text-5xl mb-4" x-text="alertIcon"></div>
+                    <h3 class="text-xl font-black uppercase tracking-tight mb-3" x-text="alertTitle"></h3>
+                    <p class="text-sm text-slate-600 leading-relaxed" x-text="alertMessage"></p>
+                </div>
+                <button @click="closeAlert()"
+                        class="w-full bg-black text-white border-2 border-black px-4 py-3 text-sm font-black uppercase tracking-tight hover:bg-zinc-800 active:translate-y-0.5 transition-none">
+                    OK
+                </button>
+            </div>
+        </div>
+
         <!-- TopAppBar -->
         <header class="w-full z-50 flex justify-between items-center py-4 bg-white border-b-2 border-black px-10 shrink-0">
             <div class="w-full flex justify-between items-center">
@@ -146,7 +191,7 @@
                     <div class="flex items-center gap-3">
                         <div class="text-right">
                             <p class="text-xs font-bold uppercase">Student: {{ auth()->user()->name }}</p>
-                            <p class="text-[10px] opacity-60 font-bold tracking-wider">{{ auth()->user()->nim ?? 'NIM' }}</p>
+                            <p class="text-[10px] opacity-60 font-bold tracking-wider">{{ optional(auth()->user()->student)->student_number ?? 'NIM' }}</p>
                         </div>
                         <span class="material-symbols-outlined text-4xl">account_circle</span>
                     </div>
@@ -155,13 +200,13 @@
         </header>
 
         <div class="flex-grow flex overflow-hidden">
-            <!-- Main Content Area (75%) -->
-            <main class="w-3/4 px-10 py-8 overflow-y-auto">
+            <!-- Main Content Area (80%) -->
+            <main class="w-4/5 px-10 py-8 overflow-y-auto">
                 <template x-if="currentSoal">
                     <div class="border-2 border-black p-8 bg-white min-h-full flex flex-col">
                         <div class="flex justify-between items-start mb-8">
                             <h1 class="text-3xl font-black uppercase tracking-tight">Soal No. <span x-text="currentIndex + 1"></span></h1>
-                            <div class="border border-black bg-black text-white px-3 py-1 text-xs font-bold tracking-widest uppercase">SOAL UJIAN</div>
+                            <div class="border border-black bg-black text-white px-3 py-1 text-xs font-bold tracking-widest uppercase" x-text="currentSoal?.cpl_kode ?? 'SOAL UJIAN'"></div>
                         </div>
                         
                         <div class="mb-10 text-lg font-medium leading-relaxed prose max-w-none prose-p:my-2" x-html="currentSoal.soal">
@@ -190,8 +235,8 @@
                 </template>
             </main>
 
-            <!-- SideNavBar (25%) -->
-            <aside class="w-1/4 pr-10 py-8 overflow-hidden">
+            <!-- SideNavBar (20%) -->
+            <aside class="w-1/5 pr-10 py-8 overflow-hidden">
                 <div class="bg-zinc-50 border-2 border-black h-full flex flex-col">
                     <div class="p-6 border-b-2 border-black bg-white">
                         <h2 class="text-base font-black uppercase tracking-tight">Navigasi Soal (<span x-text="soals.length"></span>)</h2>
@@ -202,8 +247,8 @@
                         </div>
                     </div>
                     
-                    <div class="p-5 overflow-y-auto flex-grow scrollbar-hide">
-                        <div class="grid grid-cols-5 xl:grid-cols-5 lg:grid-cols-4 gap-1.5">
+                    <div class="p-3 overflow-hidden flex-grow flex justify-center items-center">
+                        <div class="grid gap-1 w-full max-h-full" style="grid-template-columns: repeat(5, 1fr); grid-template-rows: repeat(20, 1fr); aspect-ratio: 1/4;">
                             <template x-for="(soal, idx) in soals" :key="soal.id">
                                 <div @click="goToSoal(idx)" 
                                      :class="{
@@ -214,7 +259,7 @@
                                          'bg-zinc-800 text-white': !soal.ragu_ragu && soal.jawaban_terpilih,
                                          'bg-white text-black': !soal.ragu_ragu && !soal.jawaban_terpilih
                                      }"
-                                     class="aspect-square flex items-center justify-center font-bold text-xs cursor-pointer transition-transform hover:scale-105 active:scale-95" 
+                                     class="flex items-center justify-center font-bold text-xs cursor-pointer transition-transform hover:scale-105 active:scale-95" 
                                      :title="'Soal ' + (idx + 1)">
                                     <span x-text="idx + 1"></span>
                                 </div>
@@ -222,19 +267,14 @@
                         </div>
                     </div>
 
-                    <div class="p-6 border-t-2 border-black bg-white">
-                        <button @click="submitExam()" class="w-full bg-red-600 text-white border-2 border-black px-4 py-3 text-sm font-black uppercase tracking-tight hover:bg-red-700 active:translate-y-0.5 transition-none flex items-center justify-center gap-2">
-                            <span class="material-symbols-outlined">done_all</span>
-                            Selesaikan Ujian
-                        </button>
-                    </div>
+
                 </div>
             </aside>
         </div>
 
         <!-- Footer Actions -->
-        <footer class="w-full z-50 flex justify-between items-center px-10 py-5 bg-white border-t-2 border-black shrink-0">
-            <div class="w-full flex justify-between items-center">
+        <footer class="w-full z-50 flex justify-center items-center px-10 py-5 bg-white border-t-2 border-black shrink-0 relative">
+            <div class="flex items-center gap-3">
                 <button @click="prevSoal()" :disabled="currentIndex === 0" :class="currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:invert active:translate-y-0.5'" class="border-2 border-black px-6 py-2.5 text-sm font-bold uppercase tracking-tight transition-none flex items-center gap-2 bg-white">
                     <span class="material-symbols-outlined">arrow_back</span>
                     Prev
@@ -245,10 +285,18 @@
                     <span x-text="isRagu ? 'Hapus Ragu' : 'Ragu-ragu'"></span>
                 </button>
                 
-                <button @click="nextSoal()" :disabled="currentIndex === soals.length - 1" :class="currentIndex === soals.length - 1 ? 'opacity-50 cursor-not-allowed' : 'hover:invert active:translate-y-0.5'" class="bg-black text-white border-2 border-black px-10 py-2.5 text-sm font-bold uppercase tracking-tight transition-none flex items-center gap-2">
-                    Next
-                    <span class="material-symbols-outlined">arrow_forward</span>
-                </button>
+                <template x-if="currentIndex < soals.length - 1">
+                    <button @click="nextSoal()" class="bg-black text-white border-2 border-black px-6 py-2.5 text-sm font-bold uppercase tracking-tight transition-none flex items-center gap-2 hover:invert active:translate-y-0.5">
+                        Next
+                        <span class="material-symbols-outlined">arrow_forward</span>
+                    </button>
+                </template>
+                <template x-if="currentIndex === soals.length - 1">
+                    <button @click="submitExam()" class="bg-red-600 text-white border-2 border-black px-6 py-2.5 text-sm font-bold uppercase tracking-tight transition-none flex items-center gap-2 hover:bg-red-700 active:translate-y-0.5">
+                        <span class="material-symbols-outlined" style="font-size:18px">done_all</span>
+                        Submit
+                    </button>
+                </template>
             </div>
         </footer>
 
@@ -328,6 +376,15 @@
                 fullscreenSupported: !!document.documentElement.requestFullscreen,
                 showDuplicateTabWarning: false,
 
+                // Modal state
+                showSubmitModal: false,
+                submitMessage: '',
+                showAlertModal: false,
+                alertTitle: '',
+                alertMessage: '',
+                alertIcon: '⚠️',
+                _alertCallback: null,
+
                 get currentSoal() {
                     return this.soals[this.currentIndex] || null;
                 },
@@ -379,19 +436,87 @@
                         return "Yakin ingin keluar? Ujian sedang berlangsung.";
                     }
 
-                    // ✅ Fullscreen enforcement: log pelanggaran dan tampilkan warning overlay
+                    // ✅ Fullscreen enforcement: auto re-enter + log + overlay fallback
                     const onFullscreenChange = () => {
                         const isFullscreen = !!(document.fullscreenElement || document.webkitFullscreenElement);
                         if (!isFullscreen && !this.showFullscreenOverlay) {
-                            // Hanya fire jika sudah melewati overlay awal
-                            this.showFullscreenWarning = true;
+                            // Log pelanggaran
                             logCheatEvent('fullscreen_exit', 'Peserta keluar dari mode layar penuh selama ujian berlangsung.');
+
+                            // 🔒 Auto re-enter fullscreen tanpa menunggu user klik
+                            const el  = document.documentElement;
+                            const req = el.requestFullscreen || el.webkitRequestFullscreen || el.mozRequestFullScreen;
+                            if (req) {
+                                req.call(el, { navigationUI: 'hide' })
+                                    .then(() => {
+                                        // Berhasil kembali — tidak perlu tampilkan warning
+                                        this.showFullscreenWarning = false;
+                                    })
+                                    .catch(() => {
+                                        // Gagal (browser blokir tanpa gesture) — tampilkan overlay pemblokir
+                                        this.showFullscreenWarning = true;
+                                    });
+                            } else {
+                                this.showFullscreenWarning = true;
+                            }
                         } else if (isFullscreen) {
                             this.showFullscreenWarning = false;
                         }
                     };
                     document.addEventListener('fullscreenchange', onFullscreenChange);
                     document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+
+                    // 🔒 Blokir shortcut keyboard yang umum digunakan untuk keluar
+                    document.addEventListener('keydown', (e) => {
+                        // F11 — toggle fullscreen
+                        if (e.key === 'F11') {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            return;
+                        }
+                        // F5 / Ctrl+R — refresh halaman
+                        if (e.key === 'F5' || (e.ctrlKey && (e.key === 'r' || e.key === 'R'))) {
+                            e.preventDefault();
+                            return;
+                        }
+                        // Ctrl+W — tutup tab
+                        if (e.ctrlKey && (e.key === 'w' || e.key === 'W')) {
+                            e.preventDefault();
+                            return;
+                        }
+                        // Ctrl+T — tab baru
+                        if (e.ctrlKey && (e.key === 't' || e.key === 'T')) {
+                            e.preventDefault();
+                            return;
+                        }
+                        // Ctrl+N — jendela baru
+                        if (e.ctrlKey && (e.key === 'n' || e.key === 'N')) {
+                            e.preventDefault();
+                            return;
+                        }
+                        // F12 / Ctrl+Shift+I / Ctrl+Shift+J — DevTools
+                        if (e.key === 'F12' ||
+                            (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) ||
+                            (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j'))) {
+                            e.preventDefault();
+                            return;
+                        }
+                        // Ctrl+U — View Source
+                        if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
+                            e.preventDefault();
+                            return;
+                        }
+                        // Alt+F4 — tutup jendela (Windows)
+                        if (e.altKey && e.key === 'F4') {
+                            e.preventDefault();
+                            return;
+                        }
+                        // Alt+Left / Alt+Right — navigasi browser back/forward
+                        if (e.altKey && (e.key === 'ArrowLeft' || e.key === 'ArrowRight')) {
+                            e.preventDefault();
+                            return;
+                        }
+                    }, true); // capture phase agar tidak bisa di-stopPropagation dari bawah
 
                     // ✅ M2: Deteksi parallel session (2 tab/window) via localStorage + BroadcastChannel
                     const sessionId = rawSoals[0]?.kompre_session_id || 'unknown';
@@ -470,6 +595,11 @@
                     this.isSaving = true;
                     const kompreJawabanId = this.currentSoal.id;
 
+                    // ✅ Optimistic UI: simpan nilai lama untuk rollback jika server gagal
+                    const previousAnswer = this.currentSoal.jawaban_terpilih;
+                    // Update state frontend langsung agar navigasi soal langsung akurat
+                    this.currentSoal.jawaban_terpilih = opsiId;
+
                     try {
                         const response = await fetch("{{ route('komprehensif.mahasiswa.engine.save-answer') }}", {
                             method: 'POST',
@@ -489,18 +619,26 @@
                         if (data.expired) {
                             window.onbeforeunload = null;
                             clearInterval(this.timerInterval);
-                            alert('Waktu ujian telah habis. Jawaban Anda akan disubmit otomatis oleh server.');
-                            window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}";
+                            this.showAlert(
+                                'Waktu Ujian Habis',
+                                'Waktu ujian telah habis. Jawaban Anda akan disubmit otomatis oleh server.',
+                                '⏰',
+                                () => { window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}"; }
+                            );
                             return;
                         }
 
                         if (!data.success) {
-                            alert('Gagal menyimpan jawaban. Periksa koneksi internet Anda!');
-                        } else {
-                            this.currentJawaban = opsiId;
+                            // 🔄 Rollback: kembalikan ke jawaban sebelumnya jika server menolak
+                            this.currentSoal.jawaban_terpilih = previousAnswer;
+                            this.showAlert('Gagal Menyimpan', 'Gagal menyimpan jawaban. Periksa koneksi internet Anda!', '❌');
                         }
+                        // Jika sukses: state sudah benar (diset secara optimistic di atas)
                     } catch (error) {
+                        // 🔄 Rollback juga jika ada error jaringan
+                        this.currentSoal.jawaban_terpilih = previousAnswer;
                         console.error('Save error:', error);
+                        this.showAlert('Koneksi Bermasalah', 'Jawaban gagal tersimpan karena koneksi terputus. Periksa internet Anda!', '❌');
                     } finally {
                         setTimeout(() => { this.isSaving = false; }, 300);
                     }
@@ -530,8 +668,12 @@
                         if (data.expired) {
                             window.onbeforeunload = null;
                             clearInterval(this.timerInterval);
-                            alert('Waktu ujian telah habis. Jawaban Anda akan disubmit otomatis oleh server.');
-                            window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}";
+                            this.showAlert(
+                                'Waktu Ujian Habis',
+                                'Waktu ujian telah habis. Jawaban Anda akan disubmit otomatis oleh server.',
+                                '⏰',
+                                () => { window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}"; }
+                            );
                             return;
                         }
 
@@ -545,23 +687,45 @@
                     }
                 },
 
+                showAlert(title, message, icon = '⚠️', callback = null) {
+                    this.alertTitle   = title;
+                    this.alertMessage = message;
+                    this.alertIcon    = icon;
+                    this._alertCallback = callback;
+                    this.showAlertModal = true;
+                },
+
+                closeAlert() {
+                    this.showAlertModal = false;
+                    if (this._alertCallback) {
+                        const cb = this._alertCallback;
+                        this._alertCallback = null;
+                        cb();
+                    }
+                },
+
                 submitExam() {
                     const unAnswered = this.soals.filter(s => !s.jawaban_terpilih).length;
-                    let msg = 'Apakah Anda yakin ingin menyelesaikan ujian ini?\n\nSetelah klik OK, Anda tidak bisa mengubah jawaban lagi.';
-                    if (unAnswered > 0) {
-                        msg = `PERINGATAN: Masih ada ${unAnswered} soal yang BELUM dijawab.\n\nYakin ingin mengakhiri?`;
-                    }
+                    this.submitMessage = unAnswered > 0
+                        ? `⚠️ Masih ada ${unAnswered} soal yang BELUM dijawab. Yakin ingin mengakhiri ujian?`
+                        : 'Setelah dikonfirmasi, Anda tidak dapat mengubah jawaban lagi.';
+                    this.showSubmitModal = true;
+                },
 
-                    if (confirm(msg)) {
-                        window.onbeforeunload = null;
-                        window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}";
-                    }
+                confirmSubmit() {
+                    this.showSubmitModal = false;
+                    window.onbeforeunload = null;
+                    window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}";
                 },
 
                 forceSubmitTimeUp() {
                     window.onbeforeunload = null;
-                    alert("Waktu Ujian Telah Habis! Jawaban Anda akan otomatis disubmit.");
-                    window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}";
+                    this.showAlert(
+                        'Waktu Ujian Habis',
+                        'Waktu ujian telah habis. Jawaban Anda akan otomatis disubmit.',
+                        '⏰',
+                        () => { window.location.href = "{{ route('komprehensif.mahasiswa.engine.finish') }}"; }
+                    );
                 }
             }));
         });

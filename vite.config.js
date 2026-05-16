@@ -5,11 +5,12 @@ export default defineConfig({
     plugins: [
         laravel({
             input: ["resources/css/app.css", "resources/js/app.js"],
+
             refresh: true,
         }),
     ],
     server: {
-        host: "0.0.0.0", // Membuka akses agar IP lain (HP) bisa konek
+        host: "0.0.0.0",
         hmr: {
             host: process.env.VITE_HMR_HOST || "localhost",
             protocol: "ws",

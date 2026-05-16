@@ -28,7 +28,7 @@
                 <div class="p-6">
                     <div class="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
                         <div class="flex flex-wrap items-center gap-2">
-                            <span class="inline-flex items-center rounded-full bg-blue-600 px-3 py-1 text-[11px] font-semibold text-white">SOAL #{{ $riwayatSoal->firstItem() + $index }}</span>
+                            <span class="inline-flex items-center rounded-full bg-primary px-3 py-1 text-[11px] font-semibold text-white">SOAL #{{ $riwayatSoal->firstItem() + $index }}</span>
                             <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600 border border-slate-200">LEVEL: {{ strtoupper($soal->kesulitan) }}</span>
                             @if($soal->cpl)
                                 <span class="inline-flex items-center rounded-full bg-slate-100 px-3 py-1 text-[11px] font-semibold text-slate-600 border border-slate-200"><i class="fas fa-tag mr-1"></i> {{ $soal->cpl->kode }}</span>
@@ -104,7 +104,7 @@
                         </div>
                         <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
                             <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="editModal{{ $soal->id }}">Batal</button>
-                            <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700">Simpan Perubahan</button>
+                            <button type="submit" class="rounded-lg bg-primary px-4 py-2 text-xs font-semibold text-white hover:bg-primary/90">Simpan Perubahan</button>
                         </div>
                     </form>
                 </div>
@@ -114,7 +114,7 @@
                 <i class="fas fa-folder-open mb-3 text-3xl text-slate-300"></i>
                 <p class="text-lg font-semibold text-slate-900">Riwayat Validasi Kosong</p>
                 <p class="text-sm text-slate-500">Belum ada hasil review soal yang bisa ditampilkan untuk mata kuliah ini.</p>
-                <a href="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal') }}" class="mt-4 inline-flex items-center rounded-xl bg-blue-600 px-4 py-2 text-sm font-semibold text-white hover:bg-blue-700">Kembali ke Daftar</a>
+                <a href="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal') }}" class="mt-4 inline-flex items-center rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/90">Kembali ke Daftar</a>
             </div>
         @endforelse
     </div>

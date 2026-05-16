@@ -10,58 +10,82 @@
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="bg-slate-50 text-slate-800 antialiased" x-data="{ sidebarOpen: false }">
-<div class="flex h-screen w-full">
+<div class="flex h-screen w-full overflow-hidden bg-slate-50/50">
 
     <!-- Mobile Overlay -->
-    <div x-show="sidebarOpen" class="fixed inset-0 z-20 bg-black bg-opacity-50 lg:hidden" @click="sidebarOpen = false"></div>
+    <div x-show="sidebarOpen" x-cloak class="fixed inset-0 z-20 bg-slate-900/40 backdrop-blur-sm lg:hidden" x-transition.opacity @click="sidebarOpen = false"></div>
 
     <!-- Sidebar -->
-    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-30 w-64 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 lg:static lg:translate-x-0">
-        <div class="flex items-center gap-3 px-6 h-16 border-b border-slate-200">
-            <div class="w-9 h-9 bg-slate-900 rounded-lg flex items-center justify-center text-white">
-                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/></svg>
+    <aside :class="sidebarOpen ? 'translate-x-0' : '-translate-x-full'" class="fixed inset-y-0 left-0 z-30 w-72 bg-white border-r border-slate-200 flex flex-col transition-transform duration-300 lg:static lg:translate-x-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)]">
+        <div class="h-20 flex items-center px-8 border-b border-slate-100">
+            <div class="w-10 h-10 bg-indigo-600 rounded-xl flex items-center justify-center text-white font-bold mr-4 shadow-md shadow-indigo-200 flex-shrink-0">
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5"/></svg>
             </div>
             <div>
-                <p class="font-bold text-slate-900 text-sm">SIKP</p>
-                <p class="text-[10px] text-slate-500">Sistem Informasi KP</p>
+                <h1 class="font-bold text-slate-900 text-lg leading-tight tracking-tight">Balancing Center</h1>
+                <p class="text-xs text-slate-500 font-medium">Dosen Pembimbing</p>
             </div>
         </div>
-        <nav class="flex-1 px-4 py-4 space-y-1">
-            <p class="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 mt-2">Menu Dosen</p>
-            <a href="{{ route('kp.dosen.dashboard') }}" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors">
-                <svg class="w-5 h-5 mr-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
-                List Anak Bimbingan
+        
+        <div class="flex-1 overflow-y-auto py-6 px-4">
+            <div class="mb-2 px-4"><p class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Menu Utama</p></div>
+            
+            <a href="{{ route('eoffice.kp.dosen.dashboard') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
+                Dashboard
             </a>
-            <a href="{{ route('kp.dosen.validasi_berkas') }}" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg bg-blue-50 text-blue-700 transition-colors">
-                <svg class="w-5 h-5 mr-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                Validasi & Approval Berkas
+
+            <a href="{{ route('eoffice.kp.dosen.bimbingan.index') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
+                </svg>
+                Bimbingan
             </a>
-            <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-colors">
-                <svg class="w-5 h-5 mr-3 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                Berkas B4
+
+            <a href="{{ route('eoffice.kp.dosen.validasi_berkas') }}" class="flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Validasi Berkas
             </a>
-        </nav>
-        <div class="p-4 border-t border-slate-200">
-            <a href="#" class="flex items-center px-3 py-2 text-sm font-medium rounded-lg text-red-600 hover:bg-red-50 transition-colors">
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
-                Logout
+
+            <a href="#" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                Pengajuan Tugas
             </a>
+        </div>
+        
+        <!-- User Profile -->
+        <div class="p-4 border-t border-slate-100">
+            <div class="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
+                <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shadow-sm border border-indigo-200">
+                    D
+                </div>
+                <div class="flex-1 min-w-0">
+                    <p class="text-sm font-bold text-slate-900 truncate">Dosen Pembimbing</p>
+                    <p class="text-[11px] text-slate-500 truncate">Sistem Balancing Center</p>
+                </div>
+            </div>
         </div>
     </aside>
 
-    <!-- Main -->
-    <div class="flex-1 flex flex-col overflow-hidden">
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col h-screen overflow-hidden bg-slate-50/50">
+        
         <!-- Topbar -->
-        <header class="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-4 sm:px-6">
-            <div class="flex items-center gap-4">
-                <button @click="sidebarOpen = true" class="lg:hidden text-slate-500">
+        <header class="h-20 bg-white/80 backdrop-blur-md border-b border-slate-200 flex items-center justify-between px-6 lg:px-10 z-10 sticky top-0">
+            <div class="flex items-center">
+                <button @click="sidebarOpen = true" class="lg:hidden text-slate-500 hover:text-slate-700 mr-4 p-2 rounded-lg hover:bg-slate-100 transition-colors">
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
-                <p class="text-sm text-slate-500">SIKP <span class="mx-2">/</span> <span class="text-slate-900 font-medium">Validasi & Approval Berkas</span></p>
+                <nav class="hidden sm:flex items-center space-x-2 text-sm text-slate-500 font-medium">
+                    <span class="text-indigo-700 font-semibold bg-indigo-50 px-2.5 py-1 rounded-md">Validasi Berkas</span>
+                </nav>
             </div>
-            <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600">
-                    <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"/></svg>
+            <div class="flex items-center gap-3">
+                <div class="relative">
+                    <button class="p-2 text-slate-400 hover:text-slate-600 bg-slate-50 hover:bg-slate-100 rounded-full transition-colors relative">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+                        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 border-2 border-white rounded-full"></span>
+                    </button>
                 </div>
             </div>
         </header>
@@ -195,13 +219,13 @@
                                 <td class="px-5 py-4 whitespace-nowrap text-right">
                                     @if($dok->status_validasi == 'pending')
                                     <div class="flex items-center justify-end gap-2">
-                                        <form action="{{ route('kp.dosen.bimbingan.dokumen.reject', [$dok->kp_id, $dok->id]) }}" method="POST">
+                                        <form action="{{ route('eoffice.kp.dosen.bimbingan.dokumen.reject', [$dok->kp_id, $dok->id]) }}" method="POST">
                                             @csrf
                                             <button type="submit" class="px-3 py-1.5 text-xs font-medium text-red-600 bg-red-50 hover:bg-red-100 border border-red-200 rounded-lg transition-colors">
                                                 Revisi
                                             </button>
                                         </form>
-                                        <form action="{{ route('kp.dosen.bimbingan.dokumen.approve', [$dok->kp_id, $dok->id]) }}" method="POST">
+                                        <form action="{{ route('eoffice.kp.dosen.bimbingan.dokumen.approve', [$dok->kp_id, $dok->id]) }}" method="POST">
                                             @csrf
                                             <button type="submit" class="px-3 py-1.5 text-xs font-medium text-white bg-emerald-600 hover:bg-emerald-700 rounded-lg transition-colors flex items-center gap-1">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
@@ -250,11 +274,11 @@
                         @endif
                         @if($dok->status_validasi == 'pending')
                         <div class="flex gap-2 mt-2">
-                            <form action="{{ route('kp.dosen.bimbingan.dokumen.reject', [$dok->kp_id, $dok->id]) }}" method="POST" class="flex-1">
+                            <form action="{{ route('eoffice.kp.dosen.bimbingan.dokumen.reject', [$dok->kp_id, $dok->id]) }}" method="POST" class="flex-1">
                                 @csrf
                                 <button class="w-full py-2 text-xs font-medium text-red-600 bg-red-50 border border-red-200 rounded-lg">Revisi</button>
                             </form>
-                            <form action="{{ route('kp.dosen.bimbingan.dokumen.approve', [$dok->kp_id, $dok->id]) }}" method="POST" class="flex-1">
+                            <form action="{{ route('eoffice.kp.dosen.bimbingan.dokumen.approve', [$dok->kp_id, $dok->id]) }}" method="POST" class="flex-1">
                                 @csrf
                                 <button class="w-full py-2 text-xs font-medium text-white bg-emerald-600 rounded-lg">ACC</button>
                             </form>

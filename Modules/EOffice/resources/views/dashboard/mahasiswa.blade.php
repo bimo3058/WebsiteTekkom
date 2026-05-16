@@ -149,15 +149,15 @@
                         <span class="text-[12px] font-bold px-3 py-[4px] rounded-full"
                               style="background:{{ $kpBg }}; color:{{ $kpFg }};">{{ $statusKp }}</span>
                     </div>
-                    <a href="{{ route('eoffice.kp.dashboard') }}"
+                    <a href="{{ route('eoffice.kp.mahasiswa.dashboard') }}"
                        class="text-[12px] font-semibold no-underline" style="color:#106A97;">
                         Pantau Progress →
                     </a>
                     @else
-                    <div class="text-[13px] text-[#A4ABB8] mb-3">Belum mendaftar KP.</div>
-                    <a href="{{ route('eoffice.kp.register') }}"
+                    <div class="text-[13px] text-[#A4ABB8] mb-3">Masuk ke modul KP.</div>
+                    <a href="{{ route('eoffice.kp.mahasiswa.dashboard') }}"
                        class="text-[12px] font-semibold px-4 py-[7px] rounded-[8px] no-underline text-white inline-block"
-                       style="background:#106A97;">Daftar KP</a>
+                       style="background:#106A97;">Masuk KP</a>
                     @endif
                 </div>
             </div>

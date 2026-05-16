@@ -7,9 +7,9 @@
                 Menunggu Validasi
                 <span class="ml-2 inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[11px] font-semibold text-slate-600 border border-slate-200">{{ $counts->menunggu ?? 0 }}</span>
             </a>
-            <a href="#" class="pb-3 border-b-2 border-blue-600 text-blue-600 flex items-center">
+            <a href="#" class="pb-3 border-b-2 border-primary text-primary flex items-center">
                 Selesai Direview
-                <span class="ml-2 inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-200">{{ $counts->selesai ?? $riwayat_soal->count() }}</span>
+                <span class="ml-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/20">{{ $counts->selesai ?? $riwayat_soal->count() }}</span>
             </a>
         </nav>
     </div>
@@ -67,7 +67,7 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-center">
-                                <a href="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal.detail', $riwayat->mk_id) }}" class="inline-flex flex-col items-center text-blue-600 hover:text-blue-700">
+                                <a href="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal.detail', $riwayat->mk_id) }}" class="inline-flex flex-col items-center text-primary hover:text-primary/90">
                                     <i class="fas fa-eye"></i>
                                     <span class="text-[11px] font-semibold">Lihat Detail</span>
                                 </a>
