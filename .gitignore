@@ -32,9 +32,11 @@ composer.lock
 bootstrap/providers.php
 
 # AI assistant files — jangan push ke repo
+.claude/
 CLAUDE.md
 PLAN_*.md
 AI_*.md
 .gemini/
 .cursor/
 .copilot/
+*.sql

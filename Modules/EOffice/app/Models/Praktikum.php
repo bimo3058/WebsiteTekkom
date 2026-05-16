@@ -34,13 +34,13 @@ class Praktikum extends Model
         ];
     }
 
-    // ─── Boot: audit log pakai EoAuditLog global ──────────────────────────────
+    // ─── Boot: audit log ──────────────────────────────────────────────────────
 
     protected static function booted(): void
     {
-        static::created(fn($m)  => $m->writeAuditLog('create',  null, $m->getAttributes()));
-        static::updated(fn($m)  => $m->writeAuditLog('update',  $m->getOriginal(), $m->getChanges()));
-        static::deleted(fn($m)  => $m->writeAuditLog('delete',  $m->getAttributes(), null));
+        static::created(fn($m) => $m->writeAuditLog('create', null, $m->getAttributes()));
+        static::updated(fn($m) => $m->writeAuditLog('update', $m->getOriginal(), $m->getChanges()));
+        static::deleted(fn($m) => $m->writeAuditLog('delete', $m->getAttributes(), null));
     }
 
     private function writeAuditLog(string $action, ?array $old, ?array $new): void
@@ -63,21 +63,25 @@ class Praktikum extends Model
         }
     }
 
-    // ─── Relationships ─────────────────────────────────────────────────────────
+    // ─── Relationships ────────────────────────────────────────────────────────
 
-    /**
-     * Dosen pengampu — relasi ke User global superapp.
-     */
     public function dosen()
     {
         return $this->belongsTo(User::class, 'dosen_id');
     }
 
-    /**
-     * Koordinator praktikum — relasi ke User global superapp.
-     */
     public function koordinator()
     {
         return $this->belongsTo(User::class, 'koor_id');
+    }
+
+    public function daftarPraktikan()
+    {
+        return $this->hasMany(DaftarPraktikan::class, 'praktikum_id');
+    }
+
+    public function asprakPraktikum()
+    {
+        return $this->hasMany(AsprakPraktikum::class, 'praktikum_id');
     }
 }

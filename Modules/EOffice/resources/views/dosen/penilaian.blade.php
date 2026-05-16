@@ -14,7 +14,7 @@
     <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50">
         <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex h-16 items-center gap-4">
-                <a href="{{ route('kp.dosen.bimbingan.show', $kp->id) }}" class="text-slate-400 hover:text-slate-700 transition-colors">
+                <a href="{{ route('eoffice.kp.dosen.bimbingan.show', $kp->id) }}" class="text-slate-400 hover:text-slate-700 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/></svg>
                 </a>
                 <div class="h-6 w-px bg-slate-200"></div>
@@ -56,7 +56,7 @@
         </div>
 
         <!-- Form Penilaian -->
-        <form action="{{ route('kp.dosen.bimbingan.penilaian.store', $kp->id) }}" method="POST">
+        <form action="{{ route('eoffice.kp.dosen.bimbingan.penilaian.store', $kp->id) }}" method="POST">
             @csrf
 
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
@@ -136,7 +136,7 @@
 
                 <!-- Actions -->
                 <div class="px-6 pb-6 flex flex-col sm:flex-row gap-3">
-                    <a href="{{ route('kp.dosen.bimbingan.show', $kp->id) }}" class="flex-1 text-center px-6 py-3 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors text-sm">
+                    <a href="{{ route('eoffice.kp.dosen.bimbingan.show', $kp->id) }}" class="flex-1 text-center px-6 py-3 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-50 transition-colors text-sm">
                         Batal
                     </a>
                     <button type="submit" class="flex-1 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-xl shadow-sm transition-colors text-sm flex items-center justify-center gap-2">

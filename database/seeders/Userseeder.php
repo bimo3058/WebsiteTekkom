@@ -18,7 +18,7 @@ class UserSeeder extends Seeder
             'superadmin' => Role::where('name', 'superadmin')->where('module', 'global')->firstOrFail(),
             'dosen'      => Role::where('name', 'dosen')->where('module', 'global')->firstOrFail(),
             'mahasiswa'  => Role::where('name', 'mahasiswa')->where('module', 'global')->firstOrFail(),
-            'gpm'        => Role::where('name', 'gpm')->where('module', 'bank_soal')->firstOrFail(),
+            'gpm'        => Role::where('name', 'gpm')->where('module', 'global')->firstOrFail(),
             
         ];
 

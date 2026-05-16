@@ -267,31 +267,27 @@
             <tbody>
                 @forelse($logs as $index => $log)
                 @php
-                    [$modBg, $modColor, $modBorder] = match($log->module ?? '') {
-                        'auth'               => ['#ECFDF5', '#059669', '#A7F3D0'],
-                        'bank_soal'          => ['#FFFBEB', '#D97706', '#FDE68A'],
-                        'capstone'           => ['#EFF6FF', '#3B82F6', '#BFDBFE'],
-                        'eoffice'            => ['rgba(11,38,110,0.06)', 'var(--c-primary)', 'rgba(11,38,110,0.18)'],
-                        'user_management'    => ['rgba(11,38,110,0.06)', 'var(--c-primary)', 'rgba(11,38,110,0.18)'],
-                        'manajemen_mahasiswa'=> ['#ECFDF5', '#059669', '#A7F3D0'],
-                        'modul_setting'      => ['#FFF1F2', '#F43F5E', '#FECDD3'],
-                        default              => ['#F9FAFB', '#6B7280', '#E5E7EB'],
+                    $moduleVariant = match($log->module ?? '') {
+                        'auth'                => 'module-auth',
+                        'bank_soal'           => 'module-banksoal',
+                        'capstone'            => 'module-capstone',
+                        'eoffice'             => 'module-eoffice',
+                        'user_management'     => 'module-management',
+                        'manajemen_mahasiswa' => 'module-auth',
+                        'modul_setting'       => 'destructive',
+                        default               => 'module-default',
                     };
-                    [$actBg, $actColor, $actBorder] = match(strtolower($log->action ?? '')) {
-                        'create' => ['#ECFDF5', '#059669', '#A7F3D0'],
-                        'update' => ['#FFFBEB', '#D97706', '#FDE68A'],
-                        'delete' => ['#FEF2F2', '#DC2626', '#FECACA'],
-                        'login'  => ['rgba(11,38,110,0.06)', 'var(--c-primary)', 'rgba(11,38,110,0.18)'],
-                        'logout' => ['#F9FAFB', '#6B7280', '#E5E7EB'],
-                        'view'   => ['#EFF6FF', '#3B82F6', '#BFDBFE'],
-                        default  => ['#F9FAFB', '#6B7280', '#E5E7EB'],
+                    $actionVariant = match(strtolower($log->action ?? '')) {
+                        'create' => 'action-create',
+                        'update' => 'action-update',
+                        'delete' => 'action-delete',
+                        'login'  => 'action-login',
+                        'logout' => 'action-logout',
+                        'view'   => 'action-view',
+                        default  => 'action-default',
                     };
 
                     $user        = $log->user ?? null;
-                    $isSA        = $user?->hasRole('superadmin');
-                    $initials    = $user ? strtoupper(substr($user->name, 0, 1)) : 'S';
-                    $sp          = $user ? strpos($user->name, ' ') : false;
-                    if ($sp !== false) $initials .= strtoupper(substr($user->name, $sp+1, 1));
                     $isSuspended = $user?->isSuspended();
                     $rowNo       = ($logs->currentPage() - 1) * (int) request('per_page', 10) + $index + 1;
                 @endphp
@@ -317,22 +313,9 @@
                     {{-- User Name --}}
                     <td style="padding:14px 16px; min-width:180px;">
                         <div style="display:flex; align-items:center; gap:10px;">
-                            <div style="position:relative; flex-shrink:0;">
-                                <div style="width:34px; height:34px; border-radius:50%; background:{{ $isSA ? 'rgba(11,38,110,0.07)' : '#F3F4F6' }}; color:{{ $isSA ? '#0B266E' : '#6B7280' }}; display:flex; align-items:center; justify-content:center; overflow:hidden; font-size:11px; font-weight:700; border:1.5px solid {{ $isSA ? 'rgba(11,38,110,0.15)' : '#E5E7EB' }};">
-                                    @if($user?->avatar_url)
-                                        <img src="{{ $user->avatar_url }}" style="width:100%;height:100%;object-fit:cover;">
-                                    @elseif($isSA)
-                                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M3.00059 7.59352C3.20646 13.6197 5.53308 19.0699 11.1059 20.8601C11.6866 21.0466 12.3134 21.0466 12.8941 20.8601C18.4669 19.0699 20.7935 13.6197 20.9994 7.59352C21.0169 7.08167 20.6467 6.65046 20.1578 6.55081C17.5104 6.01123 15.4106 4.85537 13.1163 3.3374C12.4363 2.88753 11.5637 2.88753 10.8837 3.3374C8.58942 4.85537 6.48962 6.01123 3.8422 6.55081C3.35327 6.65046 2.98311 7.08167 3.00059 7.59352Z"/></svg>
-                                    @elseif($user)
-                                        {{ $initials }}
-                                    @else
-                                        <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                                    @endif
-                                </div>
-                                @if($user?->is_online && !$isSuspended)
-                                    <span style="position:absolute; bottom:-1px; right:-1px; width:9px; height:9px; border-radius:50%; background:#22C55E; border:2px solid #fff;"></span>
-                                @endif
-                            </div>
+                            <x-ui.user-avatar :user="$user" size="md"
+                                :online-dot="$user?->is_online && !$isSuspended"
+                                :suspended="(bool)$isSuspended" />
                             <div style="min-width:0;">
                                 <p style="font-size:13px; font-weight:600; color:{{ $isSuspended ? '#DC2626' : 'var(--c-fg)' }}; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:140px; margin:0; {{ $isSuspended ? 'text-decoration:line-through; text-decoration-color:#FECACA;' : '' }}">
                                     {{ $user?->name ?? 'System' }}
@@ -346,16 +329,16 @@
 
                     {{-- Module --}}
                     <td style="padding:14px 16px;">
-                        <span style="display:inline-flex; padding:3px 10px; font-size:11px; font-weight:500; border-radius:9999px; white-space:nowrap; color:{{ $modColor }}; border:1px solid {{ $modBorder }}; background:{{ $modBg }};">
+                        <x-ui.badge :variant="$moduleVariant" size="xs">
                             {{ strtoupper(str_replace('_', ' ', $log->module ?? 'N/A')) }}
-                        </span>
+                        </x-ui.badge>
                     </td>
 
                     {{-- Action badge --}}
                     <td style="padding:14px 16px;">
-                        <span style="display:inline-flex; padding:3px 10px; font-size:11px; font-weight:500; border-radius:9999px; white-space:nowrap; color:{{ $actColor }}; border:1px solid {{ $actBorder }}; background:{{ $actBg }};">
+                        <x-ui.badge :variant="$actionVariant" size="xs">
                             {{ strtoupper($log->action ?? 'N/A') }}
-                        </span>
+                        </x-ui.badge>
                     </td>
 
                     {{-- Description --}}
@@ -370,20 +353,14 @@
                     <td style="padding:14px 16px; text-align:center;">
                         @if($user)
                             @if($isSuspended)
-                                <span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:500; color:#DC2626; border:1px solid #FECACA; padding:3px 12px; border-radius:9999px; white-space:nowrap;">
-                                    <span style="width:6px; height:6px; border-radius:50%; background:#DC2626; flex-shrink:0;"></span>Suspend
-                                </span>
+                                <x-ui.status-badge status="suspended" />
                             @elseif($user->is_online)
-                                <span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:500; color:#059669; border:1px solid #A7F3D0; padding:3px 12px; border-radius:9999px; white-space:nowrap;">
-                                    <span style="width:6px; height:6px; border-radius:50%; background:#22C55E; flex-shrink:0; animation:pulse-dot 2s infinite;"></span>Online
-                                </span>
+                                <x-ui.status-badge status="online" :pulse="true" />
                             @else
-                                <span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:500; color:#6B7280; border:1px solid #E5E7EB; padding:3px 12px; border-radius:9999px; white-space:nowrap;">
-                                    <span style="width:6px; height:6px; border-radius:50%; background:#9CA3AF; flex-shrink:0;"></span>Offline
-                                </span>
+                                <x-ui.status-badge status="offline" />
                             @endif
                         @else
-                            <span style="display:inline-flex; align-items:center; gap:5px; font-size:11px; font-weight:500; color:#6B7280; border:1px solid #E5E7EB; padding:3px 12px; border-radius:9999px; white-space:nowrap;">System</span>
+                            <x-ui.status-badge status="system" />
                         @endif
                     </td>
 

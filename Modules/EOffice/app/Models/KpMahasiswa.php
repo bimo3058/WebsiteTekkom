@@ -2,13 +2,13 @@
 
 namespace Modules\EOffice\Models;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class KpMahasiswa extends Model
 {
     use HasFactory;
-
     protected $table = 'eo_kp_mahasiswa';
 
     protected $fillable = [
@@ -23,7 +23,7 @@ class KpMahasiswa extends Model
      */
     public function user()
     {
-        return $this->belongsTo(\App\Models\User::class, 'user_id');
+        return $this->belongsTo(User::class, 'user_id');
     }
 
     /**
@@ -33,7 +33,6 @@ class KpMahasiswa extends Model
     {
         return $this->hasMany(KerjaPraktik::class, 'mahasiswa_id');
     }
-
     /**
      * Ambil atau buat record KpMahasiswa berdasarkan user yang login.
      * Otomatis mengisi NIM dan nama dari tabel students & users global.

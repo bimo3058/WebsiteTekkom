@@ -167,7 +167,7 @@
                             <span class="text-[13px] font-semibold">Profil Saya</span>
                         </a>
 
-                        <form method="POST" action="{{ route('logout') }}">
+                        <form method="POST" action="{{ route('logout') }}" data-no-loader>
                             @csrf
                             <button type="submit"
                                 class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-rose-600 hover:bg-rose-50 transition-colors">

@@ -160,7 +160,7 @@ class DosenController extends Controller
         $kp->status_kp = 'completed';
         $kp->save();
 
-        return redirect()->route('kp.dosen.bimbingan.show', $kp->id)
+        return redirect()->route('eoffice.kp.dosen.bimbingan.show', $kp->id)
             ->with('success', 'Nilai Seminar berhasil disimpan!');
     }
 }
