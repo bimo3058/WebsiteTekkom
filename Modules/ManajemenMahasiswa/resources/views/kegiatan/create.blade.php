@@ -639,7 +639,7 @@
         </div>
 
         <div class="row g-3 mb-3">
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <label class="form-label-custom">Kategori <span class="required">*</span></label>
                 <div class="checkbox-card-group" id="kategoriGroup">
                     @foreach($kategoriList as $kategori)
@@ -655,7 +655,7 @@
                 </div>
                 <div class="checkbox-hint">Pilih maksimal 2 kategori</div>
             </div>
-            <div class="col-md-4" id="bidangFieldWrapper">
+            <div class="col-md-6" id="bidangFieldWrapper">
                 <label class="form-label-custom">Bidang <span class="required" id="bidangRequired">*</span></label>
                 <div class="checkbox-card-group" id="bidangGroup">
                     @foreach($bidangList as $bidang)
@@ -668,17 +668,6 @@
                     @endforeach
                 </div>
                 <div class="checkbox-hint">Pilih satu atau lebih bidang</div>
-            </div>
-            <div class="col-md-4">
-                <label class="form-label-custom">Tahun</label>
-                <select name="tahun" class="form-select form-select-custom">
-                    <option value="">— Pilih Tahun —</option>
-                    @foreach($tahunList as $t)
-                        <option value="{{ $t }}" {{ old('tahun') == $t ? 'selected' : '' }}>
-                            {{ $t }}
-                        </option>
-                    @endforeach
-                </select>
             </div>
         </div>
 

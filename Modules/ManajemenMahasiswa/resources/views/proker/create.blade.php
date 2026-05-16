@@ -66,7 +66,7 @@
 
 <form action="{{ route('manajemenmahasiswa.proker.store') }}" method="POST" enctype="multipart/form-data" id="prokerForm">
     @csrf
-    <input type="hidden" name="save_as_draft" id="saveAsDraft" value="0">
+    <input type="hidden" name="save_as_draft" id="saveAsDraft" value="1">
     {{-- ── Informasi Umum Proker ── --}}
     <div class="form-card">
         <div class="form-card-title">
@@ -105,7 +105,7 @@
             <div class="col-md-6">
                 <label class="form-label-custom">Kategori <span class="required">*</span></label>
                 <div style="display:flex;flex-wrap:wrap;gap:9px;" id="kategoriGroup">
-                    @foreach($kategoriList->filter(fn($k) => stripos($k->nama_kategori, 'prodi') === false) as $kategori)
+                    @foreach($kategoriList as $kategori)
                         <label style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1.5px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;transition:all 0.2s;font-size:13px;font-weight:500;color:#374151;user-select:none;"
                                id="kategoriCard{{ $kategori->id }}">
                             <input type="checkbox" name="kategori_kegiatan_id[]" value="{{ $kategori->id }}"
@@ -172,13 +172,9 @@
     {{-- ── Bottom Action Bar ── --}}
     <div class="d-flex gap-3 justify-content-end mb-4">
         <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="btn-cancel">Batal</a>
-        <button type="button" class="btn-draft" onclick="saveDraft()">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-            Simpan Draft
-        </button>
         <button type="submit" class="btn-submit">
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
-            Simpan & Lanjut ke Persuratan →
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+            Simpan
         </button>
     </div>
     {{-- Lightbox Modal --}}
@@ -194,12 +190,6 @@
 </form>
 
 <script>
-// ── Draft ─────────────────────────────────────────────────────────────────────
-function saveDraft() {
-    document.getElementById('saveAsDraft').value = '1';
-    document.getElementById('prokerForm').submit();
-}
-
 // ── Lightbox ──────────────────────────────────────────────────────────────────
 function openLightbox() {
     const src = document.getElementById('bannerPreviewImg').src;
@@ -270,9 +260,21 @@ function clearBanner() {
 // ── Kategori checkbox ─────────────────────────────────────────────────────────
 function handleKategoriChange() {
     const checked = document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked');
+    let isOnlyProdi = false;
+    let prodiChecked = false;
+    let otherChecked = false;
+
     document.querySelectorAll('#kategoriGroup label').forEach(card => {
         const inp = card.querySelector('input');
         const isChecked = inp.checked;
+        const text = card.textContent.trim().toLowerCase();
+        
+        if (text.includes('prodi')) {
+            if (isChecked) prodiChecked = true;
+        } else {
+            if (isChecked) otherChecked = true;
+        }
+
         card.style.borderColor    = isChecked ? '#4f46e5' : '#e5e7eb';
         card.style.background     = isChecked ? '#eef2ff' : '#fff';
         card.style.color          = isChecked ? '#4338ca' : '#374151';
@@ -280,6 +282,22 @@ function handleKategoriChange() {
         if (checked.length >= 2 && !isChecked) { card.style.opacity='0.4'; card.style.pointerEvents='none'; }
         else { card.style.opacity=''; card.style.pointerEvents=''; }
     });
+
+    isOnlyProdi = prodiChecked && !otherChecked;
+    const bidangWrapper = document.getElementById('bidangFieldWrapper');
+    if (bidangWrapper) {
+        if (isOnlyProdi) {
+            bidangWrapper.style.display = 'none';
+            document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(inp => {
+                if (inp.checked) {
+                    inp.checked = false;
+                    inp.dispatchEvent(new Event('change'));
+                }
+            });
+        } else {
+            bidangWrapper.style.display = 'block';
+        }
+    }
 }
 document.querySelectorAll('#bidangGroup input').forEach(inp => {
     inp.addEventListener('change', () => {
