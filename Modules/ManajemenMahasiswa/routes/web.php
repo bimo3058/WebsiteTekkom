@@ -278,6 +278,9 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::post('/check-alumni', [ManajemenPenggunaController::class, 'checkAlumni'])
                 ->name('check-alumni')
                 ->middleware('role:admin_kemahasiswaan|admin|superadmin');
+            Route::post('/reset-pengurus', [ManajemenPenggunaController::class, 'resetPengurusRoles'])
+                ->name('reset-pengurus')
+                ->middleware('role:admin_kemahasiswaan|admin|superadmin');
         });
 
         // ── Direktori Mahasiswa ───────────────────────────────────────────
