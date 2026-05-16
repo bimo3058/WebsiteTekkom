@@ -1,928 +1,1181 @@
 <x-manajemenmahasiswa::layouts.admin>
 
-    @push('styles')
-        <style>
-            /* Override main-wrapper to be transparent so cards sit on the gray bg */
-            .main-wrapper {
-                background: transparent !important;
-                box-shadow: none !important;
-                padding: 0 !important;
-            }
-
-            /* ── Breadcrumb ──────────────────────────────────────────────────── */
-            .breadcrumb-bar {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-bottom: 20px;
-            }
-
-            .breadcrumb-bar .bc-path {
-                font-size: 13px;
-                color: #9ca3af;
-            }
-
-            .breadcrumb-bar .bc-path span {
-                color: #374151;
-                font-weight: 500;
-            }
-
-            .breadcrumb-bar .bc-actions {
-                display: flex;
-                gap: 8px;
-            }
-
-            /* ── Page Title ──────────────────────────────────────────────────── */
-            .page-title {
-                margin-bottom: 22px;
-            }
-
-            .page-title h1 {
-                font-size: 26px;
-                font-weight: 700;
-                color: #111827;
-                margin: 0 0 2px;
-                letter-spacing: -0.02em;
-            }
-
-            .page-title p {
-                font-size: 14px;
-                color: #6b7280;
-                margin: 0;
-            }
-
-            /* ── Stat Cards ──────────────────────────────────────────────────── */
-            .stat-grid {
-                display: grid;
-                grid-template-columns: repeat(4, 1fr);
-                gap: 16px;
-                margin-bottom: 20px;
-            }
-
-            .stat-card {
-                background: #fff;
-                border-radius: 12px;
-                padding: 18px 20px;
-                border: 1px solid #e5e7eb;
-            }
-
-            .stat-card .stat-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-bottom: 10px;
-            }
-
-            .stat-card .stat-label {
-                font-size: 13px;
-                color: #6b7280;
-                font-weight: 500;
-            }
-
-            .stat-card .stat-icon {
-                width: 32px;
-                height: 32px;
-                border-radius: 8px;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-            }
-
-            .stat-card .stat-value {
-                font-size: 28px;
-                font-weight: 700;
-                color: #111827;
-                letter-spacing: -0.02em;
-                line-height: 1;
-                margin-bottom: 8px;
-            }
-
-            .stat-card .stat-trend {
-                font-size: 12px;
-                display: flex;
-                align-items: center;
-                gap: 4px;
-            }
-
-            .stat-card .stat-trend.up {
-                color: #10b981;
-            }
-
-            .stat-card .stat-trend.down {
-                color: #ef4444;
-            }
-
-            .stat-card .stat-trend .trend-label {
-                color: #9ca3af;
-            }
-
-            /* ── Chart Row ───────────────────────────────────────────────────── */
-            .chart-row {
-                display: grid;
-                grid-template-columns: 1fr 270px;
-                gap: 16px;
-                margin-bottom: 20px;
-            }
-
-            /* Sidebar collapsed → lebih banyak ruang */
-            body.sidebar-collapsed .chart-row {
-                grid-template-columns: 1fr 340px;
-            }
-
-            /* Prevent grid children from overflowing their cells */
-            .chart-row > * {
-                min-width: 0;
-            }
-
-            /* ── Donut chart container ───────────────────────────────────────── */
-            .donut-canvas-wrapper {
-                position: relative;
-                width: 160px;
-                height: 160px;
-                margin: 0 auto;
-            }
-
-            body.sidebar-collapsed .donut-canvas-wrapper {
-                width: 200px;
-                height: 200px;
-            }
-
-            /* Donut total label font size adjustments */
-            .donut-total .total-num {
-                font-size: 20px;
-            }
-
-            body.sidebar-collapsed .donut-total .total-num {
-                font-size: 26px;
-            }
-
-            /* ── Responsive breakpoints ─────────────────────────────────────── */
-            @media (max-width: 1280px) {
-                body.sidebar-collapsed .chart-row {
-                    grid-template-columns: 1fr 300px;
-                }
-                body.sidebar-collapsed .donut-canvas-wrapper {
-                    width: 170px;
-                    height: 170px;
-                }
-                body.sidebar-collapsed .donut-total .total-num {
-                    font-size: 22px;
-                }
-            }
-
-            @media (max-width: 1024px) {
-                .chart-row {
-                    grid-template-columns: 1fr !important;
-                }
-            }
-
-            @media (max-width: 768px) {
-                .stat-grid {
-                    grid-template-columns: repeat(2, 1fr);
-                }
-            }
-
-            @media (max-width: 480px) {
-                .stat-grid {
-                    grid-template-columns: 1fr;
-                }
-            }
-
-            .chart-card {
-                background: #fff;
-                border-radius: 12px;
-                border: 1px solid #e5e7eb;
-                padding: 20px;
-            }
-
-            .chart-card .chart-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-bottom: 16px;
-            }
-
-            .chart-card .chart-title {
-                font-size: 15px;
-                font-weight: 600;
-                color: #111827;
-            }
-
-            /* donut legend */
-            .donut-legend {
-                display: flex;
-                flex-direction: column;
-                gap: 8px;
-                margin-top: 16px;
-            }
-
-            .donut-legend-item {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                font-size: 13px;
-                color: #374151;
-            }
-
-            .donut-legend-dot {
-                width: 10px;
-                height: 10px;
-                border-radius: 50%;
-                display: inline-block;
-                margin-right: 8px;
-                flex-shrink: 0;
-            }
-
-            .donut-total {
-                text-align: center;
-                margin-top: 8px;
-            }
-
-            .donut-total .total-num {
-                font-size: 26px;
-                font-weight: 700;
-                color: #111827;
-                letter-spacing: -0.02em;
-                display: block;
-            }
-
-            .donut-total .total-label {
-                font-size: 12px;
-                color: #9ca3af;
-            }
-
-            /* ── Table Card ──────────────────────────────────────────────────── */
-            .table-card {
-                background: #fff;
-                border-radius: 12px;
-                border: 1px solid #e5e7eb;
-                padding: 20px;
-            }
-
-            .table-card .table-header {
-                display: flex;
-                align-items: center;
-                justify-content: space-between;
-                margin-bottom: 16px;
-                flex-wrap: wrap;
-                gap: 10px;
-            }
-
-            .table-card .table-title {
-                font-size: 15px;
-                font-weight: 600;
-                color: #111827;
-            }
-
-            .table-card .table-actions {
-                display: flex;
-                align-items: center;
-                gap: 8px;
-            }
-
-            .search-input {
-                border: 1px solid #e5e7eb;
-                border-radius: 8px;
-                padding: 7px 12px 7px 32px;
-                font-size: 13px;
-                color: #374151;
-                outline: none;
-                width: 200px;
-                background: #f9fafb url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%239ca3af' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cpath d='m21 21-4.35-4.35'/%3E%3C/svg%3E") no-repeat 10px center;
-            }
-
-            .search-input:focus {
-                border-color: #4f46e5;
-            }
-
-            .btn-outline-sm {
-                border: 1px solid #e5e7eb;
-                border-radius: 8px;
-                padding: 7px 14px;
-                font-size: 13px;
-                color: #374151;
-                background: #fff;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 6px;
-                text-decoration: none;
-                transition: border-color 0.2s;
-            }
-
-            .btn-outline-sm:hover {
-                border-color: #9ca3af;
-            }
-
-            .alumni-table {
-                width: 100%;
-                border-collapse: collapse;
-                font-size: 13px;
-            }
-
-            .alumni-table th {
-                text-align: left;
-                font-weight: 600;
-                color: #6b7280;
-                padding: 10px 14px;
-                border-bottom: 1px solid #f3f4f6;
-                background: #f9fafb;
-                font-size: 12px;
-                text-transform: uppercase;
-                letter-spacing: 0.04em;
-            }
-
-            .alumni-table th:first-child {
-                border-radius: 8px 0 0 0;
-            }
-
-            .alumni-table th:last-child {
-                border-radius: 0 8px 0 0;
-            }
-
-            .alumni-table td {
-                padding: 12px 14px;
-                border-bottom: 1px solid #f3f4f6;
-                color: #374151;
-                vertical-align: middle;
-            }
-
-            .alumni-table tr:last-child td {
-                border-bottom: none;
-            }
-
-            .alumni-table tr:hover td {
-                background: #fafafa;
-            }
-
-            .alumni-avatar {
-                width: 34px;
-                height: 34px;
-                border-radius: 50%;
-                background: #e0e7ff;
-                color: #4f46e5;
-                font-weight: 700;
-                font-size: 13px;
-                display: inline-flex;
-                align-items: center;
-                justify-content: center;
-                flex-shrink: 0;
-            }
-
-            .alumni-name {
-                font-weight: 600;
-                color: #111827;
-                font-size: 13px;
-            }
-
-            .alumni-nim {
-                font-size: 11px;
-                color: #9ca3af;
-            }
-
-            .level-badge {
-                display: inline-block;
-                padding: 3px 10px;
-                border-radius: 20px;
-                font-size: 11px;
-                font-weight: 600;
-            }
-
-            .level-full-time {
-                background: #dbeafe;
-                color: #1d4ed8;
-            }
-
-            .level-internship {
-                background: #fef3c7;
-                color: #92400e;
-            }
-
-            .level-part-time {
-                background: #d1fae5;
-                color: #065f46;
-            }
-
-            .level-freelance {
-                background: #ede9fe;
-                color: #5b21b6;
-            }
-
-
-
-            /* ── Period select ───────────────────────────────────────────────── */
-            .period-select {
-                border: 1px solid #e5e7eb;
-                border-radius: 8px;
-                padding: 5px 10px;
-                font-size: 12px;
-                color: #374151;
-                background: #fff;
-                cursor: pointer;
-            }
-        </style>
-    @endpush
-
-    {{-- ── Page Title ─────────────────────────────────────────────────── --}}
-    <div class="page-title">
-        <h1>Dashboard</h1>
-        <p>Wadah komunikasi mahasiswa &amp; alumni</p>
-    </div>
-
-    {{-- ── Stat Cards ─────────────────────────────────────────────────── --}}
-    <div class="stat-grid">
-
-        {{-- Total Mahasiswa --}}
-        <div class="stat-card">
-            <div class="stat-header">
-                <span class="stat-label">Total Mahasiswa</span>
-                <div class="stat-icon" style="background:#ede9fe;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
-                        <circle cx="9" cy="7" r="4" />
-                        <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
-                        <path d="M16 3.13a4 4 0 0 1 0 7.75" />
-                    </svg>
-                </div>
-            </div>
-            <div class="stat-value">{{ number_format($snapshot['total_mahasiswa_aktif']) }}</div>
-            <div class="stat-trend up">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="18 15 12 9 6 15" />
-                </svg>
-                <span>+8.2%</span>
-                <span class="trend-label">vs last year</span>
-            </div>
-        </div>
-
-        {{-- Serapan Kerja --}}
-        <div class="stat-card">
-            <div class="stat-header">
-                <span class="stat-label">Serapan Kerja</span>
-                <div class="stat-icon" style="background:#fef3c7;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
-                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
-                    </svg>
-                </div>
-            </div>
-            @php
-                $bekerja = ($snapshot['alumni_per_status']['bekerja'] ?? 0)
-                    + ($snapshot['alumni_per_status']['wirausaha'] ?? 0);
-            @endphp
-            <div class="stat-value">{{ number_format($bekerja) }}</div>
-            <div class="stat-trend down">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="6 9 12 15 18 9" />
-                </svg>
-                <span>-8.5%</span>
-                <span class="trend-label">vs last year</span>
-            </div>
-        </div>
-
-        {{-- Kegiatan Semester --}}
-        <div class="stat-card">
-            <div class="stat-header">
-                <span class="stat-label">Kegiatan Semester</span>
-                <div class="stat-icon" style="background:#d1fae5;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <rect width="18" height="18" x="3" y="4" rx="2" ry="2" />
-                        <line x1="16" x2="16" y1="2" y2="6" />
-                        <line x1="8" x2="8" y1="2" y2="6" />
-                        <line x1="3" x2="21" y1="10" y2="10" />
-                    </svg>
-                </div>
-            </div>
-            <div class="stat-value">{{ number_format($snapshot['total_kegiatan']) }}</div>
-            <div class="stat-trend up">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="18 15 12 9 6 15" />
-                </svg>
-                <span>+4.5%</span>
-                <span class="trend-label">vs last year</span>
-            </div>
-        </div>
-
-        {{-- Preview Mahasiswa (total alumni) --}}
-        <div class="stat-card">
-            <div class="stat-header">
-                <span class="stat-label">Preview Mahasiswa</span>
-                <div class="stat-icon" style="background:#fee2e2;">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                        <circle cx="12" cy="12" r="3" />
-                    </svg>
-                </div>
-            </div>
-            <div class="stat-value">{{ number_format($snapshot['total_alumni']) }}</div>
-            <div class="stat-trend up">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <polyline points="18 15 12 9 6 15" />
-                </svg>
-                <span>+3.9%</span>
-                <span class="trend-label">vs last year</span>
-            </div>
+@push('styles')
+<style>
+    .main-wrapper { background:transparent !important; box-shadow:none !important; padding:0 !important; }
+
+    /* ─── Header ─────────────────────────────────────────── */
+    .da-header { display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px; }
+    .da-header h4 { font-size:1.45rem; font-weight:800; color:#1e1b4b; margin-bottom:2px; letter-spacing:-.02em; }
+    .da-header-meta { display:flex; flex-wrap:wrap; gap:10px; align-items:center; margin-top:4px; }
+    .da-tier-badge {
+        display:inline-flex; align-items:center; gap:5px; padding:3px 10px;
+        border-radius:50px; font-size:.72rem; font-weight:700; letter-spacing:.02em;
+    }
+
+    .da-refresh-btn {
+        display:inline-flex; align-items:center; gap:6px; padding:9px 18px;
+        border:1px solid #e5e7eb; border-radius:10px; background:#fff;
+        color:#6b7280; font-size:.85rem; font-weight:600; cursor:pointer;
+        transition:all .2s; text-decoration:none; flex-shrink:0;
+    }
+    .da-refresh-btn:hover { border-color:#6B4FF4; color:#6B4FF4; background:#f5f3ff; }
+
+    /* ─── Section Label ──────────────────────────────────── */
+    .section-header {
+        display:flex; align-items:center; gap:10px; margin-bottom:14px;
+    }
+    .section-label {
+        font-size:.8rem; font-weight:700; color:#9ca3af;
+        text-transform:uppercase; letter-spacing:.07em;
+    }
+    .section-line { flex:1; height:1px; background:#f3f4f6; }
+
+    /* ─── Tier 1: Action Cards ───────────────────────────── */
+    .action-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:28px; }
+    @media(max-width:1100px){ .action-grid { grid-template-columns:repeat(3,1fr); } }
+    @media(max-width:640px) { .action-grid { grid-template-columns:1fr 1fr; } }
+
+    .action-card {
+        background:#fff; border-radius:14px; border:1px solid;
+        padding:16px 18px; display:flex; flex-direction:column; gap:10px;
+        text-decoration:none; transition:all .2s; cursor:pointer; position:relative;
+        overflow:hidden;
+    }
+    .action-card::before { content:''; position:absolute; top:0; left:0; width:4px; height:100%; }
+    .action-card:hover { transform:translateY(-2px); box-shadow:0 8px 20px rgba(0,0,0,.08); }
+
+    .action-card-red    { border-color:#fecaca; background:#fff; }
+    .action-card-red::before    { background:#ef4444; }
+    .action-card-orange { border-color:#fed7aa; background:#fff; }
+    .action-card-orange::before { background:#f97316; }
+    .action-card-blue   { border-color:#bfdbfe; background:#fff; }
+    .action-card-blue::before   { background:#3b82f6; }
+    .action-card-purple { border-color:#ddd6fe; background:#fff; }
+    .action-card-purple::before { background:#8b5cf6; }
+    .action-card-amber  { border-color:#fde68a; background:#fff; }
+    .action-card-amber::before  { background:#f59e0b; }
+
+    .action-card-top { display:flex; align-items:center; justify-content:space-between; }
+    .action-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .action-icon-red    { background:#fef2f2; color:#dc2626; }
+    .action-icon-orange { background:#fff7ed; color:#ea580c; }
+    .action-icon-blue   { background:#eff6ff; color:#2563eb; }
+    .action-icon-purple { background:#f5f3ff; color:#7c3aed; }
+    .action-icon-amber  { background:#fffbeb; color:#d97706; }
+
+    .action-num { font-size:2rem; font-weight:900; line-height:1; }
+    .action-num-red    { color:#dc2626; }
+    .action-num-orange { color:#ea580c; }
+    .action-num-blue   { color:#2563eb; }
+    .action-num-purple { color:#7c3aed; }
+    .action-num-amber  { color:#d97706; }
+
+    .action-label { font-size:.82rem; color:#6b7280; font-weight:500; line-height:1.4; }
+    .action-link-hint { font-size:.72rem; color:#9ca3af; font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
+    .action-card.zero-state .action-num { color:#d1d5db; }
+    .action-card.zero-state { opacity:.7; }
+
+    /* ─── Tier 2: Activity Stats + Chart ────────────────── */
+    .activity-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    @media(max-width:900px){ .activity-grid { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:480px){ .activity-grid { grid-template-columns:1fr; } }
+
+    .stat-card {
+        background:#fff; border:1px solid #e5e7eb; border-radius:14px;
+        padding:18px 20px; display:flex; align-items:center; gap:14px;
+        transition:box-shadow .2s;
+    }
+    .stat-card:hover { box-shadow:0 4px 14px rgba(0,0,0,.06); }
+    .stat-icon { width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .stat-icon-blue   { background:#eff6ff; color:#2563eb; }
+    .stat-icon-green  { background:#ecfdf5; color:#059669; }
+    .stat-icon-purple { background:#f5f3ff; color:#7c3aed; }
+    .stat-icon-amber  { background:#fffbeb; color:#d97706; }
+    .stat-value { font-size:1.6rem; font-weight:800; color:#1e1b4b; line-height:1; margin-bottom:2px; }
+    .stat-label { font-size:.8rem; color:#9ca3af; font-weight:500; }
+    .stat-sub   { font-size:.72rem; color:#d1d5db; margin-top:2px; }
+
+    /* ─── Tier 3 & 4: KPI Mini Cards ────────────────────── */
+    .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    @media(max-width:900px){ .kpi-row { grid-template-columns:repeat(2,1fr); } }
+    .kpi-mini {
+        background:#fff; border:1px solid #e5e7eb; border-radius:12px;
+        padding:14px 16px; display:flex; align-items:center; gap:12px;
+    }
+    .kpi-mini-icon { width:38px; height:38px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .kpi-mini-val { font-size:1.4rem; font-weight:800; color:#1e1b4b; line-height:1; margin-bottom:1px; }
+    .kpi-mini-label { font-size:.78rem; color:#9ca3af; font-weight:500; }
+
+    /* ─── Chart Grid ─────────────────────────────────────── */
+    .chart-grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:18px; margin-bottom:18px; }
+    @media(max-width:768px){ .chart-grid-2 { grid-template-columns:1fr; } }
+    .chart-card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:22px 24px; }
+    .chart-title { font-size:.9rem; font-weight:700; color:#1e1b4b; margin-bottom:16px; display:flex; align-items:center; gap:7px; }
+    .chart-title svg { color:#6B4FF4; flex-shrink:0; }
+    .chart-title-right { margin-left:auto; font-size:.75rem; color:#9ca3af; font-weight:500; }
+    .chart-wrap { position:relative; height:220px; }
+    .chart-wrap-sm { position:relative; height:170px; }
+
+    /* ─── Donut + Legend ─────────────────────────────────── */
+    .donut-row { display:flex; align-items:center; gap:18px; }
+    .donut-canvas { flex:0 0 150px; height:150px; position:relative; }
+    .donut-legend { flex:1; display:flex; flex-direction:column; gap:7px; }
+    .legend-item { display:flex; align-items:center; gap:8px; font-size:.82rem; color:#4b5563; }
+    .legend-dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+    .legend-val { margin-left:auto; font-weight:700; color:#1e1b4b; font-size:.84rem; }
+
+    /* ─── Progress Bar Card ──────────────────────────────── */
+    .progress-card { display:flex; flex-direction:column; gap:13px; }
+    .progress-item {}
+    .progress-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:5px; }
+    .progress-label { font-size:.84rem; font-weight:600; color:#374151; }
+    .progress-count { font-size:.84rem; font-weight:700; }
+    .progress-bar-bg { height:6px; background:#f3f4f6; border-radius:50px; overflow:hidden; }
+    .progress-bar-fill { height:100%; border-radius:50px; }
+
+    /* ─── Table ──────────────────────────────────────────── */
+    .table-card { background:#fff; border:1px solid #e5e7eb; border-radius:16px; padding:22px 24px; margin-bottom:18px; overflow-x:auto; }
+    .table-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+    .table-title { font-size:.9rem; font-weight:700; color:#1e1b4b; display:flex; align-items:center; gap:7px; }
+    .table-title svg { color:#6B4FF4; }
+    .table-link { font-size:.8rem; font-weight:600; color:#6B4FF4; text-decoration:none; }
+    .table-link:hover { text-decoration:underline; }
+    .da-table { width:100%; border-collapse:collapse; }
+    .da-table th { font-size:.73rem; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.06em; padding:9px 12px; text-align:left; border-bottom:1px solid #f3f4f6; white-space:nowrap; }
+    .da-table td { padding:11px 12px; border-bottom:1px solid #f9fafb; font-size:.87rem; color:#374151; vertical-align:middle; }
+    .da-table tr:last-child td { border-bottom:none; }
+    .da-table tr:hover td { background:#fafafa; }
+
+    /* ─── Misc ───────────────────────────────────────────── */
+    .badge { display:inline-flex; align-items:center; padding:3px 9px; border-radius:50px; font-size:.73rem; font-weight:600; }
+    .badge-aktif     { background:#dcfce7; color:#15803d; }
+    .badge-bekerja   { background:#d1fae5; color:#065f46; }
+    .badge-wirausaha { background:#e0f2fe; color:#0369a1; }
+    .badge-studi     { background:#ede9fe; color:#5b21b6; }
+    .badge-belum     { background:#f3f4f6; color:#6b7280; }
+    .avatar-sm { width:32px; height:32px; border-radius:50%; background:linear-gradient(135deg,#6B4FF4,#8266F5); color:#fff; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+    .empty-row td { text-align:center; color:#9ca3af; padding:28px; font-size:.87rem; }
+    .section-gap { margin-bottom:28px; }
+
+    /* ─── Dashboard Modal ────────────────────────────────── */
+    .dm-overlay {
+        position:fixed; inset:0; background:rgba(15,23,42,.45); z-index:9000;
+        display:flex; align-items:center; justify-content:center; padding:20px;
+        opacity:0; visibility:hidden; transition:opacity .2s, visibility .2s;
+    }
+    .dm-overlay.open { opacity:1; visibility:visible; }
+    .dm-box {
+        background:#fff; border-radius:18px; width:100%; max-width:720px;
+        max-height:88vh; display:flex; flex-direction:column;
+        box-shadow:0 24px 60px rgba(0,0,0,.18);
+        transform:translateY(12px) scale(.98); transition:transform .22s;
+    }
+    .dm-overlay.open .dm-box { transform:translateY(0) scale(1); }
+    .dm-head {
+        display:flex; align-items:center; gap:12px; padding:18px 22px;
+        border-bottom:1px solid #f3f4f6; flex-shrink:0;
+    }
+    .dm-head h5 { font-size:1rem; font-weight:700; color:#1e1b4b; margin:0; flex:1; }
+    .dm-badge { font-size:.75rem; font-weight:600; color:#9ca3af; background:#f3f4f6; padding:3px 10px; border-radius:50px; flex-shrink:0; }
+    .dm-close {
+        width:30px; height:30px; border-radius:50%; border:none; background:#f3f4f6;
+        color:#6b7280; font-size:1.1rem; display:flex; align-items:center; justify-content:center;
+        cursor:pointer; flex-shrink:0; transition:all .15s;
+    }
+    .dm-close:hover { background:#e5e7eb; color:#1e1b4b; }
+    .dm-toolbar {
+        padding:12px 22px; border-bottom:1px solid #f3f4f6; flex-shrink:0;
+        display:flex; flex-wrap:wrap; gap:10px; align-items:center;
+    }
+    .dm-search {
+        flex:1; min-width:180px; padding:8px 14px 8px 36px; border:1px solid #e5e7eb;
+        border-radius:10px; font-size:.85rem; color:#374151; background:#fafafa;
+        outline:none; transition:all .2s; position:relative;
+    }
+    .dm-search:focus { border-color:#6B4FF4; background:#fff; box-shadow:0 0 0 3px rgba(107,79,244,.1); }
+    .dm-search-wrap { position:relative; flex:1; min-width:180px; }
+    .dm-search-icon { position:absolute; left:11px; top:50%; transform:translateY(-50%); color:#9ca3af; pointer-events:none; }
+    .dm-filter-chips { display:flex; flex-wrap:wrap; gap:5px; }
+    .dm-chip {
+        padding:4px 12px; border-radius:50px; border:1.5px solid #e5e7eb;
+        background:#fff; color:#6b7280; font-size:.78rem; font-weight:600;
+        cursor:pointer; transition:all .15s;
+    }
+    .dm-chip:hover { border-color:#6B4FF4; color:#6B4FF4; background:#f5f3ff; }
+    .dm-chip.active { border-color:#6B4FF4; background:#6B4FF4; color:#fff; }
+    .dm-body { overflow-y:auto; flex:1; }
+    .dm-table { width:100%; border-collapse:collapse; }
+    .dm-table th { position:sticky; top:0; background:#fafafa; font-size:.72rem; font-weight:700; color:#9ca3af; text-transform:uppercase; letter-spacing:.06em; padding:10px 22px; text-align:left; border-bottom:1px solid #f3f4f6; white-space:nowrap; z-index:1; }
+    .dm-table td { padding:11px 22px; border-bottom:1px solid #f9fafb; font-size:.87rem; color:#374151; vertical-align:middle; }
+    .dm-table tr:last-child td { border-bottom:none; }
+    .dm-table tr:hover td { background:#fafafa; }
+    .dm-empty { text-align:center; padding:48px 20px; color:#9ca3af; font-size:.88rem; }
+    .dm-footer { padding:12px 22px; border-top:1px solid #f3f4f6; font-size:.8rem; color:#9ca3af; flex-shrink:0; display:flex; align-items:center; gap:8px; }
+    .dm-loading { display:flex; align-items:center; justify-content:center; padding:48px; gap:12px; color:#9ca3af; font-size:.88rem; }
+    @keyframes dm-spin { to { transform:rotate(360deg); } }
+    .dm-spinner { width:22px; height:22px; border:2.5px solid #e5e7eb; border-top-color:#6B4FF4; border-radius:50%; animation:dm-spin .7s linear infinite; }
+
+    /* Clickable rows */
+    .dm-table tr.dm-row-link { cursor:pointer; }
+    .dm-table tr.dm-row-link:hover td { background:#f5f3ff !important; }
+    .dm-table tr.dm-row-link:hover td.dm-arrow-cell { color:#6B4FF4; }
+    .dm-arrow-cell { width:28px; text-align:right; color:#d1d5db; transition:color .15s; font-size:.9rem; padding-right:16px !important; }
+
+    /* Clickable card indicator */
+    .card-clickable { cursor:pointer; }
+    .card-clickable:hover { box-shadow:0 6px 20px rgba(107,79,244,.12); border-color:#c4b5fd !important; transform:translateY(-2px); }
+</style>
+@endpush
+
+@php
+    $act  = $dashboard['action_items'];   // Tier 1 — 30s
+    $acty = $dashboard['activity'];       // Tier 2 — 60s
+    $mhs  = $dashboard['mahasiswa'];      // Tier 3 — 120s
+    $alm  = $dashboard['alumni'];         // Tier 4 — 300s
+    $genAt = $dashboard['generated_at'];
+
+    $tingkatLabels = ['internasional'=>'Internasional','nasional'=>'Nasional','regional'=>'Regional','universitas'=>'Universitas','prodi'=>'Prodi'];
+    $karirLabels   = ['bekerja'=>'Bekerja','wirausaha'=>'Wirausaha','studi_lanjut'=>'Studi Lanjut','belum_bekerja'=>'Belum Terdata','belum_terdata'=>'Belum Terdata'];
+    $industryLabels = \Modules\ManajemenMahasiswa\Models\Alumni::BIDANG_INDUSTRI_LIST;
+
+    // Serapan kerja total dari terdata
+    $totalBekerja = ($alm['per_status_karir']['bekerja'] ?? 0) + ($alm['per_status_karir']['wirausaha'] ?? 0);
+    $pctSerapan   = $alm['total_terdata'] > 0 ? round($totalBekerja / $alm['total_terdata'] * 100) : 0;
+
+    // Total mahasiswa semua status
+    $totalSemuaMhs = $mhs['total_aktif'] + $mhs['total_cuti'] + $mhs['total_do'] + $mhs['total_pindah'] + $mhs['total_alumni_status'];
+@endphp
+
+{{-- ─── Page Header ─────────────────────────────────────────────── --}}
+<div class="da-header">
+    <div>
+        <h4>Dashboard Analitik</h4>
+        <div class="da-header-meta">
+            <span style="font-size:.82rem;color:#9ca3af;">Diperbarui: {{ $genAt->format('d M Y, H:i') }} WIB</span>
         </div>
     </div>
+    <a href="{{ route('manajemenmahasiswa.dashboard') }}" class="da-refresh-btn">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+        Refresh Data
+    </a>
+</div>
 
-    {{-- ── Chart Row ───────────────────────────────────────────────────── --}}
-    <div class="chart-row">
 
-        {{-- Tren Mahasiswa / Semester --}}
-        <div class="chart-card">
-            <div class="chart-header">
-                <span class="chart-title">Tren Mahasiswa per Angkatan</span>
+{{-- ══════════════════════════════════════════════════════════════════
+     🔴 TIER 1 — BUTUH TINDAKAN SEGERA (cache 30 detik)
+     Data yang paling sering berubah — admin/GPM harus tangani segera.
+══════════════════════════════════════════════════════════════════════ --}}
+<div class="section-header section-gap">
+    <span class="section-label">Butuh Tindakan Segera</span>
+    <div class="section-line"></div>
+</div>
+
+<div class="action-grid">
+
+    {{-- Pengaduan Baru --}}
+    <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}"
+       class="action-card action-card-red {{ $act['pengaduan_baru'] === 0 ? 'zero-state' : '' }}">
+        <div class="action-card-top">
+            <div class="action-icon action-icon-red">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
             </div>
-            <canvas id="trenChart" height="100"></canvas>
         </div>
+        <div class="action-num action-num-red">{{ $act['pengaduan_baru'] }}</div>
+        <div>
+            <div class="action-label">Pengaduan belum dijawab</div>
+            <div class="action-link-hint">Jawab sekarang →</div>
+        </div>
+    </a>
 
-        {{-- Status Mahasiswa --}}
-        <div class="chart-card">
-            <div class="chart-header">
-                <span class="chart-title">Status Mahasiswa</span>
+    {{-- Verifikasi Kegiatan Pending --}}
+    <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}"
+       class="action-card action-card-orange {{ $act['verif_kegiatan'] === 0 ? 'zero-state' : '' }}">
+        <div class="action-card-top">
+            <div class="action-icon action-icon-orange">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             </div>
-            <div class="donut-canvas-wrapper">
-                <canvas id="statusChart"></canvas>
-                <div class="donut-total"
-                    style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;pointer-events:none;">
-                    <span
-                        class="total-num">{{ number_format($statusMahasiswa['aktif'] + $statusMahasiswa['cuti'] + $statusMahasiswa['do'] + $statusMahasiswa['lulus']) }}</span>
-                    <span class="total-label" style="font-size:11px;color:#9ca3af;display:block;">Total Mahasiswa</span>
-                </div>
+        </div>
+        <div class="action-num action-num-orange">{{ $act['verif_kegiatan'] }}</div>
+        <div>
+            <div class="action-label">Verifikasi kegiatan pending</div>
+            <div class="action-link-hint">Review sekarang →</div>
+        </div>
+    </a>
+
+    {{-- Verifikasi Prestasi Pending --}}
+    <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}"
+       class="action-card action-card-amber {{ $act['verif_prestasi'] === 0 ? 'zero-state' : '' }}">
+        <div class="action-card-top">
+            <div class="action-icon action-icon-amber">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
             </div>
+        </div>
+        <div class="action-num action-num-amber">{{ $act['verif_prestasi'] }}</div>
+        <div>
+            <div class="action-label">Verifikasi prestasi pending</div>
+            <div class="action-link-hint">Review sekarang →</div>
+        </div>
+    </a>
+
+    {{-- Laporan Forum --}}
+    <a href="{{ route('manajemenmahasiswa.forum.index') }}"
+       class="action-card action-card-purple {{ $act['laporan_forum'] === 0 ? 'zero-state' : '' }}">
+        <div class="action-card-top">
+            <div class="action-icon action-icon-purple">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+        </div>
+        <div class="action-num action-num-purple">{{ $act['laporan_forum'] }}</div>
+        <div>
+            <div class="action-label">Laporan forum belum ditangani</div>
+            <div class="action-link-hint">Moderasi sekarang →</div>
+        </div>
+    </a>
+
+    {{-- Pengumuman Pending Verifikasi --}}
+    <a href="{{ route('manajemenmahasiswa.pengumuman.verifikasi.index') }}"
+       class="action-card action-card-blue {{ $act['pengumuman_pending'] === 0 ? 'zero-state' : '' }}">
+        <div class="action-card-top">
+            <div class="action-icon action-icon-blue">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+            </div>
+        </div>
+        <div class="action-num action-num-blue">{{ $act['pengumuman_pending'] }}</div>
+        <div>
+            <div class="action-label">Pengumuman menunggu verifikasi</div>
+            <div class="action-link-hint">Verifikasi sekarang →</div>
+        </div>
+    </a>
+
+</div>
+
+
+{{-- ══════════════════════════════════════════════════════════════════
+     🟠 TIER 2 — AKTIVITAS TERKINI (cache 60 detik)
+     Berubah beberapa kali sehari: kegiatan, pengumuman, forum.
+══════════════════════════════════════════════════════════════════════ --}}
+<div class="section-header section-gap">
+    <span class="section-label">Aktivitas Terkini</span>
+    <div class="section-line"></div>
+</div>
+
+<div class="activity-grid">
+    <div class="stat-card card-clickable" onclick="openDashModal('mahasiswa',{status:'aktif'},'Mahasiswa Aktif')">
+        <div class="stat-icon stat-icon-blue">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div>
+            <div class="stat-value">{{ number_format($acty['total_mahasiswa_aktif']) }}</div>
+            <div class="stat-label">Mahasiswa Aktif</div>
+        </div>
+    </div>
+    <div class="stat-card card-clickable" onclick="openDashModal('kegiatan',{},'Kegiatan Bulan Ini')">
+        <div class="stat-icon stat-icon-green">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        </div>
+        <div>
+            <div class="stat-value">{{ number_format($acty['kegiatan_bulan_ini']) }}</div>
+            <div class="stat-label">Kegiatan Bulan Ini</div>
+            <div class="stat-sub">Ditambahkan {{ now()->translatedFormat('F Y') }}</div>
+        </div>
+    </div>
+    <div class="stat-card card-clickable" onclick="openDashModal('pengumuman',{},'Pengumuman Bulan Ini')">
+        <div class="stat-icon stat-icon-purple">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m3 11 18-5v12L3 14v-3z"/><path d="M11.6 16.8a3 3 0 1 1-5.8-1.6"/></svg>
+        </div>
+        <div>
+            <div class="stat-value">{{ number_format($acty['pengumuman_bulan_ini']) }}</div>
+            <div class="stat-label">Pengumuman Bulan Ini</div>
+            <div class="stat-sub">Dipublish {{ now()->translatedFormat('F Y') }}</div>
+        </div>
+    </div>
+    <div class="stat-card card-clickable" onclick="openDashModal('thread',{},'Thread Forum Minggu Ini')">
+        <div class="stat-icon stat-icon-amber">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div>
+            <div class="stat-value">{{ number_format($acty['thread_minggu_ini']) }}</div>
+            <div class="stat-label">Thread Forum Minggu Ini</div>
+            <div class="stat-sub">Sejak {{ now()->startOfWeek()->format('d M') }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="chart-card section-gap">
+    <div class="chart-title">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+        Tren Kegiatan Ditambahkan (6 Bulan Terakhir)
+    </div>
+    <div class="chart-wrap"><canvas id="chartKegiatanTrend"></canvas></div>
+</div>
+
+
+{{-- ══════════════════════════════════════════════════════════════════
+     🟡 TIER 3 — MAHASISWA AKTIF (cache 120 detik)
+     Berubah saat admin update status — biasanya mingguan/bulanan.
+══════════════════════════════════════════════════════════════════════ --}}
+<div class="section-header section-gap">
+    <span class="section-label">Mahasiswa Aktif</span>
+    <div class="section-line"></div>
+</div>
+
+<div class="kpi-row">
+    @php
+        $mhsKpis = [
+            ['label'=>'Aktif',        'val'=>$mhs['total_aktif'],  'bg'=>'#eff6ff', 'color'=>'#2563eb', 'status'=>'aktif'],
+            ['label'=>'Cuti',         'val'=>$mhs['total_cuti'],   'bg'=>'#fffbeb', 'color'=>'#d97706', 'status'=>'cuti'],
+            ['label'=>'Drop Out',     'val'=>$mhs['total_do'],     'bg'=>'#fef2f2', 'color'=>'#dc2626', 'status'=>'drop_out'],
+            ['label'=>'Pindah Studi', 'val'=>$mhs['total_pindah'], 'bg'=>'#f5f3ff', 'color'=>'#7c3aed', 'status'=>'pindah_studi'],
+        ];
+    @endphp
+    @foreach($mhsKpis as $k)
+        <div class="kpi-mini card-clickable"
+             onclick="openDashModal('mahasiswa',{status:'{{ $k['status'] }}'},'Mahasiswa — {{ $k['label'] }}')">
+            <div class="kpi-mini-icon" style="background:{{ $k['bg'] }};color:{{ $k['color'] }};">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+            </div>
+            <div>
+                <div class="kpi-mini-val" style="color:{{ $k['color'] }};">{{ number_format($k['val']) }}</div>
+                <div class="kpi-mini-label">{{ $k['label'] }}</div>
+            </div>
+        </div>
+    @endforeach
+</div>
+
+<div class="chart-grid-2">
+    {{-- Donut: Status Seluruh Mahasiswa --}}
+    <div class="chart-card">
+        <div class="chart-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+            Status Seluruh Mahasiswa
+            <span class="chart-title-right">Total: {{ number_format($totalSemuaMhs) }}</span>
+        </div>
+        <div class="donut-row">
+            <div class="donut-canvas"><canvas id="chartStatusMhs"></canvas></div>
             <div class="donut-legend">
-                <div class="donut-legend-item">
-                    <div style="display:flex;align-items:center;">
-                        <span class="donut-legend-dot" style="background:#4f46e5;"></span>
-                        Aktif
+                @php
+                    $mhsStatusItems = [
+                        ['label'=>'Aktif','val'=>$mhs['total_aktif'],'color'=>'#3b82f6'],
+                        ['label'=>'Alumni','val'=>$mhs['total_alumni_status'],'color'=>'#10b981'],
+                        ['label'=>'Cuti','val'=>$mhs['total_cuti'],'color'=>'#f59e0b'],
+                        ['label'=>'Drop Out','val'=>$mhs['total_do'],'color'=>'#ef4444'],
+                        ['label'=>'Pindah','val'=>$mhs['total_pindah'],'color'=>'#8b5cf6'],
+                    ];
+                @endphp
+                @foreach($mhsStatusItems as $si)
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:{{ $si['color'] }};"></div>
+                        <span>{{ $si['label'] }}</span>
+                        <span class="legend-val">{{ number_format($si['val']) }}</span>
                     </div>
-                    <span style="font-weight:600;">{{ number_format($statusMahasiswa['aktif']) }}</span>
-                </div>
-                <div class="donut-legend-item">
-                    <div style="display:flex;align-items:center;">
-                        <span class="donut-legend-dot" style="background:#f59e0b;"></span>
-                        Cuti
-                    </div>
-                    <span style="font-weight:600;">{{ number_format($statusMahasiswa['cuti']) }}</span>
-                </div>
-                <div class="donut-legend-item">
-                    <div style="display:flex;align-items:center;">
-                        <span class="donut-legend-dot" style="background:#ef4444;"></span>
-                        DO
-                    </div>
-                    <span style="font-weight:600;">{{ number_format($statusMahasiswa['do']) }}</span>
-                </div>
-                <div class="donut-legend-item">
-                    <div style="display:flex;align-items:center;">
-                        <span class="donut-legend-dot" style="background:#10b981;"></span>
-                        Lulus
-                    </div>
-                    <span style="font-weight:600;">{{ number_format($statusMahasiswa['lulus']) }}</span>
-                </div>
+                @endforeach
             </div>
         </div>
     </div>
 
-    {{-- ── Chart Row 2: Serapan Kerja + Distribusi Industri ──────────── --}}
-    <div class="chart-row" style="margin-bottom: 20px;">
-        {{-- Serapan Kerja per Angkatan --}}
-        <div class="chart-card">
-            <div class="chart-header">
-                <span class="chart-title">Serapan Kerja per Angkatan (%)</span>
-            </div>
-            <canvas id="serapanChart" height="100"></canvas>
+    {{-- Line: Semua Status Mahasiswa per Angkatan --}}
+    <div class="chart-card">
+        <div class="chart-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Distribusi Mahasiswa per Angkatan
+        </div>
+        {{-- Filter Buttons --}}
+        <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;" id="angkatanFilters">
+            @php
+                $lineStatuses = [
+                    'aktif'       => ['label'=>'Aktif',        'color'=>'#3b82f6','bg'=>'#eff6ff','border'=>'#bfdbfe'],
+                    'alumni'      => ['label'=>'Alumni',       'color'=>'#10b981','bg'=>'#ecfdf5','border'=>'#a7f3d0'],
+                    'cuti'        => ['label'=>'Cuti',         'color'=>'#f59e0b','bg'=>'#fffbeb','border'=>'#fde68a'],
+                    'drop_out'    => ['label'=>'Drop Out',     'color'=>'#ef4444','bg'=>'#fef2f2','border'=>'#fecaca'],
+                    'pindah_studi'=> ['label'=>'Pindah Studi', 'color'=>'#8b5cf6','bg'=>'#f5f3ff','border'=>'#ddd6fe'],
+                ];
+            @endphp
+            @foreach($lineStatuses as $key => $cfg)
+                <button
+                    class="angkatan-filter-btn active"
+                    data-status="{{ $key }}"
+                    onclick="toggleAngkatanLine('{{ $key }}', this)"
+                    style="display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:50px;border:1.5px solid {{ $cfg['border'] }};background:{{ $cfg['bg'] }};color:{{ $cfg['color'] }};font-size:.78rem;font-weight:700;cursor:pointer;transition:all .2s;">
+                    <span style="width:8px;height:8px;border-radius:50%;background:{{ $cfg['color'] }};display:inline-block;flex-shrink:0;"></span>
+                    {{ $cfg['label'] }}
+                </button>
+            @endforeach
+        </div>
+        <div style="position:relative;height:230px;"><canvas id="chartAngkatan"></canvas></div>
+    </div>
+</div>
+
+<div class="chart-grid-2">
+    {{-- Prestasi Card — redesigned --}}
+    <div class="chart-card" style="display:flex;flex-direction:column;gap:16px;">
+        @php
+            $pColors    = ['#6B4FF4','#3b82f6','#10b981','#f59e0b','#ef4444'];
+            $tingkatOrder = ['internasional','nasional','regional','universitas','prodi'];
+            // cari tingkat tertinggi yang punya data
+            $tingkatTertinggi = null;
+            foreach ($tingkatOrder as $tk) {
+                if (!empty($mhs['prestasi_per_tingkat'][$tk])) {
+                    $tingkatTertinggi = $tk;
+                    break;
+                }
+            }
+            $pendingPrestasi = $act['verif_prestasi'] ?? 0;
+        @endphp
+
+        {{-- Header --}}
+        <div class="chart-title" style="margin-bottom:0;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+            Prestasi Mahasiswa
+            <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}" class="table-link" style="margin-left:auto;">Verifikasi →</a>
         </div>
 
-        {{-- Distribusi Bidang Industri --}}
-        <div class="chart-card">
-            <div class="chart-header">
-                <span class="chart-title">Distribusi Industri</span>
+        {{-- KPI Mini Row --}}
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+            <div style="background:#f5f3ff;border-radius:10px;padding:10px 12px;text-align:center;">
+                <div style="font-size:1.4rem;font-weight:800;color:#6B4FF4;line-height:1;">{{ $mhs['total_prestasi'] }}</div>
+                <div style="font-size:.72rem;color:#9ca3af;font-weight:500;margin-top:2px;">Terverifikasi</div>
             </div>
-            <div class="donut-canvas-wrapper">
-                <canvas id="industriChart"></canvas>
+            <div style="background:{{ $pendingPrestasi > 0 ? '#fff7ed' : '#f9fafb' }};border-radius:10px;padding:10px 12px;text-align:center;">
+                <div style="font-size:1.4rem;font-weight:800;color:{{ $pendingPrestasi > 0 ? '#ea580c' : '#d1d5db' }};line-height:1;">{{ $pendingPrestasi }}</div>
+                <div style="font-size:.72rem;color:#9ca3af;font-weight:500;margin-top:2px;">Menunggu Review</div>
             </div>
-            <div class="donut-legend" id="industriLegend">
-                {{-- Generated by JS --}}
+            <div style="background:#f0fdf4;border-radius:10px;padding:10px 12px;text-align:center;">
+                <div style="font-size:.9rem;font-weight:700;color:#059669;line-height:1.3;">{{ $tingkatTertinggi ? ucfirst($tingkatTertinggi) : '—' }}</div>
+                <div style="font-size:.72rem;color:#9ca3af;font-weight:500;margin-top:2px;">Tingkat Tertinggi</div>
             </div>
         </div>
+
+        @if($mhs['total_prestasi'] > 0)
+            {{-- Donut + Legend --}}
+            <div class="donut-row" style="gap:14px;">
+                <div style="flex:0 0 120px;height:120px;position:relative;">
+                    <canvas id="chartPrestasi"></canvas>
+                </div>
+                <div class="donut-legend" style="flex:1;gap:5px;">
+                    @php $pi=0; @endphp
+                    @foreach($tingkatOrder as $tk)
+                        @php $cnt = $mhs['prestasi_per_tingkat'][$tk] ?? 0; @endphp
+                        <div class="legend-item" style="{{ $cnt === 0 ? 'opacity:.35;' : '' }}">
+                            <div class="legend-dot" style="background:{{ $pColors[$pi % 5] }};"></div>
+                            <span style="font-size:.8rem;">{{ $tingkatLabels[$tk] ?? ucfirst($tk) }}</span>
+                            <span class="legend-val" style="font-size:.82rem;">{{ $cnt }}</span>
+                        </div>
+                        @php $pi++; @endphp
+                    @endforeach
+                </div>
+            </div>
+
+            {{-- Divider --}}
+            <div style="border-top:1px solid #f3f4f6;margin:0 -2px;"></div>
+
+            {{-- Recent Prestasi List --}}
+            <div>
+                <div style="font-size:.75rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Terbaru Diverifikasi</div>
+                @php
+                    $tingkatBadgeColor = [
+                        'internasional' => ['bg'=>'#fef2f2','color'=>'#dc2626','border'=>'#fecaca'],
+                        'nasional'      => ['bg'=>'#fff7ed','color'=>'#ea580c','border'=>'#fed7aa'],
+                        'regional'      => ['bg'=>'#fffbeb','color'=>'#d97706','border'=>'#fde68a'],
+                        'universitas'   => ['bg'=>'#eff6ff','color'=>'#2563eb','border'=>'#bfdbfe'],
+                        'prodi'         => ['bg'=>'#f5f3ff','color'=>'#7c3aed','border'=>'#ddd6fe'],
+                    ];
+                @endphp
+                <div style="display:flex;flex-direction:column;gap:8px;">
+                    @forelse($mhs['prestasi_terbaru'] as $pr)
+                        @php
+                            $studentName = $pr->kemahasiswaan?->user?->name ?? $pr->kemahasiswaan?->nama ?? 'Mahasiswa';
+                            $initials    = strtoupper(substr($studentName, 0, 2));
+                            $bc          = $tingkatBadgeColor[$pr->tingkat] ?? ['bg'=>'#f3f4f6','color'=>'#6b7280','border'=>'#e5e7eb'];
+                        @endphp
+                        <div style="display:flex;align-items:center;gap:9px;padding:7px 10px;background:#fafafa;border-radius:10px;border:1px solid #f3f4f6;">
+                            <div class="avatar-sm" style="width:28px;height:28px;font-size:10px;flex-shrink:0;">{{ $initials }}</div>
+                            <div style="flex:1;min-width:0;">
+                                <div style="font-size:.82rem;font-weight:600;color:#1e1b4b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $pr->nama_prestasi }}</div>
+                                <div style="font-size:.75rem;color:#9ca3af;">{{ $studentName }}</div>
+                            </div>
+                            <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:50px;font-size:.7rem;font-weight:700;background:{{ $bc['bg'] }};color:{{ $bc['color'] }};border:1px solid {{ $bc['border'] }};white-space:nowrap;flex-shrink:0;">
+                                {{ ucfirst($pr->tingkat) }}
+                            </span>
+                        </div>
+                    @empty
+                        <div style="text-align:center;padding:12px;color:#9ca3af;font-size:.82rem;">—</div>
+                    @endforelse
+                </div>
+            </div>
+        @else
+            {{-- Empty state yang lebih menarik --}}
+            <div style="display:flex;flex-direction:column;align-items:center;padding:24px 16px;gap:10px;">
+                <div style="width:56px;height:56px;border-radius:50%;background:#f5f3ff;display:flex;align-items:center;justify-content:center;">
+                    <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#6B4FF4" stroke-width="1.5"><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:.9rem;font-weight:600;color:#374151;margin-bottom:3px;">Belum ada prestasi terverifikasi</div>
+                    <div style="font-size:.8rem;color:#9ca3af;">Prestasi mahasiswa yang disetujui akan tampil di sini</div>
+                </div>
+                @if($pendingPrestasi > 0)
+                    <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}"
+                        style="display:inline-flex;align-items:center;gap:5px;padding:7px 16px;background:#f5f3ff;color:#6B4FF4;border-radius:8px;font-size:.82rem;font-weight:600;text-decoration:none;border:1px solid #ddd6fe;">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M9 11l3 3L22 4"/></svg>
+                        Review {{ $pendingPrestasi }} Pengajuan Pending
+                    </a>
+                @endif
+            </div>
+        @endif
     </div>
 
-    {{-- ── Tabel Serapan Alumni ────────────────────────────────────────── --}}
-    <div class="table-card">
+    {{-- Table: Mahasiswa Aktif Terbaru --}}
+    <div class="chart-card" style="overflow-x:auto;padding:22px 20px;">
         <div class="table-header">
-            <span class="table-title">Data Serapan Alumni Terbaru</span>
-            <div class="table-actions">
-                <input type="text" class="search-input" placeholder="Search…" id="alumniSearch" oninput="filterTable()">
-                <a href="{{ route('manajemenmahasiswa.direktori.alumni.index') }}" class="btn-outline-sm">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
-                        <polyline points="15 3 21 3 21 9" />
-                        <line x1="10" y1="14" x2="21" y2="3" />
-                    </svg>
-                    Lihat Semua
-                </a>
+            <div class="table-title">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+                Mahasiswa Aktif Terbaru
             </div>
+            <a href="{{ route('manajemenmahasiswa.direktori.mahasiswa.index') }}" class="table-link">Lihat Semua →</a>
         </div>
-
-        <table class="alumni-table" id="alumniTable">
-            <thead>
-                <tr>
-                    <th>#</th>
-                    <th>Nama Alumni</th>
-                    <th>Perusahaan</th>
-                    <th>Jabatan</th>
-                    <th>Angkatan</th>
-                    <th>Tahun Lulus</th>
-                    <th>Status</th>
-                    <th></th>
-                </tr>
-            </thead>
+        <table class="da-table">
+            <thead><tr><th>Mahasiswa</th><th>NIM</th><th>Angkatan</th></tr></thead>
             <tbody>
-                @forelse($serapanAlumni as $i => $alumni)
-                    @php
-                        $name = $alumni->user->name ?? 'Unknown';
-                        $initials = strtoupper(substr($name, 0, 2));
-                        $status = $alumni->status_karir ?? 'belum_terdata';
-                        $statusLabels = [
-                            'bekerja' => ['label' => 'Bekerja', 'class' => 'level-full-time'],
-                            'wirausaha' => ['label' => 'Wirausaha', 'class' => 'level-freelance'],
-                            'studi_lanjut' => ['label' => 'Studi Lanjut', 'class' => 'level-internship'],
-                            'belum_bekerja' => ['label' => 'Belum Terdata', 'class' => 'level-part-time'],
-                        ];
-                        $level = $statusLabels[$status] ?? ['label' => 'Belum Terdata', 'class' => 'level-part-time'];
-                    @endphp
+                @forelse($mhs['mahasiswa_terbaru'] as $m)
+                    @php $nm = $m->nama ?? $m->user?->name ?? '-'; @endphp
                     <tr>
-                        <td>
-                            <div class="alumni-avatar">{{ $initials }}</div>
-                        </td>
-                        <td>
-                            <div class="alumni-name">{{ $name }}</div>
-                            <div class="alumni-nim">{{ $alumni->nim ?? ($alumni->user->email ?? '-') }}</div>
-                        </td>
-                        <td>{{ $alumni->perusahaan ?? '-' }}</td>
-                        <td>{{ $alumni->jabatan ?? '-' }}</td>
-                        <td>{{ $alumni->angkatan ?? '-' }}</td>
-                        <td>{{ $alumni->tahun_lulus ?? '-' }}</td>
-                        <td>
-                            <span class="level-badge {{ $level['class'] }}">{{ $level['label'] }}</span>
-                        </td>
-                        <td>
-                            <a href="{{ route('manajemenmahasiswa.direktori.alumni.show', $alumni->id) }}"
-                                class="btn-outline-sm" style="padding:4px 8px; text-decoration: none;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                                    <circle cx="12" cy="12" r="3"></circle>
-                                </svg>
-                            </a>
-                        </td>
+                        <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar-sm">{{ strtoupper(substr($nm,0,2)) }}</div><span style="font-weight:600;color:#1e1b4b;">{{ $nm }}</span></div></td>
+                        <td style="font-family:monospace;color:#9ca3af;font-size:.82rem;">{{ $m->nim ?? '-' }}</td>
+                        <td>{{ $m->angkatan ?? '-' }}</td>
                     </tr>
                 @empty
-                    <tr>
-                        <td colspan="8" style="text-align:center;padding:32px;color:#9ca3af;">
-                            Belum ada data alumni.
-                        </td>
-                    </tr>
+                    <tr class="empty-row"><td colspan="3">Belum ada data</td></tr>
                 @endforelse
             </tbody>
         </table>
     </div>
+</div>
 
-    @push('scripts')
-        <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-        <script>
-            // ── Data dari server ──────────────────────────────────────────────
-            const angkatanLabels = @json(array_keys($snapshot['mahasiswa_per_angkatan']->toArray()));
-            const angkatanData = @json(array_values($snapshot['mahasiswa_per_angkatan']->toArray()));
-            const kegiatanLabels = @json(array_keys($snapshot['kegiatan_per_bulan']->toArray()));
-            const kegiatanData = @json(array_values($snapshot['kegiatan_per_bulan']->toArray()));
 
-            // ── Tren Chart (line) ─────────────────────────────────────────────
-            const trenCtx = document.getElementById('trenChart').getContext('2d');
-            const trenChart = new Chart(trenCtx, {
-                type: 'line',
-                data: {
-                    labels: angkatanLabels.length ? angkatanLabels : ['2019', '2020', '2021', '2022', '2023', '2024'],
-                    datasets: [{
-                        label: 'Mahasiswa',
-                        data: angkatanData.length ? angkatanData : [120, 180, 200, 230, 260, 210],
-                        borderColor: '#4f46e5',
-                        backgroundColor: 'rgba(79,70,229,0.08)',
-                        tension: 0.4,
-                        fill: true,
-                        pointBackgroundColor: '#4f46e5',
-                        pointRadius: 4,
-                        pointHoverRadius: 6,
-                        borderWidth: 2,
-                    }]
+{{-- ══════════════════════════════════════════════════════════════════
+     🟢 TIER 4 — ALUMNI (cache 300 detik / 5 menit)
+     Paling jarang berubah — alumni update profil karir setiap beberapa bulan.
+══════════════════════════════════════════════════════════════════════ --}}
+<div class="section-header section-gap">
+    <span class="section-label">Alumni</span>
+    <div class="section-line"></div>
+</div>
+
+<div class="kpi-row">
+    @php
+        $almKpis = [
+            ['label'=>'Total Alumni',  'val'=>$alm['total'],               'bg'=>'#f5f3ff','color'=>'#7c3aed','filter'=>'semua'],
+            ['label'=>'Sudah Terdata', 'val'=>$alm['total_terdata'],       'bg'=>'#ecfdf5','color'=>'#059669','filter'=>'terdata'],
+            ['label'=>'Belum Terdata', 'val'=>$alm['total_belum_terdata'], 'bg'=>'#fffbeb','color'=>'#d97706','filter'=>'belum_terdata'],
+            ['label'=>'Serapan Kerja', 'val'=>$pctSerapan.'%',             'bg'=>'#eff6ff','color'=>'#2563eb','filter'=>'bekerja'],
+        ];
+    @endphp
+    @foreach($almKpis as $k)
+        <div class="kpi-mini card-clickable"
+             onclick="openDashModal('alumni',{filter:'{{ $k['filter'] }}'},'Alumni — {{ $k['label'] }}')">
+            <div class="kpi-mini-icon" style="background:{{ $k['bg'] }};color:{{ $k['color'] }};">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            </div>
+            <div>
+                <div class="kpi-mini-val" style="color:{{ $k['color'] }};">{{ $k['val'] }}</div>
+                <div class="kpi-mini-label">{{ $k['label'] }}</div>
+            </div>
+        </div>
+    @endforeach
+</div>
+
+<div class="chart-grid-2">
+    {{-- Donut: Status Karir --}}
+    <div class="chart-card">
+        <div class="chart-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+            Status Karir Alumni
+        </div>
+        <div class="donut-row">
+            <div class="donut-canvas"><canvas id="chartStatusKarir"></canvas></div>
+            <div class="donut-legend">
+                @php $karirCM=['bekerja'=>'#10b981','wirausaha'=>'#3b82f6','studi_lanjut'=>'#8b5cf6','belum_bekerja'=>'#f59e0b','belum_terdata'=>'#9ca3af']; @endphp
+                @foreach($alm['per_status_karir'] as $s => $cnt)
+                    <div class="legend-item">
+                        <div class="legend-dot" style="background:{{ $karirCM[$s] ?? '#9ca3af' }};"></div>
+                        <span>{{ $karirLabels[$s] ?? ucfirst($s) }}</span>
+                        <span class="legend-val">{{ number_format($cnt) }}</span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    </div>
+
+    {{-- Bar: Serapan per Angkatan --}}
+    <div class="chart-card">
+        <div class="chart-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+            Serapan Kerja per Angkatan (%)
+        </div>
+        <div class="chart-wrap"><canvas id="chartSerapan"></canvas></div>
+    </div>
+</div>
+
+<div class="chart-grid-2">
+    {{-- Donut: Distribusi Industri --}}
+    <div class="chart-card">
+        <div class="chart-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            Distribusi Bidang Industri
+        </div>
+        @if(count($alm['distribusi_industri']) > 0)
+            <div class="donut-row">
+                <div class="donut-canvas"><canvas id="chartIndustri"></canvas></div>
+                <div class="donut-legend" style="max-height:170px;overflow-y:auto;">
+                    @php $iC=['#6B4FF4','#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#84cc16']; $ii=0; @endphp
+                    @foreach($alm['distribusi_industri'] as $b => $cnt)
+                        <div class="legend-item">
+                            <div class="legend-dot" style="background:{{ $iC[$ii%8] }};"></div>
+                            <span>{{ $industryLabels[$b] ?? ucfirst(str_replace('_',' ',$b)) }}</span>
+                            <span class="legend-val">{{ $cnt }}</span>
+                        </div>
+                        @php $ii++; @endphp
+                    @endforeach
+                </div>
+            </div>
+        @else
+            <div style="text-align:center;padding:36px 0;color:#9ca3af;font-size:.87rem;">Belum ada data industri</div>
+        @endif
+    </div>
+
+    {{-- Progress bars: Ringkasan Karir --}}
+    <div class="chart-card">
+        <div class="chart-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/></svg>
+            Distribusi Persentase Karir
+        </div>
+        @php
+            $totalK = max(1, array_sum($alm['per_status_karir']));
+            $karirProg = ['bekerja'=>['label'=>'Bekerja','color'=>'#10b981'],'wirausaha'=>['label'=>'Wirausaha','color'=>'#3b82f6'],'studi_lanjut'=>['label'=>'Studi Lanjut','color'=>'#8b5cf6'],'belum_bekerja'=>['label'=>'Belum Terdata','color'=>'#9ca3af'],'belum_terdata'=>['label'=>'Belum Terdata','color'=>'#9ca3af']];
+        @endphp
+        <div class="progress-card">
+            @foreach($alm['per_status_karir'] as $s => $cnt)
+                @php $cfg=$karirProg[$s]??['label'=>ucfirst($s),'color'=>'#9ca3af']; $pct=round($cnt/$totalK*100,1); @endphp
+                <div class="progress-item">
+                    <div class="progress-row">
+                        <span class="progress-label">{{ $cfg['label'] }}</span>
+                        <span class="progress-count" style="color:{{ $cfg['color'] }};">{{ number_format($cnt) }} <span style="color:#9ca3af;font-weight:500;font-size:.78rem;">({{ $pct }}%)</span></span>
+                    </div>
+                    <div class="progress-bar-bg">
+                        <div class="progress-bar-fill" style="width:{{ $pct }}%;background:{{ $cfg['color'] }};"></div>
+                    </div>
+                </div>
+            @endforeach
+        </div>
+    </div>
+</div>
+
+{{-- Table: Alumni Terbaru --}}
+<div class="table-card">
+    <div class="table-header">
+        <div class="table-title">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            Data Alumni Terbaru
+        </div>
+        <a href="{{ route('manajemenmahasiswa.direktori.alumni.index') }}" class="table-link">Lihat Semua →</a>
+    </div>
+    <table class="da-table">
+        <thead><tr><th>#</th><th>Alumni</th><th>NIM</th><th>Angkatan</th><th>Tahun Lulus</th><th>Perusahaan / Instansi</th><th>Status Karir</th></tr></thead>
+        <tbody>
+            @forelse($alm['alumni_terbaru'] as $i => $al)
+                @php
+                    $nm = $al->user?->name ?? '-';
+                    $bm = ['bekerja'=>'badge-bekerja','wirausaha'=>'badge-wirausaha','studi_lanjut'=>'badge-studi'];
+                    $badge = $bm[$al->status_karir ?? ''] ?? 'badge-belum';
+                @endphp
+                <tr>
+                    <td style="color:#d1d5db;font-size:.8rem;">{{ $i+1 }}</td>
+                    <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar-sm">{{ strtoupper(substr($nm,0,2)) }}</div><span style="font-weight:600;color:#1e1b4b;">{{ $nm }}</span></div></td>
+                    <td style="font-family:monospace;color:#9ca3af;font-size:.82rem;">{{ $al->nim ?? '-' }}</td>
+                    <td>{{ $al->angkatan ?? '-' }}</td>
+                    <td>{{ $al->tahun_lulus ?? '-' }}</td>
+                    <td>{{ $al->perusahaan ?? '-' }}</td>
+                    <td><span class="badge {{ $badge }}">{{ $karirLabels[$al->status_karir ?? 'belum_terdata'] ?? 'Belum Terdata' }}</span></td>
+                </tr>
+            @empty
+                <tr class="empty-row"><td colspan="7">Belum ada data alumni</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+</div>
+
+{{-- ── Dashboard Modal ───────────────────────────────────────────────────── --}}
+<div class="dm-overlay" id="dashModal" onclick="if(event.target===this)closeDashModal()">
+    <div class="dm-box">
+        <div class="dm-head">
+            <h5 id="dmTitle">—</h5>
+            <span class="dm-badge" id="dmBadge">0 data</span>
+            <button class="dm-close" onclick="closeDashModal()">✕</button>
+        </div>
+        <div class="dm-toolbar" id="dmToolbar">
+            <div class="dm-search-wrap">
+                <svg class="dm-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input class="dm-search" id="dmSearch" placeholder="Cari..." oninput="filterModalRows()" autocomplete="off">
+            </div>
+            <div class="dm-filter-chips" id="dmAngkatanChips"></div>
+        </div>
+        <div class="dm-body" id="dmBody">
+            <div class="dm-loading"><div class="dm-spinner"></div> Memuat data...</div>
+        </div>
+        <div class="dm-footer" id="dmFooter"></div>
+    </div>
+</div>
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+function mkDonut(id, labels, data, colors) {
+    const el = document.getElementById(id);
+    if (!el || !data.some(v => v > 0)) return;
+    new Chart(el, {
+        type: 'doughnut',
+        data: { labels, datasets: [{ data, backgroundColor: colors, borderWidth: 2, borderColor: '#fff' }] },
+        options: {
+            responsive: true, maintainAspectRatio: false, cutout: '70%',
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.label}: ${c.parsed}` } } },
+        },
+    });
+}
+function mkBar(id, labels, data, color, suffix = '') {
+    const el = document.getElementById(id);
+    if (!el) return;
+    new Chart(el, {
+        type: 'bar',
+        data: { labels, datasets: [{ data, backgroundColor: color, borderRadius: 6, borderSkipped: false }] },
+        options: {
+            responsive: true, maintainAspectRatio: false,
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                y: { grid: { color: '#f3f4f6' }, ticks: { font: { size: 11 }, callback: v => v + suffix } },
+            },
+            plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ` ${c.parsed.y}${suffix}` } } },
+        },
+    });
+}
+
+// ── Global variables — harus di luar DOMContentLoaded agar bisa diakses onclick HTML
+let _angkatanChart = null;   // instance Chart.js multi-line angkatan
+
+// FIX Bug #1: toggleAngkatanLine di scope global agar onclick HTML bisa memanggil
+function toggleAngkatanLine(statusKey, btn) {
+    if (!_angkatanChart) return;
+    const dsIndex = _angkatanChart.data.datasets.findIndex(d => d._statusKey === statusKey);
+    if (dsIndex === -1) return;
+
+    const isActive = btn.classList.contains('active');
+    _angkatanChart.data.datasets[dsIndex].hidden = isActive;
+    _angkatanChart.update();
+
+    if (isActive) {
+        btn.classList.remove('active');
+        btn.style.opacity = '0.4';
+        btn.style.textDecoration = 'line-through';
+    } else {
+        btn.classList.add('active');
+        btn.style.opacity = '1';
+        btn.style.textDecoration = 'none';
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+
+    // Tier 2 — Trend Kegiatan
+    mkBar('chartKegiatanTrend',
+        {!! json_encode(array_keys($acty['kegiatan_trend'])) !!},
+        {!! json_encode(array_values($acty['kegiatan_trend'])) !!},
+        '#6B4FF4'
+    );
+
+    // Tier 3 — Mahasiswa
+    mkDonut('chartStatusMhs',
+        ['Aktif','Alumni','Cuti','Drop Out','Pindah'],
+        [{{ $mhs['total_aktif'] }},{{ $mhs['total_alumni_status'] }},{{ $mhs['total_cuti'] }},{{ $mhs['total_do'] }},{{ $mhs['total_pindah'] }}],
+        ['#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6']
+    );
+    // ── Multi-line chart: semua status per angkatan ──────────────────────────
+    @php
+        $angkatanLabels = $mhs['angkatan_list'];
+        $angkatanByStatus = $mhs['per_angkatan_by_status'];
+        $lineDatasets = [
+            ['status'=>'aktif',        'label'=>'Aktif',        'color'=>'59,130,246'],
+            ['status'=>'alumni',       'label'=>'Alumni',       'color'=>'16,185,129'],
+            ['status'=>'cuti',         'label'=>'Cuti',         'color'=>'245,158,11'],
+            ['status'=>'drop_out',     'label'=>'Drop Out',     'color'=>'239,68,68'],
+            ['status'=>'pindah_studi', 'label'=>'Pindah Studi', 'color'=>'139,92,246'],
+        ];
+    @endphp
+
+    const angkatanChartData = {
+        labels: {!! json_encode($angkatanLabels) !!},
+        datasets: [
+            @foreach($lineDatasets as $ds)
+            {
+                label: '{{ $ds['label'] }}',
+                data: {!! json_encode($angkatanByStatus[$ds['status']] ?? array_fill(0, count($angkatanLabels), 0)) !!},
+                borderColor: 'rgb({{ $ds['color'] }})',
+                backgroundColor: 'rgba({{ $ds['color'] }}, 0.08)',
+                fill: true,
+                tension: 0.35,
+                borderWidth: 2.5,
+                pointRadius: 4,
+                pointHoverRadius: 6,
+                pointBackgroundColor: 'rgb({{ $ds['color'] }})',
+                pointBorderColor: '#fff',
+                pointBorderWidth: 2,
+                _statusKey: '{{ $ds['status'] }}',
+            },
+            @endforeach
+        ],
+    };
+
+    // FIX: assign ke variabel global (dideklarasikan di luar DOMContentLoaded)
+    // sehingga toggleAngkatanLine() bisa mengaksesnya dari scope global
+    _angkatanChart = new Chart(document.getElementById('chartAngkatan'), {
+        type: 'line',
+        data: angkatanChartData,
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            interaction: { mode: 'index', intersect: false },
+            scales: {
+                x: { grid: { display: false }, ticks: { font: { size: 11 } } },
+                y: {
+                    grid: { color: '#f3f4f6' },
+                    ticks: { font: { size: 11 }, stepSize: 1, precision: 0 },
+                    beginAtZero: true,
                 },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            mode: 'index',
-                            intersect: false,
-                            backgroundColor: '#1f2937',
-                            titleColor: '#f9fafb',
-                            bodyColor: '#d1d5db',
-                            padding: 10,
-                            cornerRadius: 8,
-                        }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: items => 'Angkatan ' + items[0].label,
+                        label: ctx => ` ${ctx.dataset.label}: ${ctx.parsed.y} mahasiswa`,
                     },
-                    scales: {
-                        x: {
-                            grid: { display: false },
-                            ticks: { color: '#9ca3af', font: { size: 11 } }
-                        },
-                        y: {
-                            beginAtZero: true,
-                            grid: { color: '#f3f4f6' },
-                            ticks: {
-                                color: '#9ca3af',
-                                font: { size: 11 },
-                                precision: 0,
-                            }
-                        }
-                    }
-                }
-            });
-
-
-            // ── Status Donut Chart ────────────────────────────────────────────
-            const statusCtx = document.getElementById('statusChart').getContext('2d');
-            new Chart(statusCtx, {
-                type: 'doughnut',
-                data: {
-                    labels: ['Aktif', 'Cuti', 'DO', 'Lulus'],
-                    datasets: [{
-                        data: [
-                            {{ $statusMahasiswa['aktif'] }},
-                            {{ $statusMahasiswa['cuti'] }},
-                            {{ $statusMahasiswa['do'] }},
-                            {{ $statusMahasiswa['lulus'] }},
-                        ],
-                        backgroundColor: ['#4f46e5', '#f59e0b', '#ef4444', '#10b981'],
-                        borderWidth: 0,
-                        hoverOffset: 0,
-                    }]
                 },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    cutout: '68%',
-                    plugins: {
-                        legend: { display: false },
-                        tooltip: {
-                            backgroundColor: '#1f2937',
-                            titleColor: '#f9fafb',
-                            bodyColor: '#d1d5db',
-                            padding: 10,
-                            cornerRadius: 8,
-                        }
-                    },
-                    hover: {
-                        mode: 'nearest',
-                        animationDuration: 0
-                    },
-                    animation: {
-                        duration: 800
-                    },
-                    onResize: function (chart, size) {
-                        // Prevent chart from shrinking below minimum size
-                        chart.canvas.parentNode.style.minWidth = '160px';
-                        chart.canvas.parentNode.style.minHeight = '160px';
-                    }
-                }
-            });
+            },
+        },
+    });
+    @if($mhs['total_prestasi'] > 0)
+    mkDonut('chartPrestasi',
+        {!! json_encode(array_map(fn($k) => $tingkatLabels[$k] ?? ucfirst($k), array_keys($mhs['prestasi_per_tingkat']))) !!},
+        {!! json_encode(array_values($mhs['prestasi_per_tingkat'])) !!},
+        ['#6B4FF4','#3b82f6','#10b981','#f59e0b','#ef4444']
+    );
+    @endif
 
-            // ── Live search tabel ─────────────────────────────────────────────
-            function filterTable() {
-                const q = document.getElementById('alumniSearch').value.toLowerCase();
-                const rows = document.querySelectorAll('#alumniTable tbody tr');
-                rows.forEach(row => {
-                    row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
-                });
+    // Tier 4 — Alumni
+    @php
+        $kChartL=[]; $kChartD=[]; $kChartC=[];
+        $kCM=['bekerja'=>'#10b981','wirausaha'=>'#3b82f6','studi_lanjut'=>'#8b5cf6','belum_bekerja'=>'#f59e0b','belum_terdata'=>'#9ca3af'];
+        foreach($alm['per_status_karir'] as $s=>$v) {
+            $kChartL[] = $karirLabels[$s] ?? ucfirst($s);
+            $kChartD[] = $v;
+            $kChartC[] = $kCM[$s] ?? '#9ca3af';
+        }
+    @endphp
+    mkDonut('chartStatusKarir',
+        {!! json_encode($kChartL) !!},
+        {!! json_encode($kChartD) !!},
+        {!! json_encode($kChartC) !!}
+    );
+    mkBar('chartSerapan',
+        {!! json_encode(array_keys($alm['serapan_per_angkatan'])) !!},
+        {!! json_encode(array_values($alm['serapan_per_angkatan'])) !!},
+        '#10b981', '%'
+    );
+    @if(count($alm['distribusi_industri']) > 0)
+    @php
+        $iL=[]; $iD=[]; $iC=[]; $iCols=['#6B4FF4','#3b82f6','#10b981','#f59e0b','#ef4444','#8b5cf6','#06b6d4','#84cc16']; $ic=0;
+        foreach($alm['distribusi_industri'] as $b=>$v) {
+            $iL[] = $industryLabels[$b] ?? ucfirst(str_replace('_',' ',$b));
+            $iD[] = $v; $iC[] = $iCols[$ic%8]; $ic++;
+        }
+    @endphp
+    mkDonut('chartIndustri',
+        {!! json_encode($iL) !!},
+        {!! json_encode($iD) !!},
+        {!! json_encode($iC) !!}
+    );
+    @endif
+
+});
+
+// ── Dashboard Modal ─────────────────────────────────────────────────────────
+
+const MODAL_URL = '{{ route('manajemenmahasiswa.dashboard.modal') }}';
+let _modalAllRows = [];   // semua row yang difetch
+let _modalType    = '';   // tipe modal aktif
+let _activeAngkatan = 'semua'; // filter angkatan aktif
+
+// FIX Bug #4: helper sanitasi XSS — escape karakter berbahaya sebelum render ke innerHTML
+function escHtml(str) {
+    return String(str ?? '-')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+}
+
+function openDashModal(type, params, title) {
+    _modalType = type;
+    _activeAngkatan = 'semua';
+    document.getElementById('dmTitle').textContent = title;
+    document.getElementById('dmBadge').textContent = '...';
+    document.getElementById('dmSearch').value = '';
+    document.getElementById('dmBody').innerHTML = '<div class="dm-loading"><div class="dm-spinner"></div> Memuat data...</div>';
+    document.getElementById('dmFooter').textContent = '';
+    document.getElementById('dashModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+
+    // FIX Bug #3: Reset chips dan visibilitas toolbar setiap kali modal dibuka
+    const chipsWrap = document.getElementById('dmAngkatanChips');
+    chipsWrap.innerHTML = '';
+    chipsWrap.style.display = type === 'mahasiswa' ? 'flex' : 'none';
+
+    const qs = new URLSearchParams({ type, ...params }).toString();
+    fetch(`${MODAL_URL}?${qs}`, {
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]')?.content || '',
+        },
+    })
+        .then(r => { if (!r.ok) throw new Error(r.status); return r.json(); })
+        .then(json => {
+            _modalAllRows = json.data || [];
+            document.getElementById('dmBadge').textContent = `${json.total ?? _modalAllRows.length} data`;
+            document.getElementById('dmFooter').textContent = `Total: ${json.total ?? _modalAllRows.length} item`;
+
+            // Angkatan filter chips — hanya untuk tipe mahasiswa
+            if (type === 'mahasiswa' && json.angkatan_list?.length) {
+                buildAngkatanChips(json.angkatan_list);
             }
 
-            // ── Serapan Kerja per Angkatan (Bar Chart) ───────────────────────
-            const serapanLabels = @json(array_keys($serapanPerAngkatan));
-            const serapanData = @json(array_values($serapanPerAngkatan));
+            renderTable(_modalAllRows, type);
+        })
+        .catch(err => {
+            document.getElementById('dmBody').innerHTML =
+                '<div class="dm-empty">Gagal memuat data. Pastikan koneksi aktif dan coba refresh.</div>';
+            console.error('[DashModal]', err);
+        });
+}
 
-            if (document.getElementById('serapanChart')) {
-                new Chart(document.getElementById('serapanChart').getContext('2d'), {
-                    type: 'bar',
-                    data: {
-                        labels: serapanLabels.length ? serapanLabels : ['2020', '2021', '2022', '2023'],
-                        datasets: [{
-                            label: 'Serapan (%)',
-                            data: serapanData.length ? serapanData : [0, 0, 0, 0],
-                            backgroundColor: serapanData.map(v => v >= 75 ? '#10b981' : v >= 50 ? '#f59e0b' : '#ef4444'),
-                            borderRadius: 6,
-                            barPercentage: 0.6,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                backgroundColor: '#1f2937',
-                                titleColor: '#f9fafb',
-                                bodyColor: '#d1d5db',
-                                padding: 10,
-                                cornerRadius: 8,
-                                callbacks: {
-                                    label: ctx => ctx.parsed.y + '%'
-                                }
-                            }
-                        },
-                        scales: {
-                            x: { grid: { display: false }, ticks: { color: '#9ca3af', font: { size: 11 } } },
-                            y: {
-                                grid: { color: '#f3f4f6' },
-                                ticks: { color: '#9ca3af', font: { size: 11 }, callback: v => v + '%' },
-                                max: 100,
-                                beginAtZero: true
-                            }
-                        }
-                    }
-                });
-            }
+function closeDashModal() {
+    document.getElementById('dashModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
 
-            // ── Distribusi Industri (Doughnut Chart) ─────────────────────────
-            const industriLabels = @json(array_keys($distribusiIndustri));
-            const industriData = @json(array_values($distribusiIndustri));
-            const industriColors = ['#4f46e5', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#06b6d4', '#ec4899', '#f97316', '#14b8a6', '#6366f1', '#a855f7'];
-            const industriLabelMap = @json(\Modules\ManajemenMahasiswa\Models\Alumni::BIDANG_INDUSTRI_LIST);
+function buildAngkatanChips(list) {
+    const wrap = document.getElementById('dmAngkatanChips');
+    wrap.innerHTML = '';
+    const all = document.createElement('button');
+    all.className = 'dm-chip active';
+    all.textContent = 'Semua';
+    all.dataset.angkatan = 'semua';
+    all.onclick = () => setAngkatanFilter('semua');
+    wrap.appendChild(all);
 
-            if (document.getElementById('industriChart') && industriData.length) {
-                new Chart(document.getElementById('industriChart').getContext('2d'), {
-                    type: 'doughnut',
-                    data: {
-                        labels: industriLabels.map(k => industriLabelMap[k] || k),
-                        datasets: [{
-                            data: industriData,
-                            backgroundColor: industriColors.slice(0, industriData.length),
-                            borderWidth: 0,
-                            hoverOffset: 0,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '68%',
-                        plugins: {
-                            legend: { display: false },
-                            tooltip: {
-                                backgroundColor: '#1f2937',
-                                titleColor: '#f9fafb',
-                                bodyColor: '#d1d5db',
-                                padding: 10,
-                                cornerRadius: 8,
-                            }
-                        },
-                        animation: { duration: 800 }
-                    }
-                });
+    list.forEach(a => {
+        const btn = document.createElement('button');
+        btn.className = 'dm-chip';
+        btn.textContent = a;
+        btn.dataset.angkatan = a;
+        btn.onclick = () => setAngkatanFilter(a);
+        wrap.appendChild(btn);
+    });
+}
 
-                // Build legend
-                const legendEl = document.getElementById('industriLegend');
-                if (legendEl) {
-                    industriLabels.forEach((key, i) => {
-                        const label = industriLabelMap[key] || key;
-                        const item = document.createElement('div');
-                        item.className = 'donut-legend-item';
-                        item.innerHTML = `
-                            <div style="display:flex;align-items:center;">
-                                <span class="donut-legend-dot" style="background:${industriColors[i % industriColors.length]};"></span>
-                                ${label}
-                            </div>
-                            <span style="font-weight:600;">${industriData[i]}</span>`;
-                        legendEl.appendChild(item);
-                    });
-                }
-            }
+function setAngkatanFilter(angkatan) {
+    _activeAngkatan = angkatan;
+    document.querySelectorAll('#dmAngkatanChips .dm-chip').forEach(b => {
+        b.classList.toggle('active', b.dataset.angkatan == angkatan);
+    });
+    filterModalRows();
+}
 
-            // ── Resize charts saat sidebar toggle ────────────────────────────
-            const sidebarToggleBtn = document.querySelector('.sidebar-toggle');
-            if (sidebarToggleBtn) {
-                sidebarToggleBtn.addEventListener('click', () => {
-                    setTimeout(() => {
-                        Object.values(Chart.instances).forEach(c => c.resize());
-                    }, 320); // setelah CSS transition selesai (0.3s)
-                });
-            }
-        </script>
-    @endpush
+function filterModalRows() {
+    const q = document.getElementById('dmSearch').value.toLowerCase().trim();
+    let rows = _modalAllRows;
+
+    // Filter angkatan (mahasiswa saja)
+    if (_modalType === 'mahasiswa' && _activeAngkatan !== 'semua') {
+        rows = rows.filter(r => r.angkatan == _activeAngkatan);
+    }
+    // Filter search
+    if (q) {
+        rows = rows.filter(r => JSON.stringify(Object.values(r)).toLowerCase().includes(q));
+    }
+
+    renderTable(rows, _modalType);
+    document.getElementById('dmFooter').textContent = `Menampilkan ${rows.length} dari ${_modalAllRows.length} item`;
+}
+
+function renderTable(rows, type) {
+    if (!rows.length) {
+        document.getElementById('dmBody').innerHTML = '<div class="dm-empty">Tidak ada data ditemukan.</div>';
+        return;
+    }
+
+    // FIX Bug #4: semua nilai di-escape sebelum masuk ke innerHTML
+    const av = (nm) => `<div class="avatar-sm" style="width:28px;height:28px;font-size:10px;">${escHtml((nm||'-').substring(0,2).toUpperCase())}</div>`;
+    const nameCell = (nm) => `<td><div style="display:flex;align-items:center;gap:8px;">${av(nm)}<span style="font-weight:600;color:#1e1b4b;">${escHtml(nm)}</span></div></td>`;
+
+    const configs = {
+        mahasiswa: {
+            headers: ['Nama', 'NIM', 'Angkatan', 'Email'],
+            cells: r => `${nameCell(r.nama)}<td style="font-family:monospace;color:#9ca3af;font-size:.82rem;">${escHtml(r.nim)}</td><td>${escHtml(r.angkatan)}</td><td style="color:#6b7280;font-size:.82rem;">${escHtml(r.email)}</td>`,
+        },
+        alumni: {
+            headers: ['Nama', 'NIM', 'Angkatan', 'Th. Lulus', 'Status Karir', 'Perusahaan'],
+            cells: r => `${nameCell(r.nama)}<td style="font-family:monospace;color:#9ca3af;font-size:.82rem;">${escHtml(r.nim)}</td><td>${escHtml(r.angkatan)}</td><td>${escHtml(r.tahun_lulus)}</td><td>${escHtml(r.status_karir)}</td><td style="color:#6b7280;">${escHtml(r.perusahaan)}</td>`,
+        },
+        kegiatan: {
+            headers: ['Judul Kegiatan', 'Tanggal Mulai', 'Lokasi'],
+            cells: r => `<td style="font-weight:600;color:#1e1b4b;">${escHtml(r.judul)}</td><td style="color:#6b7280;">${escHtml(r.tanggal_mulai)}</td><td style="color:#6b7280;">${escHtml(r.lokasi)}</td>`,
+        },
+        pengumuman: {
+            headers: ['Judul', 'Kategori', 'Target', 'Pembuat', 'Dipublish'],
+            cells: r => `<td style="font-weight:600;color:#1e1b4b;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.judul)}</td><td>${escHtml(r.kategori)}</td><td>${escHtml(r.target_audience)}</td><td style="color:#6b7280;">${escHtml(r.author)}</td><td style="color:#6b7280;white-space:nowrap;">${escHtml(r.published_at)}</td>`,
+        },
+        thread: {
+            headers: ['Judul Thread', 'Kategori', 'Pembuat', '👍', '💬', 'Dibuat'],
+            cells: r => `<td style="font-weight:600;color:#1e1b4b;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.judul)}</td><td style="color:#6b7280;font-size:.8rem;">${escHtml(r.kategori)}</td><td style="color:#6b7280;">${escHtml(r.author)}</td><td style="color:#6b7280;">${escHtml(r.vote_count)}</td><td style="color:#6b7280;">${escHtml(r.comment_count)}</td><td style="color:#9ca3af;white-space:nowrap;font-size:.8rem;">${escHtml(r.created_at)}</td>`,
+        },
+    };
+
+    const cfg = configs[type] || { headers: Object.keys(rows[0]), cells: r => Object.values(r).map(v => `<td>${escHtml(v)}</td>`).join('') };
+
+    // Cek apakah ada row yang punya URL (untuk menentukan apakah kolom arrow perlu ditambahkan)
+    const hasLinks = rows.some(r => r.url);
+    const arrowHeader = hasLinks ? '<th class="dm-arrow-cell"></th>' : '';
+    const thead = `<tr>${cfg.headers.map(h => `<th>${escHtml(h)}</th>`).join('')}${arrowHeader}</tr>`;
+
+    const tbody = rows.map(r => {
+        const cells = cfg.cells(r);
+        const arrowCell = hasLinks
+            ? `<td class="dm-arrow-cell">${r.url ? '→' : ''}</td>`
+            : '';
+
+        if (r.url) {
+            // Baris bisa diklik — navigasi ke halaman detail
+            const safeUrl = escHtml(r.url);
+            return `<tr class="dm-row-link" onclick="window.location.href='${safeUrl}'" title="Buka detail">${cells}${arrowCell}</tr>`;
+        }
+        return `<tr>${cells}${arrowCell}</tr>`;
+    }).join('');
+
+    document.getElementById('dmBody').innerHTML = `<table class="dm-table"><thead>${thead}</thead><tbody>${tbody}</tbody></table>`;
+}
+
+// Escape key closes modal
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDashModal(); });
+</script>
+@endpush
 
 </x-manajemenmahasiswa::layouts.admin>

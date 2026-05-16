@@ -156,16 +156,21 @@
         @endif
 
         @php
-            $isKetua       = (bool) array_intersect($sidebarRoles, ['ketua_unit', 'ketua_bidang', 'ketua_himpunan', 'wakil_ketua_himpunan']);
-            $isStaffHimpunan = in_array('staff_himpunan', $sidebarRoles) && !$isKetua;
+            $isKetua         = (bool) array_intersect($sidebarRoles, ['ketua_unit', 'ketua_bidang', 'ketua_himpunan', 'wakil_ketua_himpunan']);
+            $isAdminVerifier = (bool) array_intersect($sidebarRoles, ['admin', 'admin_kemahasiswaan', 'superadmin']);
+            $isStaffHimpunan = in_array('staff_himpunan', $sidebarRoles) && !$isKetua && !$isAdminVerifier;
 
             $pengumumanDropdownActive = request()->routeIs('manajemenmahasiswa.pengumuman.*');
 
-            // Counter untuk ketua: berapa request masuk yang belum diproses
+            // Counter pending verifikasi pengumuman
             $pendingVerifCount = 0;
             if ($isKetua) {
+                // Ketua: hanya request yang ditujukan ke mereka
                 $pendingVerifCount = \Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest::where('verifier_id', auth()->id())
                     ->where('status', 'pending')->count();
+            } elseif ($isAdminVerifier) {
+                // Admin: semua request pending (bisa override siapapun)
+                $pendingVerifCount = \Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest::where('status', 'pending')->count();
             }
 
             // Counter untuk staff: berapa pengajuan milik dia yang masih pending
@@ -176,7 +181,7 @@
             }
         @endphp
 
-        @if($isKetua)
+        @if($isKetua || $isAdminVerifier)
             {{-- Dropdown Pengumuman — untuk ketua yang bisa verifikasi pengumuman orang lain --}}
             <div class="sidebar-dropdown {{ $pengumumanDropdownActive ? 'open' : '' }}">
                 <a href="javascript:void(0)"

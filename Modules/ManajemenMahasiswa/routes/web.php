@@ -23,6 +23,11 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->name('dashboard');
 
+        // Modal data endpoint untuk dashboard analitik (AJAX)
+        Route::get('/dashboard/modal-data', [DashboardController::class, 'modalData'])
+            ->name('dashboard.modal')
+            ->middleware('role:superadmin|admin|admin_kemahasiswaan|gpm');
+
         // Switch tampilan dashboard antar-role (untuk user multi-role)
         Route::post('/dashboard/switch-mode', [DashboardController::class, 'switchMode'])
             ->name('switch.mode');
@@ -92,8 +97,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 ->get('/riwayat-verifikasi', [PengumumanController::class, 'riwayatVerifikasiStaff'])
                 ->name('riwayat.verifikasi');
 
-            // Verifikasi Dashboard — hanya ketua-ketua himpunan
-            Route::middleware('role:ketua_unit|ketua_bidang|ketua_himpunan|wakil_ketua_himpunan')
+            // Verifikasi Dashboard — ketua himpunan + admin kemahasiswaan
+            Route::middleware('role:ketua_unit|ketua_bidang|ketua_himpunan|wakil_ketua_himpunan|admin|admin_kemahasiswaan|superadmin')
                 ->group(function () {
                 Route::get('/verifikasi', [PengumumanController::class, 'verifikasiIndex'])
                     ->name('verifikasi.index');
