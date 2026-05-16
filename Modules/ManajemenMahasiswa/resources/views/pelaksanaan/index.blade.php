@@ -21,12 +21,7 @@
     .card-title { font-weight:700;font-size:15px;color:#1f2937;margin:8px 0 10px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
     .card-meta { display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:#9ca3af;font-weight:500;padding-top:10px;border-top:1px solid #f3f4f6;margin-top:auto; }
     .card-meta span { display:inline-flex;align-items:center;gap:4px; }
-    /* Rencana vs Realisasi compare */
-    .compare-row { display:flex;gap:8px;font-size:12px;color:#6b7280;margin-bottom:4px; }
-    .compare-label { font-weight:600;width:100px;flex-shrink:0; }
-    .compare-rencana { color:#6b7280; }
-    .compare-realisasi { color:#16a34a;font-weight:600; }
-    .compare-realisasi.missing { color:#f59e0b;font-style:italic; }
+
     /* Status */
     .status-badge { display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700; }
     .status-disetujui { background:#dcfce7;color:#166534; }
@@ -45,7 +40,7 @@
 <div class="d-flex justify-content-between align-items-start mb-4">
     <div>
         <h3 class="fw-bold mb-1 text-dark">Pelaksanaan Kegiatan</h3>
-        <p class="text-muted mb-0" style="font-size:14px;font-weight:500;">Proker yang sudah disetujui — input data realisasi pelaksanaan di sini</p>
+        <p class="text-muted mb-0" style="font-size:14px;font-weight:500;">Proker yang sudah disetujui — lengkapi data pelaksanaan di sini</p>
     </div>
 </div>
 
@@ -103,17 +98,14 @@
                             @endif
                         </div>
                         <div class="card-title">{{ $item->judul }}</div>
-                        @if($canManage && $item->status === 'disetujui' && !$item->has_realisasi)
-                            <div style="margin-top:10px;">
-                                <span style="display:inline-flex;align-items:center;gap:6px;background:#fef3c7;color:#92400e;padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;">
-                                    &#9888; Belum ada data realisasi — klik untuk input
-                                </span>
-                            </div>
-                        @endif
+
                         <div class="card-meta">
                             <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg> {{ $item->tanggal_mulai ? $item->tanggal_mulai->translatedFormat('d M Y') : 'Belum ditentukan' }}</span>
                             @if($item->jam_mulai)
                                 <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg> {{ $item->jam_mulai_formatted }}{{ $item->jam_selesai_formatted ? ' - ' . $item->jam_selesai_formatted : '' }} WIB</span>
+                            @endif
+                            @if($item->lokasi)
+                                <span><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="vertical-align:-2px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg> {{ $item->lokasi }}</span>
                             @endif
                         </div>
                     </div>

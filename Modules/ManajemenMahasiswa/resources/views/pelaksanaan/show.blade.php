@@ -109,7 +109,7 @@
                 Edit
             </a>
         @endif
-        @if($isAdmin)
+        @if($canDelete)
             <button type="button" class="btn d-flex align-items-center gap-2"
                     style="background: #fee2e2; color: #dc2626; font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: 10px; border: none;"
                     onclick="document.getElementById('deleteModal').style.display='flex'">
@@ -120,16 +120,25 @@
                 Hapus
             </button>
         @endif
-        @if($canManage && $proker->status !== 'selesai')
-            <form action="{{ route('manajemenmahasiswa.pelaksanaan.publish', $proker->id) }}" method="POST"
-                  style="display:inline;" onsubmit="return confirm('Unggah kegiatan ini ke Laporan & Arsip?\n\nSemua data akan tersinkron ke subbab 3. Kegiatan akan ditandai sebagai Selesai.')">
-                @csrf
-                <button type="submit" class="btn"
-                        style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:600;font-size:13px;padding:8px 18px;border-radius:10px;display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(79,70,229,.25);">
+        @if($proker->status !== 'selesai')
+            @if($canArsip)
+                <form action="{{ route('manajemenmahasiswa.pelaksanaan.publish', $proker->id) }}" method="POST"
+                      style="display:inline;" onsubmit="return confirm('Unggah kegiatan ini ke Laporan & Arsip?\n\nSemua data akan tersinkron ke subbab 3. Kegiatan akan ditandai sebagai Selesai.')">
+                    @csrf
+                    <button type="submit" class="btn"
+                            style="background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:600;font-size:13px;padding:8px 18px;border-radius:10px;display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(79,70,229,.25);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Unggah ke Arsip
+                    </button>
+                </form>
+            @else
+                <button type="button" disabled
+                    title="Hanya Ketua / Wakil Ketua / Ketua Bidang / Ketua Unit yang dapat mengunggah ke arsip"
+                    style="background:#e5e7eb;color:#9ca3af;font-weight:600;font-size:13px;padding:8px 18px;border-radius:10px;display:inline-flex;align-items:center;gap:6px;border:none;cursor:not-allowed;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                     Unggah ke Arsip
                 </button>
-            </form>
+            @endif
         @endif
         @if($proker->status === 'selesai')
             <a href="{{ route('manajemenmahasiswa.kegiatan.show', $proker->id) }}"
@@ -387,7 +396,7 @@
 @endif
 
 <!-- Delete Confirmation Modal -->
-@if($isAdmin)
+@if($canDelete)
 <div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;">
     <div style="background: #fff; border-radius: 16px; padding: 32px; max-width: 420px; width: 90%; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.15);">
         <div style="width: 56px; height: 56px; border-radius: 50%; background: #fee2e2; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">

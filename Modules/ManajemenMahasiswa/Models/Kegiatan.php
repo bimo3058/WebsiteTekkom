@@ -75,76 +75,47 @@ class Kegiatan extends Model
     // Constants
     // -------------------------------------------------------------------------
 
-    // ── Status Perencanaan (Subbab 1) ──────────────────────────────────────
-    const STATUS_DRAFT             = 'draft';              // baru dibuat, belum diajukan
-    const STATUS_DIAJUKAN          = 'diajukan';           // (legacy) sudah diajukan
-    const STATUS_TTD_KETUA         = 'menunggu_ttd_ketua'; // menunggu TTD ketua himpunan + bendahara
-    const STATUS_TTD_DPM           = 'menunggu_ttd_dpm';   // menunggu TTD DPM
-    const STATUS_TTD_DEPT          = 'menunggu_ttd_dept';  // menunggu TTD ketua departemen
-    const STATUS_DISETUJUI         = 'disetujui';          // semua TTD selesai, siap dilaksanakan
-    const STATUS_DITOLAK           = 'ditolak';            // ditolak, perlu revisi
+    // ── Status Aktif (alur yang digunakan saat ini) ────────────────────────
+    const STATUS_DRAFT     = 'draft';      // Subbab 1 — baru dibuat, belum diajukan
+    const STATUS_DISETUJUI = 'disetujui';  // Subbab 2 — sudah diajukan, siap dilaksanakan
+    const STATUS_SELESAI   = 'selesai';    // Subbab 3 — selesai, masuk arsip
 
-    // ── Status Pelaksanaan (Subbab 2 & 3) ────────────────────────────────
-    const STATUS_AKAN_DATANG = 'akan_datang'; // proker disetujui, belum terlaksana
+    // ── Status Legacy (tidak digunakan lagi, disimpan untuk backward compat) ─
+    /** @deprecated Tidak digunakan dalam alur bisnis aktif */
+    const STATUS_DIAJUKAN    = 'diajukan';
+    /** @deprecated Tidak digunakan dalam alur bisnis aktif */
+    const STATUS_AKAN_DATANG = 'akan_datang';
+    /** @deprecated Tidak digunakan dalam alur bisnis aktif */
     const STATUS_BERLANGSUNG = 'berlangsung';
-    const STATUS_SELESAI     = 'selesai';
 
     const STATUS_LIST = [
         self::STATUS_DRAFT,
-        self::STATUS_DIAJUKAN,
-        self::STATUS_TTD_KETUA,
-        self::STATUS_TTD_DPM,
-        self::STATUS_TTD_DEPT,
         self::STATUS_DISETUJUI,
-        self::STATUS_DITOLAK,
-        self::STATUS_AKAN_DATANG,
-        self::STATUS_BERLANGSUNG,
         self::STATUS_SELESAI,
     ];
 
-    /** Status yang masih dalam fase perencanaan / penandatanganan (Subbab 1) */
+    /** Status yang masih dalam fase perencanaan (Subbab 1) */
     const STATUS_PERENCANAAN = [
         self::STATUS_DRAFT,
-        self::STATUS_DIAJUKAN,
-        self::STATUS_TTD_KETUA,
-        self::STATUS_TTD_DPM,
-        self::STATUS_TTD_DEPT,
-        self::STATUS_DITOLAK,
     ];
 
     /** Status yang sudah disetujui / dalam proses pelaksanaan (Subbab 2) */
     const STATUS_PELAKSANAAN = [
         self::STATUS_DISETUJUI,
-        self::STATUS_AKAN_DATANG,
-        self::STATUS_BERLANGSUNG,
     ];
 
     /** Label status untuk ditampilkan di UI */
     const STATUS_LABELS = [
-        self::STATUS_DRAFT          => 'Draft',
-        self::STATUS_DIAJUKAN       => 'Diajukan',
-        self::STATUS_TTD_KETUA      => 'TTD Ketua & Bendahara',
-        self::STATUS_TTD_DPM        => 'TTD DPM',
-        self::STATUS_TTD_DEPT       => 'TTD Ketua Departemen',
-        self::STATUS_DISETUJUI      => 'Disetujui',
-        self::STATUS_DITOLAK        => 'Ditolak',
-        self::STATUS_AKAN_DATANG    => 'Akan Datang',
-        self::STATUS_BERLANGSUNG    => 'Berlangsung',
-        self::STATUS_SELESAI        => 'Selesai',
+        self::STATUS_DRAFT     => 'Draft',
+        self::STATUS_DISETUJUI => 'Pelaksanaan',
+        self::STATUS_SELESAI   => 'Selesai',
     ];
 
     /** Warna badge per status */
     const STATUS_COLORS = [
-        self::STATUS_DRAFT          => 'secondary',
-        self::STATUS_DIAJUKAN       => 'warning',
-        self::STATUS_TTD_KETUA      => 'warning',
-        self::STATUS_TTD_DPM        => 'info',
-        self::STATUS_TTD_DEPT       => 'primary',
-        self::STATUS_DISETUJUI      => 'success',
-        self::STATUS_DITOLAK        => 'danger',
-        self::STATUS_AKAN_DATANG    => 'info',
-        self::STATUS_BERLANGSUNG    => 'primary',
-        self::STATUS_SELESAI        => 'success',
+        self::STATUS_DRAFT     => 'secondary',
+        self::STATUS_DISETUJUI => 'primary',
+        self::STATUS_SELESAI   => 'success',
     ];
 
     // -------------------------------------------------------------------------
@@ -215,22 +186,6 @@ class Kegiatan extends Model
     public function repoMulmed(): HasMany
     {
         return $this->hasMany(RepoMulmed::class, 'kegiatan_id');
-    }
-
-    /**
-     * Tanda tangan digital yang terpasang pada proker ini.
-     */
-    public function prokerTtd(): HasMany
-    {
-        return $this->hasMany(ProkerTtd::class, 'kegiatan_id');
-    }
-
-    /**
-     * Ambil TTD untuk role tertentu.
-     */
-    public function ttdForRole(string $role): ?ProkerTtd
-    {
-        return $this->prokerTtd->where('role', $role)->first();
     }
 
     // -------------------------------------------------------------------------
