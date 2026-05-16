@@ -39,3 +39,4 @@ AI_*.md
 .gemini/
 .cursor/
 .copilot/
+*.sql

@@ -192,8 +192,16 @@
             </div>
 
             {{-- Kerja Praktik --}}
-            @php $activeKp = str_contains($currentRoute, 'eoffice.kp'); @endphp
-            <a href="{{ route('eoffice.kp.dashboard') }}"
+            @php 
+                $activeKp = str_contains($currentRoute, 'eoffice.kp'); 
+                $kpLink = match(true) {
+                    $isAdmin  => route('eoffice.kp.koordinator.dashboard'),
+                    $isDosen  => route('eoffice.kp.dosen.dashboard'),
+                    $isKoor   => route('eoffice.kp.koordinator.dashboard'),
+                    default   => route('eoffice.kp.mahasiswa.dashboard'),
+                };
+            @endphp
+            <a href="{{ $kpLink }}"
                class="flex items-center gap-[10px] px-[10px] py-[9px] rounded-lg mb-[1px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap
                       {{ $activeKp ? 'bg-[#0B266E]' : 'hover:bg-[#F6F8FA]' }}"
                :class="sidebarOpen ? '' : 'justify-center'">
