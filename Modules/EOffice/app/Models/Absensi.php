@@ -5,10 +5,10 @@ namespace Modules\EOffice\Models;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Absensi per modul praktikum.
+ * Absensi per modul per praktikan.
  *
  * Tabel: absensi_praktikum
- * Status: hadir | izin | tidak_hadir
+ * status: hadir | izin | tidak_hadir
  */
 class Absensi extends Model
 {

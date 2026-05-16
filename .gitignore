@@ -42,3 +42,9 @@ AI_*.md
 /Modules/BankSoal/Skills
 *.md
 *.sql
+
+_design_system_tmp/
+_ds_tmp/
+
+# Zip export
+*.zip

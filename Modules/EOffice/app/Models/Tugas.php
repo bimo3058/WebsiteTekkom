@@ -37,11 +37,4 @@ class Tugas extends Model
     {
         return $this->hasMany(PengumpulanTugas::class, 'tugas_id');
     }
-
-    // Pengumpulan dari user tertentu (dipakai di mahasiswa dashboard)
-    public function pengumpulanUser()
-    {
-        return $this->hasOne(PengumpulanTugas::class, 'tugas_id')
-            ->whereHas('daftarPraktikan', fn($q) => $q->where('user_id', auth()->id()));
-    }
 }

@@ -1,59 +1,62 @@
 <x-eoffice::manajemen-praktikum.layout pageTitle="Pembagian Modul ke Asisten">
 
-<div class="flex items-center justify-between flex-shrink-0">
+{{-- Header --}}
+<div class="mp-page-header">
     <div>
-        <div class="text-[20px] font-bold text-[#0D0D12]">Pembagian Modul ke Asisten Praktikum</div>
-        <div class="text-[12px] text-[#666D80] mt-[2px]">Tentukan asisten mana yang mengelola modul mana</div>
+        <h1 class="mp-page-title">Pembagian Modul ke Asisten Praktikum</h1>
+        <p class="mp-page-sub">Tentukan asisten mana yang mengelola modul mana</p>
     </div>
 </div>
 
 <div class="flex gap-[14px] flex-1 min-h-0">
 
     {{-- Panel Kiri: Daftar Asprak --}}
-    <div class="flex flex-col bg-white border border-[#DFE1E7] rounded-[14px] overflow-hidden shadow-[0_1px_2px_rgba(228,229,231,.24)] min-w-0" style="width:280px; flex-shrink:0;">
-        <div class="px-5 py-4 border-b border-[#DFE1E7] flex-shrink-0">
-            <div class="font-bold text-[14px] text-[#0D0D12]">Asisten Praktikum</div>
-            <div class="text-[12px] text-[#666D80] mt-[2px]">{{ $asistenList->count() }} asprak terdaftar</div>
+    <div class="mp-card flex-shrink-0" style="width:280px;">
+        <div class="mp-card-header">
+            <div>
+                <span class="mp-card-title">Asisten Praktikum</span>
+                <div style="font-size:12px;color:var(--c-fg-muted);margin-top:2px;">{{ $asistenList->count() }} asprak terdaftar</div>
+            </div>
         </div>
         <div class="overflow-y-auto flex-1">
             @forelse($asistenList ?? [] as $a)
-            <div class="px-5 py-[10px] border-b border-[#F8F9FB] last:border-0">
+            <div style="padding:10px 20px;border-bottom:1px solid var(--c-border-light);">
                 <div class="flex items-center gap-[10px]">
                     <div class="w-[30px] h-[30px] rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
                          style="background:linear-gradient(135deg,#1a6691,#40C4AA);">
                         {{ strtoupper(substr($a->user?->name ?? 'A', 0, 2)) }}
                     </div>
                     <div class="min-w-0">
-                        <div class="text-[12px] font-semibold text-[#0D0D12] truncate">{{ $a->user?->name ?? '—' }}</div>
-                        <div class="text-[10px] text-[#666D80]">{{ $a->modulAsprak->count() }} modul</div>
+                        <div style="font-size:12px;font-weight:600;color:var(--c-fg);" class="truncate">{{ $a->user?->name ?? '—' }}</div>
+                        <div style="font-size:10px;color:var(--c-fg-muted);">{{ $a->modulAsprak->count() }} modul</div>
                     </div>
                 </div>
                 @if($a->modulAsprak->isNotEmpty())
                 <div class="flex flex-wrap gap-1 mt-2">
                     @foreach($a->modulAsprak as $ma)
-                    <span class="text-[10px] font-semibold px-2 py-[2px] rounded-full bg-[#D1F0F9] text-[#106A97]">{{ $ma->modul?->nama }}</span>
+                    <span class="mp-badge sky sm">{{ $ma->modul?->nama }}</span>
                     @endforeach
                 </div>
                 @endif
             </div>
             @empty
-            <div class="py-8 text-center text-[12px] text-[#A4ABB8]">Belum ada asprak.</div>
+            <div style="padding:32px;text-align:center;font-size:12px;color:var(--c-fg-placeholder);">Belum ada asprak.</div>
             @endforelse
         </div>
     </div>
 
-    {{-- Panel Kanan: Form Bagi Modul --}}
+    {{-- Panel Kanan --}}
     <div class="flex flex-col gap-[14px] flex-1 min-w-0 overflow-y-auto">
 
         {{-- Form Assign --}}
-        <div class="bg-white border border-[#DFE1E7] rounded-[14px] p-5 shadow-[0_1px_2px_rgba(228,229,231,.24)] flex-shrink-0">
-            <div class="font-bold text-[14px] text-[#0D0D12] mb-4">Assign Asprak ke Modul</div>
+        <div class="mp-card flex-shrink-0" style="padding:20px;">
+            <div style="font-weight:700;font-size:14px;color:var(--c-fg);margin-bottom:16px;">Assign Asprak ke Modul</div>
             <form method="POST" action="{{ route('eoffice.manprak.koor.bagi-modul.store') }}">
                 @csrf
                 <div class="grid grid-cols-2 gap-3 mb-4">
                     <div>
                         <label class="block text-[12px] font-semibold text-[#353849] mb-1">Pilih Asisten <span class="text-red-500">*</span></label>
-                        <select name="asprak_id" required class="w-full border border-[#DFE1E7] rounded-[8px] px-3 py-[9px] text-[13px] focus:outline-none focus:border-[#106A97]">
+                        <select name="asprak_id" required class="mp-input mp-select w-full">
                             <option value="">— Pilih Asprak —</option>
                             @foreach($asistenList ?? [] as $a)
                             <option value="{{ $a->id }}">{{ $a->user?->name }}</option>
@@ -62,7 +65,7 @@
                     </div>
                     <div>
                         <label class="block text-[12px] font-semibold text-[#353849] mb-1">Pilih Modul <span class="text-red-500">*</span></label>
-                        <select name="modul_id" required class="w-full border border-[#DFE1E7] rounded-[8px] px-3 py-[9px] text-[13px] focus:outline-none focus:border-[#106A97]">
+                        <select name="modul_id" required class="mp-input mp-select w-full">
                             <option value="">— Pilih Modul —</option>
                             @foreach($modulList ?? [] as $m)
                             <option value="{{ $m->id }}">{{ $m->nama }}</option>
@@ -70,38 +73,39 @@
                         </select>
                     </div>
                 </div>
-                <button type="submit"
-                        class="px-5 py-[9px] rounded-[9px] bg-[#106A97] text-white text-[13px] font-semibold border-none cursor-pointer hover:bg-[#0e5a80]">Assign Modul</button>
+                <button type="submit" class="mp-btn primary md">Assign Modul</button>
             </form>
         </div>
 
         {{-- Tabel Distribusi Saat Ini --}}
-        <div class="flex flex-col bg-white border border-[#DFE1E7] rounded-[14px] overflow-hidden shadow-[0_1px_2px_rgba(228,229,231,.24)] flex-1 min-h-0">
-            <div class="px-5 py-4 border-b border-[#DFE1E7] flex-shrink-0">
-                <div class="font-bold text-[14px] text-[#0D0D12]">Distribusi Saat Ini</div>
+        <div class="mp-card flex-1 min-h-0">
+            <div class="mp-card-header" style="flex-shrink:0;">
+                <span class="mp-card-title">Distribusi Saat Ini</span>
             </div>
-            <div class="flex px-5 py-[10px] bg-[#FAFBFC] border-b border-[#DFE1E7] flex-shrink-0">
-                <div class="flex-1 text-[11px] font-semibold text-[#666D80] uppercase tracking-[.06em]">Modul</div>
-                <div class="text-[11px] font-semibold text-[#666D80] uppercase tracking-[.06em]" style="width:180px;">Asisten Praktikum</div>
-                <div class="text-[11px] font-semibold text-[#666D80] uppercase tracking-[.06em]" style="width:80px;">Aksi</div>
+            <div class="mp-card-body" style="flex-shrink:0;">
+                <div style="display:flex;align-items:center;padding:8px 20px;background:#FAFBFC;border-bottom:1px solid var(--c-border);">
+                    <div class="mp-th flex-1">Modul</div>
+                    <div class="mp-th" style="width:180px;">Asisten Praktikum</div>
+                    <div class="mp-th" style="width:80px;">Aksi</div>
+                </div>
             </div>
             <div class="overflow-y-auto flex-1">
                 @forelse($distribusiList ?? [] as $d)
-                <div class="flex items-center px-5 py-[11px] border-b border-[#F8F9FB] last:border-0">
+                <div class="mp-tr" style="display:flex;align-items:center;padding:11px 20px;">
                     <div class="flex-1">
-                        <div class="text-[13px] font-medium text-[#0D0D12]">{{ $d->modul?->nama ?? '—' }}</div>
+                        <div style="font-size:13px;font-weight:500;color:var(--c-fg);">{{ $d->modul?->nama ?? '—' }}</div>
                     </div>
-                    <div class="text-[12px] text-[#353849]" style="width:180px;">{{ $d->asprak?->user?->name ?? '—' }}</div>
+                    <div style="width:180px;font-size:12px;color:var(--c-fg-sub);">{{ $d->asprak?->user?->name ?? '—' }}</div>
                     <div style="width:80px;">
                         <form method="POST" action="{{ route('eoffice.manprak.koor.bagi-modul.destroy', $d->id) }}"
                               onsubmit="return confirm('Hapus distribusi ini?')">
                             @csrf @method('DELETE')
-                            <button type="submit" class="text-[11px] font-semibold px-2 py-[4px] rounded-[6px] bg-[#FADAE1] text-[#7C1028] border-none cursor-pointer hover:bg-[#f5b8c5]">Hapus</button>
+                            <button type="submit" class="mp-btn destructive sm">Hapus</button>
                         </form>
                     </div>
                 </div>
                 @empty
-                <div class="py-10 text-center text-[13px] text-[#666D80]">Belum ada distribusi modul.</div>
+                <div style="padding:40px;text-align:center;font-size:13px;color:var(--c-fg-muted);">Belum ada distribusi modul.</div>
                 @endforelse
             </div>
         </div>

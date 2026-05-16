@@ -4,14 +4,15 @@ namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
+use Modules\EOffice\Models\Absensi;
 use Modules\EOffice\Models\DaftarPraktikan;
+use Modules\EOffice\Models\PendaftaranPraktikan;
+use Modules\EOffice\Models\Nilai;
+use Modules\EOffice\Models\PendaftaranAsprak;
+use Modules\EOffice\Models\Pengumuman;
+use Modules\EOffice\Models\PengumpulanTugas;
 use Modules\EOffice\Models\Praktikum;
 use Modules\EOffice\Models\Tugas;
-use Modules\EOffice\Models\PengumpulanTugas;
-use Modules\EOffice\Models\Pengumuman;
-use Modules\EOffice\Models\Nilai;
-use Modules\EOffice\Models\Absensi;
-use Modules\EOffice\Models\PendaftaranAsprak;
 
 class DashboardController extends Controller
 {
@@ -19,39 +20,50 @@ class DashboardController extends Controller
     {
         $user = auth()->user();
 
-        // Data praktikum yang diikuti mahasiswa
+        // Semua praktikum yang diikuti mahasiswa (bisa lebih dari satu)
         $daftarPraktikan = DaftarPraktikan::with(['praktikum.dosen', 'praktikum.koordinator'])
             ->where('user_id', $user->id)
             ->get();
 
-        $terdaftarDi = $daftarPraktikan->first()?->praktikum;
+        $belumTerdaftar = $daftarPraktikan->isEmpty();
 
-        // Jika sudah terdaftar, ambil data relevan
-        $tugasMendatang = [];
-        $nilaiList      = [];
-        $pengumuman     = [];
+        // Pilih praktikum aktif untuk tampilan utama dashboard
+        $praktikumAktifId = $request->input('praktikum_id',
+            $daftarPraktikan->first()?->praktikum_id
+        );
+        $terdaftarDi = $daftarPraktikan->firstWhere('praktikum_id', $praktikumAktifId)?->praktikum
+            ?? $daftarPraktikan->first()?->praktikum;
+
+        $tugasMendatang = collect();
+        $nilaiList      = collect();
+        $pengumuman     = collect();
         $absensiStat    = ['hadir' => 0, 'total' => 0];
-        $statusAsprak   = null;
 
         if ($terdaftarDi) {
-            // Tugas yang belum dikumpul
+            $dp = $daftarPraktikan->firstWhere('praktikum_id', $terdaftarDi->id);
+
+            // Tugas belum dikumpul / mendatang
             $tugasMendatang = Tugas::whereHas('modul', fn($q) => $q->where('praktikum_id', $terdaftarDi->id))
+                ->where('is_published', true)
                 ->where('deadline', '>=', now())
                 ->orderBy('deadline')
                 ->limit(5)
                 ->get()
-                ->map(function ($t) use ($user) {
-                    $sudahKumpul = PengumpulanTugas::whereHas('daftarPraktikan', fn($q) => $q->where('user_id', $user->id))
-                        ->where('tugas_id', $t->id)->exists();
-                    return array_merge($t->toArray(), ['sudah_kumpul' => $sudahKumpul]);
+                ->map(function ($t) use ($dp) {
+                    $pengumpulan = PengumpulanTugas::where('tugas_id', $t->id)
+                        ->where('daftar_praktikan_id', $dp->id)
+                        ->first();
+                    $t->sudah_kumpul   = !is_null($pengumpulan);
+                    $t->status_tugas   = $pengumpulan?->status_pengumpulan ?? 'belum_dikumpul';
+                    return $t;
                 });
 
-            // Nilai per modul
-            $nilaiList = Nilai::whereHas('daftarPraktikan', fn($q) => $q->where('user_id', $user->id))
-                ->with('daftarPraktikan.praktikum')
+            // Nilai (hanya yang sudah dipublikasikan)
+            $nilaiList = Nilai::where('daftar_praktikan_id', $dp->id)
+                ->where('dipublikasikan', true)
                 ->get();
 
-            // Pengumuman praktikum
+            // Pengumuman terbaru yang published
             $pengumuman = Pengumuman::where('praktikum_id', $terdaftarDi->id)
                 ->where('is_published', true)
                 ->orderByDesc('created_at')
@@ -59,9 +71,9 @@ class DashboardController extends Controller
                 ->get();
 
             // Statistik absensi
-            $absensiAll         = Absensi::whereHas('daftarPraktikan', fn($q) => $q->where('user_id', $user->id))->get();
-            $absensiStat['total']  = $absensiAll->count();
-            $absensiStat['hadir']  = $absensiAll->where('status', 'hadir')->count();
+            $absensiAll = Absensi::where('daftar_praktikan_id', $dp->id)->get();
+            $absensiStat['total'] = $absensiAll->count();
+            $absensiStat['hadir'] = $absensiAll->where('status', 'hadir')->count();
         }
 
         // Status pendaftaran asprak/koor
@@ -69,8 +81,17 @@ class DashboardController extends Controller
             ->orderByDesc('created_at')
             ->first();
 
-        // Apakah mahasiswa belum terdaftar (butuh input kode)
-        $belumTerdaftar = $daftarPraktikan->isEmpty();
+        $siapGabung = PendaftaranPraktikan::with('praktikum')
+            ->where('user_id', $user->id)
+            ->where('status', PendaftaranPraktikan::STATUS_APPROVED)
+            ->whereNotIn('praktikum_id', $daftarPraktikan->pluck('praktikum_id'))
+            ->get();
+
+        $pendaftaranPraktikanTerbaru = PendaftaranPraktikan::with('praktikum')
+            ->where('user_id', $user->id)
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
 
         return view('eoffice::manajemen-praktikum.mahasiswa.dashboard', compact(
             'daftarPraktikan',
@@ -80,10 +101,16 @@ class DashboardController extends Controller
             'pengumuman',
             'absensiStat',
             'statusAsprak',
-            'belumTerdaftar'
+            'belumTerdaftar',
+            'siapGabung',
+            'pendaftaranPraktikanTerbaru'
         ));
     }
 
+    /**
+     * Masukkan kode praktikum untuk bergabung.
+     * Sesuai docx: kode unik yang digenerate oleh koordinator.
+     */
     public function masukkanKode(Request $request)
     {
         $request->validate(['kode' => 'required|string']);
@@ -105,10 +132,22 @@ class DashboardController extends Controller
             return back()->with('error', 'Anda sudah terdaftar di praktikum ini.');
         }
 
+        $irsDisetujui = PendaftaranPraktikan::where('user_id', $user->id)
+            ->where('praktikum_id', $praktikum->id)
+            ->where('status', PendaftaranPraktikan::STATUS_APPROVED)
+            ->exists();
+
+        if (! $irsDisetujui) {
+            return back()->with(
+                'error',
+                'Anda harus diverifikasi Koordinator (unggah Cetak IRS) sebelum bisa bergabung dengan kode. Buka menu Daftar Praktikan.'
+            );
+        }
+
         DaftarPraktikan::create([
             'user_id'      => $user->id,
             'praktikum_id' => $praktikum->id,
-            'status'       => 'aktif',
+            'status'       => 'terdaftar',
         ]);
 
         return back()->with('success', "Berhasil bergabung ke praktikum: {$praktikum->nama}");
