@@ -104,8 +104,12 @@ class KoordinatorController extends Controller
      */
     public function pengumuman()
     {
-        $pengumumen = \Modules\EOffice\Models\KpPengumuman::with('pembuat')->orderBy('created_at', 'desc')->get();
-        return view('eoffice::koordinator.pengumuman', compact('pengumumen'));
+        $allData = \Modules\EOffice\Models\KpPengumuman::with('pembuat')->orderBy('created_at', 'desc')->get();
+        $pengumumen = $allData->where('tipe', 'pengumuman');
+        $faqs = $allData->where('tipe', 'faq');
+        $timelines = $allData->where('tipe', 'timeline');
+        
+        return view('eoffice::koordinator.pengumuman', compact('pengumumen', 'faqs', 'timelines'));
     }
 
     /**
