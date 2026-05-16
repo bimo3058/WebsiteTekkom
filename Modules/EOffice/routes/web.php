@@ -52,6 +52,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
         // Route Dosen Pembimbing KP
         Route::prefix('dosen')->name('dosen.')->group(function () {
             Route::get('/dashboard', [DosenController::class, 'dashboard'])->name('dashboard');
+            Route::get('/bimbingan', [DosenController::class, 'bimbingan'])->name('bimbingan.index');
             Route::get('/bimbingan/{id}', [DosenController::class, 'show'])->name('bimbingan.show');
             Route::post('/bimbingan/{id}/approve-pra-kp', [DosenController::class, 'approvePraKp'])->name('bimbingan.approve_pra_kp');
             Route::post('/bimbingan/{id}/dokumen/{dokumenId}/approve', [DosenController::class, 'approveDokumen'])->name('bimbingan.dokumen.approve');
