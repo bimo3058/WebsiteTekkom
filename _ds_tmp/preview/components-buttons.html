@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #fff; font-family: 'Inter Tight', sans-serif; padding: 20px; display: flex; flex-direction: column; gap: 16px; }
+.row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.row-label { font-size: 10px; font-weight: 600; color: #A4ABB8; text-transform: uppercase; letter-spacing: 0.08em; width: 80px; flex-shrink: 0; }
+/* Base button */
+.btn { display: inline-flex; align-items: center; gap: 6px; font-family: 'Inter Tight', sans-serif; font-weight: 600; font-size: 14px; border-radius: 8px; border: none; cursor: pointer; transition: background 0.15s; letter-spacing: 0.01em; line-height: 1; }
+/* Sizes */
+.btn-lg { padding: 14px 20px; font-size: 16px; border-radius: 10px; }
+.btn-md { padding: 10px 16px; font-size: 14px; }
+.btn-sm { padding: 8px 12px; font-size: 13px; }
+/* Primary */
+.btn-primary { background: #0B266E; color: #fff; }
+.btn-primary:hover { background: #091958; }
+/* Secondary */
+.btn-secondary { background: #fff; color: #0D0D12; border: 1px solid #DFE1E7; }
+.btn-secondary:hover { background: #F6F8FA; }
+/* Tertiary */
+.btn-tertiary { background: transparent; color: #0B266E; border: 1px solid #3C518B; }
+.btn-tertiary:hover { background: rgba(11,38,110,0.06); }
+/* Destructive */
+.btn-destructive { background: #DF1C41; color: #fff; }
+.btn-destructive:hover { background: #95122B; }
+/* Disabled */
+.btn-disabled { background: #ECEFF3; color: #A4ABB8; cursor: not-allowed; }
+/* Ghost */
+.btn-ghost { background: rgba(11,38,110,0.08); color: #0B266E; }
+/* Icon */
+.btn-icon { width: 36px; height: 36px; padding: 0; justify-content: center; border-radius: 8px; }
+.icon-placeholder { width: 16px; height: 16px; background: currentColor; border-radius: 2px; opacity: 0.7; display: inline-block; }
+</style>
+</head>
+<body>
+  <div class="row">
+    <div class="row-label">Primary</div>
+    <button class="btn btn-primary btn-lg">Tambah Mahasiswa</button>
+    <button class="btn btn-primary btn-md">Tambah</button>
+    <button class="btn btn-primary btn-sm">Simpan</button>
+    <button class="btn btn-disabled btn-md">Disabled</button>
+  </div>
+  <div class="row">
+    <div class="row-label">Secondary</div>
+    <button class="btn btn-secondary btn-lg">Filter</button>
+    <button class="btn btn-secondary btn-md">Sort by</button>
+    <button class="btn btn-secondary btn-sm">Export</button>
+  </div>
+  <div class="row">
+    <div class="row-label">Tertiary</div>
+    <button class="btn btn-tertiary btn-md">Lihat Detail</button>
+    <button class="btn btn-tertiary btn-sm">Batal</button>
+    <button class="btn btn-ghost btn-md">Selengkapnya</button>
+  </div>
+  <div class="row">
+    <div class="row-label">Destructive</div>
+    <button class="btn btn-destructive btn-md">Hapus Data</button>
+    <button class="btn btn-destructive btn-sm">Delete</button>
+  </div>
+  <div class="row">
+    <div class="row-label">Icon</div>
+    <button class="btn btn-primary btn-icon"><span class="icon-placeholder"></span></button>
+    <button class="btn btn-secondary btn-icon"><span class="icon-placeholder"></span></button>
+    <button class="btn btn-tertiary btn-icon"><span class="icon-placeholder"></span></button>
+    <button class="btn btn-destructive btn-icon"><span class="icon-placeholder"></span></button>
+    <button class="btn btn-primary btn-md">
+      <span class="icon-placeholder" style="width:14px;height:14px"></span>
+      Tambah Soal
+    </button>
+    <button class="btn btn-secondary btn-md">
+      <span class="icon-placeholder" style="width:14px;height:14px;opacity:0.5"></span>
+      July 2024 – June 2025
+    </button>
+  </div>
+</body>
+</html>

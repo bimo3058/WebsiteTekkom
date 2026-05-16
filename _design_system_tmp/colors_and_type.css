@@ -1,0 +1,305 @@
+/**
+ * SITKOM Design System — CSS Custom Properties
+ * Sistem Informasi Teknik Komputer, Teknik Komputer UNDIP
+ *
+ * Sources: Figma "Website Tekkom Design File.fig" + GitHub bimo3058/WebsiteTekkom
+ */
+
+/* ── Inter Tight — variable fonts (local, full weight range 100–900) ── */
+@font-face {
+  font-family: 'Inter Tight';
+  src: url('fonts/InterTight-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter Tight';
+  src: url('fonts/InterTight-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* ── Secondary fonts (Google Fonts — no local files provided) ── */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Geist:wght@400;500;600;700&display=swap');
+
+:root {
+
+  /* ═══════════════════════════════════════════════
+     PRIMARY COLOR SCALE (Navy Blue — base #0B266E)
+  ═══════════════════════════════════════════════ */
+  --color-primary-50:  #E8EDF7;   /* lightest navy tint */
+  --color-primary-100: #C2CEEA;
+  --color-primary-200: #8FA3D1;
+  --color-primary-300: #5C78B8;
+  --color-primary-400: #3C518B;
+  --color-primary-500: #0B266E;   /* Base — navy */
+  --color-primary-600: #091958;
+  --color-primary-700: #071742;
+  --color-primary-800: #020816;
+
+  /* ═══════════════════════════════════════════════
+     GREYSCALE
+  ═══════════════════════════════════════════════ */
+  --color-grey-0:   #F6F8FA;   /* page background */
+  --color-grey-25:  #F6F8FA;
+  --color-grey-50:  #ECEFF3;
+  --color-grey-100: #DFE1E7;
+  --color-grey-200: #C1C7CF;
+  --color-grey-300: #A4ABB8;
+  --color-grey-400: #808897;   /* #808897 */
+  --color-grey-500: #666D80;
+  --color-grey-600: #353849;
+  --color-grey-700: #272B38;
+  --color-grey-800: #1A1B25;
+  --color-grey-900: #0D0D12;
+
+  /* ═══════════════════════════════════════════════
+     ADDITIONAL / SKY (Cyan/Blue)
+  ═══════════════════════════════════════════════ */
+  --color-sky-25:  #D1F0F9;
+  --color-sky-50:  #7EDCF1;
+  --color-sky-200: #106A97;
+  --color-sky-300: #0C4D6E;
+
+  /* ═══════════════════════════════════════════════
+     ALERT — SUCCESS (Green)
+  ═══════════════════════════════════════════════ */
+  --color-success-25:  #DDF2EE;
+  --color-success-50:  #9DE0D3;
+  --color-success-100: #40C4AA;   /* rgb(64,196,170) */
+  --color-success-200: #287F6E;
+  --color-success-300: #174E43;
+
+  /* ═══════════════════════════════════════════════
+     ALERT — WARNING (Amber/Yellow)
+  ═══════════════════════════════════════════════ */
+  --color-warning-25:  #F9ECCB;
+  --color-warning-50:  #FBD982;
+  --color-warning-100: #D39C3D;   /* rgb(211,156,61) */
+  --color-warning-200: #956321;
+  --color-warning-300: #5B3D1E;
+
+  /* ═══════════════════════════════════════════════
+     ALERT — ERROR (Red)
+  ═══════════════════════════════════════════════ */
+  --color-error-25:  #FADAE1;
+  --color-error-50:  #ED8296;
+  --color-error-100: #DF1C41;   /* rgb(223,28,65) */
+  --color-error-200: #95122B;
+  --color-error-300: #710E21;
+
+  /* ═══════════════════════════════════════════════
+     SEMANTIC / FUNCTIONAL TOKENS
+  ═══════════════════════════════════════════════ */
+
+  /* Surfaces */
+  --bg-page:         var(--color-grey-0);       /* #F6F8FA  */
+  --bg-card:         #FFFFFF;
+  --bg-subtle:       #F8FAFB;
+  --bg-input:        #FFFFFF;
+
+  /* Foreground / Text */
+  --fg-base:         var(--color-grey-900);     /* #0D0D12  */
+  --fg-secondary:    var(--color-grey-600);     /* #353849  */
+  --fg-muted:        var(--color-grey-500);     /* #666D80  */
+  --fg-placeholder:  var(--color-grey-400);     /* #808897  */
+  --fg-disabled:     var(--color-grey-300);     /* #A4ABB8  */
+  --fg-on-primary:   #FFFFFF;
+
+  /* Brand / Interactive */
+  --color-brand:        var(--color-primary-500);   /* #0B266E navy */
+  --color-brand-hover:  var(--color-primary-600);   /* #091958 */
+  --color-brand-subtle: rgba(11,38,110,0.08);
+  --color-link:         #3C518B;   /* mid-navy for links */
+
+  /* Borders */
+  --border-default:  #DFE1E7;
+  --border-strong:   #C1C7CF;
+  --border-focus:    var(--color-primary-500);
+  --border-error:    var(--color-error-100);
+
+  /* Sidebar */
+  --sidebar-bg:           #FFFFFF;
+  --sidebar-item-active:  var(--color-primary-500);
+  --sidebar-text-muted:   var(--color-grey-300);
+
+  /* ═══════════════════════════════════════════════
+     SPACING SCALE
+  ═══════════════════════════════════════════════ */
+  --space-1:   4px;
+  --space-2:   8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+
+  /* ═══════════════════════════════════════════════
+     BORDER RADIUS SCALE
+  ═══════════════════════════════════════════════ */
+  --radius-xs:   4px;
+  --radius-sm:   6px;
+  --radius-md:   8px;
+  --radius-lg:  10px;
+  --radius-xl:  12px;
+  --radius-2xl: 14px;
+  --radius-3xl: 16px;
+  --radius-full: 9999px;
+
+  /* Component-specific aliases */
+  --radius-panel:  var(--radius-2xl);  /* 14px — main content panels */
+  --radius-card:   var(--radius-2xl);  /* 14px — widget cards */
+  --radius-input:  var(--radius-xl);   /* 12px — large inputs */
+  --radius-input-sm: var(--radius-lg); /* 10px — small inputs */
+  --radius-button: var(--radius-md);   /* 8px  — buttons */
+  --radius-badge:  var(--radius-3xl);  /* 16px — pill badges */
+  --radius-chip:   var(--radius-sm);   /* 6px  — chip badges */
+
+  /* ═══════════════════════════════════════════════
+     SHADOW SCALE
+  ═══════════════════════════════════════════════ */
+  --shadow-xs:     0 1px 2px rgba(22,22,43,0.04);
+  --shadow-sm:     0 1px 3px rgba(22,22,43,0.06), 0 1px 2px rgba(22,22,43,0.04);
+  --shadow-md:     0 4px 8px -2px rgba(22,22,43,0.06), 0 2px 4px -2px rgba(22,22,43,0.04);
+  --shadow-lg:     0 12px 20px -4px rgba(22,22,43,0.08), 0 4px 8px -4px rgba(22,22,43,0.04);
+  --shadow-xl:     0 20px 25px -5px rgba(22,22,43,0.10), 0 8px 10px -6px rgba(22,22,43,0.04);
+  --shadow-card:   0px 1px 2px 0px rgba(228,229,231,0.24);
+  --shadow-inset:  0px 0px 0px 1px rgba(18,55,105,0.08), 0px 1px 2px 0px rgba(9,25,72,0.13);
+
+  /* ═══════════════════════════════════════════════
+     TYPOGRAPHY
+  ═══════════════════════════════════════════════ */
+  --font-sans:    'Inter Tight', system-ui, sans-serif;
+  --font-display: 'Inter', system-ui, sans-serif;
+  --font-brand:   'Geist', 'Inter Tight', sans-serif;
+  --font-mono:    'Geist', ui-monospace, monospace;
+
+  /* Type scale — matching Figma Style-Guide/Typography */
+  --text-h1:  48px;   --leading-h1: 1.0;   --weight-h1: 700;
+  --text-h2:  40px;   --leading-h2: 1.2;   --weight-h2: 600;
+  --text-h3:  32px;   --leading-h3: 1.4;   --weight-h3: 600;
+  --text-h4:  24px;   --leading-h4: 1.4;   --weight-h4: 600;
+  --text-h5:  20px;   --leading-h5: 1.4;   --weight-h5: 600;
+  --text-h6:  18px;   --leading-h6: 1.4;   --weight-h6: 600;
+
+  --text-body-lg:  16px;  --leading-body-lg: 1.5;  --weight-body: 400;
+  --text-body-md:  14px;  --leading-body-md: 1.5;
+  --text-body-sm:  12px;  --leading-body-sm: 1.5;
+
+  --text-label:    14px;  --weight-label: 500;  --tracking-label: 0.010em;
+  --text-label-sm: 12px;
+  --text-caption:  12px;
+
+  /* Letter spacing */
+  --tracking-ui:  0.010em;
+  --tracking-wide: 0.020em;
+}
+
+/* ═══════════════════════════════════════════════
+   SEMANTIC ELEMENT STYLES
+═══════════════════════════════════════════════ */
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-body-lg);
+  color: var(--fg-base);
+  background-color: var(--bg-page);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: "rlig" 1, "calt" 1;
+}
+
+h1 {
+  font-family: var(--font-sans);
+  font-size: var(--text-h1);
+  font-weight: var(--weight-h1);
+  line-height: var(--leading-h1);
+  color: var(--fg-base);
+}
+h2 {
+  font-family: var(--font-sans);
+  font-size: var(--text-h2);
+  font-weight: var(--weight-h2);
+  line-height: var(--leading-h2);
+  color: var(--fg-base);
+}
+h3 {
+  font-family: var(--font-sans);
+  font-size: var(--text-h3);
+  font-weight: var(--weight-h3);
+  line-height: var(--leading-h3);
+  color: var(--fg-base);
+}
+h4 {
+  font-family: var(--font-sans);
+  font-size: var(--text-h4);
+  font-weight: var(--weight-h4);
+  line-height: var(--leading-h4);
+  color: var(--fg-base);
+}
+h5 {
+  font-family: var(--font-sans);
+  font-size: var(--text-h5);
+  font-weight: var(--weight-h5);
+  line-height: var(--leading-h5);
+  color: var(--fg-base);
+}
+h6 {
+  font-family: var(--font-sans);
+  font-size: var(--text-h6);
+  font-weight: var(--weight-h6);
+  line-height: var(--leading-h6);
+  color: var(--fg-base);
+}
+
+p {
+  font-family: var(--font-sans);
+  font-size: var(--text-body-lg);
+  line-height: var(--leading-body-lg);
+  color: var(--fg-base);
+}
+
+small, .text-sm {
+  font-size: var(--text-body-md);
+  line-height: var(--leading-body-md);
+  color: var(--fg-muted);
+}
+
+label, .label {
+  font-family: var(--font-sans);
+  font-size: var(--text-label);
+  font-weight: var(--weight-label);
+  letter-spacing: var(--tracking-label);
+  color: var(--fg-base);
+}
+
+code, pre, .mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-body-sm);
+}
+
+a {
+  color: var(--color-link);
+  text-decoration: none;
+}
+a:hover {
+  text-decoration: underline;
+}
+
+/* ═══════════════════════════════════════════════
+   FOCUS STATE
+═══════════════════════════════════════════════ */
+
+:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(107,79,244,0.2);
+  border-color: var(--border-focus) !important;
+}

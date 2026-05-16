@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=Geist:wght@500;700&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #fff; font-family: 'Inter Tight', sans-serif; padding: 24px; display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+.logo-block { display: flex; flex-direction: column; gap: 12px; align-items: center; }
+.logo-label { font-size: 10px; font-weight: 600; color: #A4ABB8; text-transform: uppercase; letter-spacing: 0.08em; }
+/* Logomark only */
+.logo-mark { width: 48px; height: 48px; border-radius: 12px; background: linear-gradient(135deg, #3C518B 0%, #0B266E 100%); display: flex; align-items: center; justify-content: center; }
+.logo-mark svg { width: 26px; height: 26px; }
+/* Horizontal lockup */
+.logo-lockup { display: flex; align-items: center; gap: 10px; }
+.logo-lockup .mark { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg, #3C518B 0%, #0B266E 100%); display: flex; align-items: center; justify-content: center; }
+.logo-lockup .mark svg { width: 20px; height: 20px; }
+.logo-lockup .wordmark { display: flex; flex-direction: column; }
+.logo-lockup .name { font-family: 'Geist', sans-serif; font-weight: 700; font-size: 20px; color: #0D0D12; line-height: 1.2; }
+.logo-lockup .tagline { font-family: 'Inter Tight', sans-serif; font-weight: 600; font-size: 9px; color: #808897; line-height: 1.3; letter-spacing: 0.03em; text-transform: uppercase; }
+/* Dark bg version */
+.logo-dark { background: #0B266E; border-radius: 12px; padding: 16px 20px; display: flex; align-items: center; gap: 10px; }
+.logo-dark .name { color: #fff; }
+.logo-dark .tagline { color: #666D80; }
+/* UNDIP logo */
+.undip-block { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.undip-block img { height: 56px; width: auto; object-fit: contain; }
+/* Divider */
+.sep { width: 1px; height: 80px; background: #ECEFF3; }
+</style>
+</head>
+<body>
+  <div class="logo-block">
+    <div class="logo-label">Logomark</div>
+    <div class="logo-mark">
+      <svg viewBox="0 0 18 18" fill="white"><path d="M12.448 0L5.552 0L0 5.552L0 12.448L5.552 18L12.448 18L18 12.448L18 5.552L12.448 0ZM6.506 12.535L2.949 8.978L6.506 5.422C7.851 4.077 10.063 4.077 11.407 5.422L14.964 8.978L11.407 12.535C10.063 13.88 7.894 13.88 6.506 12.535Z"/></svg>
+    </div>
+  </div>
+
+  <div class="logo-block">
+    <div class="logo-label">Horizontal — Light</div>
+    <div class="logo-lockup">
+      <div class="mark">
+        <svg viewBox="0 0 18 18" fill="white"><path d="M12.448 0L5.552 0L0 5.552L0 12.448L5.552 18L12.448 18L18 12.448L18 5.552L12.448 0ZM6.506 12.535L2.949 8.978L6.506 5.422C7.851 4.077 10.063 4.077 11.407 5.422L14.964 8.978L11.407 12.535C10.063 13.88 7.894 13.88 6.506 12.535Z"/></svg>
+      </div>
+      <div class="wordmark">
+        <div class="name">SITKOM</div>
+        <div class="tagline">Sistem Informasi Teknik Komputer</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="logo-block">
+    <div class="logo-label">Horizontal — Dark</div>
+    <div class="logo-dark">
+      <div class="mark">
+        <svg viewBox="0 0 18 18" fill="white"><path d="M12.448 0L5.552 0L0 5.552L0 12.448L5.552 18L12.448 18L18 12.448L18 5.552L12.448 0ZM6.506 12.535L2.949 8.978L6.506 5.422C7.851 4.077 10.063 4.077 11.407 5.422L14.964 8.978L11.407 12.535C10.063 13.88 7.894 13.88 6.506 12.535Z"/></svg>
+      </div>
+      <div class="wordmark">
+        <div class="name">SITKOM</div>
+        <div class="tagline">Sistem Informasi Teknik Komputer</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="sep"></div>
+
+  <div class="undip-block">
+    <div class="logo-label">UNDIP Logo</div>
+    <img src="../assets/UNDIPOfficial.png" alt="UNDIP Official Logo">
+  </div>
+</body>
+</html>

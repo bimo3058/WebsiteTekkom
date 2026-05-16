@@ -140,6 +140,11 @@ class MicrosoftController extends Controller
             $user->syncPermissionsFromRoles();
 
             // ── 7. Cek role tidak kosong ──────────────────────────────────────
+            // unsetRelation() wajib dipanggil agar Spatie tidak pakai cache
+            // in-memory yang sudah di-load sebelum syncAcademicRole dipanggil.
+            // Tanpa ini, user yang baru saja di-assign role bisa tetap terdeteksi
+            // "roles kosong" karena object $user masih menyimpan snapshot lama.
+            $user->unsetRelation('roles');
             $userRoles = $user->roles()->get();
             $roleNames = $userRoles->pluck('name')->map(fn($r) => strtolower($r));
 
@@ -245,6 +250,8 @@ class MicrosoftController extends Controller
 
         if ($roleGlobal && !$user->hasRole('dosen')) {
             $user->roles()->syncWithoutDetaching([$roleGlobal->id]);
+            $user->unsetRelation('roles');
+            $user->forgetCachedPermissions();
             Log::info("SSO: Assigned role 'dosen' (global) ke {$email}");
         }
 
@@ -256,6 +263,8 @@ class MicrosoftController extends Controller
 
         if ($roleEoffice && !$user->hasRole('dosen', 'eoffice')) {
             $user->roles()->syncWithoutDetaching([$roleEoffice->id]);
+            $user->unsetRelation('roles');
+            $user->forgetCachedPermissions();
             Log::info("SSO: Assigned role 'dosen' (eoffice) ke {$email}");
         }
 
@@ -285,6 +294,8 @@ class MicrosoftController extends Controller
 
         if ($roleGlobal && !$user->hasRole('mahasiswa')) {
             $user->roles()->syncWithoutDetaching([$roleGlobal->id]);
+            $user->unsetRelation('roles');
+            $user->forgetCachedPermissions();
             Log::info("SSO: Assigned role 'mahasiswa' (global) ke {$email}");
         }
 
@@ -295,6 +306,8 @@ class MicrosoftController extends Controller
 
         if ($roleEoffice && !$user->hasRole('mahasiswa', 'eoffice')) {
             $user->roles()->syncWithoutDetaching([$roleEoffice->id]);
+            $user->unsetRelation('roles');
+            $user->forgetCachedPermissions();
             Log::info("SSO: Assigned role 'mahasiswa' (eoffice) ke {$email}");
         }
 
@@ -327,27 +340,19 @@ class MicrosoftController extends Controller
     /**
      * Ekstrak tahun angkatan dari NIM mahasiswa UNDIP.
      *
-     * Format NIM UNDIP: XXXXXYYZZZ
-     *   - XX = 2 digit terakhir tahun angkatan
-     *   - Posisi bisa bervariasi tergantung prodi
+     * Format NIM UNDIP: XXXXXYYZZZ (14 digit)
+     * Contoh: 21120123120029
+     *   - digit ke-7 & ke-8 (index 6–7) = "23" → angkatan 2023
      *
-     * Strategi: coba posisi 0-1 dulu (misal NIM dimulai dgn tahun),
-     * jika tidak masuk akal (< 2000 atau > tahun sekarang), coba posisi 6-7
-     * seperti yang ada di kode lama.
+     * Strategi: utamakan posisi index 6–7, fallback ke prefix 0–1
+     * jika NIM terlalu pendek.
      */
     private function extractCohortYear(string $nim): int
     {
         $currentYear = (int) date('Y');
 
-        // Coba 2 digit pertama: format "24060122140008" → "24" → 2024
-        if (strlen($nim) >= 2) {
-            $fromPrefix = (int) ('20' . substr($nim, 0, 2));
-            if ($fromPrefix >= 2000 && $fromPrefix <= $currentYear) {
-                return $fromPrefix;
-            }
-        }
-
-        // Coba digit ke-7 & ke-8: format lama yang dipakai sebelumnya
+        // Primary: digit ke-7 & ke-8 (index 6–7) — format standar NIM UNDIP
+        // Contoh: "21120123120029" → substr(6,2) = "23" → 2023
         if (strlen($nim) >= 8) {
             $fromMiddle = (int) ('20' . substr($nim, 6, 2));
             if ($fromMiddle >= 2000 && $fromMiddle <= $currentYear) {
@@ -355,7 +360,15 @@ class MicrosoftController extends Controller
             }
         }
 
-        // Fallback: tahun sekarang
+        // Fallback: 2 digit pertama (untuk format NIM non-standar / pendek)
+        if (strlen($nim) >= 2) {
+            $fromPrefix = (int) ('20' . substr($nim, 0, 2));
+            if ($fromPrefix >= 2000 && $fromPrefix <= $currentYear) {
+                return $fromPrefix;
+            }
+        }
+
+        // Last resort: tahun sekarang
         return $currentYear;
     }
 }

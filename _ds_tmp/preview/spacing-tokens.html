@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #fff; font-family: 'Inter Tight', sans-serif; padding: 20px; display: flex; flex-direction: column; gap: 20px; }
+.section-label { font-size: 10px; font-weight: 600; color: #808897; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; }
+.spacing-row { display: flex; gap: 8px; align-items: flex-end; }
+.space-item { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.space-bar { background: #7A4DF5; border-radius: 2px; width: 24px; opacity: 0.85; }
+.space-label { font-size: 9px; color: #808897; }
+.space-val { font-size: 9px; font-weight: 600; color: #353849; }
+
+.radius-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; }
+.radius-item { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+.radius-box { width: 48px; height: 32px; background: #F0EDFE; border: 2px solid #7A4DF5; }
+.radius-name { font-size: 9px; font-weight: 600; color: #353849; text-align: center; }
+.radius-val { font-size: 9px; color: #808897; text-align: center; }
+</style>
+</head>
+<body>
+  <div>
+    <div class="section-label">Spacing Scale</div>
+    <div class="spacing-row">
+      <div class="space-item"><div class="space-bar" style="height:4px"></div><div class="space-val">4</div><div class="space-label">--space-1</div></div>
+      <div class="space-item"><div class="space-bar" style="height:8px"></div><div class="space-val">8</div><div class="space-label">--space-2</div></div>
+      <div class="space-item"><div class="space-bar" style="height:12px"></div><div class="space-val">12</div><div class="space-label">--space-3</div></div>
+      <div class="space-item"><div class="space-bar" style="height:16px"></div><div class="space-val">16</div><div class="space-label">--space-4</div></div>
+      <div class="space-item"><div class="space-bar" style="height:20px"></div><div class="space-val">20</div><div class="space-label">--space-5</div></div>
+      <div class="space-item"><div class="space-bar" style="height:24px"></div><div class="space-val">24</div><div class="space-label">--space-6</div></div>
+      <div class="space-item"><div class="space-bar" style="height:32px"></div><div class="space-val">32</div><div class="space-label">--space-8</div></div>
+      <div class="space-item"><div class="space-bar" style="height:40px"></div><div class="space-val">40</div><div class="space-label">--space-10</div></div>
+      <div class="space-item"><div class="space-bar" style="height:48px"></div><div class="space-val">48</div><div class="space-label">--space-12</div></div>
+      <div class="space-item"><div class="space-bar" style="height:64px"></div><div class="space-val">64</div><div class="space-label">--space-16</div></div>
+      <div class="space-item"><div class="space-bar" style="height:80px"></div><div class="space-val">80</div><div class="space-label">--space-20</div></div>
+    </div>
+  </div>
+  <div>
+    <div class="section-label">Border Radius Scale</div>
+    <div class="radius-row">
+      <div class="radius-item"><div class="radius-box" style="border-radius:4px"></div><div class="radius-name">XS</div><div class="radius-val">4px</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:6px"></div><div class="radius-name">SM</div><div class="radius-val">6px</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:8px"></div><div class="radius-name">MD · btn</div><div class="radius-val">8px</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:10px"></div><div class="radius-name">LG · input-sm</div><div class="radius-val">10px</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:12px"></div><div class="radius-name">XL · input</div><div class="radius-val">12px</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:14px"></div><div class="radius-name">2XL · panel</div><div class="radius-val">14px</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:16px"></div><div class="radius-name">3XL · badge</div><div class="radius-val">16px</div></div>
+      <div class="radius-item"><div class="radius-box" style="border-radius:9999px"></div><div class="radius-name">Full · pill</div><div class="radius-val">9999px</div></div>
+    </div>
+  </div>
+</body>
+</html>

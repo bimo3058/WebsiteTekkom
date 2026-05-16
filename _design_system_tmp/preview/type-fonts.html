@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+@font-face {
+  font-family: 'Inter Tight';
+  src: url('../fonts/InterTight-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Inter Tight';
+  src: url('../fonts/InterTight-Italic-VariableFont_wght.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { background: #fff; font-family: 'Inter Tight', sans-serif; padding: 24px; display: flex; flex-direction: column; gap: 20px; }
+
+.card { border: 1px solid #DFE1E7; border-radius: 12px; padding: 20px 24px; background: #F8FAFB; }
+.family-name { font-size: 11px; font-weight: 600; color: #808897; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; font-family: 'Inter Tight', sans-serif; }
+.family-usage { font-size: 11px; color: #A4ABB8; margin-bottom: 14px; font-family: 'Inter Tight', sans-serif; }
+
+/* Weight strip */
+.weights { display: flex; gap: 0; border: 1px solid #DFE1E7; border-radius: 8px; overflow: hidden; }
+.weight-cell { flex: 1; padding: 10px 8px; text-align: center; background: #fff; border-right: 1px solid #DFE1E7; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.weight-cell:last-child { border-right: none; }
+.weight-label { font-size: 9px; color: #A4ABB8; font-family: 'Inter Tight', sans-serif; text-transform: uppercase; letter-spacing: 0.06em; }
+.weight-sample { font-family: 'Inter Tight', sans-serif; font-size: 18px; color: #0D0D12; line-height: 1; }
+
+/* Italic strip */
+.italic-strip { display: flex; gap: 12px; margin-top: 12px; align-items: baseline; flex-wrap: wrap; }
+.italic-item { font-family: 'Inter Tight', sans-serif; font-style: italic; color: #666D80; font-size: 14px; }
+
+/* Specimen */
+.specimen-lg { font-family: 'Inter Tight', sans-serif; font-size: 32px; font-weight: 700; color: #0D0D12; line-height: 1.1; margin-bottom: 6px; }
+.specimen-note { font-size: 11px; color: #A4ABB8; font-family: 'Inter Tight', sans-serif; }
+</style>
+</head>
+<body>
+  <!-- Inter Tight Variable -->
+  <div class="card">
+    <div class="family-name">Inter Tight Variable</div>
+    <div class="family-usage">Primary UI font — headings, body, labels, buttons, all UI text · Local variable font (wght 100–900)</div>
+    <div class="specimen-lg">Aa Bb Cc 0123</div>
+    <div class="weights">
+      <div class="weight-cell">
+        <div class="weight-sample" style="font-weight:100">Ag</div>
+        <div class="weight-label">Thin 100</div>
+      </div>
+      <div class="weight-cell">
+        <div class="weight-sample" style="font-weight:200">Ag</div>
+        <div class="weight-label">XLight 200</div>
+      </div>
+      <div class="weight-cell">
+        <div class="weight-sample" style="font-weight:300">Ag</div>
+        <div class="weight-label">Light 300</div>
+      </div>
+      <div class="weight-cell">
+        <div class="weight-sample" style="font-weight:400">Ag</div>
+        <div class="weight-label">Regular 400</div>
+      </div>
+      <div class="weight-cell">
+        <div class="weight-sample" style="font-weight:500">Ag</div>
+        <div class="weight-label">Medium 500</div>
+      </div>
+      <div class="weight-cell">
+        <div class="weight-sample" style="font-weight:600">Ag</div>
+        <div class="weight-label">SemiBold 600</div>
+      </div>
+      <div class="weight-cell">
+        <div class="weight-sample" style="font-weight:700">Ag</div>
+        <div class="weight-label">Bold 700</div>
+      </div>
+      <div class="weight-cell">
+        <div class="weight-sample" style="font-weight:800">Ag</div>
+        <div class="weight-label">XBold 800</div>
+      </div>
+      <div class="weight-cell">
+        <div class="weight-sample" style="font-weight:900">Ag</div>
+        <div class="weight-label">Black 900</div>
+      </div>
+    </div>
+    <div class="italic-strip">
+      <span class="italic-item" style="font-weight:400">Regular Italic</span>
+      <span class="italic-item" style="font-weight:500">Medium Italic</span>
+      <span class="italic-item" style="font-weight:600">SemiBold Italic</span>
+      <span class="italic-item" style="font-weight:700">Bold Italic</span>
+    </div>
+  </div>
+
+  <!-- In-use examples -->
+  <div style="display:flex;gap:16px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:200px;border:1px solid #DFE1E7;border-radius:10px;padding:16px;background:#fff;">
+      <div style="font-size:10px;font-weight:600;color:#A4ABB8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;font-family:'Inter Tight',sans-serif;">Heading style</div>
+      <div style="font-family:'Inter Tight',sans-serif;font-weight:700;font-size:22px;color:#0D0D12;line-height:1.2;">Dashboard SITKOM</div>
+      <div style="font-family:'Inter Tight',sans-serif;font-weight:400;font-size:14px;color:#666D80;margin-top:4px;">Sistem Informasi Teknik Komputer UNDIP</div>
+    </div>
+    <div style="flex:1;min-width:200px;border:1px solid #DFE1E7;border-radius:10px;padding:16px;background:#fff;">
+      <div style="font-size:10px;font-weight:600;color:#A4ABB8;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;font-family:'Inter Tight',sans-serif;">Label + body style</div>
+      <div style="font-family:'Inter Tight',sans-serif;font-weight:500;font-size:13px;color:#0D0D12;letter-spacing:0.01em;margin-bottom:4px;">Email Address *</div>
+      <div style="font-family:'Inter Tight',sans-serif;font-weight:400;font-size:14px;color:#A4ABB8;">Masukkan email UNDIP kamu</div>
+    </div>
+    <div style="flex:1;min-width:200px;border:1px solid #DFE1E7;border-radius:10px;padding:16px;background:#7A4DF5;">
+      <div style="font-size:10px;font-weight:600;color:rgba(255,255,255,0.5);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;font-family:'Inter Tight',sans-serif;">On brand color</div>
+      <div style="font-family:'Inter Tight',sans-serif;font-weight:600;font-size:15px;color:#fff;">Tambah Mahasiswa</div>
+      <div style="font-family:'Inter Tight',sans-serif;font-weight:400;font-size:12px;color:rgba(255,255,255,0.7);margin-top:4px;font-style:italic;">Periode 2024/2025</div>
+    </div>
+  </div>
+</body>
+</html>
