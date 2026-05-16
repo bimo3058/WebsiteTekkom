@@ -286,6 +286,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::post('/faq', [KoordinatorController::class, 'storeFaq'])->name('faq.store');
             Route::delete('/faq/{id}', [KoordinatorController::class, 'destroyFaq'])->name('faq.destroy');
             Route::get('/validasi-berkas', [KoordinatorController::class, 'validasiBerkas'])->name('validasi_berkas');
+            Route::get('/nilai-lapangan', [KoordinatorController::class, 'nilaiLapangan'])->name('nilai_lapangan');
             Route::get('/data-mahasiswa', [KoordinatorController::class, 'dataMahasiswa'])->name('data_mahasiswa');
         });
     });

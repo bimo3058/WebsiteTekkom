@@ -458,4 +458,33 @@ class KoordinatorController extends Controller
 
         return view('eoffice::koordinator.data_mahasiswa', compact('mahasiswas'));
     }
+
+    public function nilaiLapangan()
+    {
+        $mahasiswas = collect([
+            (object) [
+                'id' => 1,
+                'nama' => 'Ahmad Budi Santoso',
+                'nim' => '2100018111',
+                'file_nilai' => 'Nilai_Lapangan_Ahmad.pdf',
+                'status_nilai' => 'Belum Dinilai',
+            ],
+            (object) [
+                'id' => 2,
+                'nama' => 'Siti Nurhaliza',
+                'nim' => '2100018199',
+                'file_nilai' => 'Form_Penilaian_Siti.pdf',
+                'status_nilai' => 'Sudah Dinilai',
+            ],
+            (object) [
+                'id' => 3,
+                'nama' => 'Bima Sakti',
+                'nim' => '2100018155',
+                'file_nilai' => null,
+                'status_nilai' => 'Menunggu Berkas',
+            ]
+        ]);
+
+        return view('eoffice::koordinator.nilai_lapangan', compact('mahasiswas'));
+    }
 }
