@@ -74,6 +74,14 @@
                     <span class="text-sm font-medium text-slate-500 shrink-0">Tanggal Mendaftar</span>
                     <span id="detail-tanggal" class="text-sm text-slate-600 text-right"></span>
                 </div>
+
+                <div class="h-px bg-slate-100"></div>
+
+                <!-- Riwayat Ujian -->
+                <div class="flex items-start justify-between gap-4">
+                    <span class="text-sm font-medium text-slate-500 shrink-0">Riwayat Ujian</span>
+                    <span id="detail-ujian-count" class="text-sm font-semibold text-slate-800 text-right"></span>
+                </div>
             </div>
 
         </div>
@@ -101,6 +109,10 @@ function openDetailModal(data) {
     document.getElementById('detail-dosen1').textContent = data.dosen1 || '-';
     document.getElementById('detail-dosen2').textContent = data.dosen2 || '-';
     document.getElementById('detail-tanggal').textContent = data.tanggal;
+    document.getElementById('detail-ujian-count').textContent =
+        (data.ujian_count === 0 || data.ujian_count == null)
+            ? 'Belum pernah ujian'
+            : data.ujian_count + '× sudah mengikuti ujian';
 
     // Status badge
     const statusEl = document.getElementById('detail-status');

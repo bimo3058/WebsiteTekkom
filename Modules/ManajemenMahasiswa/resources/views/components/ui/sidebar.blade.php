@@ -197,19 +197,38 @@
                 <span class="nav-icon d-inline-flex">
                     {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/bar-chart-11.svg'))) !!}
                 </span>
-                <span class="nav-label" style="flex-grow:1;">Dashboard Analitik</span>
+                <span class="nav-label" style="flex-grow:1;">Analitik</span>
             </a>
         @endif
 
         @php
             $isKetua = (bool) array_intersect($sidebarRoles, ['ketua_unit', 'ketua_bidang', 'ketua_himpunan', 'wakil_ketua_himpunan']);
-            $isStaffHimpunan = in_array('staff_himpunan', $sidebarRoles) && !$isKetua;
+            $isAdminVerifier = (bool) array_intersect($sidebarRoles, ['admin', 'admin_kemahasiswaan', 'superadmin']);
+            $isStaffHimpunan = in_array('staff_himpunan', $sidebarRoles) && !$isKetua && !$isAdminVerifier;
+
             $pengumumanDropdownActive = request()->routeIs('manajemenmahasiswa.pengumuman.*');
-            $pendingVerifCount = $isKetua ? \Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest::where('verifier_id', auth()->id())->where('status', 'pending')->count() : 0;
-            $staffPendingCount = $isStaffHimpunan ? \Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest::where('requester_id', auth()->id())->where('status', 'pending')->count() : 0;
+
+            // Counter pending verifikasi pengumuman
+            $pendingVerifCount = 0;
+            if ($isKetua) {
+                // Ketua: hanya request yang ditujukan ke mereka
+                $pendingVerifCount = \Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest::where('verifier_id', auth()->id())
+                    ->where('status', 'pending')->count();
+            } elseif ($isAdminVerifier) {
+                // Admin: semua request pending (bisa override siapapun)
+                $pendingVerifCount = \Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest::where('status', 'pending')->count();
+            }
+
+            // Counter untuk staff: berapa pengajuan milik dia yang masih pending
+            $staffPendingCount = 0;
+            if ($isStaffHimpunan) {
+                $staffPendingCount = \Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest::where('requester_id', auth()->id())
+                    ->where('status', 'pending')->count();
+            }
         @endphp
 
-        @if($isKetua || $isStaffHimpunan)
+        @if($isKetua || $isAdminVerifier)
+            {{-- Dropdown Pengumuman — untuk ketua yang bisa verifikasi pengumuman orang lain --}}
             <div class="sidebar-dropdown {{ $pengumumanDropdownActive ? 'open' : '' }}">
                 <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $pengumumanDropdownActive ? 'active' : '' }}"
                     onclick="event.stopPropagation(); this.closest('.sidebar-dropdown').classList.toggle('open')">

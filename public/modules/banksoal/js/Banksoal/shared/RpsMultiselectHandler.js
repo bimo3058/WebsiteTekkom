@@ -588,14 +588,24 @@ class RpsMultiselectHandler {
         const queryParams = ids
             .map((id) => `cpl_id[]=${encodeURIComponent(id)}`)
             .join("&");
+        const mkId = this.mkSelect?.value;
         const routeCpmk = this._resolveRoute(
             "routeCpmk",
             "/bank-soal/rps/dosen/cpmk",
         );
 
-        const url = `${routeCpmk}?${queryParams}`;
+        const url = mkId
+            ? `${routeCpmk}?${queryParams}&mk_id=${encodeURIComponent(mkId)}`
+            : `${routeCpmk}?${queryParams}`;
 
-        console.log("Fetching CPMK from URL:", url, "CPL IDs:", ids);
+        console.log(
+            "Fetching CPMK from URL:",
+            url,
+            "CPL IDs:",
+            ids,
+            "MK ID:",
+            mkId,
+        );
 
         // Show loading state
         if (this.cpmkTs) {
@@ -787,5 +797,4 @@ class RpsMultiselectHandler {
     }
 }
 
-// Instance tunggal
-const RpsMultiselect = new RpsMultiselectHandler();
+// Auto-init dinonaktifkan agar form upload baru tidak diambil alih oleh flow multiselect lama.

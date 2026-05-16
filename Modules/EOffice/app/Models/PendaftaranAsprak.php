@@ -7,9 +7,10 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Pendaftaran calon Asisten Praktikum oleh mahasiswa.
- *
  * Tabel: pendaftaran_asprak
- * Status: pending | approved | rejected
+ *
+ * Flow: Mahasiswa submit → Koor review → auto assign role asprak (jika approve)
+ * status: pending | approved | rejected
  */
 class PendaftaranAsprak extends Model
 {
@@ -21,17 +22,20 @@ class PendaftaranAsprak extends Model
         'ipk',
         'motivasi',
         'cv_path',
+        'transkrip_path',
         'jadwal',
         'status',
         'alasan_penolakan',
+        'direview_oleh',
+        'direview_pada',
+        'catatan_koor',
     ];
 
     protected $casts = [
-        'jadwal' => 'array',
-        'ipk'    => 'float',
+        'ipk'           => 'float',
+        'jadwal'        => 'array',
+        'direview_pada'  => 'datetime',
     ];
-
-    // ── Relationships ──────────────────────────────────────────────────────────
 
     public function user()
     {
@@ -43,15 +47,8 @@ class PendaftaranAsprak extends Model
         return $this->belongsTo(Praktikum::class, 'praktikum_id');
     }
 
-    // ── Scopes ─────────────────────────────────────────────────────────────────
-
-    public function scopePending($query)
+    public function direviewOleh()
     {
-        return $query->where('status', 'pending');
-    }
-
-    public function scopeApproved($query)
-    {
-        return $query->where('status', 'approved');
+        return $this->belongsTo(User::class, 'direview_oleh');
     }
 }

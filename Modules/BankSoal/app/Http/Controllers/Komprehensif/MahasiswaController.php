@@ -4,7 +4,9 @@ namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Modules\BankSoal\Enums\KompreSessionStatus;
 use Modules\BankSoal\Models\Komprehensif\KompreSession;
 use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
 use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
@@ -42,6 +44,36 @@ class MahasiswaController extends Controller
                     ->where('jadwal_id', $pendaftar->jadwal->id)
                     ->where('status', 'finished')
                     ->first();
+
+                // Auto-grade no-show: jika sesi sudah habis & mahasiswa tidak pernah masuk ujian
+                if (! $finishedSession) {
+                    $jadwal = $pendaftar->jadwal;
+                    if ($jadwal->tanggal_ujian && $jadwal->waktu_selesai) {
+                        $waktuSelesai = Carbon::parse(
+                            $jadwal->tanggal_ujian->format('Y-m-d') . ' ' . $jadwal->waktu_selesai
+                        );
+
+                        $sudahPunyaSesi = KompreSession::where('user_id', auth()->id())
+                            ->where('jadwal_id', $jadwal->id)
+                            ->exists();
+
+                        if (now()->gte($waktuSelesai) && ! $sudahPunyaSesi) {
+                            $waktuMulaiSesi = Carbon::parse(
+                                $jadwal->tanggal_ujian->format('Y-m-d') . ' ' . $jadwal->waktu_mulai
+                            );
+
+                            $finishedSession = KompreSession::create([
+                                'user_id'     => auth()->id(),
+                                'jadwal_id'   => $jadwal->id,
+                                'title'       => 'Tidak Mengerjakan',
+                                'status'      => KompreSessionStatus::Finished,
+                                'score'       => 0,
+                                'started_at'  => $waktuMulaiSesi,
+                                'finished_at' => $waktuSelesai,
+                            ]);
+                        }
+                    }
+                }
             }
         }
 

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
  * Pengumpulan tugas oleh mahasiswa.
  *
  * Tabel: pengumpulan_tugas
+ * status_pengumpulan: belum_dicek | revisi | acc
  */
 class PengumpulanTugas extends Model
 {
@@ -21,12 +22,18 @@ class PengumpulanTugas extends Model
         'nilai',
         'catatan_revisi',
         'is_revision',
+        'status_pengumpulan',
     ];
 
     protected $casts = [
-        'nilai'       => 'float',
-        'is_revision' => 'boolean',
+        'nilai'              => 'float',
+        'is_revision'        => 'boolean',
     ];
+
+    // Status constants
+    const STATUS_BELUM_DICEK = 'belum_dicek';
+    const STATUS_REVISI      = 'revisi';
+    const STATUS_ACC         = 'acc';
 
     // ── Relationships ──────────────────────────────────────────────────────────
 

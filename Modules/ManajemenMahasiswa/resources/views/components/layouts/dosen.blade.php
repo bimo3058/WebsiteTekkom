@@ -19,12 +19,23 @@
             margin: 0;
             background-color: #f5f6fa;
             font-family: 'Inter Tight', sans-serif;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .simenma-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .sidebar {
             width: 240px;
             height: 100vh;
-            position: fixed;
+            position: sticky;
+            top: 0;
             background: #ffffff;
             border-right: 1px solid #DFE1E7;
             padding: 0;
@@ -32,6 +43,7 @@
             z-index: 1000;
             display: flex;
             flex-direction: column;
+            flex-shrink: 0;
         }
 
         /* Collapsed Sidebar */
@@ -174,13 +186,8 @@
         }
 
         .content {
-            margin-left: 240px;
             padding: 24px 28px 48px;
-            transition: margin-left 0.25s ease;
-        }
-
-        .sidebar-collapsed .content {
-            margin-left: 64px;
+            flex: 1;
         }
 
         .main-wrapper {
@@ -286,10 +293,16 @@
     <!-- Sidebar Dosen -->
     <x-manajemenmahasiswa::ui.sidebar />
 
-    <!-- Content -->
-    <div class="content">
-        <div class="main-wrapper">
-            {{ $slot }}
+    <!-- Main Area (topbar + content) -->
+    <div class="simenma-main">
+        <!-- Topbar -->
+        @include('manajemenmahasiswa::components.ui.topbar')
+
+        <!-- Content -->
+        <div class="content" style="margin-left: 0;">
+            <div class="main-wrapper">
+                {{ $slot }}
+            </div>
         </div>
     </div>
 

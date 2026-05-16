@@ -133,6 +133,36 @@ class ArsipSoalService
             ->map(fn ($group) => $group->groupBy('mk_id'));
     }
 
+    public function getArsipPaginated(int $dosenId, array $filters = [])
+    {
+        return ArsipSoal::query()
+            ->with(['mataKuliah', 'dosen'])
+            ->byDosen($dosenId)
+            ->where('status', 'final')
+            ->when($filters['tahun_akademik'] ?? null, function ($q, $ta) {
+                return $q->where('tahun_akademik', $ta);
+            })
+            ->when($filters['semester'] ?? null, function ($q, $semester) {
+                return $q->where('semester', $semester);
+            })
+            ->when($filters['search'] ?? null, function ($q, $search) {
+                return $q->where(function ($query) use ($search) {
+                    $query->where('nama_arsip', 'like', "%{$search}%")
+                        ->orWhereHas('mataKuliah', function ($mq) use ($search) {
+                            $mq->where('nama', 'like', "%{$search}%")
+                                ->orWhere('kode', 'like', "%{$search}%");
+                        });
+                });
+            })
+            ->join('bs_mata_kuliah', 'bs_arsip_soal.mk_id', '=', 'bs_mata_kuliah.id')
+            ->select('bs_arsip_soal.*')
+            ->orderBy('bs_mata_kuliah.nama')
+            ->orderByDesc('bs_arsip_soal.tahun_akademik')
+            ->orderByDesc('bs_arsip_soal.semester')
+            ->orderByDesc('bs_arsip_soal.created_at')
+            ->paginate(10);
+    }
+
     public function getPenarikanPending(int $dosenId)
     {
         return PenarikanSoal::query()

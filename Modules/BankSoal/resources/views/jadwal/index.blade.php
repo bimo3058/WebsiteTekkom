@@ -1,4 +1,10 @@
 <x-banksoal::layouts.admin>
+    @section('breadcrumbs')
+    <a href="#" class="text-slate-500 hover:text-primary transition-colors">Ujian Komprehensif</a>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Jadwal Sesi</span>
+    @endsection
+
     <div x-data="{ openModal: false }" class="w-full">
         <!-- Page Header -->
         <div class="mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -10,7 +16,7 @@
             <!-- Period Dropdown -->
             <div class="relative w-full sm:w-auto min-w-[300px]">
                 <form action="{{ route('banksoal.periode.jadwal') }}" method="GET" id="formPilihPeriode">
-                    <select name="periode_id" onchange="document.getElementById('formPilihPeriode').submit()" class="w-full appearance-none px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-shadow font-medium cursor-pointer shadow-sm">
+                    <select name="periode_id" onchange="document.getElementById('formPilihPeriode').submit()" class="w-full appearance-none px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-shadow font-medium cursor-pointer shadow-sm">
                         <option value="">Pilih Periode Ujian...</option>
                         @foreach($periodes as $periode)
                             <option value="{{ $periode->id }}" {{ $selectedPeriodeId == $periode->id ? 'selected' : '' }}>
@@ -33,7 +39,7 @@
             <span class="text-[13px] text-slate-500 font-medium">Rentang Ujian Periode Ini:</span>
             <div class="flex items-center gap-3 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-slate-200">
                 @if($selectedPeriode->tanggal_mulai_ujian && $selectedPeriode->tanggal_selesai_ujian)
-                    <button class="px-5 py-2.5 bg-blue-50 text-blue-700 text-[13px] font-semibold border border-blue-200 rounded-xl whitespace-nowrap transition-colors shadow-sm cursor-default">
+                    <button class="px-5 py-2.5 bg-primary/10 text-primary text-[13px] font-semibold border border-primary/20 rounded-xl whitespace-nowrap transition-colors shadow-sm cursor-default">
                         {{ \Carbon\Carbon::parse($selectedPeriode->tanggal_mulai_ujian)->format('d M') }} - {{ \Carbon\Carbon::parse($selectedPeriode->tanggal_selesai_ujian)->format('d M Y') }}
                     </button>
                 @else
@@ -155,11 +161,11 @@
                 <div class="px-6 pb-6 overflow-y-auto">
                     
                     <!-- Alert -->
-                    <div class="mb-5 bg-blue-50 border border-blue-100 rounded-xl p-3.5 flex gap-3 mt-2">
-                        <svg class="w-5 h-5 text-blue-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <div class="mb-5 bg-primary/10 border border-primary/20 rounded-xl p-3.5 flex gap-3 mt-2">
+                        <svg class="w-5 h-5 text-primary flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                         </svg>
-                        <div class="text-[13px] leading-relaxed text-blue-800 font-medium">
+                        <div class="text-[13px] leading-relaxed text-primary/80 font-medium">
                             Pastikan seluruh data yang Anda masukkan sudah benar sebelum melakukan simpan.
                         </div>
                     </div>
@@ -172,14 +178,14 @@
                         <!-- Box 1: Nama Sesi -->
                         <div>
                             <label class="block text-sm text-slate-700 mb-2 font-medium">Nama Sesi</label>
-                            <input type="text" name="nama_sesi" placeholder="Sesi 1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-shadow">
+                            <input type="text" name="nama_sesi" placeholder="Sesi 1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 placeholder-slate-400 transition-shadow">
                         </div>
 
                         <!-- Dropdown Tanggal Ujian -->
                         <div>
                             <label class="block text-sm text-slate-700 mb-2 font-medium">Tanggal Ujian (Berdasarkan Rentang Periode)</label>
                             <div class="relative">
-                                <select name="tanggal_ujian" required class="w-full appearance-none px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow font-medium cursor-pointer">
+                                <select name="tanggal_ujian" required class="w-full appearance-none px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow font-medium cursor-pointer">
                                     <option value="">Pilih Tanggal Ujian...</option>
                                     @if($selectedPeriode && $selectedPeriode->tanggal_mulai_ujian && $selectedPeriode->tanggal_selesai_ujian)
                                         @php
@@ -198,27 +204,27 @@
                         </div>
 
                         <!-- Box 2 & 3: Waktu Mulai & Selesai -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
                             <div>
                                 <label class="block text-sm text-slate-700 mb-2 font-medium">Waktu Mulai</label>
-                                <input type="time" id="waktu_mulai_input" name="waktu_mulai" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
+                                <input type="time" name="waktu_mulai" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow">
                             </div>
                             <div>
                                 <label class="block text-sm text-slate-700 mb-2 font-medium">Waktu Selesai</label>
-                                <input type="time" id="waktu_selesai_input" name="waktu_selesai" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 transition-shadow">
+                                <input type="time" name="waktu_selesai" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 transition-shadow">
                             </div>
                         </div>
 
                         <!-- Ruangan -->
                         <div>
                             <label class="block text-sm text-slate-700 mb-2 font-medium">Ruangan</label>
-                            <input type="text" name="ruangan" placeholder="Lab Jaringan" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-shadow">
+                            <input type="text" name="ruangan" placeholder="Lab Jaringan" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 placeholder-slate-400 transition-shadow">
                         </div>
 
                         <!-- Box 4: Kapasitas -->
                         <div>
                             <label class="block text-sm text-slate-700 mb-2 font-medium">Kapasitas Maksimal</label>
-                            <input type="number" name="kuota" placeholder="50" min="1" step="1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-800 placeholder-slate-400 transition-shadow">
+                            <input type="number" name="kuota" placeholder="50" min="1" step="1" required class="w-full px-4 py-2.5 bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-800 placeholder-slate-400 transition-shadow">
                         </div>
                     </form>
                 </div>

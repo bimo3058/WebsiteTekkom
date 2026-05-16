@@ -4,6 +4,8 @@ namespace Modules\EOffice\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Modules\EOffice\Models\KpMahasiswa;
+use Modules\EOffice\Models\KerjaPraktik;
 
 class KerjaPraktikController extends Controller
 {
@@ -36,15 +38,17 @@ class KerjaPraktikController extends Controller
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
         ]);
 
-        // 2. Tambahkan data default (misal: status awal selalu pending)
-        $validatedData['status_kp'] = 'pending';
+        // 2. Ambil data profil mahasiswa yang sedang login (atau buat jika belum ada)
+        $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
+
+        // 3. Tambahkan data pendukung (NIM, ID Mahasiswa, status awal)
+        $validatedData['mahasiswa_id'] = $mahasiswa->id;
+        $validatedData['nim'] = $mahasiswa->nim;
+        $validatedData['status_kp'] = 'Pra-KP'; // Sesuai default di migrasi
         $validatedData['is_acc_admin'] = false;
         
-        // Catatan: Jika fitur Login sudah siap, kita bisa ambil ID mahasiswa secara otomatis
-        // $validatedData['mahasiswa_id'] = auth()->user()->id;
-
-        // 3. Simpan ke database (tabel eo_kerja_praktik di Supabase)
-        \Modules\EOffice\Models\KerjaPraktik::create($validatedData);
+        // 4. Simpan ke database (tabel eo_kerja_praktik di Supabase)
+        KerjaPraktik::create($validatedData);
 
         // 4. Kembalikan mahasiswa ke halaman form dengan pesan sukses
         return redirect()->back()->with('success', 'Pengajuan Kerja Praktik berhasil dikirim! Silakan tunggu konfirmasi.');

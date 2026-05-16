@@ -47,11 +47,21 @@ class PengumumanService
                     $q->where('mk_pengumuman.user_id', $userId);
                 }
             })
-            ->when(!isset($filters['status']), function ($q) use ($userId, $privateStatuses) {
-                // Tanpa filter: sembunyikan draft & pending_review milik orang lain
-                $q->where(function ($sub) use ($userId, $privateStatuses) {
-                    $sub->whereNotIn('mk_pengumuman.status_publish', $privateStatuses)
-                        ->orWhere('mk_pengumuman.user_id', $userId);
+            ->when(!isset($filters['status']), function ($q) use ($userId) {
+                // Tampilan default (semua role termasuk admin):
+                // - Sembunyikan pending_review → dikelola via dashboard verifikasi
+                // - Sembunyikan draft yang pernah masuk alur verifikasi (rejected/cancelled)
+                // - Hanya "fresh draft" (belum pernah diajukan) milik sendiri yang terlihat
+                $q->where(function ($sub) use ($userId) {
+                    $sub->whereNotIn('mk_pengumuman.status_publish', ['draft', 'pending_review'])
+                        ->orWhere(function ($fresh) use ($userId) {
+                            $fresh->where('mk_pengumuman.status_publish', 'draft')
+                                  ->where('mk_pengumuman.user_id', $userId)
+                                  ->whereNotExists(function ($e) {
+                                      $e->from('mk_pengumuman_approval_requests')
+                                        ->whereColumn('pengumuman_id', 'mk_pengumuman.id');
+                                  });
+                        });
                 });
             })
             ->when(isset($filters['audience']), fn ($q) => $q->forAudience($filters['audience']))
@@ -255,7 +265,8 @@ class PengumumanService
 
     /**
      * Ambil daftar user yang dapat dijadikan verifikator.
-     * Hanya ketua-ketua himpunan — admin/GPM tidak terlibat dalam alur ini.
+     * Hanya ketua-ketua himpunan — admin tidak dipilih langsung,
+     * tapi tetap bisa memproses semua request via dashboard verifikasi.
      */
     public function getAvailableVerifiers(): Collection
     {
@@ -391,6 +402,25 @@ class PengumumanService
             ->when($status && $status !== 'all', fn ($q) => $q->where('status', $status))
             ->orderByDesc('created_at')
             ->get();
+    }
+
+    /**
+     * Ambil SEMUA approval request (untuk admin yang bisa proses request siapapun).
+     */
+    public function getAllRequests(?string $status = null): Collection
+    {
+        return PengumumanApprovalRequest::with(['pengumuman.author', 'requester', 'verifier'])
+            ->when($status && $status !== 'all', fn ($q) => $q->where('status', $status))
+            ->orderByDesc('created_at')
+            ->get();
+    }
+
+    /**
+     * Hitung semua approval request pending (untuk counter badge admin).
+     */
+    public function getAllPendingCount(): int
+    {
+        return PengumumanApprovalRequest::where('status', PengumumanApprovalRequest::STATUS_PENDING)->count();
     }
 
     /**

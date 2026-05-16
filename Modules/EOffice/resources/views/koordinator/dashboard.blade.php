@@ -41,24 +41,11 @@
                 Dashboard
             </a>
 
-            <!-- Informasi Menu (Expanded) -->
-            <div class="mb-1" x-data="{ expanded: false }">
-                <button @click="expanded = !expanded" class="w-full flex items-center justify-between px-4 py-3 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
-                    <div class="flex items-center">
-                        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        Informasi
-                    </div>
-                    <svg :class="expanded ? 'rotate-180' : ''" class="w-4 h-4 transition-transform text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                </button>
-                <div x-show="expanded" x-collapse class="pl-11 pr-4 py-2 space-y-1">
-                    <a href="{{ route('eoffice.kp.koordinator.pengumuman') }}" class="flex items-center px-3 py-2 text-sm font-medium text-slate-500 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-colors relative before:absolute before:-left-5 before:top-1/2 before:w-3 before:h-px before:bg-slate-200">
-                        Pengumuman
-                    </a>
-                    <a href="{{ route('eoffice.kp.koordinator.faq') }}" class="flex items-center px-3 py-2 text-sm font-medium text-slate-500 hover:text-indigo-600 hover:bg-slate-50 rounded-lg transition-colors relative before:absolute before:-left-5 before:top-1/2 before:w-3 before:h-px before:bg-slate-200">
-                        FAQ & Dokumen
-                    </a>
-                </div>
-            </div>
+            <!-- Informasi Menu -->
+            <a href="{{ route('eoffice.kp.koordinator.pengumuman') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Informasi
+            </a>
 
             <a href="{{ route('eoffice.kp.koordinator.data_mahasiswa') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
@@ -121,13 +108,7 @@
                         <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">Dashboard</h1>
                         <p class="text-sm text-slate-500 max-w-2xl leading-relaxed">Ringkasan data pelaksanaan Kerja Praktik mahasiswa.</p>
                     </div>
-                    <!-- Dropdown Simulator -->
-                    <div class="relative">
-                        <button class="flex items-center justify-between w-full sm:w-auto min-w-[220px] px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors">
-                            Semester Genap 2025/2026
-                            <svg class="w-4 h-4 text-slate-400 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </button>
-                    </div>
+
                 </div>
 
                 <!-- Content Area (Clean White Cards) -->

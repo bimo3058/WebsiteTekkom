@@ -40,7 +40,11 @@ class ValidasiBankSoalController extends Controller
 
         $opsi_jawaban = $this->validasiService->getOpsiJawaban($soal->id);
         $review = \Illuminate\Support\Facades\DB::table('bs_review')->where('pertanyaan_id', $soal->id)->orderBy('id', 'desc')->first();
-        return view('banksoal::gpm.validasi-bank-soal-review', compact('soal', 'opsi_jawaban', 'review', 'currentIndex', 'totalSoalMK', 'progressPercentage'));
+        $parameters = \Modules\BankSoal\Models\Parameter::where('jenis', 'soal')->get();
+        $skorMinimum = \Illuminate\Support\Facades\DB::table('bs_pengaturan')->where('kunci', 'standar_skor_minimum')->value('nilai') ?? 60;
+
+        $totalBobot = $parameters->sum('bobot');
+        return view('banksoal::gpm.validasi-bank-soal-review', compact('soal', 'opsi_jawaban', 'review', 'currentIndex', 'totalSoalMK', 'progressPercentage', 'parameters', 'skorMinimum', 'totalBobot'));
     }
 
     public function store(Request $request)

@@ -1,107 +1,112 @@
 <x-eoffice::manajemen-praktikum.layout pageTitle="Tugas Praktikum">
 
-<div class="flex items-center justify-between flex-shrink-0">
+<div class="mp-page-header">
     <div>
-        <div class="text-[20px] font-bold text-[#0D0D12]">Tugas Praktikum</div>
-        <div class="text-[12px] text-[#666D80] mt-[2px]">Lihat dan kumpulkan tugas praktikum Anda</div>
+        <h1 class="mp-page-title">Tugas Praktikum</h1>
+        <p class="mp-page-sub">Lihat dan kumpulkan tugas praktikum Anda</p>
     </div>
 </div>
 
 @if($tugasList->isEmpty())
-<div class="flex-1 bg-white border border-[#DFE1E7] rounded-[14px] flex items-center justify-center">
-    <div class="text-center text-[#A4ABB8]">
+<div class="mp-card flex-1 flex items-center justify-center" style="min-height:200px;">
+    <div style="text-align:center;color:var(--c-fg-placeholder);">
         <svg class="mx-auto mb-3 w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        <div class="text-[14px] font-medium">Belum ada tugas.</div>
+        <div style="font-size:14px;font-weight:500;">Belum ada tugas.</div>
     </div>
 </div>
 @else
 <div class="flex flex-col gap-3 flex-1">
     @foreach($tugasList as $tugas)
     @php
-        $dl = \Carbon\Carbon::parse($tugas->deadline);
-        $lewat = now()->gt($dl);
-        $sisa  = now()->diffInDays($dl, false);
-        $pengumpulan = $tugas->pengumpulan; // relasi hasOne untuk user ini
+        $dl          = $tugas->deadline ? \Carbon\Carbon::parse($tugas->deadline) : null;
+        $lewat       = $dl && now()->gt($dl);
+        $sisa        = $dl ? now()->diffInDays($dl, false) : null;
+        $pengumpulan = $tugas->pengumpulan;
         $sudahKumpul = !is_null($pengumpulan);
+        $statusTugas = $tugas->status_tugas ?? ($sudahKumpul ? $pengumpulan->status_pengumpulan : 'belum_dikumpul');
     @endphp
-    <div class="bg-white border border-[#DFE1E7] rounded-[14px] p-5 shadow-[0_1px_2px_rgba(228,229,231,.24)]" x-data="{ open: false }">
+    <div class="mp-card flex-shrink-0" style="padding:20px;" x-data="{ open: false }">
         <div class="flex items-start justify-between gap-4">
             <div class="flex-1 min-w-0">
-                <div class="flex items-center gap-2 mb-1">
-                    <div class="text-[14px] font-bold text-[#0D0D12]">{{ $tugas->judul }}</div>
-                    {{-- Status badge --}}
-                    @if($sudahKumpul)
-                        @if($pengumpulan->nilai)
-                        <span class="text-[11px] font-semibold px-2 py-[2px] rounded-full bg-[#DDF2EE] text-[#174E43]">Dinilai: {{ $pengumpulan->nilai }}</span>
-                        @elseif($pengumpulan->is_revision)
-                        <span class="text-[11px] font-semibold px-2 py-[2px] rounded-full bg-[#FADAE1] text-[#7C1028]">Perlu Revisi</span>
-                        @else
-                        <span class="text-[11px] font-semibold px-2 py-[2px] rounded-full bg-[#F9ECCB] text-[#7C5309]">Dikumpul — Menunggu Penilaian</span>
-                        @endif
+                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                    <div style="font-size:14px;font-weight:700;color:var(--c-fg);">{{ $tugas->judul }}</div>
+                    {{-- Status badge berdasarkan status_pengumpulan --}}
+                    @if($statusTugas === 'acc')
+                    <span class="mp-badge success sm">
+                        ACC{{ $pengumpulan?->nilai ? ' — Nilai: '.$pengumpulan->nilai : '' }}
+                    </span>
+                    @elseif($statusTugas === 'revisi')
+                    <span class="mp-badge error sm">Perlu Revisi</span>
+                    @elseif($statusTugas === 'belum_dicek')
+                    <span class="mp-badge warning sm">Dikumpul — Menunggu Penilaian</span>
                     @elseif($lewat)
-                    <span class="text-[11px] font-semibold px-2 py-[2px] rounded-full bg-[#FADAE1] text-[#7C1028]">Terlambat</span>
-                    @elseif($sisa <= 2)
-                    <span class="text-[11px] font-semibold px-2 py-[2px] rounded-full bg-[#FADAE1] text-[#7C1028]">Segera!</span>
+                    <span class="mp-badge error sm">Terlambat</span>
+                    @elseif($sisa !== null && $sisa <= 2)
+                    <span class="mp-badge warning sm">Segera!</span>
                     @else
-                    <span class="text-[11px] font-semibold px-2 py-[2px] rounded-full bg-[#F0F1F4] text-[#666D80]">Belum Dikumpul</span>
+                    <span class="mp-badge neutral sm">Belum Dikumpul</span>
                     @endif
                 </div>
-                <div class="text-[12px] text-[#666D80]">
-                    Modul: <span class="font-semibold text-[#353849]">{{ $tugas->modul?->nama ?? '—' }}</span>
-                    · Deadline: <span class="font-semibold {{ $lewat ? 'text-[#DF1C41]' : 'text-[#353849]' }}">{{ $dl->format('d M Y, H:i') }}</span>
-                    @if(!$lewat) <span class="text-[#A4ABB8]">({{ $sisa }} hari lagi)</span> @endif
+                <div style="font-size:12px;color:var(--c-fg-muted);">
+                    Modul: <span style="font-weight:600;color:var(--c-fg-sub);">{{ $tugas->modul?->nama ?? '—' }}</span>
+                    @if($dl)
+                    · Deadline: <span style="font-weight:600;color:{{ $lewat ? '#DF1C41' : 'var(--c-fg-sub)' }};">{{ $dl->format('d M Y, H:i') }}</span>
+                    @if($sisa !== null && !$lewat) <span style="color:var(--c-fg-muted);">({{ $sisa }} hari lagi)</span> @endif
+                    @endif
                 </div>
                 @if(!empty($tugas->deskripsi))
-                <div class="text-[12px] text-[#666D80] mt-1 line-clamp-2">{{ $tugas->deskripsi }}</div>
+                <div style="font-size:12px;color:var(--c-fg-muted);margin-top:4px;" class="line-clamp-2">{{ $tugas->deskripsi }}</div>
                 @endif
             </div>
-            {{-- Actions --}}
+
+            {{-- Action buttons --}}
             <div class="flex gap-2 flex-shrink-0">
                 @if(!$sudahKumpul && !$lewat)
-                <button @click="open = !open"
-                        class="text-[12px] font-semibold px-4 py-[7px] rounded-[8px] bg-[#0B266E] text-white border-none cursor-pointer hover:bg-[#0a1f5c]">
-                    Upload
-                </button>
-                @elseif($sudahKumpul && $pengumpulan?->is_revision)
-                <button @click="open = !open"
-                        class="text-[12px] font-semibold px-4 py-[7px] rounded-[8px] bg-[#D39C3D] text-white border-none cursor-pointer hover:bg-[#b88530]">
-                    Revisi
-                </button>
+                <button @click="open = !open" class="mp-btn primary sm">Upload</button>
+                @elseif($statusTugas === 'revisi')
+                <button @click="open = !open" class="mp-btn warning sm">Kirim Ulang</button>
                 @endif
             </div>
         </div>
 
-        {{-- Upload Form --}}
-        <div x-show="open" x-transition class="mt-4 pt-4 border-t border-[#F0F1F4]">
+        {{-- Upload / Kirim Ulang Form --}}
+        <div x-show="open" x-transition class="mt-4 pt-4" style="border-top:1px solid var(--c-border-light);">
+            @if($statusTugas === 'revisi')
+            {{-- Form kirim ulang setelah revisi --}}
+            <div style="font-size:12px;font-weight:600;color:#D39C3D;margin-bottom:12px;">Kirim ulang file perbaikan:</div>
+            <form method="POST" action="{{ route('eoffice.manprak.mahasiswa.tugas.kirim-ulang', $tugas->id) }}" enctype="multipart/form-data">
+                @csrf
+            @else
+            {{-- Form kumpul pertama kali --}}
             <form method="POST" action="{{ route('eoffice.manprak.mahasiswa.tugas.kumpul', $tugas->id) }}" enctype="multipart/form-data">
                 @csrf
+            @endif
                 <div class="flex flex-col gap-3">
                     <div>
-                        <label class="block text-[12px] font-semibold text-[#353849] mb-1">File Tugas <span class="text-red-500">*</span></label>
-                        <input type="file" name="file" required
-                               class="w-full text-[13px] border border-[#DFE1E7] rounded-[8px] px-3 py-[8px] focus:outline-none focus:border-[#0B266E]">
-                        <div class="text-[11px] text-[#A4ABB8] mt-1">Format: PDF, DOCX, ZIP (maks. 10MB)</div>
+                        <label class="block text-[12px] font-semibold mb-1" style="color:var(--c-fg-sub);">File Tugas <span class="text-red-500">*</span></label>
+                        <input type="file" name="file" required class="mp-input w-full">
+                        <div style="font-size:11px;color:var(--c-fg-muted);margin-top:4px;">Format: PDF, DOCX, ZIP, RAR (maks. 10MB)</div>
                     </div>
                     <div>
-                        <label class="block text-[12px] font-semibold text-[#353849] mb-1">Catatan (opsional)</label>
+                        <label class="block text-[12px] font-semibold mb-1" style="color:var(--c-fg-sub);">Catatan (opsional)</label>
                         <textarea name="catatan" rows="2" placeholder="Catatan untuk asisten..."
-                                  class="w-full border border-[#DFE1E7] rounded-[8px] px-3 py-[8px] text-[13px] focus:outline-none focus:border-[#0B266E] resize-none"></textarea>
+                                  class="mp-input w-full" style="resize:none;"></textarea>
                     </div>
                     <div class="flex gap-2">
-                        <button type="button" @click="open = false"
-                                class="px-4 py-[7px] rounded-[8px] border border-[#DFE1E7] text-[13px] text-[#353849] bg-white cursor-pointer hover:bg-[#F6F8FA]">Batal</button>
-                        <button type="submit"
-                                class="px-4 py-[7px] rounded-[8px] bg-[#0B266E] text-white text-[13px] font-semibold border-none cursor-pointer hover:bg-[#0a1f5c]">Kumpulkan</button>
+                        <button type="button" @click="open = false" class="mp-btn secondary md">Batal</button>
+                        <button type="submit" class="mp-btn primary md">
+                            {{ $statusTugas === 'revisi' ? 'Kirim Perbaikan' : 'Kumpulkan' }}
+                        </button>
                     </div>
                 </div>
             </form>
         </div>
 
-        {{-- Revisi note --}}
+        {{-- Catatan Revisi dari Asprak --}}
         @if($sudahKumpul && $pengumpulan?->catatan_revisi)
-        <div class="mt-3 bg-[#FADAE1] border border-[#DF1C41] rounded-[8px] px-3 py-2">
-            <div class="text-[11px] font-bold text-[#7C1028] mb-[2px]">Catatan Revisi:</div>
-            <div class="text-[12px] text-[#7C1028]">{{ $pengumpulan->catatan_revisi }}</div>
+        <div class="mt-3 p-3 rounded-[8px]" style="background:#FADAE1;border:1px solid #DF1C41;">
+            <div style="font-size:11px;font-weight:700;color:#7C1028;margin-bottom:2px;">Catatan Revisi dari Asprak:</div>
+            <div style="font-size:12px;color:#7C1028;">{{ $pengumpulan->catatan_revisi }}</div>
         </div>
         @endif
     </div>

@@ -3,9 +3,9 @@
     <x-banksoal::ui.page-header title="Riwayat Validasi RPS" subtitle="Pantau riwayat dokumen RPS yang telah direview" />
 
     <div class="border-b border-slate-200 mb-4">
-        <div class="inline-flex items-center gap-2 border-b-2 border-blue-600 pb-3 text-sm font-semibold text-blue-600">
+        <div class="inline-flex items-center gap-2 border-b-2 border-primary pb-3 text-sm font-semibold text-primary">
             Selesai Direview
-            <span class="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">{{ $riwayat_rps->total() }}</span>
+            <span class="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">{{ $riwayat_rps->total() }}</span>
         </div>
     </div>
 
@@ -45,7 +45,7 @@
                                 <span class="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">Disetujui</span>
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
+                                <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->rps_id) }}" class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/90">
                                     <i class="far fa-eye"></i> Lihat Detail
                                 </a>
                             </td>

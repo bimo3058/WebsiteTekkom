@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 class Praktikum extends Model
 {
@@ -18,6 +19,7 @@ class Praktikum extends Model
     protected $fillable = [
         'nama',
         'kode',
+        'matkul_id',
         'deskripsi',
         'dosen_id',
         'koor_id',
@@ -47,7 +49,6 @@ class Praktikum extends Model
     {
         try {
             if (!Auth::id()) return;
-
             EoAuditLog::create([
                 'user_id'    => Auth::id(),
                 'action'     => $action,
@@ -58,12 +59,15 @@ class Praktikum extends Model
                 'ip_address' => request()->ip(),
                 'user_agent' => request()->userAgent(),
             ]);
-        } catch (\Throwable) {
-            // Jangan crash app karena gagal audit log
-        }
+        } catch (\Throwable) {}
     }
 
     // ─── Relationships ────────────────────────────────────────────────────────
+
+    public function matkul()
+    {
+        return $this->belongsTo(MatkulPraktikum::class, 'matkul_id');
+    }
 
     public function dosen()
     {
@@ -83,5 +87,49 @@ class Praktikum extends Model
     public function asprakPraktikum()
     {
         return $this->hasMany(AsprakPraktikum::class, 'praktikum_id');
+    }
+
+    public function asistenPraktikum()
+    {
+        return $this->hasMany(AsprakPraktikum::class, 'praktikum_id')->where('role', 'asprak');
+    }
+
+    public function modul()
+    {
+        return $this->hasMany(Modul::class, 'praktikum_id');
+    }
+
+    public function periodePendaftaran()
+    {
+        return $this->hasMany(PeriodePendaftaran::class, 'praktikum_id');
+    }
+
+    public function pendaftaranPraktikan()
+    {
+        return $this->hasMany(PendaftaranPraktikan::class, 'praktikum_id');
+    }
+
+    /**
+     * Relasi ke periode pendaftaran yang sedang aktif & dalam rentang waktu buka.
+     * Dipakai oleh whereHas('periodeAktif') di controller mahasiswa.
+     */
+    public function periodeAktif()
+    {
+        $now = now();
+        return $this->hasMany(PeriodePendaftaran::class, 'praktikum_id')
+            ->where('is_aktif', true)
+            ->where(fn($q) => $q->whereNull('dibuka_pada')->orWhere('dibuka_pada', '<=', $now))
+            ->where(fn($q) => $q->whereNull('ditutup_pada')->orWhere('ditutup_pada', '>', $now));
+    }
+
+    // ─── Helper ───────────────────────────────────────────────────────────────
+
+    public static function generateKode(): string
+    {
+        do {
+            $kode = strtoupper(Str::random(6));
+        } while (static::where('kode', $kode)->exists());
+
+        return $kode;
     }
 }

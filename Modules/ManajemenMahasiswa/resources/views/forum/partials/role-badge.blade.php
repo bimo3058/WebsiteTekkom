@@ -50,7 +50,7 @@
             'gpm'                  => 'background: #6d28d9; color: #fff;',
             'ketua_himpunan'       => 'background: #047857; color: #fff;',
             'ketua_bidang'         => 'background: #0369a1; color: #fff;',
-            'ketua_unit'           => 'background: #4338ca; color: #fff;',
+            'ketua_unit'           => 'background: #415086; color: #fff;',
             'pengurus_himpunan'    => 'background: #ecfdf5; color: #047857; border: 1px solid #10b981;',
             'staff_himpunan'       => 'background: #f0fdf4; color: #15803d; border: 1px solid #22c55e;',
             'alumni'               => 'background: #fff1f2; color: #be123c; border: 1px solid #fb7185;',

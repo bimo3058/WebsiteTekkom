@@ -18,12 +18,12 @@
     {{-- Header --}}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
         <div style="display:flex;align-items:center;gap:8px;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5"
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#293C79" stroke-width="2.5"
                  stroke-linecap="round" stroke-linejoin="round">
                 <rect x="3" y="3" width="18" height="18" rx="2"/>
                 <path d="M9 9h6M9 12h6M9 15h4"/>
             </svg>
-            <span style="font-size:13px;font-weight:700;color:#4f46e5;">POLL</span>
+            <span style="font-size:13px;font-weight:700;color:#293C79;">POLL</span>
         </div>
         <span class="poll-total-votes" style="font-size:12px;color:#9ca3af;font-weight:500;">
             {{ number_format($totalVotes) }} suara
@@ -43,14 +43,14 @@
                  data-option-id="{{ $option->id }}"
                  data-poll-id="{{ $poll->id }}"
                  style="position:relative;margin-bottom:10px;border-radius:10px;overflow:hidden;
-                        border:1.5px solid {{ $isVoted ? '#4f46e5' : '#e5e7eb' }};
+                        border:1.5px solid {{ $isVoted ? '#293C79' : '#e5e7eb' }};
                         background:#fff;cursor:{{ $cursor }};transition:all 0.2s;">
 
                 {{-- Progress bar --}}
                 @if($showResults)
                     <div class="poll-bar"
                          style="position:absolute;top:0;left:0;height:100%;width:{{ $pct }}%;
-                                background:{{ $isVoted ? 'rgba(79,70,229,0.12)' : 'rgba(0,0,0,0.04)' }};
+                                background:{{ $isVoted ? 'rgba(41,60,121,0.12)' : 'rgba(0,0,0,0.04)' }};
                                 transition:width 0.6s ease;border-radius:8px 0 0 8px;pointer-events:none;">
                     </div>
                 @endif
@@ -61,7 +61,7 @@
                         {{-- Icon: centang jika voted, radio jika belum ada hasil, kosong jika hasil tapi bukan pilihan --}}
                         @if($isVoted)
                             <svg class="poll-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none"
-                                 stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                                 stroke="#293C79" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                                 <polyline points="20 6 9 17 4 12"/>
                             </svg>
                         @elseif(!$showResults)
@@ -73,13 +73,13 @@
                         @endif
                         <span class="poll-option-label"
                               style="font-size:14px;font-weight:{{ $isVoted ? '700' : '500' }};
-                                     color:{{ $isVoted ? '#4f46e5' : '#374151' }};">
+                                     color:{{ $isVoted ? '#293C79' : '#374151' }};">
                             {{ $option->text }}
                         </span>
                     </div>
                     <span class="poll-pct"
                           style="font-size:13px;font-weight:700;white-space:nowrap;margin-left:8px;
-                                 color:{{ $isVoted ? '#4f46e5' : '#6b7280' }};
+                                 color:{{ $isVoted ? '#293C79' : '#6b7280' }};
                                  {{ $showResults ? '' : 'display:none;' }}">
                         {{ $pct }}%
                     </span>
@@ -120,8 +120,8 @@
         background: #f5f3ff !important;
     }
     .poll-container[data-is-open="1"] .poll-option.user-voted:hover {
-        border-color: #4f46e5 !important;
-        background: #eef2ff !important;
+        border-color: #293C79 !important;
+        background: #E7E8F0 !important;
     }
     .poll-container[data-is-open="0"] .poll-option {
         cursor: default !important;
@@ -204,7 +204,7 @@ document.addEventListener('DOMContentLoaded', function () {
                     optEl.classList.toggle('user-voted', isVoted);
 
                     // Border
-                    optEl.style.border = '1.5px solid ' + (isVoted ? '#4f46e5' : '#e5e7eb');
+                    optEl.style.border = '1.5px solid ' + (isVoted ? '#293C79' : '#e5e7eb');
 
                     // Progress bar
                     let bar = optEl.querySelector('.poll-bar');
@@ -215,19 +215,19 @@ document.addEventListener('DOMContentLoaded', function () {
                         optEl.insertBefore(bar, optEl.firstChild);
                     }
                     bar.style.width      = match.percentage + '%';
-                    bar.style.background = isVoted ? 'rgba(79,70,229,0.12)' : 'rgba(0,0,0,0.04)';
+                    bar.style.background = isVoted ? 'rgba(41,60,121,0.12)' : 'rgba(0,0,0,0.04)';
 
                     // Icon: centang jika voted, spacer jika tidak
                     const iconEl = optEl.querySelector('.poll-check-icon');
                     if (iconEl) {
                         iconEl.outerHTML = isVoted
-                            ? `<svg class="poll-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+                            ? `<svg class="poll-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#293C79" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
                             : `<span class="poll-check-icon" style="width:16px;display:inline-block;"></span>`;
                     }
                     const radioEl = optEl.querySelector('.poll-radio');
                     if (radioEl) {
                         radioEl.outerHTML = isVoted
-                            ? `<svg class="poll-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
+                            ? `<svg class="poll-check-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#293C79" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>`
                             : `<span class="poll-check-icon" style="width:16px;display:inline-block;"></span>`;
                     }
 
@@ -235,14 +235,14 @@ document.addEventListener('DOMContentLoaded', function () {
                     const labelEl = optEl.querySelector('.poll-option-label');
                     if (labelEl) {
                         labelEl.style.fontWeight = isVoted ? '700' : '500';
-                        labelEl.style.color      = isVoted ? '#4f46e5' : '#374151';
+                        labelEl.style.color      = isVoted ? '#293C79' : '#374151';
                     }
 
                     // Persentase
                     const pctEl = optEl.querySelector('.poll-pct');
                     if (pctEl) {
                         pctEl.textContent     = match.percentage + '%';
-                        pctEl.style.color     = isVoted ? '#4f46e5' : '#6b7280';
+                        pctEl.style.color     = isVoted ? '#293C79' : '#6b7280';
                         pctEl.style.display   = '';
                     }
                 });

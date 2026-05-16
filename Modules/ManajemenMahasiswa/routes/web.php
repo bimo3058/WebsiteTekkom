@@ -23,6 +23,11 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->name('dashboard');
 
+        // Modal data endpoint untuk dashboard analitik (AJAX)
+        Route::get('/dashboard/modal-data', [DashboardController::class, 'modalData'])
+            ->name('dashboard.modal')
+            ->middleware('role:superadmin|admin|admin_kemahasiswaan|gpm');
+
         // Switch tampilan dashboard antar-role (untuk user multi-role)
         Route::post('/dashboard/switch-mode', [DashboardController::class, 'switchMode'])
             ->name('switch.mode');
@@ -92,8 +97,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 ->get('/riwayat-verifikasi', [PengumumanController::class, 'riwayatVerifikasiStaff'])
                 ->name('riwayat.verifikasi');
 
-            // Verifikasi Dashboard — hanya ketua-ketua himpunan
-            Route::middleware('role:ketua_unit|ketua_bidang|ketua_himpunan|wakil_ketua_himpunan')
+            // Verifikasi Dashboard — ketua himpunan + admin kemahasiswaan
+            Route::middleware('role:ketua_unit|ketua_bidang|ketua_himpunan|wakil_ketua_himpunan|admin|admin_kemahasiswaan|superadmin')
                 ->group(function () {
                 Route::get('/verifikasi', [PengumumanController::class, 'verifikasiIndex'])
                     ->name('verifikasi.index');
@@ -150,6 +155,13 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 ->name('destroy')
                 ->whereNumber('pengaduan')
                 ->middleware('role:admin|superadmin|admin_kemahasiswaan|gpm');
+        });
+
+        // ── Forum Notifications (AJAX) ────────────────────────────────────
+        Route::prefix('notifications')->name('notifications.')->group(function () {
+            Route::get('/', [ForumController::class, 'getNotifications'])->name('index');
+            Route::post('/read/{id}', [ForumController::class, 'markNotificationRead'])->name('read');
+            Route::post('/read-all', [ForumController::class, 'markAllNotificationsRead'])->name('read_all');
         });
 
         // ── Forum Diskusi ──────────────────────────────────────────────────
@@ -272,6 +284,9 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::post('/users/{user}/update-role', [ManajemenPenggunaController::class, 'updateRole'])->name('update-role');
             Route::post('/check-alumni', [ManajemenPenggunaController::class, 'checkAlumni'])
                 ->name('check-alumni')
+                ->middleware('role:admin_kemahasiswaan|admin|superadmin');
+            Route::post('/reset-pengurus', [ManajemenPenggunaController::class, 'resetPengurusRoles'])
+                ->name('reset-pengurus')
                 ->middleware('role:admin_kemahasiswaan|admin|superadmin');
         });
 

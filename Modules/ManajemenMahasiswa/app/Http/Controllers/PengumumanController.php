@@ -294,6 +294,15 @@ class PengumumanController extends Controller
         $posterFile = $request->file('poster');
         unset($validated['poster'], $validated['lampiran']);
 
+        // Staff wajib verifikasi tidak boleh mempublikasikan langsung dari form edit.
+        // Alihkan ke alur verifikasi jika status yang dipilih adalah 'published'.
+        $needsVerification = $validated['status_publish'] === 'published'
+            && $this->pengumumanService->requiresApproval(Auth::user());
+
+        if ($needsVerification) {
+            $validated['status_publish'] = 'pending_review';
+        }
+
         $this->pengumumanService->update($id, $validated);
 
         // Ganti poster jika ada upload baru
@@ -314,6 +323,12 @@ class PengumumanController extends Controller
                     'pengumuman_id' => $id,
                 ]);
             }
+        }
+
+        if ($needsVerification) {
+            return redirect()
+                ->route('manajemenmahasiswa.pengumuman.verification.request', $id)
+                ->with('info', 'Pengumuman diperbarui. Silakan pilih verifikator untuk mempublikasikannya.');
         }
 
         return redirect()
@@ -543,28 +558,39 @@ class PengumumanController extends Controller
     }
 
     /**
-     * Dashboard verifikasi untuk ketua unit/bidang/himpunan.
+     * Dashboard verifikasi pengumuman.
+     * Admin/superadmin/admin_kemahasiswaan melihat semua request dari semua staff.
+     * Ketua himpunan/bidang/unit hanya melihat request yang ditujukan ke mereka.
      */
     public function verifikasiIndex(Request $request)
     {
         $user = Auth::user();
         $statusFilter = $request->query('status', 'pending');
+        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
 
-        $requests = $this->pengumumanService->getRequestsForVerifier($user->id, $statusFilter);
-        $pendingCount = $this->pengumumanService->getPendingForVerifier($user->id)->count();
+        if ($isAdmin) {
+            $requests     = $this->pengumumanService->getAllRequests($statusFilter);
+            $pendingCount = $this->pengumumanService->getAllPendingCount();
+        } else {
+            $requests     = $this->pengumumanService->getRequestsForVerifier($user->id, $statusFilter);
+            $pendingCount = $this->pengumumanService->getPendingForVerifier($user->id)->count();
+        }
 
-        return view('manajemenmahasiswa::pengumuman.pengumuman-verifikasi', compact('requests', 'statusFilter', 'pendingCount'));
+        return view('manajemenmahasiswa::pengumuman.pengumuman-verifikasi', compact('requests', 'statusFilter', 'pendingCount', 'isAdmin'));
     }
 
     /**
      * Setujui pengumuman — publish langsung.
-     * Hanya verifikator yang ditunjuk (ketua himpunan) yang bisa approve.
+     * Admin/superadmin/admin_kemahasiswaan dapat approve request manapun.
      */
     public function approveVerifikasi(Request $request, int $requestId)
     {
         $approvalRequest = PengumumanApprovalRequest::findOrFail($requestId);
+        $user = Auth::user();
 
-        if ($approvalRequest->verifier_id !== Auth::id()) {
+        $canOverride = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
+
+        if (!$canOverride && $approvalRequest->verifier_id !== $user->id) {
             abort(403, 'Anda bukan verifikator untuk pengumuman ini.');
         }
 
@@ -583,13 +609,16 @@ class PengumumanController extends Controller
 
     /**
      * Tolak pengumuman — kembalikan ke draft.
-     * Superadmin/admin/admin_kemahasiswaan dapat reject request manapun.
+     * Admin/superadmin/admin_kemahasiswaan dapat reject request manapun.
      */
     public function rejectVerifikasi(Request $request, int $requestId)
     {
         $approvalRequest = PengumumanApprovalRequest::findOrFail($requestId);
+        $user = Auth::user();
 
-        if ($approvalRequest->verifier_id !== Auth::id()) {
+        $canOverride = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
+
+        if (!$canOverride && $approvalRequest->verifier_id !== $user->id) {
             abort(403, 'Anda bukan verifikator untuk pengumuman ini.');
         }
 

@@ -1,4 +1,9 @@
 <x-banksoal::layouts.dosen-admin>
+    @section('breadcrumbs')
+        <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-slate-500 hover:text-primary transition-colors">Bank Soal</a>
+        <span class="mx-2 text-slate-300">/</span>
+        <span class="text-slate-800 font-semibold">Edit Soal</span>
+    @endsection
     <x-banksoal::ui.page-header title="Edit Soal" subtitle="Perbarui detail pertanyaan dan opsi jawaban.">
         <x-slot:actions>
             <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"><i class="fas fa-arrow-left"></i> Kembali</a>
@@ -12,7 +17,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Waduh, Gagal...',
-                    text: '{{ session('error') }}',
+                    text: @json(session('error')),
                     confirmButtonColor: '#ef4444',
                     background: '#ffffff',
                     customClass: {
@@ -59,7 +64,7 @@
                 <div><label for="mk_id" class="mb-2 block text-sm font-semibold text-slate-700">Mata Kuliah</label><select name="mk_id" id="mk_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="">Pilih Mata Kuliah...</option>@foreach($mataKuliahDosen as $mk)<option value="{{ $mk->id }}" {{ old('mk_id', $soal->mk_id) == $mk->id ? 'selected' : '' }}>{{ $mk->kode }} - {{ $mk->nama }}</option>@endforeach</select></div>
                 <div><label for="cpl_id" class="mb-2 block text-sm font-semibold text-slate-700">Keterkaitan CPL / Topik</label><select name="cpl_id" id="cpl_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="">Pilih CPL...</option></select></div>
                 <div><label for="cpmk_id" class="mb-2 block text-sm font-semibold text-slate-700">Keterkaitan CPMK</label><select name="cpmk_id" id="cpmk_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="">Pilih CPMK...</option></select></div>
-                <div><label for="kesulitan" class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label><select name="kesulitan" id="kesulitan" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="easy" {{ old('kesulitan', $soal->kesulitan) == 'easy' ? 'selected' : '' }}>Mudah (Easy)</option><option value="intermediate" {{ old('kesulitan', $soal->kesulitan) == 'intermediate' ? 'selected' : '' }}>Sedang (Medium)</option><option value="advanced" {{ old('kesulitan', $soal->kesulitan) == 'advanced' ? 'selected' : '' }}>Sulit (Hard)</option></select></div>
+                <div><label for="kesulitan" class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label><select name="kesulitan" id="kesulitan" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="easy" {{ old('kesulitan', $soal->kesulitan) == 'easy' ? 'selected' : '' }}>Mudah (easy)</option><option value="intermediate" {{ old('kesulitan', $soal->kesulitan) == 'intermediate' ? 'selected' : '' }}>Sedang (intermediate)</option><option value="advanced" {{ old('kesulitan', $soal->kesulitan) == 'advanced' ? 'selected' : '' }}>Sulit (advanced)</option></select></div>
                 <div>
                     <label class="mb-2 block text-sm font-semibold text-slate-700">Tipe Pertanyaan</label>
                     <div class="flex items-center gap-5 text-sm font-medium text-slate-700 mt-3">
@@ -89,7 +94,7 @@
                     @endforeach
                 </div>
             </div>
-            <div class="flex items-center justify-end border-t border-slate-200 bg-slate-50 px-6 py-4"><button type="submit" class="rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-900"><i class="fas fa-save mr-1"></i> Simpan Perubahan</button></div>
+            <div class="flex items-center justify-end border-t border-slate-200 bg-slate-50 px-6 py-4"><button type="submit" class="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors"><i class="fas fa-save mr-1"></i> Simpan Perubahan</button></div>
         </form>
     </x-banksoal::ui.panel>
 
@@ -212,7 +217,7 @@
                 const cplId = this.value;
                 cpmkSelect.innerHTML = '<option value="">Memuat CPMK...</option>';
                 if (cplId) {
-                    fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${cplId}`)then(r => r.json()).then(data => {
+                    fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${cplId}`).then(r => r.json()).then(data => {
                         cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
                         data.forEach(c => { const selected = oldCpmkId == c.id ? 'selected' : ''; cpmkSelect.innerHTML += `<option value="${c.id}" ${selected}>${c.kode} - ${c.deskripsi.substring(0, 60)}...</option>`; });
                     }).catch(() => { cpmkSelect.innerHTML = '<option value="">Gagal memuat cpmk</option>'; });

@@ -15,6 +15,7 @@ use Modules\ManajemenMahasiswa\Services\CommentService;
 use Modules\ManajemenMahasiswa\Services\GamificationService;
 use App\Services\SupabaseStorage;
 use Modules\ManajemenMahasiswa\Models\RepoMulmed;
+use Modules\ManajemenMahasiswa\Models\ForumNotification;
 
 class ForumController extends Controller
 {
@@ -704,7 +705,16 @@ class ForumController extends Controller
             $this->gamificationService->getTotalXp(Auth::id())
         );
 
-        $this->commentService->addComment(Auth::id(), $threadId, $request->konten, $request->parent_id);
+        $comment = $this->commentService->addComment(Auth::id(), $threadId, $request->konten, $request->parent_id);
+
+        // Create forum notifications for reply/mention
+        try {
+            $thread = $this->threadService->findThread($threadId);
+            ForumNotification::notifyCommentReply($comment, $thread);
+        } catch (\Throwable $e) {
+            // Notification failure should not break comment flow
+            \Log::warning('Forum notification failed: ' . $e->getMessage());
+        }
 
         $newLevel = $this->gamificationService->calculateLevel(
             $this->gamificationService->getTotalXp(Auth::id())
@@ -861,5 +871,66 @@ class ForumController extends Controller
         }
 
         return back()->with('success', 'Thread berhasil dikunci dan laporan dihapus.');
+    }
+
+    // =========================================================================
+    // Notifications (AJAX)
+    // =========================================================================
+
+    /**
+     * Ambil notifikasi forum user (AJAX).
+     */
+    public function getNotifications()
+    {
+        $notifications = ForumNotification::forUser(Auth::id())
+            ->with(['actor', 'thread'])
+            ->latest()
+            ->take(20)
+            ->get()
+            ->map(fn($n) => [
+                'id'         => $n->id,
+                'type'       => $n->type,
+                'message'    => $n->message,
+                'thread_id'  => $n->thread_id,
+                'thread_url' => route('manajemenmahasiswa.forum.show', $n->thread_id),
+                'actor_name' => $n->actor?->name ?? 'Seseorang',
+                'actor_initials' => strtoupper(substr($n->actor?->name ?? 'S', 0, 2)),
+                'is_read'    => !is_null($n->read_at),
+                'time_ago'   => $n->created_at->diffForHumans(),
+                'created_at' => $n->created_at->toIso8601String(),
+            ]);
+
+        $unreadCount = ForumNotification::forUser(Auth::id())->unread()->count();
+
+        return response()->json([
+            'notifications' => $notifications,
+            'unread_count'  => $unreadCount,
+        ]);
+    }
+
+    /**
+     * Tandai satu notifikasi sebagai dibaca.
+     */
+    public function markNotificationRead(int $id)
+    {
+        $notif = ForumNotification::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $notif->markAsRead();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Tandai semua notifikasi user sebagai dibaca.
+     */
+    public function markAllNotificationsRead()
+    {
+        ForumNotification::forUser(Auth::id())
+            ->unread()
+            ->update(['read_at' => now()]);
+
+        return response()->json(['success' => true]);
     }
 }
