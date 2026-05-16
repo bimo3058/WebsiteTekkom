@@ -1,4 +1,9 @@
 <x-banksoal::layouts.dosen-admin>
+    @section('breadcrumbs')
+        <a href="{{ route('banksoal.arsip.dosen.index') }}" class="text-slate-500 hover:text-primary transition-colors">Arsip Soal</a>
+        <span class="mx-2 text-slate-300">/</span>
+        <span class="text-slate-800 font-semibold">Detail Arsip</span>
+    @endsection
 
 <x-banksoal::ui.page-header
     title="{{ $mode === 'arsip' ? 'Detail Arsip Soal' : 'Detail Riwayat Penarikan' }}"
@@ -41,7 +46,7 @@
             @forelse($soalList as $soal)
                 <div class="p-5">
                     <div class="flex items-start gap-3">
-                        <div class="w-9 h-9 rounded-lg bg-blue-50 text-blue-700 font-bold flex items-center justify-center">{{ $soal['nomor'] ?? $loop->iteration }}</div>
+                        <div class="w-9 h-9 rounded-lg bg-primary/10 text-primary font-bold flex items-center justify-center">{{ $soal['nomor'] ?? $loop->iteration }}</div>
                         <div class="flex-1">
                             <div class="text-sm text-slate-800 leading-relaxed">
                                 {!! $soal['soal'] ?? '-' !!}

@@ -44,16 +44,46 @@ class AdminCbtController extends Controller
     {
         $this->authorize('viewAny', KompreSession::class);
 
-        $query = KompreSession::with(['user', 'jadwal.periode'])
-            ->where('status', 'finished')
-            ->orderBy('finished_at', 'desc');
+        // Subquery correlated untuk menghitung "Ujian Ke-" per mahasiswa
+        // Compatible dengan MySQL 5.7+ (tanpa window function)
+        $ujianKeSubquery = "
+            (SELECT COUNT(*) FROM bs_kompre_session s2
+             WHERE s2.user_id = bs_kompre_session.user_id
+               AND s2.status = 'finished'
+               AND (s2.finished_at < bs_kompre_session.finished_at
+                    OR (s2.finished_at = bs_kompre_session.finished_at AND s2.id <= bs_kompre_session.id))
+            ) AS ujian_ke
+        ";
 
+        $query = KompreSession::with(['user.student', 'jadwal.periode'])
+            ->selectRaw("bs_kompre_session.*, {$ujianKeSubquery}")
+            ->where('bs_kompre_session.status', 'finished');
+
+        // Filter periode
         if ($request->filled('periode_id')) {
             $query->whereHas('jadwal', fn($q) => $q->where('periode_id', $request->periode_id));
         }
 
-        $sessions = $query->get();
-        $periodes = PeriodeUjian::orderBy('created_at', 'desc')->get();
+        // Filter keterangan (LULUS / MENGULANG)
+        if ($request->filled('keterangan')) {
+            if ($request->keterangan === 'lulus') {
+                $query->where('bs_kompre_session.score', '>=', 60);
+            } elseif ($request->keterangan === 'mengulang') {
+                $query->where('bs_kompre_session.score', '<', 60);
+            }
+        }
+
+        // Pencarian NIM atau Nama Mahasiswa
+        if ($request->filled('q')) {
+            $q = $request->q;
+            $query->whereHas('user', function ($subQ) use ($q) {
+                $subQ->where('name', 'like', "%{$q}%")
+                    ->orWhereHas('student', fn($sq) => $sq->where('student_number', 'like', "%{$q}%"));
+            });
+        }
+
+        $sessions = $query->orderBy('bs_kompre_session.finished_at', 'desc')->paginate(20)->withQueryString();
+        $periodes  = PeriodeUjian::orderBy('created_at', 'desc')->get();
 
         return view('banksoal::admin.cbt.riwayat', compact('sessions', 'periodes'));
     }

@@ -12,8 +12,8 @@
         <div x-init="addToast({ type: 'error', message: '{{ addslashes(session('error')) }}' })"></div>
     @endif
 
-    @if($errors->any() && !View::hasSection('hide_global_errors'))
-        <div x-init="addToast({ type: 'error', message: '{{ addslashes($errors->first()) }}' })"></div>
+    @if($errors->getBag('default')->any() && !View::hasSection('hide_global_errors'))
+        <div x-init="addToast({ type: 'error', message: '{{ addslashes($errors->getBag('default')->first()) }}' })"></div>
     @endif
 
     @if(session('warning'))
@@ -44,7 +44,7 @@
                 'border-emerald-100 shadow-emerald-500/10': toast.type === 'success',
                 'border-rose-100 shadow-rose-500/10': toast.type === 'error',
                 'border-amber-100 shadow-amber-500/10': toast.type === 'warning',
-                'border-blue-100 shadow-blue-500/10': toast.type === 'info'
+                'border-primary/20 shadow-primary/10': toast.type === 'info'
             }"
         >
             <!-- Progress Bar Atas -->
@@ -54,7 +54,7 @@
                         'bg-emerald-500': toast.type === 'success',
                         'bg-rose-500': toast.type === 'error',
                         'bg-amber-500': toast.type === 'warning',
-                        'bg-blue-500': toast.type === 'info'
+                        'bg-primary': toast.type === 'info'
                      }"
                      :style="`width: ${toast.progress}%`">
                 </div>
@@ -66,7 +66,7 @@
                     'bg-emerald-50 text-emerald-600': toast.type === 'success',
                     'bg-rose-50 text-rose-600': toast.type === 'error',
                     'bg-amber-50 text-amber-600': toast.type === 'warning',
-                    'bg-blue-50 text-blue-600': toast.type === 'info'
+                    'bg-primary/10 text-primary': toast.type === 'info'
                  }">
                 <!-- Ikon Success -->
                 <svg x-show="toast.type === 'success'" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg>
@@ -85,7 +85,7 @@
                         'text-emerald-700': toast.type === 'success',
                         'text-rose-700': toast.type === 'error',
                         'text-amber-700': toast.type === 'warning',
-                        'text-blue-700': toast.type === 'info'
+                        'text-primary': toast.type === 'info'
                     }" 
                     x-text="toast.type === 'success' ? 'Berhasil' : (toast.type === 'error' ? 'Kesalahan' : (toast.type === 'warning' ? 'Peringatan' : 'Informasi'))"></h4>
                 <p class="text-[13.5px] font-medium text-slate-700 leading-snug" x-text="toast.message"></p>

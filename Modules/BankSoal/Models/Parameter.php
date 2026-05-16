@@ -13,6 +13,7 @@ class Parameter extends Model
     protected $table = 'bs_parameter';
 
     protected $fillable = [
+        'jenis',
         'aspek',
         'bobot',
     ];

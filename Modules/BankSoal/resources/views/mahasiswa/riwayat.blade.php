@@ -78,8 +78,12 @@
                                 $score       = $session->score ?? 0;
                                 $dijawab     = $session->jawabans->whereNotNull('jawaban_dipilih')->count();
                                 $totalSoal   = $session->jawabans->count();
+                                $isNoShow    = $session->title === 'Tidak Mengerjakan';
                                 $durasi      = null;
-                                if ($session->started_at && $session->finished_at) {
+
+                                if ($isNoShow) {
+                                    $durasi = '0 mnt';
+                                } elseif ($session->started_at && $session->finished_at) {
                                     $diffInMinutes = $session->started_at->diffInMinutes($session->finished_at);
                                     $jam = floor($diffInMinutes / 60);
                                     $menit = $diffInMinutes % 60;
@@ -95,7 +99,7 @@
 
                                 $lulus = $score >= 60;
                                 $badgeBg    = $lulus ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-red-50 text-red-700 border-red-200';
-                                $badgeLabel = $lulus ? 'Lulus' : 'Tidak Lulus';
+                                $badgeLabel = $isNoShow ? 'Tidak Mengerjakan' : ($lulus ? 'Lulus' : 'Tidak Lulus');
                             @endphp
                             <tr class="hover:bg-slate-50/70 transition-colors">
                                 {{-- Periode --}}

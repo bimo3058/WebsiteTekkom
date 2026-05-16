@@ -18,19 +18,39 @@ class ArsipSoalController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-
-        $arsipGrouped = $this->arsipSoalService->getArsipGroupedByTahunSemester($user->id);
-        $penarikanPending = $this->arsipSoalService->getPenarikanPending($user->id);
-
-        $flatArsip = $arsipGrouped->flatten(2);
-
-        $stats = [
-            'total_arsip' => $flatArsip->count(),
-            'total_penarikan' => $penarikanPending->total(),
-            'mata_kuliah' => $flatArsip->pluck('mk_id')->unique()->count(),
+        
+        $filters = [
+            'search' => $request->get('search'),
+            'tahun_akademik' => $request->get('tahun_akademik'),
+            'semester' => $request->get('semester'),
         ];
 
-        return view('banksoal::pages.arsip.Dosen.index', compact('arsipGrouped', 'penarikanPending', 'stats'));
+        $arsipPaginated = $this->arsipSoalService->getArsipPaginated($user->id, $filters);
+        $penarikanPending = $this->arsipSoalService->getPenarikanPending($user->id);
+
+        // Data for filters
+        $availableYears = \Modules\BankSoal\Models\ArsipSoal::query()
+            ->byDosen($user->id)
+            ->where('status', 'final')
+            ->distinct()
+            ->pluck('tahun_akademik')
+            ->filter()
+            ->sortDesc()
+            ->values();
+
+        $stats = [
+            'total_arsip' => \Modules\BankSoal\Models\ArsipSoal::byDosen($user->id)->where('status', 'final')->count(),
+            'total_penarikan' => $penarikanPending->total(),
+            'mata_kuliah' => \Modules\BankSoal\Models\ArsipSoal::byDosen($user->id)->where('status', 'final')->distinct()->count('mk_id'),
+        ];
+
+        return view('banksoal::pages.arsip.Dosen.index', compact(
+            'arsipPaginated', 
+            'penarikanPending', 
+            'stats', 
+            'availableYears',
+            'filters'
+        ));
     }
 
     public function show(Request $request, int $id)

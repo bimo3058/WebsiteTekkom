@@ -39,4 +39,6 @@ AI_*.md
 .gemini/
 .cursor/
 .copilot/
+/Modules/BankSoal/Skills
+*.md
 *.sql
