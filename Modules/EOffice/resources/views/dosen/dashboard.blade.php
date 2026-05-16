@@ -107,13 +107,6 @@
                         <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-2">Dashboard</h1>
                         <p class="text-sm text-slate-500 max-w-2xl leading-relaxed">Ringkasan data mahasiswa bimbingan Kerja Praktik Anda.</p>
                     </div>
-                    <!-- Dropdown Simulator -->
-                    <div class="relative">
-                        <button class="flex items-center justify-between w-full sm:w-auto min-w-[220px] px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 shadow-sm hover:bg-slate-50 transition-colors">
-                            Semester Genap 2025/2026
-                            <svg class="w-4 h-4 text-slate-400 ml-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
-                        </button>
-                    </div>
                 </div>
 
                 <!-- Content Area (Clean White Cards) -->
