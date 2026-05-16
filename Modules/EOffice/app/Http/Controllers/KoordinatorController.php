@@ -120,15 +120,40 @@ class KoordinatorController extends Controller
         ]);
 
         $dataToSave = [
-            'judul' => strtoupper($validated['tipe']) . ' - ' . $validated['judul'],
-            'deskripsi' => $validated['konten'],
+            'judul' => $validated['judul'],
+            'tipe' => $validated['tipe'],
+            'konten' => $validated['konten'],
+            'is_active' => $request->has('is_active'),
             'is_published' => $request->has('is_active'),
-            'user_id' => auth()->id() ?? 1,
+            'created_by' => auth()->id() ?? 1,
         ];
 
         \Modules\EOffice\Models\KpPengumuman::create($dataToSave);
 
         return redirect()->route('eoffice.kp.koordinator.pengumuman')->with('success', 'Informasi berhasil dipublikasikan!');
+    }
+
+    /**
+     * Proses Update Pengumuman
+     */
+    public function updatePengumuman(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'judul' => 'required|string|max:255',
+            'tipe' => 'required|in:pengumuman,timeline,faq',
+            'konten' => 'required|string',
+        ]);
+
+        $pengumuman = \Modules\EOffice\Models\KpPengumuman::findOrFail($id);
+        $pengumuman->update([
+            'judul' => $validated['judul'],
+            'tipe' => $validated['tipe'],
+            'konten' => $validated['konten'],
+            'is_active' => $request->has('is_active'),
+            'is_published' => $request->has('is_active'),
+        ]);
+
+        return redirect()->route('eoffice.kp.koordinator.pengumuman')->with('success', 'Informasi berhasil diperbarui!');
     }
 
     /**

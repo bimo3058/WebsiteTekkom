@@ -262,6 +262,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
         Route::prefix('dosen')->name('dosen.')->group(function () {
             Route::get('/dashboard', [DosenController::class, 'dashboard'])->name('dashboard');
+            Route::get('/bimbingan', [DosenController::class, 'bimbingan'])->name('bimbingan.index');
             Route::get('/bimbingan/{id}', [DosenController::class, 'show'])->name('bimbingan.show');
             Route::post('/bimbingan/{id}/approve-pra-kp', [DosenController::class, 'approvePraKp'])->name('bimbingan.approve_pra_kp');
             Route::post('/bimbingan/{id}/dokumen/{dokumenId}/approve', [DosenController::class, 'approveDokumen'])->name('bimbingan.dokumen.approve');
@@ -277,6 +278,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::post('/balancing', [KoordinatorController::class, 'storeBalancing'])->name('balancing.store');
             Route::get('/pengumuman', [KoordinatorController::class, 'pengumuman'])->name('pengumuman');
             Route::post('/pengumuman', [KoordinatorController::class, 'storePengumuman'])->name('pengumuman.store');
+            Route::put('/pengumuman/{id}', [KoordinatorController::class, 'updatePengumuman'])->name('pengumuman.update');
             Route::delete('/pengumuman/{id}', [KoordinatorController::class, 'destroyPengumuman'])->name('pengumuman.destroy');
             Route::get('/faq', [KoordinatorController::class, 'faq'])->name('faq');
             Route::post('/faq/dokumen', [KoordinatorController::class, 'storeDokumenPanduan'])->name('faq.dokumen.store');
