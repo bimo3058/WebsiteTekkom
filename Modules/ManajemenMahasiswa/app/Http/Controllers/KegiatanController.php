@@ -45,7 +45,7 @@ class KegiatanController extends Controller
 
         $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'ketuaPelaksana.user', 'dosenPendamping.user'])
             ->where('status', Kegiatan::STATUS_SELESAI)
-            ->orderBy('tanggal_mulai', 'desc');
+            ->orderBy('created_at', 'desc');
 
         // Filter by bidang or prodi
         if ($request->filled('bidang') && $request->bidang !== 'semua') {
@@ -72,7 +72,11 @@ class KegiatanController extends Controller
         // Cek apakah user adalah admin/pengurus (untuk tombol Tambah)
         $user  = Auth::user();
         $roles = $user->roles->pluck('name');
-        $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'pengurus_himpunan'])->isNotEmpty();
+        $isAdmin = $roles->intersect([
+            'superadmin', 'admin_kemahasiswaan',
+            'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+            'gpm', 'dpm',
+        ])->isNotEmpty();
 
         return view('manajemenmahasiswa::kegiatan.index', compact(
             'kegiatan',
@@ -102,7 +106,11 @@ class KegiatanController extends Controller
         // Cek apakah user adalah admin/pengurus (untuk tombol Edit/Hapus)
         $user  = Auth::user();
         $roles = $user->roles->pluck('name');
-        $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'pengurus_himpunan'])->isNotEmpty();
+        $isAdmin = $roles->intersect([
+            'superadmin', 'admin_kemahasiswaan',
+            'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+            'gpm', 'dpm',
+        ])->isNotEmpty();
 
         return view('manajemenmahasiswa::kegiatan.show', compact('kegiatan', 'isAdmin'));
     }

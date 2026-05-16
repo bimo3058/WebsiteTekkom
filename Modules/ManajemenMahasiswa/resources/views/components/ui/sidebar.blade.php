@@ -362,7 +362,24 @@
                 'manajemenmahasiswa.kegiatan.*',
             ];
             $kegiatanActive = collect($kegiatanRoutes)->contains(fn($r) => request()->routeIs($r));
+
+            // Role yang boleh akses Subbab 1: Rencana Proker
+            $canViewProker = (bool) array_intersect($sidebarRoles, [
+                'superadmin', 'admin_kemahasiswaan', 'dpm', 'gpm',
+                'wakil_ketua_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+            ]);
+
+            // Role yang boleh akses Subbab 2: Pelaksanaan Kegiatan
+            $canViewPelaksanaan = (bool) array_intersect($sidebarRoles, [
+                'superadmin', 'admin_kemahasiswaan', 'dpm', 'gpm',
+                'wakil_ketua_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan',
+            ]);
+
+            // Subbab 3 (Laporan & Arsip) dapat diakses semua role,
+            // sehingga dropdown Manajemen Kegiatan selalu ditampilkan
+            $showKegiatanMenu = true;
         @endphp
+        @if($showKegiatanMenu)
         <div class="sidebar-dropdown {{ $kegiatanActive ? 'open' : '' }}">
             <a href="javascript:void(0)"
                 class="nav-link-item sidebar-dropdown-toggle {{ $kegiatanActive ? 'active' : '' }}"
@@ -386,6 +403,7 @@
             </a>
             <div class="sidebar-dropdown-menu" x-show="sidebarOpen">
                 {{-- Subbab 1: Rencana Proker --}}
+                @if($canViewProker)
                 <a href="{{ route('manajemenmahasiswa.proker.index') }}"
                     class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.proker.*') ? 'active' : '' }}">
                     <span class="nav-icon d-inline-flex">
@@ -397,7 +415,9 @@
                     </span>
                     <span class="nav-label">Rencana Proker</span>
                 </a>
+                @endif
                 {{-- Subbab 2: Pelaksanaan Kegiatan --}}
+                @if($canViewPelaksanaan)
                 <a href="{{ route('manajemenmahasiswa.pelaksanaan.index') }}"
                     class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.pelaksanaan.*') ? 'active' : '' }}">
                     <span class="nav-icon d-inline-flex">
@@ -412,6 +432,7 @@
                     </span>
                     <span class="nav-label">Pelaksanaan Kegiatan</span>
                 </a>
+                @endif
                 {{-- Subbab 3: Laporan & Arsip (manajemen kegiatan yang sudah ada) --}}
                 <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}"
                     class="nav-link-item sub-item {{ request()->routeIs('manajemenmahasiswa.kegiatan.*') ? 'active' : '' }}">
@@ -427,6 +448,7 @@
                 </a>
             </div>
         </div>
+        @endif
 
         @if(!array_intersect($sidebarRoles, ['dosen', 'dosen_koordinator']))
         <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}"
