@@ -648,13 +648,8 @@ class RpsController extends Controller
     public function getDosenByMk(Request $request): JsonResponse
     {
         try {
-            // Query semua user dengan role "dosen" (role_id = 3)
-            // Menggunakan direct join ke user_roles table untuk fetch all dosen
-            $dosenList = User::whereIn('id', function($query) {
-                    $query->select('user_id')
-                        ->from('user_roles')
-                        ->where('role_id', 3); // role_id = 3 is "dosen"
-                })
+            // Query semua user dengan role "dosen" via Spatie model_has_roles
+            $dosenList = User::whereHas('roles', fn($q) => $q->where('name', 'dosen'))
                 ->where('id', '!=', Auth::id())
                 ->whereNull('suspended_at')
                 ->orderBy('name')

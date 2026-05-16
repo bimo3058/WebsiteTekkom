@@ -535,8 +535,6 @@
                         <option value="all" {{ old('target_audience', $pengumuman->target_audience) === 'all' ? 'selected' : '' }}>Semua</option>
                         <option value="mahasiswa" {{ old('target_audience', $pengumuman->target_audience) === 'mahasiswa' ? 'selected' : '' }}>Mahasiswa</option>
                         <option value="alumni" {{ old('target_audience', $pengumuman->target_audience) === 'alumni' ? 'selected' : '' }}>Alumni</option>
-                        <option value="dosen" {{ old('target_audience', $pengumuman->target_audience) === 'dosen' ? 'selected' : '' }}>Dosen</option>
-                        <option value="pengurus" {{ old('target_audience', $pengumuman->target_audience) === 'pengurus' ? 'selected' : '' }}>Pengurus</option>
                     </select>
                     @error('target_audience') <span class="form-error">{{ $message }}</span> @enderror
                 </div>
@@ -647,7 +645,8 @@
                                 </svg>
                                 {{ $existingPoster->nama_file }}
                             </span>
-                            <button type="button" class="file-remove" onclick="deleteLampiran('{{ route('manajemenmahasiswa.pengumuman.lampiran.remove', [$pengumuman->id, $existingPoster->id]) }}', this, 'Hapus poster ini?')">
+                            <button type="button" class="file-remove"
+                                onclick="deleteLampiran('{{ route('manajemenmahasiswa.pengumuman.lampiran.remove', [$pengumuman->id, $existingPoster->id]) }}', this, 'Hapus poster ini?')">
                                 Hapus
                             </button>
                         </div>
@@ -696,7 +695,8 @@
                                     </svg>
                                     {{ $dok->judul_file ?? $dok->nama_file }}
                                 </span>
-                                <button type="button" class="file-remove" onclick="deleteLampiran('{{ route('manajemenmahasiswa.pengumuman.lampiran.remove', [$pengumuman->id, $dok->id]) }}', this, 'Hapus lampiran ini?')">
+                                <button type="button" class="file-remove"
+                                    onclick="deleteLampiran('{{ route('manajemenmahasiswa.pengumuman.lampiran.remove', [$pengumuman->id, $dok->id]) }}', this, 'Hapus lampiran ini?')">
                                     Hapus
                                 </button>
                             </div>
@@ -762,19 +762,19 @@
                         'Accept': 'application/json',
                     },
                 })
-                .then(response => {
-                    if (response.ok || response.status === 302 || response.status === 303) {
-                        // Reload halaman untuk menampilkan perubahan
-                        window.location.reload();
-                    } else {
-                        throw new Error('Gagal menghapus lampiran (status: ' + response.status + ')');
-                    }
-                })
-                .catch(error => {
-                    alert(error.message);
-                    btn.disabled = false;
-                    btn.textContent = 'Hapus';
-                });
+                    .then(response => {
+                        if (response.ok || response.status === 302 || response.status === 303) {
+                            // Reload halaman untuk menampilkan perubahan
+                            window.location.reload();
+                        } else {
+                            throw new Error('Gagal menghapus lampiran (status: ' + response.status + ')');
+                        }
+                    })
+                    .catch(error => {
+                        alert(error.message);
+                        btn.disabled = false;
+                        btn.textContent = 'Hapus';
+                    });
             }
 
             // Pre-fill editor dengan konten yang sudah ada
@@ -924,16 +924,16 @@
                     const item = document.createElement('div');
                     item.className = 'file-item';
                     item.innerHTML = `
-                            <span class="file-name">
-                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
-                                    <polyline points="14 2 14 8 20 8"/>
-                                </svg>
-                                ${file.name}
-                            </span>
-                            <span style="color:#9ca3af;font-size:0.8rem;">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
-                        `;
+                                <span class="file-name">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6b7280"
+                                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/>
+                                        <polyline points="14 2 14 8 20 8"/>
+                                    </svg>
+                                    ${file.name}
+                                </span>
+                                <span style="color:#9ca3af;font-size:0.8rem;">${(file.size / 1024 / 1024).toFixed(2)} MB</span>
+                            `;
                     list.appendChild(item);
                 });
             });

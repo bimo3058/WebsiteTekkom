@@ -207,7 +207,6 @@
             padding: 22px 26px;
             transition: all 0.25s ease;
             cursor: pointer;
-            text-decoration: none;
             display: block;
             box-shadow: 0 1px 3px rgba(22, 22, 43, 0.06), 0 1px 2px rgba(22, 22, 43, 0.04);
         }
@@ -216,6 +215,99 @@
             border-color: #C6CBD2;
             box-shadow: 0 4px 8px -2px rgba(22, 22, 43, 0.06), 0 2px 4px -2px rgba(22, 22, 43, 0.04);
             transform: translateY(-1px);
+        }
+
+        .pengumuman-card.pinned-global {
+            border-left: 3px solid #d97706;
+            background: #fffbf0;
+        }
+
+        .pengumuman-card.pinned-personal {
+            border-left: 3px solid #2563eb;
+            background: #f0f6ff;
+        }
+
+        .pengumuman-card.pinned-global.pinned-personal {
+            border-left: 3px solid #d97706;
+            background: #fffbf0;
+        }
+
+        /* Pin Badges */
+        .pin-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+        }
+
+        .pin-badge-global {
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .pin-badge-personal {
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        /* Action Buttons */
+        .btn-action-icon {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 34px;
+            height: 34px;
+            border-radius: 8px;
+            border: 1px solid #e5e7eb;
+            background: #fff;
+            color: #6b7280;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            padding: 0;
+        }
+
+        .btn-action-icon:hover {
+            border-color: #6B4FF4;
+            background: #f5f3ff;
+            color: #6B4FF4;
+            transform: translateY(-1px);
+        }
+
+        .btn-action-icon.btn-edit:hover {
+            border-color: #f59e0b;
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .btn-action-icon.btn-delete:hover {
+            border-color: #ef4444;
+            background: #fee2e2;
+            color: #dc2626;
+        }
+
+        .btn-action-icon.active-global {
+            border-color: #d97706;
+            background: #fef3c7;
+            color: #d97706;
+        }
+
+        .btn-action-icon.active-personal {
+            border-color: #2563eb;
+            background: #dbeafe;
+            color: #2563eb;
+        }
+
+        .action-buttons {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: flex-end;
         }
 
         .pengumuman-card-body {
@@ -361,20 +453,31 @@
             color: #788297;
         }
 
+        .badge-pending_review {
+            background: #fef3c7;
+            color: #d97706;
+            border: 1px solid #fde68a;
+        }
+
         .pengumuman-card-action {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            padding-left: 10px;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: space-between;
+            padding-left: 16px;
+            min-width: 120px;
         }
 
         .pengumuman-read-more {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
             flex-shrink: 0;
             font-size: 0.85rem;
             font-weight: 600;
             color: #6B4FF4;
             text-decoration: none;
-            transition: color 0.2s ease;
+            transition: all 0.2s ease;
             white-space: nowrap;
         }
 
@@ -383,46 +486,48 @@
         }
 
         /* Pagination */
-        .pengumuman-pagination {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 12px;
-            margin-top: 32px;
-        }
-
-        .pagination-btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 42px;
-            height: 42px;
-            border: 1px solid #e5e7eb;
-            border-radius: 50%;
-            background: #fff;
-            color: #6b7280;
-            font-size: 1.1rem;
-            cursor: pointer;
+        .pagination .page-link {
+            color: #6B4FF4;
+            border-color: #e5e7eb;
+            border-radius: 8px;
+            margin: 0 2px;
+            font-size: 0.875rem;
+            font-weight: 500;
+            padding: 8px 14px;
             transition: all 0.2s ease;
-            text-decoration: none;
         }
 
-        .pagination-btn:hover:not(.disabled) {
+        .pagination .page-link:hover {
+            background-color: #F5F3FF;
             border-color: #6B4FF4;
             color: #6B4FF4;
-            background: #F5F3FF;
         }
 
-        .pagination-btn.disabled {
-            opacity: 0.4;
-            cursor: not-allowed;
-            pointer-events: none;
+        .pagination .page-item.active .page-link {
+            background-color: #6B4FF4;
+            border-color: #6B4FF4;
+            color: #fff;
         }
 
-        .pagination-info {
+        .pagination .page-item.disabled .page-link {
+            color: #d1d5db;
+            border-color: #e5e7eb;
+            background: #fff;
+        }
+
+        .pagination-info-text {
             font-size: 0.82rem;
             color: #9ca3af;
             font-weight: 500;
+        }
+
+        .pagination-container nav > .d-sm-flex {
+            flex-direction: column-reverse;
+            align-items: center !important;
+            gap: 0.75rem;
+        }
+        .pagination-container .pagination {
+            margin-bottom: 0;
         }
 
         /* Empty State */
@@ -460,6 +565,98 @@
         .pengumuman-empty p {
             font-size: 0.9rem;
             color: #9ca3af;
+        }
+
+        /* ── Lightbox Modal ── */
+        .lightbox-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            z-index: 10000;
+            background: rgba(0, 0, 0, 0.92);
+            align-items: center;
+            justify-content: center;
+            animation: lightboxFadeIn 0.25s ease;
+        }
+        .lightbox-modal.active {
+            display: flex;
+        }
+        @keyframes lightboxFadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .lightbox-content {
+            position: relative;
+            max-width: 90vw;
+            max-height: 85vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .lightbox-content img {
+            max-width: 90vw;
+            max-height: 82vh;
+            object-fit: contain;
+            border-radius: 8px;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+            animation: lightboxZoomIn 0.3s ease;
+        }
+        @keyframes lightboxZoomIn {
+            from { transform: scale(0.9); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .lightbox-close {
+            position: fixed;
+            top: 20px;
+            right: 24px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+            z-index: 10001;
+        }
+        .lightbox-close:hover {
+            background: rgba(255,255,255,0.2);
+            transform: scale(1.05);
+        }
+        .lightbox-info {
+            position: fixed;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            z-index: 10001;
+        }
+        .lightbox-info .lightbox-title {
+            color: #fff;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .zoomable-thumbnail {
+            cursor: zoom-in;
+            position: relative;
+        }
+        .zoomable-thumbnail::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: rgba(0,0,0,0.2);
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+        .zoomable-thumbnail:hover::after {
+            opacity: 1;
         }
     </style>
     @endpush
@@ -527,6 +724,16 @@
                 </div>
             </div>
 
+            <!-- Per Page Selector -->
+            <select name="per_page" onchange="document.getElementById('pengumumanFilterForm').submit()"
+                style="height:44px;padding:0 12px;border:1px solid #e5e7eb;border-radius:12px;background:#f3f0ff;font-size:0.85rem;font-weight:600;color:#4b5563;cursor:pointer;outline:none;transition:all .2s;">
+                @foreach([5, 10, 20, 50] as $opt)
+                    <option value="{{ $opt }}" {{ request('per_page', 10) == $opt ? 'selected' : '' }}>
+                        {{ $opt }} / hal
+                    </option>
+                @endforeach
+            </select>
+
             <!-- Buat Post Button -->
             <a href="{{ route('manajemenmahasiswa.pengumuman.create') }}" class="btn-buat-post">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -540,6 +747,7 @@
     </form>
 
     <!-- List Pengumuman -->
+    @php $authUser = Auth::user(); @endphp
     <div class="pengumuman-list">
         @forelse($pengumuman as $item)
             @php
@@ -548,10 +756,24 @@
                     return in_array(strtolower(pathinfo($file->nama_file ?? '', PATHINFO_EXTENSION)), ['jpg', 'jpeg', 'png', 'gif', 'webp']);
                 });
                 $thumbnailUrl = $images->first() ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($images->first()->path_file) : null;
+                $isPinnedGlobal   = (bool) $item->is_pinned;
+                $isPinnedPersonal = (bool) $item->is_personal_pinned;
+                $cardClass = 'pengumuman-card'
+                    . ($isPinnedGlobal   ? ' pinned-global'   : '')
+                    . ($isPinnedPersonal ? ' pinned-personal' : '');
+                $canPinGlobal = $authUser->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+                
+                $roles = $authUser->roles->pluck('name');
+                $isAdminOrKoor = $roles->intersect(['superadmin', 'admin', 'dosen_koordinator'])->isNotEmpty();
+                $canDelete = $authUser->id === $item->user_id || $isAdminOrKoor;
+                $canEdit = $authUser->id === $item->user_id || $isAdminOrKoor;
             @endphp
-            <a href="{{ route('manajemenmahasiswa.pengumuman.show', $item->id) }}" class="pengumuman-card">
+            <div class="{{ $cardClass }}"
+                 data-href="{{ route('manajemenmahasiswa.pengumuman.show', $item->id) }}"
+                 onclick="navigatePengumuman(event, this)">
                 <div class="pengumuman-card-body">
-                    <div class="pengumuman-thumbnail">
+                    <div class="pengumuman-thumbnail {{ $thumbnailUrl ? 'zoomable-thumbnail' : '' }}" 
+                         @if($thumbnailUrl) onclick="openLightbox(event, '{{ $thumbnailUrl }}', '{{ addslashes($item->judul) }}')" @endif>
                         @if($thumbnailUrl)
                             <img src="{{ $thumbnailUrl }}" alt="Thumbnail">
                         @else
@@ -571,12 +793,28 @@
                             <h6>{{ $item->judul }}</h6>
                         </div>
                         <p class="pengumuman-card-desc">
-                            {{ Str::limit(strip_tags($item->konten), 150) }}
+                            {{ Str::limit(html_entity_decode(strip_tags($item->konten)), 150) }}
                         </p>
                         <div class="pengumuman-card-tags">
+                            @if($isPinnedGlobal)
+                                <span class="pin-badge pin-badge-global">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6h2v-6h5v-2l-2-2z"/></svg>
+                                    Pinned
+                                </span>
+                            @endif
+                            @if($isPinnedPersonal)
+                                <span class="pin-badge pin-badge-personal">
+                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+                                    Pin Pribadi
+                                </span>
+                            @endif
                             @if($item->status_publish && $item->status_publish !== 'published')
                                 <span class="pengumuman-card-badge badge-{{ $item->status_publish }}">
-                                    {{ ucfirst($item->status_publish) }}
+                                    @if($item->status_publish === 'pending_review')
+                                        ⏳ Menunggu Verifikasi
+                                    @else
+                                        {{ ucfirst($item->status_publish) }}
+                                    @endif
                                 </span>
                             @endif
                             @if($item->kategori)
@@ -591,11 +829,69 @@
                             </span>
                         </div>
                     </div>
-                    <div class="pengumuman-card-action">
-                        <span class="pengumuman-read-more">Baca Selengkapnya</span>
+                    <div class="pengumuman-card-action" onclick="event.stopPropagation()">
+                        <div class="action-buttons mb-3">
+                            {{-- Edit (admin only) --}}
+                            @if($canEdit)
+                                <a href="{{ route('manajemenmahasiswa.pengumuman.edit', $item->id) }}" class="btn-action-icon btn-edit" title="Edit Pengumuman">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                                    </svg>
+                                </a>
+                            @endif
+                            
+                            {{-- Delete (admin only) --}}
+                            @if($canDelete)
+                                <form method="POST" action="{{ route('manajemenmahasiswa.pengumuman.remove', $item->id) }}" onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengumuman ini?');" style="margin:0;">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="btn-action-icon btn-delete" title="Hapus Pengumuman">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <polyline points="3 6 5 6 21 6"></polyline>
+                                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                                            <line x1="10" y1="11" x2="10" y2="17"></line>
+                                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                                        </svg>
+                                    </button>
+                                </form>
+                            @endif
+
+                            {{-- Pin Pribadi --}}
+                            <form method="POST" action="{{ route('manajemenmahasiswa.pengumuman.personal_pin', $item->id) }}" style="margin:0;">
+                                @csrf
+                                <button type="submit"
+                                    class="btn-action-icon {{ $isPinnedPersonal ? 'active-personal' : '' }}"
+                                    title="{{ $isPinnedPersonal ? 'Unpin Pribadi' : 'Pin Pribadi' }}">
+                                    <svg width="15" height="15" viewBox="0 0 24 24" fill="{{ $isPinnedPersonal ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
+                                    </svg>
+                                </button>
+                            </form>
+                            
+                            {{-- Pin Global (admin only) --}}
+                            @if($canPinGlobal)
+                                <form method="POST" action="{{ route('manajemenmahasiswa.pengumuman.pin', $item->id) }}" style="margin:0;">
+                                    @csrf @method('PATCH')
+                                    <button type="submit"
+                                        class="btn-action-icon {{ $isPinnedGlobal ? 'active-global' : '' }}"
+                                        title="{{ $isPinnedGlobal ? 'Unpin Global' : 'Pin Global (semua user)' }}">
+                                        <svg width="15" height="15" viewBox="0 0 24 24" fill="{{ $isPinnedGlobal ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6h2v-6h5v-2l-2-2z"/>
+                                        </svg>
+                                    </button>
+                                </form>
+                            @endif
+                        </div>
+                        <a href="{{ route('manajemenmahasiswa.pengumuman.show', $item->id) }}" class="pengumuman-read-more">
+                            Baca Selengkapnya
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="5" y1="12" x2="19" y2="12"></line>
+                                <polyline points="12 5 19 12 12 19"></polyline>
+                            </svg>
+                        </a>
                     </div>
                 </div>
-            </a>
+            </div>
         @empty
             <div class="pengumuman-empty">
                 <div class="empty-icon">
@@ -612,48 +908,69 @@
     </div>
 
     <!-- Pagination -->
-    @if($pengumuman->hasPages())
-        <div class="pengumuman-pagination">
-            @if($pengumuman->onFirstPage())
-                <span class="pagination-btn disabled">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m15 18-6-6 6-6" />
-                    </svg>
-                </span>
-            @else
-                <a href="{{ $pengumuman->previousPageUrl() }}" class="pagination-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m15 18-6-6 6-6" />
-                    </svg>
-                </a>
-            @endif
-
-            <span class="pagination-info">
-                Halaman {{ $pengumuman->currentPage() }} dari {{ $pengumuman->lastPage() }}
+    @if($pengumuman->total() > 0)
+        <div class="mt-4 mb-2">
+            <span class="pagination-info-text">
+                Menampilkan {{ $pengumuman->firstItem() }}–{{ $pengumuman->lastItem() }}
+                dari {{ $pengumuman->total() }} pengumuman
             </span>
-
-            @if($pengumuman->hasMorePages())
-                <a href="{{ $pengumuman->nextPageUrl() }}" class="pagination-btn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m9 18 6-6-6-6" />
-                    </svg>
-                </a>
-            @else
-                <span class="pagination-btn disabled">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="m9 18 6-6-6-6" />
-                    </svg>
-                </span>
-            @endif
+        </div>
+    @endif
+    @if($pengumuman->hasPages())
+        <div class="d-flex justify-content-center mt-2 mb-4 pagination-container">
+            {{ $pengumuman->appends(request()->query())->links('pagination::bootstrap-5') }}
         </div>
     @endif
 
+    <!-- Lightbox Modal -->
+    <div class="lightbox-modal" id="lightboxModal">
+        <button class="lightbox-close" onclick="closeLightbox()" title="Tutup">&times;</button>
+        <div class="lightbox-content">
+            <img id="lightboxImage" src="" alt="">
+        </div>
+        <div class="lightbox-info">
+            <div class="lightbox-title" id="lightboxTitle"></div>
+        </div>
+    </div>
+
     @push('scripts')
     <script>
+        // Lightbox functionality
+        function openLightbox(event, src, title) {
+            event.stopPropagation(); // Prevent card click
+            document.getElementById('lightboxImage').src = src;
+            document.getElementById('lightboxTitle').textContent = title;
+            document.getElementById('lightboxModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightboxModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close on escape key
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('lightboxModal');
+            if (modal && modal.classList.contains('active') && e.key === 'Escape') {
+                closeLightbox();
+            }
+        });
+
+        // Close on clicking outside
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('lightboxModal');
+            if (modal && e.target === modal) {
+                closeLightbox();
+            }
+        });
+
+        // Navigate card on click, skip if user clicked on an interactive element
+        function navigatePengumuman(event, card) {
+            if (event.target.closest('form, button, a')) return;
+            window.location.href = card.dataset.href;
+        }
+
         // Filter dropdown toggle
         function toggleFilterMenu() {
             const menu = document.getElementById('filterMenu');

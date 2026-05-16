@@ -639,7 +639,7 @@
         </div>
 
         <div class="row g-3 mb-3">
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <label class="form-label-custom">Kategori <span class="required">*</span></label>
                 <div class="checkbox-card-group" id="kategoriGroup">
                     @foreach($kategoriList as $kategori)
@@ -655,7 +655,7 @@
                 </div>
                 <div class="checkbox-hint">Pilih maksimal 2 kategori</div>
             </div>
-            <div class="col-md-4" id="bidangFieldWrapper">
+            <div class="col-md-6" id="bidangFieldWrapper">
                 <label class="form-label-custom">Bidang <span class="required" id="bidangRequired">*</span></label>
                 <div class="checkbox-card-group" id="bidangGroup">
                     @foreach($bidangList as $bidang)
@@ -669,17 +669,6 @@
                 </div>
                 <div class="checkbox-hint">Pilih satu atau lebih bidang</div>
             </div>
-            <div class="col-md-4">
-                <label class="form-label-custom">Tahun</label>
-                <select name="tahun" class="form-select form-select-custom">
-                    <option value="">— Pilih Tahun —</option>
-                    @foreach($tahunList as $t)
-                        <option value="{{ $t }}" {{ old('tahun') == $t ? 'selected' : '' }}>
-                            {{ $t }}
-                        </option>
-                    @endforeach
-                </select>
-            </div>
         </div>
 
         <div class="mb-3">
@@ -688,14 +677,6 @@
                       placeholder="Jelaskan tujuan, sasaran, dan detail kegiatan secara lengkap..." required>{{ old('deskripsi') }}</textarea>
         </div>
 
-        <div class="mb-3">
-            <label class="form-label-custom">Status <span class="required">*</span></label>
-            <select name="status" class="form-select form-select-custom" required>
-                <option value="akan_datang" {{ old('status') == 'akan_datang' ? 'selected' : '' }}>🟡 Akan Datang</option>
-                <option value="berlangsung" {{ old('status') == 'berlangsung' ? 'selected' : '' }}>🔵 Berlangsung</option>
-                <option value="selesai" {{ old('status') == 'selesai' ? 'selected' : '' }}>🟢 Selesai</option>
-            </select>
-        </div>
     </div>
 
     <!-- Waktu & Lokasi -->
@@ -821,6 +802,9 @@
                 <div id="panitiaHiddenInputs"></div>
             </div>
             <div class="checkbox-hint">Pilih satu atau lebih mahasiswa sebagai panitia. Ketik nama untuk mencari.</div>
+            
+            {{-- Container for Jabatan Inputs --}}
+            <div id="panitiaRolesContainer" class="mt-3 d-flex flex-column gap-2"></div>
         </div>
     </div>
 
@@ -830,7 +814,7 @@
 
         <div class="row g-3 mb-3">
             <div class="col-md-6">
-                <label class="form-label-custom">Target Peserta</label>
+                <label class="form-label-custom">Peserta</label>
                 <input type="number" name="target_peserta" class="form-control form-control-custom"
                        placeholder="Jumlah peserta" value="{{ old('target_peserta') }}" min="1">
             </div>
@@ -849,7 +833,7 @@
         <div class="banner-upload-area" onclick="document.getElementById('bannerInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
             <p>Klik untuk upload banner kegiatan</p>
-            <small>Format: JPG, PNG, WebP • Maks: 5MB<br><span style="color: #4f46e5; font-weight: 500;">Rekomendasi: Resolusi 1280 x 720 (Rasio 16:9)</span></small>
+            <small>Format: JPG, PNG, WebP • Maks: 10MB<br><span style="color: #4f46e5; font-weight: 500;">Rekomendasi: Resolusi 1280 x 720 (Rasio 16:9)</span></small>
         </div>
         <input type="file" name="banner" id="bannerInput" accept="image/jpeg,image/png,image/webp"
                style="display: none;" onchange="previewBanner(this)">
@@ -863,7 +847,7 @@
         <div class="file-upload-area" id="fotoUploadArea" onclick="document.getElementById('fotoInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
             <p>Klik atau drag & drop foto ke sini</p>
-            <small>Format: JPG, PNG, WebP • Maks: 5MB per file</small>
+            <small>Format: JPG, PNG, WebP • Maks: 10MB per file</small>
         </div>
         <input type="file" name="foto_kegiatan[]" id="fotoInput" accept="image/jpeg,image/png,image/webp"
                multiple style="display: none;" onchange="handleFotoSelect(this)">
@@ -1185,13 +1169,37 @@ function renderPanitiaChips() {
 
 function updatePanitiaHiddenInputs() {
     const container = document.getElementById('panitiaHiddenInputs');
+    const rolesContainer = document.getElementById('panitiaRolesContainer');
+    
     container.innerHTML = '';
+    
+    // Simpan nilai peran yang sudah diinput sebelum me-render ulang
+    const existingRoles = {};
+    rolesContainer.querySelectorAll('input[type="text"]').forEach(input => {
+        existingRoles[input.dataset.id] = input.value;
+    });
+    
+    rolesContainer.innerHTML = '';
+
     Object.keys(selectedPanitia).forEach(id => {
+        // Hidden input untuk ID panitia
         const input = document.createElement('input');
         input.type  = 'hidden';
         input.name  = 'panitia_ids[]';
         input.value = id;
         container.appendChild(input);
+        
+        // Input untuk Jabatan/Peran
+        const name = selectedPanitia[id];
+        const roleDiv = document.createElement('div');
+        roleDiv.className = 'd-flex align-items-center gap-3 p-2 border rounded bg-light';
+        roleDiv.innerHTML = `
+            <div style="flex: 1; font-size: 13px; font-weight: 600; color: #374151;">${name}</div>
+            <div style="flex: 2;">
+                <input type="text" name="panitia_peran[${id}]" data-id="${id}" class="form-control form-control-sm" placeholder="Masukkan Jabatan (misal: Sekretaris, Bendahara, dll)" value="${existingRoles[id] || ''}">
+            </div>
+        `;
+        rolesContainer.appendChild(roleDiv);
     });
 }
 

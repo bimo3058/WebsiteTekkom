@@ -30,9 +30,21 @@ class KegiatanController extends Controller
     {
         $bidangList       = Bidang::orderBy('nama_bidang')->get();
         $kategoriList     = KategoriKegiatan::orderBy('nama_kategori')->get();
-        $tahunList        = range(date('Y') + 1, 2008);
+        
+        $tahunList = Kegiatan::select('tahun')
+            ->whereNotNull('tahun')
+            ->where('status', Kegiatan::STATUS_SELESAI)
+            ->distinct()
+            ->orderBy('tahun', 'desc')
+            ->pluck('tahun')
+            ->toArray();
+            
+        if (empty($tahunList)) {
+            $tahunList = [date('Y')];
+        }
 
         $query = Kegiatan::with(['bidang', 'bidangs', 'kategoriKegiatan', 'kategoris', 'ketuaPelaksana.user', 'dosenPendamping.user'])
+            ->where('status', Kegiatan::STATUS_SELESAI)
             ->orderBy('tanggal_mulai', 'desc');
 
         // Filter by bidang or prodi
@@ -85,7 +97,7 @@ class KegiatanController extends Controller
             'ketuaPelaksana.user',
             'dosenPendamping.user',
             'panitia.user',
-        ])->findOrFail($id);
+        ])->where('status', Kegiatan::STATUS_SELESAI)->findOrFail($id);
 
         // Cek apakah user adalah admin/pengurus (untuk tombol Edit/Hapus)
         $user  = Auth::user();
@@ -134,19 +146,22 @@ class KegiatanController extends Controller
             'tanggal_selesai'     => 'nullable|date|after_or_equal:tanggal_mulai',
             'jam_selesai'         => 'nullable|date_format:H:i',
             'lokasi'              => 'nullable|string|max:255',
-            'banner'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'banner'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
             'anggaran'            => 'nullable|numeric|min:0|max:9999999999999',
             'ketua_pelaksana_id'  => 'nullable|exists:students,id',
             'dosen_pendamping_id' => 'nullable|exists:lecturers,id',
             'panitia_ids'         => 'nullable|array',
             'panitia_ids.*'       => 'exists:students,id',
+            'panitia_peran'       => 'nullable|array',
+            'panitia_peran.*'     => 'nullable|string|max:255',
             'target_peserta'      => 'nullable|integer|min:1',
-            'status'              => 'required|in:akan_datang,berlangsung,selesai',
             'foto_kegiatan'       => 'nullable|array|max:10',
-            'foto_kegiatan.*'     => 'image|mimes:jpg,jpeg,png,webp|max:5120',
+            'foto_kegiatan.*'     => 'image|mimes:jpg,jpeg,png,webp|max:10240',
             'dokumen_kegiatan'    => 'nullable|array|max:10',
             'dokumen_kegiatan.*'  => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
         ]);
+
+        $validated['status'] = 'selesai';
 
         // Handle banner upload
         if ($request->hasFile('banner')) {
@@ -165,18 +180,24 @@ class KegiatanController extends Controller
         $kategoriIds = $validated['kategori_kegiatan_id'];
         $bidangIds = $validated['bidang_id'] ?? [];
         $panitiaIds = $validated['panitia_ids'] ?? [];
+        $panitiaPeran = $request->panitia_peran ?? [];
+        $panitiaSyncData = [];
+        foreach ($panitiaIds as $id) {
+            $panitiaSyncData[$id] = ['peran' => $panitiaPeran[$id] ?? null];
+        }
+
         $validated['kategori_kegiatan_id'] = $kategoriIds[0] ?? null;
         $validated['bidang_id'] = $bidangIds[0] ?? null;
 
         // Remove non-kegiatan fields before creating
-        unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan'], $validated['panitia_ids']);
+        unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan'], $validated['panitia_ids'], $validated['panitia_peran']);
 
         $kegiatan = Kegiatan::create($validated);
 
         // Sync pivot tables
         $kegiatan->kategoris()->sync($kategoriIds);
         $kegiatan->bidangs()->sync($bidangIds);
-        $kegiatan->panitia()->sync($panitiaIds);
+        $kegiatan->panitia()->sync($panitiaSyncData);
 
         // Handle foto uploads
         $this->handleFileUploads($request, $kegiatan);
@@ -191,7 +212,9 @@ class KegiatanController extends Controller
      */
     public function edit($id)
     {
-        $kegiatan         = Kegiatan::with(['repoMulmed', 'kategoris', 'bidangs', 'panitia'])->findOrFail($id);
+        $kegiatan         = Kegiatan::with(['repoMulmed', 'kategoris', 'bidangs', 'panitia.user'])
+            ->where('status', Kegiatan::STATUS_SELESAI)
+            ->findOrFail($id);
         $bidangList       = Bidang::orderBy('nama_bidang')->get();
         $kategoriList     = KategoriKegiatan::orderBy('nama_kategori')->get();
         $tahunList        = range(date('Y') + 1, 2008);
@@ -213,7 +236,7 @@ class KegiatanController extends Controller
      */
     public function update(Request $request, $id)
     {
-        $kegiatan = Kegiatan::findOrFail($id);
+        $kegiatan = Kegiatan::where('status', Kegiatan::STATUS_SELESAI)->findOrFail($id);
 
         // Check if all selected kategori are "Kegiatan Prodi" (bidang not needed)
         $validated = $request->validate([
@@ -229,21 +252,24 @@ class KegiatanController extends Controller
             'tanggal_selesai'     => 'nullable|date|after_or_equal:tanggal_mulai',
             'jam_selesai'         => 'nullable|date_format:H:i',
             'lokasi'              => 'nullable|string|max:255',
-            'banner'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:5120',
+            'banner'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
             'anggaran'            => 'nullable|numeric|min:0|max:9999999999999',
             'ketua_pelaksana_id'  => 'nullable|exists:students,id',
             'dosen_pendamping_id' => 'nullable|exists:lecturers,id',
             'panitia_ids'         => 'nullable|array',
             'panitia_ids.*'       => 'exists:students,id',
+            'panitia_peran'       => 'nullable|array',
+            'panitia_peran.*'     => 'nullable|string|max:255',
             'target_peserta'      => 'nullable|integer|min:1',
-            'status'              => 'required|in:akan_datang,berlangsung,selesai',
             'foto_kegiatan'       => 'nullable|array|max:10',
-            'foto_kegiatan.*'     => 'image|mimes:jpg,jpeg,png,webp|max:5120',
+            'foto_kegiatan.*'     => 'image|mimes:jpg,jpeg,png,webp|max:10240',
             'dokumen_kegiatan'    => 'nullable|array|max:10',
             'dokumen_kegiatan.*'  => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
             'hapus_file'          => 'nullable|array',
             'hapus_file.*'        => 'integer|exists:mk_repo_mulmed,id',
         ]);
+
+        $validated['status'] = 'selesai';
 
         // Handle banner upload
         if ($request->hasFile('banner')) {
@@ -275,24 +301,30 @@ class KegiatanController extends Controller
         $kategoriIds = $validated['kategori_kegiatan_id'];
         $bidangIds = $validated['bidang_id'] ?? [];
         $panitiaIds = $validated['panitia_ids'] ?? [];
+        $panitiaPeran = $request->panitia_peran ?? [];
+        $panitiaSyncData = [];
+        foreach ($panitiaIds as $id) {
+            $panitiaSyncData[$id] = ['peran' => $panitiaPeran[$id] ?? null];
+        }
+
         $validated['kategori_kegiatan_id'] = $kategoriIds[0] ?? null;
         $validated['bidang_id'] = $bidangIds[0] ?? null;
 
         // Remove non-kegiatan fields before updating
-        unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan'], $validated['hapus_file'], $validated['panitia_ids']);
+        unset($validated['foto_kegiatan'], $validated['dokumen_kegiatan'], $validated['hapus_file'], $validated['panitia_ids'], $validated['panitia_peran']);
 
         $kegiatan->update($validated);
 
         // Sync pivot tables
         $kegiatan->kategoris()->sync($kategoriIds);
         $kegiatan->bidangs()->sync($bidangIds);
-        $kegiatan->panitia()->sync($panitiaIds);
+        $kegiatan->panitia()->sync($panitiaSyncData);
 
         // Handle new file uploads
         $this->handleFileUploads($request, $kegiatan);
 
         return redirect()
-            ->route('manajemenmahasiswa.kegiatan.show', $id)
+            ->route('manajemenmahasiswa.kegiatan.index')
             ->with('success', 'Kegiatan berhasil diperbarui.');
     }
 
@@ -301,7 +333,9 @@ class KegiatanController extends Controller
      */
     public function destroy($id)
     {
-        $kegiatan = Kegiatan::with('repoMulmed')->findOrFail($id);
+        $kegiatan = Kegiatan::with('repoMulmed')
+            ->where('status', Kegiatan::STATUS_SELESAI)
+            ->findOrFail($id);
 
         if ($kegiatan->banner) {
             $this->supabase->delete($kegiatan->banner);

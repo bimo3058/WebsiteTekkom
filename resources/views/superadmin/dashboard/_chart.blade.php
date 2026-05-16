@@ -67,7 +67,7 @@
 <div style="width: 100%; min-width: 0; background:#fff; border:1px solid var(--c-border); border-radius:14px; margin-bottom:20px; box-shadow:var(--shadow-card); overflow:hidden;">
 
     {{-- ── Header ─────────────────────────────────────────────────────── --}}
-    <div style="display:flex; align-items:flex-start; justify-content:space-between; padding:16px 20px 14px; border-bottom:1px solid var(--c-border); flex-wrap:wrap; gap:12px;">
+    <div class="chart-header" style="display:flex; align-items:flex-start; justify-content:space-between; padding:16px 20px 14px; border-bottom:1px solid var(--c-border); flex-wrap:wrap; gap:12px;">
         <div>
             <h3 style="font-size:13px; font-weight:700; color:var(--c-fg); margin-bottom:2px;">Riwayat Akses Sistem</h3>
             <p style="font-size:11px; color:var(--c-fg-muted);">
@@ -76,7 +76,7 @@
         </div>
 
         {{-- Summary stats --}}
-        <div style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
+        <div class="chart-stats" style="display:flex; gap:14px; align-items:center; flex-wrap:wrap;">
 
             {{-- Total login 30 hari --}}
             <div style="text-align:right;">
@@ -87,7 +87,7 @@
                 </p>
             </div>
 
-            <div style="width:1px; height:28px; background:var(--c-border);"></div>
+            <div class="chart-stat-divider" style="width:1px; height:28px; background:var(--c-border);"></div>
 
             {{-- Unique users --}}
             <div style="text-align:right;">
@@ -97,7 +97,7 @@
                 </p>
             </div>
 
-            <div style="width:1px; height:28px; background:var(--c-border);"></div>
+            <div class="chart-stat-divider" style="width:1px; height:28px; background:var(--c-border);"></div>
 
             {{-- Peak --}}
             <div style="text-align:right;">
@@ -109,7 +109,7 @@
                 </p>
             </div>
 
-            <div style="width:1px; height:28px; background:var(--c-border);"></div>
+            <div class="chart-stat-divider" style="width:1px; height:28px; background:var(--c-border);"></div>
 
             {{-- Hari ini + perubahan dari kemarin --}}
             <div style="text-align:right;">
@@ -128,6 +128,26 @@
 
         </div>
     </div>
+
+    <style>
+        @media (max-width: 767px) {
+            /* Stack header secara vertikal di mobile */
+            .chart-header { flex-direction: column !important; gap: 10px !important; padding: 12px 14px !important; }
+            /* Stats: tampilkan sebagai 2x2 grid */
+            .chart-stats {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr !important;
+                gap: 10px !important;
+                width: 100%;
+            }
+            /* Sembunyikan divider vertikal */
+            .chart-stat-divider { display: none !important; }
+            /* Rata kiri di mobile */
+            .chart-stats > div { text-align: left !important; }
+            /* Nilai angka lebih kecil di mobile */
+            .chart-stats p[style*="font-size:18px"] { font-size: 16px !important; }
+        }
+    </style>
 
     {{-- ── Chart ───────────────────────────────────────────────────────── --}}
     <div style="padding:16px 20px 8px;">
@@ -159,10 +179,14 @@
     </div>
 </div>
 
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-document.addEventListener("DOMContentLoaded", function () {
-    const ctx = document.getElementById('loginHistoryChart').getContext('2d');
+(function () {
+    var canvas = document.getElementById('loginHistoryChart');
+
+    function initChart() {
+        if (!window.Chart || !canvas) return;
+        var ctx = canvas.getContext('2d');
 
     // Gradient fill
     const gradPrimary = ctx.createLinearGradient(0, 0, 0, 210);
@@ -258,5 +282,25 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         }
     });
-});
+    }
+
+    // Init hanya saat canvas masuk viewport (Intersection Observer)
+    if ('IntersectionObserver' in window) {
+        new IntersectionObserver(function (entries, observer) {
+            if (entries[0].isIntersecting) {
+                observer.disconnect();
+                // Chart.js mungkin belum selesai load karena defer — tunggu sebentar
+                if (window.Chart) {
+                    initChart();
+                } else {
+                    document.querySelector('script[src*="chart.js"]')
+                        .addEventListener('load', initChart);
+                }
+            }
+        }, { threshold: 0.1 }).observe(canvas);
+    } else {
+        // Fallback untuk browser lama
+        window.addEventListener('load', initChart);
+    }
+}());
 </script>

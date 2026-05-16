@@ -76,7 +76,7 @@
         */
 
         // Semua role dari DB, sudah di-eager-load di controller via:
-        // $user->load(['roles', 'directPermissions'])
+        // $user->load(['roles', 'permissions'])
         // $roles = \App\Models\Role::orderBy('name')->get() → dikirim sebagai $roles
 
         // Role aktif user saat ini sebagai array of NAME (untuk Alpine.js initial state)
@@ -341,13 +341,7 @@
                                     @foreach($perms as $perm)
                                         <label style="display:flex;align-items:center;gap:8px;cursor:{{ $mod->is_active ? 'pointer' : 'not-allowed' }};">
                                             <input type="checkbox" name="permissions[]" value="{{ $perm->name }}" 
-                                                {{--
-                                                | FIX 9: Cek apakah permission ini ada di directPermissions user.
-                                                | $user->directPermissions sudah di-load di controller via
-                                                | $user->load(['roles', 'directPermissions']).
-                                                | Gunakan ->contains() pada collection yang sudah ada (tanpa query baru).
-                                                --}}
-                                                {{ $user->directPermissions->contains('name', $perm->name) ? 'checked' : '' }}
+                                                    {{ $user->permissions->contains('name', $perm->name) ? 'checked' : '' }}
                                                 {{ !$mod->is_active ? 'disabled' : '' }}
                                                 style="width:15px; height:15px; border-radius:4px; border:1.5px solid #CBD5E1; cursor:inherit; accent-color:var(--c-primary);">
                                             <span style="font-size:12px;font-weight:600;color:#64748B;">{{ $perm->display_name ?? \Illuminate\Support\Str::title(\Illuminate\Support\Str::after($perm->name, '.')) }}</span>

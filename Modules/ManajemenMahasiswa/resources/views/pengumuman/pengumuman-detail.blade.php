@@ -263,6 +263,145 @@
                 box-shadow: 0 4px 12px rgba(239, 68, 68, 0.2);
             }
 
+            .btn-pin-global {
+                background: #fef3c7;
+                color: #d97706;
+                border: 1px solid #fde68a;
+            }
+
+            .btn-pin-global:hover {
+                background: #fde68a;
+                box-shadow: 0 4px 12px rgba(217, 119, 6, 0.2);
+            }
+
+            .btn-pin-personal {
+                background: #dbeafe;
+                color: #2563eb;
+                border: 1px solid #bfdbfe;
+            }
+
+            .btn-pin-personal:hover {
+                background: #bfdbfe;
+                box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+            }
+
+            /* Pin status badge di detail */
+            .pin-status-badge {
+                display: inline-flex;
+                align-items: center;
+                gap: 6px;
+                padding: 6px 14px;
+                border-radius: 50px;
+                font-size: 0.82rem;
+                font-weight: 700;
+                letter-spacing: 0.02em;
+                text-transform: uppercase;
+            }
+
+            .pin-status-global {
+                background: #fef3c7;
+                color: #d97706;
+                border: 1px solid #fde68a;
+            }
+
+            .pin-status-personal {
+                background: #dbeafe;
+                color: #2563eb;
+                border: 1px solid #bfdbfe;
+            }
+
+            /* ── Lightbox Modal ── */
+            .lightbox-modal {
+                display: none;
+                position: fixed;
+                inset: 0;
+                z-index: 10000;
+                background: rgba(0, 0, 0, 0.92);
+                align-items: center;
+                justify-content: center;
+                animation: lightboxFadeIn 0.25s ease;
+            }
+            .lightbox-modal.active {
+                display: flex;
+            }
+            @keyframes lightboxFadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            .lightbox-content {
+                position: relative;
+                max-width: 90vw;
+                max-height: 85vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .lightbox-content img {
+                max-width: 90vw;
+                max-height: 82vh;
+                object-fit: contain;
+                border-radius: 8px;
+                box-shadow: 0 25px 60px rgba(0, 0, 0, 0.4);
+                animation: lightboxZoomIn 0.3s ease;
+            }
+            @keyframes lightboxZoomIn {
+                from { transform: scale(0.9); opacity: 0; }
+                to { transform: scale(1); opacity: 1; }
+            }
+            .lightbox-close {
+                position: fixed;
+                top: 20px;
+                right: 24px;
+                width: 44px;
+                height: 44px;
+                border-radius: 50%;
+                background: rgba(255,255,255,0.1);
+                backdrop-filter: blur(8px);
+                border: 1px solid rgba(255,255,255,0.15);
+                color: #fff;
+                font-size: 20px;
+                cursor: pointer;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                transition: all 0.2s;
+                z-index: 10001;
+            }
+            .lightbox-close:hover {
+                background: rgba(255,255,255,0.2);
+                transform: scale(1.05);
+            }
+            .lightbox-info {
+                position: fixed;
+                bottom: 24px;
+                left: 50%;
+                transform: translateX(-50%);
+                text-align: center;
+                z-index: 10001;
+            }
+            .lightbox-info .lightbox-title {
+                color: #fff;
+                font-size: 14px;
+                font-weight: 600;
+                margin-bottom: 4px;
+            }
+
+            .zoomable-thumbnail {
+                cursor: zoom-in;
+                position: relative;
+            }
+            .zoomable-thumbnail::after {
+                content: '';
+                position: absolute;
+                inset: 0;
+                background: rgba(0,0,0,0.2);
+                opacity: 0;
+                transition: opacity 0.2s ease;
+            }
+            .zoomable-thumbnail:hover::after {
+                opacity: 1;
+            }
+
             @media (max-width: 640px) {
                 .detail-card {
                     padding: 24px 20px;
@@ -320,11 +459,28 @@
         $isAdminOrKoor = $roles->intersect(['superadmin', 'admin', 'dosen_koordinator'])->isNotEmpty();
         $canDelete = $user->id === $pengumuman->user_id || $isAdminOrKoor;
         $canEdit = $user->id === $pengumuman->user_id || $isAdminOrKoor;
+        $canPinGlobal = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
     @endphp
 
     <div class="detail-card">
         <!-- Title -->
         <div class="detail-title">
+            @if($pengumuman->is_pinned || $isPersonalPinned)
+                <div class="d-flex justify-content-center gap-2 mb-3">
+                    @if($pengumuman->is_pinned)
+                        <span class="pin-status-badge pin-status-global">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6h2v-6h5v-2l-2-2z"/></svg>
+                            Pinned
+                        </span>
+                    @endif
+                    @if($isPersonalPinned)
+                        <span class="pin-status-badge pin-status-personal">
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/></svg>
+                            Pin Pribadi
+                        </span>
+                    @endif
+                </div>
+            @endif
             <h5>{{ $pengumuman->judul }}</h5>
         </div>
 
@@ -370,7 +526,7 @@
 
         <!-- Image Poster -->
         @if($posterUrl)
-            <div class="detail-image-wrapper">
+            <div class="detail-image-wrapper zoomable-thumbnail" onclick="openLightbox('{{ $posterUrl }}', '{{ addslashes($pengumuman->judul) }}')">
                 <img src="{{ $posterUrl }}" alt="{{ $pengumuman->judul }}">
             </div>
         @endif
@@ -428,34 +584,76 @@
                 </svg>
                 Kembali
             </a>
-            @if($canEdit)
-                <a href="{{ route('manajemenmahasiswa.pengumuman.edit', $pengumuman->id) }}" class="btn-action btn-edit">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+
+            {{-- Pin Pribadi --}}
+            <form action="{{ route('manajemenmahasiswa.pengumuman.personal_pin', $pengumuman->id) }}" method="POST" style="margin:0;">
+                @csrf
+                <button type="submit" class="btn-action btn-pin-personal">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="{{ $isPersonalPinned ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M17 3H7c-1.1 0-2 .9-2 2v16l7-3 7 3V5c0-1.1-.9-2-2-2z"/>
                     </svg>
-                    Edit
-                </a>
-            @endif
-            @if($canDelete)
-                <form action="{{ route('manajemenmahasiswa.pengumuman.remove', $pengumuman->id) }}" method="POST"
-                    onsubmit="return confirm('Apakah Anda yakin ingin menghapus pengumuman ini?');" style="margin: 0;">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn-action btn-delete">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="3 6 5 6 21 6"></polyline>
-                            <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                            <line x1="10" y1="11" x2="10" y2="17"></line>
-                            <line x1="14" y1="11" x2="14" y2="17"></line>
+                    {{ $isPersonalPinned ? 'Unpin Pribadi' : 'Pin Pribadi' }}
+                </button>
+            </form>
+
+            {{-- Pin Global (admin only) --}}
+            @if($canPinGlobal)
+                <form action="{{ route('manajemenmahasiswa.pengumuman.pin', $pengumuman->id) }}" method="POST" style="margin:0;">
+                    @csrf @method('PATCH')
+                    <button type="submit" class="btn-action btn-pin-global">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="{{ $pengumuman->is_pinned ? 'currentColor' : 'none' }}" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M16 12V4h1V2H7v2h1v8l-2 2v2h5v6h2v-6h5v-2l-2-2z"/>
                         </svg>
-                        Hapus
+                        {{ $pengumuman->is_pinned ? 'Unpin Global' : 'Pin Global' }}
                     </button>
                 </form>
             @endif
+
         </div>
     </div>
+
+    <!-- Lightbox Modal -->
+    <div class="lightbox-modal" id="lightboxModal">
+        <button class="lightbox-close" onclick="closeLightbox()" title="Tutup">&times;</button>
+        <div class="lightbox-content">
+            <img id="lightboxImage" src="" alt="">
+        </div>
+        <div class="lightbox-info">
+            <div class="lightbox-title" id="lightboxTitle"></div>
+        </div>
+    </div>
+
+    @push('scripts')
+    <script>
+        // Lightbox functionality
+        function openLightbox(src, title) {
+            document.getElementById('lightboxImage').src = src;
+            document.getElementById('lightboxTitle').textContent = title;
+            document.getElementById('lightboxModal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeLightbox() {
+            document.getElementById('lightboxModal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+
+        // Close on escape key
+        document.addEventListener('keydown', function(e) {
+            const modal = document.getElementById('lightboxModal');
+            if (modal && modal.classList.contains('active') && e.key === 'Escape') {
+                closeLightbox();
+            }
+        });
+
+        // Close on clicking outside
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('lightboxModal');
+            if (modal && e.target === modal) {
+                closeLightbox();
+            }
+        });
+    </script>
+    @endpush
 
 </x-manajemenmahasiswa::layouts.admin>

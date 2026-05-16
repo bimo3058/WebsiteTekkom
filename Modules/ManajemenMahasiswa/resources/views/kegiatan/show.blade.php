@@ -79,15 +79,6 @@
         background: #eef2ff;
         color: #4f46e5;
     }
-    .badge-status {
-        font-size: 11px;
-        font-weight: 700;
-        padding: 4px 12px;
-        border-radius: 20px;
-    }
-    .badge-status.akan_datang { background: #fef3c7; color: #d97706; }
-    .badge-status.berlangsung { background: #dbeafe; color: #2563eb; }
-    .badge-status.selesai { background: #dcfce7; color: #16a34a; }
     .badge-kategori {
         font-size: 11px;
         font-weight: 700;
@@ -525,13 +516,20 @@
 </div>
 
 <!-- Banner -->
-<div class="detail-banner">
-    @if($kegiatan->banner)
-        <img src="{{ $kegiatan->banner_url }}" alt="{{ $kegiatan->judul }}">
-    @else
-        <span class="placeholder-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></span>
-    @endif
+@if($kegiatan->banner)
+<div style="position:relative;width:100%;max-height:340px;border-radius:18px;overflow:hidden;margin-bottom:28px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.15);cursor:pointer;transition:transform 0.2s;" 
+     onclick="openBannerLightbox()"
+     onmouseover="this.style.transform='scale(1.005)'"
+     onmouseout="this.style.transform='scale(1)'">
+    <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 45%);z-index:1;transition:background 0.2s;" onmouseover="this.style.background='linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 50%)'" onmouseout="this.style.background='linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 45%)'"></div>
+    <img src="{{ $kegiatan->banner_url }}" alt="{{ $kegiatan->judul }}" style="width:100%;height:340px;object-fit:cover;display:block;">
+    <div style="position:absolute;bottom:24px;left:28px;z-index:2;display:flex;align-items:center;gap:12px;">
+        <span style="background:rgba(255,255,255,0.25);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.5px;border:1px solid rgba(255,255,255,0.4);text-shadow:0 1px 2px rgba(0,0,0,0.2);">
+            &#128247; Banner Kegiatan &bull; Klik untuk memperbesar
+        </span>
+    </div>
 </div>
+@endif
 
 <!-- Title & Badges -->
 <div class="detail-card">
@@ -553,9 +551,6 @@
         @elseif($kegiatan->kategoriKegiatan)
             <span class="badge-kategori">{{ $kegiatan->kategoriKegiatan->nama_kategori }}</span>
         @endif
-        @if($kegiatan->status)
-            <span class="badge-status {{ $kegiatan->status }}">{{ $kegiatan->status_label }}</span>
-        @endif
     </div>
 
     <!-- Title -->
@@ -566,7 +561,7 @@
         <div class="meta-item">
             <div class="meta-item-label">Tanggal Pelaksanaan</div>
             <div class="meta-item-value">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg> {{ $kegiatan->tanggal_mulai->translatedFormat('d F Y') }}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg> {{ $kegiatan->tanggal_mulai ? $kegiatan->tanggal_mulai->translatedFormat('d F Y') : 'Belum ditentukan' }}
                 @if($kegiatan->jam_mulai)
                     pukul {{ $kegiatan->jam_mulai_formatted }}
                 @endif
@@ -618,12 +613,16 @@
 
         @if($kegiatan->target_peserta)
         <div class="meta-item">
-            <div class="meta-item-label">Target Peserta</div>
+            <div class="meta-item-label">Peserta</div>
             <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg> {{ $kegiatan->target_peserta }} orang</div>
         </div>
         @endif
 
-        @if($kegiatan->anggaran)
+        @php
+            $userRoles = auth()->user()->roles->pluck('name');
+            $canViewRestricted = $userRoles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dosen_koordinator', 'dosen', 'pengurus_himpunan'])->isNotEmpty();
+        @endphp
+        @if($kegiatan->anggaran && $canViewRestricted)
         <div class="meta-item">
             <div class="meta-item-label">Anggaran</div>
             <div class="meta-item-value"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><line x1="12" y1="1" x2="12" y2="23"></line><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg> Rp {{ number_format($kegiatan->anggaran, 0, ',', '.') }}</div>
@@ -644,6 +643,9 @@
                 <span style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: #eef2ff; color: #4338ca; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #c7d2fe;">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     {{ $p->user->name ?? '-' }}
+                    @if($p->pivot->peran)
+                        <span style="font-weight: 700; color: #3730a3; margin-left: 2px;">- {{ $p->pivot->peran }}</span>
+                    @endif
                     <span style="font-size: 10px; color: #818cf8; font-weight: 400;">({{ $p->student_number }})</span>
                 </span>
             @endforeach
@@ -740,7 +742,7 @@
     @endif
 
     {{-- ─── Document Download Section ────────────────────────────────── --}}
-    @if($documents->count() > 0)
+    @if($documents->count() > 0 && isset($canViewRestricted) && $canViewRestricted)
     <div class="detail-card">
         <div class="gallery-header">
             <div class="detail-card-title" style="margin-bottom: 0;"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen & Laporan</div>
@@ -830,6 +832,20 @@
         </div>
     </div>
 </div>
+</div>
+@endif
+
+{{-- Lightbox Modal Banner --}}
+@if($kegiatan->banner)
+<div class="lightbox-modal" id="bannerLightboxModal">
+    <button class="lightbox-close" onclick="closeBannerLightbox()" title="Tutup">&#10005;</button>
+    <div class="lightbox-content">
+        <img src="{{ $kegiatan->banner_url }}" alt="{{ $kegiatan->judul }}">
+    </div>
+    <div class="lightbox-info">
+        <div class="lightbox-title">{{ $kegiatan->judul }}</div>
+    </div>
+</div>
 @endif
 
 {{-- ─── Lightbox JavaScript ──────────────────────────────────────────── --}}
@@ -879,20 +895,40 @@ function updateLightboxImage() {
     document.getElementById('lightboxCounter').textContent = `${currentImageIndex + 1} / ${galleryImages.length}`;
 }
 
+// Banner Lightbox
+function openBannerLightbox() {
+    document.getElementById('bannerLightboxModal')?.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeBannerLightbox() {
+    document.getElementById('bannerLightboxModal')?.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
 // Keyboard navigation
 document.addEventListener('keydown', function(e) {
     const modal = document.getElementById('lightboxModal');
-    if (!modal || !modal.classList.contains('active')) return;
+    if (modal && modal.classList.contains('active')) {
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') prevImage();
+        if (e.key === 'ArrowRight') nextImage();
+        return;
+    }
 
-    if (e.key === 'Escape') closeLightbox();
-    if (e.key === 'ArrowLeft') prevImage();
-    if (e.key === 'ArrowRight') nextImage();
+    const bannerModal = document.getElementById('bannerLightboxModal');
+    if (bannerModal && bannerModal.classList.contains('active')) {
+        if (e.key === 'Escape') closeBannerLightbox();
+    }
 });
 
 // Close lightbox on backdrop click
 document.addEventListener('click', function(e) {
     const modal = document.getElementById('lightboxModal');
     if (modal && e.target === modal) closeLightbox();
+
+    const bannerModal = document.getElementById('bannerLightboxModal');
+    if (bannerModal && e.target === bannerModal) closeBannerLightbox();
 });
 </script>
 

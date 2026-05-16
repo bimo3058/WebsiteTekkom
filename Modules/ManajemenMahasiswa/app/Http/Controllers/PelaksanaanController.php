@@ -1,0 +1,472 @@
+<?php
+
+namespace Modules\ManajemenMahasiswa\Http\Controllers;
+
+use Illuminate\Routing\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
+use App\Models\Student;
+use App\Models\Lecturer;
+use App\Services\SupabaseStorage;
+use Modules\ManajemenMahasiswa\Models\Kegiatan;
+use Modules\ManajemenMahasiswa\Models\Bidang;
+use Modules\ManajemenMahasiswa\Models\KategoriKegiatan;
+use Modules\ManajemenMahasiswa\Models\RepoMulmed;
+use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
+
+class PelaksanaanController extends Controller
+{
+    public function __construct(
+        private RepoMulmedService $repoMulmedService,
+        private SupabaseStorage $supabase
+    ) {}
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Index — daftar proker yang siap/sedang/sudah dilaksanakan
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function index(Request $request)
+    {
+        $bidangList = Bidang::orderBy('nama_bidang')->get();
+        $tahunList = Kegiatan::select('tahun')
+            ->whereNotNull('tahun')
+            ->distinct()
+            ->orderBy('tahun', 'desc')
+            ->pluck('tahun')
+            ->toArray();
+
+        if (empty($tahunList)) {
+            $tahunList = [date('Y')];
+        }
+
+        $user    = Auth::user();
+        $roles   = $user->roles->pluck('name');
+        $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'gpm'])->isNotEmpty();
+        $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan',
+                                         'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
+        $canManage = $isAdmin || $isPengurus;
+
+        $query = Kegiatan::with(['bidangs', 'kategoris', 'ketuaPelaksana.user'])
+            ->whereIn('status', [
+                Kegiatan::STATUS_DIAJUKAN,
+                Kegiatan::STATUS_DISETUJUI,
+                Kegiatan::STATUS_AKAN_DATANG,
+                Kegiatan::STATUS_BERLANGSUNG,
+                Kegiatan::STATUS_SELESAI,
+            ])
+            ->orderBy('tanggal_mulai', 'desc');
+
+        // Filter bidang
+        if ($request->filled('bidang') && $request->bidang !== 'semua') {
+            if ($request->bidang === 'prodi') {
+                $query->whereDoesntHave('bidangs');
+            } else {
+                $query->whereHas('bidangs', fn($q) => $q->where('mk_bidang.id', $request->bidang));
+            }
+        }
+
+        // Filter tahun
+        if ($request->filled('tahun') && $request->tahun !== 'semua') {
+            $query->where('tahun', $request->tahun);
+        }
+
+        // Search
+        if ($request->filled('search')) {
+            $query->where('judul', 'like', '%' . $request->search . '%');
+        }
+
+        $pelaksanaanList = $query->paginate(12);
+
+
+        return view('manajemenmahasiswa::pelaksanaan.index', compact(
+            'pelaksanaanList', 'bidangList', 'tahunList',
+            'isAdmin', 'isPengurus', 'canManage'
+        ));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Show — detail pelaksanaan
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function show($id)
+    {
+        $proker = Kegiatan::with([
+            'bidangs', 'kategoris',
+            'ketuaPelaksana.user', 'dosenPendamping.user',
+            'panitia.user', 'creator', 'disetujuiOleh',
+            'repoMulmed',
+        ])->whereIn('status', [
+            Kegiatan::STATUS_DIAJUKAN,
+            Kegiatan::STATUS_DISETUJUI,
+            Kegiatan::STATUS_AKAN_DATANG,
+            Kegiatan::STATUS_BERLANGSUNG,
+            Kegiatan::STATUS_SELESAI,
+        ])->findOrFail($id);
+
+        $user    = Auth::user();
+        $roles   = $user->roles->pluck('name');
+        $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'gpm'])->isNotEmpty();
+        $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan',
+                                         'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
+        $canManage = $isAdmin || $isPengurus;
+        $canViewRestricted = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm',
+                                                'dosen_koordinator', 'dosen', 'pengurus_himpunan',
+                                                'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang',
+                                                'ketua_unit', 'staff_himpunan'])->isNotEmpty();
+
+        $images    = $proker->repoMulmed ? $proker->repoMulmed->where('tipe_file', 'image') : collect();
+        $documents = $proker->repoMulmed ? $proker->repoMulmed->where('tipe_file', 'document') : collect();
+
+        return view('manajemenmahasiswa::pelaksanaan.show', compact(
+            'proker', 'isAdmin', 'isPengurus', 'canManage',
+            'canViewRestricted', 'images', 'documents'
+        ));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Edit — form edit data pelaksanaan
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function edit($id)
+    {
+        $proker = Kegiatan::with([
+            'bidangs', 'kategoris',
+            'ketuaPelaksana.user', 'dosenPendamping.user',
+            'panitia.user', 'creator',
+            'repoMulmed',
+        ])->whereIn('status', [
+            Kegiatan::STATUS_DIAJUKAN,
+            Kegiatan::STATUS_DISETUJUI,
+            Kegiatan::STATUS_AKAN_DATANG,
+            Kegiatan::STATUS_BERLANGSUNG,
+            Kegiatan::STATUS_SELESAI,
+        ])->findOrFail($id);
+
+        $user    = Auth::user();
+        $roles   = $user->roles->pluck('name');
+        $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'gpm'])->isNotEmpty();
+        $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan',
+                                         'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
+        $canManage = $isAdmin || $isPengurus;
+
+        if (!$canManage) {
+            abort(403, 'Akses ditolak.');
+        }
+
+        $bidangList   = Bidang::orderBy('nama_bidang')->get();
+        $kategoriList = KategoriKegiatan::orderBy('nama_kategori')->get();
+        $tahunList    = range(date('Y') + 1, 2020);
+        $mahasiswaList = Student::with('user')->get()->sortBy(fn($s) => $s->user->name ?? '');
+        $dosenList     = Lecturer::with('user')->get()->sortBy(fn($l) => $l->user->name ?? '');
+
+        $existingFoto    = $proker->repoMulmed->where('tipe_file', 'image');
+        $existingDokumen = $proker->repoMulmed->where('tipe_file', 'document');
+        $existingPanitia = $proker->panitia ?? collect();
+
+        $selectedKategoriIds = old('kategori_kegiatan_id', $proker->kategoris->pluck('id')->toArray());
+        $selectedBidangIds   = old('bidang_id', $proker->bidangs->pluck('id')->toArray());
+        $existingPanitiaIds  = old('panitia_ids', $existingPanitia->pluck('id')->toArray());
+
+        return view('manajemenmahasiswa::pelaksanaan.edit', compact(
+            'proker', 'bidangList', 'kategoriList', 'tahunList',
+            'mahasiswaList', 'dosenList',
+            'existingFoto', 'existingDokumen',
+            'existingPanitia', 'existingPanitiaIds',
+            'selectedKategoriIds', 'selectedBidangIds',
+            'isAdmin', 'isPengurus', 'canManage'
+        ));
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Update — simpan perubahan data pelaksanaan
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function update(Request $request, $id)
+    {
+        $proker = Kegiatan::whereIn('status', [
+            Kegiatan::STATUS_DIAJUKAN,
+            Kegiatan::STATUS_DISETUJUI,
+            Kegiatan::STATUS_AKAN_DATANG,
+            Kegiatan::STATUS_BERLANGSUNG,
+            Kegiatan::STATUS_SELESAI,
+        ])->findOrFail($id);
+
+        $validated = $request->validate([
+            'judul'                     => 'required|string|max:255',
+            'kategori_kegiatan_id'      => 'nullable|array|max:2',
+            'kategori_kegiatan_id.*'    => 'integer|exists:mk_kategori_kegiatan,id',
+            'bidang_id'                 => 'nullable|array',
+            'bidang_id.*'               => 'integer|exists:mk_bidang,id',
+            'deskripsi'                 => 'required|string',
+            'tanggal_mulai'             => 'required|date',
+            'tanggal_selesai'           => 'nullable|date|after_or_equal:tanggal_mulai',
+            'jam_mulai'                 => 'nullable|string',
+            'jam_selesai'               => 'nullable|string',
+            'lokasi'                    => 'nullable|string|max:255',
+            'target_peserta'            => 'nullable|integer|min:1',
+            'anggaran'                  => 'nullable|numeric|min:0',
+            'ketua_pelaksana_id'        => 'nullable|exists:students,id',
+            'dosen_pendamping_id'       => 'nullable|exists:lecturers,id',
+            'panitia_ids'               => 'nullable|array',
+            'panitia_ids.*'             => 'exists:students,id',
+            'panitia_peran'             => 'nullable|array',
+            'panitia_peran.*'           => 'nullable|string|max:255',
+            'banner'                    => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
+            'foto_kegiatan'             => 'nullable|array|max:10',
+            'foto_kegiatan.*'           => 'image|mimes:jpg,jpeg,png,webp|max:10240',
+            'dokumen_kegiatan'          => 'nullable|array|max:10',
+            'dokumen_kegiatan.*'        => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
+            'hapus_file'                => 'nullable|array',
+            'hapus_file.*'              => 'integer|exists:mk_repo_mulmed,id',
+        ]);
+
+        // Update data utama
+        $proker->update([
+            'judul'              => $validated['judul'],
+            'deskripsi'          => $validated['deskripsi'],
+            'tanggal_mulai'      => $validated['tanggal_mulai'],
+            'tanggal_selesai'    => $validated['tanggal_selesai'] ?? null,
+            'jam_mulai'          => $validated['jam_mulai'] ?? null,
+            'jam_selesai'        => $validated['jam_selesai'] ?? null,
+            'lokasi'             => $validated['lokasi'] ?? null,
+            'target_peserta'     => $validated['target_peserta'] ?? null,
+            'anggaran'           => $validated['anggaran'] ?? null,
+            'ketua_pelaksana_id' => $validated['ketua_pelaksana_id'] ?? null,
+            'dosen_pendamping_id'=> $validated['dosen_pendamping_id'] ?? null,
+            'realisasi_tanggal_mulai' => $validated['tanggal_mulai'],
+            'catatan_pelaksanaan' => $validated['deskripsi'],
+        ]);
+
+        // Set penanggung_jawab from ketua pelaksana name for backward compatibility
+        if (!empty($validated['ketua_pelaksana_id'])) {
+            $student = Student::with('user')->find($validated['ketua_pelaksana_id']);
+            $proker->update(['penanggung_jawab' => $student?->user?->name]);
+        } else {
+            $proker->update(['penanggung_jawab' => null]);
+        }
+
+        // Sync kategori & bidang
+        if (!empty($validated['kategori_kegiatan_id'])) {
+            $proker->kategoris()->sync($validated['kategori_kegiatan_id']);
+        }
+        if (!empty($validated['bidang_id'])) {
+            $proker->bidangs()->sync($validated['bidang_id']);
+        } else {
+            $proker->bidangs()->detach();
+        }
+
+        // Sync panitia
+        $panitiaIds = $validated['panitia_ids'] ?? [];
+        $panitiaPeran = $request->panitia_peran ?? [];
+        $panitiaSyncData = [];
+        foreach ($panitiaIds as $pid) {
+            $panitiaSyncData[$pid] = ['peran' => $panitiaPeran[$pid] ?? null];
+        }
+        $proker->panitia()->sync($panitiaSyncData);
+
+        // Upload banner
+        if ($request->hasFile('banner')) {
+            $file = $request->file('banner');
+            $this->repoMulmedService->upload($file, [
+                'kegiatan_id'       => $proker->id,
+                'judul_file'        => 'banner',
+                'visibility_status' => 'public',
+            ]);
+        }
+
+        // Handle file deletions
+        if ($request->filled('hapus_file')) {
+            foreach ($request->hapus_file as $fileId) {
+                $file = RepoMulmed::where('kegiatan_id', $proker->id)->find($fileId);
+                if ($file) {
+                    $this->repoMulmedService->deletePermanent($file->id);
+                }
+            }
+        }
+
+        $this->handleFileUploads($request, $proker);
+
+        return redirect()
+            ->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
+            ->with('success', 'Data pelaksanaan berhasil diperbarui.');
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Publish ke Arsip — pindahkan kegiatan ke subbab 3 (status = selesai)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function publishToArsip($id)
+    {
+        $proker = Kegiatan::whereIn('status', [
+            Kegiatan::STATUS_DIAJUKAN,
+            Kegiatan::STATUS_DISETUJUI,
+            Kegiatan::STATUS_AKAN_DATANG,
+            Kegiatan::STATUS_BERLANGSUNG,
+        ])->findOrFail($id);
+
+        $proker->update(['status' => Kegiatan::STATUS_SELESAI]);
+
+        return redirect()
+            ->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
+            ->with('success', 'Kegiatan berhasil diunggah ke Laporan & Arsip.');
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Realisasi — simpan data pelaksanaan aktual
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function storeRealisasi(Request $request, $id)
+    {
+        $proker = Kegiatan::whereIn('status', [
+            Kegiatan::STATUS_DISETUJUI,
+            Kegiatan::STATUS_BERLANGSUNG,
+        ])->findOrFail($id);
+
+        $validated = $request->validate([
+            'realisasi_tanggal_mulai'   => 'required|date',
+            'realisasi_tanggal_selesai' => 'nullable|date|after_or_equal:realisasi_tanggal_mulai',
+            'realisasi_lokasi'          => 'nullable|string|max:255',
+            'realisasi_peserta'         => 'nullable|integer|min:0',
+            'realisasi_anggaran'        => 'nullable|numeric|min:0|max:9999999999999',
+            'catatan_pelaksanaan'       => 'nullable|string',
+            'status_realisasi'          => 'required|in:berlangsung,selesai',
+            'foto_kegiatan'             => 'nullable|array|max:20',
+            'foto_kegiatan.*'           => 'image|mimes:jpg,jpeg,png,webp|max:10240',
+            'dokumen_kegiatan'          => 'nullable|array|max:10',
+            'dokumen_kegiatan.*'        => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
+        ]);
+
+        $proker->update([
+            'realisasi_tanggal_mulai'   => $validated['realisasi_tanggal_mulai'],
+            'realisasi_tanggal_selesai' => $validated['realisasi_tanggal_selesai'] ?? null,
+            'realisasi_lokasi'          => $validated['realisasi_lokasi'] ?? null,
+            'realisasi_peserta'         => $validated['realisasi_peserta'] ?? null,
+            'realisasi_anggaran'        => $validated['realisasi_anggaran'] ?? null,
+            'catatan_pelaksanaan'       => $validated['catatan_pelaksanaan'] ?? null,
+            'status'                    => $validated['status_realisasi'],
+        ]);
+
+        // Upload foto & dokumen
+        $this->handleFileUploads($request, $proker);
+
+        $msg = $validated['status_realisasi'] === 'selesai'
+            ? 'Kegiatan ditandai selesai! Data kini tersedia di halaman Laporan & Arsip.'
+            : 'Data realisasi berhasil disimpan. Status kegiatan: Berlangsung.';
+
+        return redirect()
+            ->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
+            ->with('success', $msg);
+    }
+
+    public function updateRealisasi(Request $request, $id)
+    {
+        $proker = Kegiatan::whereIn('status', [
+            Kegiatan::STATUS_BERLANGSUNG,
+            Kegiatan::STATUS_SELESAI,
+        ])->findOrFail($id);
+
+        $validated = $request->validate([
+            'realisasi_tanggal_mulai'   => 'required|date',
+            'realisasi_tanggal_selesai' => 'nullable|date|after_or_equal:realisasi_tanggal_mulai',
+            'realisasi_lokasi'          => 'nullable|string|max:255',
+            'realisasi_peserta'         => 'nullable|integer|min:0',
+            'realisasi_anggaran'        => 'nullable|numeric|min:0|max:9999999999999',
+            'catatan_pelaksanaan'       => 'nullable|string',
+            'status_realisasi'          => 'required|in:berlangsung,selesai',
+            'foto_kegiatan'             => 'nullable|array|max:20',
+            'foto_kegiatan.*'           => 'image|mimes:jpg,jpeg,png,webp|max:10240',
+            'dokumen_kegiatan'          => 'nullable|array|max:10',
+            'dokumen_kegiatan.*'        => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
+            'hapus_file'                => 'nullable|array',
+            'hapus_file.*'              => 'integer|exists:mk_repo_mulmed,id',
+        ]);
+
+        // Handle file deletions
+        if ($request->filled('hapus_file')) {
+            foreach ($request->hapus_file as $fileId) {
+                $file = RepoMulmed::where('kegiatan_id', $proker->id)->find($fileId);
+                if ($file) {
+                    $this->repoMulmedService->deletePermanent($file->id);
+                }
+            }
+        }
+
+        $proker->update([
+            'realisasi_tanggal_mulai'   => $validated['realisasi_tanggal_mulai'],
+            'realisasi_tanggal_selesai' => $validated['realisasi_tanggal_selesai'] ?? null,
+            'realisasi_lokasi'          => $validated['realisasi_lokasi'] ?? null,
+            'realisasi_peserta'         => $validated['realisasi_peserta'] ?? null,
+            'realisasi_anggaran'        => $validated['realisasi_anggaran'] ?? null,
+            'catatan_pelaksanaan'       => $validated['catatan_pelaksanaan'] ?? null,
+            'status'                    => $validated['status_realisasi'],
+        ]);
+
+        $this->handleFileUploads($request, $proker);
+
+        return redirect()
+            ->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
+            ->with('success', 'Data realisasi berhasil diperbarui.');
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Hapus — Hapus pelaksanaan kegiatan (termasuk foto/dokumen)
+    // ─────────────────────────────────────────────────────────────────────────
+
+    public function destroy($id)
+    {
+        $proker = Kegiatan::with('repoMulmed')->whereIn('status', [
+            Kegiatan::STATUS_DIAJUKAN,
+            Kegiatan::STATUS_DISETUJUI,
+            Kegiatan::STATUS_AKAN_DATANG,
+            Kegiatan::STATUS_BERLANGSUNG,
+            Kegiatan::STATUS_SELESAI,
+        ])->findOrFail($id);
+
+        if ($proker->banner) {
+            $this->supabase->delete($proker->banner);
+        }
+        if ($proker->surat_proker) {
+            $this->supabase->delete($proker->surat_proker);
+        }
+
+        // Hapus semua file foto & dokumen dari repo
+        if ($proker->repoMulmed) {
+            foreach ($proker->repoMulmed as $file) {
+                $this->repoMulmedService->deletePermanent($file->id);
+            }
+        }
+
+        $proker->delete();
+
+        return redirect()
+            ->route('manajemenmahasiswa.pelaksanaan.index')
+            ->with('success', 'Data pelaksanaan kegiatan berhasil dihapus.');
+    }
+
+    // ─────────────────────────────────────────────────────────────────────────
+    // Private Helpers
+    // ─────────────────────────────────────────────────────────────────────────
+
+    private function handleFileUploads(Request $request, Kegiatan $proker): void
+    {
+        if ($request->hasFile('foto_kegiatan')) {
+            foreach ($request->file('foto_kegiatan') as $foto) {
+                $this->repoMulmedService->upload($foto, [
+                    'kegiatan_id'       => $proker->id,
+                    'judul_file'        => pathinfo($foto->getClientOriginalName(), PATHINFO_FILENAME),
+                    'visibility_status' => 'public',
+                ]);
+            }
+        }
+
+        if ($request->hasFile('dokumen_kegiatan')) {
+            foreach ($request->file('dokumen_kegiatan') as $doc) {
+                $this->repoMulmedService->upload($doc, [
+                    'kegiatan_id'       => $proker->id,
+                    'judul_file'        => pathinfo($doc->getClientOriginalName(), PATHINFO_FILENAME),
+                    'visibility_status' => 'public',
+                ]);
+            }
+        }
+    }
+}

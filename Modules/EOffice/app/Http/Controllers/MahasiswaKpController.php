@@ -1,0 +1,431 @@
+<?php
+
+namespace Modules\EOffice\Http\Controllers;
+
+use App\Http\Controllers\Controller;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
+use Modules\EOffice\Models\KerjaPraktik;
+use Modules\EOffice\Models\KpDokumen;
+use Modules\EOffice\Models\KpMahasiswa;
+use Modules\EOffice\Models\KpPengumuman;
+use Modules\EOffice\Models\KpSeminar;
+
+class MahasiswaKpController extends Controller
+{
+    // =========================================================================
+    // DASHBOARD
+    // =========================================================================
+
+    /**
+     * Dashboard utama mahasiswa KP — menampilkan status stepper,
+     * ringkasan data, pengumuman, dan checklist fase saat ini.
+     */
+    public function dashboard()
+    {
+        $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
+
+        // Ambil KP aktif milik mahasiswa (paling baru)
+        $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)
+            ->with(['dokumen', 'seminar', 'penilaian', 'dosenPembimbing'])
+            ->latest()
+            ->first();
+
+        // Pengumuman terbaru dari Koordinator KP (hanya yang aktif)
+        $pengumuman = KpPengumuman::where('is_active', true)
+            ->orderByDesc('created_at')
+            ->take(5)
+            ->get();
+
+        // Hitung jumlah dokumen per status
+        $dokumenStats = [
+            'total'     => 0,
+            'menunggu'  => 0,
+            'disetujui' => 0,
+            'ditolak'   => 0,
+        ];
+
+        if ($kp) {
+            $dokumenStats['total']     = $kp->dokumen->count();
+            $dokumenStats['menunggu']  = $kp->dokumen->where('status_validasi', 'menunggu')->count();
+            $dokumenStats['disetujui'] = $kp->dokumen->where('status_validasi', 'disetujui')->count();
+            $dokumenStats['ditolak']   = $kp->dokumen->where('status_validasi', 'ditolak')->count();
+        }
+
+        return view('eoffice::kp.mahasiswa.dashboard', compact(
+            'mahasiswa', 'kp', 'pengumuman', 'dokumenStats'
+        ));
+    }
+
+    // =========================================================================
+    // INFORMASI — KEPERLUAN PERUSAHAAN (PRA KP)
+    // =========================================================================
+
+    /**
+     * Halaman informasi persuratan & keperluan perusahaan.
+     * Juga berfungsi sebagai tempat membuat proposal KP sederhana.
+     */
+    public function informasi()
+    {
+        $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
+        $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)->latest()->first();
+
+        // Ambil pengumuman bertipe 'pengumuman' atau 'timeline'
+        $infoPersuratan = KpPengumuman::where('is_active', true)
+            ->whereIn('tipe', ['pengumuman', 'timeline'])
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('eoffice::kp.mahasiswa.informasi', compact(
+            'mahasiswa', 'kp', 'infoPersuratan'
+        ));
+    }
+
+    // =========================================================================
+    // FAQ
+    // =========================================================================
+
+    /**
+     * Halaman FAQ — cara pinjam ruangan, alur KP, persyaratan, dll.
+     */
+    public function faq()
+    {
+        // Ambil FAQ dari database jika ada, atau gunakan data statis
+        $faqItems = KpPengumuman::where('is_active', true)
+            ->where('tipe', 'faq')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('eoffice::kp.mahasiswa.faq', compact('faqItems'));
+    }
+
+    // =========================================================================
+    // PENDAFTARAN KP (PRA KP)
+    // =========================================================================
+
+    /**
+     * Menampilkan form pendaftaran KP.
+     * Jika mahasiswa sudah punya KP aktif, redirect ke dashboard.
+     */
+    public function pendaftaran()
+    {
+        $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
+
+        // Cek apakah sudah punya KP yang belum selesai
+        $existingKp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)
+            ->whereNotIn('status_kp', ['Selesai'])
+            ->first();
+
+        return view('eoffice::kp.mahasiswa.pendaftaran', compact('mahasiswa', 'existingKp'));
+    }
+
+    /**
+     * Proses simpan pendaftaran KP baru.
+     * - Membuat record di eo_kerja_praktik
+     * - Upload transkrip ke storage
+     */
+    public function storePendaftaran(Request $request)
+    {
+        $validated = $request->validate([
+            'rencana_judul'   => 'required|string|max:255',
+            'rencana_tempat'  => 'required|string|max:255',
+            'tanggal_mulai'   => 'required|date',
+            'tanggal_selesai' => 'required|date|after:tanggal_mulai',
+            'transkrip'       => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
+        ]);
+
+        $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
+
+        // Cegah duplikasi: mahasiswa hanya boleh punya 1 KP aktif
+        $existingKp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)
+            ->whereNotIn('status_kp', ['Selesai'])
+            ->first();
+
+        if ($existingKp) {
+            return redirect()->back()->with('error', 'Anda sudah memiliki pendaftaran KP yang sedang berjalan.');
+        }
+
+        // Buat record KP baru
+        $kp = KerjaPraktik::create([
+            'nim'             => $mahasiswa->nim,
+            'mahasiswa_id'    => $mahasiswa->id,
+            'rencana_judul'   => $validated['rencana_judul'],
+            'rencana_tempat'  => $validated['rencana_tempat'],
+            'tanggal_mulai'   => $validated['tanggal_mulai'],
+            'tanggal_selesai' => $validated['tanggal_selesai'],
+            'status_kp'       => 'Pra-KP',
+            'is_acc_admin'    => false,
+        ]);
+
+        // Upload transkrip
+        $path = $request->file('transkrip')->store(
+            "kp/{$mahasiswa->nim}/transkrip", 'public'
+        );
+
+        KpDokumen::create([
+            'kp_id'           => $kp->id,
+            'jenis_dokumen'   => 'Transkrip',
+            'file_path'       => $path,
+            'status_validasi' => 'menunggu',
+        ]);
+
+        return redirect()
+            ->route('eoffice.kp.mahasiswa.dashboard')
+            ->with('success', 'Pendaftaran KP berhasil! Data Anda sedang direview oleh Koordinator.');
+    }
+
+    // =========================================================================
+    // DOKUMEN (SAAT KP)
+    // =========================================================================
+
+    /**
+     * Halaman manajemen dokumen KP.
+     * Menampilkan form pengisian judul/tempat fix, upload dokumen, download template.
+     */
+    public function dokumen()
+    {
+        $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
+
+        $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)
+            ->with(['dokumen'])
+            ->latest()
+            ->first();
+
+        if (!$kp) {
+            return redirect()
+                ->route('eoffice.kp.mahasiswa.pendaftaran')
+                ->with('error', 'Anda belum mendaftar KP. Silakan daftar terlebih dahulu.');
+        }
+
+        // Kelompokkan dokumen berdasarkan jenis
+        $dokumenByJenis = $kp->dokumen->groupBy('jenis_dokumen');
+
+        return view('eoffice::kp.mahasiswa.dokumen', compact('mahasiswa', 'kp', 'dokumenByJenis'));
+    }
+
+    /**
+     * Upload dokumen KP (bukti terima, laporan, makalah, kartu hijau, dll).
+     */
+    public function storeDokumen(Request $request)
+    {
+        $validated = $request->validate([
+            'jenis_dokumen' => 'required|string|in:Bukti Terima,Laporan,Makalah,Kartu Hijau,Nilai Lapangan,A2',
+            'file'          => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
+        ]);
+
+        $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
+        $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)
+            ->latest()
+            ->firstOrFail();
+
+        // Simpan file
+        $folder = strtolower(str_replace(' ', '_', $validated['jenis_dokumen']));
+        $path = $request->file('file')->store(
+            "kp/{$mahasiswa->nim}/{$folder}", 'public'
+        );
+
+        // Cek apakah sudah ada dokumen dengan jenis yang sama, update jika ya
+        $existing = KpDokumen::where('kp_id', $kp->id)
+            ->where('jenis_dokumen', $validated['jenis_dokumen'])
+            ->first();
+
+        if ($existing) {
+            // Hapus file lama
+            Storage::disk('public')->delete($existing->file_path);
+
+            // Gunakan update pada builder atau ID secara eksplisit untuk mencegah error stdClass
+            KpDokumen::where('id', $existing->id)->update([
+                'file_path'       => $path,
+                'status_validasi' => 'menunggu',
+                'tanggal_upload'  => now(),
+            ]);
+        } else {
+            KpDokumen::create([
+                'kp_id'           => $kp->id,
+                'jenis_dokumen'   => $validated['jenis_dokumen'],
+                'file_path'       => $path,
+                'status_validasi' => 'menunggu',
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Dokumen {$validated['jenis_dokumen']} berhasil diunggah!");
+    }
+
+    /**
+     * Update data KP: judul fix dan tempat fix (diisi setelah diterima di tempat KP).
+     */
+    public function updateDataKp(Request $request)
+    {
+        $validated = $request->validate([
+            'judul_fix'  => 'required|string|max:255',
+            'tempat_fix' => 'required|string|max:255',
+        ]);
+
+        $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
+        $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)
+            ->latest()
+            ->firstOrFail();
+
+        KerjaPraktik::where('id', $kp->id)->update($validated);
+
+        return redirect()->back()->with('success', 'Judul dan tempat KP berhasil diperbarui!');
+    }
+
+    /**
+     * Download template dokumen (Laporan KP / Makalah IEEE).
+     * Untuk saat ini mengembalikan placeholder — file template bisa ditambahkan nanti.
+     */
+    public function downloadTemplate(string $type)
+    {
+        $templates = [
+            'laporan' => [
+                'name' => 'Template_Laporan_KP.docx',
+                'path' => 'templates/kp/Template_Laporan_KP.docx',
+            ],
+            'makalah' => [
+                'name' => 'Template_Makalah_IEEE.docx',
+                'path' => 'templates/kp/Template_Makalah_IEEE.docx',
+            ],
+            'a2' => [
+                'name' => 'Form_Presensi_Nilai_Lapangan_A2.pdf',
+                'path' => 'templates/kp/Form_A2.pdf',
+            ],
+            'b1' => [
+                'name' => 'Form_Permohonan_Seminar_B1.pdf',
+                'path' => 'templates/kp/Form_B1.pdf',
+            ],
+            'b2' => [
+                'name' => 'Form_Kehadiran_Peserta_Seminar_B2.pdf',
+                'path' => 'templates/kp/Form_B2.pdf',
+            ],
+        ];
+
+        if (!isset($templates[$type])) {
+            abort(404, 'Template tidak ditemukan.');
+        }
+
+        $template = $templates[$type];
+        $fullPath = storage_path("app/public/{$template['path']}");
+
+        if (!file_exists($fullPath)) {
+            return redirect()->back()->with('error', "File template {$template['name']} belum tersedia. Hubungi Koordinator KP.");
+        }
+
+        return response()->download($fullPath, $template['name']);
+    }
+
+    // =========================================================================
+    // SEMINAR (PASCA KP)
+    // =========================================================================
+
+    /**
+     * Halaman pendaftaran seminar KP.
+     * Menampilkan form daftar seminar, upload kartu hijau & nilai lapangan,
+     * checklist validasi syarat, serta status undangan seminar.
+     */
+    public function seminar()
+    {
+        $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
+
+        $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)
+            ->with(['dokumen', 'seminar', 'penilaian'])
+            ->latest()
+            ->first();
+
+        if (!$kp) {
+            return redirect()
+                ->route('eoffice.kp.mahasiswa.pendaftaran')
+                ->with('error', 'Anda belum mendaftar KP.');
+        }
+
+        // Cek kelengkapan syarat seminar
+        $dokumenByJenis = $kp->dokumen->groupBy('jenis_dokumen');
+        $syaratSeminar = $this->cekSyaratSeminar($kp, $dokumenByJenis);
+
+        return view('eoffice::kp.mahasiswa.seminar', compact(
+            'mahasiswa', 'kp', 'dokumenByJenis', 'syaratSeminar'
+        ));
+    }
+
+    /**
+     * Proses pendaftaran seminar KP.
+     * Membuat atau memperbarui record di eo_kp_seminar.
+     */
+    public function storeSeminar(Request $request)
+    {
+        $validated = $request->validate([
+            'tanggal_seminar' => 'required|date|after:today',
+            'waktu_seminar'   => 'required|date_format:H:i',
+            'ruangan'         => 'required|string|max:100',
+        ]);
+
+        $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
+        $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)
+            ->latest()
+            ->firstOrFail();
+
+        // Cek syarat: laporan & makalah harus sudah disetujui
+        $dokumenByJenis = $kp->dokumen->groupBy('jenis_dokumen');
+        $syarat = $this->cekSyaratSeminar($kp, $dokumenByJenis);
+
+        if (!$syarat['semua_terpenuhi']) {
+            return redirect()->back()->with('error', 'Syarat seminar belum terpenuhi. Pastikan semua dokumen sudah lengkap dan disetujui.');
+        }
+
+        // Buat atau update seminar
+        KpSeminar::updateOrCreate(
+            ['kp_id' => $kp->id],
+            [
+                'tanggal_seminar'         => $validated['tanggal_seminar'],
+                'waktu_seminar'           => $validated['waktu_seminar'],
+                'ruangan'                 => $validated['ruangan'],
+                'status_validasi_syarat'  => 'proses',
+            ]
+        );
+
+        // Update status KP ke Pasca KP jika masih di Saat KP
+        if ($kp->status_kp === 'Saat KP' || $kp->status_kp === 'active') {
+            KerjaPraktik::where('id', $kp->id)->update(['status_kp' => 'Pasca KP']);
+        }
+
+        return redirect()->back()->with('success', 'Pendaftaran seminar berhasil! Menunggu validasi dari Koordinator KP.');
+    }
+
+    // =========================================================================
+    // HELPERS (PRIVATE)
+    // =========================================================================
+
+    /**
+     * Cek kelengkapan syarat seminar.
+     * Mengembalikan array checklist beserta flag apakah semua terpenuhi.
+     */
+    private function cekSyaratSeminar(KerjaPraktik $kp, $dokumenByJenis): array
+    {
+        $laporanAcc = isset($dokumenByJenis['Laporan'])
+            && $dokumenByJenis['Laporan']->where('status_validasi', 'disetujui')->isNotEmpty();
+
+        $makalahAcc = isset($dokumenByJenis['Makalah'])
+            && $dokumenByJenis['Makalah']->where('status_validasi', 'disetujui')->isNotEmpty();
+
+        $kartuHijau = isset($dokumenByJenis['Kartu Hijau'])
+            && $dokumenByJenis['Kartu Hijau']->isNotEmpty();
+
+        $nilaiLapangan = isset($dokumenByJenis['Nilai Lapangan'])
+            && $dokumenByJenis['Nilai Lapangan']->isNotEmpty();
+
+        $buktiTerima = isset($dokumenByJenis['Bukti Terima'])
+            && $dokumenByJenis['Bukti Terima']->isNotEmpty();
+
+        $judulFix = !empty($kp->judul_fix) && !empty($kp->tempat_fix);
+
+        return [
+            'laporan_acc'      => $laporanAcc,
+            'makalah_acc'      => $makalahAcc,
+            'kartu_hijau'      => $kartuHijau,
+            'nilai_lapangan'   => $nilaiLapangan,
+            'bukti_terima'     => $buktiTerima,
+            'judul_fix'        => $judulFix,
+            'semua_terpenuhi'  => $laporanAcc && $makalahAcc && $kartuHijau && $nilaiLapangan && $buktiTerima && $judulFix,
+        ];
+    }
+}

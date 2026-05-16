@@ -31,7 +31,8 @@ composer.json
 composer.lock
 bootstrap/providers.php
 
-# AI assistant files
+# AI assistant files — jangan push ke repo
+.claude/
 CLAUDE.md
 PLAN_*.md
 AI_*.md
@@ -40,3 +41,4 @@ AI_*.md
 .copilot/
 /Modules/BankSoal/Skills
 *.md
+*.sql
