@@ -48,7 +48,12 @@ class PendaftarAdminController extends Controller
 
             $totalCount = $query->count();
             $perPage = $request->get('per_page', 5);
-            $pendaftars = $query->with(['mahasiswa', 'dosenPembimbing1', 'dosenPembimbing2', 'ditambahkanOleh'])->latest()->paginate($perPage)->appends($request->query());
+            $pendaftars = $query
+                ->with(['mahasiswa', 'dosenPembimbing1', 'dosenPembimbing2', 'ditambahkanOleh'])
+                ->withCount('sesiSelesai')
+                ->latest()
+                ->paginate($perPage)
+                ->appends($request->query());
         }
 
         // Ambil semua dosen untuk dropdown
@@ -81,22 +86,21 @@ class PendaftarAdminController extends Controller
             'dosen_pembimbing_2_id' => 'nullable|exists:users,id',
         ]);
 
-        // Cek duplikat di periode yang sama (termasuk yang sudah di-soft-delete / ditolak)
-        // Mahasiswa yang pernah ditolak TIDAK boleh mendaftar ulang di periode yang sama
-        $exists = PendaftarUjian::withTrashed()
-            ->where('periode_ujian_id', $request->periode_ujian_id)
+        // Cek duplikat di periode yang sama — hanya record aktif (pending/approved)
+        // Mahasiswa yang sudah ditolak (soft-deleted) boleh didaftarkan ulang
+        $exists = PendaftarUjian::where('periode_ujian_id', $request->periode_ujian_id)
             ->where('nim', $request->nim)
             ->exists();
 
         if ($exists) {
-            return back()->withErrors(['nim' => 'Mahasiswa dengan NIM ini sudah pernah terdaftar pada periode ujian tersebut.'])->withInput();
+            return back()->withErrors(['nim' => 'Mahasiswa dengan NIM ini sudah terdaftar pada periode ujian tersebut.'], 'pendaftar')->withInput();
         }
 
         // Cari ID Mahasiswa dari tabel students (kolom student_number) beserta relasi usernya
         $student = Student::with('user')->where('student_number', $request->nim)->first();
 
         if (!$student || !$student->user) {
-            return back()->withErrors(['nim' => 'Mahasiswa dengan NIM tersebut belum terdaftar di sistem.'])->withInput();
+            return back()->withErrors(['nim' => 'Mahasiswa dengan NIM tersebut belum terdaftar di sistem.'], 'pendaftar')->withInput();
         }
 
         $mahasiswa = $student->user;
@@ -137,6 +141,52 @@ class PendaftarAdminController extends Controller
         ]);
 
         return back()->with('success', "Pendaftaran {$pendaftar->nama_lengkap} berhasil disetujui.");
+    }
+
+    /**
+     * Setujui banyak pendaftar sekaligus (Bulk Approve).
+     * Hanya memproses yang masih berstatus pending — yang sudah approved diabaikan.
+     */
+    public function bulkApprove(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:bs_pendaftar_ujians,id',
+        ]);
+
+        $updated = PendaftarUjian::whereIn('id', $request->ids)
+            ->where('status_pendaftaran', '!=', PendaftaranStatus::Approved->value)
+            ->update(['status_pendaftaran' => 'approved']);
+
+        return back()->with('success', "{$updated} pendaftar berhasil disetujui.");
+    }
+
+    /**
+     * Tolak & hapus banyak pendaftar sekaligus (Bulk Reject).
+     * Hanya memproses yang masih berstatus pending — yang sudah approved dilindungi.
+     */
+    public function bulkReject(Request $request)
+    {
+        $request->validate([
+            'ids' => 'required|array|min:1',
+            'ids.*' => 'integer|exists:bs_pendaftar_ujians,id',
+        ]);
+
+        $pendaftars = PendaftarUjian::whereIn('id', $request->ids)
+            ->where('status_pendaftaran', '!=', PendaftaranStatus::Approved->value)
+            ->get();
+
+        $count = $pendaftars->count();
+
+        foreach ($pendaftars as $pendaftar) {
+            $pendaftar->update([
+                'jadwal_ujian_id' => null,
+                'status_pendaftaran' => 'rejected',
+            ]);
+            $pendaftar->delete(); // soft-delete
+        }
+
+        return back()->with('success', "{$count} pendaftar berhasil ditolak dan dihapus.");
     }
 
     /**

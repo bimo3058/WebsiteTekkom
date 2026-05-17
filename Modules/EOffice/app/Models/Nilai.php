@@ -19,12 +19,18 @@ class Nilai extends Model
         'nilai_tugas',
         'nilai_absensi',
         'nilai_akhir',
+        'disetujui_koor',
+        'disetujui_dosen',
+        'dipublikasikan',
     ];
 
     protected $casts = [
-        'nilai_tugas'    => 'float',
-        'nilai_absensi'  => 'float',
-        'nilai_akhir'    => 'float',
+        'nilai_tugas'     => 'float',
+        'nilai_absensi'   => 'float',
+        'nilai_akhir'     => 'float',
+        'disetujui_koor'  => 'boolean',
+        'disetujui_dosen' => 'boolean',
+        'dipublikasikan'  => 'boolean',
     ];
 
     // ── Relationships ──────────────────────────────────────────────────────────

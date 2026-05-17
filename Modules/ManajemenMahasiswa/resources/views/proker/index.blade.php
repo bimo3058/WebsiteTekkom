@@ -12,24 +12,7 @@
     .status-disetujui { background: #dcfce7; color: #166534; }
     .status-ditolak   { background: #fee2e2; color: #dc2626; }
 
-    /* ── Stats Cards ── */
-    .stats-grid {
-        display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px;
-        margin-bottom: 24px;
-    }
-    @media (max-width: 768px) { .stats-grid { grid-template-columns: repeat(2, 1fr); } }
-    .stat-card {
-        background: #fff; border-radius: 12px; padding: 18px 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid #f3f4f6;
-        display: flex; align-items: center; gap: 14px;
-    }
-    .stat-icon {
-        width: 44px; height: 44px; border-radius: 12px;
-        display: flex; align-items: center; justify-content: center;
-        font-size: 20px; flex-shrink: 0;
-    }
-    .stat-value { font-size: 22px; font-weight: 800; color: #1f2937; line-height: 1; }
-    .stat-label { font-size: 11px; color: #9ca3af; font-weight: 600; margin-top: 2px; }
+
 
     /* ── Filter Bar ── */
     .filter-section { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; }
@@ -41,11 +24,7 @@
     }
     .filter-chip:hover { border-color: #818cf8; color: #4f46e5; background: #eef2ff; }
     .filter-chip.active { background: #4f46e5; color: #fff !important; border-color: #4f46e5; }
-    .filter-select-custom {
-        padding: 7px 16px; border-radius: 20px; border: 1.5px solid #e5e7eb;
-        background: #fff; color: #374151; font-size: 13px; font-weight: 600;
-        outline: none; transition: all 0.2s; height: 38px;
-    }
+
     .search-wrapper { position: relative; flex-grow: 1; }
     .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
     .search-input {
@@ -123,48 +102,14 @@
     @endif
 </div>
 
-{{-- Stats --}}
-<div class="stats-grid">
-    <div class="stat-card">
-        <div class="stat-icon" style="background:#f3f4f6;">&#128221;</div>
-        <div><div class="stat-value">{{ $stats['draft'] }}</div><div class="stat-label">Draft</div></div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon" style="background:#fef3c7;">&#8987;</div>
-        <div><div class="stat-value">{{ $stats['diajukan'] }}</div><div class="stat-label">Menunggu Persetujuan</div></div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon" style="background:#dcfce7;">&#10003;</div>
-        <div><div class="stat-value">{{ $stats['disetujui'] }}</div><div class="stat-label">Disetujui</div></div>
-    </div>
-    <div class="stat-card">
-        <div class="stat-icon" style="background:#fee2e2;">&#10005;</div>
-        <div><div class="stat-value">{{ $stats['ditolak'] }}</div><div class="stat-label">Ditolak</div></div>
-    </div>
-</div>
 
 {{-- Filter --}}
 <form method="GET" action="{{ route('manajemenmahasiswa.proker.index') }}" id="filterForm">
-    <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-3">
-        <div class="search-wrapper w-100 me-0 me-md-2">
+    <div class="d-flex gap-3 align-items-center mb-3">
+        <div class="search-wrapper w-100">
             <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
             <input type="text" name="search" class="form-control search-input"
                    placeholder="Cari rencana proker..." value="{{ request('search') }}">
-        </div>
-        <div class="d-flex gap-2">
-            <select name="status" class="filter-select-custom" style="min-width:160px;" onchange="document.getElementById('filterForm').submit()">
-                <option value="semua">Semua Status</option>
-                <option value="draft" {{ request('status')==='draft'?'selected':'' }}>Draft</option>
-                <option value="diajukan" {{ request('status')==='diajukan'?'selected':'' }}>Diajukan</option>
-                <option value="disetujui" {{ request('status')==='disetujui'?'selected':'' }}>Disetujui</option>
-                <option value="ditolak" {{ request('status')==='ditolak'?'selected':'' }}>Ditolak</option>
-            </select>
-            <select name="tahun" class="filter-select-custom" style="min-width:130px;" onchange="document.getElementById('filterForm').submit()">
-                <option value="semua">Semua Tahun</option>
-                @foreach($tahunList as $t)
-                    <option value="{{ $t }}" {{ request('tahun')==$t?'selected':'' }}>{{ $t }}</option>
-                @endforeach
-            </select>
         </div>
     </div>
     <div class="filter-section">
@@ -195,20 +140,33 @@
                     <div class="proker-card-body">
                         <div class="d-flex flex-wrap gap-2">
                             <span class="status-badge status-{{ $proker->status }}">{{ $proker->status_label }}</span>
-                            @if($proker->bidangs && $proker->bidangs->count() > 0)
+                            @php
+                                $hasProdi = $proker->kategoris && $proker->kategoris->contains(fn($k) => stripos($k->nama_kategori, 'Prodi') !== false);
+                                $hasBidang = $proker->bidangs && $proker->bidangs->count() > 0;
+                            @endphp
+                            @if($hasProdi || !$hasBidang)
+                                <span class="badge-bidang" style="background:#f3e8ff;color:#7c3aed;">Prodi</span>
+                            @endif
+                            @if($hasBidang)
                                 @foreach($proker->bidangs as $b)
                                     <span class="badge-bidang">{{ $b->nama_bidang }}</span>
                                 @endforeach
-                            @else
-                                <span class="badge-bidang" style="background:#f3e8ff;color:#7c3aed;">Prodi</span>
                             @endif
                         </div>
                         <div class="proker-card-title">{{ $proker->judul }}</div>
+                        @if($proker->deskripsi)
+                            <div style="font-size:12px;color:#6b7280;line-height:1.55;margin-bottom:8px;
+                                        display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;">
+                                {{ $proker->deskripsi }}
+                            </div>
+                        @endif
                         <div class="proker-card-meta">
-                            <span>
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
-                                {{ $proker->tanggal_mulai ? $proker->tanggal_mulai->translatedFormat('d M Y') : 'Belum ditentukan' }}
-                            </span>
+                            @if($proker->tanggal_mulai)
+                                <span>
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect width="18" height="18" x="3" y="4" rx="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+                                    {{ $proker->tanggal_mulai->translatedFormat('d M Y') }}
+                                </span>
+                            @endif
                             @if($proker->tahun)<span>{{ $proker->tahun }}</span>@endif
                             @if($proker->ketuaPelaksana && $proker->ketuaPelaksana->user)
                                 <span>

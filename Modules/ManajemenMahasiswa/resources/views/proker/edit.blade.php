@@ -105,7 +105,7 @@
             <div class="col-md-6">
                 <label class="form-label-custom">Kategori <span class="required">*</span></label>
                 <div style="display:flex;flex-wrap:wrap;gap:9px;" id="kategoriGroup">
-                    @foreach($kategoriList->filter(fn($k) => stripos($k->nama_kategori, 'prodi') === false) as $kategori)
+                    @foreach($kategoriList as $kategori)
                         @php
                             $kat_old = old('kategori_kegiatan_id');
                             $kat_checked = $kat_old ? in_array($kategori->id, $kat_old) : $proker->kategoris->contains('id', $kategori->id);
@@ -266,9 +266,21 @@ function clearBanner() {
 // ── Kategori checkbox ─────────────────────────────────────────────────────────
 function handleKategoriChange() {
     const checked = document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked');
+    let isOnlyProdi = false;
+    let prodiChecked = false;
+    let otherChecked = false;
+
     document.querySelectorAll('#kategoriGroup label').forEach(card => {
         const inp = card.querySelector('input');
         const isChecked = inp.checked;
+        const text = card.textContent.trim().toLowerCase();
+        
+        if (text.includes('prodi')) {
+            if (isChecked) prodiChecked = true;
+        } else {
+            if (isChecked) otherChecked = true;
+        }
+
         card.style.borderColor    = isChecked ? '#4f46e5' : '#e5e7eb';
         card.style.background     = isChecked ? '#eef2ff' : '#fff';
         card.style.color          = isChecked ? '#4338ca' : '#374151';
@@ -276,6 +288,22 @@ function handleKategoriChange() {
         if (checked.length >= 2 && !isChecked) { card.style.opacity='0.4'; card.style.pointerEvents='none'; }
         else { card.style.opacity=''; card.style.pointerEvents=''; }
     });
+
+    isOnlyProdi = prodiChecked && !otherChecked;
+    const bidangWrapper = document.getElementById('bidangFieldWrapper');
+    if (bidangWrapper) {
+        if (isOnlyProdi) {
+            bidangWrapper.style.display = 'none';
+            document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(inp => {
+                if (inp.checked) {
+                    inp.checked = false;
+                    inp.dispatchEvent(new Event('change'));
+                }
+            });
+        } else {
+            bidangWrapper.style.display = 'block';
+        }
+    }
 }
 document.querySelectorAll('#bidangGroup input').forEach(inp => {
     inp.addEventListener('change', () => {

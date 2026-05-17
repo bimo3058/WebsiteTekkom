@@ -3,24 +3,43 @@
 ])
 
 @php
-    $baseClass = 'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2';
+    $baseClass = 'inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors';
     
     $variants = [
-        'default' => 'border-transparent bg-primary text-primary-foreground hover:bg-primary/80',
-        'secondary' => 'border-transparent bg-secondary text-secondary-foreground hover:bg-secondary/80',
-        'destructive' => 'border-transparent bg-destructive text-destructive-foreground hover:bg-destructive/80',
-        'outline' => 'text-foreground',
+        'default' => 'border-transparent bg-primary text-white',
+        'secondary' => 'border-transparent bg-slate-100 text-slate-700',
+        'destructive' => 'border-transparent bg-red-100 text-red-700',
+        'outline' => 'border border-slate-200 text-slate-700 bg-white',
         
-        // Semantic Addbrain Colors
-        'success' => 'border-transparent bg-success-50 text-success-300',
-        'warning' => 'border-transparent bg-warning-50 text-warning-300',
-        'info' => 'border-transparent bg-sky-50 text-sky-300',
-        'gray' => 'border-transparent bg-grey-50 text-grey-600',
+        // Role Colors
+        'mahasiswa' => 'border-transparent bg-amber-100 text-amber-700',
+        'dosen' => 'border-transparent bg-green-100 text-green-700',
+        'admin' => 'border-transparent bg-red-100 text-red-700',
+        'super-admin' => 'border-transparent bg-purple-100 text-purple-700',
+        'gpm' => 'border-transparent bg-purple-100 text-purple-700',
+        'alumni' => 'border-transparent bg-amber-100 text-amber-700',
+        
+        // Status Colors
+        'active' => 'border-transparent bg-green-100 text-green-700',
+        'inactive' => 'border-transparent bg-slate-100 text-slate-700',
+        'suspend' => 'border-transparent bg-red-100 text-red-700',
+        'pending' => 'border-transparent bg-amber-100 text-amber-700',
+        
+        // Semantic Colors
+        'success' => 'border-transparent bg-green-100 text-green-700',
+        'warning' => 'border-transparent bg-amber-100 text-amber-700',
+        'info' => 'border-transparent bg-blue-100 text-blue-700',
+        'error' => 'border-transparent bg-red-100 text-red-700',
+        
+            // RPS Validation Status
+            'rps-pending' => 'border-amber-200 bg-amber-50 text-amber-700',
+            'rps-revision' => 'border-red-200 bg-red-50 text-red-700',
+            'rps-approved' => 'border-emerald-200 bg-emerald-50 text-emerald-700',
     ];
 
     $classes = $baseClass . ' ' . ($variants[$variant] ?? $variants['default']);
 @endphp
 
-<div {{ $attributes->merge(['class' => $classes]) }}>
+<span {{ $attributes->merge(['class' => $classes]) }}>
     {{ $slot }}
-</div>
+</span>

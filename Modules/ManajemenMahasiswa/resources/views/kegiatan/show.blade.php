@@ -516,13 +516,20 @@
 </div>
 
 <!-- Banner -->
-<div class="detail-banner">
-    @if($kegiatan->banner)
-        <img src="{{ $kegiatan->banner_url }}" alt="{{ $kegiatan->judul }}">
-    @else
-        <span class="placeholder-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></span>
-    @endif
+@if($kegiatan->banner)
+<div style="position:relative;width:100%;max-height:340px;border-radius:18px;overflow:hidden;margin-bottom:28px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.15);cursor:pointer;transition:transform 0.2s;" 
+     onclick="openBannerLightbox()"
+     onmouseover="this.style.transform='scale(1.005)'"
+     onmouseout="this.style.transform='scale(1)'">
+    <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 45%);z-index:1;transition:background 0.2s;" onmouseover="this.style.background='linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 50%)'" onmouseout="this.style.background='linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 45%)'"></div>
+    <img src="{{ $kegiatan->banner_url }}" alt="{{ $kegiatan->judul }}" style="width:100%;height:340px;object-fit:cover;display:block;">
+    <div style="position:absolute;bottom:24px;left:28px;z-index:2;display:flex;align-items:center;gap:12px;">
+        <span style="background:rgba(255,255,255,0.25);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.5px;border:1px solid rgba(255,255,255,0.4);text-shadow:0 1px 2px rgba(0,0,0,0.2);">
+            &#128247; Banner Kegiatan &bull; Klik untuk memperbesar
+        </span>
+    </div>
 </div>
+@endif
 
 <!-- Title & Badges -->
 <div class="detail-card">
@@ -825,6 +832,20 @@
         </div>
     </div>
 </div>
+</div>
+@endif
+
+{{-- Lightbox Modal Banner --}}
+@if($kegiatan->banner)
+<div class="lightbox-modal" id="bannerLightboxModal">
+    <button class="lightbox-close" onclick="closeBannerLightbox()" title="Tutup">&#10005;</button>
+    <div class="lightbox-content">
+        <img src="{{ $kegiatan->banner_url }}" alt="{{ $kegiatan->judul }}">
+    </div>
+    <div class="lightbox-info">
+        <div class="lightbox-title">{{ $kegiatan->judul }}</div>
+    </div>
+</div>
 @endif
 
 {{-- ─── Lightbox JavaScript ──────────────────────────────────────────── --}}
@@ -874,20 +895,40 @@ function updateLightboxImage() {
     document.getElementById('lightboxCounter').textContent = `${currentImageIndex + 1} / ${galleryImages.length}`;
 }
 
+// Banner Lightbox
+function openBannerLightbox() {
+    document.getElementById('bannerLightboxModal')?.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeBannerLightbox() {
+    document.getElementById('bannerLightboxModal')?.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
 // Keyboard navigation
 document.addEventListener('keydown', function(e) {
     const modal = document.getElementById('lightboxModal');
-    if (!modal || !modal.classList.contains('active')) return;
+    if (modal && modal.classList.contains('active')) {
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') prevImage();
+        if (e.key === 'ArrowRight') nextImage();
+        return;
+    }
 
-    if (e.key === 'Escape') closeLightbox();
-    if (e.key === 'ArrowLeft') prevImage();
-    if (e.key === 'ArrowRight') nextImage();
+    const bannerModal = document.getElementById('bannerLightboxModal');
+    if (bannerModal && bannerModal.classList.contains('active')) {
+        if (e.key === 'Escape') closeBannerLightbox();
+    }
 });
 
 // Close lightbox on backdrop click
 document.addEventListener('click', function(e) {
     const modal = document.getElementById('lightboxModal');
     if (modal && e.target === modal) closeLightbox();
+
+    const bannerModal = document.getElementById('bannerLightboxModal');
+    if (bannerModal && e.target === bannerModal) closeBannerLightbox();
 });
 </script>
 

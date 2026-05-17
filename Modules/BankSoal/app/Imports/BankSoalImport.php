@@ -44,9 +44,17 @@ class BankSoalImport implements ToCollection
                 }
 
                 $rawK = trim($row[5] ?? '1');
-                $kesulitan = 'easy'; $bobot = 10;
-                if ($rawK == '2') { $kesulitan = 'intermediate'; $bobot = 15; }
-                if ($rawK == '3') { $kesulitan = 'advanced'; $bobot = 20; }
+                
+                // Support both numeric (1,2,3) and string (easy,intermediate,advanced) formats
+                if (strtolower($rawK) === 'easy' || $rawK === '1') {
+                    $kesulitan = 'easy'; $bobot = 10;
+                } elseif (strtolower($rawK) === 'intermediate' || $rawK === '2') {
+                    $kesulitan = 'intermediate'; $bobot = 15;
+                } elseif (strtolower($rawK) === 'advanced' || $rawK === '3') {
+                    $kesulitan = 'advanced'; $bobot = 20;
+                } else {
+                    $kesulitan = 'easy'; $bobot = 10; // Default to easy
+                }
 
                 $cplKode = trim($row[6] ?? '');
                 $mkNama = trim($row[7] ?? '');

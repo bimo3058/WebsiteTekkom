@@ -4,30 +4,32 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Modules\EOffice\Models\PeriodePendaftaran;
+use Modules\EOffice\Models\Pengumuman;
+use Modules\EOffice\Services\PeriodePendaftaranService;
 
 class DashboardController extends Controller
 {
     public function index(): View|RedirectResponse
     {
         $user = auth()->user();
+        app(PeriodePendaftaranService::class)->tutupKadaluarsa();
 
         if ($user->hasRole('superadmin')) {
             return redirect()->route('superadmin.dashboard');
         }
 
-        // Admin module roles are redirected by RedirectBasedOnRole middleware,
-        // but guard here in case middleware is bypassed.
         if ($user->hasRole('admin_banksoal'))      return redirect()->route('banksoal.dashboard');
         if ($user->hasRole('admin_capstone'))      return redirect()->route('capstone.dashboard');
         if ($user->hasRole('admin_eoffice'))       return redirect()->route('eoffice.dashboard');
         if ($user->hasRole('admin_kemahasiswaan')) return redirect()->route('manajemenmahasiswa.dashboard');
 
-        $isMahasiswa       = $user->hasRole('mahasiswa');
-        $isDosen           = $user->hasRole('dosen') || $user->hasRole('dosen_koor');
-        $isAlumni          = $user->hasRole('alumni');
+        $isMahasiswa        = $user->hasRole('mahasiswa');
+        $isDosen            = $user->hasRole('dosen') || $user->hasRole('dosen_koor');
+        $isAlumni           = $user->hasRole('alumni');
         $isPengurusHimpunan = $user->hasRole('pengurus_himpunan');
 
-        // Bank Soal card — mahasiswa goes to komprehensif, alumni sees riwayat only
+        // ── Module cards ────────────────────────────────────────────────────
         if ($isMahasiswa) {
             $bankSoalCard = [
                 'icon'        => 'quiz',
@@ -54,7 +56,6 @@ class DashboardController extends Controller
             ];
         }
 
-        // Manajemen Mahasiswa card
         if ($isMahasiswa || $isPengurusHimpunan) {
             $manajemenTitle = $isPengurusHimpunan ? 'Forum & Kegiatan' : 'Forum Mahasiswa';
             $manajemenDesc  = 'Kegiatan, prestasi, dan forum mahasiswa.';
@@ -95,6 +96,98 @@ class DashboardController extends Controller
             ],
         ];
 
-        return view('dashboard', compact('cards'));
+        // ── Announcements ────────────────────────────────────────────────────
+        // Tab eoffice: gabungan periode pendaftaran aktif + pengumuman praktikum published
+        $eofficeItems = collect();
+
+        // 1. Periode pendaftaran yang sedang aktif/baru dibuka (maks 5 terbaru)
+        $periodeAktif = PeriodePendaftaran::with(['praktikum', 'dibukaOleh'])
+            ->where('is_aktif', true)
+            ->where(fn ($q) => $q->whereNull('dibuka_pada')->orWhere('dibuka_pada', '<=', now()))
+            ->where(fn ($q) => $q->whereNull('ditutup_pada')->orWhere('ditutup_pada', '>', now()))
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
+
+        foreach ($periodeAktif as $periode) {
+            $jenisLabel = match ($periode->jenis) {
+                'koor' => 'Koordinator',
+                'asprak' => 'Asisten Praktikum',
+                'praktikan' => 'Praktikan',
+                default => ucfirst($periode->jenis),
+            };
+            $deadline   = $periode->ditutup_pada
+                ? ' · Batas: ' . $periode->ditutup_pada->format('d M Y H:i')
+                : '';
+
+            $eofficeItems->push([
+                'module'  => 'eoffice',
+                'date'    => $periode->created_at?->diffForHumans() ?? '',
+                'title'   => "📢 Pendaftaran {$jenisLabel} Dibuka — {$periode->praktikum?->nama}",
+                'body'    => $periode->nama . $deadline,
+                'pinned'  => true,
+            ]);
+        }
+
+        // 2. Periode pendaftaran yang baru saja ditutup (is_aktif=false, dibuat < 7 hari)
+        $periodeBaru = collect();
+
+        foreach ($periodeBaru as $periode) {
+            $jenisLabel = $periode->jenis === 'koor' ? 'Koordinator' : 'Asisten Praktikum';
+            $eofficeItems->push([
+                'module' => 'eoffice',
+                'date'   => $periode->created_at?->diffForHumans() ?? '',
+                'title'  => "Pendaftaran {$jenisLabel} Ditutup — {$periode->praktikum?->nama}",
+                'body'   => 'Periode pendaftaran telah ditutup.',
+                'pinned' => false,
+            ]);
+        }
+
+        // 3. Pengumuman praktikum yang published (maks 5 terbaru)
+        $pengumumanPraktikum = Pengumuman::with(['praktikum', 'user'])
+            ->where('is_published', true)
+            ->where(fn ($q) => $q->whereNull('tipe_sistem')->orWhere('tipe_sistem', 'buka'))
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
+
+        foreach ($pengumumanPraktikum as $peng) {
+            $eofficeItems->push([
+                'module' => 'eoffice',
+                'date'   => $peng->created_at?->diffForHumans() ?? '',
+                'title'  => $peng->judul,
+                'body'   => $peng->konten,
+                'pinned' => false,
+            ]);
+        }
+
+        // Sort semua eoffice items: pinned dulu, lalu by waktu (latest first)
+        $eofficeItems = $eofficeItems->sortByDesc(fn($i) => [$i['pinned'] ? 1 : 0])->values()->all();
+
+        // Placeholder untuk modul lain (bisa diisi nanti oleh masing-masing modul)
+        $announcements = [
+            'bank_soal'     => [],
+            'capstone'      => [],
+            'kemahasiswaan' => [],
+            'eoffice'       => $eofficeItems,
+        ];
+
+        // Tab "all" = gabungan semua, diurutkan: pinned eoffice dulu, sisanya by date
+        $allItems = collect();
+        foreach ($announcements as $key => $items) {
+            foreach ($items as $item) {
+                $allItems->push(array_merge($item, ['module' => $key]));
+            }
+        }
+        $announcements['all'] = $allItems->sortByDesc(fn($i) => [$i['pinned'] ?? false ? 1 : 0])->values()->all();
+
+        $announcementCounts = [
+            'bank_soal'     => count($announcements['bank_soal']),
+            'capstone'      => count($announcements['capstone']),
+            'kemahasiswaan' => count($announcements['kemahasiswaan']),
+            'eoffice'       => count($announcements['eoffice']),
+        ];
+
+        return view('dashboard', compact('cards', 'announcements', 'announcementCounts'));
     }
 }
