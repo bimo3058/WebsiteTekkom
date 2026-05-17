@@ -542,96 +542,24 @@ class RpsController extends Controller
 
     public function getCpmkByCpl(Request $request): JsonResponse
     {
-        // Handle both single and array cpl_id parameters
-        // Laravel automatically converts cpl_id[]=1&cpl_id[]=2 to array
-        $cplIds = $request->input('cpl_id'); // Gunakan input() untuk handle array
-        $mkId = $request->integer('mk_id') ?: null;
-
-        $mapToResponse = function ($items) {
-            return $items->map(function ($cpmk) {
-                return [
-                    'id' => $cpmk->id,
-                    'kode' => $cpmk->kode,
-                    'deskripsi' => $cpmk->deskripsi,
-                ];
-            });
-        };
-
         try {
-            $resolveLegacyCpmks = function () use ($mapToResponse) {
-                return $mapToResponse(Cpmk::orderBy('kode')->get());
-            };
+            $cplId = $request->integer('cpl_id');
 
-            // Jika cpl_id tidak disediakan, return semua CPMK (untuk CREATE form)
-            if (!$cplIds) {
-                $query = Cpmk::orderBy('kode');
-
-                if ($mkId) {
-                    $query->whereIn('id', function ($subQuery) use ($mkId) {
-                        $subQuery->select('cpmk_id')
-                            ->from('bs_cpl_cpmk')
-                            ->where('mk_id', $mkId);
-                    });
-                }
-
-                $cpmks = $mapToResponse($query->get());
-
-                if ($mkId && $cpmks->isEmpty()) {
-                    $cpmks = $resolveLegacyCpmks();
-                }
-
-                return response()->json($cpmks);
+            if (!$cplId) {
+                return response()->json([]);
             }
 
-            // Ensure cplIds is an array
-            $cplIds = is_array($cplIds) ? $cplIds : [$cplIds];
-
-            // Filter out empty values
-            $cplIds = array_filter($cplIds);
-
-            if (empty($cplIds)) {
-                $query = Cpmk::orderBy('kode');
-
-                if ($mkId) {
-                    $query->whereIn('id', function ($subQuery) use ($mkId) {
-                        $subQuery->select('cpmk_id')
-                            ->from('bs_cpl_cpmk')
-                            ->where('mk_id', $mkId);
-                    });
-                }
-
-                $cpmks = $mapToResponse($query->get());
-
-                if ($mkId && $cpmks->isEmpty()) {
-                    $cpmks = $resolveLegacyCpmks();
-                }
-
-                return response()->json($cpmks);
-            }
-
-            \Log::info('getCpmkByCpl Request', ['cplIds' => $cplIds]);
-
-            // Query CPMK melalui junction table bs_cpl_cpmk untuk semua CPL yang dipilih
-            $cpmks = $mapToResponse(
-                Cpmk::whereIn('id', function ($query) use ($cplIds, $mkId) {
-                    $query->select('cpmk_id')
-                        ->from('bs_cpl_cpmk')
-                        ->whereIn('cpl_id', $cplIds);
-
-                    if ($mkId) {
-                        $query->where('mk_id', $mkId);
-                    }
-                })
-                    ->distinct()
-                    ->orderBy('kode')
-                    ->get()
-            );
-
-            if ($mkId && $cpmks->isEmpty()) {
-                $cpmks = $resolveLegacyCpmks();
-            }
-
-            \Log::info('getCpmkByCpl Response', ['count' => count($cpmks), 'cpmks' => $cpmks]);
+            // Query langsung dari bs_cpmk berdasarkan cpl_id
+            $cpmks = Cpmk::where('cpl_id', $cplId)
+                ->orderBy('kode')
+                ->get()
+                ->map(function ($cpmk) {
+                    return [
+                        'id' => $cpmk->id,
+                        'kode' => $cpmk->kode,
+                        'deskripsi' => $cpmk->deskripsi,
+                    ];
+                });
 
             return response()->json($cpmks);
         } catch (\Exception $e) {
