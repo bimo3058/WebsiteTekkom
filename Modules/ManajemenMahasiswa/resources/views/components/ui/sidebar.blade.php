@@ -228,7 +228,7 @@
         @endphp
 
         @if($isKetua || $isAdminVerifier)
-            {{-- Dropdown Pengumuman — untuk ketua yang bisa verifikasi pengumuman orang lain --}}
+            {{-- Dropdown Pengumuman — untuk ketua/admin yang bisa verifikasi pengumuman orang lain --}}
             <div class="sidebar-dropdown {{ $pengumumanDropdownActive ? 'open' : '' }}">
                 <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $pengumumanDropdownActive ? 'active' : '' }}"
                     onclick="event.stopPropagation(); this.closest('.sidebar-dropdown').classList.toggle('open')">
@@ -236,9 +236,9 @@
                         {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/announcement-01.svg'))) !!}
                     </span>
                     <span class="nav-label" style="flex-grow: 1;">Pengumuman</span>
-                    @if(($isKetua && $pendingVerifCount > 0) || ($isStaffHimpunan && $staffPendingCount > 0))
+                    @if($pendingVerifCount > 0)
                         <span class="nav-label"
-                            style="background:{{ $isKetua ? '#ef4444' : '#f59e0b' }};color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $isKetua ? $pendingVerifCount : $staffPendingCount }}</span>
+                            style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $pendingVerifCount }}</span>
                     @endif
                     <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                         stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
@@ -250,17 +250,51 @@
                         class="sub-item {{ request()->routeIs('manajemenmahasiswa.pengumuman.index') || request()->routeIs('manajemenmahasiswa.pengumuman.show') || request()->routeIs('manajemenmahasiswa.pengumuman.create') || request()->routeIs('manajemenmahasiswa.pengumuman.edit') ? 'active' : '' }}">
                         <span class="nav-label">Daftar Pengumuman</span>
                     </a>
-                    <a href="{{ $isKetua ? route('manajemenmahasiswa.pengumuman.verifikasi.index') : route('manajemenmahasiswa.pengumuman.riwayat.verifikasi') }}"
-                        class="sub-item {{ request()->routeIs('manajemenmahasiswa.pengumuman.verifikasi.*') || request()->routeIs('manajemenmahasiswa.pengumuman.riwayat.verifikasi') ? 'active' : '' }}">
-                        <span class="nav-label">{{ $isKetua ? 'Verifikasi Pengumuman' : 'Status Verifikasi' }}</span>
-                        @if(($isKetua && $pendingVerifCount > 0) || ($isStaffHimpunan && $staffPendingCount > 0))
-                            <span class="nav-label"
-                                style="background:{{ $isKetua ? '#ef4444' : '#f59e0b' }};color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $isKetua ? $pendingVerifCount : $staffPendingCount }}</span>
+                    <a href="{{ route('manajemenmahasiswa.pengumuman.verifikasi.index') }}"
+                        class="sub-item {{ request()->routeIs('manajemenmahasiswa.pengumuman.verifikasi.*') ? 'active' : '' }}">
+                        <span class="nav-label">Verifikasi Pengumuman</span>
+                        @if($pendingVerifCount > 0)
+                            <span style="background:#ef4444;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $pendingVerifCount }}</span>
                         @endif
                     </a>
                 </div>
             </div>
+
+        @elseif($isStaffHimpunan)
+            {{-- Dropdown Pengumuman — untuk staff himpunan: lihat daftar + status verifikasi miliknya --}}
+            <div class="sidebar-dropdown {{ $pengumumanDropdownActive ? 'open' : '' }}">
+                <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $pengumumanDropdownActive ? 'active' : '' }}"
+                    onclick="event.stopPropagation(); this.closest('.sidebar-dropdown').classList.toggle('open')">
+                    <span class="nav-icon d-inline-flex">
+                        {!! str_replace(['#0D0D12', 'black'], 'currentColor', file_get_contents(public_path('images/icons/announcement-01.svg'))) !!}
+                    </span>
+                    <span class="nav-label" style="flex-grow: 1;">Pengumuman</span>
+                    @if($staffPendingCount > 0)
+                        <span class="nav-label"
+                            style="background:#f59e0b;color:#fff;font-size:10px;font-weight:700;padding:2px 7px;border-radius:50px;">{{ $staffPendingCount }}</span>
+                    @endif
+                    <svg class="dropdown-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition: transform 0.2s;">
+                        <path d="m6 9 6 6 6-6" />
+                    </svg>
+                </a>
+                <div class="sidebar-dropdown-menu">
+                    <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}"
+                        class="sub-item {{ request()->routeIs('manajemenmahasiswa.pengumuman.index') || request()->routeIs('manajemenmahasiswa.pengumuman.show') || request()->routeIs('manajemenmahasiswa.pengumuman.create') || request()->routeIs('manajemenmahasiswa.pengumuman.edit') ? 'active' : '' }}">
+                        <span class="nav-label">Daftar Pengumuman</span>
+                    </a>
+                    <a href="{{ route('manajemenmahasiswa.pengumuman.riwayat.verifikasi') }}"
+                        class="sub-item {{ request()->routeIs('manajemenmahasiswa.pengumuman.riwayat.verifikasi') ? 'active' : '' }}">
+                        <span class="nav-label">Status Verifikasi</span>
+                        @if($staffPendingCount > 0)
+                            <span style="background:#f59e0b;color:#fff;font-size:10px;font-weight:700;padding:2px 6px;border-radius:50px;margin-left:auto;">{{ $staffPendingCount }}</span>
+                        @endif
+                    </a>
+                </div>
+            </div>
+
         @else
+            {{-- Link tunggal Pengumuman — untuk role lain (mahasiswa, alumni, dosen, dll) --}}
             <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}"
                 class="{{ request()->routeIs('manajemenmahasiswa.pengumuman.*') ? 'active' : '' }}">
                 <span class="nav-icon d-inline-flex">
