@@ -176,7 +176,12 @@ class BankSoalController extends Controller
             'mk_id' => 'required',
             'agenda' => 'nullable',
             'tahun_ajaran' => 'nullable',
-            'semester' => 'nullable'
+            'semester' => 'nullable',
+            'hari_tanggal' => 'nullable',
+            'jam_mulai' => 'nullable',
+            'jam_selesai' => 'nullable',
+            'ruang_ujian' => 'nullable',
+            'sifat_ujian' => 'nullable',
         ]);
 
         $soals = \Modules\BankSoal\Models\Pertanyaan::with(['cpl', 'cpmk', 'jawaban'])

@@ -80,7 +80,7 @@
                     <tr>
                         <td class="py-1.5 align-top">Hari/Tanggal</td>
                         <td class="py-1.5 align-top">:</td>
-                        <td class="py-1.5 align-top pr-4">............................</td>
+                        <td class="py-1.5 align-top pr-4">{{ $request->hari_tanggal ? \Carbon\Carbon::parse($request->hari_tanggal)->locale('id')->translatedFormat('l, d F Y') : '............................' }}</td>
                         
                         <td class="py-1.5 align-top pl-4">Sifat Ujian</td>
                         <td class="py-1.5 align-top">:</td>
@@ -89,7 +89,7 @@
                     <tr>
                         <td class="py-1.5 align-top">Jam</td>
                         <td class="py-1.5 align-top">:</td>
-                        <td class="py-1.5 align-top pr-4">{{ $request->waktu ?? '............................' }}</td>
+                        <td class="py-1.5 align-top pr-4">{{ $request->jam_mulai && $request->jam_selesai ? $request->jam_mulai . ' – ' . $request->jam_selesai : ($request->jam_mulai ?? '............................') }}</td>
                         
                         <td class="py-1.5 align-top pl-4">Dosen Penguji</td>
                         <td class="py-1.5 align-top">:</td>

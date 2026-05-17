@@ -522,14 +522,6 @@
                 <h2 class="feature-title">CPMK</h2>
                 <p class="feature-subtitle">Format kode: CPMK-1.1, CPMK 10.3</p>
             </div>
-            <div style="display: flex; gap: 8px;">
-                <a href="{{ route('banksoal.admin.kontrol-umum.cpl-cpmk.create') }}" class="btn-add" style="text-decoration: none;">
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Tambah CPMK
-                </a>
-            </div>
         </div>
 
         <div class="controls-section">
