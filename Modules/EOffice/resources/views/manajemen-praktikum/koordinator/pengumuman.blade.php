@@ -1,10 +1,13 @@
 <x-eoffice::manajemen-praktikum.layout pageTitle="Pengumuman Praktikum">
 
-{{-- Header --}}
+{{-- Page Header --}}
 <div class="mp-page-header">
     <div>
-        <h1 class="mp-page-title">Pengumuman Praktikum</h1>
-        <p class="mp-page-sub">Buat dan kelola pengumuman untuk praktikan</p>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <h1 class="mp-page-title">Pengumuman Praktikum</h1>
+            <span class="mp-badge" style="background:#E0E7FF;color:#6366F1;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px;"><span class="dot" style="background:#6366F1;"></span>Koordinator</span>
+        </div>
+        <p class="mp-page-sub">Buat dan kelola pengumuman untuk praktikan · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
     </div>
     <div class="mp-page-actions">
         <button onclick="document.getElementById('modalCreate').classList.remove('hidden')" class="mp-btn primary md">
@@ -14,21 +17,30 @@
     </div>
 </div>
 
+<div class="sec-head">
+    <span class="sec-bar"></span>
+    <span class="sec-title">Daftar Pengumuman</span>
+    <span class="sec-rule"></span>
+    <span class="mp-badge neutral sm">{{ count($pengumuman ?? []) }} pengumuman</span>
+</div>
+
 <div class="flex flex-col gap-3 flex-1">
     @forelse($pengumuman ?? [] as $p)
-    <div class="mp-card flex-shrink-0" style="padding:20px;">
+    <div class="mp-card flex-shrink-0" style="padding:20px;"
+         onmouseover="this.style.borderColor='#B7C2DE';this.style.boxShadow='0 4px 14px rgba(11,38,110,.07)'"
+         onmouseout="this.style.borderColor='#DFE1E7';this.style.boxShadow=''">
         <div class="flex items-start justify-between gap-4">
             <div class="flex-1 min-w-0">
                 <div class="flex items-center gap-2 mb-1">
-                    <div style="font-size:14px;font-weight:700;color:var(--c-fg);">{{ $p->judul }}</div>
+                    <div style="font-size:14px;font-weight:700;color:#0D0D12;">{{ $p->judul }}</div>
                     @if($p->is_published)
-                    <span class="mp-badge success sm">Dipublikasikan</span>
+                    <span class="mp-badge success sm"><span class="dot"></span>Dipublikasikan</span>
                     @else
-                    <span class="mp-badge warning sm">Draft</span>
+                    <span class="mp-badge warning sm"><span class="dot"></span>Draft</span>
                     @endif
                 </div>
-                <div style="font-size:12px;color:var(--c-fg-muted);">{{ $p->created_at?->format('d M Y, H:i') }}</div>
-                <div style="font-size:13px;color:var(--c-fg-sub);margin-top:8px;line-height:1.6;">{{ $p->konten }}</div>
+                <div style="font-size:12px;color:#666D80;">{{ $p->created_at?->format('d M Y, H:i') }}</div>
+                <div style="font-size:13px;color:#353849;margin-top:8px;line-height:1.6;">{{ $p->konten }}</div>
             </div>
             <div class="flex gap-2 flex-shrink-0">
                 <form method="POST" action="{{ route('eoffice.manprak.koor.pengumuman.destroy', $p->id) }}"
@@ -41,9 +53,9 @@
     </div>
     @empty
     <div class="mp-card flex-1 flex items-center justify-center" style="min-height:200px;">
-        <div style="text-align:center;color:var(--c-fg-placeholder);">
-            <svg class="mx-auto mb-3 w-10 h-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
-            <div style="font-size:14px;font-weight:500;">Belum ada pengumuman.</div>
+        <div style="padding:48px;text-align:center;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/></svg>
+            <div style="font-size:13px;font-weight:500;color:#666D80;">Belum ada pengumuman.</div>
         </div>
     </div>
     @endforelse
@@ -71,7 +83,7 @@
                 </div>
                 <label class="flex items-center gap-2 cursor-pointer">
                     <input type="checkbox" name="is_published" value="1" checked class="accent-[#0B266E]">
-                    <span style="font-size:12px;font-weight:600;color:var(--c-fg-sub);">Publikasikan langsung</span>
+                    <span style="font-size:12px;font-weight:600;color:#353849;">Publikasikan langsung</span>
                 </label>
             </div>
             <div class="flex gap-2 mt-5">

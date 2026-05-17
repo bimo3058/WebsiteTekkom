@@ -14,6 +14,13 @@
     </div>
 </div>
 
+{{-- Section title --}}
+<div class="sec-head flex-shrink-0">
+    <span class="sec-bar"></span>
+    <span class="sec-title">Filter &amp; Pencarian</span>
+    <span class="sec-rule"></span>
+</div>
+
 {{-- Filter Bar --}}
 <div class="flex gap-3 flex-shrink-0">
     <form method="GET" class="flex gap-2 flex-1">
@@ -34,10 +41,17 @@
     </form>
 </div>
 
+{{-- Section title --}}
+<div class="sec-head flex-shrink-0">
+    <span class="sec-bar"></span>
+    <span class="sec-title">Daftar Praktikum</span>
+    <span class="sec-rule"></span>
+</div>
+
 {{-- Table --}}
 <div class="mp-card flex-1 min-h-0">
-    <div class="mp-card-body" style="flex-shrink:0;">
-        <div style="display:flex;align-items:center;padding:8px 20px;background:#FAFBFC;border-bottom:1px solid var(--c-border);">
+    <div style="flex-shrink:0;">
+        <div style="display:flex;align-items:center;padding:10px 20px;background:#F9FAFB;border-bottom:1px solid #DFE1E7;">
             <div class="mp-th" style="width:100px;">Kode</div>
             <div class="mp-th flex-1">Nama Praktikum</div>
             <div class="mp-th" style="width:160px;">Dosen Pengampu</div>
@@ -50,20 +64,20 @@
     <div class="overflow-y-auto flex-1">
         @forelse($praktikums ?? [] as $p)
         <div class="mp-tr" style="display:flex;align-items:center;padding:12px 20px;">
-            <div style="width:100px;font-size:12px;font-weight:700;letter-spacing:.05em;color:var(--c-primary);font-family:monospace;">{{ $p->kode ?? '—' }}</div>
+            <div style="width:100px;font-size:12px;font-weight:700;letter-spacing:.05em;color:#0B266E;font-family:monospace;">{{ $p->kode ?? '—' }}</div>
             <div class="flex-1 pr-3">
-                <div style="font-size:13px;font-weight:600;color:var(--c-fg);" class="truncate">{{ $p->nama }}</div>
-                <div style="font-size:11px;color:var(--c-fg-muted);">{{ $p->tahun_ajaran }} / Sem. {{ $p->semester }}</div>
+                <div style="font-size:13px;font-weight:600;color:#0D0D12;" class="truncate">{{ $p->nama }}</div>
+                <div style="font-size:11px;color:#666D80;">{{ $p->tahun_ajaran }} / Sem. {{ $p->semester }}</div>
             </div>
-            <div style="width:160px;font-size:12px;color:var(--c-fg-muted);" class="truncate">{{ $p->dosen?->name ?? '—' }}</div>
-            <div style="width:140px;font-size:12px;color:var(--c-fg-muted);" class="truncate">
+            <div style="width:160px;font-size:12px;color:#666D80;" class="truncate">{{ $p->dosen?->name ?? '—' }}</div>
+            <div style="width:140px;font-size:12px;color:#666D80;" class="truncate">
                 @if($p->koordinator)
                     {{ $p->koordinator->name }}
                 @else
                     <span style="color:#DF1C41;font-size:11px;font-weight:600;">Belum ditunjuk</span>
                 @endif
             </div>
-            <div style="width:80px;font-size:13px;font-weight:600;color:var(--c-fg);text-align:center;">{{ $p->daftar_praktikan_count ?? 0 }}</div>
+            <div style="width:80px;font-size:13px;font-weight:600;color:#0D0D12;text-align:center;">{{ $p->daftar_praktikan_count ?? 0 }}</div>
             <div style="width:90px;">
                 @if($p->status === 'aktif')
                     <span class="mp-badge success sm"><span class="dot"></span>Aktif</span>
@@ -86,11 +100,14 @@
             </div>
         </div>
         @empty
-        <div style="padding:56px;text-align:center;font-size:13px;color:var(--c-fg-muted);">Belum ada data praktikum.</div>
+        <div style="padding:64px 20px;text-align:center;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#DFE1E7" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+            <div style="font-size:13px;color:#666D80;">Belum ada data praktikum.</div>
+        </div>
         @endforelse
     </div>
     @if(isset($praktikums) && method_exists($praktikums, 'links'))
-    <div style="padding:12px 20px;border-top:1px solid var(--c-border);flex-shrink:0;">
+    <div style="padding:12px 20px;border-top:1px solid #DFE1E7;flex-shrink:0;">
         {{ $praktikums->links() }}
     </div>
     @endif
@@ -98,7 +115,7 @@
 
 {{-- Modal Create --}}
 <div id="modalCreate" class="hidden fixed inset-0 z-50 flex items-center justify-center" style="background:rgba(0,0,0,0.4);">
-    <div class="bg-white rounded-[16px] shadow-xl w-full max-w-lg mx-4 overflow-hidden">
+    <div class="bg-white rounded-[16px] shadow-2xl w-full max-w-lg mx-4 overflow-hidden">
         <div class="flex items-center justify-between px-6 py-4 border-b border-[#DFE1E7]">
             <div class="font-bold text-[16px] text-[#0D0D12]">Tambah Praktikum Baru</div>
             <button onclick="document.getElementById('modalCreate').classList.add('hidden')"

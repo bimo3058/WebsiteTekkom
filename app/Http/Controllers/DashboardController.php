@@ -127,6 +127,7 @@ class DashboardController extends Controller
             'capstone'      => 0,
             'kemahasiswaan' => 0,
             'eoffice'       => 0,
+        ];
         // ── Announcements ────────────────────────────────────────────────────
         // Tab eoffice: gabungan periode pendaftaran aktif + pengumuman praktikum published
         $eofficeItems = collect();
