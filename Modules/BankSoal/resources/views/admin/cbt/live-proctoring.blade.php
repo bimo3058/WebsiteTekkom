@@ -54,7 +54,7 @@
                     <thead>
                         <tr class="bg-gray-50/80 border-b border-gray-200 text-gray-500 text-[13px] font-semibold tracking-wide">
                             <th class="px-6 py-4">Peserta</th>
-                            <th class="px-6 py-4">Sesi / Token</th>
+                            <th class="px-6 py-4">Sesi</th>
                             <th class="px-6 py-4">Mulai Pengerjaan</th>
                             <th class="px-6 py-4">Progres Terjawab</th>
                             <th class="px-6 py-4">Status / Cheat Log</th>
@@ -77,15 +77,24 @@
                                         <div>
                                             <p class="font-medium text-gray-900">{{ $session->user->name }}</p>
                                             <p class="text-gray-500 text-[12px] mt-0.5">
-                                                {{ $session->user->nim ?? 'NIM tidak tersedia' }}
+                                                {{ $session->user->student->student_number ?? 'NIM tidak tersedia' }}
                                             </p>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[12px] font-medium bg-gray-50 border border-gray-200 text-gray-700">
-                                        {{ $session->title }}
-                                    </span>
+                                    @if($session->jadwal)
+                                        <p class="font-medium text-gray-800 text-[13px]">
+                                            Sesi {{ $session->jadwal->nama_sesi }}
+                                        </p>
+                                        <p class="text-[11px] text-gray-500 mt-0.5">
+                                            {{ \Carbon\Carbon::parse($session->jadwal->tanggal_ujian)->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
+                                        </p>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[12px] font-medium bg-gray-50 border border-gray-200 text-gray-700">
+                                            {{ $session->title }}
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4">
                                     <p class="text-gray-900 font-medium">

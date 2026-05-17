@@ -21,7 +21,7 @@ class AdminCbtController extends Controller
     {
         $this->authorize('viewAny', KompreSession::class);
 
-        $sessions = KompreSession::with('user')
+        $sessions = KompreSession::with(['user.student', 'jadwal'])
             ->withCount([
                 // Total soal dalam sesi
                 'jawabans',
