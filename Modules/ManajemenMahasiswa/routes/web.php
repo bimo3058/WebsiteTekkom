@@ -317,8 +317,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('riwayat.destroy')->where('riwayatId', '[0-9]+');
                 });
 
-                // Generate CV — pengurus + admin
-                Route::middleware('role:pengurus_himpunan|superadmin|admin|admin_kemahasiswaan|gpm')
+                // Generate CV — admin group, GPM, DPM, dan Dosen
+                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm|dosen|dosen_koordinator')
                     ->group(function () {
                     Route::get('/{id}/cv', [DirektoriMahasiswaController::class, 'generateCv'])
                         ->name('cv')->where('id', '[0-9]+');
@@ -361,18 +361,19 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
         // ── Verifikasi Data ─────────────────────────────────────────────
         Route::prefix('verifikasi')->name('verifikasi.')->group(function () {
 
-            // Index — semua role boleh akses (view berbeda per role)
-            Route::get('/', [VerifikasiController::class, 'index'])->name('index');
-
-            // Submit pengajuan — mahasiswa, alumni, semua pengurus himpunan
+            // Index — mahasiswa, alumni (read-only), pengurus himpunan, dan admin
             Route::middleware('role:mahasiswa|alumni|pengurus_himpunan|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin|admin_kemahasiswaan')
+                ->get('/', [VerifikasiController::class, 'index'])->name('index');
+
+            // Submit pengajuan — mahasiswa, semua pengurus himpunan, admin (alumni TIDAK diizinkan)
+            Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin|admin_kemahasiswaan')
                 ->group(function () {
                 Route::post('/riwayat', [VerifikasiController::class, 'storeRiwayat'])->name('riwayat.store');
                 Route::post('/prestasi', [VerifikasiController::class, 'storePrestasi'])->name('prestasi.store');
             });
 
-            // Approve/Reject — admin & GPM only
-            Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm')
+            // Approve/Reject — admin only
+            Route::middleware('role:superadmin|admin|admin_kemahasiswaan')
                 ->group(function () {
                 Route::patch('/riwayat/{id}/approve', [VerifikasiController::class, 'approveRiwayat'])
                     ->name('riwayat.approve')->where('id', '[0-9]+');

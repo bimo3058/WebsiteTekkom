@@ -450,7 +450,7 @@
         </div>
         @endif
 
-        @if(!array_intersect($sidebarRoles, ['dosen', 'dosen_koordinator']))
+        @if(!array_intersect($sidebarRoles, ['dosen', 'dosen_koordinator', 'dpm', 'gpm']))
         <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}"
             class="nav-link-item {{ request()->routeIs('manajemenmahasiswa.verifikasi.*') ? 'active' : '' }}"
             :class="{ 'justify-content-center': !sidebarOpen }">
