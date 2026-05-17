@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
         $this->call([
             RoleSeeder::class,
             UserSeeder::class,
-            // BankSoalDatabaseSeeder::class,
+            BankSoalDatabaseSeeder::class,
             PermissionSeeder::class,
             DosenPembimbingSeeder::class,
             MahasiswaSeeder::class,

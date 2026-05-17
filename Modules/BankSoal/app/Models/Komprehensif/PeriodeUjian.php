@@ -23,6 +23,8 @@ class PeriodeUjian extends Model
         'status',
         'deskripsi',
         'pendaftaran_ditutup_paksa',
+        'kuota_peserta',
+        'target_wisuda_options',
     ];
 
     protected $casts = [
@@ -31,6 +33,7 @@ class PeriodeUjian extends Model
         'tanggal_mulai_ujian'       => 'date',
         'tanggal_selesai_ujian'     => 'date',
         'pendaftaran_ditutup_paksa' => 'boolean',
+        'target_wisuda_options'     => 'array',
     ];
 
     /**

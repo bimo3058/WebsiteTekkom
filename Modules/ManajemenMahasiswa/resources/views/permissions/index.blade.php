@@ -220,8 +220,16 @@
                 @endif
             </form>
 
-            {{-- Cek Alumni (admin only) --}}
+            {{-- Reset Pengurus + Cek Alumni (admin only) --}}
             @if(auth()->user()->hasAnyRole(['admin_kemahasiswaan','admin','superadmin']))
+                <button onclick="openResetPengurusModal()"
+                    class="mp-btn-outline"
+                    style="border-color:#fca5a5;color:#dc2626;"
+                    onmouseover="this.style.borderColor='#ef4444';this.style.color='#dc2626';this.style.background='#fef2f2';"
+                    onmouseout="this.style.borderColor='#fca5a5';this.style.color='#dc2626';this.style.background='#fff';">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+                    Reset Pengurus Himpunan
+                </button>
                 <button onclick="openAlumniModal()" class="mp-btn-outline">
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"></path><path d="M6 12v5c3 3 9 3 12 0v-5"></path></svg>
                     Cek Alumni Otomatis
@@ -340,10 +348,129 @@
         </div>
     </div>
 
+    {{-- Modal Reset Pengurus Himpunan --}}
+    <div id="resetPengurusModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9999;align-items:center;justify-content:center;">
+        <div style="background:#fff;border-radius:16px;padding:28px;width:500px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,.15);">
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:8px;">
+                <div style="width:40px;height:40px;background:#fee2e2;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#dc2626" stroke-width="2"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+                </div>
+                <div>
+                    <h3 style="font-size:15px;font-weight:700;color:#111827;margin:0;">Reset Seluruh Role Pengurus Himpunan</h3>
+                    <p style="font-size:12px;color:#6b7280;margin:4px 0 0;">Semua pengurus akan dikembalikan ke role mahasiswa biasa</p>
+                </div>
+            </div>
+
+            <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:10px;padding:12px 14px;margin-bottom:16px;font-size:12px;color:#991b1b;display:flex;gap:8px;align-items:flex-start;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                <span>Aksi ini akan menghapus role Ketua Himpunan, Ketua Bidang, Ketua Unit, Staff Himpunan, dan Pengurus Himpunan dari seluruh anggota. Gunakan setiap pergantian periode kepengurusan.</span>
+            </div>
+
+            <div id="resetPengurusPreview" style="background:#f9fafb;border:1px solid #e5e7eb;border-radius:10px;padding:14px;margin-bottom:20px;min-height:60px;display:flex;align-items:center;justify-content:center;">
+                <span style="font-size:13px;color:#6b7280;">Klik "Preview" untuk melihat daftar pengurus yang akan direset...</span>
+            </div>
+
+            <div style="display:flex;gap:8px;justify-content:flex-end;">
+                <button onclick="previewResetPengurus()" class="mp-btn-outline" style="padding:8px 18px;">
+                    Preview
+                </button>
+                <button onclick="closeResetPengurusModal()" class="mp-btn-outline" style="padding:8px 18px;">
+                    Batal
+                </button>
+                <button id="btnExecResetPengurus" onclick="execResetPengurus()" disabled
+                    style="background:#e5e7eb;border:none;border-radius:10px;padding:8px 18px;font-size:13px;font-weight:700;color:#9ca3af;cursor:not-allowed;transition:all .2s;">
+                    Reset Sekarang
+                </button>
+            </div>
+        </div>
+    </div>
+
     @include('manajemenmahasiswa::permissions._scripts')
 
     @push('scripts')
     <script>
+    // ── Reset Pengurus Modal ──────────────────────────────────────────────────
+    function openResetPengurusModal() {
+        document.getElementById('resetPengurusModal').style.display = 'flex';
+    }
+    function closeResetPengurusModal() {
+        document.getElementById('resetPengurusModal').style.display = 'none';
+        document.getElementById('resetPengurusPreview').innerHTML =
+            '<span style="font-size:13px;color:#6b7280;">Klik "Preview" untuk melihat daftar pengurus yang akan direset...</span>';
+        const btn = document.getElementById('btnExecResetPengurus');
+        btn.disabled = true;
+        btn.style.cssText = 'background:#e5e7eb;border:none;border-radius:10px;padding:8px 18px;font-size:13px;font-weight:700;color:#9ca3af;cursor:not-allowed;transition:all .2s;';
+    }
+    function previewResetPengurus() {
+        const preview = document.getElementById('resetPengurusPreview');
+        preview.innerHTML = '<span style="font-size:13px;color:#6b7280;">Memuat...</span>';
+
+        fetch('{{ route('manajemenmahasiswa.pengguna.reset-pengurus') }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ dry_run: true }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.error) {
+                preview.innerHTML = `<span style="color:#dc2626;font-size:13px;">${data.error}</span>`;
+                return;
+            }
+            if (data.count === 0) {
+                preview.innerHTML = '<span style="font-size:13px;color:#16a34a;font-weight:600;">✓ Tidak ada pengurus himpunan yang perlu direset.</span>';
+                return;
+            }
+            const rows = data.preview.map(p =>
+                `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f3f4f6;">
+                    <span style="font-size:12px;color:#374151;font-weight:600;">${p.name}</span>
+                    <span style="font-size:11px;color:#9ca3af;background:#f3f4f6;padding:2px 8px;border-radius:50px;">${p.roles}</span>
+                </div>`
+            ).join('');
+            const more = data.count > 10
+                ? `<div style="font-size:11px;color:#9ca3af;padding-top:6px;text-align:center;">...dan ${data.count - 10} pengurus lainnya</div>`
+                : '';
+            preview.innerHTML = `
+                <div style="width:100%;">
+                    <p style="font-size:13px;font-weight:700;color:#991b1b;margin:0 0 10px;">${data.message}</p>
+                    <div>${rows}${more}</div>
+                </div>`;
+
+            const btn = document.getElementById('btnExecResetPengurus');
+            btn.disabled = false;
+            btn.style.cssText = 'background:#dc2626;border:none;border-radius:10px;padding:8px 18px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;transition:all .2s;';
+        })
+        .catch(() => {
+            preview.innerHTML = '<span style="color:#dc2626;font-size:13px;">Gagal mengambil data.</span>';
+        });
+    }
+    function execResetPengurus() {
+        if (!confirm('PERHATIAN: Aksi ini tidak dapat dibatalkan!\n\nSeluruh role pengurus himpunan akan dihapus dan mereka kembali menjadi mahasiswa biasa.\n\nLanjutkan?')) return;
+
+        fetch('{{ route('manajemenmahasiswa.pengguna.reset-pengurus') }}', {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+            },
+            body: JSON.stringify({ dry_run: false }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (data.success) {
+                closeResetPengurusModal();
+                location.reload();
+            } else {
+                alert('Gagal: ' + (data.error || 'Unknown error'));
+            }
+        })
+        .catch(() => alert('Terjadi kesalahan jaringan.'));
+    }
+
     // ── Alumni Modal ──────────────────────────────────────────────────────────
     function openAlumniModal() {
         document.getElementById('alumniModal').style.display = 'flex';

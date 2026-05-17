@@ -6,28 +6,72 @@ use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
+use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
 use Illuminate\Support\Str;
 
 class PeriodeController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        return view('banksoal::periode.index');
+        $this->updateStatusOtomatis();
+
+        $search  = $request->get('search', '');
+        $perPage = in_array((int) $request->get('perPage', 5), [5, 10, 25, 50])
+            ? (int) $request->get('perPage', 5)
+            : 5;
+
+        $query = PeriodeUjian::query();
+
+        if (!empty($search)) {
+            $query->where(function ($q) use ($search) {
+                $q->where('nama_periode', 'ilike', '%' . $search . '%')
+                  ->orWhere('status', 'ilike', '%' . $search . '%');
+            });
+        }
+
+        $periodes = $query->orderBy('created_at', 'desc')
+                          ->paginate($perPage)
+                          ->withQueryString();
+
+        return view('banksoal::periode.index', compact('periodes', 'search', 'perPage'));
+    }
+
+    /** Update status periode secara otomatis berdasarkan tanggal */
+    private function updateStatusOtomatis(): void
+    {
+        $now = now();
+        foreach (PeriodeUjian::all() as $p) {
+            if ($p->status === 'selesai') continue;
+
+            $mulai   = Carbon::parse($p->tanggal_mulai)->startOfDay();
+            $selesai = Carbon::parse($p->tanggal_selesai)->endOfDay();
+
+            if ($now->between($mulai, $selesai) && $p->status !== 'aktif') {
+                $p->update(['status' => 'aktif']);
+            } elseif ($now->lt($mulai) && $p->status !== 'draft') {
+                $p->update(['status' => 'draft']);
+            }
+        }
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'nama_periode'          => 'required|string|max:255',
-            'tanggal_mulai'         => 'required|date',
-            'tanggal_selesai'       => 'required|date|after_or_equal:tanggal_mulai',
-            'tanggal_mulai_ujian'   => 'nullable|date|after_or_equal:tanggal_selesai',
-            'tanggal_selesai_ujian' => 'nullable|date|after_or_equal:tanggal_mulai_ujian',
-            'deskripsi'             => 'nullable|string',
+            'nama_periode'              => 'required|string|max:255',
+            'tanggal_mulai'             => 'required|date',
+            'tanggal_selesai'           => 'required|date|after_or_equal:tanggal_mulai',
+            'tanggal_mulai_ujian'       => 'required|date|after_or_equal:tanggal_selesai',
+            'tanggal_selesai_ujian'     => 'required|date|after_or_equal:tanggal_mulai_ujian',
+            'deskripsi'                 => 'nullable|string',
+            'kuota_peserta'             => 'required|integer|min:1|max:9999',
+            'target_wisuda_options'     => 'required|array',
+            'target_wisuda_options.*'   => 'required|string|max:200',
         ], [
             'tanggal_mulai_ujian.after_or_equal' => 'Tanggal mulai ujian tidak boleh sebelum tanggal tutup pendaftaran.',
             'tanggal_selesai_ujian.after_or_equal' => 'Tanggal selesai ujian tidak boleh sebelum tanggal mulai ujian.',
             'tanggal_selesai.after_or_equal' => 'Tanggal tutup pendaftaran tidak boleh sebelum tanggal buka pendaftaran.',
+            'target_wisuda_options.required' => 'Pilihan target wisuda wajib diisi.',
+            'target_wisuda_options.*.required' => 'Pilihan target wisuda wajib diisi.',
         ]);
 
         // --- Validasi Overlap: Cegah dua periode berjalan bersamaan ---
@@ -67,15 +111,21 @@ class PeriodeController extends Controller
         $mulai  = Carbon::parse($request->tanggal_mulai)->startOfDay();
         $status = $now->gte($mulai) ? 'aktif' : 'draft';
 
+        // Parse target_wisuda_options: filter item kosong dari input array
+        $rawOptions = $request->input('target_wisuda_options', []);
+        $targetOptions = array_values(array_filter(array_map('trim', (array) $rawOptions))) ?: null;
+
         PeriodeUjian::create([
-            'nama_periode'          => $request->nama_periode,
-            'slug'                  => \Illuminate\Support\Str::slug($request->nama_periode . '-' . time()),
-            'tanggal_mulai'         => $request->tanggal_mulai,
-            'tanggal_selesai'       => $request->tanggal_selesai,
-            'tanggal_mulai_ujian'   => $request->tanggal_mulai_ujian,
-            'tanggal_selesai_ujian' => $request->tanggal_selesai_ujian,
-            'status'                => $status,
-            'deskripsi'             => $request->deskripsi,
+            'nama_periode'              => $request->nama_periode,
+            'slug'                      => \Illuminate\Support\Str::slug($request->nama_periode . '-' . time()),
+            'tanggal_mulai'             => $request->tanggal_mulai,
+            'tanggal_selesai'           => $request->tanggal_selesai,
+            'tanggal_mulai_ujian'       => $request->tanggal_mulai_ujian,
+            'tanggal_selesai_ujian'     => $request->tanggal_selesai_ujian,
+            'status'                    => $status,
+            'deskripsi'                 => $request->deskripsi,
+            'kuota_peserta'             => $request->kuota_peserta ?: null,
+            'target_wisuda_options'     => $targetOptions,
         ]);
 
         return redirect()->route('banksoal.periode.setup')->with('success', 'Periode Ujian berhasil ditambahkan.');
@@ -86,16 +136,21 @@ class PeriodeController extends Controller
         $periode = PeriodeUjian::findOrFail($id);
 
         $request->validate([
-            'nama_periode'          => 'required|string|max:255',
-            'tanggal_mulai'         => 'required|date',
-            'tanggal_selesai'       => 'required|date|after_or_equal:tanggal_mulai',
-            'tanggal_mulai_ujian'   => 'nullable|date|after_or_equal:tanggal_selesai',
-            'tanggal_selesai_ujian' => 'nullable|date|after_or_equal:tanggal_mulai_ujian',
-            'deskripsi'             => 'nullable|string',
+            'nama_periode'              => 'required|string|max:255',
+            'tanggal_mulai'             => 'required|date',
+            'tanggal_selesai'           => 'required|date|after_or_equal:tanggal_mulai',
+            'tanggal_mulai_ujian'       => 'required|date|after_or_equal:tanggal_selesai',
+            'tanggal_selesai_ujian'     => 'required|date|after_or_equal:tanggal_mulai_ujian',
+            'deskripsi'                 => 'nullable|string',
+            'kuota_peserta'             => 'required|integer|min:1|max:9999',
+            'target_wisuda_options'     => 'required|array',
+            'target_wisuda_options.*'   => 'required|string|max:200',
         ], [
             'tanggal_mulai_ujian.after_or_equal' => 'Tanggal mulai ujian tidak boleh sebelum tanggal tutup pendaftaran.',
             'tanggal_selesai_ujian.after_or_equal' => 'Tanggal selesai ujian tidak boleh sebelum tanggal mulai ujian.',
             'tanggal_selesai.after_or_equal' => 'Tanggal tutup pendaftaran tidak boleh sebelum tanggal buka pendaftaran.',
+            'target_wisuda_options.required' => 'Pilihan target wisuda wajib diisi.',
+            'target_wisuda_options.*.required' => 'Pilihan target wisuda wajib diisi.',
         ]);
 
         // --- Validasi Overlap (kecuali dirinya sendiri) ---
@@ -144,14 +199,20 @@ class PeriodeController extends Controller
             $newStatus = 'draft';
         }
 
+        // Parse target_wisuda_options: filter item kosong dari input array
+        $rawOptions = $request->input('target_wisuda_options', []);
+        $targetOptions = array_values(array_filter(array_map('trim', (array) $rawOptions))) ?: null;
+
         $periode->update([
-            'nama_periode'          => $request->nama_periode,
-            'tanggal_mulai'         => $request->tanggal_mulai,
-            'tanggal_selesai'       => $request->tanggal_selesai,
-            'tanggal_mulai_ujian'   => $request->tanggal_mulai_ujian,
-            'tanggal_selesai_ujian' => $request->tanggal_selesai_ujian,
-            'status'                => $newStatus,
-            'deskripsi'             => $request->deskripsi,
+            'nama_periode'              => $request->nama_periode,
+            'tanggal_mulai'             => $request->tanggal_mulai,
+            'tanggal_selesai'           => $request->tanggal_selesai,
+            'tanggal_mulai_ujian'       => $request->tanggal_mulai_ujian,
+            'tanggal_selesai_ujian'     => $request->tanggal_selesai_ujian,
+            'status'                    => $newStatus,
+            'deskripsi'                 => $request->deskripsi,
+            'kuota_peserta'             => $request->kuota_peserta ?: null,
+            'target_wisuda_options'     => $targetOptions,
         ]);
 
         return redirect()->route('banksoal.periode.setup')->with('success', 'Periode Ujian berhasil diupdate.');
@@ -161,7 +222,6 @@ class PeriodeController extends Controller
     {
         $periode = PeriodeUjian::findOrFail($id);
 
-        // Guard: hanya bisa tutup jika pendaftaran sedang terbuka
         if (!$periode->pendaftaran_terbuka) {
             return redirect()->route('banksoal.periode.setup')
                 ->with('error', 'Pendaftaran tidak sedang terbuka pada periode ini.');
@@ -170,11 +230,38 @@ class PeriodeController extends Controller
         $periode->update(['pendaftaran_ditutup_paksa' => true]);
 
         return redirect()->route('banksoal.periode.setup')
-            ->with('success', "Pendaftaran untuk \"{$periode->nama_periode}\" berhasil ditutup paksa.");
+            ->with('success', "Pendaftaran \"" . $periode->nama_periode . "\" berhasil ditutup.");
+    }
+
+    public function openPendaftaran($id)
+    {
+        $periode = PeriodeUjian::findOrFail($id);
+
+        $tglSelesai = Carbon::parse($periode->tanggal_selesai)->endOfDay();
+        if (now()->gt($tglSelesai)) {
+            return redirect()->route('banksoal.periode.setup')
+                ->with('error', 'Tidak dapat membuka kembali: tanggal pendaftaran sudah berakhir.');
+        }
+
+        if (!$periode->pendaftaran_ditutup_paksa) {
+            return redirect()->route('banksoal.periode.setup')
+                ->with('error', 'Pendaftaran periode ini tidak sedang ditutup paksa.');
+        }
+
+        $periode->update(['pendaftaran_ditutup_paksa' => false]);
+
+        return redirect()->route('banksoal.periode.setup')
+            ->with('success', "Pendaftaran \"" . $periode->nama_periode . "\" berhasil dibuka kembali.");
     }
 
     public function destroy($id)
     {
+        $hasPendaftar = PendaftarUjian::where('periode_ujian_id', $id)->exists();
+        if ($hasPendaftar) {
+            return redirect()->route('banksoal.periode.setup')
+                ->with('error', 'Gagal menghapus periode. Sudah ada mahasiswa yang mendaftar.');
+        }
+
         $periode = PeriodeUjian::findOrFail($id);
         $periode->delete();
 

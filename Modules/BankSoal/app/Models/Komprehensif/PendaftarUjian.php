@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\BankSoal\Enums\PendaftaranStatus;
+use Modules\BankSoal\Models\Komprehensif\KompreSession;
 
 class PendaftarUjian extends Model
 {
@@ -61,5 +62,14 @@ class PendaftarUjian extends Model
     public function ditambahkanOleh()
     {
         return $this->belongsTo(User::class, 'ditambahkan_oleh');
+    }
+
+    /**
+     * Sesi ujian CBT yang telah selesai oleh mahasiswa ini (lintas periode).
+     */
+    public function sesiSelesai()
+    {
+        return $this->hasMany(KompreSession::class, 'user_id', 'mahasiswa_id')
+                    ->where('status', 'finished');
     }
 }

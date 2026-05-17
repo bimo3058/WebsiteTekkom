@@ -31,6 +31,13 @@ class CplCpmkController extends Controller
         return view('banksoal::pages.admin.kontrol-umum.cpl-cpmk');
     }
 
+    public function create()
+    {
+        $this->authorize('banksoal.edit');
+
+        return view('banksoal::pages.admin.kontrol-umum.cpl-cpmk-create');
+    }
+
     public function listCpl(): JsonResponse
     {
         $this->authorize('banksoal.view');

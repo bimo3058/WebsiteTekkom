@@ -297,14 +297,6 @@
             <h4>Status Verifikasi Pengumuman</h4>
             <p>Pantau status pengajuan verifikasi pengumuman yang pernah Anda kirimkan</p>
         </div>
-        <a href="{{ route('manajemenmahasiswa.pengumuman.create') }}" class="btn-create-post">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Buat Pengumuman Baru
-        </a>
     </div>
 
     <!-- Flash Messages -->
@@ -392,6 +384,9 @@
     @forelse($requests as $req)
         @php
             $statusClass = 'status-' . $req->status;
+            // Fix #7: deteksi request yang baru diproses dalam 24 jam terakhir
+            $recentlyProcessed = in_array($req->status, ['approved','rejected'])
+                && $req->verified_at?->gt(now()->subHours(24));
         @endphp
         <div class="request-card {{ $statusClass }}">
             <div class="request-header">
@@ -404,13 +399,19 @@
                         @else
                             <span style="color:#9ca3af;">(Pengumuman telah dihapus)</span>
                         @endif
+                        {{-- Fix #7: notifikasi visual untuk status yang baru berubah dalam 24 jam --}}
+                        @if($recentlyProcessed)
+                            <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:800;letter-spacing:.04em;margin-left:6px;vertical-align:middle;{{ $req->status === 'approved' ? 'background:#dcfce7;color:#15803d;' : 'background:#fee2e2;color:#dc2626;' }}">
+                                {{ $req->status === 'approved' ? '✓ BARU DISETUJUI' : '✗ BARU DITOLAK' }}
+                            </span>
+                        @endif
                     </div>
                     <div class="request-meta">
                         <span class="request-meta-item">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/>
                             </svg>
-                            Verifikator: <strong>{{ $req->verifier->name ?? 'N/A' }}</strong>
+                            Verifikator: <strong>{{ $req->verifier?->name ?? 'N/A' }}</strong>
                         </span>
                         <span class="request-meta-item">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -455,7 +456,7 @@
                 </div>
             @endif
 
-            {{-- Catatan dari verifikator --}}
+            {{-- Fix #12: Catatan dari verifikator — label jelas bahwa ini dari pengajuan terakhir --}}
             @if($req->catatan_verifikator)
                 <div class="info-box {{ $req->status === 'approved' ? 'info-box-catatan-approved' : 'info-box-catatan-rejected' }}">
                     <div class="info-box-label">
@@ -463,13 +464,14 @@
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/>
                             </svg>
-                            Catatan persetujuan dari {{ $req->verifier->name ?? 'verifikator' }}:
+                            Catatan persetujuan dari {{ $req->verifier?->name ?? 'verifikator' }}:
                         @else
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                                 <circle cx="12" cy="12" r="10"/>
                                 <line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/>
                             </svg>
-                            Alasan penolakan dari {{ $req->verifier->name ?? 'verifikator' }}:
+                            Alasan penolakan dari {{ $req->verifier?->name ?? 'verifikator' }}
+                            <span style="font-size:.72rem;font-weight:400;opacity:.7;">(pengajuan ini)</span>:
                         @endif
                     </div>
                     {{ $req->catatan_verifikator }}
@@ -480,26 +482,46 @@
             <div class="request-footer">
                 <span class="footer-hint">
                     @if($req->status === 'pending')
-                        Menunggu persetujuan dari <strong>{{ $req->verifier->name ?? 'verifikator' }}</strong>
+                        Menunggu persetujuan dari <strong>{{ $req->verifier?->name ?? 'verifikator' }}</strong>
                     @elseif($req->status === 'approved')
                         Pengumuman telah dipublikasikan secara otomatis
                     @elseif($req->status === 'rejected')
-                        Pengumuman dikembalikan ke draft — Anda dapat mengedit dan mengajukan ulang
+                        Pengumuman dikembalikan ke draft. Edit terlebih dahulu jika perlu, lalu klik <strong>Ajukan Kembali</strong>.
                     @else
-                        Pengajuan dibatalkan — pengumuman kembali ke draft
+                        Pengajuan dibatalkan. Klik <strong>Ajukan Kembali</strong> jika ingin mengajukan ulang.
                     @endif
                 </span>
 
-                <div class="d-flex gap-2 align-items-center">
-                    @if($req->status === 'rejected' && $req->pengumuman)
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    {{-- Fix #11: Pesan informatif ketika pengumuman dihapus --}}
+                    @if(in_array($req->status, ['rejected', 'cancelled']) && !$req->pengumuman)
+                        <span style="font-size:.82rem;color:#9ca3af;font-style:italic;">
+                            Pengumuman telah dihapus — tidak dapat diajukan ulang
+                        </span>
+                    @elseif(in_array($req->status, ['rejected', 'cancelled']) && $req->pengumuman)
+                        {{-- Edit dulu, lalu ajukan ulang dari halaman ini --}}
                         <a href="{{ route('manajemenmahasiswa.pengumuman.edit', $req->pengumuman_id) }}"
-                            style="display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border:1px solid #6B4FF4;border-radius:10px;background:#f5f3ff;color:#6B4FF4;font-size:0.85rem;font-weight:600;text-decoration:none;transition:all .2s;">
+                            style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;color:#374151;font-size:0.83rem;font-weight:600;text-decoration:none;transition:all .2s;">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                             </svg>
-                            Edit & Ajukan Ulang
+                            Edit Pengumuman
                         </a>
+
+                        {{-- Ajukan kembali langsung tanpa edit --}}
+                        <form action="{{ route('manajemenmahasiswa.pengumuman.publish', $req->pengumuman_id) }}"
+                              method="POST" style="margin:0;"
+                              onsubmit="return confirm('Ajukan kembali pengumuman ini untuk diverifikasi?')">
+                            @csrf @method('PATCH')
+                            <button type="submit"
+                                style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border:1px solid #6B4FF4;border-radius:10px;background:#f5f3ff;color:#6B4FF4;font-size:0.83rem;font-weight:600;cursor:pointer;transition:all .2s;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                </svg>
+                                Ajukan Kembali
+                            </button>
+                        </form>
                     @endif
 
                     @if($req->status === 'pending' && $req->pengumuman)
@@ -540,13 +562,13 @@
                     Tidak ada pengajuan yang dibatalkan.
                 @endif
             </p>
-            <a href="{{ route('manajemenmahasiswa.pengumuman.create') }}" class="btn-create-post">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}"
+                style="display:inline-flex;align-items:center;gap:6px;padding:10px 22px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;color:#6b7280;font-size:0.88rem;font-weight:600;text-decoration:none;transition:all .2s;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
                 </svg>
-                Buat Pengumuman Pertama
+                Kembali ke Daftar Pengumuman
             </a>
         </div>
     @endforelse

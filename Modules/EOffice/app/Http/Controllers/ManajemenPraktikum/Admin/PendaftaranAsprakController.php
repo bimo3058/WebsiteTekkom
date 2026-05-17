@@ -49,7 +49,6 @@ class PendaftaranAsprakController extends Controller
         \Modules\EOffice\Models\AsprakPraktikum::firstOrCreate([
             'praktikum_id' => $pendaftaran->praktikum_id,
             'user_id'      => $pendaftaran->user_id,
-        ], [
             'role' => 'asprak',
         ]);
 

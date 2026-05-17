@@ -5,7 +5,7 @@
     function setActiveTab(button, buttons, panels) {
         const target = button.getAttribute('data-tab-target');
         buttons.forEach(btn => {
-            btn.classList.remove('text-blue-600', 'border-blue-600', 'font-semibold');
+            btn.classList.remove('text-primary', 'border-primary', 'font-semibold');
             btn.classList.add('text-slate-500', 'border-transparent');
         });
         panels.forEach(panel => {
@@ -15,7 +15,7 @@
                 panel.classList.add('hidden');
             }
         });
-        button.classList.add('text-blue-600', 'border-blue-600', 'font-semibold');
+        button.classList.add('text-primary', 'border-primary', 'font-semibold');
         button.classList.remove('text-slate-500', 'border-transparent');
     }
 

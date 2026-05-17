@@ -84,6 +84,44 @@ class CbtEngineController extends Controller
     }
 
     /**
+     * Cek token via AJAX sebelum memunculkan popup konfirmasi.
+     */
+    public function checkToken(Request $request)
+    {
+        $request->validate(['token' => 'required|string|size:6']);
+
+        $token     = strtoupper($request->token);
+        $pendaftar = PendaftarUjian::where('mahasiswa_id', auth()->id())
+            ->where('status_pendaftaran', 'approved')
+            ->whereHas('jadwal')
+            ->with('jadwal')
+            ->first();
+
+        if (! $pendaftar || ! $pendaftar->jadwal) {
+            return response()->json(['valid' => false, 'message' => 'Anda tidak terdaftar atau belum dialokasikan ke sesi ujian apapun.']);
+        }
+
+        $jadwal = $pendaftar->jadwal;
+
+        if ($jadwal->token !== $token) {
+            return response()->json(['valid' => false, 'message' => 'Token yang Anda masukkan salah.']);
+        }
+
+        if (! now()->isSameDay($jadwal->tanggal_ujian)) {
+            return response()->json(['valid' => false, 'message' => 'Ujian tidak dijadwalkan pada hari ini.']);
+        }
+
+        $tanggal      = $jadwal->tanggal_ujian->format('Y-m-d');
+        $waktuSelesai = Carbon::parse($tanggal . ' ' . $jadwal->waktu_selesai);
+
+        if (now()->gte($waktuSelesai)) {
+            return response()->json(['valid' => false, 'message' => 'Sesi ujian telah berakhir. Anda tidak dapat masuk lagi.']);
+        }
+
+        return response()->json(['valid' => true]);
+    }
+
+    /**
      * Ruang tunggu sebelum ujian dimulai.
      */
     public function waitingRoom()
@@ -180,7 +218,7 @@ class CbtEngineController extends Controller
         $jadwal   = $session->jadwal;
         $jawabans = KompreJawaban::where('kompre_session_id', $session->id)
             ->orderBy('urutan_soal')
-            ->with(['pertanyaan', 'pertanyaan.jawabans'])
+            ->with(['pertanyaan', 'pertanyaan.jawabans', 'pertanyaan.cpl'])
             ->get()
             ->map(function ($j) {
                 $opsiMap    = collect($j->pertanyaan->jawabans)->keyBy('id');
@@ -200,6 +238,7 @@ class CbtEngineController extends Controller
                     ]),
                     'jawaban_terpilih' => $j->jawaban_dipilih,
                     'ragu_ragu'        => (bool) $j->is_ragu,
+                    'cpl_kode'         => $j->pertanyaan->cpl->kode ?? 'CPL',
                 ];
             });
 

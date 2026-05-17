@@ -40,8 +40,16 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         # Admin Routes - Kontrol Umum
         Route::middleware('role:admin_banksoal|superadmin')->prefix('admin/kontrol-umum')->name('banksoal.admin.kontrol-umum.')->group(function () {
             Route::get('/mata-kuliah', [MataKuliahController::class, 'index'])->name('mata-kuliah');
+            Route::get('/mata-kuliah/create', [MataKuliahController::class, 'create'])->name('mata-kuliah.create');
             Route::get('/cpl-cpmk', [CplCpmkController::class, 'index'])->name('cpl-cpmk');
+            Route::get('/cpl-cpmk/create', [CplCpmkController::class, 'create'])->name('cpl-cpmk.create');
             Route::get('/pemetaan', [PemetaanController::class, 'index'])->name('pemetaan');
+            Route::get('/pemetaan/cpmk-cpl/create', [PemetaanController::class, 'createCpmkCpl'])->name('pemetaan.cpmk-cpl.create');
+            Route::get('/pemetaan/mk-cpl/create', [PemetaanController::class, 'createMkCpl'])->name('pemetaan.mk-cpl.create');
+            Route::get('/pemetaan/mk-dosen/create', [PemetaanController::class, 'createMkDosen'])->name('pemetaan.mk-dosen.create');
+            Route::get('/pemetaan/cpmk-cpl/{cpl_id}/edit', [PemetaanController::class, 'editCpmkCpl'])->name('pemetaan.cpmk-cpl.edit');
+            Route::get('/pemetaan/mk-cpl/{mk_id}/edit', [PemetaanController::class, 'editMkCpl'])->name('pemetaan.mk-cpl.edit');
+            Route::get('/pemetaan/mk-dosen/{mk_id}/edit', [PemetaanController::class, 'editMkDosen'])->name('pemetaan.mk-dosen.edit');
         });
 
         Route::middleware('role:admin_banksoal|superadmin')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
@@ -65,7 +73,9 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::get('/pemetaan/options', [PemetaanController::class, 'options'])->name('pemetaan.options');
             Route::get('/pemetaan/cpmk-cpl', [PemetaanController::class, 'listCpmkCpl'])->name('pemetaan.cpmk-cpl.index');
             Route::get('/pemetaan/mk-cpl', [PemetaanController::class, 'listMkCpl'])->name('pemetaan.mk-cpl.index');
+            Route::get('/pemetaan/cpl-mk', [PemetaanController::class, 'listCplMk'])->name('pemetaan.cpl-mk.index');
             Route::get('/pemetaan/dosen-mk', [PemetaanController::class, 'listDosenMk'])->name('pemetaan.dosen-mk.index');
+            Route::get('/pemetaan/dosen-by-dosen', [PemetaanController::class, 'listDosenByDosen'])->name('pemetaan.dosen-by-dosen.index');
         });
 
         # Admin Routes - Kontrol BankSoal
@@ -83,6 +93,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             // RPS - Dosen
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::get('/', [DosenRpsController::class, 'index'])->name('index');
+                Route::get('/create', [DosenRpsController::class, 'create'])->name('create');
                 Route::get('/preview/{rpsId}', [DosenRpsController::class, 'previewDokumen'])->name('preview');
                 Route::get('/download/{rpsId}', [DosenRpsController::class, 'downloadDokumen'])->name('download');
                 Route::get('/{rpsId}/edit', [DosenRpsController::class, 'edit'])->name('edit');
@@ -101,6 +112,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::get('/validasi-rps/preview/{rpsId}', [GpmRpsController::class, 'previewDokumen'])->name('validasi-rps.preview');
                 Route::get('/riwayat-validasi/rps', [RiwayatValidasiController::class, 'rps'])->name('riwayat-validasi.rps');
                 Route::get('/periode-rps', [PeriodeRpsController::class, 'index'])->name('periode-rps.index');
+                Route::get('/periode-rps/create', [PeriodeRpsController::class, 'create'])->name('periode-rps.create');
                 
                 // Delete routes for GPM
                 Route::middleware('permission:banksoal.delete')->group(function () {
@@ -139,6 +151,9 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::get('/validasi-bank-soal/review', [ValidasiBankSoalController::class, 'review'])->name('validasi-bank-soal.review');
                 Route::get('/riwayat-validasi/bank-soal', [RiwayatValidasiController::class, 'bankSoal'])->name('riwayat-validasi.bank-soal');
                 Route::get('/riwayat-validasi/bank-soal/{id}/detail', [RiwayatValidasiController::class, 'detailBankSoal'])->name('riwayat-validasi.bank-soal.detail');
+                
+                // Parameter Management - Moved to block below for consolidation
+
             });
 
             // Banksoal - Admin
@@ -184,8 +199,13 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::put('/cpmk/{id}', [CplCpmkController::class, 'updateCpmk'])->name('cpmk.update');
 
             Route::post('/pemetaan/cpmk-cpl', [PemetaanController::class, 'storeCpmkCpl'])->name('pemetaan.cpmk-cpl.store');
+            Route::post('/pemetaan/cpmk-cpl/sync', [PemetaanController::class, 'syncCpmkCpl'])->name('pemetaan.cpmk-cpl.sync');
             Route::post('/pemetaan/mk-cpl', [PemetaanController::class, 'storeMkCpl'])->name('pemetaan.mk-cpl.store');
+            Route::post('/pemetaan/mk-cpl/sync', [PemetaanController::class, 'syncMkCpl'])->name('pemetaan.mk-cpl.sync');
+            Route::post('/pemetaan/cpl-mk', [PemetaanController::class, 'storeCplMk'])->name('pemetaan.cpl-mk.store');
             Route::post('/pemetaan/dosen-mk', [PemetaanController::class, 'storeDosenMk'])->name('pemetaan.dosen-mk.store');
+            Route::post('/pemetaan/dosen-mk/sync', [PemetaanController::class, 'syncMkDosen'])->name('pemetaan.dosen-mk.sync');
+            Route::post('/pemetaan/dosen-mk-by-dosen', [PemetaanController::class, 'storeDosenMkByDosen'])->name('pemetaan.dosen-mk-by-dosen.store');
         });
 
         // 1. Blok RPS
@@ -212,6 +232,18 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
                 Route::post('/validasi-bank-soal/store', [ValidasiBankSoalController::class, 'store'])->name('validasi-bank-soal.store');            
                 Route::put('/validasi-bank-soal/update/{id}', [ValidasiBankSoalController::class, 'update'])->name('validasi-bank-soal.update');
+                
+                // Parameter Management (Full CRUD)
+                Route::prefix('parameter')->name('parameter.')->group(function () {
+                    Route::get('/', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'index'])->name('index');
+                    Route::get('/create', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'create'])->name('create');
+                    Route::post('/', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'store'])->name('store');
+                    Route::get('/{id}', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'show'])->name('show');
+                    Route::get('/{id}/edit', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'edit'])->name('edit');
+                    Route::put('/{id}', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'update'])->name('update');
+                    Route::delete('/{id}', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'destroy'])->name('destroy');
+                    Route::post('/skor', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'updateSkor'])->name('skor.update');
+                });
             });
 
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
@@ -236,8 +268,16 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::delete('/cpmk/{id}', [CplCpmkController::class, 'destroyCpmk'])->name('cpmk.destroy');
 
             Route::delete('/pemetaan/cpmk-cpl', [PemetaanController::class, 'destroyCpmkCpl'])->name('pemetaan.cpmk-cpl.destroy');
+            Route::delete('/pemetaan/cpmk-cpl/{cpl_id}/all', [PemetaanController::class, 'destroyAllCpmkByCpl'])->name('pemetaan.cpmk-cpl.destroy-all');
+            Route::delete('/pemetaan/cpmk-cpl/bulk', [PemetaanController::class, 'bulkDestroyCpmkCpl'])->name('pemetaan.cpmk-cpl.bulk-destroy');
+
             Route::delete('/pemetaan/mk-cpl', [PemetaanController::class, 'destroyMkCpl'])->name('pemetaan.mk-cpl.destroy');
+            Route::delete('/pemetaan/mk-cpl/{mk_id}/all', [PemetaanController::class, 'destroyAllCplByMk'])->name('pemetaan.mk-cpl.destroy-all');
+            Route::delete('/pemetaan/mk-cpl/bulk', [PemetaanController::class, 'bulkDestroyMkCpl'])->name('pemetaan.mk-cpl.bulk-destroy');
+
             Route::delete('/pemetaan/dosen-mk/{id}', [PemetaanController::class, 'destroyDosenMk'])->name('pemetaan.dosen-mk.destroy');
+            Route::delete('/pemetaan/dosen-mk/{mk_id}/all', [PemetaanController::class, 'destroyAllDosenByMk'])->name('pemetaan.dosen-mk.destroy-all');
+            Route::delete('/pemetaan/dosen-mk/bulk', [PemetaanController::class, 'bulkDestroyDosenMk'])->name('pemetaan.dosen-mk.bulk-destroy');
         });
         
         // RPS Dosen Delete
@@ -246,6 +286,9 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::delete('/{rpsId}', [DosenRpsController::class, 'destroy'])->name('destroy');
             });
         });
+
+        // GPM Delete - Parameter already handled in consolidated block above
+
     });
 
     // -------------------------------------------------------------------------
@@ -266,6 +309,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::put('/setup/{id}',                    [PeriodeController::class, 'update'])->name('update');
             Route::delete('/setup/{id}',                 [PeriodeController::class, 'destroy'])->name('destroy');
             Route::patch('/setup/{id}/close-pendaftaran',[PeriodeController::class, 'closePendaftaran'])->name('close-pendaftaran');
+            Route::patch('/setup/{id}/open-pendaftaran', [PeriodeController::class, 'openPendaftaran'])->name('open-pendaftaran');
 
             Route::get('/jadwal',    [JadwalController::class, 'index'])->name('jadwal');
             Route::post('/jadwal',   [JadwalController::class, 'store'])->name('jadwal.store');
@@ -280,6 +324,8 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::get('/lookup-nim',     [PendaftarAdminController::class, 'lookupNIM'])->name('lookupNIM');
             Route::post('/',              [PendaftarAdminController::class, 'store'])->name('store');
             Route::patch('/{id}/status',  [PendaftarAdminController::class, 'updateStatus'])->name('updateStatus');
+            Route::post('/bulk-approve',  [PendaftarAdminController::class, 'bulkApprove'])->name('bulkApprove');
+            Route::post('/bulk-reject',   [PendaftarAdminController::class, 'bulkReject'])->name('bulkReject');
             Route::delete('/{id}',        [PendaftarAdminController::class, 'destroy'])->name('destroy');
         });
     });
@@ -336,7 +382,8 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
         Route::get('/riwayat-ujian', [MahasiswaController::class, 'riwayat'])->name('riwayat');
 
         // CBT Engine Routes
-        // Flow: validate-token (generate soal + start sesi) → engine/run
+        // Flow: validate-token (generate soal + start sesi) -> engine/run
+        Route::post('/engine/check-token', [CbtEngineController::class, 'checkToken'])->name('engine.check-token');
         Route::post('/engine/validate-token', [CbtEngineController::class, 'validateToken'])
             ->middleware('throttle:cbt-token-validation')  // Max 5 percobaan/menit per user
             ->name('engine.validate');
@@ -351,3 +398,4 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
         Route::post('/engine/log-violation',[CbtEngineController::class, 'logViolation'])->name('engine.log-violation');
         Route::get('/engine/finish',        [CbtEngineController::class, 'finish'])->name('engine.finish');
     });
+

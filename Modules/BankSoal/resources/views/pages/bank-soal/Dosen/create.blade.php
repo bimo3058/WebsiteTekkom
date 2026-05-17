@@ -1,4 +1,9 @@
 <x-banksoal::layouts.dosen-admin>
+    @section('breadcrumbs')
+        <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-slate-500 hover:text-primary transition-colors">Bank Soal</a>
+        <span class="mx-2 text-slate-300">/</span>
+        <span class="text-slate-800 font-semibold">Buat Soal Baru</span>
+    @endsection
     <x-banksoal::ui.page-header title="Buat Soal Baru" subtitle="Lengkapi formulir untuk menambahkan butir soal ke bank soal.">
         <x-slot:actions>
             <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"><i class="fas fa-arrow-left"></i> Kembali</a>
@@ -12,7 +17,7 @@
                 Swal.fire({
                     icon: 'error',
                     title: 'Waduh, Gagal...',
-                    text: '{{ session('error') }}',
+                    text: @json(session('error')),
                     confirmButtonColor: '#ef4444',
                     background: '#ffffff',
                     customClass: {
@@ -52,9 +57,9 @@
                 <div>
                     <label for="kesulitan" class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label>
                     <select name="kesulitan" id="kesulitan" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required>
-                        <option value="easy" {{ old('kesulitan') == 'easy' ? 'selected' : '' }}>Mudah (Easy)</option>
-                        <option value="intermediate" {{ old('kesulitan') == 'intermediate' ? 'selected' : '' }}>Sedang (Medium)</option>
-                        <option value="advanced" {{ old('kesulitan') == 'advanced' ? 'selected' : '' }}>Sulit (Hard)</option>
+                        <option value="easy" {{ old('kesulitan') == 'easy' ? 'selected' : '' }}>Mudah (easy)</option>
+                        <option value="intermediate" {{ old('kesulitan') == 'intermediate' ? 'selected' : '' }}>Sedang (intermediate)</option>
+                        <option value="advanced" {{ old('kesulitan') == 'advanced' ? 'selected' : '' }}>Sulit (advanced)</option>
                     </select>
                 </div>
                 <div>
@@ -100,7 +105,7 @@
 
             <div class="flex items-center justify-between border-t border-slate-200 bg-slate-50 px-6 py-4">
                 <a href="{{ route('banksoal.soal.dosen.index') }}" class="text-sm font-semibold text-slate-600 hover:text-slate-700">Batalkan</a>
-                <div class="flex items-center gap-2"><button type="submit" name="submit_action" value="draft" class="rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-900">Simpan Draft</button><button type="submit" name="submit_action" value="publish" class="rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-slate-900">Publikasi Soal</button></div>
+                <div class="flex items-center gap-2"><button type="submit" name="submit_action" value="draft" class="rounded-lg bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary transition-colors">Simpan Draft</button><button type="submit" name="submit_action" value="publish" class="rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary/90 transition-colors">Publikasi Soal</button></div>
             </div>
         </form>
     </x-banksoal::ui.panel>
