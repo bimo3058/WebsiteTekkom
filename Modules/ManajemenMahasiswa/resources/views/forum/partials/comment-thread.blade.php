@@ -20,7 +20,7 @@
                 @include('manajemenmahasiswa::forum.partials.role-badge', ['roleUser' => $comment->author, 'badgeSize' => $depth === 0 ? '10px' : '9px'])
                 @if(isset($authorTiers[$comment->user_id]))
                     <span class="badge rounded-pill"
-                        style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-size: 9px; font-weight: 600; padding: 2px 6px;"
+                        style="background: linear-gradient(135deg, #293C79 0%, #6F7DA4 100%); color: #fff; font-size: 9px; font-weight: 600; padding: 2px 6px;"
                         title="{{ $authorTiers[$comment->user_id]['tier_name'] }}">
                         {!! $authorTiers[$comment->user_id]['tier_icon'] !!} Lv.{{ $authorTiers[$comment->user_id]['level'] }}
                     </span>
@@ -29,7 +29,7 @@
                     {{ $comment->created_at->diffForHumans() }}</span>
                 @if($comment->is_best_answer)
                     <span class="best-answer-badge d-flex align-items-center gap-1">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                        <x-manajemenmahasiswa::ui.icon name="star" size="12" /> 
                         Jawaban Terbaik
                     </span>
                 @endif
@@ -73,16 +73,14 @@
                 </div>
                 @unless($thread->is_locked)
                     <button type="button" class="c-action-btn toggle-reply-btn" data-comment-id="{{ $comment->id }}">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                        </svg>
+                        <x-manajemenmahasiswa::ui.icon name="message-dots-circle" size="14" />
                         Balas
                     </button>
                 @endunless
 
                 @if($comment->user_id === $user->id)
                     <button type="button" class="c-action-btn toggle-edit-btn d-flex align-items-center gap-1" data-comment-id="{{ $comment->id }}">
-                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"/></svg> Edit
+                        <x-manajemenmahasiswa::ui.icon name="file-01" size="12" /> Edit
                     </button>
                 @endif
 
@@ -91,7 +89,7 @@
                         style="display:inline;" onsubmit="return confirm('Hapus komentar ini?')">
                         @csrf @method('DELETE')
                         <button type="submit" class="c-action-btn d-flex align-items-center gap-1" style="color:#ef4444;">
-                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/></svg> Hapus
+                            <x-manajemenmahasiswa::ui.icon name="minus-circle" size="12" /> Hapus
                         </button>
                     </form>
                 @endif
@@ -102,7 +100,7 @@
                         style="display:inline;" onsubmit="return confirm('Tandai komentar ini sebagai Jawaban Terbaik?')">
                         @csrf
                         <button type="submit" class="c-action-btn d-flex align-items-center gap-1" style="color:#16a34a; font-weight:600;">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Best Answer
+                            <x-manajemenmahasiswa::ui.icon name="check" size="14" /> Best Answer
                         </button>
                     </form>
                 @endif
@@ -150,10 +148,7 @@
                 @endphp
                 @if($flatReplies->isNotEmpty())
                     <button type="button" class="toggle-replies-btn" data-target="replies-container-{{ $comment->id }}">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <polyline points="6 9 12 15 18 9"></polyline>
-                        </svg>
+                        <x-manajemenmahasiswa::ui.icon name="chevron-down" size="16" />
                         <span class="toggle-text">{{ $flatReplies->count() }} balasan</span>
                     </button>
 

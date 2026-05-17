@@ -97,8 +97,7 @@
                             <p class="text-sm text-slate-600 leading-relaxed mb-5 max-w-xl">
                                 Sesi ujian komprehensif Anda telah dimulai. Jangan menutup halaman web atau berpindah aplikasi
                                 selama ujian berlangsung.<br><br>
-                                Masukkan <strong>Token Akses (6 Digit)</strong> yang diberikan oleh pengawas ujian untuk memulai
-                                Test Engine.
+                                Masukkan <strong>Token Akses (6 Digit)</strong> yang diberikan oleh pengawas ujian untuk memulai Ujian.
                             </p>
                         @else
                             <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-2">Pendaftaran Berhasil
@@ -125,12 +124,11 @@
                             </div>
                         @endif
 
-                        <!-- Token Entry Form -->
-                        <div
+                        <div x-data="{ confirmModal: false }"
                             class="border-t border-slate-200 pt-5 {{ !$isUjianBerlangsung ? 'opacity-50 pointer-events-none' : '' }}">
-                            <form action="{{ route('komprehensif.mahasiswa.engine.validate') }}" method="POST"
+                            <form x-ref="examForm" action="{{ route('komprehensif.mahasiswa.engine.validate') }}" method="POST"
                                 class="flex flex-col sm:flex-row items-end gap-3 pb-2 sm:pb-4"
-                                onsubmit="return confirm('Anda akan langsung masuk ke ujian dan waktu 100 menit akan mulai berjalan.\n\nPastikan koneksi Anda stabil sebelum melanjutkan.\n\nSiap memulai ujian?')">
+                                @submit.prevent="confirmModal = true">
                                 @csrf
                                 @php
                                     $hasTokenError = $errors->has('token') || session('error');
@@ -153,12 +151,39 @@
                                 </div>
                                 <div class="w-full sm:w-1/3">
                                     <button type="submit"
-                                        class="w-full h-12 px-5 {{ !$isUjianBerlangsung ? 'bg-slate-300 cursor-not-allowed text-slate-500' : 'bg-blue-600 hover:bg-blue-700 text-white' }} font-bold text-sm tracking-widest uppercase transition-colors flex items-center justify-center rounded-xl shadow-sm"
+                                        class="w-full h-12 px-5 {{ !$isUjianBerlangsung ? 'bg-slate-300 cursor-not-allowed text-slate-500' : 'bg-primary hover:bg-primary/90 text-white' }} font-bold text-sm tracking-widest uppercase transition-colors flex items-center justify-center rounded-xl shadow-sm"
                                         {{ !$isUjianBerlangsung ? 'disabled' : '' }}>
                                         Masuk Ujian →
                                     </button>
                                 </div>
                             </form>
+
+                            <!-- Modal Popup: Konfirmasi Mulai Ujian -->
+                            <div x-show="confirmModal" tabindex="-1" class="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6" style="display: none;" x-cloak>
+                                <div x-show="confirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" @click="confirmModal = false"></div>
+
+                                <div x-show="confirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-full">
+                                    
+                                    <div class="px-6 pt-6 pb-4 text-center">
+                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-blue-50">
+                                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <h3 class="text-[17px] font-extrabold text-slate-800 tracking-tight mb-2">Mulai Ujian Sekarang?</h3>
+                                        <p class="text-[13px] text-slate-500 font-medium leading-relaxed">
+                                            Mulai ujian dan kerjakan soal dengan durasi 100 menit.
+                                        </p>
+                                    </div>
+
+                                    <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex items-center gap-3">
+                                        <button type="button" @click="confirmModal = false" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm rounded-xl focus:outline-none transition-colors">Batal</button>
+                                        <button type="button" @click="$refs.examForm.submit()" class="flex-1 w-full px-4 py-2.5 text-[13px] font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm rounded-xl focus:outline-none transition-all">
+                                            Ya, Mulai
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -284,11 +309,11 @@
                         </div>
                     @else
                         <!-- STATE: ELIGIBLE & REGISTRATION OPEN -->
-                        <div class="flex flex-col border-2 border-blue-500 bg-white">
+                        <div class="flex flex-col border-2 border-primary bg-white">
                             <div class="p-8 sm:p-10 flex flex-col h-full">
                                 <div class="flex items-center gap-4 mb-6">
                                     <span
-                                        class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 border border-blue-200 text-[11px] font-bold tracking-widest uppercase">Terbuka</span>
+                                        class="inline-flex items-center px-3 py-1 bg-primary/10 text-primary border border-primary/20 text-[11px] font-bold tracking-widest uppercase">Terbuka</span>
                                 </div>
 
                                 <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-4 leading-tight">Pendaftaran
@@ -304,7 +329,7 @@
                                 <div
                                     class="mt-auto flex flex-col sm:flex-row sm:items-center justify-between border-t border-slate-200 pt-6 gap-6">
                                     <a href="{{ route('komprehensif.mahasiswa.pendaftaran.form') }}"
-                                        class="inline-block py-4 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm tracking-widest uppercase text-center transition-colors rounded-xl shadow-sm shadow-blue-500/25">
+                                        class="inline-block py-4 px-8 bg-primary hover:bg-primary/90 text-white font-bold text-sm tracking-widest uppercase text-center transition-colors rounded-xl shadow-sm shadow-primary/25">
                                         Daftar Ujian Komprehensif
                                     </a>
                                 </div>

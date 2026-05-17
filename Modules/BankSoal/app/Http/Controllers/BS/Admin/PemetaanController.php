@@ -29,6 +29,72 @@ class PemetaanController extends Controller
         return view('banksoal::pages.admin.kontrol-umum.pemetaan');
     }
 
+    public function createCpmkCpl()
+    {
+        $this->authorize('banksoal.edit');
+        return view('banksoal::pages.admin.kontrol-umum.pemetaan-cpmk-cpl-create');
+    }
+
+    public function createMkCpl()
+    {
+        $this->authorize('banksoal.edit');
+        return view('banksoal::pages.admin.kontrol-umum.pemetaan-mk-cpl-create');
+    }
+
+    public function createMkDosen()
+    {
+        $this->authorize('banksoal.edit');
+        return view('banksoal::pages.admin.kontrol-umum.pemetaan-mk-dosen-create');
+    }
+
+    public function editCpmkCpl(int $cpl_id)
+    {
+        $this->authorize('banksoal.edit');
+        $cpl = Cpl::findOrFail($cpl_id);
+        $selectedIds = DB::table('bs_cpl_cpmk')
+            ->where('cpl_id', $cpl_id)
+            ->pluck('cpmk_id')
+            ->map(fn($id) => (int) $id)
+            ->values()
+            ->toArray();
+        return view('banksoal::pages.admin.kontrol-umum.pemetaan-cpmk-cpl-edit', [
+            'cpl'         => $cpl,
+            'selectedIds' => $selectedIds,
+        ]);
+    }
+
+    public function editMkCpl(int $mk_id)
+    {
+        $this->authorize('banksoal.edit');
+        $mk = MataKuliah::findOrFail($mk_id);
+        $selectedIds = DB::table('bs_mata_kuliah_cpl')
+            ->where('mk_id', $mk_id)
+            ->pluck('cpl_id')
+            ->map(fn($id) => (int) $id)
+            ->values()
+            ->toArray();
+        return view('banksoal::pages.admin.kontrol-umum.pemetaan-mk-cpl-edit', [
+            'mk'          => $mk,
+            'selectedIds' => $selectedIds,
+        ]);
+    }
+
+    public function editMkDosen(int $mk_id)
+    {
+        $this->authorize('banksoal.edit');
+        $mk = MataKuliah::findOrFail($mk_id);
+        $selectedIds = DB::table('bs_dosen_pengampu_mk')
+            ->where('mk_id', $mk_id)
+            ->pluck('user_id')
+            ->map(fn($id) => (int) $id)
+            ->values()
+            ->toArray();
+        return view('banksoal::pages.admin.kontrol-umum.pemetaan-mk-dosen-edit', [
+            'mk'          => $mk,
+            'selectedIds' => $selectedIds,
+        ]);
+    }
+
     public function options(): JsonResponse
     {
         $this->authorize('banksoal.view');
@@ -367,6 +433,184 @@ class PemetaanController extends Controller
         }
     }
 
+    public function listCplMk(): JsonResponse
+    {
+        $this->authorize('banksoal.view');
+
+        $allCpl = Cpl::query()->orderBy('kode')->get(['id', 'kode']);
+
+        $rawRows = DB::table('bs_cpl as cpl')
+            ->leftJoin('bs_mata_kuliah_cpl as map', 'cpl.id', '=', 'map.cpl_id')
+            ->leftJoin('bs_mata_kuliah as mk', 'mk.id', '=', 'map.mk_id')
+            ->select('cpl.id as cpl_id', 'cpl.kode as cpl_kode', 'mk.id as mk_id', 'mk.kode as mk_kode', 'mk.nama as mk_nama')
+            ->orderBy('cpl.kode')
+            ->orderBy('mk.nama')
+            ->get();
+
+        $groupedRows = $rawRows->groupBy('cpl_id');
+
+        $rows = $allCpl->map(function ($cpl) use ($groupedRows) {
+            $group = $groupedRows->get($cpl->id, collect());
+
+            return [
+                'cpl_id'   => $cpl->id,
+                'cpl_kode' => $cpl->kode,
+                'mk_items' => $group
+                    ->filter(fn($r) => !is_null($r->mk_id))
+                    ->map(fn($r) => [
+                        'mk_id'   => $r->mk_id,
+                        'mk_kode' => $r->mk_kode,
+                        'mk_nama' => $r->mk_nama,
+                    ])
+                    ->values()
+                    ->all(),
+            ];
+        })->values();
+
+        return response()->json(['success' => true, 'data' => $rows]);
+    }
+
+    public function storeCplMk(Request $request): JsonResponse
+    {
+        $this->authorize('banksoal.edit');
+
+        $validated = $request->validate([
+            'cpl_id' => ['required', 'integer', 'exists:bs_cpl,id'],
+            'mk_ids' => ['required', 'array', 'min:1'],
+            'mk_ids.*' => ['required', 'integer', 'exists:bs_mata_kuliah,id'],
+        ]);
+
+        try {
+            $mkIds = collect($validated['mk_ids'])->map(fn($id) => (int) $id)->unique()->values();
+
+            $existingMkIds = DB::table('bs_mata_kuliah_cpl')
+                ->where('cpl_id', $validated['cpl_id'])
+                ->whereIn('mk_id', $mkIds)
+                ->pluck('mk_id')
+                ->map(fn($id) => (int) $id)
+                ->all();
+
+            $newRows = $mkIds
+                ->reject(fn($mkId) => in_array((int) $mkId, $existingMkIds, true))
+                ->map(fn($mkId) => [
+                    'cpl_id' => $validated['cpl_id'],
+                    'mk_id'  => (int) $mkId,
+                ])
+                ->values()
+                ->all();
+
+            if (empty($newRows)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Semua Mata Kuliah yang dipilih sudah terpetakan untuk CPL ini',
+                ], 422);
+            }
+
+            DB::table('bs_mata_kuliah_cpl')->insert($newRows);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pemetaan CPL ke MK berhasil ditambahkan',
+                'meta'    => ['added' => count($newRows), 'skipped' => count($mkIds) - count($newRows)],
+            ], 201);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal menambahkan pemetaan CPL ke MK: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function listDosenByDosen(): JsonResponse
+    {
+        $this->authorize('banksoal.view');
+
+        $allDosen = DB::table('users')
+            ->join('lecturers', 'lecturers.user_id', '=', 'users.id')
+            ->select('users.id', 'users.name')
+            ->orderBy('users.name')
+            ->get();
+
+        $rawRows = DB::table('users as u')
+            ->join('lecturers as l', 'l.user_id', '=', 'u.id')
+            ->leftJoin('bs_dosen_pengampu_mk as map', 'u.id', '=', 'map.user_id')
+            ->leftJoin('bs_mata_kuliah as mk', 'mk.id', '=', 'map.mk_id')
+            ->select('u.id as user_id', 'u.name as dosen_nama', 'map.id as map_id', 'mk.id as mk_id', 'mk.kode as mk_kode', 'mk.nama as mk_nama')
+            ->orderBy('u.name')
+            ->orderBy('mk.nama')
+            ->get();
+
+        $groupedRows = $rawRows->groupBy('user_id');
+
+        $rows = $allDosen->map(function ($dosen) use ($groupedRows) {
+            $group = $groupedRows->get($dosen->id, collect());
+
+            return [
+                'user_id'    => $dosen->id,
+                'dosen_nama' => $dosen->name,
+                'mk_items'   => $group
+                    ->filter(fn($r) => !is_null($r->mk_id))
+                    ->map(fn($r) => [
+                        'mk_id'   => $r->mk_id,
+                        'mk_kode' => $r->mk_kode,
+                        'mk_nama' => $r->mk_nama,
+                    ])
+                    ->values()
+                    ->all(),
+            ];
+        })->values();
+
+        return response()->json(['success' => true, 'data' => $rows]);
+    }
+
+    public function storeDosenMkByDosen(Request $request): JsonResponse
+    {
+        $this->authorize('banksoal.edit');
+
+        $validated = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id', Rule::exists('lecturers', 'user_id')],
+            'mk_ids'  => ['required', 'array', 'min:1'],
+            'mk_ids.*' => ['required', 'integer', 'exists:bs_mata_kuliah,id'],
+        ]);
+
+        try {
+            $mkIds = collect($validated['mk_ids'])->map(fn($id) => (int) $id)->unique()->values();
+
+            $existingMkIds = DosenPengampuMk::query()
+                ->where('user_id', $validated['user_id'])
+                ->whereIn('mk_id', $mkIds)
+                ->pluck('mk_id')
+                ->map(fn($id) => (int) $id)
+                ->all();
+
+            $newRows = $mkIds
+                ->reject(fn($mkId) => in_array((int) $mkId, $existingMkIds, true))
+                ->map(fn($mkId) => [
+                    'user_id'    => (int) $validated['user_id'],
+                    'mk_id'      => (int) $mkId,
+                    'is_rps'     => false,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ])
+                ->values()
+                ->all();
+
+            if (empty($newRows)) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Semua Mata Kuliah yang dipilih sudah terpetakan untuk Dosen ini',
+                ], 422);
+            }
+
+            DB::table('bs_dosen_pengampu_mk')->insert($newRows);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Pemetaan Dosen ke MK berhasil ditambahkan',
+                'meta'    => ['added' => count($newRows), 'skipped' => count($mkIds) - count($newRows)],
+            ], 201);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal menambahkan pemetaan Dosen ke MK: ' . $e->getMessage()], 500);
+        }
+    }
+
     public function destroyCpmkCpl(Request $request): JsonResponse
     {
         $this->authorize('banksoal.delete');
@@ -386,6 +630,29 @@ class PemetaanController extends Controller
         }
 
         return response()->json(['success' => true, 'message' => 'Pemetaan CPMK ke CPL berhasil dihapus']);
+    }
+
+    public function destroyAllCpmkByCpl(int $cpl_id): JsonResponse
+    {
+        $this->authorize('banksoal.delete');
+
+        DB::table('bs_cpl_cpmk')->where('cpl_id', $cpl_id)->delete();
+
+        return response()->json(['success' => true, 'message' => 'Semua pemetaan CPMK untuk CPL ini berhasil dihapus']);
+    }
+
+    public function bulkDestroyCpmkCpl(Request $request): JsonResponse
+    {
+        $this->authorize('banksoal.delete');
+
+        $validated = $request->validate([
+            'cpl_ids' => ['required', 'array', 'min:1'],
+            'cpl_ids.*' => ['required', 'integer'],
+        ]);
+
+        DB::table('bs_cpl_cpmk')->whereIn('cpl_id', $validated['cpl_ids'])->delete();
+
+        return response()->json(['success' => true, 'message' => count($validated['cpl_ids']) . ' pemetaan CPMK-CPL berhasil dihapus']);
     }
 
     public function destroyMkCpl(Request $request): JsonResponse
@@ -409,6 +676,29 @@ class PemetaanController extends Controller
         return response()->json(['success' => true, 'message' => 'Pemetaan MK ke CPL berhasil dihapus']);
     }
 
+    public function destroyAllCplByMk(int $mk_id): JsonResponse
+    {
+        $this->authorize('banksoal.delete');
+
+        DB::table('bs_mata_kuliah_cpl')->where('mk_id', $mk_id)->delete();
+
+        return response()->json(['success' => true, 'message' => 'Semua pemetaan CPL untuk MK ini berhasil dihapus']);
+    }
+
+    public function bulkDestroyMkCpl(Request $request): JsonResponse
+    {
+        $this->authorize('banksoal.delete');
+
+        $validated = $request->validate([
+            'mk_ids' => ['required', 'array', 'min:1'],
+            'mk_ids.*' => ['required', 'integer'],
+        ]);
+
+        DB::table('bs_mata_kuliah_cpl')->whereIn('mk_id', $validated['mk_ids'])->delete();
+
+        return response()->json(['success' => true, 'message' => count($validated['mk_ids']) . ' pemetaan MK-CPL berhasil dihapus']);
+    }
+
     public function destroyDosenMk(int $id): JsonResponse
     {
         $this->authorize('banksoal.delete');
@@ -422,4 +712,95 @@ class PemetaanController extends Controller
 
         return response()->json(['success' => true, 'message' => 'Pemetaan dosen ke MK berhasil dihapus']);
     }
+
+    public function destroyAllDosenByMk(int $mk_id): JsonResponse
+    {
+        $this->authorize('banksoal.delete');
+
+        DosenPengampuMk::where('mk_id', $mk_id)->delete();
+
+        return response()->json(['success' => true, 'message' => 'Semua pemetaan Dosen untuk MK ini berhasil dihapus']);
+    }
+
+    public function bulkDestroyDosenMk(Request $request): JsonResponse
+    {
+        $this->authorize('banksoal.delete');
+
+        $validated = $request->validate([
+            'mk_ids' => ['required', 'array', 'min:1'],
+            'mk_ids.*' => ['required', 'integer'],
+        ]);
+
+        DosenPengampuMk::whereIn('mk_id', $validated['mk_ids'])->delete();
+
+        return response()->json(['success' => true, 'message' => count($validated['mk_ids']) . ' pemetaan Dosen-MK berhasil dihapus']);
+    }
+
+    // Edit-mode store: SYNC (replace all mappings)
+    public function syncCpmkCpl(Request $request): JsonResponse
+    {
+        $this->authorize('banksoal.edit');
+
+        $validated = $request->validate([
+            'cpl_id'   => ['required', 'integer', 'exists:bs_cpl,id'],
+            'cpmk_ids' => ['required', 'array', 'min:1'],
+            'cpmk_ids.*' => ['required', 'integer', 'exists:bs_cpmk,id'],
+        ]);
+
+        try {
+            $cpmkIds = collect($validated['cpmk_ids'])->map(fn($id) => (int) $id)->unique()->values();
+            DB::table('bs_cpl_cpmk')->where('cpl_id', $validated['cpl_id'])->delete();
+            $rows = $cpmkIds->map(fn($id) => ['cpl_id' => $validated['cpl_id'], 'cpmk_id' => $id])->all();
+            DB::table('bs_cpl_cpmk')->insert($rows);
+            return response()->json(['success' => true, 'message' => 'Pemetaan CPMK ke CPL berhasil diperbarui']);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal memperbarui: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function syncMkCpl(Request $request): JsonResponse
+    {
+        $this->authorize('banksoal.edit');
+
+        $validated = $request->validate([
+            'mk_id'   => ['required', 'integer', 'exists:bs_mata_kuliah,id'],
+            'cpl_ids' => ['required', 'array', 'min:1'],
+            'cpl_ids.*' => ['required', 'integer', 'exists:bs_cpl,id'],
+        ]);
+
+        try {
+            $cplIds = collect($validated['cpl_ids'])->map(fn($id) => (int) $id)->unique()->values();
+            DB::table('bs_mata_kuliah_cpl')->where('mk_id', $validated['mk_id'])->delete();
+            $rows = $cplIds->map(fn($id) => ['mk_id' => $validated['mk_id'], 'cpl_id' => $id])->all();
+            DB::table('bs_mata_kuliah_cpl')->insert($rows);
+            return response()->json(['success' => true, 'message' => 'Pemetaan MK ke CPL berhasil diperbarui']);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal memperbarui: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function syncMkDosen(Request $request): JsonResponse
+    {
+        $this->authorize('banksoal.edit');
+
+        $validated = $request->validate([
+            'mk_id'    => ['required', 'integer', 'exists:bs_mata_kuliah,id'],
+            'user_ids' => ['required', 'array', 'min:1'],
+            'user_ids.*' => ['required', 'integer', 'exists:users,id', Rule::exists('lecturers', 'user_id')],
+        ]);
+
+        try {
+            $userIds = collect($validated['user_ids'])->map(fn($id) => (int) $id)->unique()->values();
+            DosenPengampuMk::where('mk_id', $validated['mk_id'])->delete();
+            $rows = $userIds->map(fn($id) => [
+                'user_id' => $id, 'mk_id' => $validated['mk_id'],
+                'is_rps' => false, 'created_at' => now(), 'updated_at' => now(),
+            ])->all();
+            DB::table('bs_dosen_pengampu_mk')->insert($rows);
+            return response()->json(['success' => true, 'message' => 'Pemetaan Dosen ke MK berhasil diperbarui']);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal memperbarui: ' . $e->getMessage()], 500);
+        }
+    }
 }
+

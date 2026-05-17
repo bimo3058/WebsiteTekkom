@@ -1,125 +1,282 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Pendaftaran Asisten Praktikum">
+<x-eoffice::manajemen-praktikum.layout pageTitle="Pendaftaran Asprak & Koordinator">
 
-<div>
-    <div class="text-[20px] font-bold text-[#0D0D12]">Pendaftaran Asisten Praktikum</div>
-    <div class="text-[12px] text-[#666D80] mt-[2px]">Daftarkan diri sebagai calon asisten untuk semester depan</div>
+<div class="mp-page-header">
+    <div>
+        <h1 class="mp-page-title">Pendaftaran Asprak &amp; Koordinator</h1>
+        <p class="mp-page-sub">Daftarkan diri sebagai calon asisten atau koordinator praktikum</p>
+    </div>
 </div>
 
-@if($statusPendaftaran)
-{{-- Status Card --}}
-<div class="bg-white border border-[#DFE1E7] rounded-[14px] p-6 shadow-[0_1px_2px_rgba(228,229,231,.24)] flex-shrink-0">
-    <div class="flex items-center gap-4">
-        @if($statusPendaftaran->status === 'pending')
-        <div class="w-[48px] h-[48px] rounded-full bg-[#F9ECCB] flex items-center justify-center flex-shrink-0">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#D39C3D" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+{{-- Badge role aktif --}}
+@if($sudahJadiAsprak || $sudahJadiKoor)
+<div class="flex gap-2 flex-wrap flex-shrink-0">
+    @if($sudahJadiAsprak)
+    <div class="flex items-center gap-2 mp-badge success sm" style="padding:8px 14px;border-radius:10px;font-size:12px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Anda aktif sebagai Asisten Praktikum
+    </div>
+    @endif
+    @if($sudahJadiKoor)
+    <div class="flex items-center gap-2 mp-badge primary sm" style="padding:8px 14px;border-radius:10px;font-size:12px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+        Anda aktif sebagai Koordinator Praktikum
+    </div>
+    @endif
+</div>
+@endif
+
+{{-- Tidak ada periode terbuka sama sekali --}}
+@if($praktikumDenganPeriode->isEmpty())
+<div class="mp-card flex-shrink-0" style="padding:56px;text-align:center;">
+    <svg class="mx-auto mb-3 w-10 h-10" style="color:var(--c-border);" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+    </svg>
+    <div style="font-size:14px;font-weight:600;color:var(--c-fg);">Belum ada pendaftaran yang dibuka</div>
+    <div style="font-size:12px;color:var(--c-fg-muted);margin-top:4px;">Admin belum membuka periode pendaftaran asprak atau koordinator saat ini.</div>
+    <div style="font-size:12px;color:var(--c-fg-placeholder);margin-top:8px;">Pantau terus halaman ini atau tunggu notifikasi dari sistem.</div>
+</div>
+
+@else
+
+{{-- Card per praktikum yang punya periode terbuka --}}
+@foreach($praktikumDenganPeriode as $p)
+@php
+    $pAsprak = $periodeAktif[$p->id]['asprak'] ?? null;
+    $pKoor   = $periodeAktif[$p->id]['koor']   ?? null;
+
+    // Cek apakah user sudah terdaftar sebagai praktikan di praktikum ini
+    $sudahTerdaftar = in_array($p->id, $praktikumDiikuti);
+
+    // Cek pendaftaran yang sudah ada
+    $existingAsprak = \Modules\EOffice\Models\PendaftaranAsprak::where('user_id', auth()->id())
+        ->where('praktikum_id', $p->id)
+        ->orderByDesc('created_at')
+        ->first();
+    $existingKoor = \Modules\EOffice\Models\PendaftaranKoordinator::where('user_id', auth()->id())
+        ->where('praktikum_id', $p->id)
+        ->orderByDesc('created_at')
+        ->first();
+@endphp
+
+<div class="mp-card flex-shrink-0">
+
+    {{-- Header --}}
+    <div class="flex items-center gap-3 px-5 py-[10px]" style="background:#FAFBFC;border-bottom:1px solid var(--c-border);">
+        <div class="flex-1 min-w-0">
+            <div style="font-weight:700;font-size:13px;color:var(--c-fg);" class="truncate">{{ $p->nama }}</div>
+            <div style="font-size:11px;color:var(--c-fg-muted);">
+                {{ $p->matkul?->kode ? '[' . $p->matkul->kode . '] · ' : '' }}{{ $p->semester }} {{ $p->tahun_ajaran }}
+                @if($p->dosen) · {{ $p->dosen->name }} @endif
+            </div>
         </div>
-        <div>
-            <div class="text-[15px] font-bold text-[#0D0D12]">Pendaftaran Sedang Diproses</div>
-            <div class="text-[12px] text-[#666D80] mt-1">Praktikum: {{ $statusPendaftaran->praktikum?->nama ?? '—' }}</div>
-            <div class="text-[11px] text-[#A4ABB8] mt-1">Didaftarkan: {{ $statusPendaftaran->created_at?->format('d M Y') }}</div>
-        </div>
-        @elseif($statusPendaftaran->status === 'approved')
-        <div class="w-[48px] h-[48px] rounded-full bg-[#DDF2EE] flex items-center justify-center flex-shrink-0">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#40C4AA" stroke-width="2.2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-        </div>
-        <div>
-            <div class="text-[15px] font-bold text-[#0D0D12]">Pendaftaran Diterima!</div>
-            <div class="text-[12px] text-[#666D80] mt-1">Praktikum: {{ $statusPendaftaran->praktikum?->nama ?? '—' }}</div>
-            <div class="text-[12px] text-[#40C4AA] font-semibold mt-1">Selamat! Anda telah diterima sebagai Asisten Praktikum.</div>
-        </div>
+        @if($sudahTerdaftar)
+        <span class="mp-badge success sm flex-shrink-0">Terdaftar sebagai praktikan</span>
         @else
-        <div class="w-[48px] h-[48px] rounded-full bg-[#FADAE1] flex items-center justify-center flex-shrink-0">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#DF1C41" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-        </div>
-        <div>
-            <div class="text-[15px] font-bold text-[#0D0D12]">Pendaftaran Ditolak</div>
-            <div class="text-[12px] text-[#666D80] mt-1">Praktikum: {{ $statusPendaftaran->praktikum?->nama ?? '—' }}</div>
-            <div class="text-[12px] text-[#DF1C41] mt-1">{{ $statusPendaftaran->alasan_penolakan ?? 'Tidak ada keterangan.' }}</div>
-        </div>
+        <span class="mp-badge warning sm flex-shrink-0">Belum ikut praktikum ini</span>
         @endif
+    </div>
+
+    {{-- Dua kolom: Asprak | Koor --}}
+    <div class="grid grid-cols-2 divide-x" style="border-color:var(--c-border-light);">
+
+        {{-- ASPRAK --}}
+        <div>
+            <div class="flex items-center justify-between px-4 py-2" style="border-bottom:1px solid var(--c-border-light);background:{{ $pAsprak ? '#F0FDF9' : '#FAFBFC' }};">
+                <span style="font-size:12px;font-weight:700;color:{{ $pAsprak ? '#0D9488' : 'var(--c-fg-muted)' }};">Asisten Praktikum</span>
+                @if($pAsprak)
+                <span class="mp-badge success sm">TERBUKA</span>
+                @else
+                <span class="mp-badge neutral sm">TUTUP</span>
+                @endif
+            </div>
+
+            <div style="padding:16px;">
+            @if(!$pAsprak)
+                <div style="padding:16px 0;text-align:center;font-size:12px;color:var(--c-fg-placeholder);">Pendaftaran belum dibuka.</div>
+
+            @elseif($sudahJadiAsprak)
+                <div style="padding:8px 0;font-size:12px;color:#40C4AA;font-weight:600;">Anda sudah aktif sebagai Asprak</div>
+
+            @elseif($existingAsprak && in_array($existingAsprak->status, ['pending','approved']))
+                <div style="font-size:11px;color:var(--c-fg-muted);margin-bottom:8px;font-weight:600;">{{ $pAsprak->nama }}</div>
+                <div class="flex items-center gap-2">
+                    @if($existingAsprak->status === 'pending')
+                    <span class="mp-badge warning sm">Menunggu seleksi koordinator</span>
+                    @else
+                    <span class="mp-badge success sm">Diterima!</span>
+                    @endif
+                </div>
+
+            @else
+                @if($pAsprak->ditutup_pada)
+                <div style="font-size:11px;color:var(--c-fg-muted);margin-bottom:12px;">
+                    <span style="font-weight:600;">{{ $pAsprak->nama }}</span>
+                    · Ditutup <span style="font-weight:600;color:#DF1C41;">{{ $pAsprak->ditutup_pada->format('d M Y H:i') }}</span>
+                    <span style="color:var(--c-fg-muted);">({{ $pAsprak->ditutup_pada->diffForHumans() }})</span>
+                </div>
+                @endif
+
+                <form method="POST" action="{{ route('eoffice.manprak.mahasiswa.daftar-asprak.store') }}"
+                      enctype="multipart/form-data" class="flex flex-col gap-3">
+                    @csrf
+                    <input type="hidden" name="praktikum_id" value="{{ $p->id }}">
+                    <div>
+                        <label class="block text-[11px] font-semibold mb-1" style="color:var(--c-fg-sub);">IPK <span class="text-red-500">*</span></label>
+                        <input type="number" name="ipk" step="0.01" min="0" max="4" required placeholder="3.50" class="mp-input w-full" style="font-size:12px;padding:6px 8px;">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold mb-1" style="color:var(--c-fg-sub);">Motivasi <span class="text-red-500">*</span></label>
+                        <textarea name="motivasi" rows="3" required minlength="20"
+                                  placeholder="Ceritakan pengalaman & motivasi Anda..."
+                                  class="mp-input w-full" style="font-size:12px;padding:6px 8px;resize:none;"></textarea>
+                    </div>
+                    <div class="grid grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] font-semibold mb-1" style="color:var(--c-fg-sub);">CV <span style="font-weight:400;color:var(--c-fg-muted);">(PDF/DOCX)</span></label>
+                            <input type="file" name="cv" accept=".pdf,.docx" class="mp-input w-full" style="font-size:11px;padding:4px 6px;">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-semibold mb-1" style="color:var(--c-fg-sub);">Transkrip <span style="font-weight:400;color:var(--c-fg-muted);">(PDF)</span></label>
+                            <input type="file" name="transkrip" accept=".pdf" class="mp-input w-full" style="font-size:11px;padding:4px 6px;">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold mb-1" style="color:var(--c-fg-sub);">Jadwal Ketersediaan</label>
+                        <div class="flex flex-wrap gap-3">
+                            @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $hari)
+                            <label class="flex items-center gap-1 cursor-pointer">
+                                <input type="checkbox" name="jadwal[]" value="{{ $hari }}" class="accent-[#40C4AA]">
+                                <span style="font-size:11px;color:var(--c-fg-sub);">{{ $hari }}</span>
+                            </label>
+                            @endforeach
+                        </div>
+                    </div>
+                    <button type="submit" class="mp-btn success md w-full">Kirim Pendaftaran Asprak</button>
+                </form>
+            @endif
+            </div>
+        </div>
+
+        {{-- KOOR --}}
+        <div>
+            <div class="flex items-center justify-between px-4 py-2" style="border-bottom:1px solid var(--c-border-light);background:{{ $pKoor ? '#EEF2FF' : '#FAFBFC' }};">
+                <span style="font-size:12px;font-weight:700;color:{{ $pKoor ? 'var(--c-primary)' : 'var(--c-fg-muted)' }};">Koordinator</span>
+                @if($pKoor)
+                <span class="mp-badge primary sm">TERBUKA</span>
+                @else
+                <span class="mp-badge neutral sm">TUTUP</span>
+                @endif
+            </div>
+
+            <div style="padding:16px;">
+            @if(!$pKoor)
+                <div style="padding:16px 0;text-align:center;font-size:12px;color:var(--c-fg-placeholder);">Pendaftaran belum dibuka.</div>
+
+            @elseif($sudahJadiKoor)
+                <div style="padding:8px 0;font-size:12px;color:var(--c-primary);font-weight:600;">Anda sudah aktif sebagai Koordinator</div>
+
+            @elseif($existingKoor && in_array($existingKoor->status, ['pending','approved']))
+                <div style="font-size:11px;color:var(--c-fg-muted);margin-bottom:8px;font-weight:600;">{{ $pKoor->nama }}</div>
+                <div class="flex items-center gap-2">
+                    @if($existingKoor->status === 'pending')
+                    <span class="mp-badge warning sm">{{ $existingKoor->status_dosen === 'disetujui' ? 'Disetujui dosen, menunggu Admin' : 'Menunggu review dosen' }}</span>
+                    @else
+                    <span class="mp-badge primary sm">Diterima sebagai Koordinator!</span>
+                    @endif
+                </div>
+
+            @else
+                @if($pKoor->ditutup_pada)
+                <div style="font-size:11px;color:var(--c-fg-muted);margin-bottom:12px;">
+                    <span style="font-weight:600;">{{ $pKoor->nama }}</span>
+                    · Ditutup <span style="font-weight:600;color:#DF1C41;">{{ $pKoor->ditutup_pada->format('d M Y H:i') }}</span>
+                    <span style="color:var(--c-fg-muted);">({{ $pKoor->ditutup_pada->diffForHumans() }})</span>
+                </div>
+                @endif
+
+                <form method="POST" action="{{ route('eoffice.manprak.mahasiswa.daftar-koor.store') }}"
+                      enctype="multipart/form-data" class="flex flex-col gap-3">
+                    @csrf
+                    <input type="hidden" name="praktikum_id" value="{{ $p->id }}">
+                    <div>
+                        <label class="block text-[11px] font-semibold mb-1" style="color:var(--c-fg-sub);">IPK <span class="text-red-500">*</span></label>
+                        <input type="number" name="ipk" step="0.01" min="0" max="4" required placeholder="3.50" class="mp-input w-full" style="font-size:12px;padding:6px 8px;">
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold mb-1" style="color:var(--c-fg-sub);">Motivasi <span class="text-red-500">*</span></label>
+                        <textarea name="motivasi" rows="3" required minlength="20"
+                                  placeholder="Ceritakan motivasi Anda menjadi koordinator..."
+                                  class="mp-input w-full" style="font-size:12px;padding:6px 8px;resize:none;"></textarea>
+                    </div>
+                    <div>
+                        <label class="block text-[11px] font-semibold mb-1" style="color:var(--c-fg-sub);">Transkrip <span style="font-weight:400;color:var(--c-fg-muted);">(PDF, opsional)</span></label>
+                        <input type="file" name="transkrip" accept=".pdf" class="mp-input w-full" style="font-size:11px;padding:4px 6px;">
+                    </div>
+                    <button type="submit" class="mp-btn primary md w-full">Kirim Pendaftaran Koordinator</button>
+                </form>
+            @endif
+            </div>
+        </div>
+
+    </div>{{-- end grid --}}
+</div>
+@endforeach
+
+{{-- Daftar yang sudah lolos --}}
+@if($asprakLolos->isNotEmpty() || $koorLolos->isNotEmpty())
+<div class="mp-card flex-shrink-0">
+    <div class="mp-card-header" style="background:#FAFBFC;">
+        <span class="mp-card-title">Asisten &amp; Koordinator Terpilih</span>
+    </div>
+    <div class="grid grid-cols-2 divide-x" style="border-color:var(--c-border-light);">
+        <div style="padding:16px;">
+            <div style="font-size:11px;font-weight:700;color:#40C4AA;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Asisten Praktikum</div>
+            @forelse($asprakLolos as $a)
+            <div class="flex items-center gap-2" style="padding:6px 0;border-bottom:1px solid var(--c-border-light);">
+                <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                     style="background:#DDF2EE;color:#174E43;">
+                    {{ strtoupper(substr($a->user?->name ?? '?', 0, 1)) }}
+                </div>
+                <div class="min-w-0">
+                    <div style="font-size:12px;font-weight:600;color:var(--c-fg);" class="truncate">{{ $a->user?->name ?? '—' }}</div>
+                    <div style="font-size:10px;color:var(--c-fg-muted);">{{ $a->praktikum?->nama }}</div>
+                </div>
+            </div>
+            @empty
+            <div style="font-size:12px;color:var(--c-fg-muted);padding:12px 0;">Belum ada.</div>
+            @endforelse
+        </div>
+        <div style="padding:16px;">
+            <div style="font-size:11px;font-weight:700;color:var(--c-primary);text-transform:uppercase;letter-spacing:0.05em;margin-bottom:8px;">Koordinator</div>
+            @forelse($koorLolos as $k)
+            <div class="flex items-center gap-2" style="padding:6px 0;border-bottom:1px solid var(--c-border-light);">
+                <div class="w-7 h-7 rounded-full flex items-center justify-center text-[10px] font-bold flex-shrink-0"
+                     style="background:var(--c-bg-sub);color:var(--c-primary);">
+                    {{ strtoupper(substr($k->user?->name ?? '?', 0, 1)) }}
+                </div>
+                <div class="min-w-0">
+                    <div style="font-size:12px;font-weight:600;color:var(--c-fg);" class="truncate">{{ $k->user?->name ?? '—' }}</div>
+                    <div style="font-size:10px;color:var(--c-fg-muted);">{{ $k->praktikum?->nama }}</div>
+                </div>
+            </div>
+            @empty
+            <div style="font-size:12px;color:var(--c-fg-muted);padding:12px 0;">Belum ada.</div>
+            @endforelse
+        </div>
     </div>
 </div>
 @endif
 
-@if(!$statusPendaftaran || $statusPendaftaran->status === 'rejected')
-{{-- Form Pendaftaran --}}
-<div class="bg-white border border-[#DFE1E7] rounded-[14px] p-6 shadow-[0_1px_2px_rgba(228,229,231,.24)]">
-    <div class="font-bold text-[15px] text-[#0D0D12] mb-4">Form Pendaftaran Asisten Praktikum</div>
-    <form method="POST" action="{{ route('eoffice.manprak.mahasiswa.daftar-asprak.store') }}" enctype="multipart/form-data">
-        @csrf
-        <div class="grid grid-cols-2 gap-4">
-            <div>
-                <label class="block text-[12px] font-semibold text-[#353849] mb-1">Pilih Praktikum <span class="text-red-500">*</span></label>
-                <select name="praktikum_id" required class="w-full border border-[#DFE1E7] rounded-[8px] px-3 py-[9px] text-[13px] focus:outline-none focus:border-[#0B266E]">
-                    <option value="">— Pilih Praktikum —</option>
-                    @foreach($praktikumList ?? [] as $p)
-                    <option value="{{ $p->id }}">{{ $p->nama }} ({{ $p->kode }})</option>
-                    @endforeach
-                </select>
-            </div>
-            <div>
-                <label class="block text-[12px] font-semibold text-[#353849] mb-1">IPK Terakhir <span class="text-red-500">*</span></label>
-                <input type="number" name="ipk" step="0.01" min="0" max="4" required placeholder="3.50"
-                       class="w-full border border-[#DFE1E7] rounded-[8px] px-3 py-[9px] text-[13px] focus:outline-none focus:border-[#0B266E]">
-            </div>
-            <div>
-                <label class="block text-[12px] font-semibold text-[#353849] mb-1">Pengalaman / Motivasi <span class="text-red-500">*</span></label>
-                <textarea name="motivasi" rows="4" required placeholder="Tuliskan pengalaman dan motivasi Anda mendaftar sebagai asprak..."
-                          class="w-full border border-[#DFE1E7] rounded-[8px] px-3 py-[9px] text-[13px] focus:outline-none focus:border-[#0B266E] resize-none"></textarea>
-            </div>
-            <div>
-                <label class="block text-[12px] font-semibold text-[#353849] mb-1">CV / Portofolio (PDF)</label>
-                <input type="file" name="cv" accept=".pdf,.docx"
-                       class="w-full text-[13px] border border-[#DFE1E7] rounded-[8px] px-3 py-[8px] focus:outline-none focus:border-[#0B266E]">
-                <div class="text-[11px] text-[#A4ABB8] mt-1">Opsional. Maks. 5MB.</div>
+@endif {{-- end $praktikumDenganPeriode->isEmpty() --}}
 
-                <div class="mt-4">
-                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Jadwal Ketersediaan</label>
-                    <div class="grid grid-cols-3 gap-2">
-                        @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $hari)
-                        <label class="flex items-center gap-2 cursor-pointer">
-                            <input type="checkbox" name="jadwal[]" value="{{ $hari }}" class="accent-[#0B266E]">
-                            <span class="text-[12px] text-[#353849]">{{ $hari }}</span>
-                        </label>
-                        @endforeach
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        @if($errors->any())
-        <div class="mt-4 bg-[#FADAE1] border border-[#DF1C41] rounded-[8px] px-4 py-3">
-            @foreach($errors->all() as $e)
-            <div class="text-[12px] text-[#7C1028]">• {{ $e }}</div>
-            @endforeach
-        </div>
-        @endif
-
-        <div class="flex justify-end mt-5">
-            <button type="submit"
-                    class="px-6 py-[10px] rounded-[10px] bg-[#0B266E] text-white text-[13px] font-semibold border-none cursor-pointer hover:bg-[#0a1f5c]">
-                Kirim Pendaftaran
-            </button>
-        </div>
-    </form>
-</div>
-@endif
-
-{{-- Syarat & Ketentuan --}}
-<div class="bg-white border border-[#DFE1E7] rounded-[14px] p-5 shadow-[0_1px_2px_rgba(228,229,231,.24)]">
-    <div class="font-bold text-[14px] text-[#0D0D12] mb-3">Syarat & Ketentuan Asprak</div>
-    <div class="grid grid-cols-2 gap-3">
-        @foreach([
-            'IPK minimal 3.00',
-            'Pernah mengikuti praktikum yang didaftar',
-            'Tidak sedang mengambil praktikum yang sama',
-            'Bersedia hadir sesuai jadwal yang ditentukan',
-            'Menyetujui peraturan asisten praktikum',
-            'Aktif sebagai mahasiswa UNDIP',
-        ] as $syarat)
+{{-- Syarat --}}
+<div class="mp-card flex-shrink-0" style="padding:20px;">
+    <div style="font-weight:700;font-size:13px;color:var(--c-fg);margin-bottom:12px;">Syarat Umum</div>
+    <div class="grid grid-cols-2 gap-2">
+        @foreach(['IPK minimal 3.00','Pernah mengikuti praktikum terkait','Tidak sedang mengambil praktikum yang sama','Bersedia hadir sesuai jadwal','Aktif sebagai mahasiswa','Menyetujui peraturan asisten praktikum'] as $s)
         <div class="flex items-center gap-2">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#40C4AA" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-            <span class="text-[12px] text-[#353849]">{{ $syarat }}</span>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#40C4AA" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+            <span style="font-size:12px;color:var(--c-fg-sub);">{{ $s }}</span>
         </div>
         @endforeach
     </div>

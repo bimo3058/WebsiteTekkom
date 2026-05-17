@@ -29,6 +29,21 @@ class PeriodeRpsController extends Controller
         return view('banksoal::gpm.periode-rps.index', compact('periodes', 'tahunAjarans', 'currentSemester'));
     }
 
+    public function create()
+    {
+        // Generate tahun ajaran options
+        $currentYear = (int) now()->format('Y');
+        $tahunAjarans = [
+            ($currentYear - 1) . '/' . $currentYear,
+            $currentYear . '/' . ($currentYear + 1),
+            ($currentYear + 1) . '/' . ($currentYear + 2),
+        ];
+        
+        $currentSemester = now()->month >= 7 ? 'Ganjil' : 'Genap';
+        
+        return view('banksoal::gpm.periode-rps.create', compact('tahunAjarans', 'currentSemester'));
+    }
+
     public function store(Request $request)
     {
         $validated = $request->validate([
@@ -57,6 +72,14 @@ class PeriodeRpsController extends Controller
             ]);
 
             DB::commit();
+
+            if ($request->wantsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Berhasil menambahkan periode unggah RPS.',
+                ]);
+            }
+
             return redirect()->route('banksoal.rps.gpm.validasi-rps')->with('success', 'Berhasil menambahkan periode unggah RPS.');
         } catch (\Exception $e) {
             DB::rollBack();

@@ -57,7 +57,8 @@ class ManajemenSoalController extends Controller
                 ->get()
                 ->sortBy(function($model) use ($soalIds) {
                     return array_search($model->id, $soalIds);
-                });
+                })
+                ->values();
         }
 
         $mataKuliah = MataKuliah::find($penarikan->mk_id);

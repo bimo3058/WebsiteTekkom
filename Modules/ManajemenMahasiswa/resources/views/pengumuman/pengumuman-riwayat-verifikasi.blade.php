@@ -297,14 +297,6 @@
             <h4>Status Verifikasi Pengumuman</h4>
             <p>Pantau status pengajuan verifikasi pengumuman yang pernah Anda kirimkan</p>
         </div>
-        <a href="{{ route('manajemenmahasiswa.pengumuman.create') }}" class="btn-create-post">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Buat Pengumuman Baru
-        </a>
     </div>
 
     <!-- Flash Messages -->
@@ -484,22 +476,37 @@
                     @elseif($req->status === 'approved')
                         Pengumuman telah dipublikasikan secara otomatis
                     @elseif($req->status === 'rejected')
-                        Pengumuman dikembalikan ke draft — Anda dapat mengedit dan mengajukan ulang
+                        Pengumuman dikembalikan ke draft. Edit terlebih dahulu jika perlu, lalu klik <strong>Ajukan Kembali</strong>.
                     @else
-                        Pengajuan dibatalkan — pengumuman kembali ke draft
+                        Pengajuan dibatalkan. Klik <strong>Ajukan Kembali</strong> jika ingin mengajukan ulang.
                     @endif
                 </span>
 
-                <div class="d-flex gap-2 align-items-center">
-                    @if($req->status === 'rejected' && $req->pengumuman)
+                <div class="d-flex gap-2 align-items-center flex-wrap">
+                    @if(in_array($req->status, ['rejected', 'cancelled']) && $req->pengumuman)
+                        {{-- Edit dulu, lalu ajukan ulang dari halaman ini --}}
                         <a href="{{ route('manajemenmahasiswa.pengumuman.edit', $req->pengumuman_id) }}"
-                            style="display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border:1px solid #6B4FF4;border-radius:10px;background:#f5f3ff;color:#6B4FF4;font-size:0.85rem;font-weight:600;text-decoration:none;transition:all .2s;">
+                            style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border:1px solid #d1d5db;border-radius:10px;background:#f9fafb;color:#374151;font-size:0.83rem;font-weight:600;text-decoration:none;transition:all .2s;">
                             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
                                 <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
                                 <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
                             </svg>
-                            Edit & Ajukan Ulang
+                            Edit Pengumuman
                         </a>
+
+                        {{-- Ajukan kembali langsung tanpa edit --}}
+                        <form action="{{ route('manajemenmahasiswa.pengumuman.publish', $req->pengumuman_id) }}"
+                              method="POST" style="margin:0;"
+                              onsubmit="return confirm('Ajukan kembali pengumuman ini untuk diverifikasi?')">
+                            @csrf @method('PATCH')
+                            <button type="submit"
+                                style="display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border:1px solid #6B4FF4;border-radius:10px;background:#f5f3ff;color:#6B4FF4;font-size:0.83rem;font-weight:600;cursor:pointer;transition:all .2s;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                                    <path d="M22 2L11 13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+                                </svg>
+                                Ajukan Kembali
+                            </button>
+                        </form>
                     @endif
 
                     @if($req->status === 'pending' && $req->pengumuman)
@@ -540,13 +547,13 @@
                     Tidak ada pengajuan yang dibatalkan.
                 @endif
             </p>
-            <a href="{{ route('manajemenmahasiswa.pengumuman.create') }}" class="btn-create-post">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            <a href="{{ route('manajemenmahasiswa.pengumuman.index') }}"
+                style="display:inline-flex;align-items:center;gap:6px;padding:10px 22px;border:1px solid #e5e7eb;border-radius:12px;background:#fff;color:#6b7280;font-size:0.88rem;font-weight:600;text-decoration:none;transition:all .2s;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                     stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="12" y1="5" x2="12" y2="19"></line>
-                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                    <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
                 </svg>
-                Buat Pengumuman Pertama
+                Kembali ke Daftar Pengumuman
             </a>
         </div>
     @endforelse

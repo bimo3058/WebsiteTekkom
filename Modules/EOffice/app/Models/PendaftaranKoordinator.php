@@ -6,10 +6,12 @@ use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Pendaftaran calon Koordinator Asisten Praktikum.
- *
+ * Pendaftaran calon Koordinator Praktikum oleh mahasiswa.
  * Tabel: pendaftaran_koordinator
- * Status: pending | approved | rejected
+ *
+ * Flow: Mahasiswa submit → Dosen review (status_dosen) → Admin final approve (status)
+ * status_dosen: menunggu | disetujui | ditolak
+ * status: pending | approved | rejected
  */
 class PendaftaranKoordinator extends Model
 {
@@ -21,14 +23,17 @@ class PendaftaranKoordinator extends Model
         'ipk',
         'motivasi',
         'status',
+        'status_dosen',
+        'catatan_dosen',
         'alasan_penolakan',
+        'direview_oleh',
+        'direview_pada',
     ];
 
     protected $casts = [
-        'ipk' => 'float',
+        'ipk'          => 'float',
+        'direview_pada' => 'datetime',
     ];
-
-    // ── Relationships ──────────────────────────────────────────────────────────
 
     public function user()
     {
@@ -40,10 +45,8 @@ class PendaftaranKoordinator extends Model
         return $this->belongsTo(Praktikum::class, 'praktikum_id');
     }
 
-    // ── Scopes ─────────────────────────────────────────────────────────────────
-
-    public function scopePending($query)
+    public function direviewOleh()
     {
-        return $query->where('status', 'pending');
+        return $this->belongsTo(User::class, 'direview_oleh');
     }
 }

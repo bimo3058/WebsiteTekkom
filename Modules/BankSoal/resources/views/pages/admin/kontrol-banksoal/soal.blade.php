@@ -1,4 +1,10 @@
 <x-banksoal::layouts.admin>
+    @section('breadcrumbs')
+    <a href="#" class="text-slate-500 hover:text-primary transition-colors">Bank Soal</a>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Manajemen Soal</span>
+    @endsection
+
     <!-- Header Title -->
     <div class="mb-6 lg:mb-8 flex justify-between items-center">
         <div>

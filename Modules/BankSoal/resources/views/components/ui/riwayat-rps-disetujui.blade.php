@@ -42,6 +42,7 @@
                     <th class="table-header-cell">Jumlah Versi</th>
                     <th class="table-header-cell">Tanggal Terbaru</th>
                     <th class="table-header-cell w-16">Status</th>
+                    <th class="table-header-cell w-[80px]">Aksi</th>
                 </tr>
             </thead>
             <tbody class="table-body">
@@ -60,7 +61,7 @@
                             <div class="text-xs text-slate-500">{{ $firstItem->mk_kode ?? '-' }}</div>
                         </td>
                         <td class="table-cell text-center">
-                            <span class="inline-flex items-center rounded-full bg-blue-50 px-2.5 py-0.5 text-xs font-semibold text-blue-700">
+                            <span class="inline-flex items-center rounded-full bg-primary/10 px-2.5 py-0.5 text-xs font-semibold text-primary">
                                 {{ $rpsItems->count() }} {{ $rpsItems->count() == 1 ? 'versi' : 'versi' }}
                             </span>
                         </td>
@@ -68,6 +69,7 @@
                         <td class="table-cell text-center">
                             <span class="inline-flex items-center rounded-full bg-emerald-50 px-2.5 py-0.5 text-xs font-semibold text-emerald-700 border border-emerald-200">Disetujui</span>
                         </td>
+                        <td class="table-cell"></td>
                     </tr>
 
                     <!-- Expanded rows (hidden by default) -->
@@ -76,10 +78,17 @@
                             <td class="px-6 py-3"></td>
                             <td colspan="4">
                                 <div class="py-2 px-4 bg-slate-50 rounded-lg">
-                                    <div class="grid grid-cols-4 gap-4 text-sm">
+                                    <div class="grid grid-cols-5 gap-4 text-sm">
                                         <div>
                                             <p class="text-xs text-slate-500 font-semibold">Tanggal Disetujui</p>
                                             <p class="text-slate-900">{{ $item->tanggal_disetujui ? \Carbon\Carbon::parse($item->tanggal_disetujui)->format('d M Y H:i') : '-' }}</p>
+                                        </div>
+                                        <div>
+                                            @php
+                                                $uploaderName = $item->uploader_name ?? DB::table('bs_rps_dosen')->where('rps_id', $item->id)->join('users', 'users.id', '=', 'bs_rps_dosen.dosen_id')->orderBy('bs_rps_dosen.id', 'asc')->value('users.name') ?? 'Tidak diketahui';
+                                            @endphp
+                                            <p class="text-xs text-slate-500 font-semibold">Diunggah Oleh</p>
+                                            <p class="text-slate-900">{{ $uploaderName }}</p>
                                         </div>
                                         <div>
                                             <p class="text-xs text-slate-500 font-semibold">Tahun/Semester</p>
@@ -91,20 +100,23 @@
                                                 {{ $item->dokumen ? basename((string) $item->dokumen) : '-' }}
                                             </p>
                                         </div>
-                                        <div class="flex items-end gap-2">
+                                        <div class="flex items-end justify-end">
                                             @if ($item->dokumen)
-                                                <button type="button"
-                                                        class="preview-dokumen-btn inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100"
-                                                        data-id="{{ $item->id }}"
-                                                        data-title="{{ e($firstItem->mk_nama ?? 'Dokumen') }}"
-                                                        title="Preview dokumen">
-                                                    <i class="fas fa-eye"></i> Preview
-                                                </button>
-                                                <a href="{{ route('banksoal.rps.dosen.download', $item->id) }}"
-                                                   class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100"
-                                                   title="Unduh RPS">
-                                                    <i class="fas fa-download"></i> Unduh
-                                                </a>
+                                                <div class="dots-wrap" id="dots-approved-{{ $item->id }}">
+                                                    <button type="button" class="btn-dots" onclick="toggleMenu('approved-{{ $item->id }}', event)">⋮</button>
+                                                    <div class="dots-menu" id="menu-approved-{{ $item->id }}">
+                                                        <button type="button"
+                                                                class="preview-dokumen-btn"
+                                                                data-id="{{ $item->id }}"
+                                                                data-title="{{ e($firstItem->mk_nama ?? 'Dokumen') }}">
+                                                            <i class="fas fa-eye w-4"></i> Preview
+                                                        </button>
+                                                        <a href="{{ route('banksoal.rps.dosen.download', $item->id) }}"
+                                                           class="download-rps-btn">
+                                                            <i class="fas fa-download w-4"></i> Unduh
+                                                        </a>
+                                                    </div>
+                                                </div>
                                             @else
                                                 <span class="text-slate-400 text-sm">-</span>
                                             @endif
@@ -116,7 +128,7 @@
                     @endforeach
                 @empty
                     <tr data-empty-state="1">
-                        <td colspan="5" class="px-6 py-12 text-center text-slate-600">
+                        <td colspan="6" class="px-6 py-12 text-center text-slate-600">
                             <div class="flex flex-col items-center justify-center">
                                 <i class="fas fa-inbox text-4xl text-slate-300 mb-3"></i>
                                 <p class="font-medium">Belum ada riwayat RPS disetujui untuk mata kuliah yang Anda ampu saat ini</p>

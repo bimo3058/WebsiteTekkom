@@ -1,4 +1,10 @@
 <x-banksoal::layouts.admin>
+    @section('breadcrumbs')
+    <a href="#" class="text-slate-500 hover:text-primary transition-colors">Ujian Komprehensif</a>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Daftar Peserta</span>
+    @endsection
+
     <div class="w-full">
 
         <!-- Page Header -->
@@ -48,8 +54,8 @@
                 <button type="button" @click="toggle()"
                         class="group inline-flex items-center gap-2.5 pl-4 pr-3 py-2 rounded-lg text-[13px] font-semibold border transition-all duration-200 shadow-sm
                                {{ $selectedPeriode
-                                   ? 'bg-white text-slate-700 border-slate-300 hover:border-blue-400 hover:shadow-md'
-                                   : 'bg-blue-600 text-white border-blue-600 hover:bg-blue-700' }}">
+                                   ? 'bg-white text-slate-700 border-slate-300 hover:border-primary/40 hover:shadow-md'
+                                   : 'bg-primary text-white border-primary hover:bg-primary/90' }}">
                     @if($selectedPeriode)
                         <span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
                         <span class="max-w-[220px] truncate">{{ $selectedPeriode->nama_periode }}</span>
@@ -84,7 +90,7 @@
                                    x-model="search"
                                    type="text"
                                    placeholder="Cari nama periode..."
-                                   class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-400">
+                                   class="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-[13px] text-slate-700 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
                         </div>
                         <p class="text-[11px] text-slate-400 mt-2 pl-1">
                             <span x-text="filtered.length"></span> dari {{ $periodes->count() }} periode
@@ -96,11 +102,11 @@
                         <template x-for="p in filtered" :key="p.id">
                             <a :href="p.url"
                                class="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors hover:bg-slate-50"
-                               :class="p.id == {{ $selectedPeriodeId ?? 'null' }} ? 'bg-blue-50 text-blue-700' : 'text-slate-700'">
+                               :class="p.id == {{ $selectedPeriodeId ?? 'null' }} ? 'bg-primary/10 text-primary' : 'text-slate-700'">
                                 <span class="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                                      :class="p.id == {{ $selectedPeriodeId ?? 'null' }} ? 'bg-blue-600' : 'bg-slate-300'"></span>
+                                      :class="p.id == {{ $selectedPeriodeId ?? 'null' }} ? 'bg-primary' : 'bg-slate-300'"></span>
                                 <span x-text="p.nama" class="flex-1 truncate"></span>
-                                <svg x-show="p.id == {{ $selectedPeriodeId ?? 'null' }}" class="w-3.5 h-3.5 text-blue-600 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
+                                <svg x-show="p.id == {{ $selectedPeriodeId ?? 'null' }}" class="w-3.5 h-3.5 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                             </a>
                         </template>
                         <div x-show="filtered.length === 0" class="px-4 py-8 text-center">
@@ -123,7 +129,7 @@
                 <!-- Show Entries (Kiri) -->
                 <div class="flex items-center gap-2">
                     <span>Tampilkan</span>
-                    <select name="per_page" onchange="document.getElementById('filter-form').submit()" {{ !request('periode_id') ? 'disabled' : '' }} class="pl-3 pr-8 py-1.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-slate-600 cursor-pointer shadow-sm disabled:bg-slate-50 disabled:cursor-not-allowed">
+                    <select name="per_page" onchange="document.getElementById('filter-form').submit()" {{ !request('periode_id') ? 'disabled' : '' }} class="pl-3 pr-8 py-1.5 bg-white border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-slate-600 cursor-pointer shadow-sm disabled:bg-slate-50 disabled:cursor-not-allowed">
                         <option value="5"  {{ request('per_page', 5) == 5  ? 'selected' : '' }}>5</option>
                         <option value="10" {{ request('per_page', 5) == 10 ? 'selected' : '' }}>10</option>
                         <option value="15" {{ request('per_page', 5) == 15 ? 'selected' : '' }}>15</option>
@@ -148,7 +154,7 @@
                         value="{{ request('search') }}"
                         placeholder="Cari NIM atau nama..."
                         {{ !request('periode_id') ? 'disabled' : '' }}
-                        class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 text-slate-700 placeholder-slate-400 transition-all shadow-sm {{ !request('periode_id') ? 'bg-slate-50 cursor-not-allowed text-slate-400' : 'bg-white' }}"
+                        class="w-full pl-9 pr-4 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-slate-700 placeholder-slate-400 transition-all shadow-sm {{ !request('periode_id') ? 'bg-slate-50 cursor-not-allowed text-slate-400' : 'bg-white' }}"
                     >
                 </div>
 
@@ -158,7 +164,7 @@
                         name="status"
                         onchange="document.getElementById('filter-form').submit()"
                         {{ !request('periode_id') ? 'disabled' : '' }}
-                        class="w-full appearance-none pl-3 pr-10 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all shadow-sm {{ !request('periode_id') ? 'bg-slate-50 cursor-not-allowed text-slate-400' : 'bg-white text-slate-700 cursor-pointer' }}"
+                        class="w-full appearance-none pl-3 pr-10 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all shadow-sm {{ !request('periode_id') ? 'bg-slate-50 cursor-not-allowed text-slate-400' : 'bg-white text-slate-700 cursor-pointer' }}"
                     >
                         <option value="">Semua Status</option>
                         <option value="pending"  {{ request('status') === 'pending'   ? 'selected' : '' }}>Pending</option>
@@ -171,7 +177,7 @@
                     type="button"
                     onclick="document.getElementById('modal-tambah-manual').classList.remove('hidden')"
                     {{ !request('periode_id') ? 'disabled' : '' }}
-                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition-all focus:ring-2 focus:ring-blue-500/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white rounded-lg px-4 py-2 text-sm font-semibold shadow-sm transition-all focus:ring-2 focus:ring-primary/50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Tambah Peserta
@@ -186,11 +192,11 @@
 
         <!-- Info Banner (If no period selected) -->
         @if (!request('periode_id'))
-            <div class="mb-6 bg-blue-50/50 border border-blue-100 rounded-xl p-4 flex gap-3">
-                <svg class="w-5 h-5 text-blue-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="mb-6 bg-primary/10 border border-primary/20 rounded-xl p-4 flex gap-3">
+                <svg class="w-5 h-5 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <p class="text-sm text-blue-800">
+                <p class="text-sm text-primary/80">
                     Data pendaftar akan tampil setelah Anda memilih <strong>Periode Ujian</strong> di atas.
                 </p>
             </div>
@@ -204,8 +210,8 @@
         @include('banksoal::pendaftaran.partials.modal-detail')
     </div>
 
-    {{-- Auto-reopen modal jika ada validation error --}}
-    @if($errors->any())
+    {{-- Auto-reopen modal jika ada validation error di bag 'pendaftar' --}}
+    @if($errors->hasBag('pendaftar') && $errors->getBag('pendaftar')->any())
     <script>
         document.addEventListener('DOMContentLoaded', function() {
             document.getElementById('modal-tambah-manual').classList.remove('hidden');
