@@ -528,6 +528,7 @@ class RpsController extends Controller
                     return [
                         'id' => $cpl->id,
                         'kode' => $cpl->kode,
+                        'deskripsi' => $cpl->deskripsi,
                     ];
                 });
 

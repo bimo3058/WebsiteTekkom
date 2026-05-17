@@ -59,16 +59,6 @@
                     </div>
                 </div>
 
-                <!-- Bobot Total -->
-                <div class="mb-2">
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Bobot Total</label>
-                    <div class="relative">
-                        <input type="number" name="bobot_total" class="w-full bg-white border border-slate-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary py-2.5 pl-4 pr-12 shadow-sm" placeholder="Contoh: 100">
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                            <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">Pts</span>
-                        </div>
-                    </div>
-                </div>
             </form>
         </div>
 

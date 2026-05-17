@@ -129,7 +129,19 @@ class BankSoalController extends Controller
         }
 
         if ($request->filled('cpl_id')) {
-            $query->where('cpl_id', $request->cpl_id);
+            if (is_array($request->cpl_id)) {
+                $query->whereIn('cpl_id', $request->cpl_id);
+            } else {
+                $query->where('cpl_id', $request->cpl_id);
+            }
+        }
+
+        if ($request->filled('cpmk_id')) {
+            if (is_array($request->cpmk_id)) {
+                $query->whereIn('cpmk_id', $request->cpmk_id);
+            } else {
+                $query->where('cpmk_id', $request->cpmk_id);
+            }
         }
 
         $soals = $query->inRandomOrder()->get();
