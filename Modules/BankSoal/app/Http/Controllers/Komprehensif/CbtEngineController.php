@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Modules\BankSoal\Enums\KompreSessionStatus;
+use Modules\BankSoal\Enums\PendaftaranStatus;
 use Modules\BankSoal\Http\Requests\Komprehensif\LogViolationRequest;
 use Modules\BankSoal\Http\Requests\Komprehensif\SaveAnswerRequest;
 use Modules\BankSoal\Http\Requests\Komprehensif\ToggleRaguRequest;
@@ -38,7 +39,7 @@ class CbtEngineController extends Controller
 
         $token     = strtoupper($request->token);
         $pendaftar = PendaftarUjian::where('mahasiswa_id', auth()->id())
-            ->where('status_pendaftaran', 'approved')
+            ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
             ->whereHas('jadwal')
             ->with('jadwal')
             ->first();
@@ -92,7 +93,7 @@ class CbtEngineController extends Controller
 
         $token     = strtoupper($request->token);
         $pendaftar = PendaftarUjian::where('mahasiswa_id', auth()->id())
-            ->where('status_pendaftaran', 'approved')
+            ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
             ->whereHas('jadwal')
             ->with('jadwal')
             ->first();
@@ -141,7 +142,7 @@ class CbtEngineController extends Controller
         }
 
         $pendaftar  = PendaftarUjian::where('mahasiswa_id', auth()->id())
-            ->where('status_pendaftaran', 'approved')
+            ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
             ->first();
 
         $jadwal     = JadwalUjian::find(session(self::SESSION_JADWAL_KEY));
