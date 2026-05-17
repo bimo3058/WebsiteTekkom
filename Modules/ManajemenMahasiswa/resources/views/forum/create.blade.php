@@ -43,10 +43,10 @@
             }
 
             .create-post-card {
-                background: #ffffff;
+                background: transparent;
                 border-radius: 12px;
-                padding: 30px;
-                border: 1px solid #e5e7eb;
+                padding: 30px 0;
+                border: none;
                 margin-bottom: 20px;
             }
 
@@ -86,14 +86,14 @@
             .checkbox-card input[type="checkbox"] {
                 width: 16px;
                 height: 16px;
-                accent-color: #4f46e5;
+                accent-color: #293C79;
                 cursor: pointer;
                 flex-shrink: 0;
             }
             .checkbox-card.checked {
-                border-color: #4f46e5;
-                background: #eef2ff;
-                color: #4338ca;
+                border-color: #293C79;
+                background: #E7E8F0;
+                color: #415086;
                 font-weight: 600;
             }
             .checkbox-hint {
@@ -119,8 +119,8 @@
             .custom-select:focus,
             .custom-textarea:focus {
                 background-color: #ffffff;
-                border-color: #818cf8;
-                box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+                border-color: #6F7DA4;
+                box-shadow: 0 0 0 3px rgba(41, 60, 121, 0.1);
                 outline: none;
             }
 
@@ -150,12 +150,12 @@
             }
 
             .btn-post {
-                background-color: #4f46e5;
+                background-color: #293C79;
                 color: white;
             }
 
             .btn-post:hover {
-                background-color: #4338ca;
+                background-color: #415086;
             }
 
             .btn-cancel {
@@ -169,12 +169,12 @@
 
             .btn-draft {
                 background-color: #fff;
-                color: #4f46e5;
-                border: 1.5px solid #4f46e5 !important;
+                color: #293C79;
+                border: 1.5px solid #293C79 !important;
             }
 
             .btn-draft:hover {
-                background-color: #eef2ff;
+                background-color: #E7E8F0;
             }
 
             /* Collapsible Section */
@@ -196,15 +196,15 @@
             }
 
             .section-toggle:hover {
-                background: #eef2ff;
-                border-color: #4f46e5;
-                color: #4338ca;
+                background: #E7E8F0;
+                border-color: #293C79;
+                color: #415086;
             }
 
             .section-toggle.active {
-                background: #eef2ff;
-                border-color: #4f46e5;
-                color: #4338ca;
+                background: #E7E8F0;
+                border-color: #293C79;
+                color: #415086;
             }
 
             .section-content {
@@ -232,8 +232,8 @@
 
             .media-dropzone:hover,
             .media-dropzone.dragover {
-                border-color: #4f46e5;
-                background: #eef2ff;
+                border-color: #293C79;
+                background: #E7E8F0;
             }
 
             .media-dropzone .dropzone-text {
@@ -353,11 +353,7 @@
 
     <div class="page-title">
         <a href="{{ route('manajemenmahasiswa.forum.index') }}" class="back-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                stroke-linecap="round" stroke-linejoin="round">
-                <line x1="19" y1="12" x2="5" y2="12"></line>
-                <polyline points="12 19 5 12 12 5"></polyline>
-            </svg>
+            <x-manajemenmahasiswa::ui.icon name="arrow-narrow-left" size="20" />
         </a>
         <div>
             <h1>Forum Diskusi</h1>
@@ -436,12 +432,7 @@
             {{-- Media Upload (Collapsible) --}}
             <div class="mb-4">
                 <button type="button" class="section-toggle" id="toggleMedia" onclick="toggleSection('media')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
-                        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-                        <circle cx="8.5" cy="8.5" r="1.5" />
-                        <polyline points="21 15 16 10 5 21" />
-                    </svg> Tambah Gambar / Video
+                    <x-manajemenmahasiswa::ui.icon name="image-02" size="16" /> Tambah Gambar / Video
                     <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
                 </button>
                 <div class="section-content" id="sectionMedia">
@@ -460,11 +451,7 @@
             {{-- Link (Collapsible) --}}
             <div class="mb-3">
                 <button type="button" class="section-toggle" id="toggleLink" onclick="toggleSection('link')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
-                        <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
-                        <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
-                    </svg> Tambah Link
+                    <x-manajemenmahasiswa::ui.icon name="link-01" size="16" /> Tambah Link
                     <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
                 </button>
                 <div class="section-content" id="sectionLink">
@@ -476,11 +463,7 @@
             {{-- Poll (Collapsible) --}}
             <div class="mb-5">
                 <button type="button" class="section-toggle" id="togglePoll" onclick="togglePollSection()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
-                        <rect x="3" y="3" width="18" height="18" rx="2" />
-                        <path d="M9 9h6M9 12h6M9 15h4" />
-                    </svg>
+                    <x-manajemenmahasiswa::ui.icon name="bar-chart-11" size="16" />
                     Tambah Poll
                     <span id="pollToggleChevron" style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
                 </button>
@@ -506,7 +489,7 @@
                         }
 
                         .poll-option-input:focus {
-                            border-color: #4f46e5;
+                            border-color: #293C79;
                             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
                         }
 
@@ -533,8 +516,8 @@
                         .poll-add-option {
                             font-size: 13px;
                             font-weight: 600;
-                            color: #4f46e5;
-                            background: #eef2ff;
+                            color: #293C79;
+                            background: #E7E8F0;
                             border: 1.5px dashed #a5b4fc;
                             border-radius: 10px;
                             padding: 8px 16px;
@@ -568,7 +551,7 @@
                         }
 
                         .poll-duration-input:focus {
-                            border-color: #4f46e5;
+                            border-color: #293C79;
                         }
                     </style>
                     <div id="pollOptionsContainer">
@@ -603,21 +586,12 @@
                 <div class="d-flex justify-content-end gap-3 align-items-center">
                     <button type="button" class="btn-action btn-draft text-decoration-none"
                         onclick="saveDraftManual()">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                             stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/>
-                            <polyline points="17 21 17 13 7 13 7 21"/>
-                            <polyline points="7 3 7 8 15 8"/>
-                        </svg>
+                        <x-manajemenmahasiswa::ui.icon name="download-01" size="16" />
                         Simpan Draft
                     </button>
                     <a href="{{ route('manajemenmahasiswa.forum.index') }}"
                         class="btn-action btn-cancel text-decoration-none shadow-sm text-center">
-                        <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <line x1="18" y1="6" x2="6" y2="18" />
-                                <line x1="6" y1="6" x2="18" y2="18" />
-                            </svg></span> Batal
+                        <x-manajemenmahasiswa::ui.icon name="minus-circle" size="16" /> Batal
                     </a>
                     <button type="submit" class="btn-action btn-post shadow-sm px-4">
                         Terbitkan
@@ -663,12 +637,7 @@
                                                 class="btn btn-sm btn-light text-danger rounded-circle shadow-sm border border-danger-subtle"
                                                 style="width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;"
                                                 title="Hapus draf ini">
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                                                    stroke="currentColor" stroke-width="2.5" stroke-linecap="round"
-                                                    stroke-linejoin="round">
-                                                    <line x1="18" y1="6" x2="6" y2="18" />
-                                                    <line x1="6" y1="6" x2="18" y2="18" />
-                                                </svg>
+                                                <x-manajemenmahasiswa::ui.icon name="minus-circle" size="14" />
                                             </button>
                                         </form>
                                     </div>

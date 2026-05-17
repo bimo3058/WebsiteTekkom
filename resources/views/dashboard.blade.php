@@ -222,9 +222,9 @@
                      x-transition:enter-end="opacity-100 translate-y-0">
                     @forelse($announcements['all'] ?? [] as $item)
                     @php $b = $badgeMap[$item['module']] ?? $badgeMap['bank_soal']; @endphp
-                    <a href="{{ $item['link'] ?? '#' }}"
-                       class="flex items-start gap-4 px-5 py-4 border-b border-[#F0F1F4] last:border-b-0 hover:bg-[#F6F8FA] transition-colors group no-underline"
-                       style="border-left: 3px solid {{ $b['border_l'] }}">
+                    <div class="flex items-start gap-4 px-5 py-4 border-b border-[#F0F1F4] last:border-b-0 hover:bg-[#F6F8FA] transition-colors group {{ !empty($item['url']) ? 'cursor-pointer' : '' }}"
+                         style="border-left: 3px solid {{ $b['border_l'] }}"
+                         @if(!empty($item['url'])) onclick="window.location.href='{{ e($item['url']) }}'" @endif>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold"
@@ -267,15 +267,15 @@
                      x-transition:enter-end="opacity-100 translate-y-0"
                      style="display:none">
                     @forelse($announcements[$moduleKey] ?? [] as $item)
-                    <a href="{{ $item['link'] ?? '#' }}"
-                       class="flex items-start gap-4 px-5 py-4 border-b border-[#F0F1F4] last:border-b-0 hover:bg-[#F6F8FA] transition-colors group no-underline"
-                       style="border-left: 3px solid {{ $b['border_l'] }}">
+                    <div class="flex items-start gap-4 px-5 py-4 border-b border-[#F0F1F4] last:border-b-0 hover:bg-[#F6F8FA] transition-colors group {{ !empty($item['url']) ? 'cursor-pointer' : '' }}"
+                         style="border-left: 3px solid {{ $b['border_l'] }}"
+                         @if(!empty($item['url'])) onclick="window.location.href='{{ e($item['url']) }}'" @endif>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="text-[10px] text-[#C1C7CF]">{{ $item['date'] }}</span>
                                 @if(!empty($item['pinned']))
                                 <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                                      style="background:#F9ECCB;color:#956321">
+                                      style="background:{{ $b['bg'] }};color:{{ $b['text'] }}">
                                     Penting
                                 </span>
                                 @endif

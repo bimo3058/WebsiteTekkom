@@ -309,10 +309,12 @@ class DirektoriMahasiswaController extends Controller
             $angkatanList = collect();
         }
 
-        $isAdmin = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
-        $isGpm = $this->hasRole('gpm');
+        $isAdmin    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+        $isGpm      = $this->hasRole('gpm');
         $isPengurus = $this->hasRole('pengurus_himpunan');
         $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
+        // Admin group, GPM, DPM, dan Dosen bisa generate CV mahasiswa lain
+        $isCanCv    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator');
 
         return view('manajemenmahasiswa::direktori.mahasiswa-index', compact(
             'mahasiswa',
@@ -321,6 +323,7 @@ class DirektoriMahasiswaController extends Controller
             'isGpm',
             'isPengurus',
             'isMahasiswa',
+            'isCanCv',
         ))->with('layout', $this->resolveLayout())
             ->with('error', isset($mahasiswa) && $mahasiswa->isEmpty() && !$request->hasAny(['search', 'angkatan', 'status'])
                 ? 'Koneksi database sedang tidak stabil. Silakan muat ulang halaman.'
@@ -352,10 +355,12 @@ class DirektoriMahasiswaController extends Controller
             // Ambil riwayat kegiatan: manual + otomatis dari ketua pelaksana
             $riwayatKegiatan = $this->withRetry(fn() => $this->buildMergedRiwayat($mhs->user_id));
 
-            $isAdmin = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+            $isAdmin    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
             $isPengurus = $this->hasRole('pengurus_himpunan');
-            $isGpm = $this->hasRole('gpm');
+            $isGpm      = $this->hasRole('gpm');
             $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
+            // Hanya admin group, GPM, dan DPM yang boleh generate CV mahasiswa lain
+            $isCanCv    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm');
 
             return view('manajemenmahasiswa::direktori.mahasiswa-show', compact(
                 'mhs',
@@ -365,6 +370,7 @@ class DirektoriMahasiswaController extends Controller
                 'isPengurus',
                 'isGpm',
                 'isMahasiswa',
+                'isCanCv',
                 'cvProfile',
             ))->with('layout', $this->resolveLayout());
 
@@ -394,13 +400,14 @@ class DirektoriMahasiswaController extends Controller
     public function update(Request $request, int $id)
     {
         $request->validate([
-            'nama' => 'required|string|max:255',
-            'nim' => 'required|string|max:30',
-            'angkatan' => 'required|integer|min:2000|max:2099',
-            'status' => 'required|in:' . implode(',', Kemahasiswaan::STATUS_LIST),
+            'nama'        => 'required|string|max:255',
+            'nim'         => 'required|string|max:30',
+            'angkatan'    => 'required|integer|min:2000|max:2099',
+            'status'      => 'required|in:' . implode(',', Kemahasiswaan::STATUS_LIST),
             'tahun_lulus' => 'nullable|integer|min:2000|max:2099',
-            'profesi' => 'nullable|string|max:255',
-            'kontak' => 'nullable|string|max:255',
+            'profesi'     => 'nullable|string|max:255',
+            'kontak'      => 'nullable|string|max:255',
+            'email_pribadi' => 'nullable|email|max:255',
         ]);
 
         $mhs = Kemahasiswaan::findOrFail($id);
@@ -415,14 +422,17 @@ class DirektoriMahasiswaController extends Controller
             'profesi',
         ]));
 
-        // Sinkronisasi kontak ke tabel users dan cv_profiles
+        // ─── Sinkronisasi kontak & email_pribadi ke users + cv_profiles ───────
+        // Load user model sekali agar tidak query dua kali
+        $userModel = \App\Models\User::find($mhs->user_id);
+
+        // Sinkronisasi nomor telepon
         if ($request->has('kontak') || $request->has('phone_code')) {
-            $kontak = $request->kontak;
+            $kontak    = $request->kontak;
             $phoneCode = $request->phone_code ?? '+62';
 
             if ($kontak) {
-                // Bersihkan non-digit
-                $kontak = preg_replace('/[^\d]/', '', $kontak);
+                $kontak  = preg_replace('/[^\d]/', '', $kontak);
                 if ($phoneCode === '+62' && str_starts_with($kontak, '0')) {
                     $kontak = ltrim($kontak, '0');
                 }
@@ -431,17 +441,51 @@ class DirektoriMahasiswaController extends Controller
                 $fullWa = null;
             }
 
-            // Sync ke user
-            $userModel = \App\Models\User::find($mhs->user_id);
-            if ($userModel) {
-                $userModel->updateQuietly(['whatsapp' => $fullWa]);
+            // Sync ke users.whatsapp
+            try {
+                if ($userModel) {
+                    $userModel->updateQuietly(['whatsapp' => $fullWa]);
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Gagal sync whatsapp ke users', ['user_id' => $mhs->user_id, 'error' => $e->getMessage()]);
             }
 
-            // Sync ke cv_profiles
-            \App\Models\CvProfile::where('user_id', $mhs->user_id)->update(['cv_whatsapp' => $fullWa]);
+            // Sync ke cv_profiles.cv_whatsapp
+            try {
+                \App\Models\CvProfile::where('user_id', $mhs->user_id)->update(['cv_whatsapp' => $fullWa]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Gagal sync cv_whatsapp', ['user_id' => $mhs->user_id, 'error' => $e->getMessage()]);
+            }
 
-            // Perbarui mk_kemahasiswaan
+            // Sync ke mk_kemahasiswaan.kontak
             $mhs->updateQuietly(['kontak' => $fullWa]);
+        }
+
+        // Sinkronisasi email pribadi
+        if ($request->has('email_pribadi')) {
+            $emailPribadi = $request->email_pribadi ?: null;
+
+            // Sync ke users.personal_email
+            try {
+                if ($userModel) {
+                    $userModel->updateQuietly(['personal_email' => $emailPribadi]);
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Gagal sync personal_email ke users', ['user_id' => $mhs->user_id, 'error' => $e->getMessage()]);
+            }
+
+            // Sync ke cv_profiles.cv_email
+            try {
+                \App\Models\CvProfile::where('user_id', $mhs->user_id)->update(['cv_email' => $emailPribadi]);
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Gagal sync cv_email', ['user_id' => $mhs->user_id, 'error' => $e->getMessage()]);
+            }
+        }
+
+        // Bersihkan cache user mahasiswa agar Settings global langsung menampilkan data terbaru
+        // (sama seperti pola ProfileController::update())
+        if ($userModel) {
+            $userModel->clearUserCache();
         }
 
         // Sinkronisasi: jika status baru = alumni, otomatis buat record di mk_alumni

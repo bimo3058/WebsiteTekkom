@@ -126,7 +126,9 @@
 
         <div class="row g-3">
             @php
-                $savedWa = old('kontak', $mhs->kontak ?? '');
+                // Prioritaskan users.whatsapp (sumber kanonik dari Settings global)
+                // Fallback ke mk_kemahasiswaan.kontak jika belum tersinkron
+                $savedWa = old('kontak', $mhs->user?->whatsapp ?? $mhs->kontak ?? '');
                 $savedCode = '+62';
                 $localNum = $savedWa;
 

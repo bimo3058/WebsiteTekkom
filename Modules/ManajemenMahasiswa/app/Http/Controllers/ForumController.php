@@ -15,6 +15,7 @@ use Modules\ManajemenMahasiswa\Services\CommentService;
 use Modules\ManajemenMahasiswa\Services\GamificationService;
 use App\Services\SupabaseStorage;
 use Modules\ManajemenMahasiswa\Models\RepoMulmed;
+use Modules\ManajemenMahasiswa\Models\ForumNotification;
 
 class ForumController extends Controller
 {
@@ -47,26 +48,17 @@ class ForumController extends Controller
                 return $v->voteable_type . '_' . $v->voteable_id;
             });
 
-        // Preload tier info per thread author
-        $authorTiers = [];
-        foreach ($threads as $thread) {
-            $authorId = $thread->user_id;
-            if (!isset($authorTiers[$authorId])) {
-                $totalXp = $this->gamificationService->getTotalXp($authorId);
-                $level = $this->gamificationService->calculateLevel($totalXp);
-                $tier = $this->gamificationService->getTierInfo($level);
-                $authorTiers[$authorId] = [
-                    'level' => $level,
-                    'tier_name' => $tier['name'],
-                    'tier_icon' => $tier['icon'],
-                ];
-            }
-        }
+        // Batch-load tier info untuk semua author thread sekaligus — 1 query (Fix #13)
+        $authorIds   = collect($threads->items())->pluck('user_id')->unique()->toArray();
+        $authorTiers = $this->gamificationService->getBatchTierInfo($authorIds);
 
         // Load reports for admin
         $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
         $forumReports = $isAdmin
-            ? \Modules\ManajemenMahasiswa\Models\ForumReport::with(['reporter', 'thread.author'])->latest()->get()
+            ? \Modules\ManajemenMahasiswa\Models\ForumReport::with(['reporter', 'thread.author'])
+                ->where('status', 'pending')
+                ->latest()
+                ->get()
             : collect();
 
         $viewData = compact('threads', 'leaderboard', 'userStats', 'categories', 'user', 'userVotes', 'authorTiers', 'forumReports');
@@ -113,6 +105,14 @@ class ForumController extends Controller
                     'konten' => $request->input('konten'),
                 ]);
             } else {
+                // Draft ID dikirim tapi tidak ditemukan — cek limit lalu buat baru (Fix #10)
+                $draftCount = \Modules\ManajemenMahasiswa\Models\ThreadDraft::where('user_id', Auth::id())->count();
+                if ($draftCount >= 10) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Maksimal 10 draf tersimpan. Hapus draf lama sebelum menyimpan yang baru.',
+                    ], 422);
+                }
                 $draft = \Modules\ManajemenMahasiswa\Models\ThreadDraft::create([
                     'user_id' => Auth::id(),
                     'judul' => $request->input('judul'),
@@ -121,6 +121,14 @@ class ForumController extends Controller
                 ]);
             }
         } else {
+            // Cek limit sebelum membuat draf baru (Fix #10)
+            $draftCount = \Modules\ManajemenMahasiswa\Models\ThreadDraft::where('user_id', Auth::id())->count();
+            if ($draftCount >= 10) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Maksimal 10 draf tersimpan. Hapus draf lama sebelum menyimpan yang baru.',
+                ], 422);
+            }
             $draft = \Modules\ManajemenMahasiswa\Models\ThreadDraft::create([
                 'user_id' => Auth::id(),
                 'judul' => $request->input('judul'),
@@ -144,6 +152,11 @@ class ForumController extends Controller
         \Modules\ManajemenMahasiswa\Models\ThreadDraft::where('id', $id)
             ->where('user_id', Auth::id())
             ->delete();
+
+        // Return JSON untuk AJAX, redirect untuk non-AJAX (Fix #12)
+        if (request()->ajax()) {
+            return response()->json(['success' => true, 'message' => 'Draf berhasil dihapus.']);
+        }
 
         return redirect()->back()->with('success', 'Draf berhasil dihapus.');
     }
@@ -287,7 +300,26 @@ class ForumController extends Controller
         $thread->load(['poll.options', 'poll.votes']);
         $comments = $this->commentService->listComments($id);
 
+        // Kumpulkan semua comment ID yang tampil (termasuk nested replies) untuk filter vote (Fix #14)
+        $commentIds = collect($comments->items())->pluck('id');
+        foreach ($comments as $comment) {
+            if ($comment->allReplies) {
+                $commentIds = $commentIds->merge(
+                    collect($comment->allReplies)->pluck('id')
+                );
+            }
+        }
+
         $userVotes = \Modules\ManajemenMahasiswa\Models\Vote::where('user_id', $user->id)
+            ->where(function ($q) use ($id, $commentIds) {
+                $q->where(function ($q2) use ($id) {
+                    $q2->where('voteable_type', \Modules\ManajemenMahasiswa\Models\Thread::class)
+                       ->where('voteable_id', $id);
+                })->orWhere(function ($q2) use ($commentIds) {
+                    $q2->where('voteable_type', \Modules\ManajemenMahasiswa\Models\Comment::class)
+                       ->whereIn('voteable_id', $commentIds->unique()->toArray());
+                });
+            })
             ->get()
             ->keyBy(function ($v) {
                 return $v->voteable_type . '_' . $v->voteable_id;
@@ -297,8 +329,7 @@ class ForumController extends Controller
             ->where('thread_id', $id)
             ->exists();
 
-        // Preload tier info for thread author + all commenters
-        $authorTiers = [];
+        // Batch-load tier info untuk thread author + semua commenter — 1 query (Fix #13)
         $allUserIds = collect([$thread->user_id]);
         foreach ($comments as $comment) {
             $allUserIds->push($comment->user_id);
@@ -308,16 +339,9 @@ class ForumController extends Controller
                 }
             }
         }
-        foreach ($allUserIds->unique() as $authorId) {
-            $totalXp = $this->gamificationService->getTotalXp($authorId);
-            $level = $this->gamificationService->calculateLevel($totalXp);
-            $tier = $this->gamificationService->getTierInfo($level);
-            $authorTiers[$authorId] = [
-                'level' => $level,
-                'tier_name' => $tier['name'],
-                'tier_icon' => $tier['icon'],
-            ];
-        }
+        $authorTiers = $this->gamificationService->getBatchTierInfo(
+            $allUserIds->unique()->toArray()
+        );
 
         // Record streak (user visited a thread detail page)
         $this->gamificationService->recordStreak($user->id);
@@ -387,6 +411,32 @@ class ForumController extends Controller
     }
 
     /**
+     * Toggle poll open/closed — thread owner only.
+     */
+    public function closePoll(int $threadId)
+    {
+        $thread = Thread::findOrFail($threadId);
+        $userId = Auth::id();
+
+        if ($thread->user_id !== $userId) {
+            return response()->json(['error' => 'Hanya pemilik thread yang bisa menutup polling.'], 403);
+        }
+
+        $poll = $thread->poll;
+
+        if (!$poll) {
+            return response()->json(['error' => 'Poll tidak ditemukan.'], 404);
+        }
+
+        $poll->update(['is_closed' => !$poll->is_closed]);
+
+        return response()->json([
+            'success'   => true,
+            'is_closed' => $poll->is_closed,
+        ]);
+    }
+
+    /**
      * Form edit thread.
      */
     public function edit(int $id)
@@ -401,8 +451,9 @@ class ForumController extends Controller
 
         $thread->load(['poll.options']);
         $categories = Thread::KATEGORI_LABELS;
+        $existingLink = $thread->extractLinkUrl();
 
-        return view('manajemenmahasiswa::forum.edit', compact('thread', 'categories', 'user'));
+        return view('manajemenmahasiswa::forum.edit', compact('thread', 'categories', 'user', 'existingLink'));
     }
 
     /**
@@ -510,9 +561,10 @@ class ForumController extends Controller
             }
         }
 
-        // 3) Link
-        if (!empty($validated['link_url'])) {
-            $linkUrl = e($validated['link_url']);
+        // 3) Link — gunakan link baru jika diisi, fallback ke link lama agar tidak hilang (Fix #9)
+        $resolvedLinkUrl = $validated['link_url'] ?? $thread->extractLinkUrl();
+        if (!empty($resolvedLinkUrl)) {
+            $linkUrl = e($resolvedLinkUrl);
             $konten .= '<a href="' . $linkUrl . '" target="_blank" rel="noopener noreferrer" class="d-inline-flex p-3 rounded bg-light border border-primary-subtle text-primary fw-bold text-decoration-none mb-3" style="word-break: break-all;">🔗 ' . $linkUrl . '</a><br>';
         }
 
@@ -548,12 +600,17 @@ class ForumController extends Controller
             }
 
             // Hapus opsi yang dipilih (hanya yang votes_count = 0)
+            // Scope ke poll_id untuk mencegah IDOR — option dari poll lain diabaikan (Fix #4)
             if (!empty($validated['poll_delete_options'])) {
                 foreach ($validated['poll_delete_options'] as $optId) {
-                    $opt = $existingPoll->options->firstWhere('id', (int) $optId);
+                    $opt = ThreadPollOption::where('id', (int) $optId)
+                        ->where('poll_id', $existingPoll->id)
+                        ->first();
                     if ($opt && $opt->votes_count === 0) {
                         // Pastikan minimal 2 opsi tersisa setelah hapus
-                        $remainingCount = $existingPoll->options->where('id', '!=', $opt->id)->count();
+                        $remainingCount = ThreadPollOption::where('poll_id', $existingPoll->id)
+                            ->where('id', '!=', $opt->id)
+                            ->count();
                         if ($remainingCount >= 2) {
                             $opt->delete();
                         }
@@ -685,31 +742,79 @@ class ForumController extends Controller
             $isPinned = true;
         }
 
-        if (request()->ajax()) {
-            return response()->json(['is_pinned' => $isPinned]);
-        }
-
         $status = $isPinned ? 'dipin secara pribadi' : 'di-unpin dari pin pribadi';
         return back()->with('success', "Thread berhasil {$status}.");
     }
 
     /**
      * Tambah komentar.
+     * Mendukung AJAX: return JSON + rendered HTML agar komentar langsung muncul tanpa page reload.
      */
     public function storeComment(int $threadId, Request $request)
     {
         $request->validate(['konten' => 'required|string|min:3']);
 
+        $user = Auth::user();
+
         $oldLevel = $this->gamificationService->calculateLevel(
-            $this->gamificationService->getTotalXp(Auth::id())
+            $this->gamificationService->getTotalXp($user->id)
         );
 
-        $this->commentService->addComment(Auth::id(), $threadId, $request->konten, $request->parent_id);
+        $comment = $this->commentService->addComment($user->id, $threadId, $request->konten, $request->parent_id);
+
+        $thread = $this->threadService->findThread($threadId);
+
+        // Create forum notifications for reply/mention
+        try {
+            ForumNotification::notifyCommentReply($comment, $thread);
+        } catch (\Throwable $e) {
+            \Log::warning('Forum notification failed: ' . $e->getMessage());
+        }
 
         $newLevel = $this->gamificationService->calculateLevel(
-            $this->gamificationService->getTotalXp(Auth::id())
+            $this->gamificationService->getTotalXp($user->id)
         );
 
+        // AJAX: render partial comment sebagai HTML lalu kembalikan JSON
+        if ($request->ajax()) {
+            $comment->load(['author.roles', 'allReplies']);
+
+            $depth       = $comment->parent_id ? 1 : 0;
+            $authorTiers = $this->gamificationService->getBatchTierInfo([$user->id]);
+            $userVotes   = collect();
+
+            $html = view('manajemenmahasiswa::forum.partials.comment-thread', [
+                'comment'     => $comment,
+                'thread'      => $thread,
+                'user'        => $user,
+                'depth'       => $depth,
+                'authorTiers' => $authorTiers,
+                'userVotes'   => $userVotes,
+            ])->render();
+
+            $levelUp = null;
+            if ($newLevel > $oldLevel) {
+                $tier    = $this->gamificationService->getTierInfo($newLevel);
+                $levelUp = [
+                    'old_level' => $oldLevel,
+                    'new_level' => $newLevel,
+                    'tier_name' => $tier['name'],
+                    'tier_icon' => $tier['icon'],
+                ];
+            }
+
+            return response()->json([
+                'success'       => true,
+                'html'          => $html,
+                'comment_id'    => $comment->id,
+                'parent_id'     => $comment->parent_id,
+                'comment_count' => $thread->comment_count,
+                'xp_message'    => 'Komentar berhasil ditambahkan! +5 XP',
+                'level_up'      => $levelUp,
+            ]);
+        }
+
+        // Non-AJAX fallback (form biasa)
         $redirect = back()->with('success', 'Komentar berhasil ditambahkan! +5 XP');
 
         if ($newLevel > $oldLevel) {
@@ -744,9 +849,15 @@ class ForumController extends Controller
         $request->validate(['konten' => 'required|string|min:3']);
 
         try {
-            $this->commentService->updateComment($commentId, Auth::id(), $request->konten);
+            $comment = $this->commentService->updateComment($commentId, Auth::id(), $request->konten);
+            if (request()->wantsJson()) {
+                return response()->json(['success' => true, 'konten' => $comment->konten]);
+            }
             return back()->with('success', 'Komentar berhasil diperbarui.');
         } catch (\RuntimeException $e) {
+            if (request()->wantsJson()) {
+                return response()->json(['error' => $e->getMessage()], 403);
+            }
             return back()->withErrors(['konten' => $e->getMessage()]);
         }
     }
@@ -816,18 +927,18 @@ class ForumController extends Controller
     // =========================================================================
 
     /**
-     * Dismiss (hapus) sebuah laporan.
+     * Dismiss laporan — tandai sebagai ditolak, jangan langsung hapus (Fix #8).
      */
     public function dismissReport(int $reportId)
     {
         $report = \Modules\ManajemenMahasiswa\Models\ForumReport::findOrFail($reportId);
-        $report->delete();
+        $report->update(['status' => 'ditolak']);
 
-        return back()->with('success', 'Laporan berhasil dihapus.');
+        return back()->with('success', 'Laporan berhasil ditolak.');
     }
 
     /**
-     * Hapus thread yang dilaporkan + semua laporannya.
+     * Hapus thread yang dilaporkan — tandai laporan disetujui lalu hapus thread (Fix #8).
      */
     public function deleteReportedThread(int $reportId)
     {
@@ -835,17 +946,19 @@ class ForumController extends Controller
         $thread = $report->thread;
 
         if ($thread) {
-            \Modules\ManajemenMahasiswa\Models\ForumReport::where('thread_id', $thread->id)->delete();
+            // Tandai semua laporan terkait thread ini sebagai disetujui
+            \Modules\ManajemenMahasiswa\Models\ForumReport::where('thread_id', $thread->id)
+                ->update(['status' => 'disetujui']);
             $thread->delete();
         } else {
-            $report->delete();
+            $report->update(['status' => 'disetujui']);
         }
 
         return back()->with('success', 'Thread yang dilaporkan berhasil dihapus.');
     }
 
     /**
-     * Kunci thread yang dilaporkan + hapus laporannya.
+     * Kunci thread yang dilaporkan — tandai laporan disetujui lalu kunci thread (Fix #8).
      */
     public function lockReportedThread(int $reportId)
     {
@@ -855,11 +968,82 @@ class ForumController extends Controller
         if ($thread) {
             // Use query builder to avoid touching updated_at
             Thread::where('id', $thread->id)->update(['is_locked' => true]);
-            \Modules\ManajemenMahasiswa\Models\ForumReport::where('thread_id', $thread->id)->delete();
+            \Modules\ManajemenMahasiswa\Models\ForumReport::where('thread_id', $thread->id)
+                ->update(['status' => 'disetujui']);
         } else {
-            $report->delete();
+            $report->update(['status' => 'disetujui']);
         }
 
-        return back()->with('success', 'Thread berhasil dikunci dan laporan dihapus.');
+        return back()->with('success', 'Thread berhasil dikunci dan laporan ditandai disetujui.');
+    }
+
+    // =========================================================================
+    // Notifications (AJAX)
+    // =========================================================================
+
+    /**
+     * Ambil notifikasi forum user (AJAX).
+     */
+    public function getNotifications()
+    {
+        $notifications = ForumNotification::forUser(Auth::id())
+            ->with(['actor', 'thread'])
+            ->latest()
+            ->take(20)
+            ->get()
+            ->map(fn($n) => [
+                'id'         => $n->id,
+                'type'       => $n->type,
+                'message'    => $n->message,
+                'thread_id'  => $n->thread_id,
+                'thread_url' => route('manajemenmahasiswa.forum.show', $n->thread_id),
+                'actor_name' => $n->actor?->name ?? 'Seseorang',
+                'actor_initials' => strtoupper(substr($n->actor?->name ?? 'S', 0, 2)),
+                'is_read'    => !is_null($n->read_at),
+                'time_ago'   => $n->created_at->diffForHumans(),
+                'created_at' => $n->created_at->toIso8601String(),
+            ]);
+
+        $unreadCount = ForumNotification::forUser(Auth::id())->unread()->count();
+
+        return response()->json([
+            'notifications' => $notifications,
+            'unread_count'  => $unreadCount,
+        ]);
+    }
+
+    /**
+     * Tandai satu notifikasi sebagai dibaca.
+     */
+    public function markNotificationRead(int $id)
+    {
+        $notif = ForumNotification::where('id', $id)
+            ->where('user_id', Auth::id())
+            ->firstOrFail();
+
+        $notif->markAsRead();
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Tandai semua notifikasi user sebagai dibaca.
+     * Sekaligus bersihkan notifikasi lama yang sudah dibaca > 30 hari (Fix #11).
+     */
+    public function markAllNotificationsRead()
+    {
+        $userId = Auth::id();
+
+        ForumNotification::forUser($userId)
+            ->unread()
+            ->update(['read_at' => now()]);
+
+        // Hapus notifikasi sudah-baca yang berumur > 30 hari agar tabel tidak membengkak
+        ForumNotification::forUser($userId)
+            ->whereNotNull('read_at')
+            ->where('read_at', '<', now()->subDays(30))
+            ->delete();
+
+        return response()->json(['success' => true]);
     }
 }

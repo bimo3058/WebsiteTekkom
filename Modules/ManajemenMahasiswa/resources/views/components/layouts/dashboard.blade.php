@@ -6,14 +6,15 @@
 @push('styles')
     <style>
         .sidebar {
-            width: 260px;
+            width: 240px;
             height: 100vh;
             position: fixed;
             background: #ffffff;
-            border-right: 1px solid #e5e7eb;
-            padding: 20px;
+            border-right: 1px solid #DFE1E7;
+            padding: 0;
             display: flex;
             flex-direction: column;
+            transition: width 0.25s ease;
         }
 
         .menu-title {
@@ -23,20 +24,129 @@
         }
 
         .sidebar a {
+            position: relative;
             display: block;
-            padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 7px 10px 7px 14px;
             border-radius: 8px;
             text-decoration: none;
-            color: #374151;
+            color: #353849;
+            font-weight: 500;
+            font-size: 13px;
+            margin-bottom: 1px;
+            transition: background .12s, color .12s;
+            white-space: nowrap;
         }
 
         .sidebar a:hover {
-            background: #f3f4f6;
+            background: #F6F8FA;
+            color: #1A1C1E;
         }
 
         .sidebar a.active {
-            background: #e0e7ff;
-            color: #4f46e5;
+            background: rgba(11, 38, 110, 0.08);
+            color: #0B266E;
+            font-weight: 600;
+            box-shadow: none;
+        }
+
+        .sidebar a.active::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 20px;
+            background: #0B266E;
+            border-radius: 0 3px 3px 0;
+        }
+
+        .sidebar-collapsed .sidebar a.active::before {
+            display: none;
+        }
+
+        .sidebar a svg {
+            color: #666D80;
+            width: 16px;
+            height: 16px;
+            transition: color 0.12s;
+            flex-shrink: 0;
+        }
+
+        .sidebar a.active svg {
+            color: #0B266E;
+        }
+
+        .sidebar a:hover svg {
+            color: #1A1C1E;
+        }
+
+        /* Collapsed Sidebar */
+        .sidebar-collapsed .sidebar {
+            width: 64px;
+            padding: 0;
+        }
+
+        .sidebar-collapsed .sidebar a {
+            justify-content: center;
+            padding: 7px 0;
+            gap: 0;
+        }
+
+        .sidebar-collapsed .nav-label,
+        .sidebar-collapsed .sb-section-label,
+        .sidebar-collapsed .sb-brand-text,
+        .sidebar-collapsed .dropdown-arrow,
+        .sidebar-collapsed .sidebar-dropdown-menu {
+            display: none !important;
+        }
+
+        .btn-logout {
+            position: relative;
+            display: flex;
+            align-items: center;
+            gap: 9px;
+            padding: 7px 10px 7px 14px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #353849;
+            font-weight: 500;
+            font-size: 13px;
+            margin-bottom: 1px;
+            transition: background .12s, color .12s;
+            width: 100%;
+            text-align: left;
+            border: none;
+            background: transparent;
+            white-space: nowrap;
+            font-family: inherit;
+            cursor: pointer;
+        }
+
+        .sidebar-collapsed .btn-logout {
+            justify-content: center;
+            padding: 7px 0;
+            gap: 0;
+        }
+
+        .btn-logout:hover {
+            background: #FEF1F4;
+            color: #DF1C41;
+        }
+
+        .btn-logout svg {
+            color: #666D80;
+            width: 16px;
+            height: 16px;
+            transition: color 0.12s;
+            flex-shrink: 0;
+        }
+
+        .btn-logout:hover svg {
+            color: #DF1C41;
         }
 
         .bottom-menu {
@@ -46,14 +156,19 @@
         }
 
         .navbar-custom {
-            margin-left: 260px;
-            height: 70px;
+            margin-left: 240px;
+            height: 60px;
             background: #fff;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #DFE1E7;
             display: flex;
             justify-content: flex-end;
             align-items: center;
-            padding: 0 25px;
+            padding: 0 28px;
+            transition: margin-left 0.25s ease;
+        }
+
+        .sidebar-collapsed .navbar-custom {
+            margin-left: 64px;
         }
 
         .user-profile {
@@ -69,8 +184,13 @@
         }
 
         .content {
-            margin-left: 260px;
-            padding: 25px;
+            margin-left: 240px;
+            padding: 24px 28px 48px;
+            transition: margin-left 0.25s ease;
+        }
+
+        .sidebar-collapsed .content {
+            margin-left: 64px;
         }
 
         .main-wrapper {
@@ -104,6 +224,10 @@
 @endpush
 
 @section('body')
+<div x-data="{ sidebarOpen: localStorage.getItem('sidebarOpen') !== 'false' }" 
+     x-init="$watch('sidebarOpen', val => localStorage.setItem('sidebarOpen', val))"
+     :class="{ 'sidebar-collapsed': !sidebarOpen }">
+
     {{-- Sidebar Dinamis --}}
     <x-manajemenmahasiswa::ui.sidebar />
 
@@ -116,4 +240,5 @@
             @yield('content')
         </div>
     </div>
+</div>
 @endsection

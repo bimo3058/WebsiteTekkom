@@ -2,6 +2,7 @@
 
 namespace Modules\ManajemenMahasiswa\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Modules\ManajemenMahasiswa\Models\Badge;
 use Modules\ManajemenMahasiswa\Models\UserBadge;
@@ -30,6 +31,39 @@ class GamificationService
         ['min_level' => 11, 'max_level' => 12, 'name' => 'Mentor',          'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8.21 13.89L7 23l5-3 5 3-1.21-9.12"/><circle cx="12" cy="8" r="7"/></svg>'],
         ['min_level' => 13, 'max_level' => 99, 'name' => 'Legenda Kampus',  'icon' => '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m2 4 3 12h14l3-12-6 7-4-7-4 7-6-7zm3 16h14"/></svg>'],
     ];
+
+    /**
+     * Batch-load tier info untuk banyak user sekaligus — 1 query, bukan N query (Fix #13).
+     * Mengembalikan array indexed by user_id: ['level' => int, 'tier_name' => string, 'tier_icon' => string]
+     *
+     * @param  int[]  $userIds
+     * @return array<int, array{level: int, tier_name: string, tier_icon: string}>
+     */
+    public function getBatchTierInfo(array $userIds): array
+    {
+        if (empty($userIds)) {
+            return [];
+        }
+
+        $xpByUser = XpLog::select('user_id', DB::raw('SUM(xp_amount) as total_xp'))
+            ->whereIn('user_id', $userIds)
+            ->groupBy('user_id')
+            ->pluck('total_xp', 'user_id');
+
+        $result = [];
+        foreach ($userIds as $userId) {
+            $totalXp = max(0, (int) ($xpByUser[$userId] ?? 0));
+            $level   = $this->calculateLevel($totalXp);
+            $tier    = $this->getTierInfo($level);
+            $result[$userId] = [
+                'level'     => $level,
+                'tier_name' => $tier['name'],
+                'tier_icon' => $tier['icon'],
+            ];
+        }
+
+        return $result;
+    }
 
     /**
      * Ambil informasi tier berdasarkan level.
@@ -79,6 +113,9 @@ class GamificationService
         }
         $newLevel = $this->calculateLevel($newTotalXp);
         $leveledUp = $newLevel > $oldLevel;
+
+        // Invalidasi cache rank agar tidak stale setelah XP berubah
+        Cache::forget("forum_user_rank_{$userId}");
 
         // Setelah memberi XP, cek apakah ada badge baru yang bisa diraih
         $this->checkAndAwardBadges($userId);
@@ -179,17 +216,20 @@ class GamificationService
 
     /**
      * Ranking user berdasarkan total XP (posisi 1 = terbanyak).
+     * Di-cache 5 menit untuk menghindari full table scan tiap page load (Fix #16).
      */
     public function getUserRank(int $userId): int
     {
-        $userXp = $this->getTotalXp($userId);
+        return Cache::remember("forum_user_rank_{$userId}", 300, function () use ($userId) {
+            $userXp = $this->getTotalXp($userId);
 
-        $rank = XpLog::select('user_id')
-            ->groupBy('user_id')
-            ->havingRaw('SUM(xp_amount) > ?', [$userXp])
-            ->count();
+            $rank = XpLog::select('user_id')
+                ->groupBy('user_id')
+                ->havingRaw('SUM(xp_amount) > ?', [$userXp])
+                ->count();
 
-        return $rank + 1;
+            return $rank + 1;
+        });
     }
 
     // =========================================================================
@@ -267,10 +307,17 @@ class GamificationService
 
     /**
      * Evaluasi semua badge dan berikan yang memenuhi syarat.
+     * Di-throttle via cache 5 menit per user untuk menghindari evaluasi berulang tiap XP award (Fix #15).
      */
     public function checkAndAwardBadges(int $userId): void
     {
-        $badges = Badge::all();
+        $throttleKey = "badge_check_{$userId}";
+        if (Cache::has($throttleKey)) {
+            return;
+        }
+        Cache::put($throttleKey, true, 300);
+
+        $badges = Cache::remember('forum_all_badges', 3600, fn () => Badge::all());
         $earnedBadgeIds = UserBadge::where('user_id', $userId)->pluck('badge_id')->toArray();
 
         foreach ($badges as $badge) {

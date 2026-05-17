@@ -3,11 +3,13 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Str;
 use Illuminate\View\View;
 use Modules\BankSoal\Services\DashboardAnnouncementService;
 use Modules\EOffice\Models\PeriodePendaftaran;
 use Modules\EOffice\Models\Pengumuman;
 use Modules\EOffice\Services\PeriodePendaftaranService;
+use Modules\ManajemenMahasiswa\Models\Pengumuman as MkPengumuman;
 
 class DashboardController extends Controller
 {
@@ -145,16 +147,17 @@ class DashboardController extends Controller
                 'praktikan' => 'Praktikan',
                 default => ucfirst($periode->jenis),
             };
-            $deadline   = $periode->ditutup_pada
+            $deadline = $periode->ditutup_pada
                 ? ' · Batas: ' . $periode->ditutup_pada->format('d M Y H:i')
                 : '';
 
             $eofficeItems->push([
-                'module'  => 'eoffice',
-                'date'    => $periode->created_at?->diffForHumans() ?? '',
-                'title'   => "📢 Pendaftaran {$jenisLabel} Dibuka — {$periode->praktikum?->nama}",
-                'body'    => $periode->nama . $deadline,
-                'pinned'  => true,
+                'module' => 'eoffice',
+                'date'   => $periode->created_at?->diffForHumans() ?? '',
+                'title'  => "📢 Pendaftaran {$jenisLabel} Dibuka — {$periode->praktikum?->nama}",
+                'body'   => $periode->nama . $deadline,
+                'pinned' => true,
+                '_ts'    => $periode->created_at?->timestamp ?? 0,
             ]);
         }
 
@@ -169,6 +172,7 @@ class DashboardController extends Controller
                 'title'  => "Pendaftaran {$jenisLabel} Ditutup — {$periode->praktikum?->nama}",
                 'body'   => 'Periode pendaftaran telah ditutup.',
                 'pinned' => false,
+                '_ts'    => $periode->created_at?->timestamp ?? 0,
             ]);
         }
 
@@ -187,28 +191,53 @@ class DashboardController extends Controller
                 'title'  => $peng->judul,
                 'body'   => $peng->konten,
                 'pinned' => false,
+                '_ts'    => $peng->created_at?->timestamp ?? 0,
             ]);
         }
 
-        // Sort semua eoffice items: pinned dulu, lalu by waktu (latest first)
-        $eofficeItems = $eofficeItems->sortByDesc(fn($i) => [$i['pinned'] ? 1 : 0])->values()->all();
+        // Sort eoffice: pinned dulu, lalu by timestamp terbaru
+        $eofficeItems = $eofficeItems
+            ->sortByDesc(fn ($i) => [$i['pinned'] ? 1 : 0, $i['_ts'] ?? 0])
+            ->values()
+            ->all();
 
-        // Placeholder untuk modul lain (bisa diisi nanti oleh masing-masing modul)
+        // Tab kemahasiswaan: pengumuman published dari ManajemenMahasiswa (5 terbaru, pinned global dulu)
+        $kemahasiswaanItems = MkPengumuman::published()
+            ->orderByDesc('is_pinned')
+            ->orderByDesc('published_at')
+            ->limit(5)
+            ->get()
+            ->map(fn ($p) => [
+                'module' => 'kemahasiswaan',
+                'date'   => ($p->published_at ?? $p->created_at)?->diffForHumans() ?? '',
+                'title'  => $p->judul,
+                'body'   => Str::limit(strip_tags($p->konten), 120),
+                'pinned' => (bool) $p->is_pinned,
+                'url'    => route('manajemenmahasiswa.pengumuman.show', $p->id),
+                '_ts'    => ($p->published_at ?? $p->created_at)?->timestamp ?? 0,
+            ])
+            ->all();
+
         $announcements = [
             'bank_soal'     => [],
             'capstone'      => [],
-            'kemahasiswaan' => [],
+            'kemahasiswaan' => $kemahasiswaanItems,
             'eoffice'       => $eofficeItems,
         ];
 
-        // Tab "all" = gabungan semua, diurutkan: pinned eoffice dulu, sisanya by date
+        // Tab "all" = gabungan semua modul, diurutkan: pinned dulu, lalu timestamp terbaru
+        // Fix bug: sebelumnya hanya sort by pinned tanpa secondary sort by tanggal,
+        // sehingga urutan bergantung pada urutan insert (kemahasiswaan dulu, baru eoffice).
         $allItems = collect();
         foreach ($announcements as $key => $items) {
             foreach ($items as $item) {
                 $allItems->push(array_merge($item, ['module' => $key]));
             }
         }
-        $announcements['all'] = $allItems->sortByDesc(fn($i) => [$i['pinned'] ?? false ? 1 : 0])->values()->all();
+        $announcements['all'] = $allItems
+            ->sortByDesc(fn ($i) => [$i['pinned'] ? 1 : 0, $i['_ts'] ?? 0])
+            ->values()
+            ->all();
 
         $announcementCounts = [
             'bank_soal'     => count($announcements['bank_soal']),
