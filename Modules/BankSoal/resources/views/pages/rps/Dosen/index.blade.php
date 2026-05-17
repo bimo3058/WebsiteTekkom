@@ -191,9 +191,17 @@
             margin: 0 !important;
             line-height: 1.2 !important;
         }
-        .dots-menu button:hover, .dots-menu a:hover { 
+        .dots-menu button:hover:not(:disabled), .dots-menu a:hover:not(:disabled) { 
             background: #f1f5f9 !important; 
             color: rgb(11, 38, 110) !important;
+        }
+        .dots-menu button:disabled, .dots-menu a:disabled {
+            color: #94a3b8 !important;
+            cursor: not-allowed !important;
+            opacity: 0.7;
+        }
+        .dots-menu button:disabled svg, .dots-menu a:disabled svg, .dots-menu button:disabled i, .dots-menu a:disabled i {
+            opacity: 0.6;
         }
         .dots-menu i, .dots-menu svg {
             font-size: 14px !important;
@@ -204,10 +212,10 @@
             flex-shrink: 0 !important;
             margin: 0 !important;
         }
-        .dots-menu .menu-delete { 
+        .dots-menu .menu-delete:not(:disabled) { 
             color: #ef4444 !important; 
         }
-        .dots-menu .menu-delete:hover { 
+        .dots-menu .menu-delete:hover:not(:disabled) { 
             background: #fef2f2 !important; 
             color: #dc2626 !important;
         }
@@ -282,7 +290,13 @@
                 const menu = document.getElementById(`menu-${id}`);
                 
                 menus.forEach(m => {
-                    if (m.id !== `menu-${id}`) m.classList.remove('open');
+                    if (m.id !== `menu-${id}`) {
+                        m.classList.remove('open');
+                        m.style.top = '';
+                        m.style.bottom = '';
+                        m.style.left = '';
+                        m.style.right = '';
+                    }
                 });
                 
                 if (menu) {
@@ -290,7 +304,10 @@
                     
                     if (menu.classList.contains('open')) {
                         const rect = menu.getBoundingClientRect();
-                        if (rect.bottom > window.innerHeight) {
+                        const viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+                        const viewWidth = Math.max(document.documentElement.clientWidth, window.innerWidth);
+                        
+                        if (rect.bottom > viewHeight) {
                             menu.style.top = 'auto';
                             menu.style.bottom = '100%';
                             menu.style.marginBottom = '5px';
@@ -300,12 +317,28 @@
                             menu.style.marginBottom = '0';
                             menu.style.marginTop = '5px';
                         }
+                        
+                        if (rect.left < 0) {
+                            menu.style.right = 'auto';
+                            menu.style.left = '0';
+                        }
+                    } else {
+                        menu.style.top = '';
+                        menu.style.bottom = '';
+                        menu.style.left = '';
+                        menu.style.right = '';
                     }
                 }
             };
 
             document.addEventListener('click', function() {
-                document.querySelectorAll('.dots-menu').forEach(m => m.classList.remove('open'));
+                document.querySelectorAll('.dots-menu').forEach(m => {
+                    m.classList.remove('open');
+                    m.style.top = '';
+                    m.style.bottom = '';
+                    m.style.left = '';
+                    m.style.right = '';
+                });
             });
         })();
 

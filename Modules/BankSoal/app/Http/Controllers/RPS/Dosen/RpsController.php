@@ -12,9 +12,9 @@ use Illuminate\Support\Facades\Log;
 use App\Models\User;
 use App\Models\BsAuditLog;
 use App\Services\SupabaseStorage;
-use Modules\BankSoal\Models\Shared\MataKuliah;
-use Modules\BankSoal\Models\Shared\Cpl;
-use Modules\BankSoal\Models\Shared\Cpmk;
+use Modules\BankSoal\Models\MataKuliah;
+use Modules\BankSoal\Models\Cpl;
+use Modules\BankSoal\Models\Cpmk;
 use Modules\BankSoal\Services\KkoService;
 use Modules\BankSoal\Models\RpsDetail;
 use Modules\BankSoal\Models\PeriodeRps;
@@ -136,7 +136,7 @@ class RpsController extends Controller
             ->whereHas('dosenPengampu', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
-            ->whereRaw('semester % 2 = ?', [$semesterParity])
+            ->where('is_active', true)
             ->orderBy('nama')
             ->get();
 
@@ -146,8 +146,15 @@ class RpsController extends Controller
         // Riwayat Pengajuan RPS - fetch all untuk klien-side pagination
         $riwayat = RpsDetail::with('mataKuliah', 'dosens')
             ->select('bs_rps_detail.*')
-            ->whereHas('dosens', function ($query) use ($user) {
-                $query->where('users.id', $user->id);
+            ->where(function($q) use ($user) {
+                // Tampilkan jika user adalah pengunggah/penulis (ada di bs_rps_dosen)
+                $q->whereHas('dosens', function ($query) use ($user) {
+                    $query->where('users.id', $user->id);
+                })
+                // ATAU jika user adalah dosen pengampu MK tersebut (ada di bs_dosen_pengampu_mk)
+                ->orWhereHas('mataKuliah.dosenPengampu', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                });
             })
             ->addSelect([
                 'uploader_id' => DB::table('bs_audit_logs')
@@ -263,7 +270,7 @@ class RpsController extends Controller
                         ->join('bs_dosen_pengampu_mk', 'bs_mata_kuliah.id', '=', 'bs_dosen_pengampu_mk.mk_id')
                         ->where('bs_dosen_pengampu_mk.user_id', $user->id)
                         ->whereNotIn('bs_mata_kuliah.id', $mkIdsWithActiveRps)
-                        ->whereRaw('semester % 2 = ?', [$semesterParity])
+                        ->where('bs_mata_kuliah.is_active', true)
                         ->pluck('bs_mata_kuliah.nama')
                         ->toArray();
                 }
@@ -323,7 +330,7 @@ class RpsController extends Controller
             ->whereHas('dosenPengampu', function ($query) use ($user) {
                 $query->where('user_id', $user->id);
             })
-            ->whereRaw('semester % 2 = ?', [$semesterParity])
+            ->where('is_active', true)
             ->orderBy('nama')
             ->get();
 
@@ -363,9 +370,10 @@ class RpsController extends Controller
             'cpmk_rows.*.kko'        => ['required', 'string', 'max:20'],
             'cpmk_rows.*.objek'      => ['required', 'string', 'max:1000'],
             'cpmk_rows.*.konteks'    => ['nullable', 'string', 'max:1000'],
-            'dokumen'        => ['required', 'file', 'mimes:pdf', 'max:1024'], 
+            'dokumen'        => ['required', 'file', 'mimes:pdf', 'max:5120'], 
+            'catatan'        => ['nullable', 'string', 'max:1000'],
         ], [
-            'dokumen.max' => 'Ukuran file maksimal 1MB',
+            'dokumen.max' => 'Ukuran file maksimal 5MB',
             'dokumen.mimes' => 'Hanya menerima File berformat PDF',
             'dokumen.required' => 'File RPS harus diunggah',
             'cpmk_rows.required' => 'Minimal satu baris CPMK harus diisi',
@@ -438,6 +446,7 @@ class RpsController extends Controller
                 'tahun_ajaran' => $validated['tahun_ajaran'],
                 'dokumen'      => $pathDokumen,
                 'status'       => RpsStatus::DIAJUKAN, 
+                'catatan'      => $validated['catatan'] ?? null,
             ]);
 
             // Informasi Data Dosen Terkait
@@ -445,7 +454,7 @@ class RpsController extends Controller
             $dosenIds[] = Auth::id(); // Always include user
             $dosenIds = array_unique($dosenIds); // Remove duplicates
 
-            $createdCpmkRows = $this->createCpmksFromRows($validated['cpmk_rows']);
+            $createdCpmkRows = $this->createCpmksFromRows($validated['cpmk_rows'], (int) $validated['mata_kuliah_id']);
 
             $createdCpmkIds = collect($createdCpmkRows)
                 ->pluck('cpmk_id')
@@ -484,6 +493,7 @@ class RpsController extends Controller
                     'semester' => $rps->semester,
                     'tahun_ajaran' => $rps->tahun_ajaran,
                     'status' => $rps->status->value,
+                    'catatan' => $rps->catatan,
                 ]),
                 'created_at' => now(),
             ]);
@@ -542,26 +552,67 @@ class RpsController extends Controller
 
     public function getCpmkByCpl(Request $request): JsonResponse
     {
-        try {
-            $cplId = $request->integer('cpl_id');
+        // Handle both single and array cpl_id parameters
+        // Laravel automatically converts cpl_id[]=1&cpl_id[]=2 to array
+        $cplIds = $request->input('cpl_id'); // Gunakan input() untuk handle array
+        $mkId = $request->integer('mk_id') ?: null;
 
-            if (!$cplId) {
-                return response()->json([]);
+        $mapToResponse = function ($items) {
+            return $items->map(function ($cpmk) {
+                return [
+                    'id' => $cpmk->id,
+                    'kode' => $cpmk->kode,
+                    'deskripsi' => $cpmk->deskripsi,
+                    'cpl_id' => $cpmk->cpl_id ?? null,
+                    'mk_id' => $cpmk->mk_id ?? null,
+                ];
+            });
+        };
+
+        try {
+            $query = Cpmk::query()->orderBy('kode');
+
+            if ($mkId) {
+                $query->where(function ($subQuery) use ($mkId) {
+                    $subQuery->where('mk_id', $mkId)
+                        ->orWhereIn('id', function ($legacyQuery) use ($mkId) {
+                            $legacyQuery->select('cpmk_id')
+                                ->from('bs_cpl_cpmk')
+                                ->where('mk_id', $mkId);
+                        });
+                });
             }
 
-            // Query langsung dari bs_cpmk berdasarkan cpl_id dan mk_id
-            $mkId = $request->integer('mk_id');
-            $cpmks = Cpmk::where('cpl_id', $cplId)
-                ->when($mkId, fn($q) => $q->where('mk_id', $mkId))
-                ->orderBy('kode')
-                ->get()
-                ->map(function ($cpmk) {
-                    return [
-                        'id' => $cpmk->id,
-                        'kode' => $cpmk->kode,
-                        'deskripsi' => $cpmk->deskripsi,
-                    ];
-                });
+            // Jika cpl_id tidak disediakan, return CPMK sesuai filter MK atau semua data.
+            if (!$cplIds) {
+                return response()->json($mapToResponse($query->distinct()->get()));
+            }
+
+            // Ensure cplIds is an array
+            $cplIds = is_array($cplIds) ? $cplIds : [$cplIds];
+
+            // Filter out empty values
+            $cplIds = array_filter($cplIds);
+
+            if (empty($cplIds)) {
+                return response()->json($mapToResponse($query->distinct()->get()));
+            }
+
+            \Log::info('getCpmkByCpl Request', ['cplIds' => $cplIds]);
+
+            // Query CPMK dari kolom langsung, dengan fallback ke junction table untuk data lama.
+            $query->where(function ($subQuery) use ($cplIds) {
+                $subQuery->whereIn('cpl_id', $cplIds)
+                    ->orWhereIn('id', function ($legacyQuery) use ($cplIds) {
+                        $legacyQuery->select('cpmk_id')
+                            ->from('bs_cpl_cpmk')
+                            ->whereIn('cpl_id', $cplIds);
+                    });
+            });
+
+            $cpmks = $mapToResponse($query->distinct()->get());
+
+            \Log::info('getCpmkByCpl Response', ['count' => count($cpmks), 'cpmks' => $cpmks]);
 
             return response()->json($cpmks);
         } catch (\Exception $e) {
@@ -635,7 +686,7 @@ class RpsController extends Controller
 
 
 
-    private function createCpmksFromRows(array $cpmkRows): array
+    private function createCpmksFromRows(array $cpmkRows, ?int $mkId = null): array
     {
         $rows = collect($cpmkRows)
             ->map(function (array $row) {
@@ -667,6 +718,8 @@ class RpsController extends Controller
             $cpmk = Cpmk::create([
                 'kode' => $kode,
                 'deskripsi' => $deskripsi,
+                'mk_id' => $mkId,
+                'cpl_id' => $row['cpl_id'],
             ]);
 
             $createdRows[] = [
@@ -730,7 +783,7 @@ class RpsController extends Controller
                 ->whereHas('dosenPengampu', function ($query) use ($user) {
                     $query->where('user_id', $user->id);
                 })
-                ->whereRaw('semester % 2 = ?', [$semesterParity])
+                ->where('is_active', true)
                 ->orderBy('nama')
                 ->get()
                 ->map(function ($mk) {
@@ -941,9 +994,9 @@ class RpsController extends Controller
             'cpmk_rows.*.objek'      => ['required', 'string', 'max:1000'],
             'cpmk_rows.*.konteks'    => ['nullable', 'string', 'max:1000'],
             'catatan'                => [$isRevisionResubmit ? 'required' : 'nullable', 'string', 'max:1000'],
-            'dokumen'                => [$isRevisionResubmit ? 'required' : 'nullable', 'file', 'mimes:pdf', 'max:1024'],
+            'dokumen'                => [$isRevisionResubmit ? 'required' : 'nullable', 'file', 'mimes:pdf', 'max:5120'],
         ], [
-            'dokumen.max'            => 'Ukuran file maksimal 1MB',
+            'dokumen.max'            => 'Ukuran file maksimal 5MB',
             'dokumen.mimes'          => 'Hanya menerima File berformat PDF',
             'dokumen.required'       => 'File RPS baru wajib diunggah saat revisi',
             'catatan.required'       => 'Catatan revisi wajib diisi',
@@ -1026,7 +1079,7 @@ class RpsController extends Controller
                 throw new \Exception('Kode CPMK tidak boleh sama dalam satu RPS. Silakan periksa kembali baris CPMK yang diisi.');
             }
 
-            $createdCpmkRows = $this->createCpmksFromRows($validated['cpmk_rows']);
+            $createdCpmkRows = $this->createCpmksFromRows($validated['cpmk_rows'], (int) $validated['mata_kuliah_id']);
 
             $createdCpmkIds = collect($createdCpmkRows)
                 ->pluck('cpmk_id')
@@ -1122,10 +1175,18 @@ class RpsController extends Controller
                 $supabaseStorage->delete($rps->dokumen);
             }
 
+            // Dapatkan ID CPMK sebelum detach
+            $cpmkIds = $rps->cpmks()->pluck('bs_cpmk.id')->toArray();
+
             // Hapus relasi di junction table
             $rps->cpls()->detach();
             $rps->cpmks()->detach();
             $rps->dosens()->detach();
+
+            // Hapus CPMK master record
+            if (!empty($cpmkIds)) {
+                DB::table('bs_cpmk')->whereIn('id', $cpmkIds)->delete();
+            }
 
             // Hapus RPS record (hard delete)
             $rps->forceDelete();
@@ -1194,8 +1255,7 @@ class RpsController extends Controller
         abort_if(!in_array($rps->status->value, $editableStatuses), 403, 'RPS dengan status ' . $rps->status->label() . ' tidak dapat diedit.');
 
         // Fetch data yang sama dengan edit method
-        $semesterParity = now()->month >= 7 ? 1 : 0;
-        $mataKuliahs = MataKuliah::whereRaw('semester % 2 = ?', [$semesterParity])->orderBy('nama')->get();
+        $mataKuliahs = MataKuliah::where('is_active', true)->orderBy('nama')->get();
 
         $selectedCplIds = $rps->cpls->pluck('id')->toArray();
         $selectedCpmkIds = $rps->cpmks->pluck('id')->toArray();

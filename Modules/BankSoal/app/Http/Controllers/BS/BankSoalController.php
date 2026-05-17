@@ -89,15 +89,17 @@ class BankSoalController extends Controller
         });
 
         // 4. Pastikan mataKuliahDosen meload CPL dan CPMK yang berkaitan dengan MK maupun Soalnya
-        $mataKuliahDosen->load(['cpl', 'pertanyaan.cpl', 'pertanyaan.cpmk']);
+        $mataKuliahDosen->load(['cpl', 'cpmk', 'pertanyaan.cpl', 'pertanyaan.cpmk']);
         
         $mataKuliahDosen->transform(function ($mk) {
             $mkCpls = collect($mk->cpl);
             $soalCpls = $mk->pertanyaan->pluck('cpl')->filter();
             $mk->all_cpls = $mkCpls->merge($soalCpls)->unique('id')->sortBy('kode')->values();
             
+            // Ambil CPMK dari relasi langsung bs_cpmk.mk_id (bukan hanya dari soal)
+            $mkCpmks = collect($mk->cpmk);
             $soalCpmks = $mk->pertanyaan->pluck('cpmk')->filter();
-            $mk->all_cpmks = $soalCpmks->unique('id')->sortBy('kode')->values();
+            $mk->all_cpmks = $mkCpmks->merge($soalCpmks)->unique('id')->sortBy('kode')->values();
             
             return $mk;
         });

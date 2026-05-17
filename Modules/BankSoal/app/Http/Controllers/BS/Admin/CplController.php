@@ -15,7 +15,7 @@ use Modules\BankSoal\Exports\CpmkTemplateExport;
 use Modules\BankSoal\Imports\CplImport;
 use Modules\BankSoal\Imports\CpmkImport;
 
-class CplCpmkController extends Controller
+class CplController extends Controller
 {
     use AuthorizesRequests;
 
@@ -31,31 +31,37 @@ class CplCpmkController extends Controller
         return view('banksoal::pages.admin.kontrol-umum.cpl-cpmk');
     }
 
-    public function create()
+    public function createCpl()
     {
         $this->authorize('banksoal.edit');
 
-        return view('banksoal::pages.admin.kontrol-umum.cpl-cpmk-create');
+        return view('banksoal::pages.admin.kontrol-umum.cpl-create');
+    }
+
+    public function editCpl(int $id)
+    {
+        $this->authorize('banksoal.edit');
+
+        $cpl = Cpl::findOrFail($id);
+
+        return view('banksoal::pages.admin.kontrol-umum.cpl-edit', compact('cpl'));
     }
 
     public function listCpl(): JsonResponse
     {
         $this->authorize('banksoal.view');
 
-        return response()->json([
-            'success' => true,
-            'data' => Cpl::query()->orderBy('kode')->get(),
-        ]);
-    }
-
-    public function listCpmk(): JsonResponse
-    {
-        $this->authorize('banksoal.view');
-
-        return response()->json([
-            'success' => true,
-            'data' => Cpmk::query()->orderBy('kode')->get(),
-        ]);
+        try {
+            return response()->json([
+                'success' => true,
+                'data' => Cpl::query()->orderBy('kode')->get(),
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data CPL: ' . $e->getMessage()
+            ], 500);
+        }
     }
 
     public function exportCplTemplate()
@@ -67,30 +73,11 @@ class CplCpmkController extends Controller
     public function importCpl(Request $request): JsonResponse
     {
         $this->authorize('banksoal.edit');
-        $request->validate(['file' => 'required|mimes:xlsx,csv,xls|max:5120']);
+        $request->validate(['file' => 'required|mimes:xlsx,csv,xls|max:1024']);
 
         try {
             Excel::import(new CplImport, $request->file('file'));
             return response()->json(['success' => true, 'message' => 'Data CPL berhasil diimpor']);
-        } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Gagal mengimpor data CSV/Excel: ' . $e->getMessage()], 500);
-        }
-    }
-
-    public function exportCpmkTemplate()
-    {
-        $this->authorize('banksoal.view');
-        return Excel::download(new CpmkTemplateExport, 'template_cpmk.xlsx');
-    }
-
-    public function importCpmk(Request $request): JsonResponse
-    {
-        $this->authorize('banksoal.edit');
-        $request->validate(['file' => 'required|mimes:xlsx,csv,xls|max:5120']);
-
-        try {
-            Excel::import(new CpmkImport, $request->file('file'));
-            return response()->json(['success' => true, 'message' => 'Data CPMK berhasil diimpor']);
         } catch (\Exception $e) {
             return response()->json(['success' => false, 'message' => 'Gagal mengimpor data CSV/Excel: ' . $e->getMessage()], 500);
         }
@@ -108,18 +95,6 @@ class CplCpmkController extends Controller
         return response()->json(['success' => true, 'data' => $item]);
     }
 
-    public function showCpmk(int $id): JsonResponse
-    {
-        $this->authorize('banksoal.view');
-
-        $item = Cpmk::find($id);
-        if (!$item) {
-            return response()->json(['success' => false, 'message' => 'CPMK tidak ditemukan'], 404);
-        }
-
-        return response()->json(['success' => true, 'data' => $item]);
-    }
-
     public function nextCplCode(): JsonResponse
     {
         $this->authorize('banksoal.view');
@@ -127,16 +102,6 @@ class CplCpmkController extends Controller
         return response()->json([
             'success' => true,
             'data' => ['kode' => $this->nextKode('bs_cpl', 'CPL')],
-        ]);
-    }
-
-    public function nextCpmkCode(): JsonResponse
-    {
-        $this->authorize('banksoal.view');
-
-        return response()->json([
-            'success' => true,
-            'data' => ['kode' => ''],
         ]);
     }
 
@@ -166,36 +131,6 @@ class CplCpmkController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menambahkan CPL: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    public function storeCpmk(Request $request): JsonResponse
-    {
-        $this->authorize('banksoal.edit');
-
-        $validated = $request->validate([
-            'kode' => ['nullable', 'string', 'regex:/^(?:CPMK-)?\\d+\\.\\d+$/', 'max:50', 'unique:bs_cpmk,kode'],
-            'deskripsi' => ['required', 'string'],
-        ]);
-
-        try {
-            $created = DB::transaction(function () use ($validated) {
-                $payload = ['deskripsi' => $validated['deskripsi']];
-                $payload['kode'] = $validated['kode'] ?? $this->nextKode('bs_cpmk', 'CPMK');
-
-                return Cpmk::create($payload);
-            });
-
-            return response()->json([
-                'success' => true,
-                'message' => 'CPMK berhasil ditambahkan',
-                'data' => $created,
-            ], 201);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menambahkan CPMK: ' . $e->getMessage(),
             ], 500);
         }
     }
@@ -231,37 +166,6 @@ class CplCpmkController extends Controller
         }
     }
 
-    public function updateCpmk(Request $request, int $id): JsonResponse
-    {
-        $this->authorize('banksoal.edit');
-
-        $item = Cpmk::query()->find($id);
-        if (!$item) {
-            return response()->json(['success' => false, 'message' => 'CPMK tidak ditemukan'], 404);
-        }
-
-        $validated = $request->validate([
-            'kode' => ['required', 'string', 'regex:/^(?:CPMK-)?\\d+\\.\\d+$/', 'max:50', 'unique:bs_cpmk,kode,' . $id],
-            'deskripsi' => ['required', 'string'],
-        ]);
-
-        try {
-            Cpmk::query()->whereKey($id)->update($validated);
-            $updated = Cpmk::query()->find($id);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'CPMK berhasil diperbarui',
-                'data' => $updated,
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal memperbarui CPMK: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
-
     public function destroyCpl(int $id): JsonResponse
     {
         $this->authorize('banksoal.delete');
@@ -275,23 +179,6 @@ class CplCpmkController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menghapus CPL: ' . $e->getMessage(),
-            ], 500);
-        }
-    }
-
-    public function destroyCpmk(int $id): JsonResponse
-    {
-        $this->authorize('banksoal.delete');
-
-        try {
-            $item = Cpmk::findOrFail($id);
-            $item->delete();
-
-            return response()->json(['success' => true, 'message' => 'CPMK berhasil dihapus']);
-        } catch (\Exception $e) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Gagal menghapus CPMK: ' . $e->getMessage(),
             ], 500);
         }
     }

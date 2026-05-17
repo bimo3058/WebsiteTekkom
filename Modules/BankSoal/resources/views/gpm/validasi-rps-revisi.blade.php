@@ -4,13 +4,13 @@
     <span class="mx-2 text-slate-300">/</span>
     <a href="{{ route('banksoal.rps.gpm.validasi-rps') }}" class="text-slate-500 hover:text-primary transition-colors">Validasi RPS</a>
     <span class="mx-2 text-slate-300">/</span>
-    <span class="text-slate-800 font-semibold">Review RPS</span>
+    <span class="text-slate-800 font-semibold">Revisi RPS</span>
     @endsection
     @php
         $skorMinimum = \Illuminate\Support\Facades\DB::table('bs_pengaturan')->where('kunci', 'standar_skor_minimum')->value('nilai') ?? 60;
     @endphp
     <x-banksoal::notification.alerts />
-    <x-banksoal::ui.page-header title="Validasi RPS" subtitle="Periksa kelengkapan dokumen RPS">
+    <x-banksoal::ui.page-header title="Revisi RPS" subtitle="Lakukan revisi atau tinjau ulang perbaikan RPS">
         <x-slot:actions>
             <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50" onclick="window.history.back()">
                 <i class="fas fa-arrow-left"></i> Kembali
@@ -133,20 +133,6 @@
             </div>
         </div>
     </div>
-
-    @if(!empty($rps->catatan))
-        <div class="mb-6 rounded-2xl border border-sky-200 bg-sky-50 p-4 shadow-sm">
-            <div class="flex gap-3">
-                <div class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600">
-                    <i class="fas fa-comment-dots text-xs"></i>
-                </div>
-                <div>
-                    <h4 class="text-sm font-semibold text-sky-900">Catatan Tambahan Pengusul RPS</h4>
-                    <p class="mt-1 text-sm text-sky-700 leading-relaxed whitespace-pre-line">{{ $rps->catatan }}</p>
-                </div>
-            </div>
-        </div>
-    @endif
 
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-5">
         <div class="xl:col-span-3">

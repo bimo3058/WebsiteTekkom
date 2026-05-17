@@ -20,10 +20,6 @@ class PenarikanSoalArchived extends Model
         'catatan_konversi',
     ];
 
-    protected $casts = [
-        'archived_at' => 'datetime',
-    ];
-
     public function penarikan(): BelongsTo
     {
         return $this->belongsTo(PenarikanSoal::class, 'penarikan_id');
@@ -32,10 +28,5 @@ class PenarikanSoalArchived extends Model
     public function arsip(): BelongsTo
     {
         return $this->belongsTo(ArsipSoal::class, 'arsip_id');
-    }
-
-    public function archivedBy(): BelongsTo
-    {
-        return $this->belongsTo(\App\Models\User::class, 'archived_by');
     }
 }

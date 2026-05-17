@@ -108,6 +108,19 @@ class MataKuliahController extends Controller
     }
 
     /**
+     * Show edit form for Mata Kuliah
+     */
+    public function edit(string $id)
+    {
+        $this->authorize('banksoal.edit');
+
+        $id = (int) $id;
+        $mataKuliah = MataKuliah::findOrFail($id);
+
+        return view('banksoal::pages.admin.kontrol-umum.mata-kuliah-edit', compact('mataKuliah'));
+    }
+
+    /**
      * Update Mata Kuliah
      */
     public function update(Request $request, string $id): JsonResponse
@@ -197,11 +210,14 @@ class MataKuliahController extends Controller
         $this->authorize('banksoal.edit');
 
         $request->validate([
-            'file' => 'required|mimes:xlsx,csv,xls|max:5120',
+            'file' => 'required|mimes:xlsx,csv,xls|max:1024',
         ]);
 
         try {
             Excel::import(new MataKuliahImport, $request->file('file'));
+            
+            // Sync active semester after import
+            $this->mataKuliahService->syncSemester();
             
             // Flush cache
             \Illuminate\Support\Facades\Cache::forget('bs.mk.all');
@@ -214,6 +230,53 @@ class MataKuliahController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal mengimpor data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Toggle status aktif
+     */
+    public function toggleActive(Request $request, string $id): JsonResponse
+    {
+        $this->authorize('banksoal.edit');
+
+        $id = (int) $id;
+        $request->validate(['is_active' => 'required|boolean']);
+
+        try {
+            $mataKuliah = $this->mataKuliahService->toggleActive($id, $request->input('is_active'));
+            return response()->json([
+                'success' => true,
+                'message' => 'Status aktif Mata Kuliah berhasil diperbarui',
+                'data' => $mataKuliah
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui status aktif: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Sync semester aktif
+     */
+    public function syncSemester(): JsonResponse
+    {
+        $this->authorize('banksoal.edit');
+
+        try {
+            $updatedCount = $this->mataKuliahService->syncSemester();
+            return response()->json([
+                'success' => true,
+                'message' => "Berhasil sinkronisasi semester. {$updatedCount} mata kuliah diperbarui.",
+                'data' => ['updated_count' => $updatedCount]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal sinkronisasi semester: ' . $e->getMessage()
             ], 500);
         }
     }
