@@ -549,8 +549,10 @@ class RpsController extends Controller
                 return response()->json([]);
             }
 
-            // Query langsung dari bs_cpmk berdasarkan cpl_id
+            // Query langsung dari bs_cpmk berdasarkan cpl_id dan mk_id
+            $mkId = $request->integer('mk_id');
             $cpmks = Cpmk::where('cpl_id', $cplId)
+                ->when($mkId, fn($q) => $q->where('mk_id', $mkId))
                 ->orderBy('kode')
                 ->get()
                 ->map(function ($cpmk) {

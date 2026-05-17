@@ -239,7 +239,7 @@
                 const cplId = this.value;
                 cpmkSelect.innerHTML = '<option value="">Memuat CPMK...</option>';
                 if (cplId) {
-                    fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${cplId}`)
+                    fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${cplId}&mk_id=${mkSelect.value}`)
                         .then(r => r.json())
                         .then(data => {
                             cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
