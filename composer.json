@@ -20,7 +20,7 @@
         "nwidart/laravel-modules": "*",
         "predis/predis": "*",
         "socialiteproviders/microsoft-azure": "*",
-        "spatie/laravel-permission": "*"
+        "spatie/laravel-permission": "^6.4"
     },
     "require-dev": {
         "cweagans/composer-patches": "*",

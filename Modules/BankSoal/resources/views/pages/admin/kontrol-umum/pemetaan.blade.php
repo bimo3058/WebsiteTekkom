@@ -206,7 +206,7 @@
             border-bottom: 1px solid var(--slate-200);
             font-size: 13px;
             color: var(--slate-700);
-            vertical-align: top;
+            vertical-align: middle;
         }
 
         tbody tr:hover {
@@ -219,8 +219,8 @@
 
 
         /* ── Checkbox column ── */
-        .cb-col { width: 40px; padding: 0 8px 0 16px !important; }
-        .cb-col input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-blue); }
+        .cb-col { width: 40px; padding-left: 16px !important; padding-right: 8px !important; }
+        .cb-col input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-blue); margin: 0; }
 
         /* ── Table symmetry ── */
         .col-key  { width: 150px; font-weight: 600; color: #1e293b; }
@@ -252,9 +252,11 @@
             cursor: pointer; text-decoration: none; text-align: left;
         }
         .dots-menu a:last-child, .dots-menu button:last-child { border-bottom: none; }
-        .dots-menu a:hover, .dots-menu button:hover { background: var(--slate-50); }
-        .dots-menu .menu-delete { color: var(--danger-red); }
-        .dots-menu .menu-delete:hover { background: #fef2f2; }
+        .dots-menu a:hover:not(:disabled), .dots-menu button:hover:not(:disabled) { background: var(--slate-50); }
+        .dots-menu a:disabled, .dots-menu button:disabled { color: var(--slate-400); cursor: not-allowed; opacity: 0.7; }
+        .dots-menu a:disabled svg, .dots-menu button:disabled svg { opacity: 0.6; }
+        .dots-menu .menu-delete:not(:disabled) { color: var(--danger-red); }
+        .dots-menu .menu-delete:hover:not(:disabled) { background: #fef2f2; }
 
         /* ── Bulk action bar ── */
         .bulk-bar {
@@ -479,66 +481,11 @@
         <div class="page-header">
         <div class="header-content">
             <h1>Pemetaan</h1>
-            <p>Kelola pemetaan CPMK ke CPL, Mata Kuliah ke CPL, dan Dosen ke Mata Kuliah.</p>
+            <p>Kelola pemetaan Mata Kuliah ke CPL dan Dosen ke Mata Kuliah.</p>
         </div>
     </div>
 
-    <section class="feature-card" id="section-cpmk-cpl">
-        <div class="feature-head">
-            <div>
-                <h2 class="feature-title">Pemetaan CPMK ke CPL</h2>
-            </div>
-            <a href="{{ route('banksoal.admin.kontrol-umum.pemetaan.cpmk-cpl.create') }}" class="btn-add">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                </svg>
-                Tambah Pemetaan
-            </a>
-        </div>
 
-        <div class="controls-section">
-            <div class="search-box">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-                <input type="text" id="cpmkCplSearch" placeholder="Cari CPMK atau CPL..." onkeyup="handleSearch('cpmkCpl')">
-            </div>
-            <div class="filter-group">
-                <label for="cpmkCplSortDirection">Order By:</label>
-                <select id="cpmkCplSortDirection" onchange="handleSort('cpmkCpl')">
-                    <option value="asc">Ascending</option>
-                    <option value="desc">Descending</option>
-                </select>
-            </div>
-        </div>
-
-        <div class="tbl-loading" id="cpmkCplSpinner"><div class="tbl-spinner"></div> Memuat data...</div>
-        <div class="table-wrapper" id="cpmkCplWrapper">
-            <table>
-                <thead>
-                    <tr>
-                        <th class="cb-col"><input type="checkbox" id="cpmkCplSelAll" onchange="toggleSelectAll('cpmkCpl',this)"></th>
-                        <th class="col-key">CPL</th>
-                        <th class="col-val">CPMK</th>
-                        <th class="col-act"></th>
-                    </tr>
-                </thead>
-                <tbody id="cpmkCplTableBody"></tbody>
-            </table>
-        </div>
-        <div id="cpmkCplBulkBar" class="bulk-bar">
-            <span id="cpmkCplBulkCount">0 item dipilih</span>
-            <button class="btn-bulk-delete" onclick="bulkDelete('cpmkCpl')">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
-                Hapus Terpilih
-            </button>
-        </div>
-        <div id="cpmkCplEmptyState" class="empty-state" style="display:none;">Tidak ada data pemetaan CPMK ke CPL</div>
-        <div id="cpmkCplPagination" class="pagination-section" style="display:none;">
-            <span class="pg-info-label" id="cpmkCplPgInfo"></span>
-            <div class="pagination-list" id="cpmkCplPaginationList"></div>
-        </div>
-    </section>
 
     <section class="feature-card" id="section-mk-cpl">
         <div class="feature-head">
@@ -654,32 +601,7 @@
         </div>
     </section>
 
-    <div class="modal-overlay" id="modalCpmkCpl" onclick="closeModalOnBackdrop(event, 'modalCpmkCpl')">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <h2 class="modal-title">Tambah Pemetaan CPMK ke CPL</h2>
-                <button type="button" class="modal-close" onclick="closeModal('modalCpmkCpl')">&times;</button>
-            </div>
-            <form onsubmit="submitCpmkCpl(event)">
-                <div class="modal-body">
-                    <div class="form-group">
-                        <label for="mapCplIdForCpmk">CPL *</label>
-                        <select id="mapCplIdForCpmk" required></select>
-                        <div class="form-error" id="error-mapCplIdForCpmk"></div>
-                    </div>
-                    <div class="form-group">
-                        <label for="mapCpmkIdsForCpl">CPMK * (boleh pilih banyak)</label>
-                        <select id="mapCpmkIdsForCpl" multiple required></select>
-                        <div class="form-error" id="error-mapCpmkIdsForCpl"></div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal('modalCpmkCpl')">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                </div>
-            </form>
-        </div>
-    </div>
+
 
     <div class="modal-overlay" id="modalMkCpl" onclick="closeModalOnBackdrop(event, 'modalMkCpl')">
         <div class="modal-content" onclick="event.stopPropagation()">
@@ -742,22 +664,11 @@
         const PAGE_SIZE = 5;
         const csrfToken = '{{ csrf_token() }}';
         const BASE_API = '{{ url("/bank-soal/admin/api/pemetaan") }}';
-        let cpmkCplTomSelect = null;
         let mkCplTomSelect = null;
         let dosenMkTomSelect = null;
 
         const mappingConfig = {
-            cpmkCpl: {
-                listApi: `${BASE_API}/cpmk-cpl`,
-                searchId: 'cpmkCplSearch',
-                sortId: 'cpmkCplSortDirection',
-                tableBodyId: 'cpmkCplTableBody',
-                emptyId: 'cpmkCplEmptyState',
-                paginationId: 'cpmkCplPagination',
-                paginationListId: 'cpmkCplPaginationList',
-                sortText: (item) => `${item.cpl_kode} ${(item.cpmk_codes || []).join(' ')}`,
-                filterText: (item) => `${item.cpl_kode} ${(item.cpmk_codes || []).join(' ')}`,
-            },
+
             mkCpl: {
                 listApi: `${BASE_API}/mk-cpl`,
                 searchId: 'mkCplSearch',
@@ -784,60 +695,38 @@
 
         const state = {
             options: { cpl: [], cpmk: [], mata_kuliah: [], dosen: [] },
-            cpmkCpl: { all: [], filtered: [], currentPage: 1, timer: null, selected: new Set() },
+
             mkCpl:   { all: [], filtered: [], currentPage: 1, timer: null, selected: new Set() },
             dosenMk: { all: [], filtered: [], currentPage: 1, timer: null, selected: new Set() },
         };
 
         // key field per table (the primary anchor for the row)
-        const ROW_KEY = { cpmkCpl: 'cpl_id', mkCpl: 'mk_id', dosenMk: 'mk_id' };
+        const ROW_KEY = { mkCpl: 'mk_id', dosenMk: 'mk_id' };
         // edit URL builders
         const EDIT_URL = {
-            cpmkCpl: (id) => `{{ url('/bank-soal/admin/kontrol-umum/pemetaan/cpmk-cpl') }}/${id}/edit`,
+
             mkCpl:   (id) => `{{ url('/bank-soal/admin/kontrol-umum/pemetaan/mk-cpl') }}/${id}/edit`,
             dosenMk: (id) => `{{ url('/bank-soal/admin/kontrol-umum/pemetaan/mk-dosen') }}/${id}/edit`,
         };
         // delete-all API URLs
         const DEL_ALL_URL = {
-            cpmkCpl: (id) => `${BASE_API}/cpmk-cpl/${id}/all`,
             mkCpl:   (id) => `${BASE_API}/mk-cpl/${id}/all`,
             dosenMk: (id) => `${BASE_API}/dosen-mk/${id}/all`,
         };
         // bulk delete API URLs
         const BULK_DEL_URL = {
-            cpmkCpl: `${BASE_API}/cpmk-cpl/bulk`,
             mkCpl:   `${BASE_API}/mk-cpl/bulk`,
             dosenMk: `${BASE_API}/dosen-mk/bulk`,
         };
         // bulk body key
-        const BULK_KEY = { cpmkCpl: 'cpl_ids', mkCpl: 'mk_ids', dosenMk: 'mk_ids' };
+        const BULK_KEY = { mkCpl: 'mk_ids', dosenMk: 'mk_ids' };
 
         document.addEventListener('DOMContentLoaded', async () => {
             await loadOptions();
-            initCpmkCplMultiselect();
             initMkCplMultiselect();
             initDosenMkMultiselect();
-            await Promise.all([loadList('cpmkCpl'), loadList('mkCpl'), loadList('dosenMk')]);
+            await Promise.all([loadList('mkCpl'), loadList('dosenMk')]);
         });
-
-        function initCpmkCplMultiselect() {
-            const selectEl = document.getElementById('mapCpmkIdsForCpl');
-            if (!selectEl || typeof TomSelect === 'undefined') return;
-
-            if (cpmkCplTomSelect) {
-                cpmkCplTomSelect.destroy();
-                cpmkCplTomSelect = null;
-            }
-
-            cpmkCplTomSelect = new TomSelect(selectEl, {
-                plugins: { remove_button: { title: 'Hapus CPMK ini' } },
-                create: false,
-                maxOptions: 300,
-                placeholder: 'Pilih satu atau lebih CPMK',
-                searchField: ['text'],
-                hideSelected: true,
-            });
-        }
 
         function initMkCplMultiselect() {
             const selectEl = document.getElementById('mapCplIdsForMk');
@@ -933,8 +822,6 @@
         }
 
         function fillSelectOptions() {
-            fillSelect('mapCpmkIdsForCpl', state.options.cpmk, (row) => `${row.kode}`);
-            fillSelect('mapCplIdForCpmk', state.options.cpl, (row) => `${row.kode}`);
             fillSelect('mapMkIdForCpl', state.options.mata_kuliah, (row) => `${row.kode} - ${row.nama}`);
             fillSelect('mapCplIdsForMk', state.options.cpl, (row) => `${row.kode}`);
             fillSelect('mapMkIdForDosen', state.options.mata_kuliah, (row) => `${row.kode} - ${row.nama}`);
@@ -946,7 +833,6 @@
             if (!select) return;
 
             const tomSelectMap = {
-                mapCpmkIdsForCpl: cpmkCplTomSelect,
                 mapCplIdsForMk: mkCplTomSelect,
                 mapDosenIdsForMk: dosenMkTomSelect,
             };
@@ -1146,12 +1032,45 @@
         function toggleDots(btn) {
             const menu = btn.nextElementSibling;
             const isOpen = menu.classList.contains('open');
-            // close all others first
-            document.querySelectorAll('.dots-menu.open').forEach(m => m.classList.remove('open'));
-            if (!isOpen) menu.classList.add('open');
+            
+            // close all others first and reset styles
+            document.querySelectorAll('.dots-menu.open').forEach(m => {
+                m.classList.remove('open');
+                m.style.top = '';
+                m.style.bottom = '';
+                m.style.left = '';
+                m.style.right = '';
+            });
+            
+            if (!isOpen) {
+                menu.classList.add('open');
+                
+                // Collision detection
+                const rect = menu.getBoundingClientRect();
+                const viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+                const viewWidth = Math.max(document.documentElement.clientWidth, window.innerWidth);
+                
+                if (rect.bottom > viewHeight) {
+                    menu.style.top = 'auto';
+                    menu.style.bottom = '38px';
+                }
+                
+                if (rect.left < 0) {
+                    menu.style.right = 'auto';
+                    menu.style.left = '0';
+                }
+            }
         }
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.dots-wrap')) document.querySelectorAll('.dots-menu.open').forEach(m => m.classList.remove('open'));
+            if (!e.target.closest('.dots-wrap')) {
+                document.querySelectorAll('.dots-menu.open').forEach(m => {
+                    m.classList.remove('open');
+                    m.style.top = '';
+                    m.style.bottom = '';
+                    m.style.left = '';
+                    m.style.right = '';
+                });
+            }
         });
 
         /* ── Checkbox logic ── */
@@ -1226,14 +1145,7 @@
 
         function openModal(type) {
             clearErrors();
-            if (type === 'cpmkCpl') {
-                document.getElementById('mapCplIdForCpmk').value = '';
-                if (cpmkCplTomSelect) {
-                    cpmkCplTomSelect.clear(true);
-                }
-                document.getElementById('modalCpmkCpl').classList.add('show');
-                return;
-            }
+
             if (type === 'mkCpl') {
                 document.getElementById('mapMkIdForCpl').value = '';
                 if (mkCplTomSelect) {
@@ -1277,24 +1189,7 @@
             });
         }
 
-        async function submitCpmkCpl(event) {
-            event.preventDefault();
-            clearErrors();
 
-            const cpmkIds = Array.from(document.getElementById('mapCpmkIdsForCpl').selectedOptions)
-                .map((option) => Number(option.value))
-                .filter((value) => Number.isInteger(value) && value > 0);
-            const payload = {
-                cpl_id: Number(document.getElementById('mapCplIdForCpmk').value),
-                cpmk_ids: cpmkIds,
-            };
-
-            await createMapping(`${BASE_API}/cpmk-cpl`, payload, 'modalCpmkCpl', 'cpmkCpl', {
-                cpl_id: 'mapCplIdForCpmk',
-                cpmk_ids: 'mapCpmkIdsForCpl',
-                'cpmk_ids.0': 'mapCpmkIdsForCpl',
-            });
-        }
 
         async function submitMkCpl(event) {
             event.preventDefault();
@@ -1362,9 +1257,7 @@
             }
         }
 
-        async function deleteCpmkCpl(cplId, cpmkId) {
-            await deleteMapping(`${BASE_API}/cpmk-cpl`, { cpl_id: cplId, cpmk_id: cpmkId }, 'cpmkCpl', 'Pemetaan CPMK ke CPL');
-        }
+
 
         async function deleteMkCpl(mkId, cplId) {
             await deleteMapping(`${BASE_API}/mk-cpl`, { mk_id: mkId, cpl_id: cplId }, 'mkCpl', 'Pemetaan MK ke CPL');

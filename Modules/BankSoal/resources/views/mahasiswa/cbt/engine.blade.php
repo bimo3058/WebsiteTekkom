@@ -19,13 +19,15 @@
             -moz-user-select: none;
             -ms-user-select: none;
             font-family: 'Inter', sans-serif;
-            background-color: #eeeeee;
+            background-color: #E8EDF5;
         }
         .diagonal-hash {
-            background-image: repeating-linear-gradient(45deg, #e2e2e2 0px, #e2e2e2 2px, transparent 2px, transparent 8px);
+            background-color: #FFF8E7;
+            background-image: repeating-linear-gradient(45deg, #F59E0B 0px, #F59E0B 2px, transparent 2px, transparent 8px);
         }
         .diagonal-hash-active {
-            background-image: repeating-linear-gradient(45deg, #18181b 0px, #18181b 2px, transparent 2px, transparent 8px);
+            background-color: #FEF3C7;
+            background-image: repeating-linear-gradient(45deg, #D97706 0px, #D97706 2px, transparent 2px, transparent 8px);
         }
         .material-symbols-outlined {
             font-variation-settings: 'FILL' 0, 'wght' 600, 'GRAD' 0, 'opsz' 24;
@@ -53,7 +55,7 @@
     </style>
 </head>
 <body class="text-slate-900 overflow-hidden flex items-center justify-center min-h-screen" oncontextmenu="return false;">
-    <div x-data="cbtEngine()" x-init="initEngine()" class="viewport-container bg-white border-x-2 border-black shadow-2xl relative w-full h-full">
+    <div x-data="cbtEngine()" x-init="initEngine()" class="viewport-container bg-white border-x border-[#0B266E]/20 shadow-2xl relative w-full h-full">
 
         <!-- ============================================================ -->
         <!-- OVERLAY 1: Fullscreen Required (tampil saat halaman dimuat)  -->
@@ -143,11 +145,11 @@
                 </div>
                 <div class="grid grid-cols-2 gap-3 mt-6">
                     <button @click="showSubmitModal = false"
-                            class="border-2 border-black px-4 py-3 text-sm font-black uppercase tracking-tight hover:bg-zinc-100 active:translate-y-0.5 transition-none">
+                            class="border-2 border-slate-200 px-4 py-3 text-sm font-black uppercase tracking-tight hover:bg-slate-50 active:translate-y-0.5 transition-colors">
                         Kembali
                     </button>
                     <button @click="confirmSubmit()"
-                            class="bg-black text-white border-2 border-black px-4 py-3 text-sm font-black uppercase tracking-tight hover:bg-zinc-800 active:translate-y-0.5 transition-none flex items-center justify-center gap-2">
+                            class="bg-[#0B266E] text-white border-2 border-[#091E5A] px-4 py-3 text-sm font-black uppercase tracking-tight hover:bg-[#091E5A] active:translate-y-0.5 transition-colors flex items-center justify-center gap-2">
                         <span class="material-symbols-outlined" style="font-size:18px">done_all</span>
                         Ya, Selesaikan
                     </button>
@@ -175,25 +177,25 @@
         </div>
 
         <!-- TopAppBar -->
-        <header class="w-full z-50 flex justify-between items-center py-4 bg-white border-b-2 border-black px-10 shrink-0">
+        <header class="w-full z-50 flex justify-between items-center py-4 bg-[#0B266E] border-b-2 border-[#091E5A] px-10 shrink-0">
             <div class="w-full flex justify-between items-center">
                 <div class="flex items-center gap-4">
-                    <div class="text-xl font-black border-2 border-black px-2 py-1 uppercase tracking-widest">CBT</div>
-                    <div class="text-sm font-bold uppercase tracking-widest opacity-60 hidden md:block">
-                        {{ $session->title }}
+                    <div class="text-xl font-black border-2 border-white/30 px-2 py-1 uppercase tracking-widest text-white">CBT</div>
+                    <div class="text-sm font-bold uppercase tracking-widest text-white/60 hidden md:block">
+                        {{ trim(preg_replace('/\s*\d+$/', '', $session->title)) }}
                     </div>
                 </div>
                 <div class="flex items-center gap-8">
-                    <div class="flex items-center gap-2 border-2 border-black px-4 py-2 text-lg font-black bg-black text-white" :class="timeLeft < 300 ? 'bg-red-600 text-white animate-pulse' : 'bg-black text-white'">
+                    <div class="flex items-center gap-2 border-2 border-red-700 px-4 py-2 text-lg font-black bg-red-600 text-white" :class="timeLeft < 300 ? 'animate-pulse' : ''">
                         <span class="material-symbols-outlined">timer</span>
                         <span x-text="formattedTime">--:--:--</span>
                     </div>
                     <div class="flex items-center gap-3">
                         <div class="text-right">
-                            <p class="text-xs font-bold uppercase">Student: {{ auth()->user()->name }}</p>
-                            <p class="text-[10px] opacity-60 font-bold tracking-wider">{{ optional(auth()->user()->student)->student_number ?? 'NIM' }}</p>
+                            <p class="text-xs font-bold uppercase text-white">Student: {{ auth()->user()->name }}</p>
+                            <p class="text-[10px] text-white/60 font-bold tracking-wider">{{ optional(auth()->user()->student)->student_number ?? 'NIM' }}</p>
                         </div>
-                        <span class="material-symbols-outlined text-4xl">account_circle</span>
+                        <span class="material-symbols-outlined text-4xl text-white">account_circle</span>
                     </div>
                 </div>
             </div>
@@ -203,10 +205,10 @@
             <!-- Main Content Area (80%) -->
             <main class="w-4/5 px-10 py-8 overflow-y-auto">
                 <template x-if="currentSoal">
-                    <div class="border-2 border-black p-8 bg-white min-h-full flex flex-col">
+                    <div class="border border-slate-200 p-8 bg-white min-h-full flex flex-col shadow-sm">
                         <div class="flex justify-between items-start mb-8">
                             <h1 class="text-3xl font-black uppercase tracking-tight">Soal No. <span x-text="currentIndex + 1"></span></h1>
-                            <div class="border border-black bg-black text-white px-3 py-1 text-xs font-bold tracking-widest uppercase" x-text="currentSoal?.cpl_kode ?? 'SOAL UJIAN'"></div>
+                            <div class="border border-[#0B266E] bg-[#0B266E] text-white px-3 py-1 text-xs font-bold tracking-widest uppercase" x-text="currentSoal?.cpl_kode ?? 'SOAL UJIAN'"></div>
                         </div>
                         
                         <div class="mb-10 text-lg font-medium leading-relaxed prose max-w-none prose-p:my-2" x-html="currentSoal.soal">
@@ -216,10 +218,10 @@
                         <!-- Multiple Choice Options -->
                         <div class="space-y-4 mt-auto">
                             <template x-for="(opsi, index) in currentSoal.opsi" :key="opsi.id">
-                                <label class="flex items-center gap-4 p-4 border-2 transition-none cursor-pointer group"
-                                       :class="currentJawaban == opsi.id ? 'border-black bg-zinc-100' : 'border-transparent ring-1 ring-black hover:bg-zinc-50'">
+                                <label class="flex items-center gap-4 p-4 border-2 transition-colors cursor-pointer group"
+                                       :class="currentJawaban == opsi.id ? 'border-[#0B266E] bg-[#EEF2FF]' : 'border-transparent ring-1 ring-slate-200 hover:bg-[#F0F4FF]'">
                                     
-                                    <input class="w-6 h-6 border-2 border-black text-black focus:ring-0" 
+                                    <input class="w-6 h-6 border-2 border-slate-300 text-[#0B266E] focus:ring-0" 
                                            :name="'soal_'+currentSoal.id" 
                                            type="radio" 
                                            :value="opsi.id"
@@ -237,13 +239,13 @@
 
             <!-- SideNavBar (20%) -->
             <aside class="w-1/5 pr-10 py-8 overflow-hidden">
-                <div class="bg-zinc-50 border-2 border-black h-full flex flex-col">
-                    <div class="p-6 border-b-2 border-black bg-white">
-                        <h2 class="text-base font-black uppercase tracking-tight">Navigasi Soal (<span x-text="soals.length"></span>)</h2>
-                        <div class="flex flex-wrap gap-x-4 gap-y-2 mt-4">
-                            <div class="flex items-center gap-2 text-[10px] font-bold uppercase"><div class="w-3 h-3 bg-zinc-800 border border-black"></div> Terjawab</div>
-                            <div class="flex items-center gap-2 text-[10px] font-bold uppercase"><div class="w-3 h-3 diagonal-hash border border-black"></div> Ragu</div>
-                            <div class="flex items-center gap-2 text-[10px] font-bold uppercase"><div class="w-3 h-3 bg-white border border-black"></div> Kosong</div>
+                <div class="bg-slate-50 border border-slate-200 h-full flex flex-col shadow-sm">
+                    <div class="p-5 border-b border-slate-200 bg-[#0B266E]">
+                        <h2 class="text-sm font-black uppercase tracking-tight text-white">Navigasi Soal (<span x-text="soals.length"></span>)</h2>
+                        <div class="flex flex-wrap gap-x-4 gap-y-2 mt-3">
+                            <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-white/80"><div class="w-4 h-4 bg-[#4A80E8] border border-white/40"></div> Terjawab</div>
+                            <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-white/80"><div class="w-4 h-4 bg-yellow-400"></div> Ragu</div>
+                            <div class="flex items-center gap-2 text-[10px] font-bold uppercase text-white/80"><div class="w-4 h-4 bg-white border border-white/50"></div> Kosong</div>
                         </div>
                     </div>
                     
@@ -252,12 +254,11 @@
                             <template x-for="(soal, idx) in soals" :key="soal.id">
                                 <div @click="goToSoal(idx)" 
                                      :class="{
-                                         'border-[3px] border-black scale-110 z-10': currentIndex === idx,
-                                         'border border-black': currentIndex !== idx,
-                                         'diagonal-hash': soal.ragu_ragu && !soal.jawaban_terpilih,
-                                         'diagonal-hash-active': soal.ragu_ragu && soal.jawaban_terpilih,
-                                         'bg-zinc-800 text-white': !soal.ragu_ragu && soal.jawaban_terpilih,
-                                         'bg-white text-black': !soal.ragu_ragu && !soal.jawaban_terpilih
+                                         'border-[3px] border-[#0B266E] scale-110 z-10 shadow-md': currentIndex === idx,
+                                         'border border-slate-300': currentIndex !== idx,
+                                         'bg-yellow-400 text-yellow-900': soal.ragu_ragu,
+                                         'bg-[#4A80E8] text-white': !soal.ragu_ragu && soal.jawaban_terpilih,
+                                         'bg-white text-slate-600': !soal.ragu_ragu && !soal.jawaban_terpilih
                                      }"
                                      class="flex items-center justify-center font-bold text-xs cursor-pointer transition-transform hover:scale-105 active:scale-95" 
                                      :title="'Soal ' + (idx + 1)">
@@ -273,26 +274,26 @@
         </div>
 
         <!-- Footer Actions -->
-        <footer class="w-full z-50 flex justify-center items-center px-10 py-5 bg-white border-t-2 border-black shrink-0 relative">
+        <footer class="w-full z-50 flex justify-center items-center px-10 py-5 bg-white border-t border-slate-200 shrink-0 relative">
             <div class="flex items-center gap-3">
-                <button @click="prevSoal()" :disabled="currentIndex === 0" :class="currentIndex === 0 ? 'opacity-50 cursor-not-allowed' : 'hover:invert active:translate-y-0.5'" class="border-2 border-black px-6 py-2.5 text-sm font-bold uppercase tracking-tight transition-none flex items-center gap-2 bg-white">
+                <button @click="prevSoal()" :disabled="currentIndex === 0" :class="currentIndex === 0 ? 'opacity-40 cursor-not-allowed' : 'hover:bg-[#091E5A] active:translate-y-0.5'" class="border-2 border-[#091E5A] px-6 py-2.5 text-sm font-bold uppercase tracking-tight transition-colors flex items-center gap-2 bg-[#0B266E] text-white">
                     <span class="material-symbols-outlined">arrow_back</span>
                     Prev
                 </button>
                 
-                <button @click="toggleRagu()" :class="isRagu ? 'bg-amber-300' : 'diagonal-hash hover:bg-zinc-200'" class="border-2 border-black px-8 py-2.5 text-sm font-bold uppercase tracking-tight transition-none active:translate-y-0.5 flex items-center gap-2">
+                <button @click="toggleRagu()" :class="isRagu ? 'bg-yellow-400 text-yellow-900 border-yellow-500' : 'bg-yellow-400 border-yellow-500 text-yellow-900 hover:bg-yellow-300'" class="border-2 px-8 py-2.5 text-sm font-bold uppercase tracking-tight transition-colors active:translate-y-0.5 flex items-center gap-2">
                     <span class="material-symbols-outlined" x-text="isRagu ? 'flag' : 'outlined_flag'">flag</span>
                     <span x-text="isRagu ? 'Hapus Ragu' : 'Ragu-ragu'"></span>
                 </button>
                 
                 <template x-if="currentIndex < soals.length - 1">
-                    <button @click="nextSoal()" class="bg-black text-white border-2 border-black px-6 py-2.5 text-sm font-bold uppercase tracking-tight transition-none flex items-center gap-2 hover:invert active:translate-y-0.5">
+                    <button @click="nextSoal()" class="bg-[#0B266E] text-white border-2 border-[#091E5A] px-6 py-2.5 text-sm font-bold uppercase tracking-tight flex items-center gap-2 hover:bg-[#091E5A] active:translate-y-0.5 transition-colors">
                         Next
                         <span class="material-symbols-outlined">arrow_forward</span>
                     </button>
                 </template>
                 <template x-if="currentIndex === soals.length - 1">
-                    <button @click="submitExam()" class="bg-red-600 text-white border-2 border-black px-6 py-2.5 text-sm font-bold uppercase tracking-tight transition-none flex items-center gap-2 hover:bg-red-700 active:translate-y-0.5">
+                    <button @click="submitExam()" class="bg-red-600 text-white border-2 border-red-700 px-6 py-2.5 text-sm font-bold uppercase tracking-tight flex items-center gap-2 hover:bg-red-700 active:translate-y-0.5 transition-colors">
                         <span class="material-symbols-outlined" style="font-size:18px">done_all</span>
                         Submit
                     </button>
@@ -301,7 +302,7 @@
         </footer>
 
         <!-- Overlay Loading Auto-Save -->
-        <div x-show="isSaving" x-transition.opacity class="fixed top-6 left-1/2 -translate-x-1/2 bg-black border-2 border-white text-white px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-3 z-50 shadow-2xl">
+        <div x-show="isSaving" x-transition.opacity class="fixed top-6 left-1/2 -translate-x-1/2 bg-[#0B266E] border-2 border-white/20 text-white px-6 py-2 rounded-full text-xs font-bold uppercase tracking-widest flex items-center gap-3 z-50 shadow-2xl">
             <span class="material-symbols-outlined animate-spin" style="font-size: 18px;">autorenew</span>
             Menyimpan...
         </div>

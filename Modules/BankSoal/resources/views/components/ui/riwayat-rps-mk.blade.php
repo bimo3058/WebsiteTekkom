@@ -16,7 +16,6 @@
                     <th class="table-header-cell">Mata Kuliah</th>
                     <th class="table-header-cell">Tahun/Semester</th>
                     <th class="table-header-cell">File</th>
-                    <th class="table-header-cell w-[220px]">Aksi</th>
                 </tr>
             </thead>
             <tbody class="table-body">

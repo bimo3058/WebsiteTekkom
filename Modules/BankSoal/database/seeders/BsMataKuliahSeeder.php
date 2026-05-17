@@ -12,7 +12,7 @@ class BsMataKuliahSeeder extends Seeder
         DB::table('bs_mata_kuliah')->insert([
             [
                 'id' => 1,
-                'kode' => 'PTSK6208',
+                'kode' => 'TSK6208',
                 'nama' => 'Algoritma dan Pemrograman',
                 'sks' => 2,
                 'semester' => null,
@@ -21,7 +21,7 @@ class BsMataKuliahSeeder extends Seeder
             ],
             [
                 'id' => 2,
-                'kode' => 'PTSK6206',
+                'kode' => 'TSK6206',
                 'nama' => 'Elektronika Dasar',
                 'sks' => 2,
                 'semester' => null,
@@ -30,7 +30,7 @@ class BsMataKuliahSeeder extends Seeder
             ],
             [
                 'id' => 3,
-                'kode' => 'PTSK6211',
+                'kode' => 'TSK6211',
                 'nama' => 'Matematika Teknik',
                 'sks' => 3,
                 'semester' => null,
@@ -39,7 +39,7 @@ class BsMataKuliahSeeder extends Seeder
             ],
             [
                 'id' => 4,
-                'kode' => 'PTSK6305',
+                'kode' => 'TSK6305',
                 'nama' => 'Sistem Digital',
                 'sks' => 2,
                 'semester' => null,

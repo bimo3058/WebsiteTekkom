@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Modules\BankSoal\Services\DashboardAnnouncementService;
 use Modules\EOffice\Models\PeriodePendaftaran;
 use Modules\EOffice\Models\Pengumuman;
 use Modules\EOffice\Services\PeriodePendaftaranService;
@@ -96,6 +97,34 @@ class DashboardController extends Controller
             ],
         ];
 
+        // ── Pengumuman ────────────────────────────────────────────────────────
+        $bankSoalAnnouncements = [];
+
+        try {
+            // Only generate personalised announcements for mahasiswa
+            if ($isMahasiswa) {
+                $service = app(DashboardAnnouncementService::class);
+                $bankSoalAnnouncements = $service->getForDashboard($user->id);
+            }
+        } catch (\Throwable $e) {
+            // Graceful degradation: if BankSoal module is unavailable, show empty list
+            logger()->warning('DashboardAnnouncementService failed: ' . $e->getMessage());
+        }
+
+        $announcements = [
+            'all'           => $bankSoalAnnouncements,
+            'bank_soal'     => $bankSoalAnnouncements,
+            'capstone'      => [],
+            'kemahasiswaan' => [],
+            'eoffice'       => [],
+        ];
+
+        $announcementCounts = [
+            'all'           => count($bankSoalAnnouncements),
+            'bank_soal'     => count($bankSoalAnnouncements),
+            'capstone'      => 0,
+            'kemahasiswaan' => 0,
+            'eoffice'       => 0,
         // ── Announcements ────────────────────────────────────────────────────
         // Tab eoffice: gabungan periode pendaftaran aktif + pengumuman praktikum published
         $eofficeItems = collect();

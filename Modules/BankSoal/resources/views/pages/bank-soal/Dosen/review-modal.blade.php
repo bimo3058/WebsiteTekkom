@@ -50,6 +50,32 @@
                         </div>
                     </div>
                     
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-4">
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Hari/Tanggal</label>
+                            <input type="text" name="hari_tanggal" id="inputHariTanggal" placeholder="Pilih tanggal..." readonly class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2 px-3 shadow-sm cursor-pointer">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Jam</label>
+                            <div class="flex items-center gap-2">
+                                <input type="time" name="jam_mulai" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2 px-3 shadow-sm">
+                                <span class="text-slate-400 text-sm">–</span>
+                                <input type="time" name="jam_selesai" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2 px-3 shadow-sm">
+                            </div>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Ruang Ujian</label>
+                            <input type="text" name="ruang_ujian" placeholder="Contoh: Lab A" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2 px-3 shadow-sm">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-semibold text-slate-700 mb-1.5">Sifat Ujian</label>
+                            <select name="sifat_ujian" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2 px-3 shadow-sm">
+                                <option value="Tertutup">Tertutup</option>
+                                <option value="Terbuka">Terbuka</option>
+                            </select>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
                         <div>
                             <label class="block text-sm font-semibold text-slate-700 mb-1.5">Metode Ujian</label>
@@ -624,6 +650,29 @@
         </div>
     </div>
 </div>
+
+<!-- Flatpickr Indonesian date picker -->
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+<style>
+    .flatpickr-calendar { z-index: 9999 !important; }
+    /* Hide numInput up/down spinners that overlap month name */
+    .flatpickr-current-month .numInputWrapper span { display: none !important; }
+    .flatpickr-current-month .numInputWrapper input { padding-right: 0 !important; }
+    .flatpickr-current-month select { appearance: auto !important; -webkit-appearance: auto !important; background-image: none !important; }
+</style>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
+<script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/l10n/id.js"></script>
+<script>
+    flatpickr('#inputHariTanggal', {
+        locale: 'id',
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'l, d F Y',
+        allowInput: false,
+        position: 'auto',
+        appendTo: document.getElementById('reviewSoalModalContent'),
+    });
+</script>
 
 <!-- Snackbar container -->
 <div id="snackbarContainer" class="fixed bottom-6 right-6 z-[9999] flex flex-col items-end gap-2 pointer-events-none"></div>
