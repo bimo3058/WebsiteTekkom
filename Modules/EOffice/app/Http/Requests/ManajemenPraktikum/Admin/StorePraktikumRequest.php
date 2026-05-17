@@ -16,12 +16,25 @@ class StorePraktikumRequest extends FormRequest
         return [
             'nama'         => ['required', 'string', 'max:255'],
             'kode'         => ['nullable', 'string', 'max:50'],
+            'matkul_id'    => ['nullable', 'integer', 'exists:eo_matkul_praktikum,id'],
             'deskripsi'    => ['nullable', 'string'],
-            'dosen_id'     => ['nullable', 'uuid', 'exists:users,id'],
-            'koor_id'      => ['nullable', 'uuid', 'exists:users,id'],
+            // dosen_id & koor_id mengacu ke users.id yang bertipe bigint
+            'dosen_id'     => ['nullable', 'integer', 'exists:users,id'],
+            'koor_id'      => ['nullable', 'integer', 'exists:users,id'],
             'tahun_ajaran' => ['required', 'integer', 'min:2000'],
-            'semester'     => ['required', 'in:ganjil,genap'],
+            // Form kirim "Ganjil"/"Genap" (kapital), terima keduanya
+            'semester'     => ['required', 'in:Ganjil,Genap,ganjil,genap'],
             'status'       => ['sometimes', 'in:aktif,nonaktif'],
         ];
+    }
+
+    /**
+     * Normalize semester ke Title Case sebelum validasi.
+     */
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('semester')) {
+            $this->merge(['semester' => ucfirst(strtolower($this->semester))]);
+        }
     }
 }

@@ -3,6 +3,7 @@
 namespace Modules\EOffice\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Str;
 
 /**
  * Modul / pertemuan dalam satu Praktikum.
@@ -18,6 +19,8 @@ class Modul extends Model
         'nama',
         'deskripsi',
         'urutan',
+        'kode_modul',
+        'jadwal_minggu',
     ];
 
     // ── Relationships ──────────────────────────────────────────────────────────
@@ -32,9 +35,6 @@ class Modul extends Model
         return $this->hasMany(ModulAsprak::class, 'modul_id');
     }
 
-    /**
-     * Asprak yang mengelola modul ini (via pivot ModulAsprak).
-     */
     public function asprak()
     {
         return $this->hasManyThrough(
@@ -60,5 +60,19 @@ class Modul extends Model
     public function absensi()
     {
         return $this->hasMany(Absensi::class, 'modul_id');
+    }
+
+    // ── Helper ────────────────────────────────────────────────────────────────
+
+    /**
+     * Generate kode unik 8 karakter untuk modul.
+     */
+    public static function generateKodeModul(): string
+    {
+        do {
+            $kode = strtoupper(Str::random(8));
+        } while (static::where('kode_modul', $kode)->exists());
+
+        return $kode;
     }
 }

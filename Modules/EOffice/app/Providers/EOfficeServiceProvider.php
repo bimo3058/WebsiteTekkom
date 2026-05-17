@@ -2,8 +2,11 @@
 
 namespace Modules\EOffice\Providers;
 
+use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Modules\EOffice\Http\Middleware\EnsureAsprakOwnership;
+use Modules\EOffice\Http\Middleware\EnsureKoorOwnership;
 use Nwidart\Modules\Traits\PathNamespace;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
@@ -27,6 +30,18 @@ class EOfficeServiceProvider extends ServiceProvider
         $this->registerConfig();
         $this->registerViews();
         $this->loadMigrationsFrom(module_path($this->name, 'database/migrations'));
+        $this->registerMiddleware();
+    }
+
+    protected function registerMiddleware(): void
+    {
+        /** @var Router $router */
+        $router = $this->app['router'];
+
+        // Alias middleware agar bisa dipakai di routes/web.php
+        // Contoh: Route::middleware(['role:koor_prak', 'koor.owns'])
+        $router->aliasMiddleware('koor.owns', EnsureKoorOwnership::class);
+        $router->aliasMiddleware('asprak.owns', EnsureAsprakOwnership::class);
     }
 
     /**
@@ -36,6 +51,22 @@ class EOfficeServiceProvider extends ServiceProvider
     {
         $this->app->register(EventServiceProvider::class);
         $this->app->register(RouteServiceProvider::class);
+
+        // Services
+        $this->app->singleton(
+            \Modules\EOffice\Services\NotifikasiService::class,
+            \Modules\EOffice\Services\NotifikasiService::class
+        );
+
+        $this->app->singleton(
+            \Modules\EOffice\Services\PeriodePendaftaranService::class,
+            \Modules\EOffice\Services\PeriodePendaftaranService::class
+        );
+
+        $this->app->singleton(
+            \Modules\EOffice\Services\KoorPraktikumService::class,
+            \Modules\EOffice\Services\KoorPraktikumService::class
+        );
     }
 
     /**
@@ -43,7 +74,9 @@ class EOfficeServiceProvider extends ServiceProvider
      */
     protected function registerCommands(): void
     {
-        // $this->commands([]);
+        $this->commands([
+            \Modules\EOffice\Console\Commands\TutupPeriodePendaftaranKadaluarsa::class,
+        ]);
     }
 
     /**
@@ -51,10 +84,10 @@ class EOfficeServiceProvider extends ServiceProvider
      */
     protected function registerCommandSchedules(): void
     {
-        // $this->app->booted(function () {
-        //     $schedule = $this->app->make(Schedule::class);
-        //     $schedule->command('inspire')->hourly();
-        // });
+        $this->app->booted(function () {
+            $schedule = $this->app->make(\Illuminate\Console\Scheduling\Schedule::class);
+            $schedule->command('eoffice:periode-pendaftaran:tutup-kadaluarsa')->hourly();
+        });
     }
 
     /**

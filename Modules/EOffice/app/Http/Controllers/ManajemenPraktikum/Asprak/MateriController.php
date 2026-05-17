@@ -7,14 +7,16 @@ use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Storage;
 use Modules\EOffice\Models\AsistenPraktikum;
 use Modules\EOffice\Models\MateriModul;
+use Modules\EOffice\Models\Modul;
 use Modules\EOffice\Models\ModulAsprak;
 
 class MateriController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $user   = auth()->user();
-        $asprak = AsistenPraktikum::where('user_id', $user->id)->whereNull('deleted_at')->first();
+        $asprak = $request->attributes->get('asprak')
+            ?? AsistenPraktikum::where('user_id', auth()->id())
+                ->where('role', 'asprak')->whereNull('deleted_at')->first();
 
         $modulIds = $asprak
             ? ModulAsprak::where('asprak_id', $asprak->id)->pluck('modul_id')
@@ -22,7 +24,11 @@ class MateriController extends Controller
 
         $materis = MateriModul::whereIn('modul_id', $modulIds)->with('modul.praktikum')->orderByDesc('created_at')->get();
 
-        return view('eoffice::manajemen-praktikum.asprak.materi', compact('materis'));
+        $modulsForSelect = $modulIds->isNotEmpty()
+            ? Modul::whereIn('id', $modulIds)->orderBy('urutan')->get()
+            : collect();
+
+        return view('eoffice::manajemen-praktikum.asprak.materi', compact('materis', 'asprak', 'modulsForSelect'));
     }
 
     public function store(Request $request)
@@ -36,6 +42,16 @@ class MateriController extends Controller
 
         $path     = null;
         $tipeFile = null;
+
+        $allowed = ModulAsprak::whereHas('asprak', fn($q) => $q
+            ->where('user_id', auth()->id())
+            ->where('role', 'asprak')
+            ->whereNull('deleted_at')
+        )->where('modul_id', $request->modul_id)->exists();
+
+        if (! $allowed) {
+            return back()->with('error', 'Anda tidak di-assign ke modul ini.');
+        }
 
         if ($request->hasFile('file')) {
             $path     = $request->file('file')->store('materi-modul', 'public');
@@ -56,7 +72,14 @@ class MateriController extends Controller
 
     public function destroy($id)
     {
-        $materi = MateriModul::findOrFail($id);
+        $materi = MateriModul::with('modul.modulAsprak.asprak')->findOrFail($id);
+
+        $allowed = $materi->modul?->modulAsprak
+            ->contains(fn ($ma) => $ma->asprak?->user_id === auth()->id());
+
+        if (! $allowed) {
+            abort(403, 'Anda tidak berhak menghapus materi ini.');
+        }
 
         if ($materi->file_path) {
             Storage::disk('public')->delete($materi->file_path);

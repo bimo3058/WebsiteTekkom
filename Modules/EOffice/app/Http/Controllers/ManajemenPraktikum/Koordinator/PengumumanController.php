@@ -43,7 +43,13 @@ class PengumumanController extends Controller
 
     public function destroy($id)
     {
-        Pengumuman::findOrFail($id)->delete();
+        $pengumuman = Pengumuman::with('praktikum')->findOrFail($id);
+
+        if ($pengumuman->praktikum?->koor_id !== auth()->id()) {
+            abort(403, 'Anda tidak berhak menghapus pengumuman ini.');
+        }
+
+        $pengumuman->delete();
 
         return back()->with('success', 'Pengumuman dihapus.');
     }
