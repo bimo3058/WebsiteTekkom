@@ -8,14 +8,14 @@
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
     <!-- Material Symbols -->
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
 
     <style>
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6;
+            font-family: 'Inter Tight', sans-serif;
+            background-color: #f5f6fa;
             color: #1f2937;
             -webkit-font-smoothing: antialiased;
             min-height: 100vh;
@@ -35,7 +35,7 @@
         .anon-header-logo {
             width: 32px;
             height: 32px;
-            background: #111827;
+            background: #0B266E;
             color: #ffffff;
             border-radius: 8px;
             display: flex;
@@ -43,11 +43,10 @@
             justify-content: center;
         }
         .anon-header-title {
-            font-weight: 800;
+            font-weight: 700;
             font-size: 16px;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.2px;
             color: #111827;
-            text-transform: uppercase;
         }
         .anon-container {
             max-width: 720px;

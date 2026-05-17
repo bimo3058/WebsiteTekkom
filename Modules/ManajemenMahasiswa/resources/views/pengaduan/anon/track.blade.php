@@ -9,15 +9,6 @@
             border-radius: 14px;
             padding: 32px;
             border: 1px solid #e5e7eb;
-            position: relative;
-            overflow: hidden;
-        }
-        .pgd-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 4px;
-            background: linear-gradient(135deg, #4D4DFF 0%, #7c7cff 50%, #4D4DFF 100%);
         }
         .pgd-badge {
             font-size: 12px;
@@ -43,8 +34,7 @@
         }
         .chronology-box {
             background: #f8fafc;
-            border-left: 4px solid #4D4DFF;
-            border-radius: 0 12px 12px 0;
+            border-radius: 12px;
             padding: 24px;
             color: #334155;
             font-size: 14px;
@@ -57,27 +47,22 @@
             padding: 28px 32px;
             border: 1px solid #e5e7eb;
         }
-        .answer-card {
-            background: #f0fdf4;
-            border: 1px solid #bbf7d0;
+        .answer-card-v2 { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 14px; padding: 24px; }
+        .answer-header { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 16px; }
+        .answer-icon { background: #22c55e; color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; flex-shrink: 0; font-size: 16px; }
+        .answer-label { font-size: 13px; font-weight: 700; color: #166534; }
+        .answer-meta { font-size: 11px; color: #86efac; margin-top: 2px; }
+        .answer-body { font-size: 14px; color: #166534; line-height: 1.8; white-space: pre-wrap; margin: 0; }
+        .section-divider { display: flex; align-items: center; gap: 12px; margin: 24px 0 16px; }
+        .section-divider span { font-size: 12px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap; }
+        .section-divider::after { content: ''; flex: 1; height: 1px; background: #e5e7eb; }
+        /* ── Delegasi / Process Info Card ───────────────────── */
+        .process-info-card {
+            background: #fffaf0;
+            border: 1px solid #fde68a;
+            border-top: 3px solid #f59e0b;
             border-radius: 14px;
-            padding: 28px 32px;
-            position: relative;
-        }
-        .answer-card::before {
-            content: '';
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            height: 3px;
-            background: linear-gradient(135deg, #22c55e 0%, #4ade80 100%);
-            border-radius: 14px 14px 0 0;
-        }
-        .empty-answer {
-            border: 2px dashed #cbd5e1;
-            border-radius: 14px;
-            background: #f8fafc;
-            text-align: center;
-            padding: 48px 24px;
+            padding: 24px 28px;
         }
         .timeline-container {
             position: relative;
@@ -101,7 +86,7 @@
             width: 16px; height: 16px;
             border-radius: 50%;
             background: #fff;
-            border: 3px solid #4D4DFF;
+            border: 3px solid #0B266E;
             transform: translateX(-50%);
         }
         .timeline-content {
@@ -154,13 +139,13 @@
             transition: all 0.3s;
         }
         .step.active .step-icon {
-            border-color: #4D4DFF;
-            color: #4D4DFF;
-            box-shadow: 0 0 0 4px rgba(77, 77, 255, 0.1);
+            border-color: #0B266E;
+            color: #0B266E;
+            box-shadow: 0 0 0 4px rgba(11, 38, 110, 0.1);
         }
         .step.completed .step-icon {
-            background: #4D4DFF;
-            border-color: #4D4DFF;
+            background: #0B266E;
+            border-color: #0B266E;
             color: #fff;
         }
         .step-label {
@@ -170,7 +155,7 @@
             text-transform: uppercase;
         }
         .step.active .step-label { color: #111827; }
-        .step.completed .step-label { color: #4D4DFF; }
+        .step.completed .step-label { color: #0B266E; }
     </style>
 @endpush
 
@@ -298,49 +283,85 @@
         </div>
     </div>
 
-    <div class="row g-4 mb-4">
-        {{-- ── Kolom Kiri: Riwayat ─────────────────────────────── --}}
-        <div class="col-lg-4 order-lg-2">
-            <div class="info-grid" style="padding: 24px;">
-                <h6 class="fw-bold text-dark mb-4 d-flex align-items-center gap-2" style="font-size: 14px; text-transform: uppercase;">
-                    Riwayat Tiket
-                </h6>
-                <div class="timeline-container">
-                    @foreach($pengaduan->logs as $log)
-                        <div class="timeline-item">
-                            <div class="timeline-icon"></div>
-                            <div class="timeline-content">
-                                <div class="timeline-date">{{ $log->created_at->translatedFormat('d M Y, H:i') }} WIB</div>
-                                <div class="fw-bold text-dark" style="font-size: 13px;">
-                                    {{ ucwords(str_replace('_', ' ', $log->action)) }}
-                                </div>
-                            </div>
+
+    {{-- ── Status Proses & Tanggapan Final ──────────────────────── --}}
+    <div class="mb-4">
+
+        {{-- ── Panel Status Proses (Info delegasi untuk pelapor anonim) ── --}}
+        @php
+            $delegasiInfo = $pengaduan->delegasiAktif ?? $pengaduan->delegasiTerakhir;
+        @endphp
+
+            @if($delegasiInfo && in_array($pengaduan->status, [
+                \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_DIDELEGASIKAN,
+                \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_DITANGGAPI_DOSEN,
+            ]))
+                <div class="process-info-card mb-4">
+                    <div class="d-flex align-items-start gap-3">
+                        <div style="background: #fef3c7; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <span class="material-symbols-outlined" style="font-size: 20px; color: #d97706;">hourglass_top</span>
                         </div>
-                    @endforeach
+                        <div>
+                            @if($pengaduan->status === \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_DIDELEGASIKAN)
+                                <h6 class="fw-bold mb-1" style="color: #92400e; font-size: 15px;">Pengaduan Sedang Ditinjau Pihak Berwenang</h6>
+                                <p class="mb-0 text-muted" style="font-size: 13px; line-height: 1.6;">
+                                    Pengaduan Anda telah diteruskan ke pihak yang berwenang untuk ditindaklanjuti.
+                                    Proses ini membutuhkan waktu — Anda akan menerima jawaban setelah peninjauan selesai.
+                                </p>
+                                <div class="mt-2" style="font-size: 12px; color: #b45309;">
+                                    <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: text-bottom;">schedule</span>
+                                    Didelegasikan sejak: {{ $delegasiInfo->delegated_at->translatedFormat('d F Y, H:i') }} WIB
+                                </div>
+                            @elseif($pengaduan->status === \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_DITANGGAPI_DOSEN)
+                                <h6 class="fw-bold mb-1" style="color: #4338ca; font-size: 15px;">Jawaban Sedang Disiapkan</h6>
+                                <p class="mb-0 text-muted" style="font-size: 13px; line-height: 1.6;">
+                                    Pihak berwenang telah memberikan tanggapan. Admin sedang menyiapkan jawaban final untuk Anda.
+                                    Jawaban akan segera muncul di halaman ini.
+                                </p>
+                            @endif
+                        </div>
+                    </div>
                 </div>
+            @endif
+
+            {{-- ── Info jika delegasi ditolak dan tiket kembali ke admin ── --}}
+            @if($delegasiInfo && $delegasiInfo->status === 'ditolak' && !in_array($pengaduan->status, [
+                \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_DIJAWAB,
+                \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_SELESAI,
+            ]))
+                <div class="process-info-card mb-4" style="background: #fefce8; border-color: #fde68a;">
+                    <div class="d-flex align-items-start gap-3">
+                        <div style="background: #e0f2fe; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
+                            <span class="material-symbols-outlined" style="font-size: 20px; color: #0284c7;">replay</span>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-1" style="color: #92400e; font-size: 15px;">Pengaduan Dikembalikan ke Admin</h6>
+                            <p class="mb-0 text-muted" style="font-size: 13px; line-height: 1.6;">
+                                Pihak yang ditunjuk mengembalikan pengaduan ini ke Admin untuk ditinjau ulang.
+                                Admin akan menindaklanjuti sendiri atau meneruskan ke pihak lain yang lebih tepat.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            @endif
+
+            <div class="section-divider">
+                <span>Jawaban Pengaduan</span>
             </div>
-        </div>
 
-        {{-- ── Kolom Kanan: Tanggapan Final ────────────────────── --}}
-        <div class="col-lg-8 order-lg-1">
             <div class="mb-4">
-                <h5 class="fw-bold text-dark mb-3 d-flex align-items-center gap-2" style="font-size: 16px;">
-                    <span class="material-symbols-outlined" style="color: #4D4DFF; font-size: 20px; vertical-align: text-bottom;">chat</span> Jawaban Pengaduan
-                </h5>
-
                 @if($pengaduan->jawaban)
-                    <div class="answer-card">
-                        <div class="d-flex align-items-start gap-3">
-                            <div style="background: #22c55e; color: white; width: 36px; height: 36px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 8px rgba(34,197,94,0.3); flex-shrink: 0;">
-                                <span class="material-symbols-outlined" style="font-size: 16px; font-weight: bold;">check</span>
-                            </div>
-                            <div style="flex: 1; min-width: 0;">
-                                <div style="white-space: pre-wrap; color: #166534; font-size: 14px; line-height: 1.8;">{{ $pengaduan->jawaban }}</div>
-                                <div class="mt-3 text-muted fw-medium" style="font-size: 12px;">
-                                    Dijawab pada: {{ optional($pengaduan->answered_at)->translatedFormat('d F Y, H:i') ?? '—' }} WIB
+                    <div class="answer-card-v2">
+                        <div class="answer-header">
+                            <div class="answer-icon"><span class="material-symbols-outlined" style="font-size: 18px;">check</span></div>
+                            <div>
+                                <div class="answer-label">Jawaban Resmi</div>
+                                <div class="answer-meta">
+                                    {{ optional($pengaduan->answered_at)->translatedFormat('d F Y, H:i') ?? '—' }} WIB
                                 </div>
                             </div>
                         </div>
+                        <div class="answer-body">{{ $pengaduan->jawaban }}</div>
                     </div>
 
                     {{-- Mahasiswa Actions: Tandai Selesai atau Ajukan Ulang --}}
@@ -369,14 +390,13 @@
                         </div>
                     @endif
                 @else
-                    <div class="empty-answer">
+                    <div style="border: 2px dashed #cbd5e1; border-radius: 14px; background: #f8fafc; text-align: center; padding: 48px 24px;">
                         <div style="color: #94a3b8; margin-bottom: 12px;"><span class="material-symbols-outlined" style="font-size: 40px;">hourglass_empty</span></div>
                         <div class="fw-bold text-dark mb-1" style="font-size: 16px;">Belum ada tanggapan final</div>
                         <div class="text-muted" style="font-size: 13px;">Admin sedang meninjau atau mendelegasikan aduan ini.</div>
                     </div>
                 @endif
             </div>
-        </div>
     </div>
 
     {{-- Reopen Modal --}}

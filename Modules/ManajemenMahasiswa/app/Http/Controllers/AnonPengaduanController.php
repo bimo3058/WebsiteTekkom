@@ -32,7 +32,7 @@ class AnonPengaduanController extends Controller
      */
     public function track(Request $request, $token)
     {
-        $pengaduan = Pengaduan::with(['logs.actor', 'delegasiAktif.delegatedTo'])
+        $pengaduan = Pengaduan::with(['logs.actor', 'delegasiAktif.delegatedTo', 'delegasiTerakhir'])
             ->where('anon_token', $token)
             ->firstOrFail();
 

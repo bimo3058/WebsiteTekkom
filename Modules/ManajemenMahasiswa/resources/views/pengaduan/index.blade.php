@@ -2,48 +2,6 @@
 
     @push('styles')
         <style>
-            /* ── Gradient Header ───────────────────────────────────── */
-            .page-header {
-                background: linear-gradient(135deg, #4D4DFF 0%, #6b6bff 60%, #8484ff 100%);
-                border-radius: 16px;
-                padding: 28px 32px;
-                color: white;
-                margin-bottom: 24px;
-                position: relative;
-                overflow: hidden;
-            }
-            .page-header::after {
-                content: '';
-                position: absolute;
-                top: -40%; right: -5%;
-                width: 200px; height: 200px;
-                background: rgba(255,255,255,0.08);
-                border-radius: 50%;
-            }
-            .page-header h3 { font-weight: 800; margin-bottom: 4px; position: relative; z-index: 1; }
-            .page-header p { opacity: 0.85; margin-bottom: 0; font-weight: 500; position: relative; z-index: 1; }
-            .btn-header {
-                background: rgba(255,255,255,0.2);
-                backdrop-filter: blur(4px);
-                color: white;
-                border: 1.5px solid rgba(255,255,255,0.35);
-                border-radius: 10px;
-                padding: 10px 22px;
-                font-weight: 700;
-                font-size: 14px;
-                display: inline-flex;
-                align-items: center;
-                gap: 8px;
-                transition: all 0.2s;
-                position: relative;
-                z-index: 1;
-            }
-            .btn-header:hover {
-                background: rgba(255,255,255,0.35);
-                color: white;
-                transform: translateY(-1px);
-            }
-
             /* ── Stats Strip ───────────────────────────────────────── */
             .stats-strip {
                 display: grid;
@@ -95,9 +53,9 @@
                 margin-bottom: 20px;
             }
             .filter-input {
-                background: #f8fafc;
-                border: 2px solid #eef2f7;
-                border-radius: 10px;
+                background: #f3f4f6;
+                border: none;
+                border-radius: 8px;
                 padding: 10px 14px;
                 width: 100%;
                 font-weight: 600;
@@ -106,14 +64,13 @@
             }
             .filter-input:focus {
                 outline: none;
-                border-color: #c7d2fe;
-                box-shadow: 0 0 0 3px rgba(77, 77, 255, 0.08);
-                background: #ffffff;
+                background: #fff;
+                box-shadow: 0 0 0 2px rgba(11,38,110,0.12);
             }
             .filter-select {
-                background: #ffffff;
-                border: 2px solid #eef2f7;
-                border-radius: 10px;
+                background: #f3f4f6;
+                border: none;
+                border-radius: 8px;
                 padding: 10px 12px;
                 width: 100%;
                 font-weight: 600;
@@ -173,14 +130,14 @@
     @endpush
 
     {{-- ── Header ──────────────────────────────────────────────── --}}
-    <div class="page-header d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+    <div class="d-flex justify-content-between align-items-start mb-4">
         <div>
-            <h3>Layanan Pengaduan</h3>
-            <p>Sampaikan keluhan secara terarah (opsional anonim) dan pantau jawabannya.</p>
+            <h3 class="fw-bold mb-1 text-dark">Layanan Pengaduan</h3>
+            <p class="text-muted mb-0" style="font-size:14px; font-weight:500;">Sampaikan keluhan secara terarah (opsional anonim) dan pantau jawabannya.</p>
         </div>
         @if($canCreate)
-            <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-header text-decoration-none">
-                <span>＋</span> Buat Pengaduan
+            <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn d-flex align-items-center gap-2" style="background:#0B266E;color:#fff;font-weight:600;font-size:14px;padding:10px 20px;border-radius:10px;text-decoration:none;">
+                <span class="material-symbols-outlined" style="font-size:18px;">add</span> Buat Pengaduan
             </a>
         @endif
     </div>
@@ -330,6 +287,12 @@
                             </td>
                             <td>
                                 <span class="custom-badge {{ $badgeClass }}">{{ ucfirst($status) }}</span>
+                                @if($isStaff && in_array($status, ['didelegasikan', 'ditanggapi_dosen']) && optional($item->delegasiAktif)->delegatedTo)
+                                    <div class="d-flex align-items-center gap-1 mt-1" style="font-size: 11px; color: #6b7280;">
+                                        <span class="material-symbols-outlined" style="font-size: 13px;">arrow_forward</span>
+                                        <span>{{ $item->delegasiAktif->delegatedTo->name }}</span>
+                                    </div>
+                                @endif
                             </td>
                             <td class="text-muted fw-medium" style="font-size: 13px;">
                                 <div>{{ optional($item->created_at)->translatedFormat('j F Y') }}</div>

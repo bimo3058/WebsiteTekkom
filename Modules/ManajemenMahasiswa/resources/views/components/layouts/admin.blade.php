@@ -248,6 +248,11 @@
         ::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
+        /*
+        Button pattern untuk modul ini:
+        Primary: class="btn" style="background: var(--c-primary, #0B266E); color: white; border-radius: 10px;"
+        Danger:  class="btn" style="background: #fef2f2; color: #dc2626; border: 1.5px solid #fecaca; border-radius: 8px;"
+        */
     </style>
 
     @stack('styles')

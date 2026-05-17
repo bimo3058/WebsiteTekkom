@@ -79,7 +79,7 @@ class PengaduanController extends Controller
 
         $query = Pengaduan::query();
         if ($isStaff) {
-            $query->with(['pelapor']);
+            $query->with(['pelapor', 'delegasiAktif.delegatedTo']);
             if ($isDosenOnly) {
                 // Dosen hanya bisa melihat tiket yang didelegasikan ke mereka
                 $query->whereHas('delegasi', function($q) use ($user) {
@@ -279,12 +279,17 @@ class PengaduanController extends Controller
                 ->get(['id', 'name']);
         }
 
-        $pengaduan->load(['delegasi.delegatedBy', 'delegasi.delegatedTo', 'logs.actor', 'delegasiAktif']);
+        $pengaduan->load(['delegasi.delegatedBy', 'delegasi.delegatedTo', 'logs.actor', 'delegasiAktif', 'delegasiTerakhir.delegatedTo', 'delegasiTerakhir.delegatedBy']);
 
         $isDelegatedToMe = $pengaduan->delegasiAktif && $pengaduan->delegasiAktif->delegated_to === $user->id && $pengaduan->delegasiAktif->status === 'aktif';
 
+        // Referensi delegasi yang ditampilkan di panel:
+        // - delegasiAktif: jika masih berstatus 'aktif' (menunggu respons dosen)
+        // - delegasiTerakhir: digunakan untuk membaca tanggapan dosen setelah delegasi selesai/di-forward
+        $delegasiPanel = $pengaduan->delegasiAktif ?? $pengaduan->delegasiTerakhir;
+
         return view('manajemenmahasiswa::pengaduan.show', compact(
-            'pengaduan', 'isStaff', 'canReply', 'canDelete', 'kategoriLabel', 'dosenList', 'isDelegatedToMe'
+            'pengaduan', 'isStaff', 'canReply', 'canDelete', 'kategoriLabel', 'dosenList', 'isDelegatedToMe', 'delegasiPanel'
         ));
     }
 
