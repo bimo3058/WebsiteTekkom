@@ -5,9 +5,11 @@ namespace Modules\ManajemenMahasiswa\Http\Controllers;
 use App\Http\Controllers\Controller;
 use App\Services\SupabaseStorage;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Auth;
 use Modules\ManajemenMahasiswa\Services\PengumumanService;
 use Modules\ManajemenMahasiswa\Services\RepoMulmedService;
+use Modules\ManajemenMahasiswa\Models\Pengumuman;
 use Modules\ManajemenMahasiswa\Models\PengumumanDraft;
 use Modules\ManajemenMahasiswa\Models\PengumumanPersonalPin;
 use Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest;
@@ -29,21 +31,36 @@ class PengumumanController extends Controller
 
         $filterKategori = $request->query('kategori');
 
-        // Admin, Dosen Koordinator, Pengurus Himpunan, GPM, Admin Kemahasiswaan: lihat semua
-        $perPage = max(5, min(100, (int) $request->input('per_page', 10)));
+        // Admin murni (list lama): superadmin, admin, admin_kemahasiswaan
+        // Blog-card baru: pengurus himpunan + gpm + dosen + dosen_koordinator
+        $adminRoles    = ['superadmin', 'admin', 'admin_kemahasiswaan'];
+        $blogCardRoles = ['pengurus_himpunan', 'staff_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'gpm', 'dosen', 'dosen_koordinator'];
 
-        if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'dosen', 'pengurus_himpunan', 'staff_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'gpm', 'admin_kemahasiswaan'])->isNotEmpty()) {
+        $isAdmin        = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan'])->isNotEmpty();
+        $isAdminView    = $roles->intersect($adminRoles)->isNotEmpty();
+        $isPengurusView = !$isAdminView && $roles->intersect($blogCardRoles)->isNotEmpty();
+
+        if ($isAdminView || $isPengurusView) {
+            // Per-page default: list lama pakai 10, blog-card pakai 9
+            $defaultPerPage = $isAdminView ? 10 : 9;
+            $perPage = max(5, min(100, (int) $request->input('per_page', $defaultPerPage)));
+
             $filters = $request->only(['status', 'search', 'audience']);
             if ($filterKategori && $filterKategori !== 'semua') {
                 $filters['kategori'] = $filterKategori;
             }
 
-            // Hanya admin murni yang boleh melihat draft orang lain saat filter status=draft
-            $isAdmin = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan'])->isNotEmpty();
             $pengumuman = $this->pengumumanService->listAll($filters, $perPage, Auth::id(), $isAdmin);
 
-            return view('manajemenmahasiswa::pengumuman.pengumuman-a', compact('pengumuman'));
+            // Admin murni → tampilan list lama; Pengurus himpunan → blog-card baru
+            $view = $isAdminView
+                ? 'manajemenmahasiswa::pengumuman.pengumuman-admin'
+                : 'manajemenmahasiswa::pengumuman.pengumuman-a';
+
+            return view($view, compact('pengumuman'));
         }
+
+        $perPage = max(5, min(100, (int) $request->input('per_page', 10)));
 
         // Role lain (Mahasiswa, Alumni, Dosen): bisa filter kategori & search
         $userAudience = $this->resolveAudience($roles);
@@ -294,10 +311,17 @@ class PengumumanController extends Controller
         $posterFile = $request->file('poster');
         unset($validated['poster'], $validated['lampiran']);
 
-        // Staff wajib verifikasi tidak boleh mempublikasikan langsung dari form edit.
-        // Alihkan ke alur verifikasi jika status yang dipilih adalah 'published'.
-        $needsVerification = $validated['status_publish'] === 'published'
-            && $this->pengumumanService->requiresApproval(Auth::user());
+        // Fix #3: Re-verifikasi jika staff (requiresApproval) mengedit konten/judul
+        // pengumuman yang sudah published — perubahan konten perlu disetujui ulang.
+        $requiresApproval = $this->pengumumanService->requiresApproval(Auth::user());
+        $alreadyPublished = $pengumuman->status_publish === Pengumuman::STATUS_PUBLISHED;
+        $contentChanged   = $validated['judul'] !== $pengumuman->judul
+            || strip_tags($validated['konten']) !== strip_tags($pengumuman->konten ?? '');
+
+        // Perlu verifikasi ulang jika: (a) mau publish baru, ATAU (b) edit konten yang sudah published
+        $needsVerification = $requiresApproval
+            && ($validated['status_publish'] === 'published'
+                || ($alreadyPublished && $contentChanged));
 
         if ($needsVerification) {
             $validated['status_publish'] = 'pending_review';
@@ -498,35 +522,55 @@ class PengumumanController extends Controller
             abort(403, 'Anda tidak memiliki akses untuk aksi ini.');
         }
 
+        // Fix #1: Validasi backend bahwa verifier_id benar-benar punya role ketua yang valid
+        $validVerifierRoles = ['ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit'];
         $validated = $request->validate([
-            'verifier_id'  => 'required|exists:users,id',
+            'verifier_id' => [
+                'required',
+                'exists:users,id',
+                Rule::exists('model_has_roles', 'model_id')
+                    ->where('model_type', 'App\Models\User')
+                    ->whereIn('role_id', function ($q) use ($validVerifierRoles) {
+                        $q->select('id')->from('roles')->whereIn('name', $validVerifierRoles);
+                    }),
+            ],
             'pesan_pengaju' => 'nullable|string|max:1000',
         ]);
 
-        $this->pengumumanService->requestApproval(
-            $pengumumanId,
-            Auth::id(),
-            (int) $validated['verifier_id'],
-            $validated['pesan_pengaju'] ?? null
-        );
+        try {
+            $this->pengumumanService->requestApproval(
+                $pengumumanId,
+                Auth::id(),
+                (int) $validated['verifier_id'],
+                $validated['pesan_pengaju'] ?? null
+            );
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return redirect()
-            ->route('manajemenmahasiswa.pengumuman.index')
+            ->route('manajemenmahasiswa.pengumuman.riwayat.verifikasi')
             ->with('success', 'Pengajuan verifikasi berhasil dikirim. Menunggu persetujuan verifikator.');
     }
 
     /**
      * Tarik kembali pengajuan verifikasi yang masih pending.
+     * Fix #10: Admin/superadmin/admin_kemahasiswaan bisa cancel request milik staff manapun.
      */
     public function cancelVerificationRequest(int $pengumumanId)
     {
         $pengumuman = $this->pengumumanService->findById($pengumumanId);
+        $user       = Auth::user();
 
-        if ($pengumuman->user_id !== Auth::id()) {
+        $isAdminOverride = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
+
+        if (!$isAdminOverride && $pengumuman->user_id !== $user->id) {
             abort(403, 'Anda tidak memiliki akses untuk aksi ini.');
         }
 
-        $this->pengumumanService->cancelApprovalRequest($pengumumanId, Auth::id());
+        // Jika admin yang cancel, gunakan requester_id asli pengumuman
+        $requesterId = $isAdminOverride ? $pengumuman->user_id : $user->id;
+        $this->pengumumanService->cancelApprovalRequest($pengumumanId, $requesterId);
 
         return redirect()
             ->route('manajemenmahasiswa.pengumuman.index')
@@ -542,15 +586,9 @@ class PengumumanController extends Controller
         $user = Auth::user();
         $statusFilter = $request->query('status', 'all');
 
-        $requests    = $this->pengumumanService->getRequestsByRequester($user->id, $statusFilter);
-        $pendingCount = $this->pengumumanService->getPendingCountByRequester($user->id);
-
-        $stats = [
-            'pending'   => $this->pengumumanService->getRequestsByRequester($user->id, 'pending')->count(),
-            'approved'  => $this->pengumumanService->getRequestsByRequester($user->id, 'approved')->count(),
-            'rejected'  => $this->pengumumanService->getRequestsByRequester($user->id, 'rejected')->count(),
-            'cancelled' => $this->pengumumanService->getRequestsByRequester($user->id, 'cancelled')->count(),
-        ];
+        $requests     = $this->pengumumanService->getRequestsByRequester($user->id, $statusFilter);
+        $stats        = $this->pengumumanService->getStatsByRequester($user->id); // Fix #5: single GROUP BY query
+        $pendingCount = $stats['pending'];
 
         return view('manajemenmahasiswa::pengumuman.pengumuman-riwayat-verifikasi', compact(
             'requests', 'statusFilter', 'pendingCount', 'stats'
@@ -602,7 +640,11 @@ class PengumumanController extends Controller
             'catatan' => 'nullable|string|max:1000',
         ]);
 
-        $this->pengumumanService->approveRequest($requestId, $request->input('catatan'));
+        try {
+            $this->pengumumanService->approveRequest($requestId, $request->input('catatan'));
+        } catch (\RuntimeException $e) {
+            return back()->with('error', $e->getMessage());
+        }
 
         return back()->with('success', 'Pengumuman berhasil disetujui dan dipublikasikan.');
     }

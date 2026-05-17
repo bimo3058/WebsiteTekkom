@@ -97,8 +97,9 @@
     .stat-sub   { font-size:.72rem; color:#d1d5db; margin-top:2px; }
 
     /* ─── Tier 3 & 4: KPI Mini Cards ────────────────────── */
-    .kpi-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .kpi-row { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px; }
     @media(max-width:900px){ .kpi-row { grid-template-columns:repeat(2,1fr); } }
+    @media(max-width:480px){ .kpi-row { grid-template-columns:1fr; } }
     .kpi-mini {
         background:#fff; border:1px solid #e5e7eb; border-radius:12px;
         padding:14px 16px; display:flex; align-items:center; gap:12px;
@@ -244,7 +245,7 @@
     $pctSerapan   = $alm['total_terdata'] > 0 ? round($totalBekerja / $alm['total_terdata'] * 100) : 0;
 
     // Total mahasiswa semua status
-    $totalSemuaMhs = $mhs['total_aktif'] + $mhs['total_cuti'] + $mhs['total_do'] + $mhs['total_pindah'] + $mhs['total_alumni_status'];
+    $totalSemuaMhs = $mhs['total_aktif'] + $mhs['total_cuti'] + $mhs['total_do'] + $mhs['total_pindah'] + $mhs['total_alumni_status'] + ($mhs['total_wafat'] ?? 0) + ($mhs['total_mangkir'] ?? 0);
 @endphp
 
 {{-- ─── Page Header ─────────────────────────────────────────────── --}}
@@ -423,10 +424,12 @@
 <div class="kpi-row">
     @php
         $mhsKpis = [
-            ['label'=>'Aktif',        'val'=>$mhs['total_aktif'],  'bg'=>'#eff6ff', 'color'=>'#2563eb', 'status'=>'aktif'],
-            ['label'=>'Cuti',         'val'=>$mhs['total_cuti'],   'bg'=>'#fffbeb', 'color'=>'#d97706', 'status'=>'cuti'],
-            ['label'=>'Drop Out',     'val'=>$mhs['total_do'],     'bg'=>'#fef2f2', 'color'=>'#dc2626', 'status'=>'drop_out'],
-            ['label'=>'Pindah Studi', 'val'=>$mhs['total_pindah'], 'bg'=>'#E7E8F0', 'color'=>'#415086', 'status'=>'pindah_studi'],
+            ['label'=>'Aktif',        'val'=>$mhs['total_aktif'],           'bg'=>'#eff6ff', 'color'=>'#2563eb', 'status'=>'aktif'],
+            ['label'=>'Cuti',         'val'=>$mhs['total_cuti'],            'bg'=>'#fffbeb', 'color'=>'#d97706', 'status'=>'cuti'],
+            ['label'=>'Drop Out',     'val'=>$mhs['total_do'],              'bg'=>'#fef2f2', 'color'=>'#dc2626', 'status'=>'drop_out'],
+            ['label'=>'Pindah Studi', 'val'=>$mhs['total_pindah'],          'bg'=>'#E7E8F0', 'color'=>'#415086', 'status'=>'pindah_studi'],
+            ['label'=>'Mangkir',      'val'=>$mhs['total_mangkir'] ?? 0,   'bg'=>'#fdf4ff', 'color'=>'#a855f7', 'status'=>'mangkir'],
+            ['label'=>'Wafat',        'val'=>$mhs['total_wafat'] ?? 0,     'bg'=>'#f0fdf4', 'color'=>'#6b7280', 'status'=>'wafat'],
         ];
     @endphp
     @foreach($mhsKpis as $k)
@@ -456,11 +459,13 @@
             <div class="donut-legend">
                 @php
                     $mhsStatusItems = [
-                        ['label'=>'Aktif','val'=>$mhs['total_aktif'],'color'=>'#3b82f6'],
-                        ['label'=>'Alumni','val'=>$mhs['total_alumni_status'],'color'=>'#10b981'],
-                        ['label'=>'Cuti','val'=>$mhs['total_cuti'],'color'=>'#f59e0b'],
-                        ['label'=>'Drop Out','val'=>$mhs['total_do'],'color'=>'#ef4444'],
-                        ['label'=>'Pindah','val'=>$mhs['total_pindah'],'color'=>'#6F7DA4'],
+                        ['label'=>'Aktif',        'val'=>$mhs['total_aktif'],          'color'=>'#3b82f6'],
+                        ['label'=>'Alumni',       'val'=>$mhs['total_alumni_status'],  'color'=>'#10b981'],
+                        ['label'=>'Cuti',         'val'=>$mhs['total_cuti'],           'color'=>'#f59e0b'],
+                        ['label'=>'Drop Out',     'val'=>$mhs['total_do'],             'color'=>'#ef4444'],
+                        ['label'=>'Pindah',       'val'=>$mhs['total_pindah'],         'color'=>'#6F7DA4'],
+                        ['label'=>'Mangkir',      'val'=>$mhs['total_mangkir'] ?? 0,  'color'=>'#a855f7'],
+                        ['label'=>'Wafat',        'val'=>$mhs['total_wafat'] ?? 0,    'color'=>'#9ca3af'],
                     ];
                 @endphp
                 @foreach($mhsStatusItems as $si)
@@ -487,6 +492,8 @@
                     'aktif'       => ['label'=>'Aktif',        'color'=>'#3b82f6','bg'=>'#eff6ff','border'=>'#bfdbfe'],
                     'alumni'      => ['label'=>'Alumni',       'color'=>'#10b981','bg'=>'#ecfdf5','border'=>'#a7f3d0'],
                     'cuti'        => ['label'=>'Cuti',         'color'=>'#f59e0b','bg'=>'#fffbeb','border'=>'#fde68a'],
+                    'mangkir'     => ['label'=>'Mangkir',      'color'=>'#a855f7','bg'=>'#fdf4ff','border'=>'#e9d5ff'],
+                    'wafat'       => ['label'=>'Wafat',        'color'=>'#6b7280','bg'=>'#f9fafb','border'=>'#e5e7eb'],
                     'drop_out'    => ['label'=>'Drop Out',     'color'=>'#ef4444','bg'=>'#fef2f2','border'=>'#fecaca'],
                     'pindah_studi'=> ['label'=>'Pindah Studi', 'color'=>'#6F7DA4','bg'=>'#E7E8F0','border'=>'#CED4E0'],
                 ];
@@ -571,7 +578,15 @@
 
             {{-- Recent Prestasi List --}}
             <div>
-                <div style="font-size:.75rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:10px;">Terbaru Diverifikasi</div>
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;">
+                    <div style="font-size:.75rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;">Terbaru Diverifikasi</div>
+                    <button onclick="openPrestasiModal()"
+                        style="display:inline-flex;align-items:center;gap:4px;font-size:.78rem;font-weight:700;color:#6B4FF4;background:none;border:none;cursor:pointer;padding:0;transition:opacity .15s;"
+                        onmouseover="this.style.opacity='.7'" onmouseout="this.style.opacity='1'">
+                        Lihat Semua
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                    </button>
+                </div>
                 @php
                     $tingkatBadgeColor = [
                         'internasional' => ['bg'=>'#fef2f2','color'=>'#dc2626','border'=>'#fecaca'],
@@ -893,9 +908,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Tier 3 — Mahasiswa
     mkDonut('chartStatusMhs',
-        ['Aktif','Alumni','Cuti','Drop Out','Pindah'],
-        [{{ $mhs['total_aktif'] }},{{ $mhs['total_alumni_status'] }},{{ $mhs['total_cuti'] }},{{ $mhs['total_do'] }},{{ $mhs['total_pindah'] }}],
-        ['#3b82f6','#10b981','#f59e0b','#ef4444','#6F7DA4']
+        ['Aktif','Alumni','Cuti','Drop Out','Pindah','Mangkir','Wafat'],
+        [{{ $mhs['total_aktif'] }},{{ $mhs['total_alumni_status'] }},{{ $mhs['total_cuti'] }},{{ $mhs['total_do'] }},{{ $mhs['total_pindah'] }},{{ $mhs['total_mangkir'] ?? 0 }},{{ $mhs['total_wafat'] ?? 0 }}],
+        ['#3b82f6','#10b981','#f59e0b','#ef4444','#6F7DA4','#a855f7','#9ca3af']
     );
     // ── Multi-line chart: semua status per angkatan ──────────────────────────
     @php
@@ -907,6 +922,8 @@ document.addEventListener('DOMContentLoaded', () => {
             ['status'=>'cuti',         'label'=>'Cuti',         'color'=>'245,158,11'],
             ['status'=>'drop_out',     'label'=>'Drop Out',     'color'=>'239,68,68'],
             ['status'=>'pindah_studi', 'label'=>'Pindah Studi', 'color'=>'111,125,164'],
+            ['status'=>'mangkir',      'label'=>'Mangkir',      'color'=>'168,85,247'],
+            ['status'=>'wafat',        'label'=>'Wafat',        'color'=>'156,163,175'],
         ];
     @endphp
 
@@ -1174,8 +1191,221 @@ function renderTable(rows, type) {
 }
 
 // Escape key closes modal
-document.addEventListener('keydown', e => { if (e.key === 'Escape') closeDashModal(); });
+document.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { closeDashModal(); closePrestasiModal(); }
+});
+
+// ── Prestasi Modal ────────────────────────────────────────────────────────────
+
+const PRESTASI_MODAL_URL = '{{ route('manajemenmahasiswa.dashboard.modal') }}';
+let _prestasiAllRows = [];
+let _prestasiAngkatan = 'semua';
+let _prestasiTingkat  = 'semua';
+
+function openPrestasiModal() {
+    document.getElementById('prestasiModal').classList.add('open');
+    document.body.style.overflow = 'hidden';
+    document.getElementById('prestasiSearch').value = '';
+    document.getElementById('prestasiBody').innerHTML = '<div class="dm-loading"><div class="dm-spinner"></div> Memuat data...</div>';
+    document.getElementById('prestasiFooter').textContent = '';
+    _prestasiAngkatan = 'semua';
+    _prestasiTingkat  = 'semua';
+
+    fetch(`${PRESTASI_MODAL_URL}?type=prestasi-semua`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(r => r.json())
+    .then(json => {
+        _prestasiAllRows = json.data || [];
+        document.getElementById('prestasiBadge').textContent = `${json.total} data`;
+
+        // Bangun angkatan chips
+        buildPrestasiChips('angkatan', json.angkatan_list || [], 'prestasiAngkatanChips', setPrestasiAngkatan);
+        renderPrestasiList(_prestasiAllRows);
+    })
+    .catch(() => {
+        document.getElementById('prestasiBody').innerHTML = '<div class="dm-empty">Gagal memuat data.</div>';
+    });
+}
+
+function closePrestasiModal() {
+    document.getElementById('prestasiModal').classList.remove('open');
+    document.body.style.overflow = '';
+}
+
+function buildPrestasiChips(type, list, wrapId, callback) {
+    const wrap = document.getElementById(wrapId);
+    wrap.innerHTML = '';
+    const all = document.createElement('button');
+    all.className = 'dm-chip active'; all.textContent = 'Semua';
+    all.dataset.val = 'semua'; all.onclick = () => callback('semua');
+    wrap.appendChild(all);
+    list.forEach(v => {
+        const btn = document.createElement('button');
+        btn.className = 'dm-chip'; btn.textContent = v;
+        btn.dataset.val = v; btn.onclick = () => callback(v);
+        wrap.appendChild(btn);
+    });
+}
+
+function setPrestasiAngkatan(val) {
+    _prestasiAngkatan = val;
+    document.querySelectorAll('#prestasiAngkatanChips .dm-chip')
+        .forEach(b => b.classList.toggle('active', b.dataset.val == val));
+    filterPrestasiRows();
+}
+
+function setPrestasiTingkat(val) {
+    _prestasiTingkat = val;
+    document.querySelectorAll('#prestasiTingkatChips .dm-chip')
+        .forEach(b => b.classList.toggle('active', b.dataset.val == val));
+    filterPrestasiRows();
+}
+
+function filterPrestasiRows() {
+    const q = document.getElementById('prestasiSearch').value.toLowerCase().trim();
+    let rows = _prestasiAllRows;
+    if (_prestasiAngkatan !== 'semua') rows = rows.filter(r => r.angkatan == _prestasiAngkatan);
+    if (_prestasiTingkat  !== 'semua') rows = rows.filter(r => r.tingkat === _prestasiTingkat);
+    if (q) rows = rows.filter(r =>
+        r.nama_prestasi.toLowerCase().includes(q) ||
+        r.student_name.toLowerCase().includes(q) ||
+        r.nim.toLowerCase().includes(q)
+    );
+    renderPrestasiList(rows);
+    document.getElementById('prestasiFooter').textContent =
+        `Menampilkan ${rows.length} dari ${_prestasiAllRows.length} prestasi`;
+}
+
+const _tingkatColors = {
+    internasional: { bg:'#fef2f2', color:'#dc2626', border:'#fecaca' },
+    nasional:      { bg:'#fff7ed', color:'#ea580c', border:'#fed7aa' },
+    regional:      { bg:'#fffbeb', color:'#d97706', border:'#fde68a' },
+    universitas:   { bg:'#eff6ff', color:'#2563eb', border:'#bfdbfe' },
+    prodi:         { bg:'#E7E8F0', color:'#415086', border:'#CED4E0' },
+};
+
+function renderPrestasiList(rows) {
+    const body = document.getElementById('prestasiBody');
+    if (!rows.length) {
+        body.innerHTML = '<div class="dm-empty">Tidak ada prestasi ditemukan.</div>';
+        return;
+    }
+
+    body.innerHTML = rows.map((r, idx) => {
+        const bc  = _tingkatColors[r.tingkat] || { bg:'#f3f4f6', color:'#6b7280', border:'#e5e7eb' };
+        const ini = escHtml((r.student_name || '?').substring(0, 2).toUpperCase());
+
+        const buktiBtns = r.bukti.length
+            ? `<button onclick="toggleBukti(${idx})"
+                   style="display:inline-flex;align-items:center;gap:4px;margin-top:6px;font-size:.73rem;font-weight:600;color:#6B4FF4;background:#f5f3ff;border:1px solid #ddd6fe;border-radius:6px;padding:3px 9px;cursor:pointer;transition:all .15s;">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                    ${r.bukti.length} Bukti
+               </button>`
+            : `<span style="font-size:.72rem;color:#d1d5db;margin-top:4px;display:inline-block;">Tidak ada bukti</span>`;
+
+        const buktiItems = r.bukti.map(b => {
+            if (b.is_image) {
+                return `<a href="${escHtml(b.url)}" target="_blank" style="display:block;border-radius:8px;overflow:hidden;border:1px solid #e5e7eb;">
+                    <img src="${escHtml(b.url)}" alt="${escHtml(b.nama)}"
+                         style="width:100%;max-height:160px;object-fit:cover;display:block;cursor:zoom-in;">
+                </a>`;
+            }
+            return `<a href="${escHtml(b.url)}" target="_blank"
+                       style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:8px;text-decoration:none;color:#374151;font-size:.8rem;font-weight:600;transition:background .15s;"
+                       onmouseover="this.style.background='#f0f9ff'" onmouseout="this.style.background='#f8fafc'">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6B4FF4" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                        ${escHtml(b.nama)}
+                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="2" style="margin-left:auto;flex-shrink:0;"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+               </a>`;
+        }).join('');
+
+        return `<div class="prestasi-row" style="border:1px solid #f3f4f6;border-radius:12px;padding:12px 14px;background:#fff;">
+            <div style="display:flex;align-items:flex-start;gap:10px;">
+                <div class="avatar-sm" style="width:32px;height:32px;font-size:11px;flex-shrink:0;">${ini}</div>
+                <div style="flex:1;min-width:0;">
+                    <div style="font-size:.88rem;font-weight:700;color:#1e1b4b;line-height:1.3;margin-bottom:2px;">${escHtml(r.nama_prestasi)}</div>
+                    <div style="font-size:.78rem;color:#6b7280;">${escHtml(r.student_name)} <span style="color:#d1d5db;">·</span> ${escHtml(r.nim)} <span style="color:#d1d5db;">·</span> Angkatan ${r.angkatan || '-'}</div>
+                    <div style="font-size:.74rem;color:#9ca3af;margin-top:2px;">Diverifikasi: ${escHtml(r.verified_at)}</div>
+                    ${buktiBtns}
+                </div>
+                <span style="display:inline-flex;align-items:center;padding:3px 9px;border-radius:50px;font-size:.7rem;font-weight:700;background:${bc.bg};color:${bc.color};border:1px solid ${bc.border};white-space:nowrap;flex-shrink:0;">
+                    ${escHtml(r.tingkat.charAt(0).toUpperCase() + r.tingkat.slice(1))}
+                </span>
+            </div>
+            <div id="bukti-${idx}" style="display:none;margin-top:10px;display:none;flex-direction:column;gap:6px;">
+                ${buktiItems || '<div style="font-size:.8rem;color:#9ca3af;text-align:center;padding:8px;">Tidak ada bukti terlampir</div>'}
+            </div>
+        </div>`;
+    }).join('');
+
+    document.getElementById('prestasiFooter').textContent =
+        `Menampilkan ${rows.length} dari ${_prestasiAllRows.length} prestasi`;
+}
+
+function toggleBukti(idx) {
+    const el = document.getElementById(`bukti-${idx}`);
+    if (!el) return;
+    const isOpen = el.style.display === 'flex';
+    el.style.display = isOpen ? 'none' : 'flex';
+    el.style.flexDirection = 'column';
+}
+
+document.getElementById('prestasiModal')?.addEventListener('click', e => {
+    if (e.target === document.getElementById('prestasiModal')) closePrestasiModal();
+});
+
 </script>
 @endpush
+
+{{-- ── Prestasi Modal ─────────────────────────────────────────────────────── --}}
+<div class="dm-overlay" id="prestasiModal" onclick="if(event.target===this)closePrestasiModal()">
+    <div class="dm-box" style="max-width:760px;">
+
+        {{-- Header --}}
+        <div class="dm-head">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6B4FF4" stroke-width="2">
+                <circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/>
+            </svg>
+            <h5>Semua Prestasi Terverifikasi</h5>
+            <span class="dm-badge" id="prestasiBadge">...</span>
+            <button class="dm-close" onclick="closePrestasiModal()">✕</button>
+        </div>
+
+        {{-- Toolbar --}}
+        <div class="dm-toolbar" style="flex-direction:column;gap:10px;align-items:stretch;">
+            {{-- Search --}}
+            <div class="dm-search-wrap">
+                <svg class="dm-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+                <input class="dm-search" id="prestasiSearch" placeholder="Cari nama prestasi, mahasiswa, NIM..." oninput="filterPrestasiRows()" autocomplete="off">
+            </div>
+            {{-- Filter Angkatan --}}
+            <div>
+                <div style="font-size:.72rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Angkatan</div>
+                <div class="dm-filter-chips" id="prestasiAngkatanChips"></div>
+            </div>
+            {{-- Filter Tingkat --}}
+            <div>
+                <div style="font-size:.72rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;">Tingkat</div>
+                <div class="dm-filter-chips" id="prestasiTingkatChips">
+                    @php $tingkatList = ['semua'=>'Semua','internasional'=>'Internasional','nasional'=>'Nasional','regional'=>'Regional','universitas'=>'Universitas','prodi'=>'Prodi']; @endphp
+                    @foreach($tingkatList as $val => $lbl)
+                        <button class="dm-chip {{ $val === 'semua' ? 'active' : '' }}"
+                            data-val="{{ $val }}"
+                            onclick="setPrestasiTingkat('{{ $val }}')">{{ $lbl }}</button>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+
+        {{-- Body --}}
+        <div class="dm-body" id="prestasiBody" style="display:flex;flex-direction:column;gap:8px;padding:16px;">
+            <div class="dm-loading"><div class="dm-spinner"></div> Memuat data...</div>
+        </div>
+
+        {{-- Footer --}}
+        <div class="dm-footer" id="prestasiFooter"></div>
+    </div>
+</div>
 
 </x-manajemenmahasiswa::layouts.admin>

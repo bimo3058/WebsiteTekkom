@@ -185,6 +185,8 @@ class DashboardAnalitikService
                 Kemahasiswaan::STATUS_CUTI,
                 Kemahasiswaan::STATUS_DO,
                 Kemahasiswaan::STATUS_PINDAH_STUDI,
+                Kemahasiswaan::STATUS_WAFAT,
+                Kemahasiswaan::STATUS_MANGKIR,
             ];
             foreach ($statusKeys as $status) {
                 $rows = $rawPerStatusAngkatan->get($status, collect());
@@ -207,6 +209,8 @@ class DashboardAnalitikService
                 'total_do'             => $statusCounts[Kemahasiswaan::STATUS_DO] ?? 0,
                 'total_pindah'         => $statusCounts[Kemahasiswaan::STATUS_PINDAH_STUDI] ?? 0,
                 'total_alumni_status'  => $statusCounts[Kemahasiswaan::STATUS_ALUMNI] ?? 0,
+                'total_wafat'          => $statusCounts[Kemahasiswaan::STATUS_WAFAT] ?? 0,
+                'total_mangkir'        => $statusCounts[Kemahasiswaan::STATUS_MANGKIR] ?? 0,
                 'angkatan_list'              => $angkatanList,
                 'per_angkatan_by_status'     => $perAngkatanByStatus,
                 'prestasi_per_tingkat' => $prestasiPerTingkat,

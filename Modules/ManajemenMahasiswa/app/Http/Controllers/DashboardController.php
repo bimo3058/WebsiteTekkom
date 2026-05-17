@@ -12,6 +12,7 @@ use Modules\ManajemenMahasiswa\Models\Alumni;
 use Modules\ManajemenMahasiswa\Models\Kegiatan;
 use Modules\ManajemenMahasiswa\Models\Pengumuman;
 use Modules\ManajemenMahasiswa\Models\Thread;
+use Modules\ManajemenMahasiswa\Models\Prestasi;
 
 class DashboardController extends Controller
 {
@@ -165,6 +166,41 @@ class DashboardController extends Controller
                     ]);
 
                 return response()->json(['data' => $rows, 'total' => $rows->count()]);
+
+            case 'prestasi-semua':
+                // Semua prestasi terverifikasi dengan bukti, untuk modal dashboard analitik
+                $rows = Prestasi::approved()
+                    ->with(['kemahasiswaan.user', 'buktiFiles'])
+                    ->orderByDesc('verified_at')
+                    ->get()
+                    ->map(function ($p) {
+                        $student = $p->kemahasiswaan;
+                        return [
+                            'id'            => $p->id,
+                            'nama_prestasi' => $p->nama_prestasi,
+                            'tingkat'       => $p->tingkat,
+                            'tahun'         => $p->tahun,
+                            'tanggal'       => $p->tanggal?->translatedFormat('d M Y') ?? '-',
+                            'verified_at'   => $p->verified_at?->translatedFormat('d M Y') ?? '-',
+                            'student_name'  => $student?->user?->name ?? $student?->nama ?? 'Mahasiswa',
+                            'nim'           => $student?->nim ?? '-',
+                            'angkatan'      => (int) ($student?->angkatan ?? 0),
+                            'bukti'         => $p->buktiFiles->map(fn ($b) => [
+                                'nama'     => $b->nama_file ?? basename($b->path_file),
+                                'url'      => $b->public_url,
+                                'is_image' => $b->isImage(),
+                            ])->values()->all(),
+                        ];
+                    });
+
+                $angkatanList = $rows->pluck('angkatan')
+                    ->unique()->filter()->sort()->values();
+
+                return response()->json([
+                    'data'          => $rows,
+                    'total'         => $rows->count(),
+                    'angkatan_list' => $angkatanList,
+                ]);
 
             default:
                 return response()->json(['error' => 'Unknown modal type'], 400);
