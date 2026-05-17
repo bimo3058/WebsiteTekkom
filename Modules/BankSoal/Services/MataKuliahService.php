@@ -29,7 +29,7 @@ class MataKuliahService
     {
         return Cache::remember('bs.mk.all', 3600, fn() =>
             MataKuliah::query()
-                ->select(['id', 'kode', 'nama', 'sks', 'semester'])
+                ->select(['id', 'kode', 'nama', 'sks', 'semester', 'is_active'])
                 ->orderBy('kode')
                 ->get()
         );
@@ -42,6 +42,10 @@ class MataKuliahService
 
     public function create(array $data, array $cplIds = []): MataKuliah
     {
+        if (!isset($data['is_active'])) {
+            $data['is_active'] = $this->getActiveStatusForSemester((int) $data['semester']);
+        }
+
         return DB::transaction(function () use ($data, $cplIds) {
             $mk = MataKuliah::create($data);
 
@@ -75,6 +79,48 @@ class MataKuliahService
             MataKuliah::findOrFail($id)->delete();
             $this->flushCache();
         });
+    }
+
+    public function toggleActive(int $id, bool $isActive): MataKuliah
+    {
+        $mk = MataKuliah::findOrFail($id);
+        $mk->update(['is_active' => $isActive]);
+        $this->flushCache();
+        return $mk;
+    }
+
+    public function syncSemester(): int
+    {
+        $updatedCount = 0;
+        MataKuliah::chunk(100, function ($mks) use (&$updatedCount) {
+            foreach ($mks as $mk) {
+                $shouldBeActive = $this->getActiveStatusForSemester((int) $mk->semester);
+                if ($mk->is_active !== $shouldBeActive) {
+                    $mk->update(['is_active' => $shouldBeActive]);
+                    $updatedCount++;
+                }
+            }
+        });
+        
+        if ($updatedCount > 0) {
+            $this->flushCache();
+        }
+        
+        return $updatedCount;
+    }
+
+    public function getActiveStatusForSemester(int $semester): bool
+    {
+        $month = now()->month;
+        // Ganjil: August (8) to January (1)
+        // Genap: February (2) to July (7)
+        $isGanjil = $month >= 8 || $month == 1;
+        
+        if ($isGanjil) {
+            return $semester % 2 != 0;
+        } else {
+            return $semester % 2 == 0;
+        }
     }
 
     // -------------------------------------------------------------------------

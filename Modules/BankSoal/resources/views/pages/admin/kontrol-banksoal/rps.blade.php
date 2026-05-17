@@ -123,6 +123,23 @@
             opacity: 0.45;
             cursor: not-allowed;
         }
+
+        /* ── Table loading spinner ── */
+        .tbl-loading {
+            display: none; align-items: center; justify-content: center;
+            gap: 10px; padding: 40px 20px;
+            color: #475569; font-size: 13px;
+        }
+        .tbl-loading.show { display: flex; }
+        .tbl-spinner {
+            width: 22px; height: 22px;
+            border: 3px solid #e2e8f0;
+            border-top-color: rgb(11, 38, 110);
+            border-radius: 50%;
+            animation: tbl-spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+        @keyframes tbl-spin { to { transform: rotate(360deg); } }
     </style>
 
     <div class="mb-6 lg:mb-8 flex justify-between items-center">
@@ -152,7 +169,8 @@
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="overflow-x-auto">
+        <div id="rpsLoading" class="tbl-loading show"><div class="tbl-spinner"></div> Memuat data...</div>
+        <div class="overflow-x-auto" id="rpsTableContainer" style="opacity: 0.4; transition: opacity 0.2s;">
             <table class="min-w-full divide-y divide-slate-200">
                 <thead class="bg-slate-50">
                     <tr>
@@ -346,6 +364,12 @@
         }
 
         async function loadData() {
+            const loadingEl = document.getElementById('rpsLoading');
+            const tableEl = document.getElementById('rpsTableContainer');
+            
+            if (loadingEl) loadingEl.classList.add('show');
+            if (tableEl) tableEl.style.opacity = '0.4';
+
             try {
                 const response = await fetch(approvedRpsApi, {
                     headers: {
@@ -367,6 +391,9 @@
                 state.all = [];
                 state.filtered = [];
                 renderTable();
+            } finally {
+                if (loadingEl) loadingEl.classList.remove('show');
+                if (tableEl) tableEl.style.opacity = '1';
             }
         }
 

@@ -4,9 +4,10 @@ namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
-use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
+use Modules\BankSoal\Enums\PendaftaranStatus;
 use Modules\BankSoal\Models\Komprehensif\JadwalUjian;
+use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
+use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
 
 class AlokasiSesiController extends Controller
 {
@@ -38,7 +39,7 @@ class AlokasiSesiController extends Controller
             // Ambil mahasiswa yang status pendaftarannya approved
             $pendaftars = PendaftarUjian::with(['mahasiswa', 'jadwal'])
                 ->where('periode_ujian_id', $selectedPeriodeId)
-                ->where('status_pendaftaran', 'approved')
+                ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
                 ->orderBy('created_at', 'desc')
                 ->get();
         }

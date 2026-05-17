@@ -384,7 +384,7 @@
     @section('breadcrumbs')
     <a href="{{ route('banksoal.admin.kontrol-umum.mata-kuliah') }}" class="text-slate-500 hover:text-primary transition-colors">Kontrol Umum</a>
     <span class="mx-2 text-slate-300">/</span>
-    <a href="{{ route('banksoal.admin.kontrol-umum.mata-kuliah') }}" class="text-slate-500 hover:text-primary transition-colors">Manajemen Mata Kuliah</a>
+    <a href="{{ route('banksoal.admin.kontrol-umum.mata-kuliah') }}" class="text-slate-500 hover:text-primary transition-colors">Manajemen Data</a>
     <span class="mx-2 text-slate-300">/</span>
     <span class="text-slate-800 font-semibold">Tambah Mata Kuliah</span>
     @endsection
@@ -407,7 +407,7 @@
             
             <div class="form-group">
                 <label for="kode">Kode Mata Kuliah <span style="color: var(--danger-red)">*</span></label>
-                <input type="text" id="kode" name="kode" placeholder="Contoh: PTSK6103" required maxlength="50">
+                <input type="text" id="kode" name="kode" placeholder="Contoh: TSK6103" required maxlength="50">
                 <div class="form-error" id="error-kode"></div>
             </div>
 

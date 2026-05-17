@@ -21,7 +21,7 @@ class AdminCbtController extends Controller
     {
         $this->authorize('viewAny', KompreSession::class);
 
-        $sessions = KompreSession::with('user')
+        $sessions = KompreSession::with(['user.student', 'jadwal'])
             ->withCount([
                 // Total soal dalam sesi
                 'jawabans',
@@ -82,7 +82,8 @@ class AdminCbtController extends Controller
             });
         }
 
-        $sessions = $query->orderBy('bs_kompre_session.finished_at', 'desc')->paginate(20)->withQueryString();
+        $perPage = $request->input('per_page', 5);
+        $sessions = $query->orderBy('bs_kompre_session.finished_at', 'desc')->paginate($perPage)->withQueryString();
         $periodes  = PeriodeUjian::orderBy('created_at', 'desc')->get();
 
         return view('banksoal::admin.cbt.riwayat', compact('sessions', 'periodes'));
@@ -97,6 +98,7 @@ class AdminCbtController extends Controller
             'user.student',
             'jadwal',
             'jawabans.pertanyaan.jawabans',
+            'jawabans.pertanyaan.cpl',
             'jawabans.opsiTerpilih',
         ])->findOrFail($id);
 

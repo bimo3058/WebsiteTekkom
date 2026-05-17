@@ -45,7 +45,7 @@
                                 <span class="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">Disetujui</span>
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->rps_id) }}" class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/90">
+                                <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/90">
                                     <i class="far fa-eye"></i> Lihat Detail
                                 </a>
                             </td>

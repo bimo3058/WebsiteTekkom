@@ -8,11 +8,15 @@ use Illuminate\Support\Str;
 use Modules\BankSoal\Models\PenarikanSoal;
 use Modules\BankSoal\Services\ArsipSoalService;
 use Modules\BankSoal\Models\Shared\MataKuliah;
+use Modules\BankSoal\Services\MataKuliahService;
+use App\Services\SupabaseStorage;
 
 class ArsipSoalController extends Controller
 {
-    public function __construct(private ArsipSoalService $arsipSoalService)
-    {
+    public function __construct(
+        private ArsipSoalService $arsipSoalService,
+        private MataKuliahService $mataKuliahService
+    ) {
     }
 
     public function index(Request $request)
@@ -44,13 +48,37 @@ class ArsipSoalController extends Controller
             'mata_kuliah' => \Modules\BankSoal\Models\ArsipSoal::byDosen($user->id)->where('status', 'final')->distinct()->count('mk_id'),
         ];
 
+        $mataKuliahDosen = $this->mataKuliahService->getMkByDosen($user->id);
+
         return view('banksoal::pages.arsip.Dosen.index', compact(
             'arsipPaginated', 
             'penarikanPending', 
             'stats', 
             'availableYears',
-            'filters'
+            'filters',
+            'mataKuliahDosen'
         ));
+    }
+
+    public function create(Request $request)
+    {
+        return redirect()->route('banksoal.arsip.dosen.index');
+    }
+
+    public function createPdf(Request $request)
+    {
+        $user = $request->user();
+        $mataKuliahDosen = $this->mataKuliahService->getMkByDosen($user->id);
+
+        return view('banksoal::pages.arsip.Dosen.create-pdf', compact('mataKuliahDosen'));
+    }
+
+    public function createCsv(Request $request)
+    {
+        $user = $request->user();
+        $mataKuliahDosen = $this->mataKuliahService->getMkByDosen($user->id);
+
+        return view('banksoal::pages.arsip.Dosen.create-csv', compact('mataKuliahDosen'));
     }
 
     public function show(Request $request, int $id)
@@ -58,10 +86,17 @@ class ArsipSoalController extends Controller
         $user = $request->user();
         $arsip = $this->arsipSoalService->getArsipById($id, $user->id);
 
+        $pdfUrl = null;
+        if (!empty($arsip->pdf_file_path)) {
+            $supabaseStorage = new SupabaseStorage();
+            $pdfUrl = $supabaseStorage->getPublicUrl($arsip->pdf_file_path);
+        }
+
         return view('banksoal::pages.arsip.Dosen.show', [
             'record' => $arsip,
             'mode' => 'arsip',
             'soalList' => $arsip->getSoalArray(),
+            'pdfUrl' => $pdfUrl,
         ]);
     }
 
@@ -70,10 +105,17 @@ class ArsipSoalController extends Controller
         $user = $request->user();
         $penarikan = $this->arsipSoalService->getPenarikanById($id, $user->id);
 
+        $pdfUrl = null;
+        if (!empty($penarikan->pdf_file_path)) {
+            $supabaseStorage = new SupabaseStorage();
+            $pdfUrl = $supabaseStorage->getPublicUrl($penarikan->pdf_file_path);
+        }
+
         return view('banksoal::pages.arsip.Dosen.show', [
             'record' => $penarikan,
             'mode' => 'penarikan',
             'soalList' => $penarikan->getSoalArray(),
+            'pdfUrl' => $pdfUrl,
         ]);
     }
 
@@ -196,27 +238,56 @@ class ArsipSoalController extends Controller
     public function uploadPdf(Request $request)
     {
         $validated = $request->validate([
-            'pdf_file' => 'required|file|mimes:pdf|max:51200',
+            'mk_id' => 'required|exists:bs_mata_kuliah,id',
+            'tipe_ujian' => 'required|in:kuis,uts,uas,tugas,lainnya',
+            'nama_arsip' => 'required|string|max:255',
+            'tahun_akademik' => 'required|string',
+            'semester' => 'required|in:Ganjil,Genap,Antara',
+            'metode_ujian' => 'nullable|in:online,offline',
+            'tanggal_ujian' => 'nullable|date',
+            'pdf_file' => 'required|file|mimes:pdf|max:5120',
         ]);
 
         $userId = $request->user()->id;
         $file = $validated['pdf_file'];
         $baseName = pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME);
         $safeBaseName = Str::slug($baseName) ?: 'arsip-soal-pdf';
-        $fileName = $safeBaseName . '-' . now()->format('YmdHis') . '.pdf';
-        $storedPath = $file->storeAs("banksoal/arsip-soal/pdf/{$userId}", $fileName, 'local');
+        $supabaseStorage = new SupabaseStorage();
+        $storedPath = $supabaseStorage->upload($file, "banksoal/arsip-soal/pdf/{$userId}", null, $safeBaseName . '-' . now()->format('YmdHis'));
 
         if (! $storedPath) {
-            return back()->with('error', 'Gagal menyimpan file PDF arsip.');
+            return back()->with('error', 'Gagal menyimpan file PDF arsip ke Cloud Storage.');
         }
 
-        return back()->with('success', 'File PDF arsip berhasil diunggah.');
+        $metodeUjian = $validated['metode_ujian'] ?? 'online';
+        $penarikan = $this->arsipSoalService->savePenarikanSoal($userId, $validated['mk_id'], [
+            'nama_ekstraksi' => $validated['nama_arsip'],
+            'tipe_ujian' => $validated['tipe_ujian'],
+            'metode_ujian' => $metodeUjian,
+            'status_cetak' => $metodeUjian === 'offline' ? 'pending' : null,
+            'tahun_akademik' => $validated['tahun_akademik'],
+            'semester' => $validated['semester'],
+            'tanggal_ujian' => $validated['tanggal_ujian'] ?? null,
+            'soal_list' => [],
+            'pdf_file_path' => $storedPath,
+            'status' => 'pending'
+        ]);
+
+        return redirect()->route('banksoal.arsip.dosen.penarikan.edit', $penarikan->id)
+            ->with('success', 'File PDF berhasil diunggah. Silakan review data sebelum dimasukkan ke arsip final.');
     }
 
     public function uploadCsv(Request $request)
     {
         $validated = $request->validate([
-            'csv_file' => 'required|file|mimes:csv,txt,xls,xlsx|max:51200',
+            'mk_id' => 'required|exists:bs_mata_kuliah,id',
+            'tipe_ujian' => 'required|in:kuis,uts,uas,tugas,lainnya',
+            'nama_arsip' => 'required|string|max:255',
+            'tahun_akademik' => 'required|string',
+            'semester' => 'required|in:Ganjil,Genap,Antara',
+            'metode_ujian' => 'nullable|in:online,offline',
+            'tanggal_ujian' => 'nullable|date',
+            'csv_file' => 'required|file|mimes:csv,txt,xls,xlsx|max:1024',
         ]);
 
         $userId = $request->user()->id;
@@ -231,7 +302,21 @@ class ArsipSoalController extends Controller
             return back()->with('error', 'Gagal menyimpan file CSV arsip.');
         }
 
-        return back()->with('success', 'File CSV arsip berhasil diunggah.');
+        $metodeUjian = $validated['metode_ujian'] ?? 'online';
+        $penarikan = $this->arsipSoalService->savePenarikanSoal($userId, $validated['mk_id'], [
+            'nama_ekstraksi' => $validated['nama_arsip'],
+            'tipe_ujian' => $validated['tipe_ujian'],
+            'metode_ujian' => $metodeUjian,
+            'status_cetak' => $metodeUjian === 'offline' ? 'pending' : null,
+            'tahun_akademik' => $validated['tahun_akademik'],
+            'semester' => $validated['semester'],
+            'tanggal_ujian' => $validated['tanggal_ujian'] ?? null,
+            'soal_list' => [],
+            'status' => 'pending'
+        ]);
+
+        return redirect()->route('banksoal.arsip.dosen.penarikan.edit', $penarikan->id)
+            ->with('success', 'File CSV/Excel berhasil diunggah. Silakan review data sebelum dimasukkan ke arsip final.');
     }
 
     private function mapAgendaToTipeUjian(string $agenda): string

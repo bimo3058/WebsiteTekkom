@@ -64,7 +64,7 @@
                 </div>
                 <div>
                     <label for="bobot" class="mb-2 block text-sm font-semibold text-slate-700">Bobot / Skor</label>
-                    <input type="number" id="bobot" name="bobot" min="1" value="{{ old('bobot', 10) }}" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:outline-none" required>
+                    <input type="number" id="bobot" name="bobot" min="1" max="10" value="{{ old('bobot', 10) }}" class="w-full rounded-lg border border-slate-200 px-3 py-2.5 text-sm focus:outline-none" required oninput="if(this.value > 10) this.value = 10; if(this.value < 1) this.value = 1;">
                 </div>
             </div>
 
@@ -239,7 +239,7 @@
                 const cplId = this.value;
                 cpmkSelect.innerHTML = '<option value="">Memuat CPMK...</option>';
                 if (cplId) {
-                    fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${cplId}`)
+                    fetch(`{{ route('banksoal.rps.dosen.cpmk') }}?cpl_id=${cplId}&mk_id=${mkSelect.value}`)
                         .then(r => r.json())
                         .then(data => {
                             cpmkSelect.innerHTML = '<option value="">Pilih CPMK...</option>';
