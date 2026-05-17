@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\RedirectResponse;
 use Illuminate\View\View;
+use Modules\BankSoal\Services\DashboardAnnouncementService;
 
 class DashboardController extends Controller
 {
@@ -22,9 +23,9 @@ class DashboardController extends Controller
         if ($user->hasRole('admin_eoffice'))       return redirect()->route('eoffice.dashboard');
         if ($user->hasRole('admin_kemahasiswaan')) return redirect()->route('manajemenmahasiswa.dashboard');
 
-        $isMahasiswa       = $user->hasRole('mahasiswa');
-        $isDosen           = $user->hasRole('dosen') || $user->hasRole('dosen_koor');
-        $isAlumni          = $user->hasRole('alumni');
+        $isMahasiswa        = $user->hasRole('mahasiswa');
+        $isDosen            = $user->hasRole('dosen') || $user->hasRole('dosen_koor');
+        $isAlumni           = $user->hasRole('alumni');
         $isPengurusHimpunan = $user->hasRole('pengurus_himpunan');
 
         // Bank Soal card — mahasiswa goes to komprehensif, alumni sees riwayat only
@@ -95,6 +96,36 @@ class DashboardController extends Controller
             ],
         ];
 
-        return view('dashboard', compact('cards'));
+        // ── Pengumuman ────────────────────────────────────────────────────────
+        $bankSoalAnnouncements = [];
+
+        try {
+            // Only generate personalised announcements for mahasiswa
+            if ($isMahasiswa) {
+                $service = app(DashboardAnnouncementService::class);
+                $bankSoalAnnouncements = $service->getForDashboard($user->id);
+            }
+        } catch (\Throwable $e) {
+            // Graceful degradation: if BankSoal module is unavailable, show empty list
+            logger()->warning('DashboardAnnouncementService failed: ' . $e->getMessage());
+        }
+
+        $announcements = [
+            'all'           => $bankSoalAnnouncements,
+            'bank_soal'     => $bankSoalAnnouncements,
+            'capstone'      => [],
+            'kemahasiswaan' => [],
+            'eoffice'       => [],
+        ];
+
+        $announcementCounts = [
+            'all'           => count($bankSoalAnnouncements),
+            'bank_soal'     => count($bankSoalAnnouncements),
+            'capstone'      => 0,
+            'kemahasiswaan' => 0,
+            'eoffice'       => 0,
+        ];
+
+        return view('dashboard', compact('cards', 'announcements', 'announcementCounts'));
     }
 }

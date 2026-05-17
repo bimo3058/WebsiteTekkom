@@ -173,14 +173,14 @@
         @php
             $tabs = [
                 ['key' => 'all',           'label' => 'Semua'],
-                ['key' => 'bank_soal',     'label' => 'Bank Soal'],
+                ['key' => 'bank_soal',     'label' => 'Ujian Komprehensif'],
                 ['key' => 'capstone',      'label' => 'Capstone TA'],
                 ['key' => 'kemahasiswaan', 'label' => 'Kemahasiswaan'],
                 ['key' => 'eoffice',       'label' => 'EOffice'],
             ];
 
             $badgeMap = [
-                'bank_soal'     => ['bg' => '#E8EDF7', 'text' => '#0B266E', 'dot' => '#3C518B', 'border_l' => '#3C518B', 'label' => 'Bank Soal'],
+                'bank_soal'     => ['bg' => '#E8EDF7', 'text' => '#0B266E', 'dot' => '#3C518B', 'border_l' => '#3C518B', 'label' => 'Ujian Komprehensif'],
                 'capstone'      => ['bg' => '#E8EDF7', 'text' => '#091958', 'dot' => '#091958', 'border_l' => '#091958', 'label' => 'Capstone TA'],
                 'kemahasiswaan' => ['bg' => '#DDF2EE', 'text' => '#287F6E', 'dot' => '#40C4AA', 'border_l' => '#40C4AA', 'label' => 'Kemahasiswaan'],
                 'eoffice'       => ['bg' => '#F9ECCB', 'text' => '#956321', 'dot' => '#D39C3D', 'border_l' => '#D39C3D', 'label' => 'EOffice'],
@@ -207,12 +207,7 @@
                         : 'text-[#A4ABB8] hover:text-[#666D80] border-b-2 border-transparent hover:bg-[#F6F8FA]'"
                     class="px-4 py-2.5 text-[12px] transition-all duration-150 -mb-px whitespace-nowrap rounded-t-lg flex-shrink-0">
                     {{ $tab['label'] }}
-                    @if($tab['key'] !== 'all')
-                    <span x-show="activeTab !== '{{ $tab['key'] }}'"
-                          class="ml-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-[#F0F1F4] text-[9px] font-bold text-[#A4ABB8]">
-                        {{ $announcementCounts[$tab['key']] ?? 0 }}
-                    </span>
-                    @endif
+
                 </button>
                 @endforeach
             </div>
@@ -227,8 +222,9 @@
                      x-transition:enter-end="opacity-100 translate-y-0">
                     @forelse($announcements['all'] ?? [] as $item)
                     @php $b = $badgeMap[$item['module']] ?? $badgeMap['bank_soal']; @endphp
-                    <div class="flex items-start gap-4 px-5 py-4 border-b border-[#F0F1F4] last:border-b-0 hover:bg-[#F6F8FA] transition-colors group"
-                         style="border-left: 3px solid {{ $b['border_l'] }}">
+                    <a href="{{ $item['link'] ?? '#' }}"
+                       class="flex items-start gap-4 px-5 py-4 border-b border-[#F0F1F4] last:border-b-0 hover:bg-[#F6F8FA] transition-colors group no-underline"
+                       style="border-left: 3px solid {{ $b['border_l'] }}">
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold"
@@ -251,7 +247,7 @@
                              class="flex-shrink-0 mt-1 group-hover:stroke-[#0B266E] transition-colors">
                             <polyline points="9 18 15 12 9 6"/>
                         </svg>
-                    </div>
+                    </a>
                     @empty
                     <div class="flex flex-col items-center justify-center py-12 text-[#DFE1E7]">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2">
@@ -271,8 +267,9 @@
                      x-transition:enter-end="opacity-100 translate-y-0"
                      style="display:none">
                     @forelse($announcements[$moduleKey] ?? [] as $item)
-                    <div class="flex items-start gap-4 px-5 py-4 border-b border-[#F0F1F4] last:border-b-0 hover:bg-[#F6F8FA] transition-colors group"
-                         style="border-left: 3px solid {{ $b['border_l'] }}">
+                    <a href="{{ $item['link'] ?? '#' }}"
+                       class="flex items-start gap-4 px-5 py-4 border-b border-[#F0F1F4] last:border-b-0 hover:bg-[#F6F8FA] transition-colors group no-underline"
+                       style="border-left: 3px solid {{ $b['border_l'] }}">
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-2 mb-1">
                                 <span class="text-[10px] text-[#C1C7CF]">{{ $item['date'] }}</span>
@@ -295,7 +292,7 @@
                              class="flex-shrink-0 mt-1 group-hover:stroke-[#0B266E] transition-colors">
                             <polyline points="9 18 15 12 9 6"/>
                         </svg>
-                    </div>
+                    </a>
                     @empty
                     <div class="flex flex-col items-center justify-center py-12">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#DFE1E7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2">

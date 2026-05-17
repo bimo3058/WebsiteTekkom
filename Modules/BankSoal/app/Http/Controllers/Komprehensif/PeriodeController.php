@@ -43,12 +43,19 @@ class PeriodeController extends Controller
         foreach (PeriodeUjian::all() as $p) {
             if ($p->status === 'selesai') continue;
 
-            $mulai   = Carbon::parse($p->tanggal_mulai)->startOfDay();
-            $selesai = Carbon::parse($p->tanggal_selesai)->endOfDay();
+            $mulai        = Carbon::parse($p->tanggal_mulai)->startOfDay();
+            $selesaiUjian = $p->tanggal_selesai_ujian
+                ? Carbon::parse($p->tanggal_selesai_ujian)->endOfDay()
+                : Carbon::parse($p->tanggal_selesai)->endOfDay();
 
-            if ($now->between($mulai, $selesai) && $p->status !== 'aktif') {
+            if ($now->gt($selesaiUjian)) {
+                // Periode & ujian sudah berakhir → selesai
+                $p->update(['status' => 'selesai']);
+            } elseif ($now->gte($mulai) && $p->status !== 'aktif') {
+                // Dalam rentang pendaftaran → aktif
                 $p->update(['status' => 'aktif']);
             } elseif ($now->lt($mulai) && $p->status !== 'draft') {
+                // Belum mulai → draft
                 $p->update(['status' => 'draft']);
             }
         }
