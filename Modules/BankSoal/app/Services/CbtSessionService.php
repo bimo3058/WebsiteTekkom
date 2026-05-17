@@ -67,27 +67,37 @@ class CbtSessionService
      *
      * Mengambil SOAL_PER_CPL soal dari masing-masing TOTAL_CPL CPL
      * secara acak, kemudian mengacak keseluruhan urutan soal dan opsi jawaban.
+     *
+     * OPTIMASI:
+     * - 1 query untuk CPL (ganti 10 query loop individual)
+     * - 1 query untuk semua soal via whereIn (ganti N+1 loop pertanyaan)
+     * - shuffle() di PHP lebih cepat dari ORDER BY RANDOM() di remote DB
+     * - 1 bulk INSERT untuk semua jawabans (ganti 100x individual create)
      */
     public function generateSoal(KompreSession $session): void
     {
-        $cpls  = Cpl::inRandomOrder()->limit(self::TOTAL_CPL)->get();
+        // ✅ Query 1: Ambil semua CPL sekali, acak di PHP
+        $cplIds = Cpl::pluck('id')->shuffle()->take(self::TOTAL_CPL);
+
+        // ✅ Query 2: Ambil semua soal dari CPL yang terpilih SEKALIGUS
+        // beserta jawabans-nya (eager load, bukan lazy load dalam loop)
+        $allPertanyaans = Pertanyaan::whereIn('cpl_id', $cplIds)
+            ->where('status', Pertanyaan::STATUS_DISETUJUI)
+            ->with('jawabans:id,soal_id') // eager load hanya kolom yang dibutuhkan
+            ->get()
+            ->groupBy('cpl_id');
+
+        // Pilih soal per CPL secara merata, acak di PHP (lebih cepat dari ORDER BY RANDOM())
         $soals = collect();
-
-        foreach ($cpls as $cpl) {
-            $pertanyaans = Pertanyaan::where('cpl_id', $cpl->id)
-                ->where('status', Pertanyaan::STATUS_DISETUJUI)
-                ->inRandomOrder()
-                ->limit(self::SOAL_PER_CPL)
-                ->get();
-
-            $soals = $soals->merge($pertanyaans);
+        foreach ($cplIds as $cplId) {
+            $pool = $allPertanyaans->get($cplId, collect());
+            $soals = $soals->merge($pool->shuffle()->take(self::SOAL_PER_CPL));
         }
 
-        $soals = $soals->shuffle();
+        // Acak urutan final semua soal
+        $soals = $soals->shuffle()->values();
 
-        // ✅ M3: Validasi minimum soal sebelum membuat sesi
-        // Jika bank soal tidak mencukupi, transaksi akan di-rollback secara otomatis
-        // dan pesan error akan ditampilkan ke mahasiswa via catch di startUjian().
+        // ✅ Validasi minimum soal
         $required = self::SOAL_PER_CPL * self::TOTAL_CPL;
         if ($soals->count() < $required) {
             throw new \RuntimeException(sprintf(
@@ -99,20 +109,24 @@ class CbtSessionService
             ));
         }
 
-        $urutan = 1;
+        // ✅ Query 3: Satu bulk INSERT menggantikan 100x individual create()
+        $now   = now();
+        $rows  = $soals->map(function ($soal, $idx) use ($session, $now) {
+            // Acak urutan opsi di PHP dari data yang sudah di-eager-load
+            $opsiIds = $soal->jawabans->pluck('id')->shuffle()->toArray();
 
-        foreach ($soals as $soal) {
-            // Acak urutan opsi jawaban
-            $opsiIds = $soal->jawabans()->pluck('id')->shuffle()->toArray();
-
-            KompreJawaban::create([
+            return [
                 'kompre_session_id' => $session->id,
                 'pertanyaan_id'     => $soal->id,
-                'urutan_soal'       => $urutan++,
-                'urutan_opsi'       => $opsiIds,
+                'urutan_soal'       => $idx + 1,
+                'urutan_opsi'       => json_encode($opsiIds),
                 'kesulitan_now'     => $soal->kesulitan,
-            ]);
-        }
+                'created_at'        => $now,
+                'updated_at'        => $now,
+            ];
+        })->toArray();
+
+        KompreJawaban::insert($rows);
     }
 
     /**

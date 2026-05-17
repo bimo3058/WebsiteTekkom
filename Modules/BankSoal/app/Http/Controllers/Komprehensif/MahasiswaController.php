@@ -17,13 +17,44 @@ class MahasiswaController extends Controller
     {
         $student = auth()->user()->student;
         $semester = 1;
+
         if ($student && $student->cohort_year) {
-            $currentYear = date('Y');
-            $currentMonth = date('n');
-            $yearsPassed = $currentYear - $student->cohort_year;
-            $semester = ($yearsPassed * 2) + ($currentMonth >= 8 ? 1 : 0);
+            $currentYear  = (int) date('Y');
+            $currentMonth = (int) date('n');
+
+            // Kalender akademik Indonesia:
+            //   Semester Ganjil  : Agustus/September  → Januari
+            //   Semester Genap   : Februari/Maret     → Juli
+            //
+            // Cara hitung semester saat ini:
+            //   1 Jan – 31 Jul  → masih semester genap dari tahun ajaran yang sama
+            //   1 Agt – 31 Des  → masuk semester ganjil tahun ajaran baru
+            //
+            // Contoh angkatan 2023, Mei 2026 (bulan 5):
+            //   effectiveYear = 2026 - 1 = 2025  (belum melewati Agustus)
+            //   academicYears = 2025 - 2023 = 2   (sudah melewati 2 tahun ajaran penuh)
+            //   baseSemester  = 2 * 2 = 4
+            //   semester genap aktif → +2  → total = 6  [s6 = Feb-Jul 2026] ← SALAH
+            //
+            // Perbaikan: hitung semester AKTIF yang sedang dijalani, bukan yang sudah lewat.
+            // Setiap tahun ajaran = 2 semester. Angkatan masuk semester 1 di Agustus.
+            // Total semester aktif = (tahun berjalan × 2) + offset bulan.
+
+            if ($currentMonth >= 8) {
+                // Semester ganjil: Ags–Jan
+                // Tahun ajaran baru sudah mulai
+                $academicYears = $currentYear - $student->cohort_year;
+                $semester = ($academicYears * 2) + 1;
+            } else {
+                // Semester genap: Feb–Jul
+                // Masih dalam tahun ajaran yang dimulai tahun sebelumnya
+                $academicYears = ($currentYear - 1) - $student->cohort_year;
+                $semester = ($academicYears * 2) + 2;
+            }
+
             if ($semester < 1) $semester = 1;
         }
+
         return $semester;
     }
 
@@ -80,7 +111,14 @@ class MahasiswaController extends Controller
         $semester = $this->getStudentSemester();
         $isEligible = $semester >= 7;
 
-        return view('banksoal::mahasiswa.dashboard', compact('activePeriode', 'pendaftar', 'semester', 'isEligible', 'finishedSession'));
+        // Cek apakah kuota pendaftaran periode sudah penuh
+        $kuotaPenuh = false;
+        if ($activePeriode && $activePeriode->kuota_peserta && !$pendaftar) {
+            $jumlahPendaftar = PendaftarUjian::where('periode_ujian_id', $activePeriode->id)->count();
+            $kuotaPenuh = $jumlahPendaftar >= $activePeriode->kuota_peserta;
+        }
+
+        return view('banksoal::mahasiswa.dashboard', compact('activePeriode', 'pendaftar', 'semester', 'isEligible', 'finishedSession', 'kuotaPenuh'));
     }
 
     public function createPendaftaran()
