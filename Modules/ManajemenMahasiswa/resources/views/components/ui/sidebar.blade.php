@@ -351,21 +351,6 @@
             </div>
         </div>
 
-<<<<<<< HEAD
-        @if(!array_intersect($sidebarRoles, ['dosen', 'dosen_koordinator', 'dpm', 'gpm']))
-        <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}"
-            class="nav-link-item {{ request()->routeIs('manajemenmahasiswa.verifikasi.*') ? 'active' : '' }}"
-            :class="{ 'justify-content-center': !sidebarOpen }">
-            <span class="nav-icon d-inline-flex">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M9 11l3 3L22 4"></path>
-                    <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
-                </svg>
-            </span>
-            <span class="nav-label" x-show="sidebarOpen" style="flex-grow: 1;">Verifikasi Data</span>
-        </a>
-=======
         @if(!array_intersect($sidebarRoles, ['dosen', 'dosen_koordinator']))
             <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}"
                 class="{{ request()->routeIs('manajemenmahasiswa.verifikasi.*') ? 'active' : '' }}">
@@ -374,7 +359,6 @@
                 </span>
                 <span class="nav-label" style="flex-grow:1;">Verifikasi Data</span>
             </a>
->>>>>>> 4c73f0333ce35aca657c5b533c74016990ad51d1
         @endif
 
         <a href="{{ route('manajemenmahasiswa.forum.index') }}"
