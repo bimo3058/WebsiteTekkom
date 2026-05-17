@@ -222,6 +222,23 @@ class Thread extends Model
     }
 
     /**
+     * Ekstrak link URL dari konten (link card yang ditambahkan saat buat thread).
+     * Digunakan untuk pre-fill field link_url pada form edit (Fix #9).
+     */
+    public function extractLinkUrl(): ?string
+    {
+        if (!$this->konten) {
+            return null;
+        }
+
+        if (preg_match('/<a[^>]+href=["\']([^"\']+)["\'][^>]*class="[^"]*d-inline-flex[^"]*"/i', $this->konten, $matches)) {
+            return $matches[1];
+        }
+
+        return null;
+    }
+
+    /**
      * Ambil URL pertama gambar dari konten (untuk thumbnail di listing).
      */
     public function getFirstImageUrl(): ?string
