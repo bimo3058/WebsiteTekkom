@@ -244,10 +244,22 @@
         </div>
         @endif
 
-        @if($mhs->kontak)
+        @php
+            $emailPribadi = $mhs->user->personal_email ?? null;
+            $kontakDisplay = $mhs->kontak ?? $mhs->user->whatsapp ?? null;
+        @endphp
+
+        @if($emailPribadi)
         <div>
-            <div class="info-item-label">Kontak</div>
-            <div class="info-item-value">{{ $mhs->kontak }}</div>
+            <div class="info-item-label">Email Pribadi</div>
+            <div class="info-item-value" style="word-break: break-all;">{{ $emailPribadi }}</div>
+        </div>
+        @endif
+
+        @if($kontakDisplay)
+        <div>
+            <div class="info-item-label">Nomor Telepon</div>
+            <div class="info-item-value">{{ $kontakDisplay }}</div>
         </div>
         @endif
 

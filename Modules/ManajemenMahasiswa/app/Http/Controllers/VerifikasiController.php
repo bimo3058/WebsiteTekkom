@@ -31,7 +31,7 @@ class VerifikasiController extends Controller
 
     private function isVerificator(): bool
     {
-        return $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm');
+        return $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
     }
 
     private function resolveLayout(): string
@@ -43,9 +43,6 @@ class VerifikasiController extends Controller
             return 'manajemenmahasiswa::layouts.admin';
         }
 
-        if (\in_array('gpm', $roles)) {
-            return 'manajemenmahasiswa::layouts.dosen';
-        }
 
         // Semua jenis pengurus himpunan menggunakan layout admin
         $pengurus = ['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
@@ -240,13 +237,13 @@ class VerifikasiController extends Controller
 
     public function storeRiwayat(Request $request)
     {
-        if ($this->hasRole('alumni') && !$this->hasRole('mahasiswa', 'pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'superadmin', 'admin', 'admin_kemahasiswaan')) {
+        if ($this->hasRole('alumni')) {
             return redirect()->back()->with('error', 'Role alumni tidak dapat mengajukan data baru.');
         }
 
         $request->validate([
-            'nama_kegiatan_manual' => 'required|string|max:255',
-            'peran_manual'         => 'required|string|max:255',
+            'nama_kegiatan_manual' => 'required|string|max:50',
+            'peran_manual'         => 'required|string|max:50',
             'tanggal_kegiatan'     => 'required|date',
             'bukti_images'         => 'nullable|array|max:5',
             'bukti_images.*'       => 'file|mimes:jpg,jpeg,png,gif,webp|max:10240',
@@ -281,12 +278,12 @@ class VerifikasiController extends Controller
 
     public function storePrestasi(Request $request)
     {
-        if ($this->hasRole('alumni') && !$this->hasRole('mahasiswa', 'pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'superadmin', 'admin', 'admin_kemahasiswaan')) {
+        if ($this->hasRole('alumni')) {
             return redirect()->back()->with('error', 'Role alumni tidak dapat mengajukan data baru.');
         }
 
         $request->validate([
-            'nama_prestasi' => 'required|string|max:255',
+            'nama_prestasi' => 'required|string|max:50',
             'tingkat'       => 'required|in:' . implode(',', Prestasi::TINGKAT_LIST),
             'tanggal'       => 'required|date',
             'bukti_images'  => 'nullable|array|max:5',
@@ -329,14 +326,18 @@ class VerifikasiController extends Controller
     // Approve Riwayat
     // -------------------------------------------------------------------------
 
-    public function approveRiwayat(int $id)
+    public function approveRiwayat(Request $request, int $id)
     {
+        $request->validate([
+            'verification_note' => 'nullable|string|max:200',
+        ]);
+
         $riwayat = RiwayatKegiatan::findOrFail($id);
         $riwayat->update([
             'verification_status' => 'approved',
             'verified_by'         => Auth::id(),
             'verified_at'         => now(),
-            'verification_note'   => null,
+            'verification_note'   => $request->verification_note ?: null,
         ]);
 
         return redirect()
@@ -351,7 +352,7 @@ class VerifikasiController extends Controller
     public function rejectRiwayat(Request $request, int $id)
     {
         $request->validate([
-            'verification_note' => 'required|string|max:500',
+            'verification_note' => 'required|string|max:200',
         ]);
 
         $riwayat = RiwayatKegiatan::findOrFail($id);
@@ -371,14 +372,18 @@ class VerifikasiController extends Controller
     // Approve Prestasi
     // -------------------------------------------------------------------------
 
-    public function approvePrestasi(int $id)
+    public function approvePrestasi(Request $request, int $id)
     {
+        $request->validate([
+            'verification_note' => 'nullable|string|max:200',
+        ]);
+
         $prestasi = Prestasi::findOrFail($id);
         $prestasi->update([
             'verification_status' => 'approved',
             'verified_by'         => Auth::id(),
             'verified_at'         => now(),
-            'verification_note'   => null,
+            'verification_note'   => $request->verification_note ?: null,
         ]);
 
         return redirect()
@@ -393,7 +398,7 @@ class VerifikasiController extends Controller
     public function rejectPrestasi(Request $request, int $id)
     {
         $request->validate([
-            'verification_note' => 'required|string|max:500',
+            'verification_note' => 'required|string|max:200',
         ]);
 
         $prestasi = Prestasi::findOrFail($id);

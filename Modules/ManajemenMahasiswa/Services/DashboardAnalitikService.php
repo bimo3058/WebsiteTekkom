@@ -123,7 +123,8 @@ class DashboardAnalitikService
 
     /**
      * TIER 2 — Aktivitas Terkini (cache 60 detik).
-     * Berubah beberapa kali sehari: thread forum baru, kegiatan & pengumuman bulan ini,
+     * Berubah beberapa kali sehari: kegiatan & pengumuman bulan ini,
+     * verifikasi pengumuman masuk minggu ini, kegiatan berlangsung hari ini,
      * dan trend kegiatan 6 bulan untuk chart.
      */
     public function getActivityStats(): array
@@ -138,14 +139,20 @@ class DashboardAnalitikService
             }
 
             return [
-                'kegiatan_bulan_ini'    => Kegiatan::whereYear('created_at', now()->year)
-                                            ->whereMonth('created_at', now()->month)->count(),
-                'pengumuman_bulan_ini'  => Pengumuman::published()
-                                            ->whereYear('published_at', now()->year)
-                                            ->whereMonth('published_at', now()->month)->count(),
-                'thread_minggu_ini'     => Thread::where('created_at', '>=', now()->startOfWeek())->count(),
-                'total_mahasiswa_aktif' => Kemahasiswaan::aktif()->count(),
-                'kegiatan_trend'        => $kegiatanTrend,   // untuk bar chart
+                'kegiatan_bulan_ini'          => Kegiatan::whereYear('created_at', now()->year)
+                                                    ->whereMonth('created_at', now()->month)->count(),
+                'pengumuman_bulan_ini'         => Pengumuman::published()
+                                                    ->whereYear('published_at', now()->year)
+                                                    ->whereMonth('published_at', now()->month)->count(),
+                // Kegiatan yang sedang berlangsung hari ini (tanggal_mulai <= hari ini <= tanggal_selesai)
+                'kegiatan_berlangsung'         => Kegiatan::whereNotNull('tanggal_mulai')
+                                                    ->where('tanggal_mulai', '<=', now())
+                                                    ->where(fn ($q) => $q
+                                                        ->whereNull('tanggal_selesai')
+                                                        ->orWhere('tanggal_selesai', '>=', now())
+                                                    )
+                                                    ->count(),
+                'kegiatan_trend'               => $kegiatanTrend,
             ];
         });
     }
