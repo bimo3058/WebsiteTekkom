@@ -28,6 +28,19 @@
             color: white;
             transform: translateY(-1px);
         }
+        .btn-outline-custom {
+            background-color: transparent;
+            color: #6b7280;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 8px 20px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .btn-outline-custom:hover {
+            background-color: #f3f4f6;
+            color: #374151;
+        }
         .form-control-custom, .form-select-custom {
             background-color: #f9fafb;
             border: 2px solid #f3f4f6;
@@ -73,9 +86,14 @@
 @endpush
 
 @section('content')
-    <div class="mb-4">
-        <h3 class="fw-bold mb-1 text-dark">Form Pengaduan</h3>
-        <p class="text-muted mb-0 fw-medium">Silakan isi detail pengaduan Anda. Identitas Anda tidak akan ditampilkan kepada publik maupun admin.</p>
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3 class="fw-bold mb-1 text-dark">Form Pengaduan Konfidensial</h3>
+            <p class="text-muted mb-0 fw-medium">Identitas Anda tidak akan ditampilkan kepada publik maupun admin.</p>
+        </div>
+        <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-outline-custom text-decoration-none">
+            ← Kembali
+        </a>
     </div>
 
     @if ($errors->any())
@@ -89,7 +107,7 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.anon.store', ['token' => $token]) }}" class="custom-card">
+    <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.anon.confirm', ['token' => $token]) }}" class="custom-card">
         @csrf
 
         <div class="info-box">
@@ -218,8 +236,9 @@
             </div>
         </div>
 
-        <div class="mt-5 pt-4" style="border-top: 1px solid #f3f4f6;">
-            <button type="submit" class="btn-custom">Kirim Pengaduan</button>
+        <div class="d-flex justify-content-end gap-3 mt-5 pt-4" style="border-top: 1px solid #f3f4f6;">
+            <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-outline-custom text-decoration-none" style="padding: 12px 24px;">Batal</a>
+            <button type="submit" class="btn-custom" style="width: auto;">Kirim Pengaduan</button>
         </div>
     </form>
 @endsection

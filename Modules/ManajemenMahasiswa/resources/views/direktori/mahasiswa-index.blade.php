@@ -476,9 +476,99 @@
 
     <!-- Pagination -->
     @if($mahasiswa->hasPages())
-        <div class="mt-4 d-flex justify-content-center">
-            {{ $mahasiswa->withQueryString()->links() }}
+        <div class="mt-4 d-flex flex-column align-items-center gap-2">
+            <div class="d-flex align-items-center gap-1">
+
+                {{-- Prev --}}
+                @if($mahasiswa->onFirstPage())
+                    <span class="page-btn page-btn-nav disabled">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    </span>
+                @else
+                    <a href="{{ $mahasiswa->withQueryString()->previousPageUrl() }}" class="page-btn page-btn-nav">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+                    </a>
+                @endif
+
+                {{-- Page Numbers --}}
+                @foreach($mahasiswa->withQueryString()->links()->offsetGet('elements') as $element)
+                    @if(is_string($element))
+                        <span class="page-btn page-btn-dots">…</span>
+                    @endif
+                    @if(is_array($element))
+                        @foreach($element as $page => $url)
+                            @if($page == $mahasiswa->currentPage())
+                                <span class="page-btn page-btn-active">{{ $page }}</span>
+                            @else
+                                <a href="{{ $url }}" class="page-btn">{{ $page }}</a>
+                            @endif
+                        @endforeach
+                    @endif
+                @endforeach
+
+                {{-- Next --}}
+                @if($mahasiswa->hasMorePages())
+                    <a href="{{ $mahasiswa->withQueryString()->nextPageUrl() }}" class="page-btn page-btn-nav">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </a>
+                @else
+                    <span class="page-btn page-btn-nav disabled">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+                    </span>
+                @endif
+
+            </div>
+            {{-- Info teks --}}
+            <div style="font-size: 12px; color: #9ca3af; font-weight: 500;">
+                Showing {{ $mahasiswa->firstItem() }}–{{ $mahasiswa->lastItem() }} of {{ $mahasiswa->total() }} results
+            </div>
         </div>
+
+        <style>
+            .page-btn {
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+                min-width: 34px;
+                height: 34px;
+                padding: 0 10px;
+                border-radius: 8px;
+                font-size: 13px;
+                font-weight: 600;
+                color: #374151;
+                background: #ffffff;
+                border: 1.5px solid #e5e7eb;
+                text-decoration: none !important;
+                transition: all 0.15s;
+                cursor: pointer;
+            }
+            .page-btn:hover:not(.disabled):not(.page-btn-active) {
+                background: #f1f5f9;
+                border-color: #c7d2fe;
+                color: #4f46e5;
+            }
+            .page-btn-active {
+                background: #4f46e5;
+                border-color: #4f46e5;
+                color: #ffffff !important;
+                cursor: default;
+            }
+            .page-btn-nav {
+                color: #6b7280;
+            }
+            .page-btn-nav.disabled {
+                opacity: 0.35;
+                cursor: not-allowed;
+            }
+            .page-btn-dots {
+                border: none;
+                background: transparent;
+                color: #9ca3af;
+                cursor: default;
+                min-width: 24px;
+                padding: 0;
+            }
+        </style>
     @endif
 @else
     <div class="empty-state">

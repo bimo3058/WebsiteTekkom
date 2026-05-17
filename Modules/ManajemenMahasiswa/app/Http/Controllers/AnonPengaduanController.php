@@ -38,10 +38,38 @@ class AnonPengaduanController extends Controller
 
         if ($pengaduan->status === Pengaduan::STATUS_DRAFT) {
             $kategoriList = [
-                'akademik' => ['label' => 'Akademik & Pembelajaran', 'example' => 'Jadwal bentrok, nilai tidak keluar'],
-                'fasilitas' => ['label' => 'Fasilitas & Infrastruktur', 'example' => 'AC rusak, WiFi lambat'],
-                'pelayanan' => ['label' => 'Pelayanan & Administrasi', 'example' => 'Surat keterangan lama, staf kurang ramah'],
-                'lainnya' => ['label' => 'Lainnya', 'example' => 'Masalah di luar kategori di atas'],
+                Pengaduan::KATEGORI_AKADEMIK_ADMINISTRASI => [
+                    'label' => 'Akademik dan Administrasi',
+                    'example' => 'KRS, transkrip, surat-menyurat, masalah administrasi akademik',
+                ],
+                Pengaduan::KATEGORI_PROSES_PEMBELAJARAN => [
+                    'label' => 'Proses Pembelajaran di Kelas',
+                    'example' => 'Metode mengajar, penilaian, materi tidak sesuai, jadwal perkuliahan',
+                ],
+                Pengaduan::KATEGORI_FASILITAS_KAMPUS => [
+                    'label' => 'Fasilitas Kampus (Sarana dan Prasarana)',
+                    'example' => 'AC/infocus rusak, kursi/kelas, kebersihan, lab/praktikum',
+                ],
+                Pengaduan::KATEGORI_LAYANAN_IT_SSO => [
+                    'label' => 'Layanan IT dan Akun SSO',
+                    'example' => 'SSO/login, email kampus, akses WiFi, LMS/portal bermasalah',
+                ],
+                Pengaduan::KATEGORI_KEGIATAN_KEMAHASISWAAN => [
+                    'label' => 'Kegiatan Kemahasiswaan',
+                    'example' => 'UKM/Himpunan, proposal kegiatan, perizinan, pendanaan',
+                ],
+                Pengaduan::KATEGORI_KEAMANAN_KETERTIBAN => [
+                    'label' => 'Keamanan dan Ketertiban Kampus',
+                    'example' => 'Parkir, kehilangan barang, keamanan area kampus, keributan',
+                ],
+                Pengaduan::KATEGORI_KESEHATAN_KONSELING => [
+                    'label' => 'Layanan Kesehatan dan Konseling Mahasiswa',
+                    'example' => 'Konseling, kesehatan mental, layanan klinik kampus, rujukan',
+                ],
+                Pengaduan::KATEGORI_TINDAKAN_TIDAK_MENYENANGKAN => [
+                    'label' => 'Tindakan Tidak Menyenangkan di Lingkungan Kampus',
+                    'example' => 'Perundungan, pelecehan, intimidasi, perlakuan tidak pantas',
+                ],
             ];
 
             $dosenList = User::whereHas('roles', fn($q) => $q->whereIn('name', ['dosen', 'dosen_koordinator']))
@@ -60,6 +88,44 @@ class AnonPengaduanController extends Controller
         }
 
         return view('manajemenmahasiswa::pengaduan.anon.track', compact('pengaduan'));
+    }
+
+    /**
+     * Konfirmasi form pengaduan anonim sebelum disubmit.
+     */
+    public function confirm(Request $request, $token)
+    {
+        $pengaduan = Pengaduan::where('anon_token', $token)
+            ->where('status', Pengaduan::STATUS_DRAFT)
+            ->firstOrFail();
+
+        $validated = $request->validate([
+            'kategori' => 'required|string',
+            'template' => 'required|array',
+            'template.judul' => 'required|string|max:255',
+            'template.hal_aduan' => 'required|string',
+            'template.kronologi' => 'required|string|min:20',
+            'template.angkatan' => 'nullable|string|max:20',
+            'template.lokasi' => 'nullable|string|max:255',
+            'template.waktu_kejadian' => 'nullable|date',
+            'template.tanggal_kejadian' => 'nullable|date',
+            'template.mata_kuliah' => 'nullable|string|max:255',
+            'template.nama_dosen' => 'nullable|string|max:255',
+            'template.nama_tendik' => 'nullable|string|max:255',
+            'template.frekuensi' => 'nullable|string|max:100',
+            'template.link_bukti' => 'nullable|url|max:2048',
+        ]);
+
+        $request->flash();
+
+        return view('manajemenmahasiswa::pengaduan.anon.confirm', [
+            'pengaduan' => $pengaduan,
+            'token' => $token,
+            'payload' => [
+                'kategori' => $validated['kategori'],
+                'template' => $validated['template'],
+            ],
+        ]);
     }
 
     /**

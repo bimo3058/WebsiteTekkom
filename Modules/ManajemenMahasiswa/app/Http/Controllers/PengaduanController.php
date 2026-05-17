@@ -203,6 +203,8 @@ class PengaduanController extends Controller
 
         $validated = $this->validatePengaduanPayload($request);
 
+        $request->flash();
+
         $template = $this->normalizeTemplate($validated['template']);
 
         return view('manajemenmahasiswa::pengaduan.confirm', [
