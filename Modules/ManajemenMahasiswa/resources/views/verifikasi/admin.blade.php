@@ -417,15 +417,15 @@
                         Anda akan menyetujui: <strong id="approveItemName" style="color: #1f2937;"></strong>
                     </p>
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                        <label class="form-label fw-bold mb-0" style="font-size: 13px;">Catatan Persetujuan <span style="font-weight: 400; color: #9ca3af;">(opsional)</span></label>
+                        <label class="form-label fw-bold mb-0" style="font-size: 13px;">Catatan Persetujuan <span style="color: #16a34a;">*</span></label>
                         <span class="text-muted" style="font-size: 11px;" id="charCount_approve">0 / 200 huruf</span>
                     </div>
-                    <textarea name="verification_note" class="form-control" rows="3" maxlength="200"
+                    <textarea name="verification_note" class="form-control" rows="3" required maxlength="200"
                               placeholder="Contoh: Dokumen lengkap dan valid. Disetujui."
                               style="border-radius: 10px; font-size: 14px; border-color: #bbf7d0;"
                               onfocus="this.style.borderColor='#16a34a';this.style.boxShadow='0 0 0 3px rgba(22,163,74,0.1)'"
                               onblur="this.style.borderColor='#bbf7d0';this.style.boxShadow='none'" oninput="document.getElementById('charCount_approve').innerText = this.value.length + ' / 200 huruf'"></textarea>
-                    <p style="font-size: 12px; color: #9ca3af; margin-top: 6px; margin-bottom: 0;">Catatan akan terlihat di halaman status mahasiswa.</p>
+                    <p style="display: none;" aria-hidden="true">Catatan akan terlihat di halaman status mahasiswa.</p>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Batal</button>

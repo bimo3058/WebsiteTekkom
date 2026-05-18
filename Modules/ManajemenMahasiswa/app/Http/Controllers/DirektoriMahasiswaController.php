@@ -273,14 +273,16 @@ class DirektoriMahasiswaController extends Controller
         }
 
         try {
-            $query = Kemahasiswaan::with(['user', 'user.student']);
+            $query = Kemahasiswaan::with(['user', 'user.student'])
+                // Direktori Mahasiswa tidak menampilkan alumni — mereka ada di Direktori Alumni
+                ->where('status', '!=', Kemahasiswaan::STATUS_ALUMNI);
 
             // Filter angkatan
             if ($request->filled('angkatan') && $request->angkatan !== 'semua') {
                 $query->byAngkatan((int) $request->angkatan);
             }
 
-            // Filter status
+            // Filter status (hanya status non-alumni yang bisa dipilih)
             if ($request->filled('status') && $request->status !== 'semua') {
                 $query->where('status', $request->status);
             }
