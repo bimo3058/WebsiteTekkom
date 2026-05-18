@@ -6,13 +6,29 @@ use Modules\ManajemenMahasiswa\Http\Controllers\PengumumanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\KemahasiswaanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\ForumController;
 use Modules\ManajemenMahasiswa\Http\Controllers\GamificationController;
+use Modules\ManajemenMahasiswa\Http\Controllers\AnonPengaduanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PengaduanController;
+use Modules\ManajemenMahasiswa\Http\Controllers\PengaduanDelegasiController;
 use Modules\ManajemenMahasiswa\Http\Controllers\KegiatanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\ProkerController;
 use Modules\ManajemenMahasiswa\Http\Controllers\PelaksanaanController;
 use Modules\ManajemenMahasiswa\Http\Controllers\DirektoriMahasiswaController;
 use Modules\ManajemenMahasiswa\Http\Controllers\ManajemenPenggunaController;
 use Modules\ManajemenMahasiswa\Http\Controllers\VerifikasiController;
+
+Route::middleware(['module.active:manajemen_mahasiswa'])
+    ->prefix('manajemen-mahasiswa')
+    ->name('manajemenmahasiswa.')
+    ->group(function () {
+        // ── Layanan Pengaduan (Publik / Magic Link) ──────────────────────
+        Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
+            Route::post('/track/{token}/confirm', [AnonPengaduanController::class, 'confirm'])->name('anon.confirm');
+            Route::post('/track/{token}/store', [AnonPengaduanController::class, 'store'])->name('anon.store');
+            Route::get('/track/{token}', [AnonPengaduanController::class, 'track'])->name('track');
+            Route::post('/track/{token}/close', [AnonPengaduanController::class, 'close'])->name('track.close');
+            Route::post('/track/{token}/reopen', [AnonPengaduanController::class, 'reopen'])->name('track.reopen');
+        });
+    });
 
 Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
     ->prefix('manajemen-mahasiswa')
@@ -128,12 +144,22 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
         // ── Layanan Pengaduan ─────────────────────────────────────────────
         Route::prefix('pengaduan')->name('pengaduan.')->group(function () {
-            // Mahasiswa & pengurus himpunan membuat pengaduan
+            // Jalur Anonim / Konfidensial (Pembuatan Magic Link)
+            Route::get('/anon/generate', [AnonPengaduanController::class, 'generate'])->name('anon.generate');
+
+            // Mahasiswa membuat pengaduan
             // NOTE: HARUS didefinisikan sebelum /{pengaduan} agar tidak konflik dengan path seperti /create
             Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan')->group(function () {
+                Route::get('/jalur', [PengaduanController::class, 'jalur'])->name('jalur');
                 Route::get('/create', [PengaduanController::class, 'create'])->name('create');
                 Route::post('/confirm', [PengaduanController::class, 'confirm'])->name('confirm');
                 Route::post('/', [PengaduanController::class, 'store'])->name('store');
+
+                // Mahasiswa: tandai selesai & ajukan ulang
+                Route::post('/{pengaduan}/close', [PengaduanController::class, 'closeByMahasiswa'])
+                    ->name('close')->whereNumber('pengaduan');
+                Route::post('/{pengaduan}/reopen', [PengaduanController::class, 'reopen'])
+                    ->name('reopen')->whereNumber('pengaduan');
             });
 
             // Akses pengaduan: mahasiswa, pengurus himpunan, dan staff (dosen/gpm/admin)
@@ -144,17 +170,31 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->name('show');
             });
 
-            // Jawab pengaduan — hanya Admin & GPM
-            Route::post('/{pengaduan}/reply', [PengaduanController::class, 'reply'])
-                ->name('reply')
-                ->whereNumber('pengaduan')
-                ->middleware('role:admin|superadmin|admin_kemahasiswaan|gpm');
+            // Admin: jawab langsung, delegasi, forward, tutup paksa
+            Route::middleware('role:admin|superadmin|admin_kemahasiswaan|gpm')->group(function () {
+                Route::post('/{pengaduan}/reply', [PengaduanController::class, 'reply'])
+                    ->name('reply')->whereNumber('pengaduan');
+                Route::post('/{pengaduan}/delegate', [PengaduanController::class, 'delegate'])
+                    ->name('delegate')->whereNumber('pengaduan');
+                Route::post('/{pengaduan}/forward', [PengaduanController::class, 'forwardAnswer'])
+                    ->name('forward')->whereNumber('pengaduan');
+                Route::post('/{pengaduan}/close-admin', [PengaduanController::class, 'closeByAdmin'])
+                    ->name('close.admin')->whereNumber('pengaduan');
+            });
 
             // Hapus pengaduan — hanya Admin & GPM
             Route::delete('/{pengaduan}', [PengaduanController::class, 'destroy'])
                 ->name('destroy')
                 ->whereNumber('pengaduan')
                 ->middleware('role:admin|superadmin|admin_kemahasiswaan|gpm');
+
+            // ── Delegasi (khusus Dosen) ────────────────────────────────────
+            Route::prefix('delegasi')->name('delegasi.')->middleware('role:dosen|dosen_koordinator')->group(function () {
+                Route::post('/{delegasi}/respond', [PengaduanDelegasiController::class, 'respond'])
+                    ->name('respond')->whereNumber('delegasi');
+                Route::post('/{delegasi}/reject', [PengaduanDelegasiController::class, 'reject'])
+                    ->name('reject')->whereNumber('delegasi');
+            });
         });
 
         // ── Forum Notifications (AJAX) ────────────────────────────────────
@@ -372,6 +412,23 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('edit')->where('id', '[0-9]+');
                     Route::put('/{id}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'update'])
                         ->name('update')->where('id', '[0-9]+');
+                });
+
+                // Riwayat kegiatan & prestasi alumni — admin only (tambahkan role di sini jika diperlukan)
+                Route::middleware('role:superadmin|admin|admin_kemahasiswaan')
+                    ->group(function () {
+                    // Riwayat kegiatan
+                    Route::post('/{id}/riwayat', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'storeRiwayat'])
+                        ->name('riwayat.store')->where('id', '[0-9]+');
+                    Route::put('/riwayat/{riwayatId}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'updateRiwayat'])
+                        ->name('riwayat.update')->where('riwayatId', '[0-9]+');
+                    Route::delete('/riwayat/{riwayatId}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'destroyRiwayat'])
+                        ->name('riwayat.destroy')->where('riwayatId', '[0-9]+');
+                    // Prestasi
+                    Route::post('/{id}/prestasi', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'storePrestasi'])
+                        ->name('prestasi.store')->where('id', '[0-9]+');
+                    Route::delete('/prestasi/{prestasiId}', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'destroyPrestasi'])
+                        ->name('prestasi.destroy')->where('prestasiId', '[0-9]+');
                 });
             });
         });

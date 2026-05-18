@@ -177,7 +177,7 @@
         <div>
             <p style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:2px;display:flex;align-items:center;gap:6px;">
                 <span class="material-symbols-outlined" style="font-size:16px;color:#5E53F4;">description</span>
-                CV Builder Cerdas
+                CV Builder
             </p>
             <p style="font-size:12px;color:#64748b;line-height:1.5;">Buat CV profesional semi-otomatis dari data profil & akademik Anda.</p>
         </div>

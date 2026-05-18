@@ -325,4 +325,376 @@
     </div>
 </div>
 
+{{-- ═══════════════════════════════════════════════════════════════════════ --}}
+{{-- SECTION: Prestasi & Riwayat Kegiatan (visible: admin, gpm, dosen, pengurus) --}}
+{{-- ═══════════════════════════════════════════════════════════════════════ --}}
+@if($canSeeHistory)
+
+@push('styles')
+<style>
+    .history-section {
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-radius: 16px;
+        padding: 24px;
+        margin-top: 20px;
+    }
+    .history-section-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #374151;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        padding-bottom: 10px;
+        border-bottom: 2px solid #f1f5f9;
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
+    .history-section-title span { display: flex; align-items: center; gap: 8px; }
+    .prestasi-item {
+        background: #f8fafc;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 14px 18px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+    }
+    .tingkat-badge {
+        font-size: 10px; font-weight: 700;
+        padding: 2px 8px; border-radius: 12px;
+        text-transform: uppercase;
+    }
+    .tingkat-badge.internasional { background: #fef3c7; color: #92400e; }
+    .tingkat-badge.nasional      { background: #dbeafe; color: #1e40af; }
+    .tingkat-badge.regional      { background: #f3e8ff; color: #7c3aed; }
+    .tingkat-badge.universitas   { background: #dcfce7; color: #166534; }
+    .tingkat-badge.prodi         { background: #eef2ff; color: #4f46e5; }
+
+    .riwayat-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    .riwayat-table thead th {
+        background: #f8fafc; padding: 10px 14px;
+        font-size: 12px; font-weight: 700; color: #64748b;
+        text-transform: uppercase; letter-spacing: 0.05em;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    .riwayat-table tbody td {
+        padding: 12px 14px; font-size: 14px; color: #374151;
+        border-bottom: 1px solid #f3f4f6; vertical-align: middle;
+    }
+    .riwayat-table tbody tr:hover { background: #f8fafc; }
+    .peran-badge {
+        font-size: 11px; font-weight: 700;
+        padding: 3px 10px; border-radius: 20px; display: inline-block;
+    }
+    .peran-badge.ketua   { background: #fef3c7; color: #92400e; }
+    .peran-badge.anggota { background: #eef2ff; color: #4f46e5; }
+    .peran-badge.panitia { background: #f3e8ff; color: #7c3aed; }
+    .peran-badge.peserta { background: #dcfce7; color: #166534; }
+    .btn-add-riwayat {
+        background: #4f46e5; color: #fff;
+        border: none; padding: 6px 14px; border-radius: 8px;
+        font-size: 12px; font-weight: 600; cursor: pointer;
+        display: inline-flex; align-items: center; gap: 5px;
+        transition: background 0.2s;
+    }
+    .btn-add-riwayat:hover { background: #4338ca; color: #fff; }
+    .btn-del-sm {
+        background: #fef2f2; color: #dc2626;
+        border: 1px solid #fecaca; padding: 3px 9px;
+        border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;
+        transition: background 0.2s;
+    }
+    .btn-del-sm:hover { background: #fee2e2; }
+    .empty-state { color: #9ca3af; font-size: 14px; text-align: center; padding: 20px 0; }
+</style>
+@endpush
+
+{{-- ── Prestasi ─────────────────────────────────────────────────────────── --}}
+<div class="history-section">
+    <div class="history-section-title">
+        <span>
+            <span class="material-symbols-outlined" style="font-size:18px;color:#4f46e5;">emoji_events</span>
+            Prestasi / Lomba
+        </span>
+        @if($canManageHistory)
+            <button type="button" class="btn-add-riwayat"
+                    data-bs-toggle="modal" data-bs-target="#modalTambahPrestasi">
+                <span class="material-symbols-outlined" style="font-size:14px;">add</span>
+                Tambah
+            </button>
+        @endif
+    </div>
+
+    @php $prestasi = $kemahasiswaan?->prestasi ?? collect(); @endphp
+
+    @if($prestasi->count() > 0)
+        @foreach($prestasi as $p)
+            <div class="prestasi-item">
+                <div>
+                    <div style="font-weight:600;font-size:14px;color:#1f2937;">{{ $p->nama_prestasi }}</div>
+                    <div style="font-size:12px;color:#9ca3af;">
+                        {{ $p->tanggal ? \Carbon\Carbon::parse($p->tanggal)->translatedFormat('d M Y') : '—' }}
+                    </div>
+                </div>
+                <div style="display:flex;align-items:center;gap:10px;">
+                    <span class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span>
+                    @if($canManageHistory)
+                        <form method="POST"
+                              action="{{ route('manajemenmahasiswa.direktori.alumni.prestasi.destroy', $p->id) }}"
+                              onsubmit="return confirm('Hapus prestasi ini?')">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="btn-del-sm">Hapus</button>
+                        </form>
+                    @endif
+                </div>
+            </div>
+        @endforeach
+    @else
+        <p class="empty-state">Belum ada data prestasi yang terverifikasi.</p>
+    @endif
+</div>
+
+{{-- Modal Tambah Prestasi --}}
+@if($canManageHistory)
+<div class="modal fade" id="modalTambahPrestasi" tabindex="-1" aria-labelledby="modalTambahPrestasiLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px;border:none;">
+            <div class="modal-header" style="border-bottom:1px solid #f3f4f6;padding:20px 24px;">
+                <h5 class="modal-title" id="modalTambahPrestasiLabel" style="font-weight:700;font-size:16px;">
+                    Tambah Prestasi / Lomba
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST" action="{{ route('manajemenmahasiswa.direktori.alumni.prestasi.store', $alumni->id) }}">
+                @csrf
+                <div class="modal-body" style="padding:24px;">
+                    <div class="mb-3">
+                        <label style="font-size:13px;font-weight:600;color:#374151;" class="mb-1">Nama Prestasi</label>
+                        <input type="text" name="nama_prestasi" class="form-control"
+                               placeholder="Cth: Juara 1 Hackathon Nasional 2024"
+                               style="border-radius:8px;font-size:14px;" required>
+                    </div>
+                    <div class="mb-3">
+                        <label style="font-size:13px;font-weight:600;color:#374151;" class="mb-1">Tingkat</label>
+                        <select name="tingkat" class="form-select" style="border-radius:8px;font-size:14px;" required>
+                            <option value="">-- Pilih Tingkat --</option>
+                            <option value="internasional">Internasional</option>
+                            <option value="nasional">Nasional</option>
+                            <option value="regional">Regional</option>
+                            <option value="universitas">Universitas</option>
+                            <option value="prodi">Program Studi</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label style="font-size:13px;font-weight:600;color:#374151;" class="mb-1">Tanggal</label>
+                        <input type="date" name="tanggal" class="form-control"
+                               style="border-radius:8px;font-size:14px;">
+                    </div>
+                </div>
+                <div class="modal-footer" style="border-top:1px solid #f3f4f6;padding:16px 24px;">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                            style="border-radius:8px;font-size:13px;font-weight:600;">Batal</button>
+                    <button type="submit" class="btn-add-riwayat">Simpan Prestasi</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
+
+
+{{-- ── Riwayat Kegiatan ─────────────────────────────────────────────────── --}}
+<div class="history-section">
+    <div class="history-section-title">
+        <span>
+            <span class="material-symbols-outlined" style="font-size:18px;color:#4f46e5;">calendar_month</span>
+            Riwayat Keikutsertaan Kegiatan
+        </span>
+        @if($canManageHistory)
+            <button type="button" class="btn-add-riwayat"
+                    data-bs-toggle="modal" data-bs-target="#modalTambahRiwayat">
+                <span class="material-symbols-outlined" style="font-size:14px;">add</span>
+                Tambah
+            </button>
+        @endif
+    </div>
+
+    @if($riwayatKegiatan->count() > 0)
+        <div style="overflow-x:auto;border-radius:10px;border:1px solid #f3f4f6;">
+            <table class="riwayat-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nama Kegiatan</th>
+                        <th>Peran</th>
+                        <th>Tanggal</th>
+                        @if($canManageHistory)<th></th>@endif
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($riwayatKegiatan as $i => $rw)
+                        @php
+                            $hasKegiatan   = is_object($rw->kegiatan ?? null) && ($rw->kegiatan->id ?? false);
+                            $namaManual    = $rw->nama_kegiatan_manual ?? null;
+                            $peranManual   = $rw->peran_manual ?? null;
+                            $peranValue    = $peranManual ?: ucfirst($rw->peran ?? '');
+                            $isAutoEntry   = !empty($rw->is_auto);
+                            $tanggalDisplay = null;
+                            if ($hasKegiatan && $rw->kegiatan->tanggal_mulai) {
+                                $tanggalDisplay = $rw->kegiatan->tanggal_mulai;
+                            } elseif (isset($rw->tanggal_kegiatan) && $rw->tanggal_kegiatan) {
+                                $tanggalDisplay = $rw->tanggal_kegiatan;
+                            }
+                        @endphp
+                        <tr>
+                            <td style="color:#9ca3af;">{{ $i + 1 }}</td>
+                            <td>
+                                @if($hasKegiatan)
+                                    <a href="{{ route('manajemenmahasiswa.kegiatan.show', $rw->kegiatan->id) }}"
+                                       style="color:#4f46e5;font-weight:600;text-decoration:none;">
+                                        {{ $rw->kegiatan->judul }}
+                                    </a>
+                                @elseif($namaManual)
+                                    <span style="font-weight:600;color:#1f2937;">{{ $namaManual }}</span>
+                                    <span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;background:#fef3c7;color:#d97706;margin-left:6px;">Eksternal</span>
+                                @else
+                                    <span style="color:#9ca3af;">Kegiatan tidak ditemukan</span>
+                                @endif
+                            </td>
+                            <td><span class="peran-badge {{ $rw->peran ?? '' }}">{{ $peranValue }}</span></td>
+                            <td style="font-size:13px;color:#6b7280;">
+                                {{ $tanggalDisplay ? \Carbon\Carbon::parse($tanggalDisplay)->translatedFormat('d M Y') : '—' }}
+                            </td>
+                            @if($canManageHistory)
+                            <td>
+                                @if(!$isAutoEntry && $rw->id)
+                                    <form method="POST"
+                                          action="{{ route('manajemenmahasiswa.direktori.alumni.riwayat.destroy', $rw->id) }}"
+                                          onsubmit="return confirm('Hapus riwayat ini?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn-del-sm">Hapus</button>
+                                    </form>
+                                @else
+                                    <span style="font-size:11px;color:#d1d5db;">Auto</span>
+                                @endif
+                            </td>
+                            @endif
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <p class="empty-state">Belum ada riwayat kegiatan.</p>
+    @endif
+</div>
+
+{{-- ── Modal Tambah Riwayat (hanya untuk canManageHistory) ─────────────── --}}
+@if($canManageHistory)
+<div class="modal fade" id="modalTambahRiwayat" tabindex="-1" aria-labelledby="modalTambahRiwayatLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content" style="border-radius:16px;border:none;">
+            <div class="modal-header" style="border-bottom:1px solid #f3f4f6;padding:20px 24px;">
+                <h5 class="modal-title" id="modalTambahRiwayatLabel" style="font-weight:700;font-size:16px;">
+                    Tambah Riwayat Kegiatan
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <form method="POST" action="{{ route('manajemenmahasiswa.direktori.alumni.riwayat.store', $alumni->id) }}">
+                @csrf
+                <input type="hidden" name="input_mode" id="input_mode_alumni" value="dropdown">
+
+                <div class="modal-body" style="padding:24px;">
+                    {{-- Toggle mode --}}
+                    <div style="display:flex;gap:8px;margin-bottom:20px;">
+                        <button type="button" id="btn-mode-dropdown-alumni"
+                                onclick="setModeAlumni('dropdown')"
+                                style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #4f46e5;background:#4f46e5;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">
+                            Pilih dari Daftar
+                        </button>
+                        <button type="button" id="btn-mode-manual-alumni"
+                                onclick="setModeAlumni('manual')"
+                                style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:13px;font-weight:600;cursor:pointer;">
+                            Input Manual
+                        </button>
+                    </div>
+
+                    {{-- Mode: dropdown --}}
+                    <div id="section-dropdown-alumni">
+                        <div class="mb-3">
+                            <label style="font-size:13px;font-weight:600;color:#374151;" class="mb-1">Kegiatan</label>
+                            <select name="kegiatan_id" class="form-select" style="border-radius:8px;font-size:14px;">
+                                <option value="">-- Pilih Kegiatan --</option>
+                                @foreach($semuaKegiatan as $kg)
+                                    <option value="{{ $kg->id }}">{{ $kg->judul }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label style="font-size:13px;font-weight:600;color:#374151;" class="mb-1">Peran</label>
+                            <select name="peran" class="form-select" style="border-radius:8px;font-size:14px;">
+                                <option value="ketua">Ketua</option>
+                                <option value="anggota">Anggota</option>
+                                <option value="panitia">Panitia</option>
+                                <option value="peserta">Peserta</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {{-- Mode: manual --}}
+                    <div id="section-manual-alumni" style="display:none;">
+                        <div class="mb-3">
+                            <label style="font-size:13px;font-weight:600;color:#374151;" class="mb-1">Nama Kegiatan</label>
+                            <input type="text" name="nama_kegiatan_manual" class="form-control"
+                                   placeholder="Cth: Kompetisi Robotika Nasional 2024"
+                                   style="border-radius:8px;font-size:14px;">
+                        </div>
+                        <div class="mb-3">
+                            <label style="font-size:13px;font-weight:600;color:#374151;" class="mb-1">Peran</label>
+                            <input type="text" name="peran_manual" class="form-control"
+                                   placeholder="Cth: Peserta, Juri, Koordinator"
+                                   style="border-radius:8px;font-size:14px;">
+                        </div>
+                        <div class="mb-3">
+                            <label style="font-size:13px;font-weight:600;color:#374151;" class="mb-1">Tanggal Kegiatan</label>
+                            <input type="date" name="tanggal_kegiatan" class="form-control"
+                                   style="border-radius:8px;font-size:14px;">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer" style="border-top:1px solid #f3f4f6;padding:16px 24px;">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal"
+                            style="border-radius:8px;font-size:13px;font-weight:600;">Batal</button>
+                    <button type="submit" class="btn-add-riwayat">Simpan Riwayat</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<script>
+function setModeAlumni(mode) {
+    document.getElementById('input_mode_alumni').value = mode;
+    const isDropdown = mode === 'dropdown';
+    document.getElementById('section-dropdown-alumni').style.display = isDropdown ? '' : 'none';
+    document.getElementById('section-manual-alumni').style.display   = isDropdown ? 'none' : '';
+    document.getElementById('btn-mode-dropdown-alumni').style.background  = isDropdown ? '#4f46e5' : '#fff';
+    document.getElementById('btn-mode-dropdown-alumni').style.color       = isDropdown ? '#fff'    : '#6b7280';
+    document.getElementById('btn-mode-dropdown-alumni').style.borderColor = isDropdown ? '#4f46e5' : '#e5e7eb';
+    document.getElementById('btn-mode-manual-alumni').style.background    = isDropdown ? '#fff'    : '#4f46e5';
+    document.getElementById('btn-mode-manual-alumni').style.color         = isDropdown ? '#6b7280' : '#fff';
+    document.getElementById('btn-mode-manual-alumni').style.borderColor   = isDropdown ? '#e5e7eb' : '#4f46e5';
+}
+</script>
+@endif
+
+@endif {{-- end canSeeHistory --}}
+
 </x-dynamic-component>
