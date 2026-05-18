@@ -507,9 +507,10 @@ class KoordinatorController extends Controller implements HasMiddleware
                 'status_kp' => $statusStr,
                 'semester' => 'Genap',
                 'tahun_kp' => date('Y', strtotime($kp->created_at)),
-                'nilai_seminar' => $kp->nilai_seminar_pembimbing,
-                'nilai_lapangan' => $kp->nilai_lapangan,
-                'nilai_akhir' => $kp->nilai_akhir,
+                'nilai_seminar'   => $kp->nilai_seminar_pembimbing,
+                'nilai_laporan'   => $kp->nilai_seminar_pembimbing, // alias, sama dengan nilai_seminar (diisi dosen)
+                'nilai_lapangan'  => $kp->nilai_lapangan,            // diisi koordinator dari menu nilai lapangan
+                'nilai_akhir'     => $kp->nilai_akhir,
                 'status_dokumen' => '-',
                 'riwayat_approval' => [
                     ['tanggal' => date('Y-m-d', strtotime($kp->updated_at)), 'status' => 'Info', 'keterangan' => 'Tahap saat ini: ' . $tahap]

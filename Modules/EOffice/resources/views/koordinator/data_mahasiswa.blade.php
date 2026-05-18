@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -198,8 +198,9 @@
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50">Mahasiswa</th>
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50">Tempat KP</th>
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50">Pembimbing</th>
-                                    <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Nilai Seminar</th>
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Nilai Lapangan</th>
+                                    <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Nilai Seminar</th>
+                                    <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Nilai Laporan</th>
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Nilai Akhir</th>
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Status KP</th>
                                 </tr>
@@ -223,12 +224,17 @@
                                             <p class="text-sm text-slate-600" x-text="m.dosen_pembimbing || 'Belum diplot'"></p>
                                         </td>
                                         <td class="py-4 px-6 align-middle text-center">
-                                            <span x-show="m.nilai_seminar !== null" class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 text-slate-700" x-text="m.nilai_seminar"></span>
-                                            <span x-show="m.nilai_seminar === null" class="text-slate-400 text-xs">-</span>
+                                        <td class="py-4 px-6 align-middle text-center">
+                                            <span x-show="m.nilai_lapangan !== null && m.nilai_lapangan !== undefined" class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100" x-text="m.nilai_lapangan"></span>
+                                            <span x-show="m.nilai_lapangan === null || m.nilai_lapangan === undefined" class="text-slate-400 text-xs italic">Belum</span>
                                         </td>
                                         <td class="py-4 px-6 align-middle text-center">
-                                            <span x-show="m.nilai_lapangan !== null" class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 text-slate-700" x-text="m.nilai_lapangan"></span>
-                                            <span x-show="m.nilai_lapangan === null" class="text-slate-400 text-xs">-</span>
+                                            <span x-show="m.nilai_seminar !== null" class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100" x-text="m.nilai_seminar"></span>
+                                            <span x-show="m.nilai_seminar === null" class="text-slate-400 text-xs italic">Belum</span>
+                                        </td>
+                                        <td class="py-4 px-6 align-middle text-center">
+                                            <span x-show="m.nilai_laporan !== null" class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100" x-text="m.nilai_laporan"></span>
+                                            <span x-show="m.nilai_laporan === null" class="text-slate-400 text-xs italic">Belum</span>
                                         </td>
                                         <td class="py-4 px-6 align-middle text-center">
                                             <span x-show="m.nilai_akhir !== null" class="inline-flex items-center justify-center px-3 py-1 rounded-md text-sm font-bold bg-indigo-50 text-indigo-700" x-text="m.nilai_akhir"></span>
@@ -312,7 +318,7 @@
                                         </div>
                                         <div>
                                             <h2 class="text-xl font-bold text-slate-900" x-text="selectedMahasiswa.nama"></h2>
-                                            <p class="text-sm text-slate-500 font-medium" x-text="selectedMahasiswa.nim + ' • ' + selectedMahasiswa.prodi"></p>
+                                            <p class="text-sm text-slate-500 font-medium" x-text="selectedMahasiswa.nim"></p>
                                         </div>
                                     </div>
                                 </div>
@@ -361,20 +367,29 @@
                                             <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
                                             Rekap Penilaian
                                         </h3>
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                                <p class="text-xs font-medium text-slate-500 mb-1">Nilai Seminar</p>
-                                                <p class="text-xl font-extrabold text-slate-900" x-text="selectedMahasiswa.nilai_seminar !== null ? selectedMahasiswa.nilai_seminar : '-'"></p>
+                                        <!-- 3 kartu nilai dari dosen -->
+                                        <div class="grid grid-cols-3 gap-3 mb-3">
+                                            <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                                                <p class="text-[10px] font-medium text-emerald-700 mb-1">Nilai Seminar</p>
+                                                <p class="text-xl font-extrabold text-emerald-800" x-text="selectedMahasiswa.nilai_seminar !== null ? selectedMahasiswa.nilai_seminar : '-'"></p>
+                                                <p class="text-[9px] text-emerald-600 mt-0.5">Oleh Dosen</p>
                                             </div>
-                                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                                <p class="text-xs font-medium text-slate-500 mb-1">Nilai Lapangan</p>
-                                                <p class="text-xl font-extrabold text-slate-900" x-text="selectedMahasiswa.nilai_lapangan !== null ? selectedMahasiswa.nilai_lapangan : '-'"></p>
+                                            <div class="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                                                <p class="text-[10px] font-medium text-blue-700 mb-1">Nilai Laporan</p>
+                                                <p class="text-xl font-extrabold text-blue-800" x-text="selectedMahasiswa.nilai_laporan !== null ? selectedMahasiswa.nilai_laporan : '-'"></p>
+                                                <p class="text-[9px] text-blue-600 mt-0.5">Oleh Dosen</p>
+                                            </div>
+                                            <div class="bg-amber-50 p-3 rounded-xl border border-amber-100">
+                                                <p class="text-[10px] font-medium text-amber-700 mb-1">Nilai Lapangan</p>
+                                                <p class="text-xl font-extrabold text-amber-800" x-text="selectedMahasiswa.nilai_lapangan !== null && selectedMahasiswa.nilai_lapangan !== undefined ? selectedMahasiswa.nilai_lapangan : '-'"></p>
+                                                <p class="text-[9px] text-amber-600 mt-0.5">Oleh Koordinator</p>
                                             </div>
                                         </div>
-                                        <div class="mt-4 bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex items-center justify-between">
+                                        <!-- Nilai Akhir -->
+                                        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex items-center justify-between">
                                             <div>
                                                 <p class="text-xs font-bold text-indigo-700 uppercase tracking-wider mb-0.5">Nilai Akhir</p>
-                                                <p class="text-[10px] text-indigo-500 font-medium">Rata-rata penilaian</p>
+                                                <p class="text-[10px] text-indigo-500 font-medium">Hasil kalkulasi akhir</p>
                                             </div>
                                             <p class="text-3xl font-black text-indigo-700" x-text="selectedMahasiswa.nilai_akhir !== null ? selectedMahasiswa.nilai_akhir : '-'"></p>
                                         </div>
