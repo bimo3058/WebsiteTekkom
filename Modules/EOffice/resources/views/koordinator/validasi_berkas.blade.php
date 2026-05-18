@@ -477,34 +477,90 @@
                  x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95 translate-y-4" x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                  @click.away="rejectModalOpen = false"
                  class="relative w-full max-w-lg rounded-2xl bg-white shadow-xl overflow-hidden border border-slate-100">
-                
+
                 <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-                    <h3 class="text-lg font-bold text-slate-900">Tolak & Beri Catatan Revisi</h3>
+                    <h3 class="text-lg font-bold text-slate-900">Tolak / Minta Revisi</h3>
                     <button @click="rejectModalOpen = false" class="text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg transition-colors">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
-                
-                <div class="p-6">
-                    <div class="bg-red-50 p-4 rounded-xl border border-red-100 mb-5 flex gap-3 items-start">
-                        <svg class="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-                        <div>
-                            <p class="text-sm font-bold text-red-800">Penolakan Dokumen</p>
-                            <p class="text-xs text-red-600 mt-1 leading-relaxed">Anda akan menolak dokumen <span class="font-bold" x-text="rejectDoc ? rejectDoc.nama_file : ''"></span>. Mahasiswa harus mengunggah ulang dokumen ini.</p>
+
+                <div class="p-6 space-y-5">
+                    <!-- File info -->
+                    <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        <div class="w-9 h-9 bg-red-100 text-red-500 rounded-lg flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
+                        </div>
+                        <p class="text-sm font-semibold text-slate-900 truncate" x-text="rejectDoc ? rejectDoc.nama_file : ''"></p>
+                    </div>
+
+                    <!-- Pilihan aksi -->
+                    <div>
+                        <p class="text-sm font-bold text-slate-700 mb-2">Pilih Tindakan</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="flex items-start gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all"
+                                   :class="rejectAction === 'revision' ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-white hover:border-slate-300'">
+                                <input type="radio" x-model="rejectAction" value="revision" class="mt-0.5 accent-amber-500">
+                                <div>
+                                    <p class="text-sm font-bold text-slate-800">Minta Revisi</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">Dokumen perlu diperbaiki sebelum disetujui</p>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all"
+                                   :class="rejectAction === 'rejected' ? 'border-red-400 bg-red-50' : 'border-slate-200 bg-white hover:border-slate-300'">
+                                <input type="radio" x-model="rejectAction" value="rejected" class="mt-0.5 accent-red-500">
+                                <div>
+                                    <p class="text-sm font-bold text-slate-800">Tolak Dokumen</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">Dokumen ditolak dan harus diupload ulang</p>
+                                </div>
+                            </label>
                         </div>
                     </div>
-                    
-                    <label class="block text-sm font-bold text-slate-700 mb-2">Catatan Revisi <span class="text-red-500">*</span></label>
-                    <textarea x-model="rejectReason" rows="4" placeholder="Tuliskan alasan penolakan atau bagian yang harus direvisi..."
-                              class="w-full rounded-xl border-slate-200 py-3 px-4 text-sm focus:border-red-500 focus:ring-4 focus:ring-red-500/10 border outline-none resize-y"></textarea>
+
+                    <!-- Catatan -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5">Catatan <span class="text-red-500">*</span></label>
+                        <textarea x-model="rejectReason" rows="3" placeholder="Tuliskan alasan atau bagian yang perlu diperbaiki..."
+                                  class="w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border outline-none resize-y"></textarea>
+                    </div>
                 </div>
-                
+
                 <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end">
                     <button @click="rejectModalOpen = false" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50">Batal</button>
-                    <button @click="submitReject()" class="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 shadow-sm shadow-red-200">Kirim Revisi</button>
+                    <button @click="submitReject()"
+                            :disabled="isLoading"
+                            :class="rejectAction === 'rejected' ? 'bg-red-600 hover:bg-red-700 shadow-red-200' : 'bg-amber-500 hover:bg-amber-600 shadow-amber-200'"
+                            class="px-5 py-2 text-white text-sm font-bold rounded-xl shadow-sm transition-colors flex items-center gap-2 disabled:opacity-60">
+                        <svg x-show="isLoading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                        <span x-text="rejectAction === 'rejected' ? 'Tolak Dokumen' : 'Kirim ke Revisi'"></span>
+                    </button>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div x-show="toast.show"
+         x-transition:enter="transition ease-out duration-300 transform"
+         x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0 translate-y-4"
+         class="fixed bottom-6 right-6 z-[100] min-w-[320px] max-w-sm bg-white rounded-2xl shadow-2xl border border-slate-100 flex items-start gap-4 p-4"
+         style="display: none;">
+        <div class="shrink-0 w-10 h-10 rounded-full flex items-center justify-center mt-0.5"
+             :class="toast.type === 'success' ? 'bg-emerald-50 border border-emerald-100' : 'bg-red-50 border border-red-100'">
+            <svg x-show="toast.type === 'success'" class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <svg x-show="toast.type !== 'success'" class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </div>
+        <div class="flex-1">
+            <p class="text-sm font-bold text-slate-900" x-text="toast.title"></p>
+            <p class="text-xs text-slate-500 mt-0.5 leading-relaxed" x-text="toast.message"></p>
+        </div>
+        <button @click="toast.show = false" class="text-slate-400 hover:text-slate-600 p-1 rounded-md">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
     </div>
 
 </div>
@@ -519,14 +575,16 @@
             activeTab: 'pra_kp',
             mahasiswas: @json($mahasiswas),
             selectedStudent: null,
-            
+            isLoading: false,
+
             // Modal States
             previewModalOpen: false,
             previewDoc: null,
             rejectModalOpen: false,
             rejectDoc: null,
             rejectReason: '',
-            
+            rejectAction: 'revision', // 'revision' | 'rejected'
+
             // Toast state
             toast: {
                 show: false,
@@ -578,10 +636,11 @@
             
             getDocStatusColor(status) {
                 switch(status) {
-                    case 'pending': return 'bg-amber-50 text-amber-600 border-amber-200';
+                    case 'pending':  return 'bg-slate-100 text-slate-500 border-slate-200';
                     case 'approved': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
                     case 'rejected': return 'bg-red-50 text-red-600 border-red-200';
-                    default: return 'bg-slate-100 text-slate-500 border-slate-200';
+                    case 'revision': return 'bg-amber-50 text-amber-600 border-amber-200';
+                    default:         return 'bg-slate-100 text-slate-500 border-slate-200';
                 }
             },
             
@@ -598,15 +657,15 @@
             openRejectModal(doc) {
                 this.rejectDoc = doc;
                 this.rejectReason = '';
+                this.rejectAction = 'revision';
                 this.rejectModalOpen = true;
             },
             
             processApproval(docId, status) {
-                const url = status === 'approved' 
-                    ? `/eoffice/kp/koordinator/validasi-berkas/${docId}/approve`
-                    : `/eoffice/kp/koordinator/validasi-berkas/${docId}/reject`;
+                if (this.isLoading) return;
+                this.isLoading = true;
 
-                fetch(url, {
+                fetch(`/eoffice/kp/koordinator/validasi-berkas/${docId}/approve`, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -615,28 +674,41 @@
                 })
                 .then(res => res.json())
                 .then(data => {
-                    if(data.success) {
-                        const docIndex = this.currentDocuments.findIndex(d => d.id === docId);
-                        if (docIndex !== -1) {
-                            this.currentDocuments[docIndex].status = status;
+                    if (data.success) {
+                        // Fix Alpine reactivity: mutate nested array properly
+                        const phase = this.activeTab;
+                        const idx = this.selectedStudent.dokumen[phase].findIndex(d => d.id === docId);
+                        if (idx !== -1) {
+                            this.selectedStudent.dokumen[phase][idx] = {
+                                ...this.selectedStudent.dokumen[phase][idx],
+                                status: 'approved',
+                                catatan: ''
+                            };
+                            // Force reactivity
+                            this.selectedStudent = { ...this.selectedStudent };
                         }
-                        this.showToast('success', 'Berhasil', data.message);
+                        this.showToast('success', 'Dokumen Disetujui ✓', data.message);
                     } else {
                         this.showToast('error', 'Gagal', 'Terjadi kesalahan sistem.');
                     }
                 })
-                .catch(err => {
-                    this.showToast('error', 'Gagal', 'Terjadi kesalahan jaringan.');
-                });
+                .catch(() => this.showToast('error', 'Gagal', 'Terjadi kesalahan jaringan.'))
+                .finally(() => { this.isLoading = false; });
             },
             
             submitReject() {
-                if(!this.rejectReason.trim()) {
-                    this.showToast('error', 'Error', 'Catatan revisi wajib diisi.');
+                if (!this.rejectReason.trim()) {
+                    this.showToast('error', 'Error', 'Catatan wajib diisi.');
                     return;
                 }
-                
-                fetch(`/eoffice/kp/koordinator/validasi-berkas/${this.rejectDoc.id}/revise`, {
+                if (this.isLoading) return;
+                this.isLoading = true;
+
+                const endpoint = this.rejectAction === 'rejected'
+                    ? `/eoffice/kp/koordinator/validasi-berkas/${this.rejectDoc.id}/reject`
+                    : `/eoffice/kp/koordinator/validasi-berkas/${this.rejectDoc.id}/revise`;
+
+                fetch(endpoint, {
                     method: 'POST',
                     headers: {
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
@@ -647,21 +719,27 @@
                 })
                 .then(res => res.json())
                 .then(data => {
-                    if(data.success) {
-                        const docIndex = this.currentDocuments.findIndex(d => d.id === this.rejectDoc.id);
-                        if (docIndex !== -1) {
-                            this.currentDocuments[docIndex].status = 'revision';
-                            this.currentDocuments[docIndex].catatan = this.rejectReason;
+                    if (data.success) {
+                        const newStatus = this.rejectAction;
+                        const phase = this.activeTab;
+                        const idx = this.selectedStudent.dokumen[phase].findIndex(d => d.id === this.rejectDoc.id);
+                        if (idx !== -1) {
+                            this.selectedStudent.dokumen[phase][idx] = {
+                                ...this.selectedStudent.dokumen[phase][idx],
+                                status: newStatus,
+                                catatan: this.rejectReason
+                            };
+                            this.selectedStudent = { ...this.selectedStudent };
                         }
-                        this.showToast('success', 'Dokumen Direvisi', data.message);
+                        const msg = newStatus === 'rejected' ? 'Dokumen Ditolak' : 'Revisi Dikirim';
+                        this.showToast('success', msg, data.message);
                         this.rejectModalOpen = false;
                     } else {
                         this.showToast('error', 'Gagal', 'Terjadi kesalahan sistem.');
                     }
                 })
-                .catch(err => {
-                    this.showToast('error', 'Gagal', 'Terjadi kesalahan jaringan.');
-                });
+                .catch(() => this.showToast('error', 'Gagal', 'Terjadi kesalahan jaringan.'))
+                .finally(() => { this.isLoading = false; });
             },
             
             showToast(type, title, message) {

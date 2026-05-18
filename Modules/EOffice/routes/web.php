@@ -509,6 +509,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::post('/validasi-berkas/{id}/approve', [KoordinatorController::class, 'approveBerkas'])->name('validasi_berkas.approve');
             Route::post('/validasi-berkas/{id}/reject', [KoordinatorController::class, 'rejectBerkas'])->name('validasi_berkas.reject');
             Route::post('/validasi-berkas/{id}/revise', [KoordinatorController::class, 'reviseBerkas'])->name('validasi_berkas.revise');
+            Route::get('/serve-file/{path}', [KoordinatorController::class, 'serveFile'])->where('path', '.*')->name('serve_file');
             
             Route::get('/nilai-lapangan', [KoordinatorController::class, 'nilaiLapangan'])->name('nilai_lapangan');
             Route::post('/nilai-lapangan/{id}/update', [KoordinatorController::class, 'updateNilaiLapangan'])->name('nilai_lapangan.update');

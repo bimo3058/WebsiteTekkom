@@ -22,7 +22,7 @@
     deleteId: null,
     isEditing: false, 
     formAction: '{{ route('eoffice.kp.koordinator.template.store') }}', 
-    formData: { nama_template: '', fase: 'pra_kp' }
+    formData: { title: '', phase: 'pra_kp', fileName: '' }
 }">
 <div class="flex h-screen w-full overflow-hidden">
 
@@ -222,14 +222,25 @@
                                             <p class="text-xs text-slate-500">PDF, DOC, DOCX up to 5MB</p>
                                         </div>
 
-                                        <!-- File Preview -->
+                                        <!-- File yang sudah ada (mode edit) -->
+                                        <div class="flex items-center gap-3 text-left w-full" x-show="isEditing && formData.fileName && !fileName" style="display: none;">
+                                            <div class="w-10 h-10 bg-emerald-100 text-emerald-600 rounded-lg flex items-center justify-center shrink-0">
+                                                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
+                                            </div>
+                                            <div class="flex-1 min-w-0">
+                                                <p class="text-sm font-semibold text-slate-900 truncate" x-text="formData.fileName"></p>
+                                                <p class="text-xs text-emerald-600 font-medium">File saat ini tersimpan — upload baru untuk mengganti</p>
+                                            </div>
+                                        </div>
+
+                                        <!-- File baru dipilih -->
                                         <div class="flex items-center gap-3 text-left w-full" x-show="fileName" style="display: none;">
                                             <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center shrink-0">
                                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
                                             </div>
                                             <div class="flex-1 min-w-0">
                                                 <p class="text-sm font-semibold text-slate-900 truncate" x-text="fileName"></p>
-                                                <p class="text-xs text-slate-500">File siap diupload</p>
+                                                <p class="text-xs text-slate-500">File baru siap diupload</p>
                                             </div>
                                             <button type="button" @click.stop.prevent="$refs.fileInput.value = ''; fileName = ''" class="text-slate-400 hover:text-red-500 p-1 rounded-md transition-colors z-20 relative">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -240,7 +251,7 @@
                                 
                                 <div class="w-full flex flex-col justify-end h-full space-y-4 md:w-64">
                                     <div class="flex gap-2 w-full mt-7">
-                                        <button type="button" x-show="isEditing" @click="isEditing = false; formAction = '{{ route('eoffice.kp.koordinator.template.store') }}'; formData = { title: '', phase: 'pra_kp' }" class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-200 transition-colors focus:ring-4 focus:ring-slate-100 outline-none flex items-center justify-center">
+                                        <button type="button" x-show="isEditing" @click="isEditing = false; formAction = '{{ route('eoffice.kp.koordinator.template.store') }}'; formData = { title: '', phase: 'pra_kp', fileName: '' }" class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-200 transition-colors focus:ring-4 focus:ring-slate-100 outline-none flex items-center justify-center">
                                             Batal
                                         </button>
                                         <button type="submit" class="flex-1 px-5 py-3.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200 focus:ring-4 focus:ring-indigo-100 outline-none flex items-center justify-center">
@@ -269,10 +280,16 @@
                                 </span>
                             </div>
                             <h3 class="text-lg font-bold text-slate-900 mb-1 truncate">{{ $item->title }}</h3>
+                            @if($item->file_path)
+                            <a href="{{ Storage::disk('public')->url($item->file_path) }}" target="_blank" class="inline-flex items-center gap-1.5 text-xs font-semibold text-indigo-600 hover:text-indigo-700 mt-1">
+                                <svg class="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
+                                {{ $item->file_name ?? basename($item->file_path) }}
+                            </a>
+                            @endif
                         </div>
                         
                         <div class="flex flex-row items-center gap-2 shrink-0">
-                            <button type="button" @click='formData = { title: @json($item->title), phase: @json($item->phase) }; formAction = `/eoffice/kp/koordinator/template/{{ $item->id }}`; isEditing = true; document.getElementById("form-section").scrollIntoView({ behavior: "smooth" });' class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
+                            <button type="button" @click='formData = { title: @json($item->title), phase: @json($item->phase), fileName: @json($item->file_name ?? basename($item->file_path ?? "")) }; formAction = `/eoffice/kp/koordinator/template/{{ $item->id }}`; isEditing = true; document.getElementById("form-section").scrollIntoView({ behavior: "smooth" });' class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                 Edit
                             </button>

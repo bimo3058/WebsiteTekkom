@@ -238,7 +238,7 @@ class KoordinatorController extends Controller implements HasMiddleware
                         'id' => $dok->id,
                         'nama_file' => $dok->file_name ?? basename($dok->file_path),
                         'file_path' => $dok->file_path,
-                        'file_url' => $dok->file_path ? (str_starts_with($dok->file_path, 'http') ? $dok->file_path : \Storage::disk('public')->url($dok->file_path)) : null,
+                        'file_url' => $dok->file_path ? route('eoffice.kp.koordinator.serve_file', ['path' => $dok->file_path]) : null,
                         'jenis' => $dok->jenis_dokumen,
                         'tanggal' => $dok->created_at->format('Y-m-d'),
                         'ukuran' => '-',
@@ -307,6 +307,26 @@ class KoordinatorController extends Controller implements HasMiddleware
         });
 
         return view('eoffice::koordinator.validasi_berkas', compact('mahasiswas'));
+    }
+
+    /**
+     * Stream file langsung dari storage ke browser.
+     * Ini menghindari masalah redirect 404 → dashboard.
+     */
+    public function serveFile($path)
+    {
+        if (!\Storage::disk('public')->exists($path)) {
+            abort(404, 'File tidak ditemukan di server.');
+        }
+
+        $file     = \Storage::disk('public')->get($path);
+        $mimeType = \Storage::disk('public')->mimeType($path);
+        $fileName = basename($path);
+
+        return response($file, 200)
+            ->header('Content-Type', $mimeType)
+            ->header('Content-Disposition', 'inline; filename="' . $fileName . '"')
+            ->header('Cache-Control', 'private, max-age=3600');
     }
 
     public function approveBerkas(Request $request, $id)
