@@ -4,8 +4,12 @@ namespace Modules\EOffice\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+<<<<<<< HEAD
 use Illuminate\Routing\Controllers\HasMiddleware;
 use Illuminate\Routing\Controllers\Middleware;
+=======
+use Illuminate\Support\Facades\Storage;
+>>>>>>> 6a466f3 (feat(eoffice): implementasi upload template A2 koordinator & generate dokumen dinamis mahasiswa)
 use Modules\EOffice\Models\KerjaPraktik;
 
 class KoordinatorController extends Controller implements HasMiddleware
@@ -465,5 +469,35 @@ class KoordinatorController extends Controller implements HasMiddleware
         ]);
 
         return view('eoffice::koordinator.nilai_lapangan', compact('mahasiswas'));
+    }
+
+    /**
+     * Halaman Upload Berkas (Template, dll)
+     */
+    public function uploadBerkas()
+    {
+        return view('eoffice::koordinator.upload_berkas');
+    }
+
+    /**
+     * Proses Simpan Template A2
+     */
+    public function storeTemplateA2(Request $request)
+    {
+        $request->validate([
+            'template_a2' => 'required|mimes:doc,docx|max:10240', // Maks 10MB
+        ], [
+            'template_a2.required' => 'File template wajib diunggah.',
+            'template_a2.mimes' => 'File harus berupa dokumen Word (doc/docx).',
+            'template_a2.max' => 'Ukuran file maksimal 10MB.',
+        ]);
+
+        $file = $request->file('template_a2');
+        
+        // Simpan file dengan nama yang tetap (akan di-overwrite)
+        $file->storeAs('templates', 'form_a2.docx', 'local');
+
+        return redirect()->route('eoffice.kp.koordinator.upload_berkas')
+            ->with('success', 'Template Form Kehadiran & Nilai (A2) berhasil diunggah dan diperbarui!');
     }
 }

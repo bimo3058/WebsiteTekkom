@@ -32,9 +32,17 @@ class MahasiswaKpController extends Controller
             ->first();
 
         // Pengumuman terbaru dari Koordinator KP (hanya yang aktif)
-        $pengumuman = KpPengumuman::where('is_active', true)
-            ->orderByDesc('created_at')
+        $pengumuman = KpPengumuman::with('pembuat')
+            ->where('is_active', true)
+            ->where('tipe', 'pengumuman')
+            ->orderByDesc('updated_at')
             ->take(5)
+            ->get();
+
+        // Timeline KP
+        $timeline = KpPengumuman::where('is_active', true)
+            ->where('tipe', 'timeline')
+            ->orderBy('created_at', 'asc')
             ->get();
 
         // Hitung jumlah dokumen per status
@@ -53,7 +61,7 @@ class MahasiswaKpController extends Controller
         }
 
         return view('eoffice::kp.mahasiswa.dashboard', compact(
-            'mahasiswa', 'kp', 'pengumuman', 'dokumenStats'
+            'mahasiswa', 'kp', 'pengumuman', 'timeline', 'dokumenStats'
         ));
     }
 
@@ -71,14 +79,136 @@ class MahasiswaKpController extends Controller
         $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)->latest()->first();
 
         // Ambil pengumuman bertipe 'pengumuman' atau 'timeline'
-        $infoPersuratan = KpPengumuman::where('is_active', true)
+        $infoPersuratan = KpPengumuman::with('pembuat')
+            ->where('is_active', true)
             ->whereIn('tipe', ['pengumuman', 'timeline'])
-            ->orderByDesc('created_at')
+            ->orderByDesc('updated_at')
             ->get();
 
+        $templateContent = Storage::disk('public')->exists('templates/proposal_kp.html') 
+            ? Storage::disk('public')->get('templates/proposal_kp.html') 
+            : '<h2>1. Latar Belakang</h2><p><br></p>
+            <h2>2. Rumusan Masalah</h2><p><br></p>
+            <h2>3. Batasan Masalah</h2><p><br></p>
+            <h2>4. Tujuan Kerja Praktek</h2><p><br></p>
+            <h2>5. Bentuk Kegiatan</h2><p><br></p>
+            <h2>6. Tempat dan Waktu Pelaksanaan</h2><p><br></p>
+            <h2>7. Penutup</h2><p><br></p>';
+
         return view('eoffice::kp.mahasiswa.informasi', compact(
-            'mahasiswa', 'kp', 'infoPersuratan'
+            'mahasiswa', 'kp', 'infoPersuratan', 'templateContent'
         ));
+    }
+
+
+
+    // =========================================================================
+    // EXPORT DOCUMENTS (Surat Pengantar & Proposal)
+    // =========================================================================
+
+    public function exportSuratPengantar(Request $request)
+    {
+        $data = $request->validate([
+            'format' => 'required|in:word,pdf',
+            'instansi' => 'required|string',
+            'alamat' => 'required|string',
+            'durasi' => 'required|string',
+            'anggota' => 'required|string', // JSON string
+        ]);
+
+        $anggota = json_decode($data['anggota'], true) ?? [];
+        $view = view('eoffice::kp.mahasiswa.templates.surat_pengantar', compact('data', 'anggota'));
+
+        if ($data['format'] === 'word') {
+            return response($view)
+                ->header('Content-Type', 'application/msword')
+                ->header('Content-Disposition', 'attachment; filename="Surat_Pengantar_KP.doc"');
+        }
+
+        // PDF relies on print preview / browser PDF generation logic or HTML to PDF library if we had one.
+        // For now, we return the view, which will automatically print via JS if we structure it that way.
+        return $view;
+    }
+
+    public function exportProposal(Request $request)
+    {
+        $data = $request->validate([
+            'format' => 'required|in:word,pdf',
+            'judul' => 'nullable|string',
+            'instansi' => 'nullable|string',
+            'content' => 'required|string', // HTML string
+        ]);
+
+        $view = view('eoffice::kp.mahasiswa.templates.proposal', compact('data'));
+
+        if ($data['format'] === 'word') {
+            return response($view)
+                ->header('Content-Type', 'application/msword')
+                ->header('Content-Disposition', 'attachment; filename="Proposal_KP.doc"');
+        }
+
+        return $view;
+    }
+
+    /**
+     * Generate A2 template from uploaded docx
+     */
+    public function generateA2(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_pembimbing' => 'required|string',
+            'nip_pembimbing' => 'required|string',
+            'jabatan_pembimbing' => 'required|string',
+            'perusahaan' => 'required|string',
+        ]);
+
+        $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
+        $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)->latest()->first();
+
+        // 1. Ambil path template dari storage
+        $templatePath = storage_path('app/templates/form_a2.docx');
+        
+        if (!file_exists($templatePath)) {
+            return redirect()->back()->with('error', 'Template A2 belum diunggah oleh Koordinator.');
+        }
+
+        // 2. Load template menggunakan PhpWord
+        $templateProcessor = new \PhpOffice\PhpWord\TemplateProcessor($templatePath);
+
+        // 3. Replace variabel-variabel di dalam template Word
+        $templateProcessor->setValue('nama', $mahasiswa->user->name ?? '-');
+        $templateProcessor->setValue('nip', $mahasiswa->nim ?? '-');
+        $templateProcessor->setValue('topik', $kp->rencana_judul ?? ($kp->judul_fix ?? '-'));
+        
+        $templateProcessor->setValue('nama_pembimbing', $validated['nama_pembimbing']);
+        $templateProcessor->setValue('nip_pembimbing', $validated['nip_pembimbing']);
+        $templateProcessor->setValue('jabatan_pembimbing', $validated['jabatan_pembimbing']);
+        $templateProcessor->setValue('perusahaan', $validated['perusahaan']);
+
+        // 4. Buat file temporary untuk dikirim ke user
+        $tempFile = tempnam(sys_get_temp_dir(), 'PHPWord');
+        $templateProcessor->saveAs($tempFile);
+
+        // 5. Kembalikan file sebagai download
+        return response()->download($tempFile, "Form_Kehadiran_A2_{$mahasiswa->nim}.docx")->deleteFileAfterSend(true);
+    }
+
+    // =========================================================================
+    // PENGUMUMAN
+    // =========================================================================
+
+    /**
+     * Halaman Pengumuman — melihat semua pengumuman aktif.
+     */
+    public function pengumuman()
+    {
+        $pengumumanItems = KpPengumuman::with('pembuat')
+            ->where('is_active', true)
+            ->whereIn('tipe', ['pengumuman', 'timeline'])
+            ->orderByDesc('updated_at')
+            ->get();
+
+        return view('eoffice::kp.mahasiswa.pengumuman', compact('pengumumanItems'));
     }
 
     // =========================================================================
@@ -131,7 +261,6 @@ class MahasiswaKpController extends Controller
             'rencana_tempat'  => 'required|string|max:255',
             'tanggal_mulai'   => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
-            'transkrip'       => 'required|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
         $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
@@ -155,18 +284,6 @@ class MahasiswaKpController extends Controller
             'tanggal_selesai' => $validated['tanggal_selesai'],
             'status_kp'       => 'Pra-KP',
             'is_acc_admin'    => false,
-        ]);
-
-        // Upload transkrip
-        $path = $request->file('transkrip')->store(
-            "kp/{$mahasiswa->nim}/transkrip", 'public'
-        );
-
-        KpDokumen::create([
-            'kp_id'           => $kp->id,
-            'jenis_dokumen'   => 'Transkrip',
-            'file_path'       => $path,
-            'status_validasi' => 'menunggu',
         ]);
 
         return redirect()
@@ -278,6 +395,10 @@ class MahasiswaKpController extends Controller
     public function downloadTemplate(string $type)
     {
         $templates = [
+            'surat_pengantar' => [
+                'name' => 'Template_Surat_Pengantar_KP.docx',
+                'path' => 'templates/kp/Template_Surat_Pengantar_KP.docx',
+            ],
             'laporan' => [
                 'name' => 'Template_Laporan_KP.docx',
                 'path' => 'templates/kp/Template_Laporan_KP.docx',

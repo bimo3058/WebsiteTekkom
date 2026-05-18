@@ -435,7 +435,19 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
     });
 
     // ════════════════════════════════════════════════════════════════════════
+<<<<<<< HEAD
     // KERJA PRAKTIK (KP)
+=======
+    // ADMIN E-OFFICE
+    // ════════════════════════════════════════════════════════════════════════
+    Route::prefix('eoffice/admin')->name('eoffice.admin.')->middleware(['role:superadmin|admin_eoffice'])->group(function () {
+        Route::get('/template-proposal', [EOfficeController::class, 'templateProposal'])->name('template_proposal');
+        Route::post('/template-proposal', [EOfficeController::class, 'storeTemplateProposal'])->name('template_proposal.store');
+    });
+
+    // ════════════════════════════════════════════════════════════════════════
+    // KERJA PRAKTIK (KP) — tidak berubah
+>>>>>>> 6a466f3 (feat(eoffice): implementasi upload template A2 koordinator & generate dokumen dinamis mahasiswa)
     // ════════════════════════════════════════════════════════════════════════
     Route::prefix('eoffice/kp')->name('eoffice.kp.')->group(function () {
         Route::get('/daftar', [KerjaPraktikController::class, 'create'])->name('register');
@@ -446,13 +458,21 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
         Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
             Route::get('/dashboard',                [MahasiswaKpController::class, 'dashboard'])->name('dashboard');
             Route::get('/informasi',                [MahasiswaKpController::class, 'informasi'])->name('informasi');
+            Route::get('/pengumuman',               [MahasiswaKpController::class, 'pengumuman'])->name('pengumuman');
             Route::get('/faq',                      [MahasiswaKpController::class, 'faq'])->name('faq');
+            
+            // Keperluan Perusahaan
+            Route::post('/surat-pengantar/export',  [MahasiswaKpController::class, 'exportSuratPengantar'])->name('surat_pengantar.export');
+            Route::post('/proposal/export',         [MahasiswaKpController::class, 'exportProposal'])->name('proposal.export');
+            
             Route::get('/pendaftaran',              [MahasiswaKpController::class, 'pendaftaran'])->name('pendaftaran');
             Route::post('/pendaftaran',             [MahasiswaKpController::class, 'storePendaftaran'])->name('pendaftaran.store');
             Route::get('/dokumen',                  [MahasiswaKpController::class, 'dokumen'])->name('dokumen');
             Route::post('/dokumen',                 [MahasiswaKpController::class, 'storeDokumen'])->name('dokumen.store');
             Route::put('/dokumen/update-data',      [MahasiswaKpController::class, 'updateDataKp'])->name('dokumen.update_data');
             Route::get('/dokumen/template/{type}',  [MahasiswaKpController::class, 'downloadTemplate'])->name('dokumen.template');
+            Route::post('/dokumen/export-a2',       [MahasiswaKpController::class, 'exportA2'])->name('dokumen.export_a2');
+            Route::post('/dokumen/generate-a2',     [MahasiswaKpController::class, 'generateA2'])->name('dokumen.generate_a2');
             Route::get('/seminar',                  [MahasiswaKpController::class, 'seminar'])->name('seminar');
             Route::post('/seminar',                 [MahasiswaKpController::class, 'storeSeminar'])->name('seminar.store');
         });
@@ -482,6 +502,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::delete('/faq/dokumen/{id}', [KoordinatorController::class, 'destroyDokumenPanduan'])->name('faq.dokumen.destroy');
             Route::post('/faq', [KoordinatorController::class, 'storeFaq'])->name('faq.store');
             Route::delete('/faq/{id}', [KoordinatorController::class, 'destroyFaq'])->name('faq.destroy');
+            Route::get('/upload-berkas', [KoordinatorController::class, 'uploadBerkas'])->name('upload_berkas');
+            Route::post('/upload-berkas/template-a2', [KoordinatorController::class, 'storeTemplateA2'])->name('upload_berkas.template_a2');
             Route::get('/validasi-berkas', [KoordinatorController::class, 'validasiBerkas'])->name('validasi_berkas');
             Route::get('/nilai-lapangan', [KoordinatorController::class, 'nilaiLapangan'])->name('nilai_lapangan');
             Route::get('/data-mahasiswa', [KoordinatorController::class, 'dataMahasiswa'])->name('data_mahasiswa');
