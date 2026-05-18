@@ -224,20 +224,7 @@ class CvBuilderController extends Controller
             ]);
             $cvProfile->tentang_diri = $request->tentang_diri;
             $cvProfile->cv_email = $request->personal_email;
-            $whatsapp = $request->whatsapp;
-            $phoneCode = $request->phone_code ?? '+62';
-
-            if ($whatsapp) {
-                // Bersihkan non-digit
-                $whatsapp = preg_replace('/[^\d]/', '', $whatsapp);
-                // Hilangkan 0 di depan jika kode negara +62
-                if ($phoneCode === '+62' && str_starts_with($whatsapp, '0')) {
-                    $whatsapp = ltrim($whatsapp, '0');
-                }
-                $fullWa = $phoneCode . $whatsapp;
-            } else {
-                $fullWa = null;
-            }
+            $fullWa = $request->whatsapp;
 
             $cvProfile->cv_whatsapp = $fullWa;
             $cvProfile->cv_domisili = $request->cv_domisili;

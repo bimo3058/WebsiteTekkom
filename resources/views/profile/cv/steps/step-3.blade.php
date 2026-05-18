@@ -107,53 +107,5 @@
         </div>
     </div>
 
-    <div class="border-t border-slate-100 pt-6 mt-6">
-        <h4 class="text-sm font-bold text-slate-800 mb-4">Tambah Pengalaman Organisasi / Kepanitiaan Lain (Opsional)</h4>
-        
-        <!-- Manual Org List -->
-        <div class="space-y-3 mb-4">
-            <template x-for="(org, index) in data.cv.kegiatan_organisasi" :key="index">
-                <div class="bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-start">
-                    <div>
-                        <h5 class="font-bold text-slate-800 text-sm" x-text="org.peran"></h5>
-                        <p class="text-sm text-slate-600" x-text="org.organisasi"></p>
-                        <p class="text-xs text-slate-500 my-1" x-text="`${org.tahun_mulai} - ${org.tahun_selesai || 'Sekarang'}`"></p>
-                        <p class="text-sm text-slate-600 mt-2" x-text="org.deskripsi"></p>
-                    </div>
-                    <button @click="removeOrg(index)" class="text-red-400 hover:text-red-600 transition-colors">
-                        <span class="material-symbols-outlined text-[18px]">delete</span>
-                    </button>
-                </div>
-            </template>
-        </div>
 
-        <!-- Add Form -->
-        <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Peran / Jabatan</label>
-                    <input type="text" x-model="newOrg.peran" class="w-full text-sm border-slate-200 rounded-lg p-2 outline-none focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4]" placeholder="Contoh: Ketua Divisi Acara">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Nama Organisasi / Acara</label>
-                    <input type="text" x-model="newOrg.organisasi" class="w-full text-sm border-slate-200 rounded-lg p-2 outline-none focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4]">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Tahun Mulai</label>
-                    <input type="text" x-model="newOrg.tahun_mulai" class="w-full text-sm border-slate-200 rounded-lg p-2 outline-none focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4]">
-                </div>
-                <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Tahun Selesai</label>
-                    <input type="text" x-model="newOrg.tahun_selesai" class="w-full text-sm border-slate-200 rounded-lg p-2 outline-none focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4]">
-                </div>
-                <div class="md:col-span-2">
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Deskripsi Kegiatan (Opsional)</label>
-                    <textarea x-model="newOrg.deskripsi" rows="3" class="w-full text-sm border-slate-200 rounded-lg p-2 outline-none focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4]"></textarea>
-                </div>
-            </div>
-            <button @click="addOrg()" class="text-xs font-bold bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
-                + Tambah Organisasi
-            </button>
-        </div>
-    </div>
 </div>

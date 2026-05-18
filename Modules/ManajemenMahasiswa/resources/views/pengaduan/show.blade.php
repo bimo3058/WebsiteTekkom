@@ -198,6 +198,74 @@
             /* ── Ticket Page Header ────────────────────────── */
             .ticket-page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; gap: 12px; flex-wrap: wrap; }
             .ticket-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+
+            /* ── Stepper (Mahasiswa View) ───────────────────────── */
+            .stepper-wrapper {
+                display: flex;
+                justify-content: space-between;
+                margin-bottom: 28px;
+                position: relative;
+                padding: 0 20px;
+            }
+            .stepper-wrapper::before {
+                content: '';
+                position: absolute;
+                top: 15px; left: 40px; right: 40px;
+                height: 2px;
+                background: #e5e7eb;
+                z-index: 1;
+            }
+            .step {
+                position: relative;
+                z-index: 2;
+                text-align: center;
+                width: 60px;
+            }
+            .step-icon {
+                width: 32px; height: 32px;
+                border-radius: 50%;
+                background: #fff;
+                border: 2px solid #e5e7eb;
+                margin: 0 auto 8px auto;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 14px;
+                font-weight: 700;
+                color: #9ca3af;
+                transition: all 0.3s;
+            }
+            .step.active .step-icon {
+                border-color: #0B266E;
+                color: #0B266E;
+                box-shadow: 0 0 0 4px rgba(11, 38, 110, 0.1);
+            }
+            .step.completed .step-icon {
+                background: #0B266E;
+                border-color: #0B266E;
+                color: #fff;
+            }
+            .step-label {
+                font-size: 11px;
+                font-weight: 700;
+                color: #9ca3af;
+                text-transform: uppercase;
+            }
+            .step.active .step-label  { color: #111827; }
+            .step.completed .step-label { color: #0B266E; }
+
+            /* ── Timeline Scroll Constraint ─────────────────────── */
+            .timeline-container {
+                position: relative;
+                padding-left: 24px;
+                max-height: 420px;        /* batasi agar tidak terlalu panjang */
+                overflow-y: auto;
+                padding-right: 8px;
+            }
+            /* Custom scrollbar yang rapi */
+            .timeline-container::-webkit-scrollbar       { width: 5px; }
+            .timeline-container::-webkit-scrollbar-track { background: transparent; }
+            .timeline-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
         </style>
     @endpush
 
@@ -279,6 +347,52 @@
         <strong>{{ $banner['label'] }}</strong>
         @if($banner['sub'])<span class="status-banner-sub">{{ $banner['sub'] }}</span>@endif
     </div>
+
+    {{-- ── Stepper Progress (Hanya Mahasiswa) ───────────── --}}
+    @if(!$isStaff)
+        @php
+            $stepNum = match(strtolower($pengaduan->status)) {
+                'baru'                              => 1,
+                'dibaca'                            => 2,
+                'didelegasikan', 'ditanggapi_dosen' => 3,
+                'dijawab', 'diajukan_ulang'         => 4,
+                'selesai'                           => 5,
+                default                             => 1,
+            };
+        @endphp
+        <div class="stepper-wrapper mb-4">
+            <div class="step {{ $stepNum >= 1 ? ($stepNum > 1 ? 'completed' : 'active') : '' }}">
+                <div class="step-icon">
+                    @if($stepNum > 1) <span class="material-symbols-outlined" style="font-size: 18px;">check</span> @else 1 @endif
+                </div>
+                <div class="step-label">Terkirim</div>
+            </div>
+            <div class="step {{ $stepNum >= 2 ? ($stepNum > 2 ? 'completed' : 'active') : '' }}">
+                <div class="step-icon">
+                    @if($stepNum > 2) <span class="material-symbols-outlined" style="font-size: 18px;">check</span> @else 2 @endif
+                </div>
+                <div class="step-label">Dibaca</div>
+            </div>
+            <div class="step {{ $stepNum >= 3 ? ($stepNum > 3 ? 'completed' : 'active') : '' }}">
+                <div class="step-icon">
+                    @if($stepNum > 3) <span class="material-symbols-outlined" style="font-size: 18px;">check</span> @else 3 @endif
+                </div>
+                <div class="step-label">Diproses</div>
+            </div>
+            <div class="step {{ $stepNum >= 4 ? ($stepNum > 4 ? 'completed' : 'active') : '' }}">
+                <div class="step-icon">
+                    @if($stepNum > 4) <span class="material-symbols-outlined" style="font-size: 18px;">check</span> @else 4 @endif
+                </div>
+                <div class="step-label">Dijawab</div>
+            </div>
+            <div class="step {{ $stepNum >= 5 ? 'completed active' : '' }}">
+                <div class="step-icon">
+                    @if($stepNum >= 5) <span class="material-symbols-outlined" style="font-size: 18px;">check</span> @else 5 @endif
+                </div>
+                <div class="step-label">Selesai</div>
+            </div>
+        </div>
+    @endif
 
     @php
         $waktuKejadian = data_get($pengaduan, 'data_template.waktu_kejadian')
@@ -684,6 +798,7 @@
             </div>
             @endif
 
+            @if($isStaff)
             <div class="sidebar-card">
                 <div class="sidebar-card-title">Riwayat Tiket</div>
                 <div class="timeline-container">
@@ -719,6 +834,7 @@
                     @endforeach
                 </div>
             </div>
+            @endif
         </div>
     </div>
 
