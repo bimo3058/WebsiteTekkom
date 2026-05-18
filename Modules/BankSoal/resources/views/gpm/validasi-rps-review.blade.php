@@ -134,6 +134,20 @@
         </div>
     </div>
 
+    @if(!empty($rps->catatan))
+        <div class="mb-6 rounded-2xl border border-sky-200 bg-sky-50 p-4 shadow-sm">
+            <div class="flex gap-3">
+                <div class="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-sky-100 text-sky-600">
+                    <i class="fas fa-comment-dots text-xs"></i>
+                </div>
+                <div>
+                    <h4 class="text-sm font-semibold text-sky-900">Catatan Tambahan Pengusul RPS</h4>
+                    <p class="mt-1 text-sm text-sky-700 leading-relaxed whitespace-pre-line">{{ $rps->catatan }}</p>
+                </div>
+            </div>
+        </div>
+    @endif
+
     <div class="grid grid-cols-1 gap-6 xl:grid-cols-5">
         <div class="xl:col-span-3">
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[500px] flex flex-col">

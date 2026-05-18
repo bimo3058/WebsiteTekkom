@@ -59,32 +59,30 @@
     <x-banksoal::ui.page-header title="Arsip Soal Dosen" subtitle="Kelola riwayat penarikan dan arsip final dokumen ujian Anda.">
         <x-slot:actions>
             <div class="flex flex-wrap items-center gap-3">
-                <div class="relative" x-data="{ open: false }" @click.away="open = false">
-                    <button @click="open = !open" type="button" class="inline-flex items-center gap-2 rounded-xl bg-navy px-5 py-2.5 font-bold text-white shadow-lg shadow-navy/20 transition-all hover:opacity-90 active:scale-95">
-                        <i class="fas fa-plus-circle"></i> Tambah Arsip <i class="fas fa-chevron-down text-[10px] ml-1 transition-transform" :class="open ? 'rotate-180' : ''"></i>
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" class="inline-flex items-center gap-2 rounded-xl bg-navy px-5 py-2.5 font-bold text-white shadow-lg shadow-navy/20 transition-all hover:opacity-90 active:scale-95">
+                        <i class="fas fa-plus-circle"></i> Tambah Arsip
+                        <i class="fas fa-chevron-down text-[10px] transition-transform" :class="open ? 'rotate-180' : ''"></i>
                     </button>
-
-                    <div x-show="open" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" class="absolute right-0 mt-2 w-56 origin-top-right divide-y divide-slate-100 rounded-2xl border border-slate-100 bg-white shadow-xl z-50 overflow-hidden">
-                        <div class="py-1">
-                            <button type="button" class="group flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-navy" onclick="openModal('uploadPdfModal')">
-                                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-500 group-hover:bg-rose-100">
-                                    <i class="fas fa-file-pdf"></i>
-                                </span>
-                                <div>
-                                    <p>Upload PDF</p>
-                                    <p class="text-[10px] text-slate-400 font-normal">Format .pdf standar</p>
-                                </div>
-                            </button>
-                            <button type="button" class="group flex w-full items-center gap-3 px-4 py-3 text-left text-sm font-medium text-slate-700 hover:bg-slate-50 hover:text-emerald-700" onclick="openModal('uploadCsvModal')">
-                                <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500 group-hover:bg-emerald-100">
-                                    <i class="fas fa-file-csv"></i>
-                                </span>
-                                <div>
-                                    <p>Upload CSV/Excel</p>
-                                    <p class="text-[10px] text-slate-400 font-normal">Import massal soal</p>
-                                </div>
-                            </button>
-                        </div>
+                    <div x-show="open" @click.away="open = false" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" class="absolute right-0 mt-2 w-56 origin-top-right rounded-2xl border border-slate-100 bg-white shadow-xl z-50 p-2 space-y-1">
+                        <a href="{{ route('banksoal.arsip.dosen.create-pdf') }}" class="flex items-center gap-3 px-3 py-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-navy transition-all group">
+                            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-rose-50 text-rose-500 group-hover:bg-rose-100 transition-colors">
+                                <i class="fas fa-file-pdf"></i>
+                            </span>
+                            <div class="flex flex-col">
+                                <span>Upload PDF</span>
+                                <span class="text-[10px] text-slate-400 font-normal">Format PDF Standar</span>
+                            </div>
+                        </a>
+                        <a href="{{ route('banksoal.arsip.dosen.create-csv') }}" class="flex items-center gap-3 px-3 py-3 rounded-xl text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-navy transition-all group">
+                            <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-50 text-emerald-500 group-hover:bg-emerald-100 transition-colors">
+                                <i class="fas fa-file-excel"></i>
+                            </span>
+                            <div class="flex flex-col">
+                                <span>Import CSV/Excel</span>
+                                <span class="text-[10px] text-slate-400 font-normal">Gunakan Template</span>
+                            </div>
+                        </a>
                     </div>
                 </div>
             </div>
@@ -371,93 +369,7 @@
         @endif
     </div>
 
-    <!-- Modals -->
-    <x-banksoal::ui.modal id="uploadPdfModal" title="Unggah PDF Arsip" subtitle="Dokumen akan diarsipkan sebagai format PDF standar.">
-        <form action="{{ route('banksoal.arsip.dosen.upload-pdf') }}" method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
-            @csrf
-            <div class="space-y-5">
-                <div class="p-6 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 text-center hover:border-navy transition-all cursor-pointer group" onclick="document.getElementById('pdf_file').click()">
-                    <div class="h-16 w-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-file-pdf text-3xl text-rose-500"></i>
-                    </div>
-                    <p class="text-sm font-bold text-slate-800">Klik atau Tarik File PDF</p>
-                    <p class="text-xs text-slate-400 mt-1 uppercase tracking-widest">Maksimal 50MB</p>
-                    <input type="file" id="pdf_file" name="pdf_file" class="hidden" accept="application/pdf" onchange="updateFileName(this, 'pdf_name_display')">
-                </div>
-                <div id="pdf_name_display" class="hidden animate-popup">
-                    <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold">
-                        <i class="fas fa-check-circle"></i>
-                        <span class="file-name"></span>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-8 flex justify-end gap-3">
-                <button type="button" class="px-6 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-500 hover:bg-slate-50" onclick="closeModal('uploadPdfModal')">Batal</button>
-                <button type="submit" class="px-6 py-2.5 rounded-xl bg-navy text-white text-sm font-bold hover:opacity-90 shadow-lg shadow-navy/20 transition-all">Upload Sekarang</button>
-            </div>
-        </form>
-    </x-banksoal::ui.modal>
-
-    <x-banksoal::ui.modal id="uploadCsvModal" title="Import Massal via CSV/Excel" subtitle="Gunakan template resmi untuk menghindari kesalahan format data.">
-        <form action="{{ route('banksoal.arsip.dosen.upload-csv') }}" method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
-            @csrf
-            <div class="space-y-6">
-                <div class="flex items-center justify-between p-4 rounded-2xl bg-amber-50 border border-amber-100">
-                    <div class="flex items-center gap-3">
-                        <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-amber-100 text-amber-600">
-                            <i class="fas fa-download text-sm"></i>
-                        </span>
-                        <div>
-                            <p class="text-sm font-bold text-amber-900">Unduh Template</p>
-                            <p class="text-[10px] text-amber-700">Pastikan data sesuai kolom yang tersedia.</p>
-                        </div>
-                    </div>
-                    <a href="{{ route('banksoal.soal.dosen.export-csv') }}" class="px-4 py-2 rounded-xl bg-white border border-amber-200 text-amber-700 text-xs font-bold hover:bg-amber-100 transition-all shadow-sm">
-                        Download .xlsx
-                    </a>
-                </div>
-
-                <div class="p-6 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 text-center hover:border-navy transition-all cursor-pointer group" onclick="document.getElementById('csv_file').click()">
-                    <div class="h-16 w-16 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                        <i class="fas fa-file-excel text-3xl text-emerald-500"></i>
-                    </div>
-                    <p class="text-sm font-bold text-slate-800">Klik atau Tarik File Spreadsheet</p>
-                    <p class="text-xs text-slate-400 mt-1 uppercase tracking-widest">Format: CSV, XLS, XLSX • Maks 50MB</p>
-                    <input type="file" id="csv_file" name="csv_file" class="hidden" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" onchange="updateFileName(this, 'csv_name_display')">
-                </div>
-                <div id="csv_name_display" class="hidden animate-popup">
-                    <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold">
-                        <i class="fas fa-check-circle"></i>
-                        <span class="file-name"></span>
-                    </div>
-                </div>
-            </div>
-            <div class="mt-8 flex justify-end gap-3">
-                <button type="button" class="px-6 py-2.5 rounded-xl border border-slate-200 text-sm font-bold text-slate-500 hover:bg-slate-50" onclick="closeModal('uploadCsvModal')">Batal</button>
-                <button type="submit" class="px-6 py-2.5 rounded-xl bg-navy text-white text-sm font-bold hover:opacity-90 shadow-lg shadow-navy/20 transition-all">Import Sekarang</button>
-            </div>
-        </form>
-    </x-banksoal::ui.modal>
-
     <script>
-        function openModal(id) {
-            document.getElementById(id).classList.remove('hidden');
-            document.body.classList.add('overflow-hidden');
-        }
-        function closeModal(id) {
-            document.getElementById(id).classList.add('hidden');
-            document.body.classList.remove('overflow-hidden');
-        }
-        function updateFileName(input, displayId) {
-            const display = document.getElementById(displayId);
-            const nameSpan = display.querySelector('.file-name');
-            if (input.files.length > 0) {
-                nameSpan.textContent = input.files[0].name;
-                display.classList.remove('hidden');
-            } else {
-                display.classList.add('hidden');
-            }
-        }
         function showLoader() {
             document.getElementById('global-loader').style.display = 'flex';
         }

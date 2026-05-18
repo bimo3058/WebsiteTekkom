@@ -86,18 +86,39 @@
                     </div>
 
                     <!-- Riwayat Validasi -->
-                    @php $isRiwayat = request()->routeIs('banksoal.rps.gpm.index') || request()->routeIs('banksoal.rps.gpm.riwayat-validasi.*') || request()->routeIs('banksoal.soal.gpm.riwayat-validasi*'); @endphp
-                    <a href="{{ route('banksoal.rps.gpm.index') }}"
-                        class="group relative flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all {{ $isRiwayat ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}">
-                        @if($isRiwayat)
-                            <div class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1.5 bg-primary rounded-r-full"></div>
-                        @endif
-                        <svg class="w-5 h-5 flex-shrink-0 {{ $isRiwayat ? 'text-primary' : 'text-slate-400 group-hover:text-slate-500' }}"
-                             fill="{{ $isRiwayat ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                        <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap" x-transition.opacity.duration.300ms>Riwayat Validasi</span>
-                    </a>
+                    @php 
+                        $isRiwayatRps = request()->routeIs('banksoal.rps.gpm.riwayat-validasi.*'); 
+                        $isRiwayatSoal = request()->routeIs('banksoal.soal.gpm.riwayat-validasi*');
+                        $isRiwayat = request()->routeIs('banksoal.rps.gpm.index') || $isRiwayatRps || $isRiwayatSoal; 
+                    @endphp
+                    <div x-data="{ isRiwayatOpen: {{ $isRiwayat ? 'true' : 'false' }} }">
+                        <button @click="if(sidebarOpen) { isRiwayatOpen = !isRiwayatOpen } else { sidebarOpen = true; isRiwayatOpen = true }"
+                            class="w-full group relative flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all {{ $isRiwayat ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}">
+                            @if($isRiwayat)
+                                <div class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1.5 bg-primary rounded-r-full"></div>
+                            @endif
+                            <svg class="w-5 h-5 flex-shrink-0 {{ $isRiwayat ? 'text-primary' : 'text-slate-400 group-hover:text-slate-500' }}"
+                                fill="{{ $isRiwayat ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            <span x-show="sidebarOpen" class="flex-1 text-left text-sm font-medium whitespace-nowrap" x-transition.opacity.duration.300ms>Riwayat Validasi</span>
+                            <svg x-show="sidebarOpen" :class="isRiwayatOpen ? 'rotate-180' : ''" class="w-4 h-4 transition-transform duration-200 {{ $isRiwayat ? 'text-slate-900' : 'text-slate-400' }}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </button>
+                        
+                        <!-- Submenu -->
+                        <div x-show="isRiwayatOpen && sidebarOpen" x-collapse x-transition.duration.200ms class="mt-1 space-y-1 pl-11">
+                            <a href="{{ route('banksoal.rps.gpm.riwayat-validasi.rps') }}"
+                                class="block py-2 px-3 text-sm font-medium rounded-lg transition-all {{ $isRiwayatRps ? 'text-primary bg-primary/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">
+                                Riwayat Validasi RPS
+                            </a>
+                            <a href="{{ route('banksoal.soal.gpm.riwayat-validasi.bank-soal') }}"
+                                class="block py-2 px-3 text-sm font-medium rounded-lg transition-all {{ $isRiwayatSoal ? 'text-primary bg-primary/5' : 'text-slate-500 hover:text-slate-700 hover:bg-slate-50' }}">
+                                Riwayat Validasi Bank Soal
+                            </a>
+                        </div>
+                    </div>
 
                 </div>
             </div>

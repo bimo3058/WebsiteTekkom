@@ -288,6 +288,22 @@
             </template>
         </div>
 
+        <div class="form-card">
+            <div class="form-card-title"><i class="fas fa-pen-to-square"></i> Catatan Pengajuan</div>
+            <div class="form-group">
+                <label class="field-label">Catatan</label>
+                <textarea
+                    name="catatan"
+                    class="field-control"
+                    rows="3"
+                    placeholder="Opsional. Tambahkan catatan terkait pengajuan RPS ini."
+                    {{ !$isUploadOpen ? 'disabled' : '' }}
+                >{{ old('catatan') }}</textarea>
+                <p class="field-hint">Catatan ini akan dapat dilihat oleh GPM saat validasi.</p>
+                @error('catatan')<p class="field-error">{{ $message }}</p>@enderror
+            </div>
+        </div>
+
         {{-- Dokumen Upload --}}
         <div class="form-card">
             <div class="form-card-title"><i class="fas fa-file-pdf"></i> Dokumen RPS</div>

@@ -96,6 +96,24 @@ class RpsController extends Controller
      */
     public function validasiRpsReview($rpsId)
     {
+        $data = $this->getRpsReviewData($rpsId);
+        return view('banksoal::gpm.validasi-rps-review', $data);
+    }
+
+    public function revisiRps($rpsId)
+    {
+        $data = $this->getRpsReviewData($rpsId);
+        return view('banksoal::gpm.validasi-rps-revisi', $data);
+    }
+
+    public function setujuRps($rpsId)
+    {
+        $data = $this->getRpsReviewData($rpsId);
+        return view('banksoal::gpm.validasi-rps-setuju', $data);
+    }
+
+    private function getRpsReviewData($rpsId)
+    {
         $dosenAggregate = DB::raw("STRING_AGG(DISTINCT CONCAT(LEFT(UPPER(users.name), 1), RIGHT(UPPER(users.name), 1), '|', users.name, '|', users.email), ', ') as dosens_list");
         
         $rps = DB::table('bs_rps_detail')
@@ -111,11 +129,12 @@ class RpsController extends Controller
                 'bs_rps_detail.tahun_ajaran',
                 'bs_rps_detail.status',
                 'bs_rps_detail.dokumen',
+                'bs_rps_detail.catatan',
                 'bs_rps_detail.created_at as tanggal_diajukan',
                 $dosenAggregate
             )
             ->where('bs_rps_detail.id', '=', $rpsId)
-            ->groupBy('bs_rps_detail.id', 'bs_mata_kuliah.id', 'bs_mata_kuliah.kode', 'bs_mata_kuliah.nama', 'bs_rps_detail.semester', 'bs_rps_detail.tahun_ajaran', 'bs_rps_detail.status', 'bs_rps_detail.dokumen', 'bs_rps_detail.created_at')
+            ->groupBy('bs_rps_detail.id', 'bs_mata_kuliah.id', 'bs_mata_kuliah.kode', 'bs_mata_kuliah.nama', 'bs_rps_detail.semester', 'bs_rps_detail.tahun_ajaran', 'bs_rps_detail.status', 'bs_rps_detail.dokumen', 'bs_rps_detail.catatan', 'bs_rps_detail.created_at')
             ->first();
 
         if (!$rps) {
@@ -128,12 +147,12 @@ class RpsController extends Controller
             ->orderBy('cpl.kode')
             ->get(['cpl.id', 'cpl.kode', 'cpl.deskripsi']);
 
-        $cplCpmkMappings = DB::table('bs_cpl_cpmk as map')
+        $cplCpmkMappings = DB::table('bs_rps_cpmk as map')
             ->join('bs_cpl as cpl', 'cpl.id', '=', 'map.cpl_id')
             ->join('bs_cpmk as cpmk', 'cpmk.id', '=', 'map.cpmk_id')
-            ->where('map.mk_id', $rps->mk_id)
+            ->where('map.rps_id', $rpsId)
             ->select(
-                'map.mk_id',
+                'map.rps_id',
                 'cpl.id as cpl_id',
                 'cpl.kode as cpl_kode',
                 'cpl.deskripsi as cpl_deskripsi',
@@ -209,7 +228,7 @@ class RpsController extends Controller
             ->get();
 
         $totalBobot = $parameters->sum('bobot');
-        return view('banksoal::gpm.validasi-rps-review', compact('rps', 'parameters', 'existingReview', 'history', 'selectedCpls', 'cplCpmkMappings', 'draftCpmkItems', 'dosenPengampu', 'totalBobot'));
+        return compact('rps', 'parameters', 'existingReview', 'history', 'selectedCpls', 'cplCpmkMappings', 'draftCpmkItems', 'dosenPengampu', 'totalBobot');
     }
 
     public function previewDokumen(int $rpsId)

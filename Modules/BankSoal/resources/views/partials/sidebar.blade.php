@@ -49,8 +49,7 @@
                     </svg>
                 </button>
                 <div x-show="open" class="pl-4 space-y-1">
-                    <a href="{{ route('banksoal.admin.kontrol-umum.mata-kuliah') }}" class="block px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-50 {{ $currentRoute === 'banksoal.admin.kontrol-umum.mata-kuliah' ? 'bg-primary/10 text-primary' : '' }}">Manajemen Mata Kuliah</a>
-                    <a href="{{ route('banksoal.admin.kontrol-umum.cpl-cpmk') }}" class="block px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-50 {{ $currentRoute === 'banksoal.admin.kontrol-umum.cpl-cpmk' ? 'bg-primary/10 text-primary' : '' }}">Manajemen CPL & CPMK</a>
+                    <a href="{{ route('banksoal.admin.kontrol-umum.mata-kuliah') }}" class="block px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-50 {{ $currentRoute === 'banksoal.admin.kontrol-umum.mata-kuliah' ? 'bg-primary/10 text-primary' : '' }}">Manajemen Data</a>
                     <a href="{{ route('banksoal.admin.kontrol-umum.pemetaan') }}" class="block px-4 py-2 text-sm rounded-lg text-slate-600 hover:bg-slate-50 {{ $currentRoute === 'banksoal.admin.kontrol-umum.pemetaan' ? 'bg-primary/10 text-primary' : '' }}">Pemetaan</a>
                 </div>
             </div>

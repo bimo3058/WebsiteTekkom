@@ -76,18 +76,19 @@
 .mp-stat { background:#fff; border:1px solid var(--c-border); border-radius:14px; padding:16px 20px;
            box-shadow:var(--shadow-card); transition:border-color .15s, box-shadow .15s; }
 .mp-stat:hover { border-color:var(--c-primary-border); box-shadow:0 4px 14px rgba(11,38,110,.07); }
-.mp-stat-icon { width:32px; height:32px; border-radius:8px; display:flex; align-items:center;
+.mp-stat-icon { width:34px; height:34px; border-radius:9px; display:flex; align-items:center;
                 justify-content:center; flex-shrink:0; }
-.mp-stat-label { font-size:12px; font-weight:500; color:var(--c-fg-muted); margin-bottom:10px; }
-.mp-stat-value { font-size:26px; font-weight:700; color:var(--c-fg); line-height:1; letter-spacing:-.02em; }
+.mp-stat-label { font-size:12px; font-weight:500; color:var(--c-fg-muted); margin-top:12px; margin-bottom:6px; }
+.mp-stat-value { font-size:28px; font-weight:700; color:var(--c-fg); line-height:1; letter-spacing:-.02em; }
 .mp-stat-sub   { font-size:11px; color:var(--c-fg-placeholder); margin-top:4px; }
 
 /* Table / Card containers */
 .mp-card { background:#fff; border:1px solid var(--c-border); border-radius:14px; overflow:hidden;
            box-shadow:var(--shadow-card); display:flex; flex-direction:column; }
-.mp-card-header { padding:12px 16px; background:#FAFBFC; border-bottom:1px solid var(--c-border);
-                  display:flex; align-items:center; justify-content:space-between; flex-shrink:0; }
-.mp-card-title { font-size:13px; font-weight:700; color:var(--c-fg); }
+.mp-card-header { padding:14px 18px; background:#fff; border-bottom:1px solid var(--c-border);
+                  display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.mp-card-title { font-size:15px; font-weight:700; color:var(--c-fg); }
+.mp-card-header .right { margin-left:auto; display:flex; align-items:center; gap:8px; }
 .mp-card-body  { flex:1; overflow-y:auto; }
 .mp-th { font-size:11px; font-weight:600; color:var(--c-fg-placeholder); text-transform:uppercase;
          letter-spacing:.06em; }
@@ -110,6 +111,33 @@
 
 /* Divider */
 .mp-divider { height:1px; background:var(--c-border); margin:0 -24px; flex-shrink:0; }
+
+/* Section title — accent bar pattern (§6.2) */
+.sec-head   { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+.sec-bar    { width:4px; height:22px; background:#0B266E; border-radius:19px; flex-shrink:0; }
+.sec-title  { font-family:'Inter Tight',sans-serif; font-size:15px; font-weight:700; color:#0D0D12; white-space:nowrap; }
+.sec-rule   { flex:1; height:1px; background:#DFE1E7; }
+.sec-action { font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#0B266E; text-decoration:none; white-space:nowrap; }
+.sec-action:hover { text-decoration:underline; }
+
+/* Stat icon tone variants */
+.mp-stat-icon.navy   { background:#EEF1FA; color:#0E1E54; }
+.mp-stat-icon.sky    { background:#D1F0F9; color:#106A97; }
+.mp-stat-icon.green  { background:#DDF2EE; color:#174E43; }
+.mp-stat-icon.yellow { background:#F9ECCB; color:#956321; }
+.mp-stat-icon.red    { background:#FADAE1; color:#95122B; }
+
+/* Avatar (table/chip) */
+.mp-av { width:28px; height:28px; border-radius:999px; display:grid; place-items:center;
+         font:700 11px/1 'Inter Tight',sans-serif; flex-shrink:0; }
+.mp-av.sm { width:22px; height:22px; font-size:9px; }
+.mp-av.lg { width:36px; height:36px; font-size:13px; }
+.mp-av.navy   { background:#EEF1FA; color:#0E1E54; }
+.mp-av.sky    { background:#D1F0F9; color:#106A97; }
+.mp-av.green  { background:#DDF2EE; color:#174E43; }
+.mp-av.yellow { background:#F9ECCB; color:#956321; }
+.mp-av.red    { background:#FADAE1; color:#95122B; }
+.mp-av.violet { background:#E4DFFD; color:#6B39F4; }
 
 /* Mobile overrides */
 @media (max-width:767px) {
@@ -291,7 +319,7 @@
     {{-- SIDEBAR                                                        --}}
     {{-- ═══════════════════════════════════════════════════════════════ --}}
     <aside class="flex flex-col flex-shrink-0 bg-white border-r border-[#DFE1E7] relative overflow-visible z-20 transition-all duration-[240ms] ease-[cubic-bezier(.4,0,.2,1)]"
-           :class="sidebarOpen ? 'w-[240px]' : 'w-[64px]'">
+           :class="sidebarOpen ? 'w-[272px]' : 'w-[64px]'">
 
         {{-- Brand --}}
         <div class="relative px-[10px] pt-[18px] pb-[10px]">
@@ -379,7 +407,7 @@
                     @foreach($items as $item)
                     @php $active = str_contains($currentRoute, $item['match']); @endphp
                     <a href="{{ $item['href'] }}"
-                       class="flex items-center gap-[10px] px-[10px] py-[8px] rounded-[8px] mb-[1px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap"
+                       class="flex items-center gap-[10px] px-[12px] py-[9px] rounded-[10px] mb-[1px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap"
                        :class="sidebarOpen ? '' : 'justify-center'"
                        @if($active)
                            style="background:{{ $sectionColor }}; color:white;"
@@ -388,12 +416,12 @@
                            onmouseover="this.style.background='#F6F8FA'"
                            onmouseout="this.style.background='transparent'"
                        @endif>
-                        <svg class="w-[14px] h-[14px] flex-shrink-0"
-                             style="color:{{ $active ? 'white' : '#666D80' }}"
+                        <svg class="w-[16px] h-[16px] flex-shrink-0"
+                             style="color:{{ $active ? 'white' : '#808897' }}"
                              viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                             <path d="{{ $item['icon'] }}"/>
                         </svg>
-                        <span class="text-[12px] flex-1 overflow-hidden text-ellipsis transition-[opacity,width] duration-200
+                        <span class="text-[13px] flex-1 overflow-hidden text-ellipsis transition-[opacity,width] duration-200
                                      {{ $active ? 'font-semibold' : 'font-medium' }}"
                               :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">{{ $item['label'] }}</span>
                     </a>

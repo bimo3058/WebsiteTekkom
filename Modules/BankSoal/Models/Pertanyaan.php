@@ -42,7 +42,7 @@ class Pertanyaan extends Model
 
     public function cpmk(): BelongsTo
     {
-        return $this->belongsTo(\Modules\BankSoal\Models\Shared\Cpmk::class, 'cpmk_id');
+        return $this->belongsTo(\Modules\BankSoal\Models\Cpmk::class, 'cpmk_id');
     }
 
     public function jawaban(): HasMany

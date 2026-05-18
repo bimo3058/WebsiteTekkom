@@ -4,7 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Modules\BankSoal\Http\Controllers\BS\DashboardController;
-use Modules\BankSoal\Http\Controllers\BS\Admin\CplCpmkController;
+use Modules\BankSoal\Http\Controllers\BS\Admin\CplController;
 use Modules\BankSoal\Http\Controllers\BS\Admin\MataKuliahController;
 use Modules\BankSoal\Http\Controllers\BS\Admin\PemetaanController;
 use Modules\BankSoal\Http\Controllers\RPS\Dosen\RpsController as DosenRpsController;
@@ -41,37 +41,31 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         Route::middleware('role:admin_banksoal|superadmin')->prefix('admin/kontrol-umum')->name('banksoal.admin.kontrol-umum.')->group(function () {
             Route::get('/mata-kuliah', [MataKuliahController::class, 'index'])->name('mata-kuliah');
             Route::get('/mata-kuliah/create', [MataKuliahController::class, 'create'])->name('mata-kuliah.create');
-            Route::get('/cpl-cpmk', [CplCpmkController::class, 'index'])->name('cpl-cpmk');
-            Route::get('/cpl-cpmk/create', [CplCpmkController::class, 'create'])->name('cpl-cpmk.create');
+            Route::get('/mata-kuliah/{id}/edit', [MataKuliahController::class, 'edit'])->name('mata-kuliah.edit');
+            Route::get('/cpl/create', [CplController::class, 'createCpl'])->name('cpl.create');
+            Route::get('/cpl/{id}/edit', [CplController::class, 'editCpl'])->name('cpl.edit');
             Route::get('/pemetaan', [PemetaanController::class, 'index'])->name('pemetaan');
-            Route::get('/pemetaan/cpmk-cpl/create', [PemetaanController::class, 'createCpmkCpl'])->name('pemetaan.cpmk-cpl.create');
             Route::get('/pemetaan/mk-cpl/create', [PemetaanController::class, 'createMkCpl'])->name('pemetaan.mk-cpl.create');
             Route::get('/pemetaan/mk-dosen/create', [PemetaanController::class, 'createMkDosen'])->name('pemetaan.mk-dosen.create');
-            Route::get('/pemetaan/cpmk-cpl/{cpl_id}/edit', [PemetaanController::class, 'editCpmkCpl'])->name('pemetaan.cpmk-cpl.edit');
             Route::get('/pemetaan/mk-cpl/{mk_id}/edit', [PemetaanController::class, 'editMkCpl'])->name('pemetaan.mk-cpl.edit');
             Route::get('/pemetaan/mk-dosen/{mk_id}/edit', [PemetaanController::class, 'editMkDosen'])->name('pemetaan.mk-dosen.edit');
         });
 
         Route::middleware('role:admin_banksoal|superadmin')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
-            Route::get('/cpl', [CplCpmkController::class, 'listCpl'])->name('cpl.index');
-            Route::get('/cpl/next-code', [CplCpmkController::class, 'nextCplCode'])->name('cpl.next-code');
-            Route::get('/cpl/export-template', [CplCpmkController::class, 'exportCplTemplate'])->name('cpl.export-template');
-            Route::post('/cpl/import', [CplCpmkController::class, 'importCpl'])->name('cpl.import');
-            Route::get('/cpl/{id}', [CplCpmkController::class, 'showCpl'])->name('cpl.show');
+            Route::get('/cpl', [CplController::class, 'listCpl'])->name('cpl.index');
+            Route::get('/cpl/next-code', [CplController::class, 'nextCplCode'])->name('cpl.next-code');
+            Route::get('/cpl/export-template', [CplController::class, 'exportCplTemplate'])->name('cpl.export-template');
+            Route::post('/cpl/import', [CplController::class, 'importCpl'])->name('cpl.import');
+            Route::get('/cpl/{id}', [CplController::class, 'showCpl'])->name('cpl.show');
 
             Route::get('/rps/approved', [AdminRpsController::class, 'listApproved'])->name('rps.approved.index');
 
-            Route::get('/cpmk', [CplCpmkController::class, 'listCpmk'])->name('cpmk.index');
-            Route::get('/cpmk/next-code', [CplCpmkController::class, 'nextCpmkCode'])->name('cpmk.next-code');
-            Route::get('/cpmk/export-template', [CplCpmkController::class, 'exportCpmkTemplate'])->name('cpmk.export-template');
-            Route::post('/cpmk/import', [CplCpmkController::class, 'importCpmk'])->name('cpmk.import');
-            Route::get('/cpmk/{id}', [CplCpmkController::class, 'showCpmk'])->name('cpmk.show');
-
             Route::post('/mata-kuliah/import', [MataKuliahController::class, 'import'])->name('mata-kuliah.import');
             Route::get('/mata-kuliah/export-template', [MataKuliahController::class, 'exportTemplate'])->name('mata-kuliah.export-template');
+            Route::patch('/mata-kuliah/{id}/toggle-active', [MataKuliahController::class, 'toggleActive'])->name('mata-kuliah.toggle-active');
+            Route::post('/mata-kuliah/sync-semester', [MataKuliahController::class, 'syncSemester'])->name('mata-kuliah.sync-semester');
 
             Route::get('/pemetaan/options', [PemetaanController::class, 'options'])->name('pemetaan.options');
-            Route::get('/pemetaan/cpmk-cpl', [PemetaanController::class, 'listCpmkCpl'])->name('pemetaan.cpmk-cpl.index');
             Route::get('/pemetaan/mk-cpl', [PemetaanController::class, 'listMkCpl'])->name('pemetaan.mk-cpl.index');
             Route::get('/pemetaan/cpl-mk', [PemetaanController::class, 'listCplMk'])->name('pemetaan.cpl-mk.index');
             Route::get('/pemetaan/dosen-mk', [PemetaanController::class, 'listDosenMk'])->name('pemetaan.dosen-mk.index');
@@ -109,6 +103,8 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::get('/', [RiwayatValidasiController::class, 'index'])->name('index');
                 Route::get('/validasi-rps', [GpmRpsController::class, 'validasiRps'])->name('validasi-rps');
                 Route::get('/validasi-rps/review/{rpsId}', [GpmRpsController::class, 'validasiRpsReview'])->name('validasi-rps.review');
+                Route::get('/validasi-rps/revisi/{rpsId}', [GpmRpsController::class, 'revisiRps'])->name('validasi-rps.revisi');
+                Route::get('/validasi-rps/setuju/{rpsId}', [GpmRpsController::class, 'setujuRps'])->name('validasi-rps.setuju');
                 Route::get('/validasi-rps/preview/{rpsId}', [GpmRpsController::class, 'previewDokumen'])->name('validasi-rps.preview');
                 Route::get('/riwayat-validasi/rps', [RiwayatValidasiController::class, 'rps'])->name('riwayat-validasi.rps');
                 Route::get('/periode-rps', [PeriodeRpsController::class, 'index'])->name('periode-rps.index');
@@ -164,6 +160,9 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         Route::prefix('arsip')->name('banksoal.arsip.')->group(function () {
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::get('/', [ArsipSoalController::class, 'index'])->name('index');
+                Route::get('/create', [ArsipSoalController::class, 'create'])->name('create');
+                Route::get('/create-pdf', [ArsipSoalController::class, 'createPdf'])->name('create-pdf');
+                Route::get('/create-csv', [ArsipSoalController::class, 'createCsv'])->name('create-csv');
                 Route::get('/{id}', [ArsipSoalController::class, 'show'])->name('show');
                 Route::get('/penarikan/{id}', [ArsipSoalController::class, 'showPenarikan'])->name('penarikan.show');
                 Route::get('/penarikan/{id}/edit', [ArsipSoalController::class, 'editPenarikan'])->name('penarikan.edit');
@@ -192,14 +191,10 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         });
 
         Route::middleware('role:admin_banksoal|superadmin')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
-            Route::post('/cpl', [CplCpmkController::class, 'storeCpl'])->name('cpl.store');
-            Route::put('/cpl/{id}', [CplCpmkController::class, 'updateCpl'])->name('cpl.update');
+            Route::post('/cpl', [CplController::class, 'storeCpl'])->name('cpl.store');
+            Route::put('/cpl/{id}', [CplController::class, 'updateCpl'])->name('cpl.update');
+            Route::delete('/cpl/{id}', [CplController::class, 'destroyCpl'])->name('cpl.destroy');
 
-            Route::post('/cpmk', [CplCpmkController::class, 'storeCpmk'])->name('cpmk.store');
-            Route::put('/cpmk/{id}', [CplCpmkController::class, 'updateCpmk'])->name('cpmk.update');
-
-            Route::post('/pemetaan/cpmk-cpl', [PemetaanController::class, 'storeCpmkCpl'])->name('pemetaan.cpmk-cpl.store');
-            Route::post('/pemetaan/cpmk-cpl/sync', [PemetaanController::class, 'syncCpmkCpl'])->name('pemetaan.cpmk-cpl.sync');
             Route::post('/pemetaan/mk-cpl', [PemetaanController::class, 'storeMkCpl'])->name('pemetaan.mk-cpl.store');
             Route::post('/pemetaan/mk-cpl/sync', [PemetaanController::class, 'syncMkCpl'])->name('pemetaan.mk-cpl.sync');
             Route::post('/pemetaan/cpl-mk', [PemetaanController::class, 'storeCplMk'])->name('pemetaan.cpl-mk.store');
@@ -264,13 +259,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         });
 
         Route::middleware('role:admin_banksoal|superadmin')->prefix('admin/api')->name('banksoal.api.v1.admin.')->group(function () {
-            Route::delete('/cpl/{id}', [CplCpmkController::class, 'destroyCpl'])->name('cpl.destroy');
-            Route::delete('/cpmk/{id}', [CplCpmkController::class, 'destroyCpmk'])->name('cpmk.destroy');
-
-            Route::delete('/pemetaan/cpmk-cpl', [PemetaanController::class, 'destroyCpmkCpl'])->name('pemetaan.cpmk-cpl.destroy');
-            Route::delete('/pemetaan/cpmk-cpl/{cpl_id}/all', [PemetaanController::class, 'destroyAllCpmkByCpl'])->name('pemetaan.cpmk-cpl.destroy-all');
-            Route::delete('/pemetaan/cpmk-cpl/bulk', [PemetaanController::class, 'bulkDestroyCpmkCpl'])->name('pemetaan.cpmk-cpl.bulk-destroy');
-
+            Route::delete('/cpl/{id}', [CplController::class, 'destroyCpl'])->name('cpl.destroy');
             Route::delete('/pemetaan/mk-cpl', [PemetaanController::class, 'destroyMkCpl'])->name('pemetaan.mk-cpl.destroy');
             Route::delete('/pemetaan/mk-cpl/{mk_id}/all', [PemetaanController::class, 'destroyAllCplByMk'])->name('pemetaan.mk-cpl.destroy-all');
             Route::delete('/pemetaan/mk-cpl/bulk', [PemetaanController::class, 'bulkDestroyMkCpl'])->name('pemetaan.mk-cpl.bulk-destroy');

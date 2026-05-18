@@ -36,23 +36,41 @@ class PeriodeController extends Controller
         return view('banksoal::periode.index', compact('periodes', 'search', 'perPage'));
     }
 
-    /** Update status periode secara otomatis berdasarkan tanggal */
+    /**
+     * Update status periode secara otomatis berdasarkan tanggal.
+     *
+     * Menggunakan 3 batch UPDATE — tidak ada loop/N+1.
+     * Urutan eksekusi penting: selesai → aktif → draft.
+     */
     private function updateStatusOtomatis(): void
     {
-        $now = now();
-        foreach (PeriodeUjian::all() as $p) {
-            if ($p->status === 'selesai') continue;
+        $today = now()->toDateString();
 
-            $mulai   = Carbon::parse($p->tanggal_mulai)->startOfDay();
-            $selesai = Carbon::parse($p->tanggal_selesai)->endOfDay();
+        // 1. Selesai: tanggal akhir ujian (atau pendaftaran jika ujian null) sudah berlalu.
+        //    Ekuivalen SQL: COALESCE(tanggal_selesai_ujian, tanggal_selesai) < $today
+        PeriodeUjian::where('status', '!=', 'selesai')
+            ->where(function ($q) use ($today) {
+                $q->where(function ($q2) use ($today) {
+                    $q2->whereNotNull('tanggal_selesai_ujian')
+                       ->where('tanggal_selesai_ujian', '<', $today);
+                })->orWhere(function ($q2) use ($today) {
+                    $q2->whereNull('tanggal_selesai_ujian')
+                       ->where('tanggal_selesai', '<', $today);
+                });
+            })
+            ->update(['status' => 'selesai']);
 
-            if ($now->between($mulai, $selesai) && $p->status !== 'aktif') {
-                $p->update(['status' => 'aktif']);
-            } elseif ($now->lt($mulai) && $p->status !== 'draft') {
-                $p->update(['status' => 'draft']);
-            }
-        }
+        // 2. Draft → Aktif: tanggal mulai pendaftaran sudah tiba.
+        PeriodeUjian::where('status', 'draft')
+            ->where('tanggal_mulai', '<=', $today)
+            ->update(['status' => 'aktif']);
+
+        // 3. Aktif → Draft: tanggal mulai dimajukan ke depan (kasus setelah edit periode).
+        PeriodeUjian::where('status', 'aktif')
+            ->where('tanggal_mulai', '>', $today)
+            ->update(['status' => 'draft']);
     }
+
 
     public function store(Request $request)
     {

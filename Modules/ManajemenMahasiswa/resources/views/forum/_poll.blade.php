@@ -1,11 +1,13 @@
 @php
-    $totalVotes  = $poll->totalVotes();
-    $isClosed    = $poll->isClosed();
-    $userVotedId = $poll->userVotedOptionId();
-    $hasVoted    = $userVotedId !== null;
-    $showResults = $hasVoted || $isClosed;
-    $csrfToken   = csrf_token();
-    $voteUrl     = route('manajemenmahasiswa.forum.poll.vote', $threadId);
+    $totalVotes    = $poll->totalVotes();
+    $isClosed      = $poll->isClosed();
+    $userVotedId   = $poll->userVotedOptionId();
+    $hasVoted      = $userVotedId !== null;
+    $showResults   = $hasVoted || $isClosed;
+    $csrfToken     = csrf_token();
+    $voteUrl       = route('manajemenmahasiswa.forum.poll.vote', $threadId);
+    $closeUrl      = route('manajemenmahasiswa.forum.poll.close', $threadId);
+    $isOwner       = isset($threadOwnerId) && auth()->id() === $threadOwnerId;
 @endphp
 
 <div class="poll-container"
@@ -90,9 +92,9 @@
 
     {{-- Footer --}}
     <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;flex-wrap:wrap;gap:6px;">
-        <span style="font-size:12px;color:#9ca3af;">
+        <span class="poll-status-label" style="font-size:12px;color:#9ca3af;">
             @if($isClosed)
-                <span style="background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:20px;font-weight:600;font-size:11px;">
+                <span class="poll-closed-badge" style="background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:20px;font-weight:600;font-size:11px;">
                     Poll ditutup
                 </span>
                 @if($poll->expires_at)
@@ -104,11 +106,23 @@
                 Tidak ada batas waktu
             @endif
         </span>
-        @if($hasVoted && !$isClosed)
-            <span class="poll-change-hint" style="font-size:12px;color:#9ca3af;">
-                Klik opsi lain untuk ganti pilihan
-            </span>
-        @endif
+        <div style="display:flex;align-items:center;gap:8px;">
+            @if($hasVoted && !$isClosed)
+                <span class="poll-change-hint" style="font-size:12px;color:#9ca3af;">
+                    Klik opsi lain untuk ganti pilihan
+                </span>
+            @endif
+            @if($isOwner)
+                <button class="poll-toggle-btn"
+                        data-poll-id="{{ $poll->id }}"
+                        data-close-url="{{ $closeUrl }}"
+                        data-is-closed="{{ $isClosed ? '1' : '0' }}"
+                        style="font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;border:1.5px solid;cursor:pointer;background:transparent;transition:all 0.2s;
+                               {{ $isClosed ? 'color:#16a34a;border-color:#16a34a;' : 'color:#dc2626;border-color:#dc2626;' }}">
+                    {{ $isClosed ? 'Buka Polling' : 'Tutup Polling' }}
+                </button>
+            @endif
+        </div>
     </div>
 </div>
 
@@ -129,6 +143,84 @@
 </style>
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // Toggle close/open poll (owner only)
+    document.querySelectorAll('.poll-toggle-btn').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            const pollId   = this.dataset.pollId;
+            const closeUrl = this.dataset.closeUrl;
+            const container = document.getElementById('poll-' + pollId);
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+
+            fetch(closeUrl, {
+                method: 'PATCH',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': '{{ $csrfToken }}',
+                    'Accept': 'application/json',
+                },
+            })
+            .then(r => r.json())
+            .then(data => {
+                btn.disabled = false;
+                btn.style.opacity = '';
+                if (!data.success) {
+                    alert(data.error || 'Gagal mengubah status polling.');
+                    return;
+                }
+
+                const nowClosed = data.is_closed;
+
+                // Update container attribute
+                container.dataset.isOpen = nowClosed ? '0' : '1';
+                btn.dataset.isClosed = nowClosed ? '1' : '0';
+
+                // Update button label & color
+                if (nowClosed) {
+                    btn.textContent = 'Buka Polling';
+                    btn.style.color = '#16a34a';
+                    btn.style.borderColor = '#16a34a';
+                } else {
+                    btn.textContent = 'Tutup Polling';
+                    btn.style.color = '#dc2626';
+                    btn.style.borderColor = '#dc2626';
+                }
+
+                // Update status label
+                const statusLabel = container.querySelector('.poll-status-label');
+                if (statusLabel) {
+                    let badge = statusLabel.querySelector('.poll-closed-badge');
+                    if (nowClosed) {
+                        if (!badge) {
+                            badge = document.createElement('span');
+                            badge.className = 'poll-closed-badge';
+                            badge.style.cssText = 'background:#fee2e2;color:#dc2626;padding:2px 8px;border-radius:20px;font-weight:600;font-size:11px;';
+                            statusLabel.prepend(badge);
+                        }
+                        badge.textContent = 'Poll ditutup';
+                    } else {
+                        if (badge) badge.remove();
+                    }
+                }
+
+                // Disable/enable option clicks
+                container.querySelectorAll('.poll-option').forEach(function (opt) {
+                    opt.style.cursor = nowClosed ? 'default' : 'pointer';
+                    opt.style.pointerEvents = nowClosed ? 'none' : '';
+                });
+
+                // Hide change hint if now closed
+                const hint = container.querySelector('.poll-change-hint');
+                if (hint) hint.style.display = nowClosed ? 'none' : '';
+            })
+            .catch(() => {
+                btn.disabled = false;
+                btn.style.opacity = '';
+                alert('Terjadi kesalahan. Coba lagi.');
+            });
+        });
+    });
+
     // Attach listener ke SEMUA opsi dalam poll yang TERBUKA
     document.querySelectorAll('.poll-container[data-is-open="1"] .poll-option').forEach(function (el) {
         el.addEventListener('click', function () {

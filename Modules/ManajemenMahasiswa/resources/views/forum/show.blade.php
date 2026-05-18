@@ -647,7 +647,7 @@
 
         {{-- Poll --}}
         @if($thread->poll)
-            @include('manajemenmahasiswa::forum._poll', ['poll' => $thread->poll, 'threadId' => $thread->id])
+            @include('manajemenmahasiswa::forum._poll', ['poll' => $thread->poll, 'threadId' => $thread->id, 'threadOwnerId' => $thread->user_id])
         @endif
 
         @php
@@ -768,14 +768,14 @@
         <!-- Reply Section -->
         @unless($thread->is_locked)
             <div class="reply-form mb-2">
-                <form method="POST" action="{{ route('manajemenmahasiswa.forum.comments.store', $thread->id) }}">
+                <form id="main-comment-form" method="POST" action="{{ route('manajemenmahasiswa.forum.comments.store', $thread->id) }}">
                     @csrf
                     <div class="d-flex gap-3">
                         <div class="avatar-placeholder avatar-sm flex-shrink-0">
                             {{ strtoupper(substr($user->name ?? '?', 0, 2)) }}
                         </div>
                         <div class="flex-grow-1">
-                            <textarea name="konten" class="form-control mb-3 @error('konten') is-invalid @enderror" rows="3"
+                            <textarea name="konten" id="main-comment-textarea" class="form-control mb-3 @error('konten') is-invalid @enderror" rows="3"
                                 placeholder="Tulis komentar Anda di sini..." required
                                 minlength="3">{{ old('konten') }}</textarea>
                             @error('konten')
@@ -796,15 +796,17 @@
 
         <!-- Comments List -->
         <div class="comment-list">
-            <h6 class="fw-bold text-dark mb-4">{{ $thread->comments_count ?? $thread->comment_count }} Komentar</h6>
+            <h6 id="comment-count-display" class="fw-bold text-dark mb-4">{{ $thread->comments_count ?? $thread->comment_count }} Komentar</h6>
 
-            @forelse($comments as $comment)
-                @include('manajemenmahasiswa::forum.partials.comment-thread', ['comment' => $comment, 'depth' => 0])
-            @empty
-                <div class="text-center py-4" style="color: #9ca3af;">
-                    <p class="mb-0">Belum ada komentar.</p>
-                </div>
-            @endforelse
+            <div id="comment-list-items">
+                @forelse($comments as $comment)
+                    @include('manajemenmahasiswa::forum.partials.comment-thread', ['comment' => $comment, 'depth' => 0])
+                @empty
+                    <div id="empty-comments" class="text-center py-4" style="color: #9ca3af;">
+                        <p class="mb-0">Belum ada komentar.</p>
+                    </div>
+                @endforelse
+            </div>
 
             <!-- Pagination -->
             @if($comments->hasPages())
@@ -857,120 +859,316 @@
     </div>
 
     @push('scripts')
+        {{-- Toast container untuk notifikasi XP --}}
+        <div id="forum-toast" style="
+            position: fixed; bottom: 24px; right: 24px; z-index: 9999;
+            background: #111827; color: #fff; padding: 12px 20px; border-radius: 10px;
+            font-size: 14px; font-weight: 600; box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+            opacity: 0; transform: translateY(12px);
+            transition: opacity 0.25s ease, transform 0.25s ease;
+            pointer-events: none;">
+        </div>
 
         <script>
-            // CSRF token
             const csrfToken = '{{ csrf_token() }}';
+            const commentStoreUrl = '{{ route('manajemenmahasiswa.forum.comments.store', $thread->id) }}';
+            const commentVoteBaseUrl = '{{ url('manajemen-mahasiswa/forum/comments') }}';
+            const threadVoteBaseUrl  = '{{ url('manajemen-mahasiswa/forum') }}';
 
-            // Vote Thread (AJAX)
+            // ── Toast ─────────────────────────────────────────────────────────
+            function showToast(message) {
+                const toast = document.getElementById('forum-toast');
+                toast.textContent = message;
+                toast.style.opacity = '1';
+                toast.style.transform = 'translateY(0)';
+                clearTimeout(toast._hideTimer);
+                toast._hideTimer = setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transform = 'translateY(12px)';
+                }, 3000);
+            }
+
+            // ── AJAX Comment Submit ────────────────────────────────────────────
+            async function submitCommentForm(form, isReply) {
+                const submitBtn = form.querySelector('button[type="submit"]');
+                const textarea  = form.querySelector('textarea[name="konten"]');
+                if (!textarea || textarea.value.trim().length < 3) return;
+
+                // Tampilkan loading state
+                const origHtml = submitBtn.innerHTML;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner"></span> Mengirim...';
+
+                const formData = new FormData(form);
+
+                try {
+                    const res = await fetch(commentStoreUrl, {
+                        method: 'POST',
+                        headers: {
+                            'X-CSRF-TOKEN': csrfToken,
+                            'X-Requested-With': 'XMLHttpRequest',
+                            'Accept': 'application/json',
+                        },
+                        body: formData,
+                    });
+
+                    const data = await res.json();
+
+                    if (!res.ok || !data.success) {
+                        showToast(data.message ?? 'Gagal mengirim komentar.');
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = origHtml;
+                        return;
+                    }
+
+                    // Sisipkan HTML komentar baru ke DOM
+                    const listEl = document.getElementById('comment-list-items');
+
+                    if (isReply && data.parent_id) {
+                        // Reply: masukkan ke dalam replies-container milik parent
+                        injectReply(data, listEl);
+                    } else {
+                        // Top-level comment: prepend ke atas daftar komentar
+                        const emptyEl = document.getElementById('empty-comments');
+                        if (emptyEl) emptyEl.remove();
+
+                        const wrapper = document.createElement('div');
+                        wrapper.innerHTML = data.html.trim();
+                        const newNode = wrapper.firstElementChild;
+                        listEl.insertBefore(newNode, listEl.firstChild);
+                    }
+
+                    // Update jumlah komentar
+                    const countEl = document.getElementById('comment-count-display');
+                    if (countEl && data.comment_count !== undefined) {
+                        countEl.textContent = `${data.comment_count} Komentar`;
+                    }
+
+                    // Bersihkan textarea & tutup form reply jika ada
+                    textarea.value = '';
+                    const replyFormWrapper = form.closest('.inline-reply-form');
+                    if (replyFormWrapper) replyFormWrapper.classList.remove('show');
+
+                    // Tampilkan notifikasi XP
+                    showToast(data.xp_message ?? 'Komentar terkirim!');
+
+                    if (data.level_up) {
+                        setTimeout(() => showToast(`🎉 Level Up! ${data.level_up.tier_name} Lv.${data.level_up.new_level}`), 3200);
+                    }
+
+                } catch (err) {
+                    console.error('Comment submit error:', err);
+                    showToast('Terjadi kesalahan. Coba lagi.');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origHtml;
+                }
+            }
+
+            function injectReply(data, listEl) {
+                const parentId = data.parent_id;
+                let repliesContainer = document.getElementById(`replies-container-${parentId}`);
+
+                if (repliesContainer) {
+                    // Container sudah ada — append reply baru
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = data.html.trim();
+                    repliesContainer.appendChild(wrapper.firstElementChild);
+
+                    // Update teks toggle button
+                    const toggleBtn = document.querySelector(`.toggle-replies-btn[data-target="replies-container-${parentId}"]`);
+                    if (toggleBtn) {
+                        const replyCount = repliesContainer.querySelectorAll('.comment-item').length;
+                        const textSpan = toggleBtn.querySelector('.toggle-text');
+                        if (textSpan) textSpan.textContent = `${replyCount} balasan`;
+                        // Pastikan terbuka
+                        repliesContainer.classList.add('show');
+                        toggleBtn.classList.add('open');
+                    }
+                } else {
+                    // Belum ada container replies — buat baru di bawah comment parent
+                    const parentItem = listEl.querySelector(`.comment-item #reply-form-${parentId}`)?.closest('.comment-item');
+                    if (!parentItem) return;
+
+                    const wrapper = document.createElement('div');
+                    wrapper.innerHTML = data.html.trim();
+                    const replyNode = wrapper.firstElementChild;
+
+                    // Buat toggle button + container
+                    const toggleBtn = document.createElement('button');
+                    toggleBtn.type = 'button';
+                    toggleBtn.className = 'toggle-replies-btn open';
+                    toggleBtn.dataset.target = `replies-container-${parentId}`;
+                    toggleBtn.innerHTML = `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg><span class="toggle-text">1 balasan</span>`;
+
+                    const container = document.createElement('div');
+                    container.className = 'replies-container show';
+                    container.id = `replies-container-${parentId}`;
+                    container.style.cssText = 'margin-left:18px; border-left:2px solid #e5e7eb; padding-left:20px;';
+                    container.appendChild(replyNode);
+
+                    const actionsEl = parentItem.querySelector('.comment-actions');
+                    if (actionsEl) {
+                        actionsEl.after(toggleBtn, container);
+                    } else {
+                        parentItem.querySelector('.flex-grow-1').append(toggleBtn, container);
+                    }
+                }
+            }
+
+            // ── Intercept form submit — main comment + reply forms ─────────────
+            // Menggunakan event delegation pada document agar bekerja untuk form yang di-inject secara dinamis
+            document.addEventListener('submit', function (e) {
+                const form = e.target;
+
+                const isMainComment = form.id === 'main-comment-form';
+                const isReplyForm   = form.classList.contains('reply-submit-form');
+
+                if (isMainComment || isReplyForm) {
+                    e.preventDefault();
+                    submitCommentForm(form, isReplyForm);
+                }
+            });
+
+            // ── Vote Thread (AJAX) ─────────────────────────────────────────────
             document.querySelectorAll('.vote-thread-btn').forEach(btn => {
                 btn.addEventListener('click', async function (e) {
                     e.preventDefault();
                     const threadId = this.dataset.threadId;
-                    const value = parseInt(this.dataset.value);
-                    const parent = this.closest('#thread-vote-area');
+                    const value    = parseInt(this.dataset.value);
+                    const pill     = this.closest('#thread-vote-area');
 
                     try {
-                        const res = await fetch(`{{ url('manajemen-mahasiswa/forum') }}/${threadId}/vote`, {
+                        const res  = await fetch(`${threadVoteBaseUrl}/${threadId}/vote`, {
                             method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken,
-                                'Accept': 'application/json',
-                            },
-                            body: JSON.stringify({ value })
+                            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                            body: JSON.stringify({ value }),
                         });
-
                         const data = await res.json();
+                        if (!pill) return;
 
-                        if (parent) {
-                            parent.querySelectorAll('.vote-thread-btn').forEach(b => b.classList.remove('vote-active-up', 'vote-active-down'));
-                            const countEl = parent.querySelector(`.thread-vote-count-${threadId}`);
-                            countEl.textContent = data.vote_count;
+                        pill.querySelectorAll('.vote-thread-btn').forEach(b => b.classList.remove('vote-active-up', 'vote-active-down'));
+                        pill.querySelector(`.thread-vote-count-${threadId}`).textContent = data.vote_count;
 
-                            if (data.user_vote === 1) {
-                                parent.querySelector('.vote-thread-btn[data-value="1"]').classList.add('vote-active-up');
-                                parent.querySelector('.vote-thread-btn[data-value="1"] svg').setAttribute('fill', 'currentColor');
-                                parent.querySelector('.vote-thread-btn[data-value="-1"] svg').setAttribute('fill', 'none');
-                            } else if (data.user_vote === -1) {
-                                parent.querySelector('.vote-thread-btn[data-value="-1"]').classList.add('vote-active-down');
-                                parent.querySelector('.vote-thread-btn[data-value="-1"] svg').setAttribute('fill', 'currentColor');
-                                parent.querySelector('.vote-thread-btn[data-value="1"] svg').setAttribute('fill', 'none');
-                            } else {
-                                parent.querySelector('.vote-thread-btn[data-value="1"] svg').setAttribute('fill', 'none');
-                                parent.querySelector('.vote-thread-btn[data-value="-1"] svg').setAttribute('fill', 'none');
-                            }
+                        if (data.user_vote === 1) {
+                            pill.querySelector('.vote-thread-btn[data-value="1"]').classList.add('vote-active-up');
+                            pill.querySelector('.vote-thread-btn[data-value="1"] svg').setAttribute('fill', 'currentColor');
+                            pill.querySelector('.vote-thread-btn[data-value="-1"] svg').setAttribute('fill', 'none');
+                        } else if (data.user_vote === -1) {
+                            pill.querySelector('.vote-thread-btn[data-value="-1"]').classList.add('vote-active-down');
+                            pill.querySelector('.vote-thread-btn[data-value="-1"] svg').setAttribute('fill', 'currentColor');
+                            pill.querySelector('.vote-thread-btn[data-value="1"] svg').setAttribute('fill', 'none');
+                        } else {
+                            pill.querySelector('.vote-thread-btn[data-value="1"] svg').setAttribute('fill', 'none');
+                            pill.querySelector('.vote-thread-btn[data-value="-1"] svg').setAttribute('fill', 'none');
                         }
-                    } catch (err) {
-                        console.error('Vote error:', err);
-                    }
+                    } catch (err) { console.error('Vote error:', err); }
                 });
             });
 
-            // Vote Comment (AJAX)
-            document.querySelectorAll('.vote-comment-btn').forEach(btn => {
-                btn.addEventListener('click', async function (e) {
-                    e.preventDefault();
-                    const commentId = this.dataset.commentId;
-                    const value = parseInt(this.dataset.value);
-                    const parent = this.closest('.c-vote-pill');
+            // ── Vote Comment (AJAX) — event delegation ─────────────────────────
+            document.addEventListener('click', async function (e) {
+                const btn = e.target.closest('.vote-comment-btn');
+                if (!btn) return;
+                e.preventDefault();
 
-                    try {
-                        const res = await fetch(`{{ url('manajemen-mahasiswa/forum/comments') }}/${commentId}/vote`, {
-                            method: 'POST',
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': csrfToken,
-                                'Accept': 'application/json',
-                            },
-                            body: JSON.stringify({ value })
-                        });
+                const commentId = btn.dataset.commentId;
+                const value     = parseInt(btn.dataset.value);
+                const pill      = btn.closest('.c-vote-pill');
 
-                        const data = await res.json();
+                try {
+                    const res  = await fetch(`${commentVoteBaseUrl}/${commentId}/vote`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                        body: JSON.stringify({ value }),
+                    });
+                    const data = await res.json();
+                    if (!pill) return;
 
-                        if (parent) {
-                            parent.querySelectorAll('.vote-comment-btn').forEach(b => b.classList.remove('active-up', 'active-down'));
-                            const countEl = parent.querySelector(`.comment-vote-count-${commentId}`);
-                            countEl.textContent = data.vote_count;
+                    pill.querySelectorAll('.vote-comment-btn').forEach(b => b.classList.remove('active-up', 'active-down'));
+                    pill.querySelector(`.comment-vote-count-${commentId}`).textContent = data.vote_count;
 
-                            if (data.user_vote === 1) {
-                                parent.querySelector('.vote-comment-btn[data-value="1"]').classList.add('active-up');
-                                parent.querySelector('.vote-comment-btn[data-value="1"] svg').setAttribute('fill', 'currentColor');
-                                parent.querySelector('.vote-comment-btn[data-value="-1"] svg').setAttribute('fill', 'none');
-                            } else if (data.user_vote === -1) {
-                                parent.querySelector('.vote-comment-btn[data-value="-1"]').classList.add('active-down');
-                                parent.querySelector('.vote-comment-btn[data-value="-1"] svg').setAttribute('fill', 'currentColor');
-                                parent.querySelector('.vote-comment-btn[data-value="1"] svg').setAttribute('fill', 'none');
-                            } else {
-                                parent.querySelector('.vote-comment-btn[data-value="1"] svg').setAttribute('fill', 'none');
-                                parent.querySelector('.vote-comment-btn[data-value="-1"] svg').setAttribute('fill', 'none');
-                            }
-                        }
-                    } catch (err) {
-                        console.error('Vote error:', err);
+                    if (data.user_vote === 1) {
+                        pill.querySelector('.vote-comment-btn[data-value="1"]').classList.add('active-up');
+                        pill.querySelector('.vote-comment-btn[data-value="1"] svg').setAttribute('fill', 'currentColor');
+                        pill.querySelector('.vote-comment-btn[data-value="-1"] svg').setAttribute('fill', 'none');
+                    } else if (data.user_vote === -1) {
+                        pill.querySelector('.vote-comment-btn[data-value="-1"]').classList.add('active-down');
+                        pill.querySelector('.vote-comment-btn[data-value="-1"] svg').setAttribute('fill', 'currentColor');
+                        pill.querySelector('.vote-comment-btn[data-value="1"] svg').setAttribute('fill', 'none');
+                    } else {
+                        pill.querySelector('.vote-comment-btn[data-value="1"] svg').setAttribute('fill', 'none');
+                        pill.querySelector('.vote-comment-btn[data-value="-1"] svg').setAttribute('fill', 'none');
                     }
-                });
+                } catch (err) { console.error('Vote comment error:', err); }
             });
 
-            // Share functionality (Copy Link)
+            // ── Toggle Reply/Edit/Replies — event delegation ───────────────────
+            document.addEventListener('click', function (e) {
+                // Toggle Reply Form
+                const replyBtn = e.target.closest('.toggle-reply-btn');
+                if (replyBtn) {
+                    const commentId = replyBtn.dataset.commentId;
+                    const form = document.getElementById(`reply-form-${commentId}`);
+                    if (!form) return;
+                    document.querySelectorAll('.inline-reply-form.show').forEach(f => { if (f !== form) f.classList.remove('show'); });
+                    form.classList.toggle('show');
+                    if (form.classList.contains('show')) form.querySelector('textarea')?.focus();
+                    return;
+                }
+
+                // Cancel Reply
+                const cancelReplyBtn = e.target.closest('.cancel-reply-btn');
+                if (cancelReplyBtn) {
+                    const form = document.getElementById(`reply-form-${cancelReplyBtn.dataset.commentId}`);
+                    if (form) { form.classList.remove('show'); form.querySelector('textarea').value = ''; }
+                    return;
+                }
+
+                // Toggle Edit Form
+                const editBtn = e.target.closest('.toggle-edit-btn');
+                if (editBtn) {
+                    const commentId = editBtn.dataset.commentId;
+                    const form = document.getElementById(`edit-form-${commentId}`);
+                    if (!form) return;
+                    document.querySelectorAll('.inline-reply-form.show').forEach(f => { if (f !== form) f.classList.remove('show'); });
+                    form.classList.toggle('show');
+                    if (form.classList.contains('show')) form.querySelector('textarea')?.focus();
+                    return;
+                }
+
+                // Cancel Edit
+                const cancelEditBtn = e.target.closest('.cancel-edit-btn');
+                if (cancelEditBtn) {
+                    const form = document.getElementById(`edit-form-${cancelEditBtn.dataset.commentId}`);
+                    if (form) form.classList.remove('show');
+                    return;
+                }
+
+                // Toggle Replies Visibility
+                const toggleRepliesBtn = e.target.closest('.toggle-replies-btn');
+                if (toggleRepliesBtn) {
+                    const container = document.getElementById(toggleRepliesBtn.dataset.target);
+                    if (!container) return;
+                    const isOpen = container.classList.contains('show');
+                    container.classList.toggle('show', !isOpen);
+                    toggleRepliesBtn.classList.toggle('open', !isOpen);
+                    return;
+                }
+            });
+
+            // ── Share (Copy Link) ──────────────────────────────────────────────
             document.querySelectorAll('.share-btn').forEach(btn => {
                 btn.addEventListener('click', function (e) {
                     e.preventDefault();
-                    const targetUrl = this.dataset.url;
-
-                    navigator.clipboard.writeText(targetUrl).then(() => {
-                        const originalHtml = this.innerHTML;
-                        this.innerHTML = '<span style="font-size: 14px;">✅</span>';
-                        setTimeout(() => {
-                            this.innerHTML = originalHtml;
-                        }, 2000);
-                    }).catch(err => {
-                        console.error('Failed to copy link: ', err);
+                    navigator.clipboard.writeText(this.dataset.url).then(() => {
+                        const orig = this.innerHTML;
+                        this.innerHTML = '<span style="font-size:14px;">✅</span>';
+                        setTimeout(() => { this.innerHTML = orig; }, 2000);
                     });
                 });
             });
 
-            // Handling Report Modal data
+            // ── Report Modal ───────────────────────────────────────────────────
             const reportModal = document.getElementById('reportModal');
             if (reportModal) {
                 reportModal.addEventListener('show.bs.modal', function (event) {
@@ -980,118 +1178,15 @@
                 });
             }
 
-
-
-            // ---- Toggle Reply Forms (Reddit style) ----
-            document.querySelectorAll('.toggle-reply-btn').forEach(btn => {
-                btn.addEventListener('click', function () {
-                    const commentId = this.dataset.commentId;
-                    const form = document.getElementById(`reply-form-${commentId}`);
-                    if (!form) return;
-                    // Close all other open reply forms
-                    document.querySelectorAll('.inline-reply-form.show').forEach(f => {
-                        if (f !== form) f.classList.remove('show');
-                    });
-                    form.classList.toggle('show');
-                    if (form.classList.contains('show')) {
-                        form.querySelector('textarea').focus();
-                    }
-                });
-            });
-
-            document.querySelectorAll('.cancel-reply-btn').forEach(btn => {
-                btn.addEventListener('click', function () {
-                    const commentId = this.dataset.commentId;
-                    const form = document.getElementById(`reply-form-${commentId}`);
-                    if (form) {
-                        form.classList.remove('show');
-                        form.querySelector('textarea').value = '';
-                    }
-                });
-            });
-
-            // ---- Toggle Edit Forms ----
-            document.querySelectorAll('.toggle-edit-btn').forEach(btn => {
-                btn.addEventListener('click', function () {
-                    const commentId = this.dataset.commentId;
-                    const form = document.getElementById(`edit-form-${commentId}`);
-                    if (!form) return;
-                    // Close all other open inline forms (reply or edit)
-                    document.querySelectorAll('.inline-reply-form.show').forEach(f => {
-                        if (f !== form) f.classList.remove('show');
-                    });
-                    form.classList.toggle('show');
-                    if (form.classList.contains('show')) {
-                        form.querySelector('textarea').focus();
-                    }
-                });
-            });
-
-            document.querySelectorAll('.cancel-edit-btn').forEach(btn => {
-                btn.addEventListener('click', function () {
-                    const commentId = this.dataset.commentId;
-                    const form = document.getElementById(`edit-form-${commentId}`);
-                    if (form) {
-                        form.classList.remove('show');
-                    }
-                });
-            });
-
-            // ---- Toggle Replies Visibility (YouTube style) ----
-            document.querySelectorAll('.toggle-replies-btn').forEach(btn => {
-                btn.addEventListener('click', function () {
-                    const targetId = this.dataset.target;
-                    const container = document.getElementById(targetId);
-                    const textSpan = this.querySelector('.toggle-text');
-
-                    if (container) {
-                        const isOpen = container.classList.contains('show');
-                        if (isOpen) {
-                            container.classList.remove('show');
-                            this.classList.remove('open');
-                        } else {
-                            container.classList.add('show');
-                            this.classList.add('open');
-                        }
-                    }
-                });
-            });
-
-            // ---- Double-Post Prevention ----
-            document.querySelectorAll('form').forEach(form => {
-                form.addEventListener('submit', function (event) {
-                    const submitBtn = this.querySelector('button[type="submit"]');
-                    if (!submitBtn || submitBtn.disabled) {
-                        if (submitBtn && submitBtn.disabled) { event.preventDefault(); return; }
-                        return;
-                    }
-                    submitBtn.disabled = true;
-                    // Add spinner for btn-post or btn-reply-submit
-                    if (submitBtn.classList.contains('btn-post') || submitBtn.classList.contains('btn-reply-submit')) {
-                        const origText = submitBtn.textContent;
-                        submitBtn.dataset.origText = origText;
-                        submitBtn.innerHTML = '<span class="spinner"></span> Mengirim...';
-                    }
-                });
-            });
-
-            // ---- Enter to Submit ----
-            document.querySelectorAll('textarea').forEach(textarea => {
-                textarea.addEventListener('keydown', function (e) {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                        e.preventDefault();
-                        const form = this.closest('form');
-                        if (form) {
-                            // Trigger submit event
-                            const submitEvent = new Event('submit', { cancelable: true, bubbles: true });
-                            form.dispatchEvent(submitEvent);
-
-                            if (!submitEvent.defaultPrevented) {
-                                form.submit();
-                            }
-                        }
-                    }
-                });
+            // ── Enter to Submit — event delegation ─────────────────────────────
+            document.addEventListener('keydown', function (e) {
+                if (e.key !== 'Enter' || e.shiftKey) return;
+                const textarea = e.target.closest('textarea');
+                if (!textarea) return;
+                const form = textarea.closest('form');
+                if (!form) return;
+                e.preventDefault();
+                form.dispatchEvent(new Event('submit', { cancelable: true, bubbles: true }));
             });
 
         </script>
