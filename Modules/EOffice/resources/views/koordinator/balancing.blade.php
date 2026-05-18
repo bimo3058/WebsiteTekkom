@@ -195,9 +195,17 @@
                             <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             Auto Balancing
                         </button>
-                        <button type="submit" class="inline-flex items-center justify-center px-5 py-2 bg-slate-900 border border-transparent rounded-lg text-sm font-semibold text-white shadow-sm hover:bg-slate-800 transition-colors">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-                            Simpan Perubahan
+                        <button type="button" @click="submitForm('draft')" class="inline-flex items-center justify-center px-5 py-2 bg-slate-900 border border-transparent rounded-lg text-sm font-semibold text-white shadow-sm hover:bg-slate-800 transition-colors" :disabled="isSaving" :class="{'opacity-75 cursor-not-allowed': isSaving}">
+                            <svg x-show="!isSaving" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                            <svg x-show="isSaving" class="animate-spin w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            <span x-text="isSaving ? 'Menyimpan...' : 'Simpan Progress'"></span>
+                        </button>
+                        <button type="button" @click="showFinalizeModal = true" class="inline-flex items-center justify-center px-5 py-2 bg-indigo-600 border border-transparent rounded-lg text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-colors">
+                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                            Finalisasi Balancing
                         </button>
                     </div>
                 </div>
@@ -303,7 +311,7 @@
                                                 <p class="text-sm font-bold text-slate-800 group-hover:text-blue-600 transition-colors" x-text="mhs.nama_mahasiswa"></p>
                                                 <p class="text-xs text-slate-500 mt-0.5" x-text="mhs.nim"></p>
                                             </div>
-                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-slate-100 text-slate-600">Belum</span>
+                                            <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium" :class="getBadgeClass(mhs.status)" x-text="getBadgeText(mhs.status)"></span>
                                         </div>
                                         <p class="text-[11px] text-slate-600 mt-2 line-clamp-1 border-t border-slate-50 pt-2" :title="mhs.rencana_judul" x-text="mhs.rencana_judul || 'Belum ada rencana judul'"></p>
                                     </div>
@@ -355,7 +363,10 @@
                                                     <div class="flex justify-between items-start pr-6">
                                                         <div class="truncate">
                                                             <p class="text-xs font-bold text-slate-800 truncate" :title="mhs.nama_mahasiswa" x-text="mhs.nama_mahasiswa"></p>
-                                                            <p class="text-[10px] text-slate-500" x-text="mhs.nim"></p>
+                                                            <div class="flex items-center gap-2 mt-0.5">
+                                                                <p class="text-[10px] text-slate-500" x-text="mhs.nim"></p>
+                                                                <span class="inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold uppercase tracking-wider" :class="getBadgeClass(mhs.status)" x-text="getBadgeText(mhs.status)"></span>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                     <button type="button" @click.stop="removeFromDosen(dosen.id, mhs)" class="absolute top-2 right-2 text-slate-400 hover:text-red-500 transition-colors" title="Hapus dari dosen ini">
@@ -423,10 +434,47 @@
                             </div>
                         </div>
                     </div>
+                <!-- Action Buttons -->
+                <div class="mt-6 flex justify-end gap-3 sticky bottom-0 bg-slate-50/80 backdrop-blur-sm p-4 border-t border-slate-200">
+                    <button type="button" @click="submitForm('draft')" class="px-6 py-2 bg-white border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 shadow-sm transition-all text-sm">Simpan Draft</button>
+                    <button type="button" @click="showFinalizeModal = true" class="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-sm transition-all text-sm">Finalisasi</button>
                 </div>
 
             </form>
         </main>
+    </div>
+    <!-- Confirm Finalize Modal -->
+    <div x-show="showFinalizeModal" class="relative z-50" aria-labelledby="modal-title" role="dialog" aria-modal="true" style="display: none;">
+        <div x-show="showFinalizeModal" x-transition.opacity class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity"></div>
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <div x-show="showFinalizeModal" 
+                     x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                     x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                     @click.away="showFinalizeModal = false"
+                     class="relative transform overflow-hidden rounded-xl bg-white text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg border border-slate-100">
+                    <div class="bg-white px-4 pb-4 pt-5 sm:p-6 sm:pb-4">
+                        <div class="sm:flex sm:items-start">
+                            <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-indigo-100 sm:mx-0 sm:h-10 sm:w-10">
+                                <svg class="h-6 w-6 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                            </div>
+                            <div class="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
+                                <h3 class="text-base font-bold leading-6 text-slate-900" id="modal-title">Finalisasi Balancing</h3>
+                                <div class="mt-2">
+                                    <p class="text-sm text-slate-500">Mahasiswa yang sudah difinalisasi akan tampil pada role dosen pembimbing dan mahasiswa. Lanjutkan?</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="bg-slate-50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6 border-t border-slate-100">
+                        <button type="button" @click="submitForm('finalize'); showFinalizeModal = false" class="inline-flex w-full justify-center rounded-lg bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:ml-3 sm:w-auto">Lanjutkan</button>
+                        <button type="button" @click="showFinalizeModal = false" class="mt-3 inline-flex w-full justify-center rounded-lg bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50 sm:mt-0 sm:w-auto">Batal</button>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -434,10 +482,11 @@
     function balancingApp() {
         return {
             sidebarOpen: false,
-            unassignedStudents: @json($mahasiswas),
+            unassignedStudents: @json($unassignedStudents),
             dosens: @json($dosens),
             searchStudent: '',
             searchDosen: '',
+            isSaving: false,
             
             draggedStudent: null,
             sourceType: null,
@@ -540,7 +589,9 @@
                     const srcDosen = this.dosens.find(d => d.id === this.sourceId);
                     if (srcDosen) {
                         srcDosen.mahasiswas = srcDosen.mahasiswas.filter(s => s.id !== this.draggedStudent.id);
+                        this.draggedStudent.status = 'belum';
                         this.unassignedStudents.push(this.draggedStudent);
+                        this.autoSave();
                     }
                 }
                 this.endDrag();
@@ -562,7 +613,9 @@
                 // Move from unassigned
                 if (this.sourceType === 'unassigned') {
                     this.unassignedStudents = this.unassignedStudents.filter(s => s.id !== this.draggedStudent.id);
+                    this.draggedStudent.status = this.draggedStudent.status === 'finalized' ? 'finalized' : 'draft';
                     targetDosen.mahasiswas.push(this.draggedStudent);
+                    this.autoSave();
                 } 
                 // Move from another dosen
                 else if (this.sourceType === 'dosen') {
@@ -573,7 +626,9 @@
                     const srcDosen = this.dosens.find(d => d.id === this.sourceId);
                     if (srcDosen) {
                         srcDosen.mahasiswas = srcDosen.mahasiswas.filter(s => s.id !== this.draggedStudent.id);
+                        this.draggedStudent.status = this.draggedStudent.status === 'finalized' ? 'finalized' : 'draft';
                         targetDosen.mahasiswas.push(this.draggedStudent);
+                        this.autoSave();
                     }
                 }
 
@@ -584,7 +639,9 @@
                 const dosen = this.dosens.find(d => d.id === dosenId);
                 if (dosen) {
                     dosen.mahasiswas = dosen.mahasiswas.filter(s => s.id !== mhs.id);
+                    mhs.status = 'belum';
                     this.unassignedStudents.push(mhs);
+                    this.autoSave();
                 }
             },
 
@@ -622,6 +679,7 @@
                         let dRef = this.dosens.find(d => d.id === sortedDosens[i].id);
                         if (dRef.mahasiswas.length < parseInt(dRef.kuota_maksimal)) {
                             let student = unassigned.shift();
+                            student.status = 'draft';
                             dRef.mahasiswas.push(student);
                             this.unassignedStudents = this.unassignedStudents.filter(s => s.id !== student.id);
                             assignedInThisRound = true;
@@ -635,12 +693,75 @@
                 }
 
                 if (assignedCount > 0) {
-                    this.showToast('success', 'Auto Balancing Selesai', `${assignedCount} mahasiswa berhasil didistribusikan. Jangan lupa klik Simpan Perubahan.`);
+                    this.autoSave(true, `${assignedCount} mahasiswa berhasil didistribusikan secara otomatis!`);
                 }
             },
 
-            submitForm() {
-                document.getElementById('balancingForm').submit();
+            getBadgeClass(status) {
+                if (status === 'finalized') return 'bg-indigo-100 text-indigo-700 border-indigo-200 border';
+                if (status === 'draft') return 'bg-amber-100 text-amber-700 border-amber-200 border';
+                return 'bg-slate-100 text-slate-600 border-slate-200 border';
+            },
+
+            getBadgeText(status) {
+                if (status === 'finalized') return 'Final';
+                if (status === 'draft') return 'Draft';
+                return 'Belum';
+            },
+
+            submitForm(action = 'draft') {
+                this.isSaving = true;
+                const form = document.getElementById('balancingForm');
+                
+                // Remove existing hidden inputs if any
+                document.querySelectorAll('.balancing-payload').forEach(el => el.remove());
+                
+                const dosensInput = document.createElement('input');
+                dosensInput.type = 'hidden';
+                dosensInput.name = 'dosens';
+                dosensInput.className = 'balancing-payload';
+                dosensInput.value = JSON.stringify(this.dosens);
+                
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'action';
+                actionInput.className = 'balancing-payload';
+                actionInput.value = action;
+
+                form.appendChild(dosensInput);
+                form.appendChild(actionInput);
+                
+                form.submit();
+            },
+
+            autoSave(showToast = false, customMessage = 'Perubahan otomatis tersimpan') {
+                this.isSaving = true;
+                const payload = {
+                    dosens: JSON.stringify(this.dosens),
+                    action: 'draft',
+                    _token: document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : document.querySelector('input[name="_token"]').value
+                };
+
+                fetch(document.getElementById('balancingForm').action, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => response.json())
+                .then(data => {
+                    this.isSaving = false;
+                    if (data.success && showToast) {
+                        this.showToast('success', 'Auto Save Aktif', customMessage);
+                    }
+                })
+                .catch(error => {
+                    this.isSaving = false;
+                    console.error('Error auto-saving:', error);
+                    this.showToast('error', 'Gagal', 'Terjadi kesalahan saat menyimpan otomatis.');
+                });
             }
         }
     }

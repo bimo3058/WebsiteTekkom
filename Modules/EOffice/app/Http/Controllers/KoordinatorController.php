@@ -44,91 +44,7 @@ class KoordinatorController extends Controller implements HasMiddleware
         return view('eoffice::koordinator.dashboard', compact('stats'));
     }
 
-    /**
-     * Halaman Balancing Dosen
-     */
-    public function balancingDosen()
-    {
-        // 1. Ambil mahasiswa yang belum punya dosen
-        $mahasiswas = KerjaPraktik::select(
-                'eo_kerja_praktik.id',
-                'eo_kerja_praktik.nim',
-                'eo_kerja_praktik.rencana_judul',
-                'u.name as nama_mahasiswa'
-            )
-            ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
-            ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
-            ->whereNull('eo_kerja_praktik.dosen_pembimbing_id')
-            ->orderBy('eo_kerja_praktik.created_at', 'asc')
-            ->get();
 
-        // 2. Ambil semua dosen berdasarkan domain email @undip.ac.id (bukan students)
-        $dosens = \App\Models\User::where('email', 'like', '%@undip.ac.id')
-            ->where('email', 'not like', '%@students.undip.ac.id')
-            ->select('id', 'name')
-            ->get();
-
-        // 3. Hitung jumlah mahasiswa bimbingan dan ambil daftar mahasiswa untuk masing-masing dosen
-        foreach ($dosens as $dosen) {
-            $kpDosen = \Modules\EOffice\Models\KpDosen::where('user_id', $dosen->id)->first();
-            
-            if ($kpDosen) {
-                $assigned = KerjaPraktik::select(
-                        'eo_kerja_praktik.id',
-                        'eo_kerja_praktik.nim',
-                        'eo_kerja_praktik.rencana_judul',
-                        'u.name as nama_mahasiswa'
-                    )
-                    ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
-                    ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
-                    ->where('eo_kerja_praktik.dosen_pembimbing_id', $kpDosen->id)
-                    ->get();
-            } else {
-                $assigned = collect();
-            }
-            
-            $dosen->jumlah_bimbingan = $assigned->count();
-            $dosen->mahasiswas = $assigned;
-            // Dummy kuota maksimal (karena belum ada di tabel users/dosen)
-            $dosen->kuota_maksimal = 10;
-        }
-
-        // Urutkan dosen berdasarkan jumlah bimbingan (paling sedikit di atas untuk prioritas)
-        $dosens = collect($dosens)->sortBy('jumlah_bimbingan')->values();
-
-        return view('eoffice::koordinator.balancing', compact('mahasiswas', 'dosens'));
-    }
-
-    /**
-     * Proses Simpan Balancing Dosen
-     */
-    public function storeBalancing(Request $request)
-    {
-        $validated = $request->validate([
-            'assignments' => 'required|array',
-            'assignments.*.kp_id' => 'required|exists:eo_kerja_praktik,id',
-            'assignments.*.dosen_id' => 'nullable|exists:users,id',
-        ]);
-
-        $assignedCount = 0;
-        foreach ($validated['assignments'] as $assign) {
-            if (!empty($assign['dosen_id'])) {
-                // Mapping ID global ke tabel lokal eo_kp_dosen agar tidak FK violation
-                $userDosen = \App\Models\User::find($assign['dosen_id']);
-                $kpDosen = \Modules\EOffice\Models\KpDosen::firstOrCreate(
-                    ['user_id' => $assign['dosen_id']],
-                    ['nama_lengkap' => $userDosen->name ?? 'Dosen KP', 'nip' => '-']
-                );
-
-                KerjaPraktik::where('id', $assign['kp_id'])
-                    ->update(['dosen_pembimbing_id' => $kpDosen->id]);
-                $assignedCount++;
-            }
-        }
-
-        return redirect()->route('eoffice.kp.koordinator.balancing')
-            ->with('success', "Berhasil menetapkan Dosen Pembimbing untuk $assignedCount mahasiswa!");
-    }
 
     /**
      * Halaman Pengumuman & Timeline
@@ -152,6 +68,7 @@ class KoordinatorController extends Controller implements HasMiddleware
             'judul' => 'required|string|max:255',
             'tipe' => 'required|in:pengumuman,timeline,faq',
             'konten' => 'required|string',
+            'lampiran' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:10240',
         ]);
 
         $dataToSave = [
@@ -162,6 +79,10 @@ class KoordinatorController extends Controller implements HasMiddleware
             'is_published' => $request->has('is_active'),
             'created_by' => auth()->id() ?? 1,
         ];
+
+        if ($request->hasFile('lampiran')) {
+            $dataToSave['lampiran'] = $request->file('lampiran')->store('pengumuman', 'public');
+        }
 
         \Modules\EOffice\Models\KpPengumuman::create($dataToSave);
 
@@ -177,16 +98,28 @@ class KoordinatorController extends Controller implements HasMiddleware
             'judul' => 'required|string|max:255',
             'tipe' => 'required|in:pengumuman,timeline,faq',
             'konten' => 'required|string',
+            'lampiran' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:10240',
         ]);
 
         $pengumuman = \Modules\EOffice\Models\KpPengumuman::findOrFail($id);
-        $pengumuman->update([
+        
+        $dataToUpdate = [
             'judul' => $validated['judul'],
             'tipe' => $validated['tipe'],
             'konten' => $validated['konten'],
             'is_active' => $request->has('is_active'),
             'is_published' => $request->has('is_active'),
-        ]);
+        ];
+
+        if ($request->hasFile('lampiran')) {
+            // Hapus file lama jika ada
+            if ($pengumuman->lampiran && \Storage::disk('public')->exists($pengumuman->lampiran)) {
+                \Storage::disk('public')->delete($pengumuman->lampiran);
+            }
+            $dataToUpdate['lampiran'] = $request->file('lampiran')->store('pengumuman', 'public');
+        }
+
+        $pengumuman->update($dataToUpdate);
 
         return redirect()->route('eoffice.kp.koordinator.pengumuman')->with('success', 'Informasi berhasil diperbarui!');
     }
@@ -304,9 +237,11 @@ class KoordinatorController extends Controller implements HasMiddleware
                     $item = (object)[
                         'id' => $dok->id,
                         'nama_file' => $dok->file_name ?? basename($dok->file_path),
+                        'file_path' => $dok->file_path,
+                        'file_url' => $dok->file_path ? (str_starts_with($dok->file_path, 'http') ? $dok->file_path : \Storage::disk('public')->url($dok->file_path)) : null,
                         'jenis' => $dok->jenis_dokumen,
                         'tanggal' => $dok->created_at->format('Y-m-d'),
-                        'ukuran' => '-', // Tidak ada data file size saat ini
+                        'ukuran' => '-',
                         'status' => $dok->approval_status ?? ($dok->status_validasi === 'disetujui' ? 'approved' : ($dok->status_validasi === 'ditolak' ? 'rejected' : 'pending')),
                         'catatan' => $dok->revision_note ?? ''
                     ];
@@ -633,6 +568,134 @@ class KoordinatorController extends Controller implements HasMiddleware
         }
 
         return redirect()->back()->with('success', 'Nilai lapangan berhasil diperbarui.');
+    }
+
+    public function balancingDosen()
+    {
+        $dosens = \Modules\EOffice\Models\KpDosen::with('user')->get()->map(function($dosen) {
+            return [
+                'id' => $dosen->id,
+                'name' => $dosen->nama_lengkap ?? $dosen->user->name ?? 'Unknown',
+                'kuota_maksimal' => $dosen->kuota_maksimal ?? 10,
+                'mahasiswas' => []
+            ];
+        })->toArray();
+
+        // Get mahasiswas and their current draft/finalized assignment
+        $kps = \Modules\EOffice\Models\KerjaPraktik::with(['mahasiswa.user', 'balancing'])->get();
+        
+        $unassignedStudents = [];
+        $dosenMap = collect($dosens)->keyBy('id')->toArray();
+
+        foreach ($kps as $kp) {
+            if (!$kp->mahasiswa || !$kp->mahasiswa->user) continue;
+
+            $mhsData = [
+                'id' => $kp->id,
+                'mahasiswa_id' => $kp->mahasiswa_id,
+                'nama_mahasiswa' => $kp->mahasiswa->nama_lengkap ?? $kp->mahasiswa->user->name ?? 'Unknown',
+                'nim' => $kp->mahasiswa->nim ?? '-',
+                'status' => $kp->balancing->status ?? 'belum', // belum, draft, finalized
+                'rencana_judul' => $kp->rencana_judul ?? 'Belum ada rencana judul'
+            ];
+
+            $dosenId = null;
+            if ($kp->balancing) {
+                $dosenId = $kp->balancing->dosen_id;
+            } elseif ($kp->dosen_pembimbing_id) {
+                // Legacy support if they are assigned but no balancing record exists
+                $dosenId = $kp->dosen_pembimbing_id;
+            }
+
+            if ($dosenId && isset($dosenMap[$dosenId])) {
+                $dosenMap[$dosenId]['mahasiswas'][] = $mhsData;
+            } else {
+                $unassignedStudents[] = $mhsData;
+            }
+        }
+
+        $dosens = array_values($dosenMap);
+
+        return view('eoffice::koordinator.balancing', compact('dosens', 'unassignedStudents'));
+    }
+
+    public function storeBalancing(Request $request)
+    {
+        $dosens = json_decode($request->input('dosens'), true);
+        $action = $request->input('action', 'draft'); // 'draft' or 'finalize'
+        $status = $action === 'finalize' ? 'finalized' : 'draft';
+
+        if (empty($dosens)) {
+            return redirect()->back()->with('error', 'Data tidak valid.');
+        }
+
+        \DB::beginTransaction();
+        try {
+            $assignedMahasiswaIds = [];
+
+            foreach ($dosens as $dosen) {
+                if (isset($dosen['kuota_maksimal'])) {
+                    \Modules\EOffice\Models\KpDosen::where('id', $dosen['id'])
+                        ->update(['kuota_maksimal' => $dosen['kuota_maksimal']]);
+                }
+
+                foreach ($dosen['mahasiswas'] as $mhs) {
+                    $assignedMahasiswaIds[] = $mhs['id'];
+
+                    \Modules\EOffice\Models\KpBalancing::updateOrCreate(
+                        ['kp_id' => $mhs['id']],
+                        [
+                            'mahasiswa_id' => $mhs['mahasiswa_id'],
+                            'dosen_id' => $dosen['id'],
+                            'status' => $status,
+                            'assigned_by' => auth()->id(),
+                            'assigned_at' => now(),
+                            'finalized_at' => $status === 'finalized' ? now() : null,
+                        ]
+                    );
+
+                    // Jika finalized, perbarui eo_kerja_praktik (sync ke tabel utama)
+                    if ($status === 'finalized') {
+                        \Modules\EOffice\Models\KerjaPraktik::where('id', $mhs['id'])
+                            ->update(['dosen_pembimbing_id' => $dosen['id']]);
+                    }
+                }
+            }
+
+            // Hapus/reset status untuk mahasiswa yang dikembalikan ke 'Belum Penempatan'
+            if (!empty($dosens)) {
+                $unassignedKps = \Modules\EOffice\Models\KerjaPraktik::whereNotIn('id', $assignedMahasiswaIds)
+                    ->whereNotNull('dosen_pembimbing_id')
+                    ->get();
+                
+                foreach ($unassignedKps as $ukp) {
+                    // Hanya batalkan dosen_pembimbing_id jika aksi adalah finalize, 
+                    // atau jika kita mau sinkronisasi penuh
+                    if ($action === 'finalize') {
+                        $ukp->update(['dosen_pembimbing_id' => null]);
+                    }
+                }
+                
+                \Modules\EOffice\Models\KpBalancing::whereNotIn('kp_id', $assignedMahasiswaIds)->delete();
+            }
+
+            \DB::commit();
+
+            $message = $status === 'finalized' 
+                ? 'Balancing berhasil difinalisasi.' 
+                : 'Progress balancing berhasil disimpan (Draft).';
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => true, 'message' => $message]);
+            }
+            return redirect()->back()->with('success', $message);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Terjadi kesalahan sistem.']);
+            }
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     /**

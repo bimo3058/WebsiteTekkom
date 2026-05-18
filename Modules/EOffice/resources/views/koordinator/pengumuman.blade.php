@@ -23,9 +23,9 @@
     deleteModalOpen: false, 
     deleteId: null,
     tabState: {
-        pengumuman: { isEditing: false, formAction: '{{ route('eoffice.kp.koordinator.pengumuman.store') }}', formData: { judul: '', konten: '', is_active: true } },
-        faq: { isEditing: false, formAction: '{{ route('eoffice.kp.koordinator.pengumuman.store') }}', formData: { judul: '', konten: '', is_active: true } },
-        timeline: { isEditing: false, formAction: '{{ route('eoffice.kp.koordinator.pengumuman.store') }}', formData: { judul: '', konten: '', is_active: true } }
+        pengumuman: { isEditing: false, formAction: '{{ route('eoffice.kp.koordinator.pengumuman.store') }}', formData: { judul: '', konten: '', is_active: true, fileName: '' } },
+        faq: { isEditing: false, formAction: '{{ route('eoffice.kp.koordinator.pengumuman.store') }}', formData: { judul: '', konten: '', is_active: true, fileName: '' } },
+        timeline: { isEditing: false, formAction: '{{ route('eoffice.kp.koordinator.pengumuman.store') }}', formData: { judul: '', konten: '', is_active: true, fileName: '' } }
     }
 }">
 <div class="flex h-screen w-full overflow-hidden">
@@ -187,7 +187,7 @@
 
                 <!-- Form Card -->
                 <div class="bg-white rounded-2xl border border-slate-200 shadow-sm mb-10 overflow-hidden" id="form-section">
-                    <form :action="tabState[activeTab].formAction" method="POST" enctype="multipart/form-data" x-data="{ dragging: false, fileName: '' }">
+                    <form :action="tabState[activeTab].formAction" method="POST" enctype="multipart/form-data" x-data="{ dragging: false }">
                         @csrf
                         <template x-if="tabState[activeTab].isEditing">
                             <input type="hidden" name="_method" value="PUT">
@@ -225,11 +225,11 @@
                                          :class="{ 'drag-active': dragging }"
                                          @dragover.prevent="dragging = true"
                                          @dragleave.prevent="dragging = false"
-                                         @drop.prevent="dragging = false; $refs.fileInput.files = $event.dataTransfer.files; fileName = $refs.fileInput.files[0].name">
+                                         @drop.prevent="dragging = false; $refs.fileInput.files = $event.dataTransfer.files; tabState[activeTab].formData.fileName = $refs.fileInput.files[0].name">
                                         
-                                        <input type="file" name="lampiran" x-ref="fileInput" @change="fileName = $refs.fileInput.files[0] ? $refs.fileInput.files[0].name : ''" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept=".pdf,.doc,.docx,.jpg,.png">
+                                        <input type="file" name="lampiran" x-ref="fileInput" @change="tabState[activeTab].formData.fileName = $refs.fileInput.files[0] ? $refs.fileInput.files[0].name : ''" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" accept=".pdf,.doc,.docx,.jpg,.png">
                                         
-                                        <div class="space-y-2 text-center" x-show="!fileName">
+                                        <div class="space-y-2 text-center" x-show="!tabState[activeTab].formData.fileName">
                                             <div class="w-12 h-12 bg-indigo-50 text-indigo-500 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
                                                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
                                             </div>
@@ -243,15 +243,15 @@
                                         </div>
 
                                         <!-- File Preview -->
-                                        <div class="flex items-center gap-3 text-left w-full" x-show="fileName" style="display: none;">
+                                        <div class="flex items-center gap-3 text-left w-full" x-show="tabState[activeTab].formData.fileName" style="display: none;">
                                             <div class="w-10 h-10 bg-indigo-100 text-indigo-600 rounded-lg flex items-center justify-center shrink-0">
                                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
                                             </div>
                                             <div class="flex-1 min-w-0">
-                                                <p class="text-sm font-semibold text-slate-900 truncate" x-text="fileName"></p>
-                                                <p class="text-xs text-slate-500">File siap diupload</p>
+                                                <p class="text-sm font-semibold text-slate-900 truncate" x-text="tabState[activeTab].formData.fileName"></p>
+                                                <p class="text-xs text-slate-500">File lampiran yang akan disimpan</p>
                                             </div>
-                                            <button type="button" @click.stop.prevent="$refs.fileInput.value = ''; fileName = ''" class="text-slate-400 hover:text-red-500 p-1 rounded-md transition-colors z-20 relative">
+                                            <button type="button" @click.stop.prevent="$refs.fileInput.value = ''; tabState[activeTab].formData.fileName = ''" class="text-slate-400 hover:text-red-500 p-1 rounded-md transition-colors z-20 relative">
                                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                             </button>
                                         </div>
@@ -271,7 +271,7 @@
                                         <p class="text-[11px] text-slate-500 leading-relaxed">Aktifkan agar langsung tampil di dashboard mahasiswa.</p>
                                     </div>
                                     <div class="flex gap-2 w-full">
-                                        <button type="button" x-show="tabState[activeTab].isEditing" @click="tabState[activeTab].isEditing = false; tabState[activeTab].formAction = '{{ route('eoffice.kp.koordinator.pengumuman.store') }}'; tabState[activeTab].formData = { judul: '', konten: '', is_active: true }" class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-200 transition-colors focus:ring-4 focus:ring-slate-100 outline-none flex items-center justify-center">
+                                        <button type="button" x-show="tabState[activeTab].isEditing" @click="tabState[activeTab].isEditing = false; tabState[activeTab].formAction = '{{ route('eoffice.kp.koordinator.pengumuman.store') }}'; tabState[activeTab].formData = { judul: '', konten: '', is_active: true, fileName: '' }" class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-200 transition-colors focus:ring-4 focus:ring-slate-100 outline-none flex items-center justify-center">
                                             Batal
                                         </button>
                                         <button type="submit" class="flex-1 px-5 py-3.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200 focus:ring-4 focus:ring-indigo-100 outline-none flex items-center justify-center">
@@ -336,15 +336,15 @@
                             
                             @if($item->lampiran)
                             <!-- Attachment Mock (Optional visual) -->
-                            <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 cursor-pointer transition-colors">
+                            <a href="{{ Storage::url($item->lampiran) }}" target="_blank" class="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-indigo-600 cursor-pointer transition-colors w-fit">
                                 <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
-                                {{ $item->lampiran }}
-                            </div>
+                                {{ basename($item->lampiran) }}
+                            </a>
                             @endif
                         </div>
                         
                         <div class="flex flex-row md:flex-col items-center justify-end gap-2 shrink-0 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-5">
-                            <button type="button" @click='tabState[activeTab].formData = { judul: @json($item->judul), konten: @json($item->konten), is_active: {{ $item->is_published ? "true" : "false" }} }; tabState[activeTab].formAction = `/eoffice/kp/koordinator/pengumuman/{{ $item->id }}`; tabState[activeTab].isEditing = true; document.getElementById("form-section").scrollIntoView({ behavior: "smooth" });' class="flex-1 md:flex-none inline-flex items-center justify-center px-4 md:px-3 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
+                            <button type="button" @click='tabState[activeTab].formData = { judul: @json($item->judul), konten: @json($item->konten), is_active: {{ $item->is_published ? "true" : "false" }}, fileName: @json($item->lampiran ? basename($item->lampiran) : "") }; tabState[activeTab].formAction = `/eoffice/kp/koordinator/pengumuman/{{ $item->id }}`; tabState[activeTab].isEditing = true; document.getElementById("form-section").scrollIntoView({ behavior: "smooth" });' class="flex-1 md:flex-none inline-flex items-center justify-center px-4 md:px-3 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
                                 <svg class="w-4 h-4 mr-2 md:mr-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                 <span class="md:hidden">Edit</span>
                             </button>
@@ -457,15 +457,15 @@
                             <p class="text-sm text-slate-600 line-clamp-2 leading-relaxed mb-4">{{ $timeline->konten }}</p>
                             
                             @if($timeline->lampiran)
-                            <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 cursor-pointer transition-colors">
+                            <a href="{{ Storage::url($timeline->lampiran) }}" target="_blank" class="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-indigo-600 cursor-pointer transition-colors w-fit">
                                 <svg class="w-4 h-4 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
-                                {{ $timeline->lampiran }}
-                            </div>
+                                {{ basename($timeline->lampiran) }}
+                            </a>
                             @endif
                         </div>
                         
                         <div class="flex flex-row md:flex-col items-center justify-end gap-2 shrink-0 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-5">
-                            <button type="button" @click='tabState[activeTab].formData = { judul: @json($timeline->judul), konten: @json($timeline->konten), is_active: {{ $timeline->is_published ? "true" : "false" }} }; tabState[activeTab].formAction = `/eoffice/kp/koordinator/pengumuman/{{ $timeline->id }}`; tabState[activeTab].isEditing = true; document.getElementById("form-section").scrollIntoView({ behavior: "smooth" });' class="flex-1 md:flex-none inline-flex items-center justify-center px-4 md:px-3 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
+                            <button type="button" @click='tabState[activeTab].formData = { judul: @json($timeline->judul), konten: @json($timeline->konten), is_active: {{ $timeline->is_published ? "true" : "false" }}, fileName: @json($timeline->lampiran ? basename($timeline->lampiran) : "") }; tabState[activeTab].formAction = `/eoffice/kp/koordinator/pengumuman/{{ $timeline->id }}`; tabState[activeTab].isEditing = true; document.getElementById("form-section").scrollIntoView({ behavior: "smooth" });' class="flex-1 md:flex-none inline-flex items-center justify-center px-4 md:px-3 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
                                 <svg class="w-4 h-4 mr-2 md:mr-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                 <span class="md:hidden">Edit</span>
                             </button>

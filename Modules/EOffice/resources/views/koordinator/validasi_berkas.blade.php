@@ -332,21 +332,30 @@
                                                 <div class="min-w-0">
                                                     <h4 class="text-sm font-bold text-slate-900 truncate" x-text="doc.jenis"></h4>
                                                     <p class="text-xs text-slate-500 mt-1 truncate" x-text="doc.nama_file"></p>
-                                                    <div class="flex items-center gap-2 mt-2">
-                                                        <span class="text-[10px] font-medium text-slate-400" x-text="doc.ukuran"></span>
-                                                        <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                                    <div class="flex flex-wrap items-center gap-2 mt-2">
                                                         <span class="text-[10px] font-medium text-slate-400" x-text="'Diunggah: ' + doc.tanggal"></span>
                                                         <span class="w-1 h-1 rounded-full bg-slate-300"></span>
                                                         <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded border"
                                                               :class="getDocStatusColor(doc.status)" x-text="doc.status"></span>
+                                                        <!-- Badge: file tidak tersedia -->
+                                                        <span x-show="!doc.file_url" class="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-50 text-orange-600 border border-orange-200 text-[10px] font-bold rounded">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                                            File tidak tersedia
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <!-- Actions -->
                                             <div class="flex items-center gap-2 w-full sm:w-auto shrink-0 border-t sm:border-t-0 pt-4 sm:pt-0 border-slate-100">
-                                                <button @click="openPreview(doc)" class="flex-1 sm:flex-none px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold text-xs rounded-xl transition-colors text-center border border-indigo-100">
-                                                    Preview
+                                                <!-- Preview button: disabled if no file -->
+                                                <button @click="doc.file_url ? openPreview(doc) : null"
+                                                        :disabled="!doc.file_url"
+                                                        :class="doc.file_url ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100 cursor-pointer' : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'"
+                                                        :title="doc.file_url ? 'Preview file' : 'File belum tersedia, minta mahasiswa upload ulang'"
+                                                        class="flex-1 sm:flex-none px-4 py-2 font-bold text-xs rounded-xl transition-colors text-center border">
+                                                    <template x-if="doc.file_url">Preview</template>
+                                                    <template x-if="!doc.file_url">Tidak Ada File</template>
                                                 </button>
                                                 
                                                 <template x-if="doc.status === 'pending'">
@@ -412,26 +421,49 @@
                         </div>
                         <div>
                             <h3 class="text-sm font-bold text-slate-900" x-text="previewDoc ? previewDoc.nama_file : ''"></h3>
-                            <p class="text-xs text-slate-500 font-medium mt-0.5">Preview PDF • Diunggah oleh Mahasiswa</p>
+                            <p class="text-xs text-slate-500 font-medium mt-0.5" x-text="previewDoc && isPdf(previewDoc.nama_file) ? 'Preview PDF • Diunggah oleh Mahasiswa' : 'File Dokumen • Klik Download untuk membuka'"></p>
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100" title="Download">
+                        <a :href="previewDoc ? previewDoc.file_url : '#'" :download="previewDoc ? previewDoc.nama_file : ''" target="_blank" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100" title="Download">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                        </button>
+                        </a>
                         <button @click="previewModalOpen = false" class="p-2 text-slate-400 hover:text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors" title="Tutup">
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     </div>
                 </div>
                 
-                <div class="flex-1 bg-slate-200 flex items-center justify-center relative">
-                    <!-- Dummy PDF placeholder -->
-                    <div class="text-center">
-                        <svg class="w-16 h-16 text-slate-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                        <p class="text-slate-500 font-medium">Area Preview PDF</p>
-                        <p class="text-xs text-slate-400 mt-2 max-w-sm mx-auto">Dokumen asli akan dirender di sini menggunakan tag <span class="font-mono text-[10px] bg-slate-300 px-1 rounded text-slate-600">&lt;embed&gt;</span> atau <span class="font-mono text-[10px] bg-slate-300 px-1 rounded text-slate-600">&lt;iframe&gt;</span></p>
-                    </div>
+                <div class="flex-1 bg-slate-100 flex flex-col items-center justify-center relative overflow-hidden">
+                    <!-- PDF: embed with iframe -->
+                    <template x-if="previewDoc && previewDoc.file_url && isPdf(previewDoc.nama_file)">
+                        <iframe :src="previewDoc.file_url" class="w-full h-full border-0" style="min-height:500px;"></iframe>
+                    </template>
+
+                    <!-- Word/Doc: cannot preview in browser, show download prompt -->
+                    <template x-if="previewDoc && previewDoc.file_url && !isPdf(previewDoc.nama_file)">
+                        <div class="text-center p-10">
+                            <div class="w-20 h-20 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                                <svg class="w-10 h-10 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>
+                            </div>
+                            <h4 class="text-base font-bold text-slate-800 mb-1" x-text="previewDoc.nama_file"></h4>
+                            <p class="text-sm text-slate-500 mb-2">File Word/Dokumen tidak bisa dipreview langsung di browser.</p>
+                            <p class="text-xs text-slate-400 mb-6">Gunakan tombol Download di atas untuk membuka file ini.</p>
+                            <a :href="previewDoc.file_url" target="_blank" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 shadow-sm transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                Buka / Download File
+                            </a>
+                        </div>
+                    </template>
+
+                    <!-- Fallback jika file_url null -->
+                    <template x-if="!previewDoc || !previewDoc.file_url">
+                        <div class="text-center p-8">
+                            <svg class="w-16 h-16 text-slate-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            <p class="text-slate-600 font-semibold">File tidak tersedia</p>
+                            <p class="text-xs text-slate-400 mt-1">Dokumen ini belum memiliki file yang bisa dipreview.</p>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -556,6 +588,11 @@
             openPreview(doc) {
                 this.previewDoc = doc;
                 this.previewModalOpen = true;
+            },
+
+            isPdf(filename) {
+                if (!filename) return false;
+                return filename.toLowerCase().endsWith('.pdf');
             },
             
             openRejectModal(doc) {
