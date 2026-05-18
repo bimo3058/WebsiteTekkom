@@ -91,10 +91,10 @@
 
         <div class="p-4 border-t border-slate-100 shrink-0">
             <div class="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
-                <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shadow-sm border border-indigo-200">K</div>
+                <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shadow-sm border border-indigo-200">{{ strtoupper(substr(auth()->user()->name ?? 'K', 0, 1)) }}</div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-slate-900 truncate">Koordinator KP</p>
-                    <p class="text-[11px] text-slate-500 truncate">Sistem Balancing</p>
+                    <p class="text-sm font-bold text-slate-900 truncate">{{ auth()->user()->name ?? 'Koordinator KP' }}</p>
+                    <p class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email ?? 'Sistem Balancing' }}</p>
                 </div>
             </div>
         </div>

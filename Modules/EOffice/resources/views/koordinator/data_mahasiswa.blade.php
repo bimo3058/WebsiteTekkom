@@ -78,14 +78,22 @@
             </a>
         </div>
         
+                @if(auth()->user() && auth()->user()->email === 'ike.pertiwi@undip.ac.id')
+        <div class="px-4 pb-4 mt-auto">
+            <a href="{{ route('eoffice.kp.dosen.dashboard') }}" class="flex items-center px-4 py-2.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-all text-sm font-semibold border border-emerald-200 shadow-sm">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                Beralih ke Dosen
+            </a>
+        </div>
+        @endif
         <div class="p-4 border-t border-slate-100">
             <div class="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
                 <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shadow-sm border border-indigo-200">
-                    K
+                    {{ strtoupper(substr(auth()->user()->name ?? 'K', 0, 1)) }}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-slate-900 truncate">Koordinator KP</p>
-                    <p class="text-[11px] text-slate-500 truncate">Sistem Balancing</p>
+                    <p class="text-sm font-bold text-slate-900 truncate">{{ auth()->user()->name ?? 'Koordinator KP' }}</p>
+                    <p class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email ?? 'Sistem Balancing' }}</p>
                 </div>
             </div>
         </div>
@@ -354,21 +362,9 @@
                                                 <p class="text-xs font-medium text-slate-500 mb-1">Nilai Seminar</p>
                                                 <p class="text-xl font-extrabold text-slate-900" x-text="selectedMahasiswa.nilai_seminar !== null ? selectedMahasiswa.nilai_seminar : '-'"></p>
                                             </div>
-                                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 relative group">
+                                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
                                                 <p class="text-xs font-medium text-slate-500 mb-1">Nilai Lapangan</p>
-                                                <div x-show="!isEditingNilai" class="flex items-center justify-between">
-                                                    <p class="text-xl font-extrabold text-slate-900" x-text="selectedMahasiswa.nilai_lapangan !== null ? selectedMahasiswa.nilai_lapangan : '-'"></p>
-                                                    <button @click="isEditingNilai = true; tempNilai = selectedMahasiswa.nilai_lapangan" class="text-slate-400 hover:text-indigo-600 transition-colors p-1 rounded-md hover:bg-indigo-50" title="Input/Edit Nilai Lapangan">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                                                    </button>
-                                                </div>
-                                                <div x-show="isEditingNilai" x-cloak class="mt-1 flex flex-col gap-2">
-                                                    <input type="number" x-model="tempNilai" min="0" max="100" step="0.1" class="w-full rounded-lg border border-slate-300 py-1.5 px-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="0 - 100">
-                                                    <div class="flex gap-2">
-                                                        <button @click="saveNilai()" class="flex-1 bg-indigo-600 text-white px-2 py-1.5 rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors">Simpan</button>
-                                                        <button @click="isEditingNilai = false" class="flex-1 bg-white border border-slate-300 text-slate-600 px-2 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-50 transition-colors">Batal</button>
-                                                    </div>
-                                                </div>
+                                                <p class="text-xl font-extrabold text-slate-900" x-text="selectedMahasiswa.nilai_lapangan !== null ? selectedMahasiswa.nilai_lapangan : '-'"></p>
                                             </div>
                                         </div>
                                         <div class="mt-4 bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex items-center justify-between">
@@ -428,8 +424,6 @@ function pageData() {
         mahasiswas: @json($mahasiswas),
         selectedMahasiswa: null,
         detailModal: false,
-        isEditingNilai: false,
-        tempNilai: '',
         toast: { show: false, type: 'success', title: '', message: '' },
         get filteredMahasiswas() {
             return this.mahasiswas.filter(m => {
@@ -440,34 +434,7 @@ function pageData() {
         },
         openDetail(m) {
             this.selectedMahasiswa = m;
-            this.isEditingNilai = false;
             this.detailModal = true;
-        },
-        saveNilai() {
-            let nilai = parseFloat(this.tempNilai);
-            if(isNaN(nilai) || nilai < 0 || nilai > 100) {
-                this.showToast('error', 'Validasi Gagal', 'Nilai harus berada antara 0 dan 100.');
-                return;
-            }
-            
-            let idx = this.mahasiswas.findIndex(m => m.id === this.selectedMahasiswa.id);
-            if(idx !== -1) {
-                this.mahasiswas[idx].nilai_lapangan = nilai;
-                
-                // Recalculate nilai akhir if needed
-                let ns = this.mahasiswas[idx].nilai_seminar;
-                let nl = this.mahasiswas[idx].nilai_lapangan;
-                if(ns !== null && nl !== null) {
-                    this.mahasiswas[idx].nilai_akhir = parseFloat(((ns + nl) / 2).toFixed(1));
-                }
-                
-                this.selectedMahasiswa = this.mahasiswas[idx];
-                this.isEditingNilai = false;
-                this.showToast('success', 'Berhasil', 'Nilai lapangan berhasil disimpan.');
-                
-                // In a real app, you would make an AJAX/fetch request here to save to database.
-                // fetch(`/eoffice/kp/koordinator/data-mahasiswa/${this.selectedMahasiswa.id}/nilai`, { ... })
-            }
         },
         showToast(type, title, message) {
             this.toast.type = type;

@@ -4,10 +4,24 @@ namespace Modules\EOffice\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Routing\Controllers\HasMiddleware;
+use Illuminate\Routing\Controllers\Middleware;
 use Modules\EOffice\Models\KerjaPraktik;
 
-class KoordinatorController extends Controller
+class KoordinatorController extends Controller implements HasMiddleware
 {
+    public static function middleware(): array
+    {
+        return [
+            new Middleware(function ($request, $next) {
+                if (auth()->user() && auth()->user()->email !== 'ike.pertiwi@undip.ac.id') {
+                    abort(403, 'Akses Ditolak. Halaman ini khusus Koordinator KP.');
+                }
+                return $next($request);
+            }),
+        ];
+    }
+
     /**
      * Halaman Utama Dashboard Koordinator KP
      */
@@ -47,21 +61,30 @@ class KoordinatorController extends Controller
             ->orderBy('eo_kerja_praktik.created_at', 'asc')
             ->get();
 
-        // 2. Ambil semua dosen (menggunakan scope dari Spatie Permission)
-        $dosens = \App\Models\User::role('dosen')->select('id', 'name')->get();
+        // 2. Ambil semua dosen berdasarkan domain email @undip.ac.id (bukan students)
+        $dosens = \App\Models\User::where('email', 'like', '%@undip.ac.id')
+            ->where('email', 'not like', '%@students.undip.ac.id')
+            ->select('id', 'name')
+            ->get();
 
         // 3. Hitung jumlah mahasiswa bimbingan dan ambil daftar mahasiswa untuk masing-masing dosen
         foreach ($dosens as $dosen) {
-            $assigned = KerjaPraktik::select(
-                    'eo_kerja_praktik.id',
-                    'eo_kerja_praktik.nim',
-                    'eo_kerja_praktik.rencana_judul',
-                    'u.name as nama_mahasiswa'
-                )
-                ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
-                ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
-                ->where('eo_kerja_praktik.dosen_pembimbing_id', $dosen->id)
-                ->get();
+            $kpDosen = \Modules\EOffice\Models\KpDosen::where('user_id', $dosen->id)->first();
+            
+            if ($kpDosen) {
+                $assigned = KerjaPraktik::select(
+                        'eo_kerja_praktik.id',
+                        'eo_kerja_praktik.nim',
+                        'eo_kerja_praktik.rencana_judul',
+                        'u.name as nama_mahasiswa'
+                    )
+                    ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
+                    ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
+                    ->where('eo_kerja_praktik.dosen_pembimbing_id', $kpDosen->id)
+                    ->get();
+            } else {
+                $assigned = collect();
+            }
             
             $dosen->jumlah_bimbingan = $assigned->count();
             $dosen->mahasiswas = $assigned;
@@ -89,8 +112,15 @@ class KoordinatorController extends Controller
         $assignedCount = 0;
         foreach ($validated['assignments'] as $assign) {
             if (!empty($assign['dosen_id'])) {
+                // Mapping ID global ke tabel lokal eo_kp_dosen agar tidak FK violation
+                $userDosen = \App\Models\User::find($assign['dosen_id']);
+                $kpDosen = \Modules\EOffice\Models\KpDosen::firstOrCreate(
+                    ['user_id' => $assign['dosen_id']],
+                    ['nama_lengkap' => $userDosen->name ?? 'Dosen KP', 'nip' => '-']
+                );
+
                 KerjaPraktik::where('id', $assign['kp_id'])
-                    ->update(['dosen_pembimbing_id' => $assign['dosen_id']]);
+                    ->update(['dosen_pembimbing_id' => $kpDosen->id]);
                 $assignedCount++;
             }
         }
@@ -353,108 +383,57 @@ class KoordinatorController extends Controller
      */
     public function dataMahasiswa()
     {
-        // Dummy data untuk desain UI/UX Data Mahasiswa
-        $mahasiswas = collect([
-            (object) [
-                'id' => 1,
-                'nama' => 'Ahmad Fathanah',
-                'nim' => '2100018112',
-                'prodi' => 'Informatika',
-                'tempat_kp' => 'PT GoTo Gojek Tokopedia',
-                'judul_kp' => 'Pengembangan Sistem Microservice Backend',
-                'dosen_pembimbing' => 'Dr. Budi Santoso, M.Kom',
-                'status_kp' => 'Selesai',
+        $kps = \Modules\EOffice\Models\KerjaPraktik::select(
+            'eo_kerja_praktik.*',
+            'u.name as nama',
+            'm.nim as nim',
+            'd.nama_lengkap as dosen_pembimbing',
+            'p.nilai_seminar_pembimbing',
+            'p.nilai_lapangan',
+            'p.nilai_akhir'
+        )
+        ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
+        ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
+        ->leftJoin('eo_kp_dosen as d', 'eo_kerja_praktik.dosen_pembimbing_id', '=', 'd.id')
+        ->leftJoin('eo_kp_penilaian as p', 'eo_kerja_praktik.id', '=', 'p.kp_id')
+        ->orderBy('eo_kerja_praktik.created_at', 'desc')
+        ->get();
+
+        $mahasiswas = $kps->map(function($kp) {
+            $statusStr = 'Pending';
+            $tahap = 'Pra KP';
+            if ($kp->status_kp === 'pending') {
+                $statusStr = 'Pending';
+                $tahap = 'Pra KP';
+            } elseif ($kp->status_kp === 'active') {
+                $statusStr = 'Aktif KP';
+                $tahap = 'Saat KP';
+            } elseif ($kp->status_kp === 'completed') {
+                $statusStr = 'Selesai';
+                $tahap = 'Pasca KP';
+            }
+            
+            return (object) [
+                'id' => $kp->id,
+                'nama' => $kp->nama ?? 'Unknown',
+                'nim' => $kp->nim ?? '-',
+                'prodi' => 'Teknik Komputer',
+                'tempat_kp' => $kp->rencana_tempat ?? 'Belum ditentukan',
+                'judul_kp' => $kp->rencana_judul ?? 'Belum ditentukan',
+                'dosen_pembimbing' => $kp->dosen_pembimbing,
+                'status_kp' => $statusStr,
                 'semester' => 'Genap',
-                'tahun_kp' => '2026',
-                'nilai_seminar' => 88,
-                'nilai_lapangan' => 90,
-                'nilai_akhir' => 89, // (88+90)/2
-                'status_dokumen' => 'Lengkap',
+                'tahun_kp' => date('Y', strtotime($kp->created_at)),
+                'nilai_seminar' => $kp->nilai_seminar_pembimbing,
+                'nilai_lapangan' => $kp->nilai_lapangan,
+                'nilai_akhir' => $kp->nilai_akhir,
+                'status_dokumen' => '-',
                 'riwayat_approval' => [
-                    ['tanggal' => '2026-06-15', 'status' => 'Disetujui', 'keterangan' => 'Laporan akhir disetujui pembimbing.'],
-                    ['tanggal' => '2026-06-10', 'status' => 'Revisi', 'keterangan' => 'Revisi bab 4 dan 5.'],
+                    ['tanggal' => date('Y-m-d', strtotime($kp->updated_at)), 'status' => 'Info', 'keterangan' => 'Tahap saat ini: ' . $tahap]
                 ],
-                'status_seminar' => 'Lulus',
-            ],
-            (object) [
-                'id' => 2,
-                'nama' => 'Siti Nurhaliza',
-                'nim' => '2100018199',
-                'prodi' => 'Informatika',
-                'tempat_kp' => 'PT Telkom Indonesia',
-                'judul_kp' => 'Analisis Jaringan Fiber Optic Regional 5',
-                'dosen_pembimbing' => 'Ir. Cipto Mangunkusumo, M.T',
-                'status_kp' => 'Aktif KP',
-                'semester' => 'Genap',
-                'tahun_kp' => '2026',
-                'nilai_seminar' => null,
-                'nilai_lapangan' => null,
-                'nilai_akhir' => null,
-                'status_dokumen' => 'Tidak Lengkap',
-                'riwayat_approval' => [
-                    ['tanggal' => '2026-06-20', 'status' => 'Ditolak', 'keterangan' => 'Laporan progress 1 format tidak sesuai.'],
-                ],
-                'status_seminar' => 'Belum Daftar',
-            ],
-            (object) [
-                'id' => 3,
-                'nama' => 'Bima Sakti',
-                'nim' => '2100018155',
-                'prodi' => 'Informatika',
-                'tempat_kp' => 'Bank Mandiri IT Group',
-                'judul_kp' => 'Implementasi Fraud Detection System',
-                'dosen_pembimbing' => 'Prof. Dian Sastro, Ph.D',
-                'status_kp' => 'Seminar',
-                'semester' => 'Genap',
-                'tahun_kp' => '2026',
-                'nilai_seminar' => null,
-                'nilai_lapangan' => 85,
-                'nilai_akhir' => null,
-                'status_dokumen' => 'Lengkap',
-                'riwayat_approval' => [
-                    ['tanggal' => '2026-05-12', 'status' => 'Disetujui', 'keterangan' => 'Laporan siap diseminarkan.'],
-                ],
-                'status_seminar' => 'Menunggu Jadwal',
-            ],
-            (object) [
-                'id' => 4,
-                'nama' => 'Joko Widodo',
-                'nim' => '2100018101',
-                'prodi' => 'Informatika',
-                'tempat_kp' => 'PT PLN (Persero)',
-                'judul_kp' => 'Sistem Informasi Manajemen Aset',
-                'dosen_pembimbing' => 'Dr. Budi Santoso, M.Kom',
-                'status_kp' => 'Menunggu Nilai',
-                'semester' => 'Genap',
-                'tahun_kp' => '2026',
-                'nilai_seminar' => 85,
-                'nilai_lapangan' => null,
-                'nilai_akhir' => null,
-                'status_dokumen' => 'Lengkap',
-                'riwayat_approval' => [
-                    ['tanggal' => '2026-05-20', 'status' => 'Disetujui', 'keterangan' => 'Seminar selesai, menunggu nilai lapangan.'],
-                ],
-                'status_seminar' => 'Lulus',
-            ],
-            (object) [
-                'id' => 5,
-                'nama' => 'Rina Gunawan',
-                'nim' => '2100018202',
-                'prodi' => 'Informatika',
-                'tempat_kp' => 'Kementerian Kominfo',
-                'judul_kp' => 'Audit Keamanan Aplikasi E-Government',
-                'dosen_pembimbing' => null,
-                'status_kp' => 'Pending',
-                'semester' => 'Genap',
-                'tahun_kp' => '2026',
-                'nilai_seminar' => null,
-                'nilai_lapangan' => null,
-                'nilai_akhir' => null,
-                'status_dokumen' => 'Tidak Lengkap',
-                'riwayat_approval' => [],
-                'status_seminar' => 'Belum Daftar',
-            ],
-        ]);
+                'status_seminar' => '-',
+            ];
+        });
 
         return view('eoffice::koordinator.data_mahasiswa', compact('mahasiswas'));
     }

@@ -11,8 +11,10 @@ class DosenController extends Controller
 {
     public function dashboard()
     {
+        $kpDosen = \Modules\EOffice\Models\KpDosen::where('user_id', auth()->id())->first();
+
         // Ambil data KP + nama mahasiswa dari tabel global users (READ ONLY, tidak mengubah apapun)
-        $bimbingan = KerjaPraktik::select(
+        $bimbinganQuery = KerjaPraktik::select(
             'eo_kerja_praktik.*',
             'u.name as nama_mahasiswa',
             'u.email as email_mahasiswa',
@@ -20,9 +22,15 @@ class DosenController extends Controller
         )
             ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
             ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
-            ->leftJoin('users as ud', 'eo_kerja_praktik.dosen_pembimbing_id', '=', 'ud.id')
-            ->orderBy('eo_kerja_praktik.created_at', 'desc')
-            ->get();
+            ->leftJoin('users as ud', 'eo_kerja_praktik.dosen_pembimbing_id', '=', 'ud.id');
+            
+        if ($kpDosen) {
+            $bimbinganQuery->where('eo_kerja_praktik.dosen_pembimbing_id', $kpDosen->id);
+        } else {
+            $bimbinganQuery->whereNull('eo_kerja_praktik.id'); // Kosongkan jika dosen belum terdaftar
+        }
+            
+        $bimbingan = $bimbinganQuery->orderBy('eo_kerja_praktik.created_at', 'desc')->get();
 
         $stats = [
             'total_bimbingan' => $bimbingan->count(),
@@ -39,7 +47,9 @@ class DosenController extends Controller
      */
     public function bimbingan()
     {
-        $bimbingan = KerjaPraktik::select(
+        $kpDosen = \Modules\EOffice\Models\KpDosen::where('user_id', auth()->id())->first();
+
+        $query = KerjaPraktik::select(
             'eo_kerja_praktik.*',
             'u.name as nama_mahasiswa',
             'm.nim as nim_user',
@@ -50,11 +60,15 @@ class DosenController extends Controller
             ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
             ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
             ->leftJoin('users as ud', 'eo_kerja_praktik.dosen_pembimbing_id', '=', 'ud.id')
-            ->leftJoin('eo_kp_penilaian as p', 'eo_kerja_praktik.id', '=', 'p.kp_id')
-            // Dummy limit for current user ID context if needed, but keeping global for now
-            // ->where('eo_kerja_praktik.dosen_pembimbing_id', auth()->id())
-            ->orderBy('eo_kerja_praktik.created_at', 'desc')
-            ->get();
+            ->leftJoin('eo_kp_penilaian as p', 'eo_kerja_praktik.id', '=', 'p.kp_id');
+            
+        if ($kpDosen) {
+            $query->where('eo_kerja_praktik.dosen_pembimbing_id', $kpDosen->id);
+        } else {
+            $query->whereNull('eo_kerja_praktik.id'); // Kosongkan jika dosen belum terdaftar
+        }
+            
+        $bimbingan = $query->orderBy('eo_kerja_praktik.created_at', 'desc')->get();
             
         // Map data dummy buat UI supaya lengkap
         $mahasiswas = $bimbingan->map(function ($kp) {
@@ -176,8 +190,10 @@ class DosenController extends Controller
      */
     public function validasiBerkas()
     {
+        $kpDosen = \Modules\EOffice\Models\KpDosen::where('user_id', auth()->id())->first();
+
         // Ambil semua dokumen (Laporan & Makalah) beserta nama mahasiswa dari global users
-        $dokumens = \Modules\EOffice\Models\KpDokumen::select(
+        $query = \Modules\EOffice\Models\KpDokumen::select(
             'eo_kp_dokumen.*',
             'kp.nim',
             'kp.rencana_judul',
@@ -188,8 +204,15 @@ class DosenController extends Controller
             ->join('eo_kerja_praktik as kp', 'eo_kp_dokumen.kp_id', '=', 'kp.id')
             ->leftJoin('eo_kp_mahasiswa as m', 'kp.mahasiswa_id', '=', 'm.id')
             ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
-            ->whereIn('eo_kp_dokumen.jenis_dokumen', ['Laporan', 'Makalah'])
-            ->orderByRaw("CASE eo_kp_dokumen.status_validasi WHEN 'pending' THEN 0 ELSE 1 END")
+            ->whereIn('eo_kp_dokumen.jenis_dokumen', ['Laporan', 'Makalah']);
+
+        if ($kpDosen) {
+            $query->where('kp.dosen_pembimbing_id', $kpDosen->id);
+        } else {
+            $query->whereNull('kp.id'); // Kosongkan jika dosen belum terdaftar
+        }
+
+        $dokumens = $query->orderByRaw("CASE eo_kp_dokumen.status_validasi WHEN 'pending' THEN 0 ELSE 1 END")
             ->orderBy('eo_kp_dokumen.tanggal_upload', 'desc')
             ->get();
 

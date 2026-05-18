@@ -412,10 +412,15 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
         // ── Redirect root manprak ke dashboard sesuai role ───────────────────
         Route::get('/', function () {
             $user = auth()->user();
+            $email = strtolower($user->email ?? '');
+
+            if ($email === 'ike.pertiwi@undip.ac.id') {
+                return redirect()->route('eoffice.kp.koordinator.dashboard');
+            }
             if ($user->hasRole('superadmin') || $user->hasRole('admin_eoffice', 'eoffice')) {
                 return redirect()->route('eoffice.manprak.admin.dashboard');
             }
-            if ($user->hasRole('dosen', 'eoffice')) {
+            if ($user->hasRole('dosen', 'eoffice') || (str_ends_with($email, '@undip.ac.id') && !str_ends_with($email, '@students.undip.ac.id'))) {
                 return redirect()->route('eoffice.manprak.dosen.dashboard');
             }
             if ($user->hasRole('koor_prak', 'eoffice')) {

@@ -92,15 +92,23 @@
             </a>
         </div>
 
+                @if(auth()->user() && auth()->user()->email === 'ike.pertiwi@undip.ac.id')
+        <div class="px-4 pb-4 mt-auto">
+            <a href="{{ route('eoffice.kp.dosen.dashboard') }}" class="flex items-center px-4 py-2.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-all text-sm font-semibold border border-emerald-200 shadow-sm">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                Beralih ke Dosen
+            </a>
+        </div>
+        @endif
         <div class="p-4 border-t border-slate-100">
             <div class="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
                 <div
                     class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shadow-sm border border-indigo-200">
-                    K
+                    {{ strtoupper(substr(auth()->user()->name ?? 'K', 0, 1)) }}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-slate-900 truncate">Koordinator KP</p>
-                    <p class="text-[11px] text-slate-500 truncate">Sistem Balancing</p>
+                    <p class="text-sm font-bold text-slate-900 truncate">{{ auth()->user()->name ?? 'Koordinator KP' }}</p>
+                    <p class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email ?? 'Sistem Balancing' }}</p>
                 </div>
             </div>
         </div>
@@ -346,7 +354,7 @@
                                                             <p class="text-[10px] text-slate-500" x-text="mhs.nim"></p>
                                                         </div>
                                                     </div>
-                                                    <button type="button" @click.stop="removeFromDosen(dosen.id, mhs)" class="absolute top-2 right-2 text-slate-300 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity" title="Hapus dari dosen ini">
+                                                    <button type="button" @click.stop="removeFromDosen(dosen.id, mhs)" class="absolute top-2 right-2 text-slate-400 hover:text-red-500 transition-colors" title="Hapus dari dosen ini">
                                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
                                                     </button>
                                                     
