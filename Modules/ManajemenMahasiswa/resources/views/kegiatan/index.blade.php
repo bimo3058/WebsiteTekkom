@@ -209,17 +209,7 @@
         <h3 class="fw-bold mb-1 text-dark">Manajemen Kegiatan</h3>
         <p class="text-dark fw-bold mb-0" style="font-size: 14px;">Daftar kegiatan terbaru dari berbagai bidang kepengurusan</p>
     </div>
-    @if($isAdmin)
-        <a href="{{ route('manajemenmahasiswa.kegiatan.create') }}"
-           class="btn d-flex align-items-center gap-2"
-           style="background: #4f46e5; color: #fff; font-weight: 600; font-size: 14px; padding: 10px 20px; border-radius: 10px; transition: all 0.2s;">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                <line x1="12" y1="5" x2="12" y2="19"></line>
-                <line x1="5" y1="12" x2="19" y2="12"></line>
-            </svg>
-            Tambah Kegiatan
-        </a>
-    @endif
+
 </div>
 
 <!-- Search & Filter Area (matching forum layout) -->
