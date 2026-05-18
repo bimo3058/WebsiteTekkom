@@ -403,7 +403,7 @@
             <span class="nav-label" style="flex-grow:1;">Forum Diskusi</span>
         </a>
 
-        @if(array_intersect($sidebarRoles, ['mahasiswa', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']))
+        @if(array_intersect($sidebarRoles, ['mahasiswa', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dosen', 'dosen_koordinator', 'dpm']))
             <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}"
                 class="{{ request()->routeIs('manajemenmahasiswa.pengaduan.*') ? 'active' : '' }}">
                 <span class="nav-icon d-inline-flex">
