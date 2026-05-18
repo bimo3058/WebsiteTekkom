@@ -1,29 +1,43 @@
 <x-eoffice::manajemen-praktikum.layout pageTitle="Bagi Asprak ke Modul">
 
-{{-- Header --}}
+{{-- Page Header --}}
 <div class="mp-page-header">
     <div>
-        <h1 class="mp-page-title">Bagi Asprak ke Modul</h1>
-        <p class="mp-page-sub">Tugaskan asisten praktikum ke modul-modul yang tersedia</p>
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <h1 class="mp-page-title">Bagi Asprak ke Modul</h1>
+            <span class="mp-badge error sm"><span class="dot"></span>Admin</span>
+        </div>
+        <p class="mp-page-sub">Tugaskan asisten praktikum ke modul-modul yang tersedia · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
+    </div>
+    <div class="mp-page-actions">
+        <form method="GET" class="flex gap-2 items-center">
+            <select name="praktikum_id" onchange="this.form.submit()" class="mp-input mp-select">
+                @foreach($praktikums as $prak)
+                <option value="{{ $prak->id }}" {{ $prak->id == $praktikumId ? 'selected' : '' }}>
+                    {{ $prak->nama }} ({{ $prak->semester }} {{ $prak->tahun_ajaran }})
+                </option>
+                @endforeach
+            </select>
+        </form>
     </div>
 </div>
 
-{{-- Pilih Praktikum --}}
-<div class="flex-shrink-0">
-    <form method="GET" class="flex gap-2 items-center">
-        <select name="praktikum_id" onchange="this.form.submit()" class="mp-input mp-select">
-            @foreach($praktikums as $prak)
-            <option value="{{ $prak->id }}" {{ $prak->id == $praktikumId ? 'selected' : '' }}>
-                {{ $prak->nama }} ({{ $prak->semester }} {{ $prak->tahun_ajaran }})
-            </option>
-            @endforeach
-        </select>
-    </form>
+{{-- Section title --}}
+<div class="sec-head">
+    <span class="sec-bar"></span>
+    <span class="sec-title">Penugasan Modul</span>
+    <span class="sec-rule"></span>
+    @if($selectedPraktikum)
+    <span style="font-size:12px;color:#666D80;">{{ $selectedPraktikum->nama }}</span>
+    @endif
 </div>
 
 @if($praktikums->isEmpty())
-<div class="flex-1 flex items-center justify-center" style="font-size:14px;color:var(--c-fg-muted);">
-    Tidak ada praktikum aktif saat ini.
+<div class="mp-card flex-shrink-0">
+    <div style="padding:48px;text-align:center;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <div style="font-size:13px;font-weight:500;color:#666D80;">Tidak ada praktikum aktif saat ini.</div>
+    </div>
 </div>
 @else
 
@@ -34,37 +48,38 @@
         <div class="mp-card-header">
             <span class="mp-card-title">
                 Modul Praktikum
-                @if($selectedPraktikum) — <span style="font-weight:400;">{{ $selectedPraktikum->nama }}</span> @endif
+                @if($selectedPraktikum) &mdash; <span style="font-weight:400;color:#666D80;">{{ $selectedPraktikum->nama }}</span> @endif
             </span>
         </div>
-        <div class="overflow-y-auto flex-1">
+        <div style="overflow-y:auto;flex:1;">
             @forelse($moduls as $modul)
-            <div style="padding:16px 20px;border-bottom:1px solid var(--c-border-light);">
-                <div class="flex items-start justify-between gap-3">
-                    <div>
-                        <div style="font-size:13px;font-weight:600;color:var(--c-fg);">
+            <div style="padding:16px 20px;border-bottom:1px solid #DFE1E7;"
+                 onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background=''">
+                <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
+                    <div style="flex:1;min-width:0;">
+                        <div style="font-size:13px;font-weight:600;color:#0D0D12;margin-bottom:2px;">
                             {{ $modul->urutan }}. {{ $modul->nama }}
                         </div>
                         @if($modul->deskripsi)
-                        <div style="font-size:11px;color:var(--c-fg-muted);margin-top:2px;">{{ $modul->deskripsi }}</div>
+                        <div style="font-size:11px;color:#666D80;margin-bottom:6px;">{{ $modul->deskripsi }}</div>
                         @endif
 
                         {{-- Asprak yang sudah ditugaskan --}}
                         @if($modul->modulAsprak->isNotEmpty())
-                        <div class="flex flex-wrap gap-1 mt-2">
+                        <div style="display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;">
                             @foreach($modul->modulAsprak as $ma)
-                            <span class="mp-badge sky sm">{{ $ma->asprak?->user?->name ?? '—' }}</span>
+                            <span class="mp-badge green sm"><span class="dot"></span>{{ $ma->asprak?->user?->name ?? '—' }}</span>
                             @endforeach
                         </div>
                         @else
-                        <div style="font-size:11px;color:var(--c-fg-placeholder);margin-top:4px;font-style:italic;">Belum ada asprak ditugaskan</div>
+                        <div style="font-size:11px;color:#808897;margin-top:4px;font-style:italic;">Belum ada asprak ditugaskan</div>
                         @endif
                     </div>
 
                     {{-- Form tambah asprak ke modul ini --}}
                     @if($aspraks->isNotEmpty())
                     <form method="POST" action="{{ route('eoffice.manprak.admin.bagi-asprak.store') }}"
-                          class="flex gap-2 items-center flex-shrink-0">
+                          style="display:flex;gap:8px;align-items:center;flex-shrink:0;">
                         @csrf
                         <input type="hidden" name="modul_id" value="{{ $modul->id }}">
                         <select name="asprak_id" class="mp-input mp-select" style="font-size:12px;">
@@ -78,8 +93,9 @@
                 </div>
             </div>
             @empty
-            <div style="padding:56px;text-align:center;font-size:13px;color:var(--c-fg-muted);">
-                Belum ada modul untuk praktikum ini.
+            <div style="padding:48px;text-align:center;">
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <div style="font-size:13px;font-weight:500;color:#666D80;">Belum ada modul untuk praktikum ini.</div>
             </div>
             @endforelse
         </div>
@@ -89,21 +105,23 @@
     <div class="mp-card flex-shrink-0" style="width:260px;">
         <div class="mp-card-header">
             <span class="mp-card-title">Asprak Terdaftar</span>
+            <span class="mp-badge neutral sm">{{ $aspraks->count() }}</span>
         </div>
-        <div class="overflow-y-auto flex-1">
+        <div style="overflow-y:auto;flex:1;">
             @forelse($aspraks as $asprak)
-            <div class="flex items-center gap-3" style="padding:12px 16px;border-bottom:1px solid var(--c-border-light);">
-                <div class="w-[30px] h-[30px] rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-                     style="background:linear-gradient(135deg,#3C518B,#0B266E);">
-                    {{ strtoupper(substr($asprak->user?->name ?? 'A', 0, 2)) }}
-                </div>
-                <div class="min-w-0">
-                    <div style="font-size:12px;font-weight:600;color:var(--c-fg);" class="truncate">{{ $asprak->user?->name ?? '—' }}</div>
-                    <div style="font-size:11px;color:var(--c-fg-muted);">{{ $asprak->user?->email ?? '—' }}</div>
+            <div style="display:flex;align-items:center;gap:12px;padding:12px 16px;border-bottom:1px solid #DFE1E7;"
+                 onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background=''">
+                <div class="mp-av green">{{ strtoupper(substr($asprak->user?->name ?? 'A', 0, 1)) }}{{ strtoupper(substr($asprak->user?->name ?? 'A', strpos(($asprak->user?->name ?? 'A').' ', ' ')+1, 1)) }}</div>
+                <div style="min-width:0;flex:1;">
+                    <div style="font-size:12px;font-weight:600;color:#0D0D12;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $asprak->user?->name ?? '—' }}</div>
+                    <div style="font-size:11px;color:#666D80;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $asprak->user?->email ?? '—' }}</div>
                 </div>
             </div>
             @empty
-            <div style="padding:32px;text-align:center;font-size:12px;color:var(--c-fg-placeholder);">Belum ada asprak.</div>
+            <div style="padding:32px;text-align:center;">
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 8px;display:block;"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                <div style="font-size:12px;color:#808897;">Belum ada asprak.</div>
+            </div>
             @endforelse
         </div>
     </div>
