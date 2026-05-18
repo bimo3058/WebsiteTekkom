@@ -203,6 +203,70 @@ class KoordinatorController extends Controller implements HasMiddleware
         return redirect()->route('eoffice.kp.koordinator.pengumuman')->with('success', 'Informasi berhasil dihapus!');
     }
 
+    /**
+     * Manajemen Template Dokumen
+     */
+    public function template()
+    {
+        // Try to fetch real templates if table exists, otherwise return empty collection safely
+        try {
+            $templates = \Modules\EOffice\Models\KpTemplate::orderBy('created_at', 'desc')->get();
+        } catch (\Illuminate\Database\QueryException $e) {
+            $templates = collect(); // Table might not exist yet
+            session()->flash('warning', 'Tabel eo_kp_template belum ada di database. Silakan jalankan migrasi.');
+        }
+
+        return view('eoffice::koordinator.template', compact('templates'));
+    }
+
+    public function storeTemplate(Request $request)
+    {
+        $validated = $request->validate([
+            'nama_template' => 'required|string|max:255',
+            'fase' => 'required|in:pra_kp,saat_kp,pasca_kp',
+            'file_path' => 'required|file|max:5120', // Max 5MB
+        ]);
+
+        if ($request->hasFile('file_path')) {
+            $path = $request->file('file_path')->store('kp_templates', 'public');
+            $validated['file_path'] = $path;
+        }
+
+        try {
+            \Modules\EOffice\Models\KpTemplate::create($validated);
+            return redirect()->back()->with('success', 'Template berhasil diunggah!');
+        } catch (\Illuminate\Database\QueryException $e) {
+            return redirect()->back()->with('error', 'Gagal menyimpan: Tabel eo_kp_template belum ada di database Supabase.');
+        }
+    }
+
+    public function updateTemplate(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'nama_template' => 'required|string|max:255',
+            'fase' => 'required|in:pra_kp,saat_kp,pasca_kp',
+            'file_path' => 'nullable|file|max:5120',
+        ]);
+
+        $template = \Modules\EOffice\Models\KpTemplate::findOrFail($id);
+
+        if ($request->hasFile('file_path')) {
+            $path = $request->file('file_path')->store('kp_templates', 'public');
+            $validated['file_path'] = $path;
+        }
+
+        $template->update($validated);
+
+        return redirect()->back()->with('success', 'Template berhasil diperbarui!');
+    }
+
+    public function destroyTemplate($id)
+    {
+        $template = \Modules\EOffice\Models\KpTemplate::findOrFail($id);
+        $template->delete();
+        return redirect()->back()->with('success', 'Template berhasil dihapus!');
+    }
+
     public function validasiBerkas()
     {
         // Data dummy untuk UI design karena tabel di database belum lengkap
