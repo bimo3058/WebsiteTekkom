@@ -29,12 +29,6 @@ class PemetaanController extends Controller
         return view('banksoal::pages.admin.kontrol-umum.pemetaan');
     }
 
-    public function createCpmkCpl()
-    {
-        $this->authorize('banksoal.edit');
-        return view('banksoal::pages.admin.kontrol-umum.pemetaan-cpmk-cpl-create');
-    }
-
     public function createMkCpl()
     {
         $this->authorize('banksoal.edit');
@@ -45,22 +39,6 @@ class PemetaanController extends Controller
     {
         $this->authorize('banksoal.edit');
         return view('banksoal::pages.admin.kontrol-umum.pemetaan-mk-dosen-create');
-    }
-
-    public function editCpmkCpl(int $cpl_id)
-    {
-        $this->authorize('banksoal.edit');
-        $cpl = Cpl::findOrFail($cpl_id);
-        $selectedIds = DB::table('bs_cpl_cpmk')
-            ->where('cpl_id', $cpl_id)
-            ->pluck('cpmk_id')
-            ->map(fn($id) => (int) $id)
-            ->values()
-            ->toArray();
-        return view('banksoal::pages.admin.kontrol-umum.pemetaan-cpmk-cpl-edit', [
-            'cpl'         => $cpl,
-            'selectedIds' => $selectedIds,
-        ]);
     }
 
     public function editMkCpl(int $mk_id)
@@ -109,61 +87,10 @@ class PemetaanController extends Controller
             'success' => true,
             'data' => [
                 'cpl' => Cpl::query()->orderBy('kode')->get(['id', 'kode']),
-                'cpmk' => Cpmk::query()->orderBy('kode')->get(['id', 'kode']),
                 'mata_kuliah' => MataKuliah::query()->orderBy('kode')->get(['id', 'kode', 'nama']),
                 'dosen' => $dosen,
             ],
         ]);
-    }
-
-    public function listCpmkCpl(): JsonResponse
-    {
-        $this->authorize('banksoal.view');
-
-        $allCpl = Cpl::query()
-            ->orderBy('kode')
-            ->get(['id', 'kode']);
-
-        $rawRows = DB::table('bs_cpl as cpl')
-            ->leftJoin('bs_cpl_cpmk as map', 'cpl.id', '=', 'map.cpl_id')
-            ->leftJoin('bs_cpmk as cpmk', 'cpmk.id', '=', 'map.cpmk_id')
-            ->select(
-                'cpl.id as cpl_id',
-                'map.cpmk_id',
-                'cpl.kode as cpl_kode',
-                'cpmk.kode as cpmk_kode'
-            )
-            ->orderBy('cpl.kode')
-            ->orderBy('cpmk.kode')
-            ->get();
-
-        $groupedRows = $rawRows->groupBy('cpl_id');
-
-        $rows = $allCpl
-            ->map(function ($cpl) use ($groupedRows) {
-                $group = $groupedRows->get($cpl->id, collect());
-
-                return [
-                    'cpl_id' => $cpl->id,
-                    'cpl_kode' => $cpl->kode,
-                    'cpmk_codes' => $group
-                        ->filter(fn ($row) => !is_null($row->cpmk_id))
-                        ->pluck('cpmk_kode')
-                        ->values()
-                        ->all(),
-                    'cpmk_items' => $group
-                        ->filter(fn ($row) => !is_null($row->cpmk_id))
-                        ->map(fn ($row) => [
-                            'cpmk_id' => $row->cpmk_id,
-                            'cpmk_kode' => $row->cpmk_kode,
-                        ])
-                        ->values()
-                        ->all(),
-                ];
-            })
-            ->values();
-
-        return response()->json(['success' => true, 'data' => $rows]);
     }
 
     public function listMkCpl(): JsonResponse
@@ -270,57 +197,6 @@ class PemetaanController extends Controller
             ->values();
 
         return response()->json(['success' => true, 'data' => $rows]);
-    }
-
-    public function storeCpmkCpl(Request $request): JsonResponse
-    {
-        $this->authorize('banksoal.edit');
-
-        $validated = $request->validate([
-            'cpl_id' => ['required', 'integer', 'exists:bs_cpl,id'],
-            'cpmk_ids' => ['required', 'array', 'min:1'],
-            'cpmk_ids.*' => ['required', 'integer', 'exists:bs_cpmk,id'],
-        ]);
-
-        try {
-            $cpmkIds = collect($validated['cpmk_ids'])->map(fn ($id) => (int) $id)->unique()->values();
-
-            $existingCpmkIds = DB::table('bs_cpl_cpmk')
-                ->where('cpl_id', $validated['cpl_id'])
-                ->whereIn('cpmk_id', $cpmkIds)
-                ->pluck('cpmk_id')
-                ->map(fn ($id) => (int) $id)
-                ->all();
-
-            $newRows = $cpmkIds
-                ->reject(fn ($cpmkId) => in_array((int) $cpmkId, $existingCpmkIds, true))
-                ->map(fn ($cpmkId) => [
-                    'cpl_id' => $validated['cpl_id'],
-                    'cpmk_id' => (int) $cpmkId,
-                ])
-                ->values()
-                ->all();
-
-            if (empty($newRows)) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Semua CPMK yang dipilih sudah terpetakan',
-                ], 422);
-            }
-
-            DB::table('bs_cpl_cpmk')->insert($newRows);
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Pemetaan CPMK ke CPL berhasil ditambahkan',
-                'meta' => [
-                    'added' => count($newRows),
-                    'skipped' => count($cpmkIds) - count($newRows),
-                ],
-            ], 201);
-        } catch (\Throwable $e) {
-            return response()->json(['success' => false, 'message' => 'Gagal menambahkan pemetaan CPMK ke CPL: ' . $e->getMessage()], 500);
-        }
     }
 
     public function storeMkCpl(Request $request): JsonResponse
@@ -611,50 +487,6 @@ class PemetaanController extends Controller
         }
     }
 
-    public function destroyCpmkCpl(Request $request): JsonResponse
-    {
-        $this->authorize('banksoal.delete');
-
-        $validated = $request->validate([
-            'cpl_id' => ['required', 'integer'],
-            'cpmk_id' => ['required', 'integer'],
-        ]);
-
-        $deleted = DB::table('bs_cpl_cpmk')
-            ->where('cpl_id', $validated['cpl_id'])
-            ->where('cpmk_id', $validated['cpmk_id'])
-            ->delete();
-
-        if (!$deleted) {
-            return response()->json(['success' => false, 'message' => 'Data pemetaan CPMK ke CPL tidak ditemukan'], 404);
-        }
-
-        return response()->json(['success' => true, 'message' => 'Pemetaan CPMK ke CPL berhasil dihapus']);
-    }
-
-    public function destroyAllCpmkByCpl(int $cpl_id): JsonResponse
-    {
-        $this->authorize('banksoal.delete');
-
-        DB::table('bs_cpl_cpmk')->where('cpl_id', $cpl_id)->delete();
-
-        return response()->json(['success' => true, 'message' => 'Semua pemetaan CPMK untuk CPL ini berhasil dihapus']);
-    }
-
-    public function bulkDestroyCpmkCpl(Request $request): JsonResponse
-    {
-        $this->authorize('banksoal.delete');
-
-        $validated = $request->validate([
-            'cpl_ids' => ['required', 'array', 'min:1'],
-            'cpl_ids.*' => ['required', 'integer'],
-        ]);
-
-        DB::table('bs_cpl_cpmk')->whereIn('cpl_id', $validated['cpl_ids'])->delete();
-
-        return response()->json(['success' => true, 'message' => count($validated['cpl_ids']) . ' pemetaan CPMK-CPL berhasil dihapus']);
-    }
-
     public function destroyMkCpl(Request $request): JsonResponse
     {
         $this->authorize('banksoal.delete');
@@ -734,28 +566,6 @@ class PemetaanController extends Controller
         DosenPengampuMk::whereIn('mk_id', $validated['mk_ids'])->delete();
 
         return response()->json(['success' => true, 'message' => count($validated['mk_ids']) . ' pemetaan Dosen-MK berhasil dihapus']);
-    }
-
-    // Edit-mode store: SYNC (replace all mappings)
-    public function syncCpmkCpl(Request $request): JsonResponse
-    {
-        $this->authorize('banksoal.edit');
-
-        $validated = $request->validate([
-            'cpl_id'   => ['required', 'integer', 'exists:bs_cpl,id'],
-            'cpmk_ids' => ['required', 'array', 'min:1'],
-            'cpmk_ids.*' => ['required', 'integer', 'exists:bs_cpmk,id'],
-        ]);
-
-        try {
-            $cpmkIds = collect($validated['cpmk_ids'])->map(fn($id) => (int) $id)->unique()->values();
-            DB::table('bs_cpl_cpmk')->where('cpl_id', $validated['cpl_id'])->delete();
-            $rows = $cpmkIds->map(fn($id) => ['cpl_id' => $validated['cpl_id'], 'cpmk_id' => $id])->all();
-            DB::table('bs_cpl_cpmk')->insert($rows);
-            return response()->json(['success' => true, 'message' => 'Pemetaan CPMK ke CPL berhasil diperbarui']);
-        } catch (\Throwable $e) {
-            return response()->json(['success' => false, 'message' => 'Gagal memperbarui: ' . $e->getMessage()], 500);
-        }
     }
 
     public function syncMkCpl(Request $request): JsonResponse

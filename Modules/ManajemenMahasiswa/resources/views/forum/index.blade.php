@@ -133,19 +133,19 @@
             }
 
             .post-actions .vote-pill button.vote-active-up {
-                color: #293C79;
+                color: #ff4500;
             }
 
             .post-actions .vote-pill button.vote-active-up:hover {
-                background: rgba(41, 60, 121, 0.1);
+                background: rgba(255, 69, 0, 0.1);
             }
 
             .post-actions .vote-pill button.vote-active-down {
-                color: #94a3b8;
+                color: #7193ff;
             }
 
             .post-actions .vote-pill button.vote-active-down:hover {
-                background: rgba(148, 163, 184, 0.15);
+                background: rgba(113, 147, 255, 0.1);
             }
 
             .post-actions .vote-pill span {
@@ -1141,7 +1141,7 @@
                         $poll = $thread->poll;
                         $threadId = $thread->id;
                     @endphp
-                    @include('manajemenmahasiswa::forum._poll', ['poll' => $poll, 'threadId' => $threadId])
+                    @include('manajemenmahasiswa::forum._poll', ['poll' => $poll, 'threadId' => $threadId, 'threadOwnerId' => $thread->user_id])
                 @endif
 
                 <!-- Labels -->
@@ -1151,7 +1151,7 @@
                         <span class="tag-label {{ $colorClass }}">{{ $lbl }}</span>
                     @endforeach
                     @if($thread->is_locked)
-                        <span class="tag-label tag-red">🔒 Dikunci</span>
+                        <span class="tag-label tag-red"><x-manajemenmahasiswa::ui.icon name="locked-01" size="12" /> Dikunci</span>
                     @endif
                 </div>
 

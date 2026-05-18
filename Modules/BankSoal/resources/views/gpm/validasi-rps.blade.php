@@ -307,7 +307,7 @@
                                     <td class="px-6 py-4 text-sm text-slate-600">{{ $rps->updated_at->format('d M Y') }}</td>
                                     <td class="px-6 py-4"><span class="inline-flex rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 border border-red-200">Revisi</span></td>
                                     <td class="px-6 py-4 text-right">
-                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="gpm-rps-action-btn">
+                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.revisi', $rps->id) }}" class="gpm-rps-action-btn">
                                             <i class="fas fa-edit"></i> Lihat Catatan
                                         </a>
                                     </td>
@@ -386,7 +386,7 @@
                                     <td class="px-6 py-4 text-sm text-slate-600">{{ $rps->updated_at->format('d M Y') }}</td>
                                     <td class="px-6 py-4"><span class="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 border border-emerald-200">Disetujui</span></td>
                                     <td class="px-6 py-4 text-right">
-                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="gpm-rps-action-btn">
+                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.setuju', $rps->id) }}" class="gpm-rps-action-btn">
                                             <i class="fas fa-eye"></i> Lihat Detail
                                         </a>
                                     </td>

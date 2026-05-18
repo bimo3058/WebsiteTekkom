@@ -192,6 +192,9 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             // Poll Vote
             Route::post('/{threadId}/poll/vote', [ForumController::class, 'votePoll'])->name('poll.vote');
 
+            // Poll Close/Open (thread owner only)
+            Route::patch('/{threadId}/poll/close', [ForumController::class, 'closePoll'])->name('poll.close');
+
             // Best Answer
             Route::post('/{threadId}/best-answer/{commentId}', [ForumController::class, 'markBestAnswer'])->name('best_answer');
 

@@ -9,13 +9,17 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('roles', function (Blueprint $table) {
-            $table->string('guard_name')->default('web')->after('name');
-        });
+        if (!Schema::hasColumn('roles', 'guard_name')) {
+            Schema::table('roles', function (Blueprint $table) {
+                $table->string('guard_name')->default('web')->after('name');
+            });
+        }
 
-        Schema::table('permissions', function (Blueprint $table) {
-            $table->string('guard_name')->default('web')->after('name');
-        });
+        if (!Schema::hasColumn('permissions', 'guard_name')) {
+            Schema::table('permissions', function (Blueprint $table) {
+                $table->string('guard_name')->default('web')->after('name');
+            });
+        }
 
         // isi data lama
         DB::table('roles')->update([
@@ -29,12 +33,16 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::table('roles', function (Blueprint $table) {
-            $table->dropColumn('guard_name');
-        });
+        if (Schema::hasColumn('roles', 'guard_name')) {
+            Schema::table('roles', function (Blueprint $table) {
+                $table->dropColumn('guard_name');
+            });
+        }
 
-        Schema::table('permissions', function (Blueprint $table) {
-            $table->dropColumn('guard_name');
-        });
+        if (Schema::hasColumn('permissions', 'guard_name')) {
+            Schema::table('permissions', function (Blueprint $table) {
+                $table->dropColumn('guard_name');
+            });
+        }
     }
 };

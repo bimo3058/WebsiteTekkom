@@ -44,6 +44,17 @@ class CommentService
             throw new \RuntimeException('Thread sudah dikunci, tidak bisa menambahkan komentar.');
         }
 
+        // Pastikan parent comment ada dan milik thread yang sama (Fix #3)
+        if ($parentId !== null) {
+            $parentExists = Comment::where('id', $parentId)
+                ->where('thread_id', $threadId)
+                ->exists();
+
+            if (!$parentExists) {
+                throw new \RuntimeException('Komentar induk tidak valid atau bukan bagian dari thread ini.');
+            }
+        }
+
         return DB::transaction(function () use ($userId, $threadId, $konten, $parentId, $thread) {
             $comment = Comment::create([
                 'thread_id' => $threadId,

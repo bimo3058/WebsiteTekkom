@@ -77,7 +77,7 @@
     .action-card.zero-state { opacity:.7; }
 
     /* ─── Tier 2: Activity Stats + Chart ────────────────── */
-    .activity-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:18px; }
+    .activity-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin-bottom:18px; }
     @media(max-width:900px){ .activity-grid { grid-template-columns:repeat(2,1fr); } }
     @media(max-width:480px){ .activity-grid { grid-template-columns:1fr; } }
 
@@ -362,15 +362,7 @@
 </div>
 
 <div class="activity-grid">
-    <div class="stat-card card-clickable" onclick="openDashModal('mahasiswa',{status:'aktif'},'Mahasiswa Aktif')">
-        <div class="stat-icon stat-icon-blue">
-            <span style="display:inline-flex;width:20px;height:20px;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/user-01.svg'))) !!}</span>
-        </div>
-        <div>
-            <div class="stat-value">{{ number_format($acty['total_mahasiswa_aktif']) }}</div>
-            <div class="stat-label">Mahasiswa Aktif</div>
-        </div>
-    </div>
+    {{-- Kegiatan Bulan Ini --}}
     <div class="stat-card card-clickable" onclick="openDashModal('kegiatan',{},'Kegiatan Bulan Ini')">
         <div class="stat-icon stat-icon-green">
             <span style="display:inline-flex;width:20px;height:20px;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/calendar.svg'))) !!}</span>
@@ -381,6 +373,8 @@
             <div class="stat-sub">Ditambahkan {{ now()->translatedFormat('F Y') }}</div>
         </div>
     </div>
+
+    {{-- Pengumuman Bulan Ini --}}
     <div class="stat-card card-clickable" onclick="openDashModal('pengumuman',{},'Pengumuman Bulan Ini')">
         <div class="stat-icon stat-icon-purple">
             <span style="display:inline-flex;width:20px;height:20px;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/announcement-01.svg'))) !!}</span>
@@ -391,14 +385,21 @@
             <div class="stat-sub">Dipublish {{ now()->translatedFormat('F Y') }}</div>
         </div>
     </div>
-    <div class="stat-card card-clickable" onclick="openDashModal('thread',{},'Thread Forum Minggu Ini')">
+
+    {{-- Kegiatan Berlangsung Hari Ini — monitoring real-time organisasi --}}
+    <div class="stat-card {{ $acty['kegiatan_berlangsung'] > 0 ? 'card-clickable' : '' }}"
+         @if($acty['kegiatan_berlangsung'] > 0)
+             onclick="window.location.href='{{ route('manajemenmahasiswa.kegiatan.index') }}'"
+         @endif>
         <div class="stat-icon stat-icon-amber">
-            <span style="display:inline-flex;width:20px;height:20px;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/message-text-square.svg'))) !!}</span>
+            <span style="display:inline-flex;width:20px;height:20px;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/clock-02.svg'))) !!}</span>
         </div>
         <div>
-            <div class="stat-value">{{ number_format($acty['thread_minggu_ini']) }}</div>
-            <div class="stat-label">Thread Forum Minggu Ini</div>
-            <div class="stat-sub">Sejak {{ now()->startOfWeek()->format('d M') }}</div>
+            <div class="stat-value" style="{{ $acty['kegiatan_berlangsung'] > 0 ? 'color:#d97706;' : '' }}">
+                {{ number_format($acty['kegiatan_berlangsung']) }}
+            </div>
+            <div class="stat-label">Kegiatan Berlangsung</div>
+            <div class="stat-sub">Aktif hari ini</div>
         </div>
     </div>
 </div>

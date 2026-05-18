@@ -64,9 +64,11 @@
             font-size: 13px; font-weight: 600; color: var(--slate-700);
             cursor: pointer; text-align: left; transition: background 0.2s;
         }
-        .dots-menu a:hover, .dots-menu button:hover { background: #f8fafc; color: var(--primary-blue); }
-        .dots-menu .menu-delete { color: var(--danger-red); }
-        .dots-menu .menu-delete:hover { background: #fff1f2; color: var(--danger-red); }
+        .dots-menu a:hover:not(:disabled), .dots-menu button:hover:not(:disabled) { background: #f8fafc; color: var(--primary-blue); }
+        .dots-menu a:disabled, .dots-menu button:disabled { color: var(--slate-400); cursor: not-allowed; opacity: 0.7; }
+        .dots-menu a:disabled svg, .dots-menu button:disabled svg, .dots-menu a:disabled i, .dots-menu button:disabled i { opacity: 0.6; }
+        .dots-menu .menu-delete:not(:disabled) { color: var(--danger-red); }
+        .dots-menu .menu-delete:hover:not(:disabled) { background: #fff1f2; color: var(--danger-red); }
     </style>
     @endpush
 
@@ -189,15 +191,60 @@
         function toggleMenu(id, event) {
             event.stopPropagation();
             const menus = document.querySelectorAll('.dots-menu');
+            
             menus.forEach(m => {
-                if (m.id !== `menu-${id}`) m.classList.remove('open');
+                if (m.id !== `menu-${id}`) {
+                    m.classList.remove('open');
+                    m.style.top = '';
+                    m.style.bottom = '';
+                    m.style.left = '';
+                    m.style.right = '';
+                }
             });
+            
             const menu = document.getElementById(`menu-${id}`);
-            menu.classList.toggle('open');
+            if (menu) {
+                menu.classList.toggle('open');
+                
+                if (menu.classList.contains('open')) {
+                    const rect = menu.getBoundingClientRect();
+                    const viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+                    
+                    if (rect.bottom > viewHeight) {
+                        menu.style.top = 'auto';
+                        menu.style.bottom = '100%';
+                        menu.style.marginBottom = '5px';
+                    } else {
+                        menu.style.top = '100%';
+                        menu.style.bottom = 'auto';
+                        menu.style.marginBottom = '0';
+                        menu.style.marginTop = '5px';
+                    }
+                    
+                    if (rect.left < 0) {
+                        menu.style.right = 'auto';
+                        menu.style.left = '0';
+                    } else {
+                        menu.style.right = '0';
+                        menu.style.left = 'auto';
+                    }
+                } else {
+                    menu.style.top = '';
+                    menu.style.bottom = '';
+                    menu.style.left = '';
+                    menu.style.right = '';
+                }
+            }
         }
 
         document.addEventListener('click', () => {
-            document.querySelectorAll('.dots-menu').forEach(m => m.classList.remove('open'));
+            document.querySelectorAll('.dots-menu').forEach(m => {
+                m.classList.remove('open');
+                m.style.top = '';
+                m.style.bottom = '';
+                m.style.left = '';
+                m.style.right = '';
+            });
         });
 
         async function deleteParameter(id, aspek) {
