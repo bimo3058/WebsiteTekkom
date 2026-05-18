@@ -1,4 +1,10 @@
 <x-banksoal::layouts.admin>
+    @section('breadcrumbs')
+    <a href="#" class="text-slate-500 hover:text-primary transition-colors">Ujian Komprehensif</a>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Live Pengawasan</span>
+    @endsection
+
     <div class="px-6 py-6 sm:px-8 sm:py-8 max-w-7xl mx-auto space-y-8">
         
         <!-- Header -->
@@ -8,7 +14,7 @@
                 <p class="text-sm text-slate-500 mt-1">Pantau mahasiswa yang sedang mengerjakan ujian secara real-time.</p>
             </div>
             <div class="flex gap-2">
-                <button onclick="window.location.reload()" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:text-blue-600 transition-colors shadow-sm text-sm font-medium">
+                <button onclick="window.location.reload()" class="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-lg hover:bg-slate-50 hover:text-primary transition-colors shadow-sm text-sm font-medium">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                     Refresh Data
                 </button>
@@ -25,7 +31,7 @@
         <!-- Stats Overview -->
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div class="bg-white rounded-xl border border-slate-100 p-6 shadow-sm flex items-center gap-4">
-                <div class="w-12 h-12 rounded-full bg-blue-50 flex items-center justify-center text-blue-600">
+                <div class="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
                 </div>
                 <div>
@@ -59,7 +65,7 @@
                             <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0">
+                                        <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
                                             {{ substr($session->user->name, 0, 1) }}
                                         </div>
                                         <div>
@@ -80,10 +86,16 @@
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
                                         <div class="w-full bg-slate-200 rounded-full h-2 min-w-[80px]">
-                                            <div class="bg-blue-600 h-2 rounded-full" style="width: {{ $progres }}%"></div>
+                                            <div class="bg-primary h-2 rounded-full" data-progress="{{ (int) $progres }}"></div>
                                         </div>
                                         <span class="text-xs font-medium text-slate-600">{{ $terjawab }}/{{ $totalSoal }}</span>
                                     </div>
+
+                                    <script>
+                                        document.querySelectorAll('[data-progress]').forEach((bar) => {
+                                            bar.style.width = `${Number(bar.getAttribute('data-progress') || 0)}%`;
+                                        });
+                                    </script>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">

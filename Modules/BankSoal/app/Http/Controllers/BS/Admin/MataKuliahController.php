@@ -8,6 +8,9 @@ use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Modules\BankSoal\Models\MataKuliah;
 use Modules\BankSoal\Services\MataKuliahService;
+use Maatwebsite\Excel\Facades\Excel;
+use Modules\BankSoal\Exports\MataKuliahTemplateExport;
+use Modules\BankSoal\Imports\MataKuliahImport;
 
 /**
  * [Admin] MataKuliahController - Manajemen Mata Kuliah
@@ -42,6 +45,16 @@ class MataKuliahController extends Controller
         // Return view for page load
         $mataKuliah = MataKuliah::orderBy('kode')->paginate(10);
         return view('banksoal::pages.admin.kontrol-umum.mata-kuliah', compact('mataKuliah'));
+    }
+
+    /**
+     * Show create form for Mata Kuliah
+     */
+    public function create()
+    {
+        $this->authorize('banksoal.edit');
+
+        return view('banksoal::pages.admin.kontrol-umum.mata-kuliah-create');
     }
 
     /**
@@ -92,6 +105,19 @@ class MataKuliahController extends Controller
                 'message' => 'Mata Kuliah tidak ditemukan'
             ], 404);
         }
+    }
+
+    /**
+     * Show edit form for Mata Kuliah
+     */
+    public function edit(string $id)
+    {
+        $this->authorize('banksoal.edit');
+
+        $id = (int) $id;
+        $mataKuliah = MataKuliah::findOrFail($id);
+
+        return view('banksoal::pages.admin.kontrol-umum.mata-kuliah-edit', compact('mataKuliah'));
     }
 
     /**
@@ -169,6 +195,88 @@ class MataKuliahController extends Controller
             return response()->json([
                 'success' => false,
                 'message' => 'Gagal menghapus Mata Kuliah: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function exportTemplate()
+    {
+        $this->authorize('banksoal.view');
+        return Excel::download(new MataKuliahTemplateExport, 'template_mata_kuliah.xlsx');
+    }
+
+    public function import(Request $request): JsonResponse
+    {
+        $this->authorize('banksoal.edit');
+
+        $request->validate([
+            'file' => 'required|mimes:xlsx,csv,xls|max:1024',
+        ]);
+
+        try {
+            Excel::import(new MataKuliahImport, $request->file('file'));
+            
+            // Sync active semester after import
+            $this->mataKuliahService->syncSemester();
+            
+            // Flush cache
+            \Illuminate\Support\Facades\Cache::forget('bs.mk.all');
+            
+            return response()->json([
+                'success' => true,
+                'message' => 'Data Mata Kuliah berhasil diimpor'
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengimpor data: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Toggle status aktif
+     */
+    public function toggleActive(Request $request, string $id): JsonResponse
+    {
+        $this->authorize('banksoal.edit');
+
+        $id = (int) $id;
+        $request->validate(['is_active' => 'required|boolean']);
+
+        try {
+            $mataKuliah = $this->mataKuliahService->toggleActive($id, $request->input('is_active'));
+            return response()->json([
+                'success' => true,
+                'message' => 'Status aktif Mata Kuliah berhasil diperbarui',
+                'data' => $mataKuliah
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memperbarui status aktif: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Sync semester aktif
+     */
+    public function syncSemester(): JsonResponse
+    {
+        $this->authorize('banksoal.edit');
+
+        try {
+            $updatedCount = $this->mataKuliahService->syncSemester();
+            return response()->json([
+                'success' => true,
+                'message' => "Berhasil sinkronisasi semester. {$updatedCount} mata kuliah diperbarui.",
+                'data' => ['updated_count' => $updatedCount]
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal sinkronisasi semester: ' . $e->getMessage()
             ], 500);
         }
     }

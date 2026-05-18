@@ -1,4 +1,10 @@
 <x-banksoal::layouts.admin>
+    @section('breadcrumbs')
+    <a href="#" class="text-slate-500 hover:text-primary transition-colors">Bank Soal</a>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Manajemen RPS</span>
+    @endsection
+
     <style>
         .controls-section {
             padding: 14px 16px;
@@ -30,8 +36,8 @@
 
         .search-box input:focus {
             outline: none;
-            border-color: #3b82f6;
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+            border-color: rgb(11, 38, 110);
+            box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
         }
 
         .search-box svg {
@@ -103,13 +109,13 @@
         }
 
         .pagination-btn:hover:not(:disabled) {
-            border-color: #3b82f6;
-            color: #3b82f6;
+            border-color: rgb(11, 38, 110);
+            color: rgb(11, 38, 110);
         }
 
         .pagination-btn.active {
-            background: #3b82f6;
-            border-color: #3b82f6;
+            background: rgb(11, 38, 110);
+            border-color: rgb(11, 38, 110);
             color: #fff;
         }
 
@@ -117,6 +123,23 @@
             opacity: 0.45;
             cursor: not-allowed;
         }
+
+        /* ── Table loading spinner ── */
+        .tbl-loading {
+            display: none; align-items: center; justify-content: center;
+            gap: 10px; padding: 40px 20px;
+            color: #475569; font-size: 13px;
+        }
+        .tbl-loading.show { display: flex; }
+        .tbl-spinner {
+            width: 22px; height: 22px;
+            border: 3px solid #e2e8f0;
+            border-top-color: rgb(11, 38, 110);
+            border-radius: 50%;
+            animation: tbl-spin 0.7s linear infinite;
+            flex-shrink: 0;
+        }
+        @keyframes tbl-spin { to { transform: rotate(360deg); } }
     </style>
 
     <div class="mb-6 lg:mb-8 flex justify-between items-center">
@@ -146,7 +169,8 @@
     </div>
 
     <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-        <div class="overflow-x-auto">
+        <div id="rpsLoading" class="tbl-loading show"><div class="tbl-spinner"></div> Memuat data...</div>
+        <div class="overflow-x-auto" id="rpsTableContainer" style="opacity: 0.4; transition: opacity 0.2s;">
             <table class="min-w-full divide-y divide-slate-200">
                 <thead class="bg-slate-50">
                     <tr>
@@ -323,7 +347,7 @@
                     <td class="px-6 py-4 text-sm text-slate-600">${escapeHtml(item.file_name || '-')}</td>
                     <td class="px-6 py-4 text-sm">
                         <div class="flex items-center gap-2">
-                            <a href="${toPreviewUrl(item.id)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-lg border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 hover:bg-blue-100">Preview</a>
+                            <a href="${toPreviewUrl(item.id)}" target="_blank" rel="noopener noreferrer" class="inline-flex items-center gap-1 rounded-lg border border-primary/20 bg-primary/10 px-3 py-1.5 text-xs font-semibold text-primary hover:bg-primary/20">Preview</a>
                             <a href="${toDownloadUrl(item.id)}" class="inline-flex items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">Unduh</a>
                         </div>
                     </td>
@@ -340,6 +364,12 @@
         }
 
         async function loadData() {
+            const loadingEl = document.getElementById('rpsLoading');
+            const tableEl = document.getElementById('rpsTableContainer');
+            
+            if (loadingEl) loadingEl.classList.add('show');
+            if (tableEl) tableEl.style.opacity = '0.4';
+
             try {
                 const response = await fetch(approvedRpsApi, {
                     headers: {
@@ -361,6 +391,9 @@
                 state.all = [];
                 state.filtered = [];
                 renderTable();
+            } finally {
+                if (loadingEl) loadingEl.classList.remove('show');
+                if (tableEl) tableEl.style.opacity = '1';
             }
         }
 

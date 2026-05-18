@@ -42,12 +42,12 @@
                 left: 50%;
                 transform: translate(-50%, -50%) scale(0.5);
                 z-index: 100000;
-                background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%);
+                background: linear-gradient(135deg, #293C79 0%, #415086 50%, #6F7DA4 100%);
                 color: #fff;
                 padding: 32px 48px;
                 border-radius: 20px;
                 text-align: center;
-                box-shadow: 0 25px 60px rgba(99, 102, 241, 0.4), 0 0 80px rgba(139, 92, 246, 0.2);
+                box-shadow: 0 25px 60px rgba(41, 60, 121, 0.4), 0 0 80px rgba(65, 80, 134, 0.2);
                 animation: level-up-appear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
                 pointer-events: auto;
             }

@@ -1,10 +1,16 @@
 <x-banksoal::layouts.admin>
+    @section('breadcrumbs')
+    <a href="#" class="text-slate-500 hover:text-primary transition-colors">Kontrol Umum</a>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Manajemen Data</span>
+    @endsection
+
     @push('styles')
     <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
         :root {
-            --primary-blue: #3b82f6;
-            --primary-hover: #2563eb;
+            --primary-blue: rgb(11, 38, 110);
+            --primary-hover: rgb(8, 28, 82);
             --danger-red: #ef4444;
             --danger-hover: #dc2626;
             --slate-50: #f8fafc;
@@ -64,7 +70,7 @@
         .btn-add:hover {
             background: #f1f5f9;
             border-color: #94a3b8;
-            box-shadow: 0 2px 4px rgba(15, 23, 42, 0.1);
+            box-shadow: 0 2px 4px rgba(11, 38, 110, 0.1);
         }
 
         .btn-add svg {
@@ -246,6 +252,89 @@
             border-bottom: 1px solid var(--slate-200);
             font-size: 14px;
             color: var(--slate-700);
+            vertical-align: middle;
+        }
+
+        tbody tr:hover {
+            background: var(--slate-50);
+        }
+
+        tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .cb-col { width: 40px; padding: 0 8px 0 16px !important; }
+        .cb-col input[type=checkbox] { width: 16px; height: 16px; cursor: pointer; accent-color: var(--primary-blue); margin: 0; }
+
+        /* Toggle Switch */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input { 
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: var(--slate-300);
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary-blue);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        input:disabled + .slider {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .status-text {
+            font-size: 13px;
+            font-weight: 600;
+        }
+        
+        .status-text.active {
+            color: var(--primary-blue);
+        }
+        
+        .status-text.inactive {
+            color: var(--slate-400);
         }
 
         tbody tr:hover {
@@ -263,53 +352,52 @@
             accent-color: var(--primary-blue);
         }
 
-        .badge {
-            display: inline-block;
-            padding: 6px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            background: var(--primary-blue);
-            color: #fff;
+        /* ── 3-dot dropdown ── */
+        .dots-wrap { position: relative; display: inline-block; }
+        .btn-dots {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 32px; height: 32px; border-radius: 6px;
+            border: 1px solid var(--slate-200); background: #fff;
+            font-size: 18px; cursor: pointer; color: var(--slate-600);
+            transition: all 0.15s; line-height: 1;
         }
+        .btn-dots:hover { border-color: var(--primary-blue); color: var(--primary-blue); background: #f0f4ff; }
+        .dots-menu {
+            display: none; position: absolute; right: 0; top: 38px;
+            background: #fff; border: 1px solid var(--slate-200);
+            border-radius: 8px; box-shadow: 0 4px 16px rgba(15,23,42,0.1);
+            min-width: 140px; z-index: 50; overflow: hidden;
+        }
+        .dots-menu.open { display: block; }
+        .dots-menu button {
+            display: flex; align-items: center; gap: 8px;
+            width: 100%; padding: 9px 14px;
+            background: none; border: none; border-bottom: 1px solid var(--slate-100);
+            font-size: 13px; font-weight: 500; color: var(--slate-700);
+            cursor: pointer; text-align: left;
+        }
+        .dots-menu button:last-child { border-bottom: none; }
+        .dots-menu button:hover:not(:disabled) { background: var(--slate-50); }
+        .dots-menu button:disabled { color: var(--slate-400); cursor: not-allowed; opacity: 0.7; }
+        .dots-menu button:disabled svg { opacity: 0.6; }
+        .dots-menu .menu-delete:not(:disabled) { color: var(--danger-red); }
+        .dots-menu .menu-delete:hover:not(:disabled) { background: #fef2f2; }
 
-        .action-cell {
-            display: flex;
-            gap: 8px;
+        /* ── Table loading ── */
+        .tbl-loading {
+            display: none; align-items: center; justify-content: center;
+            gap: 10px; padding: 48px 20px; color: var(--slate-400);
+            font-size: 14px;
         }
-
-        .btn-icon {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 32px;
-            height: 32px;
-            border: 1px solid currentColor;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            background: transparent;
+        .tbl-loading.show { display: flex; }
+        .tbl-spinner {
+            width: 24px; height: 24px;
+            border: 3px solid var(--slate-200);
+            border-top-color: var(--primary-blue);
+            border-radius: 50%;
+            animation: tbl-spin 0.7s linear infinite; flex-shrink: 0;
         }
-
-        .btn-icon-edit {
-            color: var(--primary-blue);
-        }
-
-        .btn-icon-edit:hover {
-            background: var(--primary-blue);
-            border-color: var(--primary-blue);
-            color: #fff;
-        }
-
-        .btn-icon-delete {
-            color: var(--danger-red);
-        }
-
-        .btn-icon-delete:hover {
-            background: var(--danger-red);
-            border-color: var(--danger-red);
-            color: #fff;
-        }
+        @keyframes tbl-spin { to { transform: rotate(360deg); } }
 
         .empty-state {
             text-align: center;
@@ -379,12 +467,13 @@
             position: fixed;
             top: 0;
             left: 0;
-            right: 0;
-            bottom: 0;
+            width: 100%;
+            height: 100%;
             background: rgba(0, 0, 0, 0.5);
-            z-index: 50;
-            align-items: center;
+            backdrop-filter: blur(4px);
+            z-index: 100;
             justify-content: center;
+            align-items: center;
         }
 
         .modal-overlay.show {
@@ -583,15 +672,23 @@
 
     <div class="page-header">
         <div class="header-content">
-            <h1>Manajemen Mata Kuliah</h1>
+            <h1>Manajemen Data Mata Kuliah</h1>
             <p>Kelola data mata kuliah untuk program studi</p>
         </div>
-        <button type="button" onclick="openAddModal()" class="btn-add">
-            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-            </svg>
-            Tambah Mata Kuliah
-        </button>
+        <div style="display: flex; gap: 8px;">
+            <button type="button" onclick="syncSemester()" class="btn-add" style="background: var(--slate-100); color: var(--slate-700); border-color: var(--slate-200);">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                </svg>
+                Sinkronisasi
+            </button>
+            <a href="{{ route('banksoal.admin.kontrol-umum.mata-kuliah.create') }}" class="btn-add" style="text-decoration: none;">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Tambah Mata Kuliah
+            </a>
+        </div>
     </div>
 
     <div class="bulk-delete-bar" id="bulkDeleteBar">
@@ -632,18 +729,23 @@
     </div>
 
     <div class="table-section">
-        <div class="table-wrapper">
+        <div class="tbl-loading" id="tblLoading">
+            <div class="tbl-spinner"></div>
+            Memuat data...
+        </div>
+        <div class="table-wrapper" id="tblWrapper" style="display:none;">
             <table>
                 <thead>
                     <tr>
-                        <th style="width: 40px;">
+                        <th class="cb-col">
                             <input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll()">
                         </th>
                         <th>Kode</th>
                         <th>Nama</th>
                         <th>SKS</th>
                         <th>Semester</th>
-                        <th>Aksi</th>
+                        <th>Status</th>
+                        <th style="width:56px;"></th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -662,68 +764,73 @@
         </div>
     </div>
 
-    <div class="modal-overlay" id="mataKuliahModal" onclick="closeModalOnBackdrop(event)">
-        <div class="modal-content" onclick="event.stopPropagation()">
-            <div class="modal-header">
-                <h2 class="modal-title" id="modalTitle">Tambah Mata Kuliah</h2>
-                <button type="button" class="modal-close" onclick="closeModal()">&times;</button>
-            </div>
-
-            <form id="mataKuliahForm" onsubmit="handleFormSubmit(event)">
-                <div class="modal-body">
-                    <input type="hidden" id="mkId">
-
-                    <div class="form-group">
-                        <label for="kode">Kode Mata Kuliah *</label>
-                        <input type="text" id="kode" name="kode" placeholder="Contoh: PTSK6103" required maxlength="50">
-                        <div class="form-error" id="error-kode"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="nama">Nama Mata Kuliah *</label>
-                        <input type="text" id="nama" name="nama" placeholder="Contoh: Dasar Komputer &amp; Pemrograman" required>
-                        <div class="form-error" id="error-nama"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="sks">Jumlah SKS *</label>
-                        <div class="sks-counter">
-                            <button type="button" onclick="decrementSKS()">-</button>
-                            <input type="number" id="sks" name="sks" value="2" min="1" max="3" readonly>
-                            <button type="button" onclick="incrementSKS()">+</button>
-                        </div>
-                        <div class="form-error" id="error-sks"></div>
-                    </div>
-
-                    <div class="form-group">
-                        <label for="semester">Semester *</label>
-                        <select id="semester" name="semester" required>
-                            <option value="">-- Pilih Semester --</option>
-                            <option value="1">Semester 1</option>
-                            <option value="2">Semester 2</option>
-                            <option value="3">Semester 3</option>
-                            <option value="4">Semester 4</option>
-                            <option value="5">Semester 5</option>
-                            <option value="6">Semester 6</option>
-                            <option value="7">Semester 7</option>
-                            <option value="8">Semester 8</option>
-                        </select>
-                        <div class="form-error" id="error-semester"></div>
-                    </div>
-                </div>
-
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" onclick="closeModal()">Batal</button>
-                    <button type="submit" class="btn btn-primary">Simpan</button>
-                </div>
-            </form>
+    <!-- CPL Section -->
+    <div class="page-header" style="margin-top: 48px;">
+        <div class="header-content">
+            <h1>Manajemen Data CPL</h1>
+            <p>Kelola data Capaian Pembelajaran Lulusan</p>
+        </div>
+        <div style="display: flex; gap: 8px;">
+            <a href="{{ route('banksoal.admin.kontrol-umum.cpl.create') }}" class="btn-add" style="text-decoration: none;">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                </svg>
+                Tambah CPL
+            </a>
         </div>
     </div>
+
+    <div class="controls-section">
+        <div class="search-box">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+            </svg>
+            <input type="text" id="cplSearch" placeholder="Cari kode atau deskripsi CPL..." onkeyup="handleSearchCpl(this.value)">
+        </div>
+        <div class="filter-group">
+            <label for="cplSortDirection">Order By:</label>
+            <select id="cplSortDirection" onchange="handleSortCpl()">
+                <option value="asc">Ascending</option>
+                <option value="desc">Descending</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="table-section">
+        <div class="tbl-loading" id="cplLoading"><div class="tbl-spinner"></div> Memuat data...</div>
+        <div class="table-wrapper" id="cplTableWrapper" style="display:none;">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 140px;">Kode</th>
+                        <th>Deskripsi</th>
+                        <th style="width: 56px;"></th>
+                    </tr>
+                </thead>
+                <tbody id="cplTableBody"></tbody>
+            </table>
+        </div>
+        <div id="cplEmptyState" class="empty-state" style="display:none;">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+            </svg>
+            <p>Tidak ada data CPL</p>
+        </div>
+        <div class="pagination-section" id="cplPagination" style="display:none;">
+            <div class="pagination-list" id="cplPaginationList"></div>
+        </div>
+    </div>
+
+
+
+    <!-- Modals removed as we now use standalone pages -->
 
     @push('scripts')
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
     <script>
         const API_URL = '{{ url("/bank-soal/admin/api/mata-kuliah") }}';
+        const EDIT_MK_URL = '{{ url("/bank-soal/admin/kontrol-umum/mata-kuliah") }}';
+        const EDIT_CPL_URL = '{{ url("/bank-soal/admin/kontrol-umum/cpl") }}';
         const csrfToken = '{{ csrf_token() }}';
         const PAGE_SIZE = 10;
 
@@ -778,9 +885,15 @@
             return message;
         }
 
-        document.addEventListener('DOMContentLoaded', loadAllMataKuliah);
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAllMataKuliah();
+            loadAllCpl();
+        });
 
         async function loadAllMataKuliah() {
+            document.getElementById('tblLoading').classList.add('show');
+            document.getElementById('tblWrapper').style.display = 'none';
+            document.getElementById('emptyState').style.display = 'none';
             try {
                 const response = await fetch(API_URL, {
                     headers: {
@@ -800,6 +913,9 @@
                 }
             } catch (error) {
                 showError(toFriendlyMessage(error.message, 'Gagal memuat data mata kuliah'));
+            } finally {
+                document.getElementById('tblLoading').classList.remove('show');
+                document.getElementById('tblWrapper').style.display = 'block';
             }
         }
 
@@ -847,6 +963,56 @@
             renderTable();
         }
 
+        // ── 3-dot dropdown ──────────────────────────────────────────
+        function toggleDots(btn) {
+            const menu = btn.nextElementSibling;
+            const isOpen = menu.classList.contains('open');
+            
+            // Close all other menus and reset their inline styles
+            document.querySelectorAll('.dots-menu.open').forEach(m => {
+                m.classList.remove('open');
+                m.style.top = '';
+                m.style.bottom = '';
+                m.style.left = '';
+                m.style.right = '';
+            });
+
+            if (!isOpen) {
+                menu.classList.add('open');
+                
+                // Collision detection
+                const rect = menu.getBoundingClientRect();
+                const viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
+                const viewWidth = Math.max(document.documentElement.clientWidth, window.innerWidth);
+                
+                // If it overflows at the bottom, push it upwards
+                if (rect.bottom > viewHeight) {
+                    menu.style.top = 'auto';
+                    menu.style.bottom = '38px';
+                }
+                
+                // If it overflows at the left, push it rightwards
+                if (rect.left < 0) {
+                    menu.style.right = 'auto';
+                    menu.style.left = '0';
+                }
+            }
+        }
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('.dots-wrap')) {
+                document.querySelectorAll('.dots-menu.open').forEach(m => {
+                    m.classList.remove('open');
+                    m.style.top = '';
+                    m.style.bottom = '';
+                    m.style.left = '';
+                    m.style.right = '';
+                });
+            }
+        });
+
+        const ICON_EDIT   = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>`;
+        const ICON_DEL    = `<svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width:14px;height:14px"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>`;
+
         function renderTable() {
             const tableBody = document.getElementById('tableBody');
             const emptyState = document.getElementById('emptyState');
@@ -854,9 +1020,7 @@
 
             const totalItems = filteredMataKuliah.length;
             const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
-            if (currentPage > totalPages) {
-                currentPage = totalPages;
-            }
+            if (currentPage > totalPages) currentPage = totalPages;
 
             const startIndex = (currentPage - 1) * PAGE_SIZE;
             const pageItems = filteredMataKuliah.slice(startIndex, startIndex + PAGE_SIZE);
@@ -870,35 +1034,35 @@
 
             emptyState.style.display = 'none';
             paginationSection.style.display = totalPages > 1 ? 'flex' : 'none';
-            tableBody.innerHTML = pageItems
-                .map(
-                    (mk) => `
-                <tr>
-                    <td>
-                        <input type="checkbox" class="mk-checkbox" value="${mk.id}" onchange="updateBulkDeleteUI()">
-                    </td>
-                    <td><span class="badge">${escapeHtml(mk.kode)}</span></td>
+            tableBody.innerHTML = pageItems.map((mk) => `
+                <tr style="${!mk.is_active ? 'opacity: 0.8; background-color: #fafafa;' : ''}">
+                    <td class="cb-col"><input type="checkbox" class="mk-checkbox" value="${mk.id}" onchange="updateBulkDeleteUI()"></td>
+                    <td><span style="font-weight:700;color:#1e293b">${escapeHtml(mk.kode)}</span></td>
                     <td>${escapeHtml(mk.nama)}</td>
                     <td>${mk.sks} SKS</td>
                     <td>Semester ${mk.semester}</td>
                     <td>
-                        <div class="action-cell">
-                            <button type="button" class="btn-icon btn-icon-edit" title="Edit" onclick="editMataKuliah(${mk.id})">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
-                                </svg>
-                            </button>
-                            <button type="button" class="btn-icon btn-icon-delete" title="Hapus" onclick="deleteMataKuliah(${mk.id})">
-                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" style="width: 16px; height: 16px;">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
-                                </svg>
-                            </button>
+                        <div class="status-badge">
+                            <label class="switch">
+                                <input type="checkbox" onchange="toggleActive(${mk.id}, this)" ${mk.is_active ? 'checked' : ''}>
+                                <span class="slider"></span>
+                            </label>
+                            <span class="status-text ${mk.is_active ? 'active' : 'inactive'}">
+                                ${mk.is_active ? 'Aktif' : 'Tidak Aktif'}
+                            </span>
+                        </div>
+                    </td>
+                    <td style="text-align:center">
+                        <div class="dots-wrap">
+                            <button class="btn-dots" onclick="toggleDots(this)" title="Aksi">&#8943;</button>
+                            <div class="dots-menu">
+                                <a href="${EDIT_MK_URL}/${mk.id}/edit" class="dots-menu-link" style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;text-decoration:none;color:var(--slate-700);border-bottom:1px solid var(--slate-100);">${ICON_EDIT} Edit</a>
+                                <button class="menu-delete" onclick="deleteMataKuliah(${mk.id})">${ICON_DEL} Hapus</button>
+                            </div>
                         </div>
                     </td>
                 </tr>
-            `
-                )
-                .join('');
+            `).join('');
 
             renderPagination(totalPages);
         }
@@ -928,32 +1092,7 @@
             renderTable();
         }
 
-        function openAddModal() {
-            document.getElementById('mkId').value = '';
-            document.getElementById('modalTitle').textContent = 'Tambah Mata Kuliah';
-            document.getElementById('mataKuliahForm').reset();
-            document.getElementById('sks').value = '2';
-            clearFormErrors();
-            document.getElementById('mataKuliahModal').classList.add('show');
-        }
 
-        function closeModal() {
-            document.getElementById('mataKuliahModal').classList.remove('show');
-            clearFormErrors();
-        }
-
-        function closeModalOnBackdrop(e) {
-            if (e.target.id === 'mataKuliahModal') {
-                closeModal();
-            }
-        }
-
-        function clearFormErrors() {
-            document.querySelectorAll('.form-error').forEach((el) => {
-                el.classList.remove('show');
-                el.textContent = '';
-            });
-        }
 
         function incrementSKS() {
             const input = document.getElementById('sks');
@@ -969,94 +1108,6 @@
             }
         }
 
-        async function handleFormSubmit(e) {
-            e.preventDefault();
-            clearFormErrors();
-
-            const mkId = document.getElementById('mkId').value;
-            const formData = {
-                kode: document.getElementById('kode').value,
-                nama: document.getElementById('nama').value,
-                sks: document.getElementById('sks').value,
-                semester: document.getElementById('semester').value,
-            };
-
-            try {
-                const url = mkId ? `${API_URL}/${mkId}` : API_URL;
-                const method = mkId ? 'PUT' : 'POST';
-
-                const response = await fetch(url, {
-                    method,
-                    headers: {
-                        'Content-Type': 'application/json',
-                        Accept: 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                    },
-                    body: JSON.stringify(formData),
-                });
-
-                const result = await readApiResponse(response);
-
-                if (!response.ok) {
-                    if (result.errors) {
-                        Object.entries(result.errors).forEach(([field, messages]) => {
-                            const errorEl = document.getElementById(`error-${field}`);
-                            if (errorEl) {
-                                errorEl.textContent = mapFieldError(field, messages[0]);
-                                errorEl.classList.add('show');
-                            }
-                        });
-                    }
-                    throw new Error(toFriendlyMessage(result.message, 'Gagal menyimpan data'));
-                }
-
-                showSuccess(mkId ? 'Mata kuliah berhasil diperbarui' : 'Mata kuliah berhasil ditambahkan');
-                closeModal();
-
-                if (mkId) {
-                    const index = allMataKuliah.findIndex((mk) => Number(mk.id) === Number(mkId));
-                    if (index !== -1) allMataKuliah[index] = result.data;
-                } else {
-                    allMataKuliah.push(result.data);
-                }
-
-                const currentSearch = document.getElementById('searchInput').value;
-                currentPage = 1;
-                currentPage = 1;
-                handleSearch(currentSearch);
-            } catch (error) {
-                showError(toFriendlyMessage(error.message, 'Gagal menyimpan data'));
-            }
-        }
-
-        async function editMataKuliah(id) {
-            try {
-                const response = await fetch(`${API_URL}/${id}`, {
-                    headers: {
-                        Accept: 'application/json',
-                        'X-CSRF-TOKEN': csrfToken,
-                    },
-                });
-
-                const result = await readApiResponse(response);
-                if (!result.success) {
-                    throw new Error(toFriendlyMessage(result.message, 'Data tidak ditemukan'));
-                }
-
-                const mk = result.data;
-                document.getElementById('mkId').value = mk.id;
-                document.getElementById('kode').value = mk.kode;
-                document.getElementById('nama').value = mk.nama;
-                document.getElementById('sks').value = mk.sks;
-                document.getElementById('semester').value = mk.semester;
-                document.getElementById('modalTitle').textContent = 'Edit Mata Kuliah';
-
-                clearFormErrors();
-                document.getElementById('mataKuliahModal').classList.add('show');
-            } catch (error) {
-                showError(toFriendlyMessage(error.message, 'Gagal memuat data mata kuliah'));
-            }
-        }
 
         async function deleteMataKuliah(id) {
             const mk = allMataKuliah.find((item) => Number(item.id) === Number(id));
@@ -1182,6 +1233,93 @@
             });
         }
 
+        async function toggleActive(id, checkbox) {
+            const isActive = checkbox.checked;
+            try {
+                const response = await fetch(`${API_URL}/${id}/toggle-active`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        Accept: 'application/json',
+                        'X-CSRF-TOKEN': csrfToken,
+                    },
+                    body: JSON.stringify({ is_active: isActive }),
+                });
+
+                const result = await readApiResponse(response);
+                if (!response.ok) {
+                    checkbox.checked = !isActive; // revert
+                    throw new Error(toFriendlyMessage(result.message, 'Gagal mengubah status aktif'));
+                }
+
+                // Update local data
+                const mk = allMataKuliah.find(m => m.id == id);
+                if (mk) mk.is_active = isActive;
+                
+                // Re-render
+                renderTable();
+                
+                const Toast = Swal.mixin({
+                    toast: true,
+                    position: 'top-end',
+                    showConfirmButton: false,
+                    timer: 2000,
+                    timerProgressBar: true,
+                });
+                Toast.fire({
+                    icon: 'success',
+                    title: 'Status berhasil diperbarui'
+                });
+            } catch (error) {
+                showError(toFriendlyMessage(error.message, 'Gagal mengubah status aktif'));
+            }
+        }
+
+        async function syncSemester() {
+            Swal.fire({
+                title: 'Sinkronisasi Semester',
+                text: 'Proses ini akan mengaktifkan Mata Kuliah sesuai dengan semester berjalan dan menonaktifkan yang lainnya. Lanjutkan?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonColor: '#3b82f6',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Ya, Sinkronkan',
+                cancelButtonText: 'Batal',
+            }).then(async (dialogResult) => {
+                if (!dialogResult.isConfirmed) return;
+
+                Swal.fire({
+                    title: 'Memproses...',
+                    text: 'Mohon tunggu sebentar',
+                    allowOutsideClick: false,
+                    didOpen: () => {
+                        Swal.showLoading();
+                    }
+                });
+
+                try {
+                    const response = await fetch(`${API_URL}/sync-semester`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            Accept: 'application/json',
+                            'X-CSRF-TOKEN': csrfToken,
+                        }
+                    });
+
+                    const result = await readApiResponse(response);
+                    if (!response.ok) {
+                        throw new Error(toFriendlyMessage(result.message, 'Gagal sinkronisasi semester'));
+                    }
+
+                    await loadAllMataKuliah();
+                    showSuccess(result.message);
+                } catch (error) {
+                    showError(toFriendlyMessage(error.message, 'Gagal sinkronisasi semester'));
+                }
+            });
+        }
+
         function showSuccess(message) {
             Swal.fire({
                 icon: 'success',
@@ -1206,6 +1344,158 @@
                 title: 'Perhatian',
                 text: message,
                 confirmButtonColor: '#3b82f6',
+            });
+        }
+
+        const API_URL_CPL = '{{ url("/bank-soal/admin/api/cpl") }}';
+        let allCpl = [];
+        let filteredCpl = [];
+        let searchTimeoutCpl;
+        let currentPageCpl = 1;
+
+        async function loadAllCpl() {
+            document.getElementById('cplLoading').classList.add('show');
+            document.getElementById('cplTableWrapper').style.display = 'none';
+            document.getElementById('cplEmptyState').style.display = 'none';
+            try {
+                const response = await fetch(API_URL_CPL, {
+                    headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                });
+                const result = await readApiResponse(response);
+                if (result.success) {
+                    allCpl = result.data;
+                    filteredCpl = [...allCpl];
+                    currentPageCpl = 1;
+                    renderTableCpl();
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('loadAllCpl Error:', error);
+                showError('Gagal memuat data CPL: ' + error.message);
+            } finally {
+                document.getElementById('cplLoading').classList.remove('show');
+                document.getElementById('cplTableWrapper').style.display = 'block';
+            }
+        }
+
+        function handleSearchCpl(value) {
+            clearTimeout(searchTimeoutCpl);
+            searchTimeoutCpl = setTimeout(() => {
+                const query = value.toLowerCase().trim();
+                if (query === '') {
+                    filteredCpl = [...allCpl];
+                } else {
+                    filteredCpl = allCpl.filter((cpl) =>
+                        String(cpl.kode).toLowerCase().includes(query) || String(cpl.deskripsi).toLowerCase().includes(query)
+                    );
+                }
+                currentPageCpl = 1;
+                handleSortCpl();
+            }, 300);
+        }
+
+        function handleSortCpl() {
+            const dir = document.getElementById('cplSortDirection').value;
+            filteredCpl.sort((a, b) => {
+                const aVal = String(a.kode).toLowerCase();
+                const bVal = String(b.kode).toLowerCase();
+                if (aVal === bVal) return 0;
+                if (dir === 'asc') return aVal > bVal ? 1 : -1;
+                return aVal < bVal ? 1 : -1;
+            });
+            if (currentPageCpl < 1) currentPageCpl = 1;
+            renderTableCpl();
+        }
+
+        function renderTableCpl() {
+            const tableBody = document.getElementById('cplTableBody');
+            const emptyState = document.getElementById('cplEmptyState');
+            const paginationSection = document.getElementById('cplPagination');
+
+            const totalItems = filteredCpl.length;
+            const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+            if (currentPageCpl > totalPages) currentPageCpl = totalPages;
+
+            const startIndex = (currentPageCpl - 1) * PAGE_SIZE;
+            const pageItems = filteredCpl.slice(startIndex, startIndex + PAGE_SIZE);
+
+            if (totalItems === 0) {
+                tableBody.innerHTML = '';
+                emptyState.style.display = 'block';
+                paginationSection.style.display = 'none';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            paginationSection.style.display = totalPages > 1 ? 'flex' : 'none';
+            tableBody.innerHTML = pageItems.map((cpl) => `
+                <tr>
+                    <td><span style="font-weight:700;color:#1e293b">${escapeHtml(cpl.kode)}</span></td>
+                    <td style="color: #0f172a; line-height: 1.4; max-width: 520px;">${escapeHtml(cpl.deskripsi)}</td>
+                    <td style="text-align:center">
+                        <div class="dots-wrap">
+                            <button class="btn-dots" onclick="toggleDots(this)" title="Aksi">&#8943;</button>
+                            <div class="dots-menu">
+                                <a href="${EDIT_CPL_URL}/${cpl.id}/edit" class="dots-menu-link" style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;text-decoration:none;color:var(--slate-700);border-bottom:1px solid var(--slate-100);">${ICON_EDIT} Edit</a>
+                                <button class="menu-delete" onclick="deleteCpl(${cpl.id}, '${escapeHtml(cpl.kode)}')">${ICON_DEL} Hapus</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+
+            renderPaginationCpl(totalPages);
+        }
+
+        function renderPaginationCpl(totalPages) {
+            const paginationList = document.getElementById('cplPaginationList');
+            if (totalPages <= 1) { paginationList.innerHTML = ''; return; }
+            const buttons = [];
+            buttons.push(`<button type="button" class="pagination-btn" onclick="goToPageCpl(${Math.max(1, currentPageCpl - 1)})" ${currentPageCpl === 1 ? 'disabled' : ''}>&lsaquo;</button>`);
+            for (let page = 1; page <= totalPages; page++) {
+                buttons.push(`<button type="button" class="pagination-btn ${page === currentPageCpl ? 'active' : ''}" onclick="goToPageCpl(${page})">${page}</button>`);
+            }
+            buttons.push(`<button type="button" class="pagination-btn" onclick="goToPageCpl(${Math.min(totalPages, currentPageCpl + 1)})" ${currentPageCpl === totalPages ? 'disabled' : ''}>&rsaquo;</button>`);
+            paginationList.innerHTML = buttons.join('');
+        }
+
+        function goToPageCpl(page) {
+            currentPageCpl = page;
+            renderTableCpl();
+        }
+
+
+        async function deleteCpl(id, kode) {
+            Swal.fire({
+                title: 'Hapus CPL?',
+                text: `Apakah Anda yakin ingin menghapus "${kode}"?`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal',
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch(`${API_URL_CPL}/${id}`, {
+                            method: 'DELETE',
+                            headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken },
+                        });
+                        const res = await readApiResponse(response);
+                        if (!response.ok) throw new Error(res.message || 'Gagal menghapus CPL');
+                        allCpl = allCpl.filter((item) => Number(item.id) !== Number(id));
+                        const currentSearch = document.getElementById('cplSearch').value;
+                        if (currentPageCpl > 1 && filteredCpl.length % PAGE_SIZE === 1) {
+                            currentPageCpl = Math.max(1, currentPageCpl - 1);
+                        }
+                        handleSearchCpl(currentSearch);
+                        showSuccess('CPL berhasil dihapus');
+                    } catch (error) {
+                        showError(error.message);
+                    }
+                }
             });
         }
 

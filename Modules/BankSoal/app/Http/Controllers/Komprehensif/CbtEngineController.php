@@ -3,22 +3,48 @@
 namespace Modules\BankSoal\Http\Controllers\Komprehensif;
 
 use App\Http\Controllers\Controller;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Modules\BankSoal\Enums\KompreSessionStatus;
+use Modules\BankSoal\Enums\PendaftaranStatus;
+use Modules\BankSoal\Http\Requests\Komprehensif\LogViolationRequest;
+use Modules\BankSoal\Http\Requests\Komprehensif\SaveAnswerRequest;
+use Modules\BankSoal\Http\Requests\Komprehensif\ToggleRaguRequest;
+use Modules\BankSoal\Models\Komprehensif\CheatLog;
+use Modules\BankSoal\Models\Komprehensif\JadwalUjian;
+use Modules\BankSoal\Models\Komprehensif\KompreJawaban;
+use Modules\BankSoal\Models\Komprehensif\KompreSession;
+use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
+use Modules\BankSoal\Services\CbtSessionService;
 
 class CbtEngineController extends Controller
 {
+    /** Session key untuk menandai token sudah divalidasi. */
+    private const SESSION_TOKEN_KEY = 'cbt_token_valid';
+
+    /** Session key untuk menyimpan ID jadwal ujian yang aktif. */
+    private const SESSION_JADWAL_KEY = 'cbt_jadwal_id';
+
+    public function __construct(private CbtSessionService $cbtService) {}
+
+    /**
+     * Validasi token ujian dan langsung mulai sesi CBT.
+     *
+     * Ruang tunggu dieliminasi — token valid = langsung ke engine.
+     * Konfirmasi "siap ujian" ditangani via JS confirm() di form dashboard.
+     */
     public function validateToken(Request $request)
     {
         $request->validate(['token' => 'required|string|size:6']);
-        $token = strtoupper($request->token);
 
-        $pendaftar = \Modules\BankSoal\Models\PendaftarUjian::where('mahasiswa_id', auth()->id())
-            ->where('status_pendaftaran', 'approved')
+        $token     = strtoupper($request->token);
+        $pendaftar = PendaftarUjian::where('mahasiswa_id', auth()->id())
+            ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
             ->whereHas('jadwal')
             ->with('jadwal')
             ->first();
 
-        if (!$pendaftar || !$pendaftar->jadwal) {
+        if (! $pendaftar || ! $pendaftar->jadwal) {
             return back()->with('error', 'Anda tidak terdaftar atau belum dialokasikan ke sesi ujian apapun.');
         }
 
@@ -28,62 +54,130 @@ class CbtEngineController extends Controller
             return back()->with('error', 'Token yang Anda masukkan salah.');
         }
 
-        if (!now()->isSameDay($jadwal->tanggal_ujian)) {
+        if (! now()->isSameDay($jadwal->tanggal_ujian)) {
             return back()->with('error', 'Ujian tidak dijadwalkan pada hari ini.');
         }
 
-        $waktuSelesai = \Carbon\Carbon::parse($jadwal->tanggal_ujian->format('Y-m-d') . ' ' . $jadwal->waktu_selesai);
-        if (now()->gt($waktuSelesai)) {
+        $tanggal      = $jadwal->tanggal_ujian->format('Y-m-d');
+        $waktuSelesai = Carbon::parse($tanggal . ' ' . $jadwal->waktu_selesai);
+
+        if (now()->gte($waktuSelesai)) {
             return back()->with('error', 'Sesi ujian telah berakhir. Anda tidak dapat masuk lagi.');
         }
 
-        session(['cbt_token_valid' => true, 'cbt_jadwal_id' => $jadwal->id]);
-
-        return redirect()->route('komprehensif.mahasiswa.engine.waiting');
-    }
-
-    public function waitingRoom()
-    {
-        if (!session('cbt_token_valid')) {
-            return redirect()->route('komprehensif.mahasiswa.dashboard')->with('error', 'Silakan masukkan token terlebih dahulu.');
-        }
-
-        $pendaftar = \Modules\BankSoal\Models\PendaftarUjian::where('mahasiswa_id', auth()->id())
-            ->where('status_pendaftaran', 'approved')
+        // Jika sudah ada sesi ongoing (misal token diinput ulang), langsung ke engine
+        $existingSession = KompreSession::where('user_id', auth()->id())
+            ->where('status', KompreSessionStatus::Ongoing)
             ->first();
 
-        $jadwal = \Modules\BankSoal\Models\JadwalUjian::find(session('cbt_jadwal_id'));
-        $waktuMulai = \Carbon\Carbon::parse($jadwal->tanggal_ujian->format('Y-m-d') . ' ' . $jadwal->waktu_mulai);
-        
-        $canStart = now()->gte($waktuMulai);
+        if ($existingSession) {
+            return redirect()->route('komprehensif.mahasiswa.engine.run');
+        }
 
-        // Jika ujian sudah ongoing, langsung lempar ke soal
-        $kompreSession = \Modules\BankSoal\Models\KompreSession::where('user_id', auth()->id())
+        // ✅ Langsung generate soal & mulai sesi — tidak perlu waiting room
+        try {
+            $this->cbtService->startSession($jadwal, auth()->id());
+        } catch (\Exception $e) {
+            return back()->with('error', 'Gagal membangkitkan soal ujian: ' . $e->getMessage());
+        }
+
+        return redirect()->route('komprehensif.mahasiswa.engine.run');
+    }
+
+    /**
+     * Cek token via AJAX sebelum memunculkan popup konfirmasi.
+     */
+    public function checkToken(Request $request)
+    {
+        $request->validate(['token' => 'required|string|size:6']);
+
+        $token     = strtoupper($request->token);
+        $pendaftar = PendaftarUjian::where('mahasiswa_id', auth()->id())
+            ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
+            ->whereHas('jadwal')
+            ->with('jadwal')
+            ->first();
+
+        if (! $pendaftar || ! $pendaftar->jadwal) {
+            return response()->json(['valid' => false, 'message' => 'Anda tidak terdaftar atau belum dialokasikan ke sesi ujian apapun.']);
+        }
+
+        $jadwal = $pendaftar->jadwal;
+
+        if ($jadwal->token !== $token) {
+            return response()->json(['valid' => false, 'message' => 'Token yang Anda masukkan salah.']);
+        }
+
+        if (! now()->isSameDay($jadwal->tanggal_ujian)) {
+            return response()->json(['valid' => false, 'message' => 'Ujian tidak dijadwalkan pada hari ini.']);
+        }
+
+        $tanggal      = $jadwal->tanggal_ujian->format('Y-m-d');
+        $waktuSelesai = Carbon::parse($tanggal . ' ' . $jadwal->waktu_selesai);
+
+        if (now()->gte($waktuSelesai)) {
+            return response()->json(['valid' => false, 'message' => 'Sesi ujian telah berakhir. Anda tidak dapat masuk lagi.']);
+        }
+
+        return response()->json(['valid' => true]);
+    }
+
+    /**
+     * Ruang tunggu sebelum ujian dimulai.
+     */
+    public function waitingRoom()
+    {
+        if (! session(self::SESSION_TOKEN_KEY)) {
+            return redirect()->route('komprehensif.mahasiswa.dashboard')
+                ->with('error', 'Silakan masukkan token terlebih dahulu.');
+        }
+
+        // Jika ujian sudah berjalan, langsung lempar ke soal
+        $ongoingSession = KompreSession::where('user_id', auth()->id())
             ->where('status', 'ongoing')
             ->first();
 
-        if ($kompreSession) {
+        if ($ongoingSession) {
             return redirect()->route('komprehensif.mahasiswa.engine.run');
         }
+
+        $pendaftar  = PendaftarUjian::where('mahasiswa_id', auth()->id())
+            ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
+            ->first();
+
+        $jadwal     = JadwalUjian::find(session(self::SESSION_JADWAL_KEY));
+        $waktuMulai = Carbon::parse($jadwal->tanggal_ujian->format('Y-m-d') . ' ' . $jadwal->waktu_mulai);
+        $canStart   = now()->gte($waktuMulai);
 
         return view('banksoal::mahasiswa.cbt.waiting-room', compact('pendaftar', 'jadwal', 'waktuMulai', 'canStart'));
     }
 
+    /**
+     * Mulai sesi ujian — hasilkan soal via CbtSessionService.
+     */
     public function startUjian(Request $request)
     {
-        if (!session('cbt_token_valid') || !session('cbt_jadwal_id')) {
-            return redirect()->route('komprehensif.mahasiswa.dashboard')->with('error', 'Sesi tidak valid.');
+        if (! session(self::SESSION_TOKEN_KEY) || ! session(self::SESSION_JADWAL_KEY)) {
+            return redirect()->route('komprehensif.mahasiswa.dashboard')
+                ->with('error', 'Sesi tidak valid.');
         }
 
-        $jadwal = \Modules\BankSoal\Models\JadwalUjian::find(session('cbt_jadwal_id'));
-        $waktuMulai = \Carbon\Carbon::parse($jadwal->tanggal_ujian->format('Y-m-d') . ' ' . $jadwal->waktu_mulai);
-        
+        $jadwal      = JadwalUjian::findOrFail(session(self::SESSION_JADWAL_KEY));
+        $tanggal     = $jadwal->tanggal_ujian->format('Y-m-d');
+        $waktuMulai  = Carbon::parse($tanggal . ' ' . $jadwal->waktu_mulai);
+        $waktuSelesai = Carbon::parse($tanggal . ' ' . $jadwal->waktu_selesai);
+
         if (now()->lt($waktuMulai)) {
             return back()->with('error', 'Waktu ujian belum dimulai.');
         }
 
-        // Cek apakah ujian sudah berjalan
-        $existingSession = \Modules\BankSoal\Models\KompreSession::where('user_id', auth()->id())
+        // ✅ Ketat: tolak jika gate sudah ditutup
+        if (now()->gte($waktuSelesai)) {
+            return back()->with('error', 'Waktu ujian sudah berakhir. Anda tidak dapat memulai ujian.');
+        }
+
+        // Jika sesi sudah ada (misal refresh), lanjutkan
+        $existingSession = KompreSession::where('user_id', auth()->id())
             ->where('status', 'ongoing')
             ->first();
 
@@ -91,123 +185,92 @@ class CbtEngineController extends Controller
             return redirect()->route('komprehensif.mahasiswa.engine.run');
         }
 
-        \Illuminate\Support\Facades\DB::beginTransaction();
         try {
-            // 1. Buat Record Sesi Ujian (KompreSession)
-            $session = \Modules\BankSoal\Models\KompreSession::create([
-                'user_id' => auth()->id(),
-                'jadwal_id' => $jadwal->id,
-                'title' => 'Ujian Komprehensif ' . $jadwal->nama_sesi,
-                'started_at' => now(),
-                'status' => 'ongoing'
-            ]);
-
-            // 2. Acak 100 Soal dari 10 CPL
-            $cpls = \Modules\BankSoal\Models\Shared\Cpl::inRandomOrder()->limit(10)->get();
-            $soals = collect();
-
-            foreach ($cpls as $cpl) {
-                // Ambil 10 soal acak dari CPL ini
-                $pertanyaans = \Modules\BankSoal\Models\Pertanyaan::where('cpl_id', $cpl->id)
-                    ->where('status', 'disetujui') // Pastikan soal valid
-                    ->inRandomOrder()
-                    ->limit(10)
-                    ->get();
-                $soals = $soals->merge($pertanyaans);
-            }
-
-            // 3. Acak seluruh gabungan 100 soal tersebut
-            $soals = $soals->shuffle();
-
-            // 4. Masukkan ke KompreJawaban dan acak opsi jawabannya
-            $urutan = 1;
-            foreach ($soals as $soal) {
-                // Ambil semua id jawaban dari soal ini, lalu acak urutannya
-                $opsiIds = $soal->jawabans()->pluck('id')->shuffle()->toArray();
-
-                \Modules\BankSoal\Models\KompreJawaban::create([
-                    'kompre_session_id' => $session->id,
-                    'pertanyaan_id' => $soal->id,
-                    'urutan_soal' => $urutan++,
-                    'urutan_opsi' => $opsiIds,
-                    'kesulitan_now' => $soal->kesulitan
-                ]);
-            }
-
-            \Illuminate\Support\Facades\DB::commit();
+            $this->cbtService->startSession($jadwal, auth()->id());
             return redirect()->route('komprehensif.mahasiswa.engine.run');
-
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\DB::rollBack();
             return back()->with('error', 'Gagal membangkitkan soal ujian: ' . $e->getMessage());
         }
     }
 
+    /**
+     * Tampilkan halaman ujian dengan data soal terstruktur untuk Alpine.js.
+     */
     public function run()
     {
-        $session = \Modules\BankSoal\Models\KompreSession::where('user_id', auth()->id())
+        $session = KompreSession::where('user_id', auth()->id())
             ->where('status', 'ongoing')
+            ->with('jadwal')  // diperlukan oleh getEndTime() untuk strict gate enforcement
             ->first();
 
-        if (!$session) {
-            return redirect()->route('komprehensif.mahasiswa.dashboard')->with('error', 'Tidak ada sesi ujian yang sedang berjalan.');
+        if (! $session) {
+            return redirect()->route('komprehensif.mahasiswa.dashboard')
+                ->with('error', 'Tidak ada sesi ujian yang sedang berjalan.');
         }
 
-        // Cek apakah waktu sudah habis (100 menit)
-        $endTime = $session->started_at->addMinutes(100);
+        $endTime = $this->cbtService->getEndTime($session);
+
         if (now()->gt($endTime)) {
-            $session->update(['status' => 'finished']);
-            return redirect()->route('komprehensif.mahasiswa.dashboard')->with('info', 'Waktu ujian telah habis.');
+            $this->cbtService->finishSession($session);
+            return redirect()->route('komprehensif.mahasiswa.dashboard')
+                ->with('info', 'Waktu ujian telah habis.');
         }
 
-        $jadwal = $session->jadwal;
-
-        // Ambil semua soal beserta opsinya (Hanya data teks dan id)
-        // Kita butuh JSON data yang bersih untuk dikirim ke Alpine.js
-        $jawabans = \Modules\BankSoal\Models\KompreJawaban::where('kompre_session_id', $session->id)
+        $jadwal   = $session->jadwal;
+        $jawabans = KompreJawaban::where('kompre_session_id', $session->id)
             ->orderBy('urutan_soal')
-            ->with(['pertanyaan', 'pertanyaan.jawabans'])
+            ->with(['pertanyaan', 'pertanyaan.jawabans', 'pertanyaan.cpl'])
             ->get()
             ->map(function ($j) {
-                // Urutkan opsi sesuai $j->urutan_opsi array
-                $opsiMap = collect($j->pertanyaan->jawabans)->keyBy('id');
-                $opsiSorted = collect($j->urutan_opsi)->map(function ($oId) use ($opsiMap) {
-                    return $opsiMap->get($oId);
-                })->filter()->values();
+                $opsiMap    = collect($j->pertanyaan->jawabans)->keyBy('id');
+                $opsiSorted = collect($j->urutan_opsi)
+                    ->map(fn($oId) => $opsiMap->get($oId))
+                    ->filter()
+                    ->values();
 
                 return [
-                    'id' => $j->id, // KompreJawaban ID
-                    'urutan' => $j->urutan_soal,
-                    'soal' => $j->pertanyaan->soal,
-                    'opsi' => $opsiSorted->map(function ($o, $idx) {
-                        return [
-                            'id' => $o->id,
-                            'teks' => $o->deskripsi,
-                            'label' => chr(65 + $idx) // A, B, C, D, E berdasarkan urutan acak
-                        ];
-                    }),
+                    'id'               => $j->id,
+                    'urutan'           => $j->urutan_soal,
+                    'soal'             => $j->pertanyaan->soal,
+                    'opsi'             => $opsiSorted->map(fn($o, $idx) => [
+                        'id'    => $o->id,
+                        'teks'  => $o->deskripsi,
+                        'label' => chr(65 + $idx), // A, B, C, D, E
+                    ]),
                     'jawaban_terpilih' => $j->jawaban_dipilih,
-                    'ragu_ragu' => (bool) $j->is_ragu
+                    'ragu_ragu'        => (bool) $j->is_ragu,
+                    'cpl_kode'         => $j->pertanyaan->cpl->kode ?? 'CPL',
                 ];
             });
 
         return view('banksoal::mahasiswa.cbt.engine', compact('session', 'jawabans', 'endTime', 'jadwal'));
     }
 
-    public function saveAnswer(Request $request)
+    /**
+     * Simpan pilihan jawaban (AJAX).
+     */
+    public function saveAnswer(SaveAnswerRequest $request)
     {
-        $request->validate([
-            'jawaban_id' => 'required|exists:bs_kompre_jawaban,id',
-            'opsi_terpilih' => 'required|exists:bs_jawaban,id'
-        ]);
+        $jawaban = KompreJawaban::where('id', $request->jawaban_id)
+            ->whereHas('session', fn($q) => $q->where('user_id', auth()->id())->where('status', KompreSessionStatus::Ongoing))
+            ->with('session.jadwal')  // eager-load jadwal untuk strict gate time check
+            ->first();
 
-        $jawaban = \Modules\BankSoal\Models\KompreJawaban::where('id', $request->jawaban_id)
-            ->whereHas('session', function($q) {
-                $q->where('user_id', auth()->id())->where('status', 'ongoing');
-            })->first();
-
-        if (!$jawaban) {
+        if (! $jawaban) {
             return response()->json(['success' => false, 'message' => 'Sesi tidak valid.'], 403);
+        }
+
+        // ✅ Server-side timer validation — tidak bisa dimanipulasi dari client
+        if (now()->gt($this->cbtService->getEndTime($jawaban->session))) {
+            $this->cbtService->finishSession($jawaban->session);
+            return response()->json(['success' => false, 'expired' => true], 403);
+        }
+
+        // ✅ Answer integrity check — opsi_terpilih harus merupakan opsi valid
+        // untuk soal ini. Mencegah exploit: kirim jawaban_id soal A tapi
+        // opsi_terpilih dari soal B yang kebetulan is_benar = true.
+        if (! in_array($request->opsi_terpilih, $jawaban->urutan_opsi ?? [])) {
+            return response()->json(['success' => false, 'message' => 'Opsi jawaban tidak valid.'], 422);
         }
 
         $jawaban->update(['jawaban_dipilih' => $request->opsi_terpilih]);
@@ -215,20 +278,24 @@ class CbtEngineController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function toggleRagu(Request $request)
+    /**
+     * Toggle flag ragu-ragu pada soal (AJAX).
+     */
+    public function toggleRagu(ToggleRaguRequest $request)
     {
-        $request->validate([
-            'jawaban_id' => 'required|exists:bs_kompre_jawaban,id',
-            'is_ragu' => 'required|boolean'
-        ]);
+        $jawaban = KompreJawaban::where('id', $request->jawaban_id)
+            ->whereHas('session', fn($q) => $q->where('user_id', auth()->id())->where('status', KompreSessionStatus::Ongoing))
+            ->with('session.jadwal')  // eager-load jadwal untuk strict gate time check
+            ->first();
 
-        $jawaban = \Modules\BankSoal\Models\KompreJawaban::where('id', $request->jawaban_id)
-            ->whereHas('session', function($q) {
-                $q->where('user_id', auth()->id())->where('status', 'ongoing');
-            })->first();
-
-        if (!$jawaban) {
+        if (! $jawaban) {
             return response()->json(['success' => false, 'message' => 'Sesi tidak valid.'], 403);
+        }
+
+        // ✅ Server-side timer validation
+        if (now()->gt($this->cbtService->getEndTime($jawaban->session))) {
+            $this->cbtService->finishSession($jawaban->session);
+            return response()->json(['success' => false, 'expired' => true], 403);
         }
 
         $jawaban->update(['is_ragu' => $request->is_ragu]);
@@ -236,58 +303,46 @@ class CbtEngineController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function logViolation(Request $request)
+    /**
+     * Catat pelanggaran/kejadian selama ujian (AJAX).
+     */
+    public function logViolation(LogViolationRequest $request)
     {
-        $request->validate([
-            'event_type' => 'required|string',
-            'description' => 'nullable|string'
+        $session = KompreSession::where('user_id', auth()->id())
+            ->where('status', 'ongoing')
+            ->first();
+
+        if (! $session) {
+            return response()->json(['success' => false, 'message' => 'Tidak ada sesi berjalan'], 403);
+        }
+
+        CheatLog::create([
+            'kompre_session_id' => $session->id,
+            'event_type'        => $request->event_type,
+            'description'       => $request->description,
+            'metadata'          => [
+                'ip'         => $request->ip(),
+                'user_agent' => $request->userAgent(),
+            ],
         ]);
 
-        $session = \Modules\BankSoal\Models\KompreSession::where('user_id', auth()->id())
-            ->where('status', 'ongoing')
-            ->first();
-
-        if ($session) {
-            \Modules\BankSoal\Models\CheatLog::create([
-                'kompre_session_id' => $session->id,
-                'event_type' => $request->event_type,
-                'description' => $request->description,
-                'metadata' => [
-                    'ip' => $request->ip(),
-                    'user_agent' => $request->userAgent()
-                ]
-            ]);
-            return response()->json(['success' => true]);
-        }
-        return response()->json(['success' => false, 'message' => 'Tidak ada sesi berjalan'], 403);
+        return response()->json(['success' => true]);
     }
 
+    /**
+     * Selesaikan ujian secara mandiri oleh mahasiswa.
+     */
     public function finish()
     {
-        $session = \Modules\BankSoal\Models\KompreSession::where('user_id', auth()->id())
+        $session = KompreSession::where('user_id', auth()->id())
             ->where('status', 'ongoing')
             ->first();
 
         if ($session) {
-            // Kalkulasi skor akhir: Benar = 1 poin, Salah = 0 poin.
-            $jawabans = \Modules\BankSoal\Models\KompreJawaban::where('kompre_session_id', $session->id)->with('opsiTerpilih')->get();
-            $benar = 0;
-
-            foreach ($jawabans as $j) {
-                if ($j->opsiTerpilih && $j->opsiTerpilih->is_benar) {
-                    $benar += 1;
-                }
-            }
-
-            $skor = $benar; // Skor adalah jumlah jawaban benar
-
-            $session->update([
-                'status' => 'finished',
-                'finished_at' => now(),
-                'score' => $skor
-            ]);
+            $this->cbtService->finishSession($session);
         }
 
-        return redirect()->route('komprehensif.mahasiswa.dashboard')->with('success', 'Ujian telah selesai. Terima kasih.');
+        return redirect()->route('komprehensif.mahasiswa.dashboard')
+            ->with('success', 'Ujian telah selesai. Terima kasih.');
     }
 }

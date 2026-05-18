@@ -3,51 +3,116 @@
 namespace Modules\ManajemenMahasiswa\Services;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
+use App\Models\User;
+use App\Services\AuditLogger;
 use Modules\ManajemenMahasiswa\Models\Pengumuman;
+use Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest;
+use Modules\ManajemenMahasiswa\Models\PengumumanPersonalPin;
 
 class PengumumanService
 {
     /**
-     * Listing pengumuman untuk admin/operator.
+     * Listing pengumuman untuk admin/operator dengan dukungan pin global & personal.
+     *
+     * @param bool $isAdmin True jika user adalah admin/superadmin/admin_kemahasiswaan —
+     *                      admin dapat melihat semua draft saat filter status=draft diterapkan.
      */
-    public function listAll(array $filters = [], int $perPage = 20): LengthAwarePaginator
+    public function listAll(array $filters = [], int $perPage = 20, ?int $userId = null, bool $isAdmin = false): LengthAwarePaginator
     {
+        // Status yang bersifat "private" — hanya boleh dilihat pemiliknya di tampilan default
+        $privateStatuses = ['draft', 'pending_review'];
+
         return Pengumuman::with(['author', 'repoMulmed'])
-            ->when(isset($filters['status']), fn($q) => $q->where('status_publish', $filters['status']))
-            ->when(isset($filters['audience']), fn($q) => $q->forAudience($filters['audience']))
-            ->when(isset($filters['kategori']), fn($q) => $q->whereJsonContains('kategori', $filters['kategori']))
+            ->when(
+                $userId !== null,
+                fn ($q) => $q
+                    ->leftJoin('mk_pengumuman_personal_pins', function ($join) use ($userId) {
+                        $join->on('mk_pengumuman.id', '=', 'mk_pengumuman_personal_pins.pengumuman_id')
+                             ->where('mk_pengumuman_personal_pins.user_id', '=', $userId);
+                    })
+                    ->select('mk_pengumuman.*', DB::raw(
+                        'CASE WHEN mk_pengumuman_personal_pins.id IS NOT NULL THEN 1 ELSE 0 END AS is_personal_pinned'
+                    )),
+                fn ($q) => $q->select('mk_pengumuman.*', DB::raw('0 AS is_personal_pinned'))
+            )
+            ->when(isset($filters['status']), function ($q) use ($filters, $userId, $isAdmin, $privateStatuses) {
+                $q->where('mk_pengumuman.status_publish', $filters['status']);
+                // Non-admin yang filter ke status private hanya boleh lihat milik sendiri
+                if (!$isAdmin && in_array($filters['status'], $privateStatuses)) {
+                    $q->where('mk_pengumuman.user_id', $userId);
+                }
+            })
+            ->when(!isset($filters['status']), function ($q) use ($userId) {
+                // Tampilan default (semua role termasuk admin):
+                // - Sembunyikan pending_review → dikelola via dashboard verifikasi
+                // - Sembunyikan draft yang pernah masuk alur verifikasi (rejected/cancelled)
+                // - Hanya "fresh draft" (belum pernah diajukan) milik sendiri yang terlihat
+                $q->where(function ($sub) use ($userId) {
+                    $sub->whereNotIn('mk_pengumuman.status_publish', ['draft', 'pending_review'])
+                        ->orWhere(function ($fresh) use ($userId) {
+                            $fresh->where('mk_pengumuman.status_publish', 'draft')
+                                  ->where('mk_pengumuman.user_id', $userId)
+                                  ->whereNotExists(function ($e) {
+                                      $e->from('mk_pengumuman_approval_requests')
+                                        ->whereColumn('pengumuman_id', 'mk_pengumuman.id');
+                                  });
+                        });
+                });
+            })
+            ->when(isset($filters['audience']), fn ($q) => $q->forAudience($filters['audience']))
+            ->when(isset($filters['kategori']), fn ($q) => $q->whereJsonContains('mk_pengumuman.kategori', $filters['kategori']))
             ->when(isset($filters['search']), function ($q) use ($filters) {
                 $search = $filters['search'];
                 return $q->where(function ($sub) use ($search) {
-                    $sub->where('judul', 'like', "%{$search}%")
-                        ->orWhere('konten', 'like', "%{$search}%");
+                    $sub->where('mk_pengumuman.judul', 'like', "%{$search}%")
+                        ->orWhere('mk_pengumuman.konten', 'like', "%{$search}%");
                 });
             })
-            ->orderByDesc('created_at')
+            ->orderByDesc('mk_pengumuman.is_pinned')
+            ->orderByDesc('is_personal_pinned')
+            ->orderByDesc('mk_pengumuman.created_at')
             ->paginate($perPage);
     }
 
     /**
      * Listing pengumuman publik untuk mahasiswa/alumni/dosen.
-     * Di-cache karena sering dibaca oleh ribuan user.
+     * Pin global selalu di atas, diikuti pin pribadi user, lalu terbaru.
      */
-    public function listPublished(string $userRoleAudience, ?string $filterKategori = null, ?string $search = null, int $perPage = 10): LengthAwarePaginator
-    {
+    public function listPublished(
+        string $userRoleAudience,
+        ?string $filterKategori = null,
+        ?string $search = null,
+        int $perPage = 10,
+        ?int $userId = null
+    ): LengthAwarePaginator {
         return Pengumuman::with(['author', 'repoMulmed'])
+            ->when(
+                $userId !== null,
+                fn ($q) => $q
+                    ->leftJoin('mk_pengumuman_personal_pins', function ($join) use ($userId) {
+                        $join->on('mk_pengumuman.id', '=', 'mk_pengumuman_personal_pins.pengumuman_id')
+                             ->where('mk_pengumuman_personal_pins.user_id', '=', $userId);
+                    })
+                    ->select('mk_pengumuman.*', DB::raw(
+                        'CASE WHEN mk_pengumuman_personal_pins.id IS NOT NULL THEN 1 ELSE 0 END AS is_personal_pinned'
+                    )),
+                fn ($q) => $q->select('mk_pengumuman.*', DB::raw('0 AS is_personal_pinned'))
+            )
             ->published()
             ->forAudience($userRoleAudience)
-            ->when($filterKategori, function ($query, $filter) {
-                return $query->whereJsonContains('kategori', $filter);
-            })
-            ->when($search, function ($query, $search) {
-                return $query->where(function ($sub) use ($search) {
-                    $sub->where('judul', 'like', "%{$search}%")
-                        ->orWhere('konten', 'like', "%{$search}%");
+            ->when($filterKategori, fn ($q) => $q->whereJsonContains('mk_pengumuman.kategori', $filterKategori))
+            ->when($search, function ($q) use ($search) {
+                return $q->where(function ($sub) use ($search) {
+                    $sub->where('mk_pengumuman.judul', 'like', "%{$search}%")
+                        ->orWhere('mk_pengumuman.konten', 'like', "%{$search}%");
                 });
             })
-            ->orderByDesc('created_at')
+            ->orderByDesc('mk_pengumuman.is_pinned')
+            ->orderByDesc('is_personal_pinned')
+            ->orderByDesc('mk_pengumuman.created_at')
             ->paginate($perPage);
     }
 
@@ -89,9 +154,9 @@ class PengumumanService
     public function publish(int $id): Pengumuman
     {
         return $this->update($id, [
-            'status_publish' => Pengumuman::STATUS_PUBLISHED, 
-            'scheduled_at' => null,
-            'published_at' => now()
+            'status_publish' => Pengumuman::STATUS_PUBLISHED,
+            'scheduled_at'   => null,
+            'published_at'   => now(),
         ]);
     }
 
@@ -124,8 +189,327 @@ class PengumumanService
         return $count;
     }
 
+    /**
+     * Toggle pin global pengumuman (admin only).
+     * Tidak menyentuh updated_at agar tidak mengganggu urutan tampilan.
+     */
+    public function pinPengumuman(int $id): Pengumuman
+    {
+        $pengumuman = Pengumuman::findOrFail($id);
+        Pengumuman::where('id', $id)->update(['is_pinned' => !$pengumuman->is_pinned]);
+        $this->flushCache();
+        return $pengumuman->fresh();
+    }
+
+    /**
+     * Toggle pin pribadi pengumuman per user.
+     * Kembalikan true jika sekarang di-pin, false jika di-unpin.
+     */
+    public function togglePersonalPin(int $pengumumanId, int $userId): bool
+    {
+        Pengumuman::findOrFail($pengumumanId);
+
+        $existing = PengumumanPersonalPin::where('user_id', $userId)
+            ->where('pengumuman_id', $pengumumanId)
+            ->first();
+
+        if ($existing) {
+            $existing->delete();
+            return false;
+        }
+
+        PengumumanPersonalPin::create([
+            'user_id'       => $userId,
+            'pengumuman_id' => $pengumumanId,
+        ]);
+
+        return true;
+    }
+
+    /**
+     * Cek apakah user sudah personal-pin pengumuman ini.
+     */
+    public function isPersonalPinned(int $pengumumanId, int $userId): bool
+    {
+        return PengumumanPersonalPin::where('user_id', $userId)
+            ->where('pengumuman_id', $pengumumanId)
+            ->exists();
+    }
+
     private function flushCache(): void
     {
         Cache::forget('mk.dashboard.snapshot');
+        // Fix #6: flush tier cache dashboard yang menyimpan pengumuman_pending & pengumuman_bulan_ini
+        Cache::forget('mk.dashboard.tier1');
+        Cache::forget('mk.dashboard.tier2');
+    }
+
+    // =========================================================================
+    // Approval Workflow (Staff Himpunan → Ketua)
+    // =========================================================================
+
+    /**
+     * Cek apakah user memiliki role staff_himpunan yang wajib verifikasi.
+     */
+    public function requiresApproval(User $user): bool
+    {
+        $roles = $user->roles->pluck('name');
+
+        // Staff himpunan wajib verifikasi, KECUALI jika juga punya role senior
+        $seniorRoles = ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm',
+                        'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+                        'dosen', 'dosen_koordinator'];
+
+        return $roles->contains('staff_himpunan')
+            && $roles->intersect($seniorRoles)->isEmpty();
+    }
+
+    /**
+     * Ambil daftar user yang dapat dijadikan verifikator.
+     * Hanya ketua-ketua himpunan — admin tidak dipilih langsung,
+     * tapi tetap bisa memproses semua request via dashboard verifikasi.
+     */
+    public function getAvailableVerifiers(): Collection
+    {
+        $verifierRoleNames = [
+            'ketua_himpunan',
+            'wakil_ketua_himpunan',
+            'ketua_bidang',
+            'ketua_unit',
+        ];
+
+        // Filter berdasarkan role saja — filter PengurusHimaskom.status_keaktifan
+        // dihapus karena tidak semua ketua punya record di tabel tersebut,
+        // yang menyebabkan dropdown kosong.
+        return User::whereHas('roles', function ($q) use ($verifierRoleNames) {
+            $q->whereIn('name', $verifierRoleNames);
+        })
+        ->with(['roles' => function ($q) use ($verifierRoleNames) {
+            $q->whereIn('name', $verifierRoleNames);
+        }])
+        ->orderBy('name')
+        ->get();
+    }
+
+    /**
+     * Buat approval request dan set pengumuman ke pending_review.
+     */
+    /**
+     * Fix #2: Batasi jumlah pengajuan ulang maks 5 per pengumuman untuk mencegah
+     * "verifier shopping" — memilih verifikator bergantian sampai dapat yang lunak.
+     */
+    public function requestApproval(int $pengumumanId, int $requesterId, int $verifierId, ?string $pesan): PengumumanApprovalRequest
+    {
+        // Hitung total pengajuan yang pernah dibuat untuk pengumuman ini
+        $totalSubmissions = PengumumanApprovalRequest::where('pengumuman_id', $pengumumanId)
+            ->where('requester_id', $requesterId)
+            ->count();
+
+        if ($totalSubmissions >= 5) {
+            throw new \RuntimeException(
+                'Batas maksimal pengajuan verifikasi (5 kali) telah tercapai untuk pengumuman ini. Hubungi admin kemahasiswaan.'
+            );
+        }
+
+        return DB::transaction(function () use ($pengumumanId, $requesterId, $verifierId, $pesan) {
+            // Set pengumuman ke pending_review
+            Pengumuman::where('id', $pengumumanId)->update([
+                'status_publish' => Pengumuman::STATUS_PENDING_REVIEW,
+            ]);
+
+            // Batalkan request pending sebelumnya jika ada
+            PengumumanApprovalRequest::where('pengumuman_id', $pengumumanId)
+                ->where('status', PengumumanApprovalRequest::STATUS_PENDING)
+                ->update(['status' => PengumumanApprovalRequest::STATUS_CANCELLED]);
+
+            $this->flushCache();
+
+            return PengumumanApprovalRequest::create([
+                'pengumuman_id'  => $pengumumanId,
+                'requester_id'   => $requesterId,
+                'verifier_id'    => $verifierId,
+                'status'         => PengumumanApprovalRequest::STATUS_PENDING,
+                'pesan_pengaju'  => $pesan,
+            ]);
+        });
+    }
+
+    /**
+     * Approve pengumuman — publish langsung.
+     * Fix #4: Tambah audit log untuk tracking siapa yang approve dan kapan.
+     */
+    public function approveRequest(int $requestId, ?string $catatan): void
+    {
+        DB::transaction(function () use ($requestId, $catatan) {
+            $approvalReq = PengumumanApprovalRequest::with('pengumuman', 'requester')->findOrFail($requestId);
+
+            // Fix #8: Validasi state pengumuman masih pending_review sebelum publish
+            if ($approvalReq->pengumuman?->status_publish !== Pengumuman::STATUS_PENDING_REVIEW) {
+                throw new \RuntimeException(
+                    'Pengumuman sudah tidak dalam status menunggu verifikasi. Mungkin sudah dibatalkan atau diproses sebelumnya.'
+                );
+            }
+
+            $approvalReq->update([
+                'status'              => PengumumanApprovalRequest::STATUS_APPROVED,
+                'catatan_verifikator' => $catatan,
+                'verified_at'         => now(),
+            ]);
+
+            // Publish pengumuman
+            $this->update($approvalReq->pengumuman_id, [
+                'status_publish' => Pengumuman::STATUS_PUBLISHED,
+                'published_at'   => now(),
+            ]);
+
+            // Fix #4: Audit log
+            AuditLogger::update(
+                module:  'manajemen_mahasiswa',
+                desc:    "Pengumuman disetujui: \"{$approvalReq->pengumuman?->judul}\"",
+                subject: $approvalReq->pengumuman,
+                oldData: ['status' => 'pending_review', 'diajukan_oleh' => $approvalReq->requester?->name],
+                newData: ['status' => 'published', 'disetujui_oleh' => auth()->user()?->name, 'catatan' => $catatan],
+            );
+
+            $this->flushCache();
+        });
+    }
+
+    /**
+     * Reject pengumuman — kembalikan ke draft.
+     * Fix #4: Tambah audit log untuk tracking siapa yang reject, kapan, dan alasan.
+     */
+    public function rejectRequest(int $requestId, string $catatan): void
+    {
+        DB::transaction(function () use ($requestId, $catatan) {
+            $approvalReq = PengumumanApprovalRequest::with('pengumuman', 'requester')->findOrFail($requestId);
+
+            $approvalReq->update([
+                'status'              => PengumumanApprovalRequest::STATUS_REJECTED,
+                'catatan_verifikator' => $catatan,
+                'verified_at'         => now(),
+            ]);
+
+            // Kembalikan ke draft agar staff bisa edit & ajukan ulang
+            Pengumuman::where('id', $approvalReq->pengumuman_id)->update([
+                'status_publish' => Pengumuman::STATUS_DRAFT,
+            ]);
+
+            // Fix #4: Audit log
+            AuditLogger::update(
+                module:  'manajemen_mahasiswa',
+                desc:    "Pengumuman ditolak: \"{$approvalReq->pengumuman?->judul}\"",
+                subject: $approvalReq->pengumuman,
+                oldData: ['status' => 'pending_review', 'diajukan_oleh' => $approvalReq->requester?->name],
+                newData: ['status' => 'draft', 'ditolak_oleh' => auth()->user()?->name, 'alasan' => $catatan],
+            );
+
+            $this->flushCache();
+        });
+    }
+
+    /**
+     * Cancel/tarik kembali approval request yang masih pending.
+     */
+    public function cancelApprovalRequest(int $pengumumanId, int $requesterId): void
+    {
+        DB::transaction(function () use ($pengumumanId, $requesterId) {
+            PengumumanApprovalRequest::where('pengumuman_id', $pengumumanId)
+                ->where('requester_id', $requesterId)
+                ->where('status', PengumumanApprovalRequest::STATUS_PENDING)
+                ->update(['status' => PengumumanApprovalRequest::STATUS_CANCELLED]);
+
+            // Kembalikan ke draft
+            Pengumuman::where('id', $pengumumanId)->update([
+                'status_publish' => Pengumuman::STATUS_DRAFT,
+            ]);
+
+            $this->flushCache();
+        });
+    }
+
+    /**
+     * Ambil daftar approval request pending milik verifikator tertentu.
+     */
+    public function getPendingForVerifier(int $userId): Collection
+    {
+        return PengumumanApprovalRequest::with(['pengumuman.author', 'requester'])
+            ->forVerifier($userId)
+            ->pending()
+            ->orderByDesc('created_at')
+            ->get();
+    }
+
+    /**
+     * Ambil semua approval request untuk verifikator dengan filter status.
+     */
+    public function getRequestsForVerifier(int $userId, ?string $status = null): Collection
+    {
+        return PengumumanApprovalRequest::with(['pengumuman.author', 'requester'])
+            ->forVerifier($userId)
+            ->when($status && $status !== 'all', fn ($q) => $q->where('status', $status))
+            ->orderByDesc('created_at')
+            ->get();
+    }
+
+    /**
+     * Ambil SEMUA approval request (untuk admin) dengan pagination.
+     * Fix #9: Ganti ->get() dengan ->paginate() agar tidak load semua sekaligus.
+     */
+    public function getAllRequests(?string $status = null, int $perPage = 20)
+    {
+        return PengumumanApprovalRequest::with(['pengumuman.author', 'requester', 'verifier'])
+            ->when($status && $status !== 'all', fn ($q) => $q->where('status', $status))
+            ->orderByDesc('created_at')
+            ->paginate($perPage);
+    }
+
+    /**
+     * Hitung semua approval request pending (untuk counter badge admin).
+     */
+    public function getAllPendingCount(): int
+    {
+        return PengumumanApprovalRequest::where('status', PengumumanApprovalRequest::STATUS_PENDING)->count();
+    }
+
+    /**
+     * Ambil semua approval request yang DIAJUKAN oleh requester (staff himpunan).
+     * Digunakan untuk halaman "Status Verifikasi" milik staff sendiri.
+     */
+    public function getRequestsByRequester(int $userId, ?string $status = null): Collection
+    {
+        return PengumumanApprovalRequest::with(['pengumuman', 'verifier'])
+            ->where('requester_id', $userId)
+            ->when($status && $status !== 'all', fn ($q) => $q->where('status', $status))
+            ->orderByDesc('created_at')
+            ->get();
+    }
+
+    /**
+     * Fix #5: Ambil stats semua status dalam SATU query GROUP BY — menggantikan 4 query terpisah.
+     */
+    public function getStatsByRequester(int $userId): array
+    {
+        $counts = PengumumanApprovalRequest::where('requester_id', $userId)
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        return [
+            'pending'   => (int) ($counts['pending']   ?? 0),
+            'approved'  => (int) ($counts['approved']  ?? 0),
+            'rejected'  => (int) ($counts['rejected']  ?? 0),
+            'cancelled' => (int) ($counts['cancelled'] ?? 0),
+        ];
+    }
+
+    /**
+     * Hitung jumlah approval request pending yang diajukan oleh requester.
+     */
+    public function getPendingCountByRequester(int $userId): int
+    {
+        return PengumumanApprovalRequest::where('requester_id', $userId)
+            ->where('status', PengumumanApprovalRequest::STATUS_PENDING)
+            ->count();
     }
 }

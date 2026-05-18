@@ -112,21 +112,14 @@ class AppServiceProvider extends ServiceProvider
 
         // =====================================================================
         // 3. GATE & PERMISSION SYSTEM
-        // FIX: Gate::before() — menghubungkan @can() / @cannot() di Blade
-        // dengan sistem permission custom kita (hasPermissionTo).
+        // Superadmin bypass semua gate check. Pengecekan permission
+        // module.action ditangani otomatis oleh Spatie via PermissionRegistrar.
         // =====================================================================
         Gate::before(function (User $user, string $ability) {
-            // Superadmin bypass semua
             if ($user->hasRole('superadmin')) {
                 return true;
             }
-
-            // Hanya intercept permission format "module.action" (berisi titik)
-            if (str_contains($ability, '.')) {
-                return $user->hasPermissionTo($ability) ?: null;
-            }
-
-            return null; // Biarkan Gate definition lain yang handle
+            return null; // Biarkan Spatie dan Gate definition lain yang handle
         });
 
         Gate::define('viewPulse', function (User $user) {

@@ -32,8 +32,6 @@ class RoleMiddleware
             return $next($request);
         }
 
-        // hasAnyRole() sudah pakai getCachedRoles() — tidak ada query baru
-        // kalau cache sudah ada (diset saat login di AuthenticatedSessionController)
         if (! $user->hasAnyRole($roles)) {
             abort(403, 'Unauthorized. Required role: ' . implode(' or ', $roles));
         }

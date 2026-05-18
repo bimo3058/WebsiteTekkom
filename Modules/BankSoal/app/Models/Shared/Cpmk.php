@@ -10,6 +10,24 @@ class Cpmk extends Model
     protected $fillable = ['kode', 'deskripsi', 'cpl_id'];
     public $timestamps = true;
 
+    public function getDeskripsiAttribute($value)
+    {
+        $value = $value ?? '';
+        
+        if (preg_match('/^\((.*?)\)\s+\((.*?)\)(?:\s+\((.*?)\))?$/', $value, $matches)) {
+            $kko = trim($matches[1]);
+            $objek = trim($matches[2]);
+            $konteks = isset($matches[3]) ? trim($matches[3]) : '';
+            
+            $parts = ['Mahasiswa mampu', $kko, $objek];
+            if ($konteks !== '') {
+                $parts[] = $konteks;
+            }
+            return implode(' ', $parts);
+        }
+        
+        return $value;
+    }
 
     public function cpls()
     {

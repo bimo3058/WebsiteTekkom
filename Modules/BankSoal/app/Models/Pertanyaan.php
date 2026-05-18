@@ -42,7 +42,7 @@ class Pertanyaan extends Model
 
     public function cpmk(): BelongsTo
     {
-        return $this->belongsTo(\Modules\BankSoal\Models\Shared\Cpmk::class, 'cpmk_id');
+        return $this->belongsTo(Cpmk::class, 'cpmk_id');
     }
 
     public function jawaban(): HasMany
@@ -77,7 +77,6 @@ class Pertanyaan extends Model
 
     public function canTransitionTo(string $newStatus): bool
     {
-        // Simple mock of transitions
         return match($this->status) {
             self::STATUS_DRAFT => in_array($newStatus, [self::STATUS_DIAJUKAN, self::STATUS_DRAFT]),
             self::STATUS_DIAJUKAN => in_array($newStatus, [self::STATUS_DISETUJUI, self::STATUS_REVISI]),

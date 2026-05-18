@@ -24,17 +24,24 @@ class SuperAdminController extends Controller
 
     // ── Cache key helpers ──────────────────────────────────────────────────────
 
-    private function userListCacheKey(string $search, string $role, int $page, int $perPage = 10): string
+ 
+    private function userListCacheKey(string $search, string $role, int $page, int $perPage = 10, string $sortBy = 'created_at', string $sortDir = 'desc'): string
     {
+        $version = (int) Cache::get('sa:users:version', 0);
+    
         $parts = [
+            'v='        . $version,
             'page='     . $page,
             'role='     . $role,
             'per_page=' . $perPage,
             'search='   . mb_strtolower(trim($search)),
+            'sort_by='  . $sortBy,
+            'sort_dir=' . $sortDir,
         ];
         sort($parts);
         return 'sa:users:' . implode(':', $parts);
     }
+ 
 
     public function bustStatsCache()
     {
@@ -44,19 +51,22 @@ class SuperAdminController extends Controller
     
     private function bustUserCache(): void
     {
-        try {
-            Cache::tags(['sa_users'])->flush();
-        } catch (\BadMethodCallException $e) {
-            // Driver tidak support tags (file/database) — forget manual
-        }
-
-        $keys = [
+        $currentVersion = (int) Cache::get('sa:users:version', 0);
+        Cache::put('sa:users:version', $currentVersion + 1, now()->addDays(30));
+    
+        $statsKeys = [
             'sa:total_users', 'sa:total_superadmins', 'sa:total_lecturers',
             'sa:total_students', 'sa:total_gpm', 'sa:total_admin_modul',
             'sa:recent_users', 'sa:recent_logins', 'sa:new_registrations',
         ];
-        foreach ($keys as $key) {
+        foreach ($statsKeys as $key) {
             Cache::forget($key);
+        }
+
+        try {
+            Cache::tags(['sa_users'])->flush();
+        } catch (\BadMethodCallException $e) {
+            // File/database driver — sudah ditangani dengan versioning di atas
         }
     }
 
@@ -159,11 +169,17 @@ class SuperAdminController extends Controller
             $request->session()->put('um_per_page', $perPage);
         }
 
-        $roles    = Cache::remember('sa:roles_list', self::TTL_ROLES, fn() => Role::orderBy('name')->get());
-        $cacheKey = $this->userListCacheKey($search, $role, $page, $perPage);
+        // ── Sort ──────────────────────────────────────────────────────────────
+        $allowedSortBy  = ['name', 'created_at', 'role'];
+        $allowedSortDir = ['asc', 'desc'];
+        $sortBy  = in_array($request->input('sort_by'),  $allowedSortBy)  ? $request->input('sort_by')  : 'created_at';
+        $sortDir = in_array($request->input('sort_dir'), $allowedSortDir) ? $request->input('sort_dir') : 'desc';
 
-        // EAGER LOADING: Tambahkan 'directPermissions' untuk mendukung desain tabel baru
-        $query = User::with(['roles', 'directPermissions']) 
+        $roles    = Cache::remember('sa:roles_list', self::TTL_ROLES, fn() => Role::orderBy('name')->get());
+        $cacheKey = $this->userListCacheKey($search, $role, $page, $perPage, $sortBy, $sortDir);
+
+        // EAGER LOADING: 'permissions' = direct permissions via Spatie model_has_permissions
+        $query = User::with(['roles', 'permissions'])
             ->whereNull('deleted_at')
             ->select('id', 'name', 'email', 'avatar_url', 'created_at', 'last_login', 'deleted_at', 'suspended_at', 'suspension_reason', 'is_online');
 
@@ -171,9 +187,10 @@ class SuperAdminController extends Controller
         if ($role !== 'all') {
             $query->whereExists(function ($sub) use ($role) {
                 $sub->select(DB::raw(1))
-                    ->from('user_roles')
-                    ->join('roles', 'roles.id', '=', 'user_roles.role_id')
-                    ->whereColumn('user_roles.user_id', 'users.id')
+                    ->from('model_has_roles')
+                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                    ->whereColumn('model_has_roles.model_id', 'users.id')
+                    ->where('model_has_roles.model_type', 'App\\Models\\User')
                     ->where('roles.name', $role);
             });
         }
@@ -187,9 +204,25 @@ class SuperAdminController extends Controller
             });
         }
 
+        // ── Apply sort ────────────────────────────────────────────────────────
+        if ($sortBy === 'role') {
+            // Sort berdasarkan nama role pertama via subquery
+            $query->orderBy(
+                Role::select('name')
+                    ->join('model_has_roles', 'roles.id', '=', 'model_has_roles.role_id')
+                    ->whereColumn('model_has_roles.model_id', 'users.id')
+                    ->where('model_has_roles.model_type', 'App\\Models\\User')
+                    ->orderBy('name')
+                    ->limit(1),
+                $sortDir
+            );
+        } else {
+            $query->orderBy($sortBy, $sortDir);
+        }
+
         // Menggunakan Cache Tags agar manajemen cache user lebih rapi
         $rememberCb = function() use ($query, $perPage) {
-            return $query->latest()->paginate($perPage);
+            return $query->paginate($perPage);
         };
 
         try {
@@ -225,7 +258,7 @@ class SuperAdminController extends Controller
         // 2. Ambil daftar role untuk dropdown
         $roles = \Illuminate\Support\Facades\Cache::remember('sa:roles_list', 3600, fn() => Role::orderBy('name')->get());
 
-        $query = \App\Models\User::with(['roles', 'directPermissions'])
+        $query = \App\Models\User::with(['roles', 'permissions'])
             ->whereNull('deleted_at')
             ->where('is_online', \Illuminate\Support\Facades\DB::raw('true'));
 
@@ -233,9 +266,10 @@ class SuperAdminController extends Controller
         if ($role !== 'all') {
             $query->whereExists(function ($sub) use ($role) {
                 $sub->select(\Illuminate\Support\Facades\DB::raw(1))
-                    ->from('user_roles')
-                    ->join('roles', 'roles.id', '=', 'user_roles.role_id')
-                    ->whereColumn('user_roles.user_id', 'users.id')
+                    ->from('model_has_roles')
+                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                    ->whereColumn('model_has_roles.model_id', 'users.id')
+                    ->where('model_has_roles.model_type', 'App\\Models\\User')
                     ->where('roles.name', $role);
             });
         }
@@ -264,16 +298,17 @@ class SuperAdminController extends Controller
 
         $roles = \Illuminate\Support\Facades\Cache::remember('sa:roles_list', 3600, fn() => Role::orderBy('name')->get());
 
-        $query = \App\Models\User::with(['roles', 'directPermissions'])
+        $query = \App\Models\User::with(['roles', 'permissions'])
             ->whereNull('deleted_at')
             ->whereNotNull('suspended_at');
 
         if ($role !== 'all') {
             $query->whereExists(function ($sub) use ($role) {
                 $sub->select(\Illuminate\Support\Facades\DB::raw(1))
-                    ->from('user_roles')
-                    ->join('roles', 'roles.id', '=', 'user_roles.role_id')
-                    ->whereColumn('user_roles.user_id', 'users.id')
+                    ->from('model_has_roles')
+                    ->join('roles', 'roles.id', '=', 'model_has_roles.role_id')
+                    ->whereColumn('model_has_roles.model_id', 'users.id')
+                    ->where('model_has_roles.model_type', 'App\\Models\\User')
                     ->where('roles.name', $role);
             });
         }
@@ -288,6 +323,24 @@ class SuperAdminController extends Controller
         $users = $query->latest('suspended_at')->paginate($perPage);
         
         return view('superadmin.users.suspended', compact('users', 'roles'));
+    }
+
+    public function show(User $user)
+    {
+        // Eager load relasi untuk menghindari N+1 query
+        $user->load(['roles', 'permissions']);
+
+        // Ambil semua daftar role untuk keperluan dropdown edit di halaman detail
+        $roles = \App\Models\Role::orderBy('name')->get();
+
+        return view('superadmin.users.show', compact('user', 'roles'));
+    }
+
+    public function edit(User $user)
+    {
+        $user->load(['roles', 'permissions']);
+        $roles = \App\Models\Role::orderBy('name')->get();
+        return view('superadmin.users.edit', compact('user', 'roles'));
     }
 
     // ── Users — Store ──────────────────────────────────────────────────────────
@@ -395,7 +448,7 @@ class SuperAdminController extends Controller
 
             // SYNC: hapus semua yang lama, pasang yang baru
             // Ini otomatis handle grant + revoke sekaligus
-            $user->directPermissions()->sync($grantIds);
+            $user->permissions()->sync($grantIds);
 
             // ── 3. Bersihkan cache ────────────────────────────────────────────
             $user->clearUserCache();
@@ -593,6 +646,85 @@ class SuperAdminController extends Controller
         }
     }
 
+    // ── Permissions — Bulk Update ─────────────────────────────────────────────
+    public function bulkUpdatePermissions(Request $request)
+    {
+        $request->validate([
+            'role'          => ['nullable', 'string'],
+            'permissions'   => ['nullable', 'array'],
+            'permissions.*' => ['string'],
+            'user_ids'      => ['nullable', 'array'],
+            'user_ids.*'    => ['exists:users,id']
+        ]);
+
+        DB::beginTransaction();
+        try {
+            // Bersihkan array permission dari nilai kosong
+            $permissionsNames = collect($request->input('permissions', []))->filter()->toArray();
+            $userIds          = collect($request->input('user_ids', []))->filter()->toArray();
+            $roleName         = $request->input('role');
+
+            // Ambil ID dari permissions berdasarkan namanya
+            $permIds = \App\Models\Permission::whereIn('name', $permissionsNames)->pluck('id')->toArray();
+
+            $updatedUsersCount = 0;
+
+            // Jika ada user_ids yang dikirimkan, update secara massal permissions mereka
+            if (!empty($userIds)) {
+                $users = User::whereIn('id', $userIds)->get();
+
+                foreach ($users as $user) {
+                    // Proteksi agar permission Superadmin tidak ter-override
+                    if (!$user->hasRole('superadmin')) {
+                        $user->permissions()->sync($permIds);
+                        $user->clearUserCache();
+                        $updatedUsersCount++;
+                    }
+                }
+
+                \App\Services\AuditLogger::update(
+                    module:  'user_management',
+                    desc:    "Bulk update permissions untuk {$updatedUsersCount} users di role: " . ($roleName ?: 'Campuran'),
+                    subject: null,
+                    oldData: [],
+                    newData: [
+                        'user_ids'    => $userIds,
+                        'permissions' => $permissionsNames
+                    ],
+                );
+            }
+
+            // Opsi: Jika logic Anda bertujuan mengupdate default permissions pada Role itu sendiri
+            if (empty($userIds) && !empty($roleName)) {
+                $role = Role::where('name', $roleName)->first();
+                if ($role && $role->name !== 'superadmin') {
+                    $role->permissions()->sync($permIds);
+
+                    \App\Services\AuditLogger::update(
+                        module:  'user_management',
+                        desc:    "Bulk update permissions untuk role: {$role->name}",
+                        subject: null,
+                        oldData: [],
+                        newData: [
+                            'role'        => $role->name,
+                            'permissions' => $permissionsNames
+                        ],
+                    );
+                }
+            }
+
+            // Bersihkan cache global
+            $this->bustUserCache();
+            DB::commit();
+
+            return back()->with('success', 'Permission berhasil diperbarui secara massal.');
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return back()->with('error', 'Gagal memperbarui permission: ' . $e->getMessage());
+        }
+    }
+
     // ── Users -- Bulk Delete ────────────────────────────────────────────────────────
     public function bulkDestroy(Request $request)
     {
@@ -676,29 +808,115 @@ class SuperAdminController extends Controller
     public function updateUser(Request $request, User $user)
     {
         $validated = $request->validate([
-            'name'  => ['required', 'string', 'max:255'],
-            'email' => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'name'            => ['required', 'string', 'max:255'],
+            'email'           => ['required', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'phone'           => ['nullable', 'string', 'max:20'],
+            'roles'           => ['nullable', 'array'],
+            'roles.*'         => ['exists:roles,name'],
+            'permissions'     => ['nullable', 'array'],
+            'permissions.*'   => ['string'],
+            'employee_number' => ['nullable', 'string', 'max:50'],
+            'student_number'  => ['nullable', 'string', 'max:50'],
+            'cohort_year'     => ['nullable', 'integer', 'min:2000', 'max:' . (date('Y') + 1)],
         ]);
 
         DB::beginTransaction();
         try {
-            $oldData = ['name' => $user->name, 'email' => $user->email];
+            $oldData = [
+                'name'        => $user->name,
+                'email'       => $user->email,
+                'roles'       => $user->roles->pluck('name')->toArray(),
+                'permissions' => $user->permissions->pluck('name')->toArray(),
+            ];
             
-            $user->update($validated);
-            $user->clearUserCache();
+            // 2. Update Info Dasar
+            $user->update([
+                'name'     => $validated['name'],
+                'email'    => $validated['email'],
+                'whatsapp' => $validated['phone'] ?? $user->whatsapp,
+            ]);
 
+            // 3. Sync Roles
+            $roleNames = $validated['roles'] ?? [];
+            // 👈 Konversi nama role dari input form menjadi array ID dari database
+            $roleIds = \App\Models\Role::whereIn('name', $roleNames)->pluck('id')->toArray();
+            
+            $user->roles()->sync($roleIds);
+
+            // 4. Upsert data Lecturer / Student berdasarkan role yang aktif setelah sync
+            $user->refresh(); // pastikan relasi segar setelah roles sync
+            $activeRoleNames = collect($roleNames);
+
+            // -- Dosen --
+            if ($activeRoleNames->contains('dosen')) {
+                if ($user->lecturer) {
+                    if (!empty($validated['employee_number'])) {
+                        $user->lecturer->update(['employee_number' => $validated['employee_number']]);
+                    }
+                } elseif (!empty($validated['employee_number'])) {
+                    Lecturer::create([
+                        'user_id'         => $user->id,
+                        'employee_number' => $validated['employee_number'],
+                    ]);
+                }
+            }
+
+            // -- Mahasiswa --
+            if ($activeRoleNames->contains('mahasiswa')) {
+                if ($user->student) {
+                    $updateData = [];
+                    if (!empty($validated['student_number'])) {
+                        $updateData['student_number'] = $validated['student_number'];
+                    }
+                    if (!empty($validated['cohort_year'])) {
+                        $updateData['cohort_year'] = $validated['cohort_year'];
+                    }
+                    if (!empty($updateData)) {
+                        $user->student->update($updateData);
+                    }
+                } elseif (!empty($validated['student_number'])) {
+                    Student::create([
+                        'user_id'        => $user->id,
+                        'student_number' => $validated['student_number'],
+                        'cohort_year'    => $validated['cohort_year'] ?? date('Y'),
+                    ]);
+                }
+            }
+
+            // 5. Sync Permissions
+            $allPermByName = \App\Models\Permission::pluck('id', 'name');
+            $checkedNames  = collect($request->input('permissions', []));
+            
+            $grantIds = $checkedNames
+                ->filter(fn($name) => $allPermByName->has($name))
+                ->map(fn($name) => $allPermByName[$name])
+                ->values()
+                ->toArray();
+
+            $user->permissions()->sync($grantIds);
+
+            // Bersihkan Cache
+            $user->clearUserCache();
+            \Illuminate\Support\Facades\Cache::forget("user_permissions_{$user->id}");
+
+            // Catat ke Log
             AuditLogger::update(
                 module:  'user_management',
-                desc:    "Update info user: {$user->name}",
+                desc:    "Update info & permissions user: {$user->name}",
                 subject: $user,
                 oldData: $oldData,
-                newData: $validated,
+                newData: [
+                    'name'        => $validated['name'],
+                    'email'       => $validated['email'],
+                    'roles'       => $roleNames, // Catat log dengan nama role agar mudah dibaca
+                    'permissions' => $checkedNames->toArray(),
+                ],
             );
 
             $this->bustUserCache();
             DB::commit();
 
-            return back()->with('success', "Info user \"{$user->name}\" berhasil diperbarui.");
+            return back()->with('success', "Info dan permission user \"{$user->name}\" berhasil diperbarui.");
 
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -730,17 +948,19 @@ class SuperAdminController extends Controller
         if ($user->id === auth()->id()) {
             return back()->with('error', 'Tidak dapat suspend akun sendiri.');
         }
-
+    
         if ($user->hasRole('superadmin')) {
             return back()->with('error', 'Tidak dapat suspend akun superadmin.');
         }
-
+    
         $request->validate([
             'reason' => ['nullable', 'string', 'max:500'],
         ]);
-
+    
         $user->suspend($request->reason ?? '');
-
+    
+        $user->clearUserCache();
+    
         AuditLogger::update(
             module:  'user_management',
             desc:    "Suspend user: {$user->name} ({$user->email})",
@@ -748,16 +968,18 @@ class SuperAdminController extends Controller
             oldData: ['suspended' => false],
             newData: ['suspended' => true, 'reason' => $request->reason],
         );
-
+    
         $this->bustUserCache();
-
+    
         return back()->with('success', "User \"{$user->name}\" berhasil disuspend.");
     }
 
     public function unsuspend(User $user)
     {
         $user->unsuspend();
-
+    
+        $user->clearUserCache();
+    
         AuditLogger::update(
             module:  'user_management',
             desc:    "Unsuspend user: {$user->name} ({$user->email})",
@@ -767,7 +989,7 @@ class SuperAdminController extends Controller
         );
 
         $this->bustUserCache();
-
+    
         return back()->with('success', "User \"{$user->name}\" berhasil di-unsuspend.");
     }
 
@@ -815,13 +1037,13 @@ class SuperAdminController extends Controller
                         ->orWhere('email', 'ILIKE', "%{$search}%");
                 });
             })
-            ->with(['roles.permissions', 'directPermissions'])
+            ->with(['roles.permissions', 'permissions'])
             ->select('id', 'name', 'email', 'avatar_url', 'suspended_at')
             ->orderByRaw("
                 CASE WHEN EXISTS (
-                    SELECT 1 FROM user_roles ur
-                    JOIN roles r ON r.id = ur.role_id
-                    WHERE ur.user_id = users.id AND r.name = 'superadmin'
+                    SELECT 1 FROM model_has_roles mhr
+                    JOIN roles r ON r.id = mhr.role_id
+                    WHERE mhr.model_id = users.id AND mhr.model_type = 'App\\\\Models\\\\User' AND r.name = 'superadmin'
                 ) THEN 0 ELSE 1 END ASC
             ")
             ->orderBy('name')
@@ -835,6 +1057,70 @@ class SuperAdminController extends Controller
     }
     
     // ── Users — Bulk Import ─────────────────────────────────────────────────
+    public function downloadImportTemplate()
+    {
+        $roles = [
+            'superadmin', 'admin', 'dosen', 'mahasiswa', 'gpm', 'alumni',
+            'admin_banksoal', 'admin_capstone', 'admin_eoffice', 'admin_kemahasiswaan',
+            'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+            'staff_himpunan', 'dpm', 'ketua_departemen', 'bendahara',
+        ];
+
+        $permissions = [
+            'banksoal.view', 'banksoal.edit', 'banksoal.delete',
+            'kemahasiswaan.view', 'kemahasiswaan.edit', 'kemahasiswaan.delete',
+            'capstone.view', 'capstone.edit', 'capstone.delete',
+            'eoffice.view', 'eoffice.edit', 'eoffice.delete',
+        ];
+
+        $divider = '# ' . str_repeat('=', 131);
+
+        $lines = [];
+
+        // ── Header Block ──────────────────────────────────────────────────────
+        $lines[] = $divider;
+        $lines[] = '# TEMPLATE BULK IMPORT USER — Sistem Informasi Akademik';
+        $lines[] = $divider;
+        $lines[] = '#';
+        $lines[] = '# PETUNJUK : Hapus semua baris berawalan "#" sebelum diupload | Gunakan pemisah koma (,) | Satu baris = satu user';
+        $lines[] = '#';
+
+        // ── Legend Kolom ──────────────────────────────────────────────────────
+        $lines[] = '# KOLOM    : name              | email                        | password        | role            | external_id      | student_number   | cohort_year | permissions';
+        $lines[] = '# KETERANGAN name=Nama lengkap | email=Harus unik di sistem   | password=Min 8  | role=Lihat list | external_id=SSO  | NIM (mahasiswa)  | Thn angktn  | Permission tambahan (opsional)';
+        $lines[] = '#';
+
+        // ── Legend Role (horizontal) ──────────────────────────────────────────
+        $lines[] = '# ROLE     : ' . implode(' | ', $roles);
+        $lines[] = '# Multi-role: pisahkan dengan koma dan bungkus tanda kutip, contoh: "dosen,gpm"';
+        $lines[] = '#';
+
+        // ── Legend Permission (horizontal) ────────────────────────────────────
+        $lines[] = '# PERMISSION: ' . implode(' | ', $permissions);
+        $lines[] = '# Multi-permission: pisahkan dengan koma dan bungkus tanda kutip, contoh: "banksoal.view,capstone.view,eoffice.edit"';
+        $lines[] = '# Catatan: student_number & cohort_year WAJIB diisi jika role=mahasiswa, kosongkan jika bukan mahasiswa';
+        $lines[] = '#';
+        $lines[] = $divider;
+
+        // ── Header CSV ────────────────────────────────────────────────────────
+        $lines[] = 'name,email,password,role,external_id,student_number,cohort_year,permissions';
+
+        // ── Contoh Data (multi-value dibungkus quote) ─────────────────────────
+        $lines[] = 'Budi Santoso,budi.santoso@student.undip.ac.id,password123,mahasiswa,SSO-M1001,23060122140001,2023,"banksoal.view,capstone.view"';
+        $lines[] = 'Dr. Siti Rahayu,siti.rahayu@undip.ac.id,password123,dosen,NIP-198501012010011001,,,';
+        $lines[] = 'Ahmad Fauzi,ahmad.fauzi@undip.ac.id,password123,dosen,NIP-199001012015011002,,,"banksoal.view,banksoal.edit"';
+        $lines[] = 'Rina Wati,rina.wati@student.undip.ac.id,password123,mahasiswa,SSO-M1002,22060122140002,2022,';
+        $lines[] = 'Koordinator GPM,koordinator.gpm@undip.ac.id,password123,"dosen,gpm",NIP-197501012000011001,,,"banksoal.view,banksoal.edit,banksoal.delete"';
+
+        $csvContent = implode("\n", $lines) . "\n";
+
+        return response($csvContent, 200, [
+            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Disposition' => 'attachment; filename="template_bulk_import_user.csv"',
+            'Cache-Control'       => 'no-cache, no-store, must-revalidate',
+        ]);
+    }
+    
     public function bulkImport(Request $request)
     {
         $request->validate([
@@ -1106,7 +1392,7 @@ class SuperAdminController extends Controller
     {
         $search = $request->input('search');
 
-        $query = User::with(['roles.permissions', 'directPermissions']) 
+        $query = User::with(['roles.permissions', 'permissions']) 
             ->whereNull('deleted_at');
 
         // Tambahkan Logika Search agar filter berfungsi
@@ -1123,6 +1409,35 @@ class SuperAdminController extends Controller
 
         $permissions = \App\Models\Permission::all()->groupBy('module');
         $roles = Role::with('permissions')->get();
+
+        return view('superadmin.permission.permissions', compact('users', 'permissions', 'roles'));
+    }
+
+    public function permissionsIndex(Request $request)
+    {
+        // Reuse query sama seperti permissions() tapi untuk index table
+        $roles = \App\Models\Role::withCount('users')->with('permissions')->orderBy('name')->get();
+        $dbModules = \App\Models\SystemModule::all();
+
+        return view('superadmin.permission.index', compact('roles', 'dbModules'));
+    }
+
+    public function permissionsShow(Request $request, string $role)
+    {
+        // Reuse query persis seperti permissions()
+        $search = $request->input('search');
+
+        $users = User::with(['roles.permissions', 'permissions'])
+            ->whereNull('deleted_at')
+            ->when($search, fn($q) => $q->where(function($q) use ($search) {
+                $q->where('name', 'ILIKE', "%{$search}%")
+                ->orWhere('email', 'ILIKE', "%{$search}%");
+            }))
+            ->orderBy('name')
+            ->get();
+
+        $permissions = \App\Models\Permission::all()->groupBy('module');
+        $roles       = Role::with('permissions')->get();
 
         return view('superadmin.permission.permissions', compact('users', 'permissions', 'roles'));
     }
@@ -1222,27 +1537,102 @@ class SuperAdminController extends Controller
 
     public function auditLogs(Request $request)
     {
-        $perPage = in_array((int) $request->per_page, [25, 50, 100]) ? (int) $request->per_page : 25;
+        // Kolom yang boleh di-sort (whitelist untuk keamanan)
+        $allowedSortBy  = ['created_at', 'module', 'action'];
+        $allowedSortDir = ['asc', 'desc'];
+    
+        $sortBy  = in_array($request->sort_by, $allowedSortBy)  ? $request->sort_by  : 'created_at';
+        $sortDir = in_array($request->sort_dir, $allowedSortDir) ? $request->sort_dir : 'desc';
+        $perPage = in_array((int) $request->per_page, [5, 10, 25, 50]) ? (int) $request->per_page : 10;
+    
+        $query = \App\Models\AuditLog::with('user')
+            ->when($request->module,   fn($q) => $q->where('module', $request->module))
+            ->when($request->action,   fn($q) => $q->where('action', $request->action))
+            ->when($request->user_id,  fn($q) => $q->where('user_id', $request->user_id))
+            ->when($request->date_from,fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
+            ->when($request->date_to,  fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
+            ->when($request->search,   fn($q) => $q->where('description', 'like', '%' . $request->search . '%'))
+            ->orderBy($sortBy, $sortDir);
+    
+        $logs = $query->paginate($perPage)->withQueryString();
+    
+        // Data untuk filter dropdowns
+        $modules = \App\Models\AuditLog::distinct()->pluck('module')->filter()->sort()->values();
+        $actions = \App\Models\AuditLog::distinct()->pluck('action')->filter()->sort()->values();
+        $users   = \App\Models\User::select('id', 'name')->orderBy('name')->get();
+    
+        return view('superadmin.audit-logs.audit-logs', compact(
+            'logs', 'modules', 'actions', 'users'
+        ));
+    }
 
-        $logs = AuditLog::with([
-                'user'       => fn($q) => $q->select('id', 'name', 'email', 'avatar_url', 'is_online', 'suspended_at'),
-                'user.roles',
-            ])
-            ->when($request->filled('module'),    fn($q) => $q->where('module', $request->module))
-            ->when($request->filled('action'),    fn($q) => $q->where('action', $request->action))
-            ->when($request->filled('user_id'),   fn($q) => $q->where('user_id', $request->user_id))
-            ->when($request->filled('date_from'), fn($q) => $q->whereDate('created_at', '>=', $request->date_from))
-            ->when($request->filled('date_to'),   fn($q) => $q->whereDate('created_at', '<=', $request->date_to))
-            ->when($request->filled('search'),    fn($q) => $q->where('description', 'ILIKE', "%{$request->search}%"))
-            ->latest('created_at')
-            ->paginate($perPage)
-            ->withQueryString();
-
-        $users   = User::select('id', 'name', 'email')->orderBy('name')->get();
-        $modules = ['bank_soal', 'capstone', 'eoffice', 'manajemen_mahasiswa', 'user_management'];
-        $actions = ['CREATE', 'UPDATE', 'DELETE', 'VIEW', 'LOGIN', 'LOGOUT'];
-
-        return view('superadmin.audit-logs.audit-logs', compact('logs', 'users', 'modules', 'actions'));
+    public function bulkForceLogout(Request $request)
+    {
+        $ids = array_filter((array) $request->input('ids', []), 'is_numeric');
+    
+        if (empty($ids)) {
+            return back()->with('error', 'Tidak ada user yang dipilih.');
+        }
+    
+        $ids = array_diff($ids, [auth()->id()]);
+    
+        $users = \App\Models\User::whereIn('id', $ids)
+            ->where('is_online', true)
+            ->get();
+    
+        if ($users->isEmpty()) {
+            return back()->with('error', 'Tidak ada user online yang valid untuk di-logout.');
+        }
+    
+        foreach ($users as $user) {
+            $user->forceLogout();       // sudah include clearUserCache() di dalamnya
+        }
+    
+        AuditLogger::update(
+            module:  'user_management',
+            desc:    "Bulk force logout: {$users->count()} user",
+            subject: auth()->user(),
+            oldData: [],
+            newData: ['action' => 'bulk_force_logout', 'count' => $users->count()],
+        );
+    
+        $this->bustUserCache();
+    
+        return back()->with('success', "{$users->count()} user berhasil di-logout paksa.");
+    }
+    
+    public function bulkUnsuspend(Request $request)
+    {
+        $ids = array_filter((array) $request->input('ids', []), 'is_numeric');
+    
+        if (empty($ids)) {
+            return back()->with('error', 'Tidak ada user yang dipilih.');
+        }
+    
+        $users = \App\Models\User::whereIn('id', $ids)
+            ->whereNotNull('suspended_at')
+            ->get();
+    
+        if ($users->isEmpty()) {
+            return back()->with('error', 'Tidak ada user tersuspend yang valid.');
+        }
+    
+        foreach ($users as $user) {
+            $user->unsuspend();
+            $user->clearUserCache();
+        }
+    
+        AuditLogger::update(
+            module:  'user_management',
+            desc:    "Bulk unsuspend: {$users->count()} user",
+            subject: auth()->user(),
+            oldData: [],
+            newData: ['action' => 'bulk_unsuspend', 'count' => $users->count()],
+        );
+    
+        $this->bustUserCache();
+    
+        return back()->with('success', "{$users->count()} user berhasil di-unsuspend.");
     }
 
     public function bulkDeleteAuditLogs(Request $request)

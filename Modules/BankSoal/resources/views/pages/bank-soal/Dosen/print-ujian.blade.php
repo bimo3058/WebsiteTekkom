@@ -17,7 +17,7 @@
 </head>
 <body>
     <div class="text-center no-print mb-6 space-x-4">
-        <button onclick="window.print()" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg font-sans font-medium text-sm shadow-sm transition-colors">
+        <button onclick="window.print()" class="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-lg font-sans font-medium text-sm shadow-sm transition-colors">
             Cetak PDF / Print
         </button>
         <button onclick="window.close()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 px-6 py-2.5 rounded-lg font-sans font-medium text-sm transition-colors">
@@ -27,24 +27,37 @@
 
     <div class="document-container">
         <!-- Header -->
-        <div style="border-bottom: 3px solid black; padding-bottom: 15px; margin-bottom: 25px;">
-            <table style="width: 100%; border-collapse: collapse; color: #000066;">
-                <tr>
-                    <td style="width: 220px; padding-right: 20px; padding-left: 10px; vertical-align: middle; text-align: center;">
-                        <img src="{{ asset('images/logo-undip.png') }}" style="width: 180px !important; max-width: none !important; height: auto !important;" alt="Logo Undip" />
+        <div style="border-bottom: 3px solid black; padding-bottom: 8px; margin-bottom: 20px;">
+            <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                <tr style="vertical-align: middle;">
+                    <!-- Logo (kiri) -->
+                    <td style="width: 13%; text-align: center; padding: 0; line-height: 0">
+                        <img src="{{ asset('images/logo-undip.png') }}" style="width: 180px; height: 180px; object-fit: contain; display: block; margin: 0 auto;" alt="Logo Undip" />
                     </td>
-                    <td style="vertical-align: middle; padding-top: 5px;">
-                        <h1 style="font-size: 13pt; font-weight: bold; margin: 0; line-height: 1.2;">KEMENTERIAN PENDIDIKAN TINGGI,<br>SAIN, DAN TEKNOLOGI</h1>
-                        <h2 style="font-size: 18pt; font-weight: bold; margin: 4px 0 0 0; line-height: 1.2;">UNIVERSITAS DIPONEGORO</h2>
-                        <h3 style="font-size: 15pt; font-weight: bold; margin: 4px 0 0 0; line-height: 1.2;">FAKULTAS TEKNIK</h3>
-                        <h4 style="font-size: 14pt; font-weight: bold; margin: 4px 0 0 0; line-height: 1.2;">DEPARTEMEN TEKNIK KOMPUTER</h4>
+
+                    <!-- Judul & Info -->
+                    <td style="width: 52%; padding: 0 2px; vertical-align: middle;">
+                        <div style="font-size: 9.5pt; font-weight: bold; color: #003366; line-height: 1.3;">
+                            KEMENTERIAN PENDIDIKAN TINGGI, SAIN, DAN TEKNOLOGI
+                        </div>
+                        <div style="font-size: 16pt; font-weight: bold; color: #003366; line-height: 1.1; letter-spacing: 0.3px;">
+                            UNIVERSITAS DIPONEGORO
+                        </div>
+                        <div style="font-size: 10pt; font-weight: bold; color: #003366; line-height: 1.3;">
+                            FAKULTAS TEKNIK
+                        </div>
+                        <div style="font-size: 10pt; font-weight: bold; color: #003366; line-height: 1.3;">
+                            DEPARTEMEN TEKNIK KOMPUTER
+                        </div>
                     </td>
-                    <td style="width: 250px; vertical-align: bottom; text-align: right; padding-bottom: 5px;">
-                        <div style="font-size: 9pt; line-height: 1.5; white-space: nowrap;">
+
+                    <!-- Kontak (kanan) -->
+                    <td style="width: 35%; text-align: right; padding-left: 0; vertical-align: middle;">
+                        <div style="font-size: 9pt; color: #003366; line-height: 1.6;">
                             <p style="margin: 0;">Jalan Prof. Sudarto, S.H.</p>
                             <p style="margin: 0;">Tembalang Semarang Kode Pos 50275</p>
                             <p style="margin: 0;">Telp. (024) 7460055, (024) 7460053, Faks. (024) 7460053</p>
-                            <p style="margin: 0;"><span style="text-decoration: underline;">tekkom.ft.undip.ac.id</span> | email: tekkom[at]undip.ac.id</p>
+                            <p style="margin: 0;"><u>tekkom.ft.undip.ac.id</u> | email: tekkom[at]undip.ac.id</p>
                         </div>
                     </td>
                 </tr>
@@ -67,7 +80,7 @@
                     <tr>
                         <td class="py-1.5 align-top">Hari/Tanggal</td>
                         <td class="py-1.5 align-top">:</td>
-                        <td class="py-1.5 align-top pr-4">............................</td>
+                        <td class="py-1.5 align-top pr-4">{{ $request->hari_tanggal ? \Carbon\Carbon::parse($request->hari_tanggal)->locale('id')->translatedFormat('l, d F Y') : '............................' }}</td>
                         
                         <td class="py-1.5 align-top pl-4">Sifat Ujian</td>
                         <td class="py-1.5 align-top">:</td>
@@ -76,7 +89,7 @@
                     <tr>
                         <td class="py-1.5 align-top">Jam</td>
                         <td class="py-1.5 align-top">:</td>
-                        <td class="py-1.5 align-top pr-4">{{ $request->waktu ?? '............................' }}</td>
+                        <td class="py-1.5 align-top pr-4">{{ $request->jam_mulai && $request->jam_selesai ? $request->jam_mulai . ' – ' . $request->jam_selesai : ($request->jam_mulai ?? '............................') }}</td>
                         
                         <td class="py-1.5 align-top pl-4">Dosen Penguji</td>
                         <td class="py-1.5 align-top">:</td>
@@ -105,6 +118,12 @@
                     <div class="font-bold">{{ $index + 1 }}.</div>
                     <div class="flex-1">
                         <div class="text-justify prose prose-sm max-w-none">{!! $soal->soal !!}</div>
+                        
+                        @if($soal->gambar)
+                        <div class="mt-3 mb-2">
+                            <img src="{{ asset('storage/' . $soal->gambar) }}" alt="Gambar Soal" style="max-width: 100%; max-height: 250px; border-radius: 8px;">
+                        </div>
+                        @endif
                         
                         @if($soal->jawaban && $soal->jawaban->count() > 0)
                         <div class="mt-3 space-y-1">

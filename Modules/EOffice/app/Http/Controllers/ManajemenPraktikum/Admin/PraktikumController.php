@@ -10,18 +10,22 @@ use Modules\EOffice\Http\Requests\ManajemenPraktikum\Admin\AssignKoorRequest;
 use Modules\EOffice\Http\Requests\ManajemenPraktikum\Admin\StorePraktikumRequest;
 use Modules\EOffice\Http\Requests\ManajemenPraktikum\Admin\UpdatePraktikumRequest;
 use Modules\EOffice\Http\Resources\ManajemenPraktikum\Admin\PraktikumResource;
+use Modules\EOffice\Models\MatkulPraktikum;
 use Modules\EOffice\Models\Praktikum;
+use Modules\EOffice\Services\KoorPraktikumService;
 
 class PraktikumController extends Controller
 {
-    /**
-     * GET /api/eoffice/manprak/admin/praktikum
-     */
-    public function index(Request $request): JsonResponse
-    {
-        $perPage = min($request->input('per_page', 10), 50);
+    public function __construct(protected KoorPraktikumService $koorService) {}
 
-        $query = Praktikum::with(['dosen', 'koordinator'])->orderBy('created_at', 'desc');
+    /**
+     * GET /eoffice/manprak/admin/praktikum
+     */
+    public function index(Request $request)
+    {
+        $query = Praktikum::with(['dosen', 'koordinator', 'matkul'])
+            ->withCount('daftarPraktikan')
+            ->orderBy('created_at', 'desc');
 
         if ($search = $request->input('search')) {
             $query->where(function ($q) use ($search) {
@@ -34,64 +38,44 @@ class PraktikumController extends Controller
             $query->where('status', $status);
         }
 
-        if ($tahunAjaran = $request->input('tahun_ajaran')) {
-            $query->where('tahun_ajaran', $tahunAjaran);
-        }
-
         if ($semester = $request->input('semester')) {
             $query->where('semester', $semester);
         }
 
-        $praktikums = $query->paginate($perPage);
+        $praktikums = $query->paginate(15)->withQueryString();
 
-        return response()->json([
-            'success' => true,
-            'data'    => PraktikumResource::collection($praktikums),
-            'pagination' => [
-                'current_page' => $praktikums->currentPage(),
-                'per_page'     => $praktikums->perPage(),
-                'total'        => $praktikums->total(),
-                'last_page'    => $praktikums->lastPage(),
-            ],
-        ]);
+        // Dosen list untuk dropdown di modal create
+        $dosenList = \App\Models\Lecturer::with('user')
+            ->get()
+            ->map(fn($l) => (object)['id' => $l->user_id, 'name' => $l->user?->name ?? '—']);
+
+        // Matkul list untuk dropdown pilih mata kuliah praktikum
+        $matkulList = MatkulPraktikum::orderBy('semester')->orderBy('kode')->get();
+
+        return view('eoffice::manajemen-praktikum.admin.praktikum', compact('praktikums', 'dosenList', 'matkulList'));
     }
 
     /**
-     * POST /api/eoffice/manprak/admin/praktikum
+     * POST /eoffice/manprak/admin/praktikum
+     * Form submit biasa — return redirect, bukan JSON.
      */
-    public function store(StorePraktikumRequest $request): JsonResponse
+    public function store(StorePraktikumRequest $request)
     {
         $data = $request->validated();
 
-        // Validasi Dosen — pakai User global + hasRole() dari superapp
+        // Validasi dosen (opsional — skip jika kosong)
         if (!empty($data['dosen_id'])) {
             $dosen = User::find($data['dosen_id']);
-            if (!$dosen || !$dosen->hasRole('dosen', 'eoffice')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User yang dipilih untuk dosen tidak valid atau tidak memiliki role dosen.',
-                ], 422);
+            if (!$dosen) {
+                return back()->withInput()->with('error', 'Dosen tidak ditemukan.');
             }
         }
 
-        // Validasi Koordinator
-        if (!empty($data['koor_id'])) {
-            $koor = User::find($data['koor_id']);
-            if (!$koor || !$koor->hasRole('koor_prak', 'eoffice')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'User yang dipilih untuk koordinator tidak valid atau tidak memiliki role koor_prak.',
-                ], 422);
-            }
-        }
+        Praktikum::create($data);
 
-        $praktikum = Praktikum::create($data);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Praktikum berhasil dibuat.',
-            'data'    => new PraktikumResource($praktikum->load(['dosen', 'koordinator'])),
-        ], 201);
+        return redirect()
+            ->route('eoffice.manprak.admin.praktikum.index')
+            ->with('success', 'Praktikum berhasil ditambahkan.');
     }
 
     /**
@@ -132,7 +116,7 @@ class PraktikumController extends Controller
 
         if (array_key_exists('dosen_id', $data) && !empty($data['dosen_id'])) {
             $dosen = User::find($data['dosen_id']);
-            if (!$dosen || !$dosen->hasRole('dosen', 'eoffice')) {
+            if (!$dosen || !$dosen->hasRole('dosen')) {
                 return response()->json([
                     'success' => false,
                     'message' => 'User yang dipilih untuk dosen tidak valid atau tidak memiliki role dosen.',
@@ -142,7 +126,7 @@ class PraktikumController extends Controller
 
         if (array_key_exists('koor_id', $data) && !empty($data['koor_id'])) {
             $koor = User::find($data['koor_id']);
-            if (!$koor || !$koor->hasRole('koor_prak', 'eoffice')) {
+            if (!$koor || !$koor->hasRole('koor_prak')) {
                 return response()->json([
                     'success' => false,
                     'message' => 'User yang dipilih untuk koordinator tidak valid atau tidak memiliki role koor_prak.',
@@ -205,25 +189,23 @@ class PraktikumController extends Controller
             ], 404);
         }
 
-        // Assign role koor_prak via sistem permission global superapp
-        if (!$user->hasRole('koor_prak', 'eoffice')) {
-            $roleKoor = \App\Models\Role::where('name', 'koor_prak')
-                ->where('module', 'eoffice')
-                ->first();
-
-            if ($roleKoor) {
-                $user->roles()->syncWithoutDetaching([$roleKoor->id]);
-                $user->syncPermissionsFromRoles();
-                $user->clearUserCache();
-            }
-        }
-
-        $praktikum->update(['koor_id' => $userId]);
+        $this->koorService->assign($praktikum, $user);
 
         return response()->json([
             'success' => true,
-            'message' => 'Koordinator berhasil diassign ke Praktikum.',
+            'message' => 'Koordinator berhasil diassign ke Praktikum dan otomatis aktif sebagai asprak.',
             'data'    => new PraktikumResource($praktikum->load(['dosen', 'koordinator'])),
         ]);
     }
+
+    /**
+     * POST /eoffice/manprak/admin/praktikum/generate-kode
+     * Generate kode unik untuk praktikum baru.
+     */
+    public function generateKode(): JsonResponse
+    {
+        $kode = Praktikum::generateKode();
+        return response()->json(['success' => true, 'kode' => $kode]);
+    }
+
 }

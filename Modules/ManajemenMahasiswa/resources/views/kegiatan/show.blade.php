@@ -516,13 +516,20 @@
 </div>
 
 <!-- Banner -->
-<div class="detail-banner">
-    @if($kegiatan->banner)
-        <img src="{{ $kegiatan->banner_url }}" alt="{{ $kegiatan->judul }}">
-    @else
-        <span class="placeholder-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"></path><rect x="8" y="2" width="8" height="4" rx="1" ry="1"></rect></svg></span>
-    @endif
+@if($kegiatan->banner)
+<div style="position:relative;width:100%;max-height:340px;border-radius:18px;overflow:hidden;margin-bottom:28px;box-shadow:0 10px 30px -10px rgba(0,0,0,0.15);cursor:pointer;transition:transform 0.2s;" 
+     onclick="openBannerLightbox()"
+     onmouseover="this.style.transform='scale(1.005)'"
+     onmouseout="this.style.transform='scale(1)'">
+    <div style="position:absolute;inset:0;background:linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 45%);z-index:1;transition:background 0.2s;" onmouseover="this.style.background='linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 50%)'" onmouseout="this.style.background='linear-gradient(to top, rgba(0,0,0,0.65) 0%, transparent 45%)'"></div>
+    <img src="{{ $kegiatan->banner_url }}" alt="{{ $kegiatan->judul }}" style="width:100%;height:340px;object-fit:cover;display:block;">
+    <div style="position:absolute;bottom:24px;left:28px;z-index:2;display:flex;align-items:center;gap:12px;">
+        <span style="background:rgba(255,255,255,0.25);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.5px;border:1px solid rgba(255,255,255,0.4);text-shadow:0 1px 2px rgba(0,0,0,0.2);">
+            &#128247; Banner Kegiatan &bull; Klik untuk memperbesar
+        </span>
+    </div>
 </div>
+@endif
 
 <!-- Title & Badges -->
 <div class="detail-card">
@@ -554,7 +561,7 @@
         <div class="meta-item">
             <div class="meta-item-label">Tanggal Pelaksanaan</div>
             <div class="meta-item-value">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg> {{ $kegiatan->tanggal_mulai->translatedFormat('d F Y') }}
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg> {{ $kegiatan->tanggal_mulai ? $kegiatan->tanggal_mulai->translatedFormat('d F Y') : 'Belum ditentukan' }}
                 @if($kegiatan->jam_mulai)
                     pukul {{ $kegiatan->jam_mulai_formatted }}
                 @endif
@@ -625,14 +632,15 @@
 
     {{-- Panitia Kegiatan --}}
     @if($kegiatan->panitia && $kegiatan->panitia->count() > 0)
+    @php $panitiaList = $kegiatan->panitia; $panitiaCount = $panitiaList->count(); @endphp
     <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #f3f4f6;">
         <div class="meta-item-label" style="margin-bottom: 10px;">
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
             PANITIA KEGIATAN
-            <span style="font-size: 10px; font-weight: 600; background: #eef2ff; color: #4f46e5; padding: 1px 7px; border-radius: 20px; margin-left: 4px;">{{ $kegiatan->panitia->count() }} orang</span>
+            <span style="font-size: 10px; font-weight: 600; background: #eef2ff; color: #4f46e5; padding: 1px 7px; border-radius: 20px; margin-left: 4px;">{{ $panitiaCount }} orang</span>
         </div>
-        <div style="display: flex; flex-wrap: wrap; gap: 8px;">
-            @foreach($kegiatan->panitia as $p)
+        <div style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center;">
+            @foreach($panitiaList->take(2) as $p)
                 <span style="display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; background: #eef2ff; color: #4338ca; border-radius: 20px; font-size: 12px; font-weight: 600; border: 1px solid #c7d2fe;">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
                     {{ $p->user->name ?? '-' }}
@@ -642,8 +650,64 @@
                     <span style="font-size: 10px; color: #818cf8; font-weight: 400;">({{ $p->student_number }})</span>
                 </span>
             @endforeach
+            @if($panitiaCount > 2)
+                <button type="button" onclick="openPanitiaModal()" style="display:inline-flex;align-items:center;gap:5px;padding:5px 12px;background:#f3f4f6;color:#6b7280;border-radius:20px;font-size:12px;font-weight:600;border:1px solid #e5e7eb;cursor:pointer;transition:all 0.2s;" onmouseover="this.style.background='#eef2ff';this.style.color='#4338ca';this.style.borderColor='#c7d2fe'" onmouseout="this.style.background='#f3f4f6';this.style.color='#6b7280';this.style.borderColor='#e5e7eb'">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+                    {{ $panitiaCount - 2 }} lainnya
+                </button>
+            @endif
         </div>
     </div>
+
+    {{-- Panitia Full Modal --}}
+    <div id="panitiaModal" style="display:none;position:fixed;inset:0;z-index:99999;background:rgba(0,0,0,0.45);align-items:center;justify-content:center;" onclick="if(event.target===this)closePanitiaModal()">
+        <div style="background:#fff;border-radius:20px;padding:0;max-width:480px;width:92%;max-height:80vh;display:flex;flex-direction:column;box-shadow:0 25px 60px rgba(0,0,0,0.18);animation:panitiaModalIn 0.25s cubic-bezier(0.34,1.56,0.64,1);">
+            <div style="padding:22px 24px 16px;border-bottom:1px solid #f3f4f6;display:flex;align-items:center;justify-content:space-between;flex-shrink:0;">
+                <div>
+                    <div style="font-size:15px;font-weight:700;color:#1f2937;display:flex;align-items:center;gap:8px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+                        Daftar Panitia Kegiatan
+                    </div>
+                    <div style="font-size:12px;color:#9ca3af;margin-top:3px;font-weight:500;">{{ $panitiaCount }} orang terdaftar</div>
+                </div>
+                <button type="button" onclick="closePanitiaModal()" style="width:32px;height:32px;border-radius:50%;background:#f3f4f6;border:none;color:#6b7280;font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.2s;" onmouseover="this.style.background='#fee2e2';this.style.color='#dc2626'" onmouseout="this.style.background='#f3f4f6';this.style.color='#6b7280'">&times;</button>
+            </div>
+            <div style="overflow-y:auto;padding:16px 24px 24px;flex:1;">
+                <div style="display:flex;flex-direction:column;gap:10px;">
+                    @foreach($panitiaList as $idx => $p)
+                    <div style="display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f9fafb;border:1px solid #f3f4f6;border-radius:12px;transition:all 0.2s;" onmouseover="this.style.background='#eef2ff';this.style.borderColor='#c7d2fe'" onmouseout="this.style.background='#f9fafb';this.style.borderColor='#f3f4f6'">
+                        <div style="width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,#4f46e5,#7c3aed);display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700;flex-shrink:0;">{{ $idx + 1 }}</div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:13px;font-weight:600;color:#1f2937;">{{ $p->user->name ?? '-' }}</div>
+                            <div style="font-size:11px;color:#9ca3af;font-weight:500;margin-top:1px;">{{ $p->student_number ?? '' }}@if($p->pivot->peran) &bull; <span style="color:#4f46e5;font-weight:600;">{{ $p->pivot->peran }}</span>@endif</div>
+                        </div>
+                        @if($p->pivot->peran)
+                        <span style="font-size:10px;font-weight:700;padding:3px 10px;background:#eef2ff;color:#4338ca;border-radius:20px;white-space:nowrap;border:1px solid #c7d2fe;">{{ $p->pivot->peran }}</span>
+                        @endif
+                    </div>
+                    @endforeach
+                </div>
+            </div>
+        </div>
+    </div>
+    <style>
+    @keyframes panitiaModalIn { from { transform: scale(0.88); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+    </style>
+    <script>
+    function openPanitiaModal() {
+        const m = document.getElementById('panitiaModal');
+        m.style.display = 'flex';
+        document.body.style.overflow = 'hidden';
+    }
+    function closePanitiaModal() {
+        const m = document.getElementById('panitiaModal');
+        m.style.display = 'none';
+        document.body.style.overflow = '';
+    }
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closePanitiaModal();
+    });
+    </script>
     @endif
 </div>
 </div>
@@ -825,6 +889,20 @@
         </div>
     </div>
 </div>
+</div>
+@endif
+
+{{-- Lightbox Modal Banner --}}
+@if($kegiatan->banner)
+<div class="lightbox-modal" id="bannerLightboxModal">
+    <button class="lightbox-close" onclick="closeBannerLightbox()" title="Tutup">&#10005;</button>
+    <div class="lightbox-content">
+        <img src="{{ $kegiatan->banner_url }}" alt="{{ $kegiatan->judul }}">
+    </div>
+    <div class="lightbox-info">
+        <div class="lightbox-title">{{ $kegiatan->judul }}</div>
+    </div>
+</div>
 @endif
 
 {{-- ─── Lightbox JavaScript ──────────────────────────────────────────── --}}
@@ -874,20 +952,40 @@ function updateLightboxImage() {
     document.getElementById('lightboxCounter').textContent = `${currentImageIndex + 1} / ${galleryImages.length}`;
 }
 
+// Banner Lightbox
+function openBannerLightbox() {
+    document.getElementById('bannerLightboxModal')?.classList.add('active');
+    document.body.style.overflow = 'hidden';
+}
+
+function closeBannerLightbox() {
+    document.getElementById('bannerLightboxModal')?.classList.remove('active');
+    document.body.style.overflow = '';
+}
+
 // Keyboard navigation
 document.addEventListener('keydown', function(e) {
     const modal = document.getElementById('lightboxModal');
-    if (!modal || !modal.classList.contains('active')) return;
+    if (modal && modal.classList.contains('active')) {
+        if (e.key === 'Escape') closeLightbox();
+        if (e.key === 'ArrowLeft') prevImage();
+        if (e.key === 'ArrowRight') nextImage();
+        return;
+    }
 
-    if (e.key === 'Escape') closeLightbox();
-    if (e.key === 'ArrowLeft') prevImage();
-    if (e.key === 'ArrowRight') nextImage();
+    const bannerModal = document.getElementById('bannerLightboxModal');
+    if (bannerModal && bannerModal.classList.contains('active')) {
+        if (e.key === 'Escape') closeBannerLightbox();
+    }
 });
 
 // Close lightbox on backdrop click
 document.addEventListener('click', function(e) {
     const modal = document.getElementById('lightboxModal');
     if (modal && e.target === modal) closeLightbox();
+
+    const bannerModal = document.getElementById('bannerLightboxModal');
+    if (bannerModal && e.target === bannerModal) closeBannerLightbox();
 });
 </script>
 

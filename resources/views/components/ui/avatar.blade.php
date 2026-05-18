@@ -19,7 +19,7 @@
 
 <div {{ $attributes->merge(['class' => "relative flex shrink-0 overflow-hidden rounded-full $sizeClass"]) }}>
     @if($src)
-        <img src="{{ $src }}" alt="{{ $alt }}" class="aspect-square h-full w-full object-cover" />
+        <img src="{{ $src }}" alt="{{ $alt }}" loading="lazy" decoding="async" class="aspect-square h-full w-full object-cover" />
     @else
         <div class="flex h-full w-full items-center justify-center rounded-full bg-muted font-medium text-muted-foreground">
             {!! $fallback !!}

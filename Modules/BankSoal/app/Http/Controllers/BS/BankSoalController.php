@@ -89,15 +89,17 @@ class BankSoalController extends Controller
         });
 
         // 4. Pastikan mataKuliahDosen meload CPL dan CPMK yang berkaitan dengan MK maupun Soalnya
-        $mataKuliahDosen->load(['cpl', 'pertanyaan.cpl', 'pertanyaan.cpmk']);
+        $mataKuliahDosen->load(['cpl', 'cpmk', 'pertanyaan.cpl', 'pertanyaan.cpmk']);
         
         $mataKuliahDosen->transform(function ($mk) {
             $mkCpls = collect($mk->cpl);
             $soalCpls = $mk->pertanyaan->pluck('cpl')->filter();
             $mk->all_cpls = $mkCpls->merge($soalCpls)->unique('id')->sortBy('kode')->values();
             
+            // Ambil CPMK dari relasi langsung bs_cpmk.mk_id (bukan hanya dari soal)
+            $mkCpmks = collect($mk->cpmk);
             $soalCpmks = $mk->pertanyaan->pluck('cpmk')->filter();
-            $mk->all_cpmks = $soalCpmks->unique('id')->sortBy('kode')->values();
+            $mk->all_cpmks = $mkCpmks->merge($soalCpmks)->unique('id')->sortBy('kode')->values();
             
             return $mk;
         });
@@ -116,7 +118,7 @@ class BankSoalController extends Controller
             'bobot_total' => 'nullable|numeric'
         ]);
 
-        $query = \Modules\BankSoal\Models\Pertanyaan::with(['mataKuliah', 'cpl', 'jawaban'])
+        $query = \Modules\BankSoal\Models\Pertanyaan::with(['mataKuliah', 'cpl', 'cpmk', 'jawaban'])
             ->where('mk_id', $request->mk_id);
 
         if ($request->filled('jenis_soal')) {
@@ -129,23 +131,29 @@ class BankSoalController extends Controller
         }
 
         if ($request->filled('cpl_id')) {
-            $query->where('cpl_id', $request->cpl_id);
+            if (is_array($request->cpl_id)) {
+                $query->whereIn('cpl_id', $request->cpl_id);
+            } else {
+                $query->where('cpl_id', $request->cpl_id);
+            }
+        }
+
+        if ($request->filled('cpmk_id')) {
+            if (is_array($request->cpmk_id)) {
+                $query->whereIn('cpmk_id', $request->cpmk_id);
+            } else {
+                $query->where('cpmk_id', $request->cpmk_id);
+            }
         }
 
         $soals = $query->inRandomOrder()->get();
-
-        if($soals->isEmpty()){
-            if ($request->ajax() || $request->wantsJson()) {
-                return response()->json(['success' => false, 'message' => 'Tidak ada soal yang sesuai dengan kriteria ekstraksi.']);
-            }
-            return back()->with('error', 'Tidak ada soal yang sesuai dengan kriteria ekstraksi.');
-        }
 
         $mataKuliah = \Modules\BankSoal\Models\MataKuliah::find($request->mk_id);
 
         if ($request->ajax() || $request->wantsJson()) {
             return response()->json([
                 'success' => true,
+                'message' => $soals->isEmpty() ? 'Tidak ada soal yang sesuai dengan kriteria ekstraksi. Anda masih bisa melanjutkan ke konfirmasi.' : 'Soal berhasil ditarik.',
                 'mataKuliah' => $mataKuliah,
                 'soals' => $soals->map(function ($soal) {
                     // Sertakan cpmk_id jika ada relasi CPMK
@@ -160,7 +168,7 @@ class BankSoalController extends Controller
             ]);
         }
 
-        return view('banksoal::pages.bank-soal.Dosen.ekstrak-result', compact('soals', 'mataKuliah', 'request'));
+        return redirect()->route('banksoal.soal.dosen.index')->with('warning', 'Gunakan tombol Tarik Soal untuk membuka konfirmasi tarik.');
     }
 
     public function cetakUjian(Request $request)
@@ -170,7 +178,12 @@ class BankSoalController extends Controller
             'mk_id' => 'required',
             'agenda' => 'nullable',
             'tahun_ajaran' => 'nullable',
-            'semester' => 'nullable'
+            'semester' => 'nullable',
+            'hari_tanggal' => 'nullable',
+            'jam_mulai' => 'nullable',
+            'jam_selesai' => 'nullable',
+            'ruang_ujian' => 'nullable',
+            'sifat_ujian' => 'nullable',
         ]);
 
         $soals = \Modules\BankSoal\Models\Pertanyaan::with(['cpl', 'cpmk', 'jawaban'])

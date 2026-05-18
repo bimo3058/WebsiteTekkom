@@ -31,4 +31,20 @@ composer.json
 composer.lock
 bootstrap/providers.php
 
+# AI assistant files
+.claude/
 CLAUDE.md
+PLAN_*.md
+AI_*.md
+.gemini/
+.cursor/
+.copilot/
+/Modules/BankSoal/Skills
+*.md
+*.sql
+
+_design_system_tmp/
+_ds_tmp/
+
+# Zip export
+*.zip

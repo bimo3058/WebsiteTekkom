@@ -1,4 +1,10 @@
 <x-banksoal::layouts.admin>
+    @section('breadcrumbs')
+    <a href="#" class="text-slate-500 hover:text-primary transition-colors">Ujian Komprehensif</a>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Riwayat Ujian</span>
+    @endsection
+
     <div class="px-6 py-6 sm:px-8 sm:py-8 max-w-7xl mx-auto space-y-8">
         
         <!-- Header -->
@@ -9,7 +15,7 @@
             </div>
             <div class="flex gap-2">
                 <!-- Nantinya fitur export ke CSV bisa dihidupkan -->
-                <button class="flex items-center gap-2 px-4 py-2 bg-blue-600 border border-transparent text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm text-sm font-medium">
+                <button class="flex items-center gap-2 px-4 py-2 bg-primary border border-transparent text-white rounded-lg hover:bg-primary/90 transition-colors shadow-sm text-sm font-medium">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     Export Rekap (CSV)
                 </button>
@@ -35,7 +41,7 @@
                             <tr class="hover:bg-slate-50/50 transition-colors">
                                 <td class="px-6 py-4">
                                     <div class="flex items-center gap-3">
-                                        <div class="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center font-bold text-xs shrink-0">
+                                        <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs shrink-0">
                                             {{ substr($session->user->name, 0, 1) }}
                                         </div>
                                         <div>
@@ -65,7 +71,7 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-right">
-                                    <a href="{{ route('banksoal.admin.cbt.detail', $session->id) }}" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-blue-600 bg-blue-50 border border-blue-100 rounded-lg hover:bg-blue-100 transition-colors">
+                                    <a href="{{ route('banksoal.admin.cbt.detail', $session->id) }}" class="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-medium text-primary bg-primary/10 border border-primary/20 rounded-lg hover:bg-primary/20 transition-colors">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                         Detail
                                     </a>

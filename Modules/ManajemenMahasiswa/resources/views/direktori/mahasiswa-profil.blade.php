@@ -96,6 +96,7 @@
     .status-badge.alumni { background: #dbeafe; color: #1e40af; }
     .status-badge.cuti { background: #fef3c7; color: #92400e; }
     .status-badge.drop_out { background: #fef2f2; color: #991b1b; }
+    .status-badge.pindah_studi { background: #f3f4f6; color: #374151; }
 
     .riwayat-table {
         width: 100%;
@@ -204,6 +205,7 @@
                         @case('alumni') ● Lulus @break
                         @case('cuti') ● Cuti @break
                         @case('drop_out') ● Drop Out @break
+                        @case('pindah_studi') ● Pindah Studi @break
                         @default ● {{ ucfirst($mhs->status) }}
                     @endswitch
                 </span>
@@ -242,18 +244,25 @@
         </div>
         @endif
 
-        @if($mhs->kontak)
+        @php
+            $emailPribadi = $mhs->user->personal_email ?? null;
+            $kontakDisplay = $mhs->kontak ?? $mhs->user->whatsapp ?? null;
+        @endphp
+
+        @if($emailPribadi)
         <div>
-            <div class="info-item-label">Kontak</div>
-            <div class="info-item-value">{{ $mhs->kontak }}</div>
+            <div class="info-item-label">Email Pribadi</div>
+            <div class="info-item-value" style="word-break: break-all;">{{ $emailPribadi }}</div>
         </div>
         @endif
-        @if($mhs->profesi)
+
+        @if($kontakDisplay)
         <div>
-            <div class="info-item-label">Profesi</div>
-            <div class="info-item-value">{{ $mhs->profesi }}</div>
+            <div class="info-item-label">Nomor Telepon</div>
+            <div class="info-item-value">{{ $kontakDisplay }}</div>
         </div>
         @endif
+
     </div>
 </div>
 
@@ -276,16 +285,11 @@
                     @case('alumni') Lulus @break
                     @case('cuti') Cuti @break
                     @case('drop_out') Drop Out @break
+                    @case('pindah_studi') Pindah Studi @break
                     @default {{ ucfirst($mhs->status) }}
                 @endswitch
             </span></div>
         </div>
-        @if($mhs->tahun_lulus)
-        <div>
-            <div class="info-item-label">Tahun Lulus</div>
-            <div class="info-item-value">{{ $mhs->tahun_lulus }}</div>
-        </div>
-        @endif
     </div>
 </div>
 

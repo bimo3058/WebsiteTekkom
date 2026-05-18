@@ -1,15 +1,16 @@
 <x-banksoal::layouts.mahasiswa>
+    @section('breadcrumbs')
+        <span class="text-slate-900 font-semibold">Portal Ujian</span>
+    @endsection
+
     <!-- Page Header -->
     <div class="mb-12 border-b border-slate-200 pb-8">
         <div class="flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-                <p class="text-[11px] font-bold tracking-widest text-slate-500 uppercase mb-3">Portal Akademik Mahasiswa
-                </p>
                 <h1 class="text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight leading-tight">
                     Ujian Komprehensif
                 </h1>
             </div>
-
         </div>
     </div>
 
@@ -61,7 +62,7 @@
                     </div>
                 </div>
 
-            @elseif($pendaftar && $pendaftar->status_pendaftaran === 'approved')
+            @elseif($pendaftar && $pendaftar->status_pendaftaran->value === 'approved')
                 @php
                     $isUjianBerlangsung = false;
                     $tanggalWaktuTeks = "<strong>menunggu alokasi jadwal</strong>";
@@ -97,8 +98,7 @@
                             <p class="text-sm text-slate-600 leading-relaxed mb-5 max-w-xl">
                                 Sesi ujian komprehensif Anda telah dimulai. Jangan menutup halaman web atau berpindah aplikasi
                                 selama ujian berlangsung.<br><br>
-                                Masukkan <strong>Token Akses (6 Digit)</strong> yang diberikan oleh pengawas ujian untuk memulai
-                                Test Engine.
+                                Masukkan <strong>Token Akses (6 Digit)</strong> yang diberikan oleh pengawas ujian untuk memulai Ujian.
                             </p>
                         @else
                             <h3 class="text-2xl font-extrabold text-slate-900 tracking-tight mb-2">Pendaftaran Berhasil
@@ -125,33 +125,127 @@
                             </div>
                         @endif
 
-                        <!-- Token Entry Form -->
-                        <div
+                        <div x-data="{
+                                confirmModal: false,
+                                tokenError: '',
+                                checking: false,
+                                async checkAndConfirm() {
+                                    const tokenInput = document.getElementById('token');
+                                    const token = tokenInput ? tokenInput.value.trim() : '';
+
+                                    if (!token || token.length !== 6) {
+                                        this.tokenError = 'Token harus 6 karakter.';
+                                        return;
+                                    }
+
+                                    this.tokenError = '';
+                                    this.checking = true;
+
+                                    try {
+                                        const res = await fetch('{{ route('komprehensif.mahasiswa.engine.check-token') }}', {
+                                            method: 'POST',
+                                            headers: {
+                                                'Content-Type': 'application/json',
+                                                'X-CSRF-TOKEN': document.querySelector('meta[name=csrf-token]').getAttribute('content')
+                                            },
+                                            body: JSON.stringify({ token })
+                                        });
+                                        const data = await res.json();
+
+                                        if (data.valid) {
+                                            this.confirmModal = true;
+                                        } else {
+                                            this.tokenError = data.message || 'Token tidak valid.';
+                                        }
+                                    } catch (e) {
+                                        this.tokenError = 'Gagal menghubungi server. Periksa koneksi internet Anda.';
+                                    } finally {
+                                        this.checking = false;
+                                    }
+                                }
+                            }"
                             class="border-t border-slate-200 pt-5 {{ !$isUjianBerlangsung ? 'opacity-50 pointer-events-none' : '' }}">
-                            <form action="{{ route('komprehensif.mahasiswa.engine.validate') }}" method="POST"
-                                class="flex flex-col sm:flex-row items-end gap-3">
+                            <form x-ref="examForm" action="{{ route('komprehensif.mahasiswa.engine.validate') }}" method="POST"
+                                class="flex flex-col sm:flex-row items-end gap-3 pb-2 sm:pb-4"
+                                @submit.prevent="checkAndConfirm()">
                                 @csrf
-                                <div class="w-full sm:w-2/3 space-y-2">
+                                @php
+                                    $hasTokenError = $errors->has('token') || session('error');
+                                    $tokenErrorMessage = $errors->first('token') ?: session('error');
+                                @endphp
+                                <div class="w-full sm:w-2/3 space-y-2 relative">
                                     <label for="token"
-                                        class="block text-[11px] font-bold text-slate-900 uppercase tracking-widest">Token
+                                        class="block text-[11px] font-bold uppercase tracking-widest text-slate-900">Token
                                         Sesi</label>
                                     <input type="text" id="token" name="token" required
-                                        class="w-full h-12 px-4 text-xl tracking-[0.5em] font-mono font-bold text-slate-900 bg-white border-2 border-slate-300 focus:border-slate-900 focus:ring-0 outline-none transition-colors uppercase placeholder:text-slate-300"
-                                        placeholder="XXXXXX" maxlength="6" {{ !$isUjianBerlangsung ? 'disabled' : '' }} />
+                                        :class="tokenError ? 'border-red-500 bg-red-50 focus:border-red-600' : 'bg-white border-slate-300 focus:border-slate-900'"
+                                        class="w-full h-12 px-4 text-xl tracking-[0.5em] font-mono font-bold text-slate-900 border-2 focus:ring-0 outline-none transition-colors uppercase placeholder:text-slate-300 {{ $hasTokenError ? 'border-red-500 bg-red-50' : '' }}"
+                                        placeholder="XXXXXX" maxlength="6" {{ !$isUjianBerlangsung ? 'disabled' : '' }} value="{{ old('token') }}"
+                                        @input="tokenError = ''" />
+
+                                    {{-- Server-side error (from redirect back) --}}
+                                    @if($hasTokenError)
+                                        <div class="absolute top-full left-0 flex items-center gap-1.5 mt-1 sm:mt-1.5">
+                                            <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                            <p class="text-xs font-bold text-red-600 tracking-wide">{{ $tokenErrorMessage }}</p>
+                                        </div>
+                                    @endif
+
+                                    {{-- AJAX error (Alpine.js) --}}
+                                    <div x-show="tokenError" x-cloak
+                                         class="absolute top-full left-0 flex items-center gap-1.5 mt-1 sm:mt-1.5">
+                                        <svg class="w-4 h-4 text-red-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        <p class="text-xs font-bold text-red-600 tracking-wide" x-text="tokenError"></p>
+                                    </div>
                                 </div>
                                 <div class="w-full sm:w-1/3">
                                     <button type="submit"
-                                        class="w-full h-12 px-5 {{ !$isUjianBerlangsung ? 'bg-slate-300 cursor-not-allowed text-slate-500' : 'bg-blue-600 hover:bg-blue-700 text-white' }} font-bold text-sm tracking-widest uppercase transition-colors flex items-center justify-center rounded-xl shadow-sm"
+                                        :disabled="checking"
+                                        class="w-full h-12 px-5 {{ !$isUjianBerlangsung ? 'bg-slate-300 cursor-not-allowed text-slate-500' : 'bg-primary hover:bg-primary/90 text-white' }} font-bold text-sm tracking-widest uppercase transition-colors flex items-center justify-center rounded-xl shadow-sm"
                                         {{ !$isUjianBerlangsung ? 'disabled' : '' }}>
-                                        Mulai Ujian
+                                        <span x-show="!checking">Masuk Ujian →</span>
+                                        <span x-show="checking" x-cloak class="flex items-center gap-2">
+                                            <svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24">
+                                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path>
+                                            </svg>
+                                            Memeriksa...
+                                        </span>
                                     </button>
                                 </div>
                             </form>
+
+                            <!-- Modal Popup: Konfirmasi Mulai Ujian -->
+                            <div x-show="confirmModal" tabindex="-1" class="fixed inset-0 z-[70] flex items-center justify-center p-4 sm:p-6" style="display: none;" x-cloak>
+                                <div x-show="confirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity" @click="confirmModal = false"></div>
+
+                                <div x-show="confirmModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="relative w-full max-w-sm bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden max-h-full">
+
+                                    <div class="px-6 pt-6 pb-4 text-center">
+                                        <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-blue-50">
+                                            <svg class="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                        </div>
+                                        <h3 class="text-[17px] font-extrabold text-slate-800 tracking-tight mb-2">Mulai Ujian Sekarang?</h3>
+                                        <p class="text-[13px] text-slate-500 font-medium leading-relaxed">
+                                            Token valid. Mulai ujian dan kerjakan soal dengan durasi 100 menit.
+                                        </p>
+                                    </div>
+
+                                    <div class="px-6 py-4 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex items-center gap-3">
+                                        <button type="button" @click="confirmModal = false" class="flex-1 px-4 py-2.5 text-[13px] font-bold text-slate-700 bg-white border border-slate-300 hover:bg-slate-50 shadow-sm rounded-xl focus:outline-none transition-colors">Batal</button>
+                                        <button type="button" @click="$refs.examForm.submit()" class="flex-1 w-full px-4 py-2.5 text-[13px] font-bold text-white bg-blue-600 hover:bg-blue-700 shadow-sm rounded-xl focus:outline-none transition-all">
+                                            Ya, Mulai
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
 
-            @elseif($pendaftar && $pendaftar->status_pendaftaran === 'pending')
+            @elseif($pendaftar && $pendaftar->status_pendaftaran->value === 'pending')
                 <!-- STATE: PENDING -->
                 <div class="flex flex-col border border-amber-300 bg-white">
                     <div class="p-8 sm:p-10 flex flex-col items-start">
@@ -166,7 +260,7 @@
                         </p>
                     </div>
                 </div>
-            @elseif($pendaftar && $pendaftar->status_pendaftaran === 'rejected')
+            @elseif($pendaftar && $pendaftar->status_pendaftaran->value === 'rejected')
                 <!-- STATE: REJECTED -->
                 <div class="flex flex-col border-2 border-red-500 bg-red-50">
                     <div class="p-8 sm:p-10 flex flex-col items-start">
@@ -248,7 +342,22 @@
                     </div>
                 @else
                     <!-- STATE: REGISTRATION OPEN -->
-                    @if(!$isEligible)
+                    @if($kuotaPenuh)
+                        <!-- STATE: QUOTA FULL — same display as no active period -->
+                        <div class="flex flex-col border border-slate-300 bg-slate-50">
+                            <div class="p-8 sm:p-10 flex flex-col items-start h-full">
+                                <span
+                                    class="inline-flex items-center px-3 py-1 bg-slate-200 text-slate-600 text-[11px] font-bold tracking-widest uppercase mb-6">Ditutup</span>
+                                <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-4">Pendaftaran Belum
+                                    Dibuka</h3>
+                                <p class="text-base text-slate-600 leading-relaxed mb-10 max-w-xl">
+                                    Saat ini belum ada periode pendaftaran ujian komprehensif yang aktif. Silakan pantau
+                                    halaman ini secara berkala atau hubungi bagian akademik untuk informasi periode
+                                    berikutnya.
+                                </p>
+                            </div>
+                        </div>
+                    @elseif(!$isEligible)
                         <!-- STATE: NOT ELIGIBLE -->
                         <div class="flex flex-col border border-slate-300 bg-white">
                             <div class="p-8 sm:p-10 flex flex-col h-full">
@@ -272,11 +381,11 @@
                         </div>
                     @else
                         <!-- STATE: ELIGIBLE & REGISTRATION OPEN -->
-                        <div class="flex flex-col border-2 border-blue-500 bg-white">
+                        <div class="flex flex-col border-2 border-primary bg-white">
                             <div class="p-8 sm:p-10 flex flex-col h-full">
                                 <div class="flex items-center gap-4 mb-6">
                                     <span
-                                        class="inline-flex items-center px-3 py-1 bg-blue-100 text-blue-800 border border-blue-200 text-[11px] font-bold tracking-widest uppercase">Terbuka</span>
+                                        class="inline-flex items-center px-3 py-1 bg-primary/10 text-primary border border-primary/20 text-[11px] font-bold tracking-widest uppercase">Terbuka</span>
                                 </div>
 
                                 <h3 class="text-3xl font-extrabold text-slate-900 tracking-tight mb-4 leading-tight">Pendaftaran
@@ -292,7 +401,7 @@
                                 <div
                                     class="mt-auto flex flex-col sm:flex-row sm:items-center justify-between border-t border-slate-200 pt-6 gap-6">
                                     <a href="{{ route('komprehensif.mahasiswa.pendaftaran.form') }}"
-                                        class="inline-block py-4 px-8 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm tracking-widest uppercase text-center transition-colors rounded-xl shadow-sm shadow-blue-500/25">
+                                        class="inline-block py-4 px-8 bg-primary hover:bg-primary/90 text-white font-bold text-sm tracking-widest uppercase text-center transition-colors rounded-xl shadow-sm shadow-primary/25">
                                         Daftar Ujian Komprehensif
                                     </a>
                                 </div>

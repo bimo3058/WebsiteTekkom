@@ -4,33 +4,72 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use App\Http\Middleware\CheckRole;
-use App\Http\Middleware\CheckSuspended;        
+use App\Http\Middleware\CheckSuspended;
 use App\Http\Middleware\RedirectBasedOnRole;
-use App\Http\Middleware\LockToModule;           
+use App\Http\Middleware\LockToModule;
 use App\Http\Middleware\CheckModuleActive;
 use App\Http\Middleware\PreventBackHistory;
-use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\CheckSessionVersion;
+use Illuminate\Support\Facades\Route;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
         health: '/up',
+        then: function () {
+            // ─── Web routes per modul ────────────────────────────────────────
+            $webModules = [
+                'Capstone',
+                'BankSoal',
+                'EOffice',
+                'ManajemenMahasiswa',
+            ];
+
+            foreach ($webModules as $module) {
+                $path = base_path("Modules/{$module}/routes/web.php");
+                if (file_exists($path)) {
+                    Route::middleware('web')->group($path);
+                }
+            }
+
+            // ─── API routes per modul ────────────────────────────────────────
+            $apiModules = [
+                'Capstone',
+                'BankSoal',
+                'EOffice',
+                'ManajemenMahasiswa',
+            ];
+
+            Route::middleware(['api'])
+                ->prefix('api')
+                ->group(function () use ($apiModules) {
+                    foreach ($apiModules as $module) {
+                        $path = base_path("Modules/{$module}/routes/api.php");
+                        if (file_exists($path)) {
+                            require $path;
+                        }
+                    }
+                });
+        },
     )
     ->withMiddleware(function (Middleware $middleware) {
+        $middleware->validateCsrfTokens(except: [
+            'api/capstone/auth/exchange',
+        ]);
+
         $middleware->web(append: [
             CheckSuspended::class,
             CheckSessionVersion::class,
-            PreventBackHistory::class,    
+            PreventBackHistory::class,
             RedirectBasedOnRole::class,
         ]);
 
         $middleware->alias([
-            'role'          => CheckRole::class,
-            'permission'    => CheckPermission::class,
+            'role'          => \Spatie\Permission\Middleware\RoleMiddleware::class,
+            'permission'    => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'module.active' => CheckModuleActive::class,
+            'capstone.role' => \Modules\Capstone\Http\Middleware\CapstoneRoleMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
@@ -49,7 +88,7 @@ return Application::configure(basePath: dirname(__DIR__))
             if ($e->getStatusCode() === 419) {
                 if ($request->expectsJson()) {
                     return response()->json([
-                        'message' => 'Sesi Anda telah kedaluwarsa. Silakan muat ulang halaman.'
+                        'message' => 'Sesi Anda telah kedaluwarsa. Silakan muat ulang halaman.',
                     ], 419);
                 }
 
@@ -61,7 +100,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->renderable(function (\Illuminate\Session\TokenMismatchException $e, $request) {
             if ($request->expectsJson()) {
                 return response()->json([
-                    'message' => 'Sesi Anda telah kedaluwarsa. Silakan muat ulang halaman.'
+                    'message' => 'Sesi Anda telah kedaluwarsa. Silakan muat ulang halaman.',
                 ], 419);
             }
 

@@ -13,12 +13,14 @@
         "genealabs/laravel-model-caching": "*",
         "laravel/framework": "^12.0",
         "laravel/pulse": "*",
+        "laravel/sanctum": "*",
         "laravel/socialite": "*",
         "laravel/tinker": "^2.10.1",
-        "maatwebsite/excel": "*",
+        "maatwebsite/excel": "~3.1",
         "nwidart/laravel-modules": "*",
         "predis/predis": "*",
-        "socialiteproviders/microsoft-azure": "*"
+        "socialiteproviders/microsoft-azure": "*",
+        "spatie/laravel-permission": "^6.4"
     },
     "require-dev": {
         "cweagans/composer-patches": "*",

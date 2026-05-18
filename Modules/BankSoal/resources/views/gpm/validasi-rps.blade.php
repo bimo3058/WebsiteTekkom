@@ -1,4 +1,9 @@
 <x-banksoal::layouts.gpm-master>
+    @section('breadcrumbs')
+    <span class="text-slate-500 hover:text-primary transition-colors">Manajemen Modul</span>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Validasi RPS</span>
+    @endsection
     <style>
         /* Animasi untuk background gelap (fade in) */
         @keyframes modalFadeIn {
@@ -45,17 +50,25 @@
             padding: 0.625rem 1rem;
             font-size: 0.875rem;
         }
+
+        .gpm-rps-btn-primary {
+            background: rgb(11, 38, 110) !important;
+            border-color: rgb(11, 38, 110) !important;
+            color: white !important;
+        }
+
+        .gpm-rps-btn-primary:hover {
+            background: rgb(9, 31, 90) !important;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
     </style>
 
     <x-banksoal::notification.alerts />
     <x-banksoal::ui.page-header title="Validasi RPS" subtitle="Pantau riwayat dokumen RPS yang telah direview">
         <x-slot:actions>
-            <button type="button" class="gpm-rps-action-btn gpm-rps-action-btn-lg" data-modal-open="modalUploadTemplate">
-                <i class="fas fa-file-upload"></i> Upload Template
-            </button>
-            <button type="button" class="gpm-rps-action-btn gpm-rps-action-btn-lg" data-modal-open="modalTambah">
-                <i class="fas fa-calendar-plus"></i> Buat Periode
-            </button>
+            <a href="{{ route('banksoal.rps.gpm.periode-rps.create') }}" class="gpm-rps-action-btn gpm-rps-action-btn-lg gpm-rps-btn-primary">
+                <i class="fas fa-calendar-alt"></i> Atur Periode Pengajuan
+            </a>
         </x-slot:actions>
     </x-banksoal::ui.page-header>
 
@@ -88,7 +101,7 @@
             </div>
         </div>
     @else
-        <div class="mb-6 rounded-2xl border border-amber-200 bg-amber-50 p-4 border-l-4 border-amber-400">
+        <div class="mb-6 rounded-2xl border-l-4 border-amber-400 bg-amber-50 p-4">
             <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div class="flex items-center gap-3">
                     <div class="flex h-10 w-10 items-center justify-center rounded-full bg-amber-100 text-amber-600">
@@ -132,7 +145,7 @@
                                     <p class="text-xs text-slate-500">{{ \Carbon\Carbon::parse($periode->tanggal_mulai)->translatedFormat('d M Y H:i') }} s.d. {{ \Carbon\Carbon::parse($periode->tanggal_selesai)->translatedFormat('d M Y H:i') }}</p>
                                 </div>
                             </div>
-                            <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-blue-200 px-3 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50" data-modal-open="modalOpenSession" data-periode-id="{{ $periode->id }}" data-periode-judul="{{ $periode->judul }}" onclick="setPeriodeData(this)">
+                            <button type="button" class="inline-flex items-center gap-2 rounded-xl border border-primary/20 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/10" data-modal-open="modalOpenSession" data-periode-id="{{ $periode->id }}" data-periode-judul="{{ $periode->judul }}" onclick="setPeriodeData(this)">
                                 <i class="fas fa-power-off"></i> Nyalakan Sesi
                             </button>
                         </div>
@@ -145,9 +158,9 @@
     <div data-tabs>
         <div class="flex flex-col gap-4 border-b border-slate-200 pb-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
             <div class="flex flex-wrap gap-6 text-sm font-semibold">
-                <button type="button" class="pb-2 border-b-2 border-blue-600 text-blue-600" data-tab-target="menunggu" data-tab-active>
+                <button type="button" class="pb-2 border-b-2 border-primary text-primary" data-tab-target="menunggu" data-tab-active>
                     Menunggu Validasi
-                    <span class="ml-2 inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[11px] font-semibold text-blue-700 border border-blue-200">{{ $rpsDiajukan->total() }}</span>
+                    <span class="ml-2 inline-flex items-center rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-semibold text-primary border border-primary/20">{{ $rpsDiajukan->total() }}</span>
                 </button>
                 <button type="button" class="pb-2 border-b-2 border-transparent text-slate-500" data-tab-target="revisi">
                     Menunggu Revisi
@@ -178,13 +191,13 @@
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead class="bg-slate-50 border-b border-slate-200">
+                        <thead class="bg-primary text-white border-b border-primary/20">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mata Kuliah</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Dosen Pengampu</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanggal Diajukan</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Dosen Pengampu</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal Diajukan</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -204,7 +217,7 @@
                                                     $initials = strtoupper(substr($first, 0, 1) . substr($last, 0, 1));
                                                 @endphp
                                                 <div class="flex items-center gap-2">
-                                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ $initials }}</div>
+                                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">{{ $initials }}</div>
                                                     <span class="text-sm font-medium text-slate-700">{{ $dosen->name }}</span>
                                                 </div>
                                             @empty
@@ -249,7 +262,7 @@
                     </div>
                     <input type="text" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" data-search-tab="revisi" placeholder="Cari mata kuliah atau dosen...">
                 </div>
-                <button class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+                <button class="inline-flex items-center gap-2 rounded-xl border border-primary/20 px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10">
                     <i class="fas fa-filter"></i> Filter
                 </button>
             </div>
@@ -257,13 +270,13 @@
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead class="bg-slate-50 border-b border-slate-200">
+                        <thead class="bg-primary text-white border-b border-primary/20">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mata Kuliah</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Dosen Pengampu</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanggal Review</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Dosen Pengampu</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal Review</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -283,7 +296,7 @@
                                                     $initials = strtoupper(substr($first, 0, 1) . substr($last, 0, 1));
                                                 @endphp
                                                 <div class="flex items-center gap-2">
-                                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ $initials }}</div>
+                                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">{{ $initials }}</div>
                                                     <span class="text-sm font-medium text-slate-700">{{ $dosen->name }}</span>
                                                 </div>
                                             @empty
@@ -294,7 +307,7 @@
                                     <td class="px-6 py-4 text-sm text-slate-600">{{ $rps->updated_at->format('d M Y') }}</td>
                                     <td class="px-6 py-4"><span class="inline-flex rounded-full bg-red-50 px-2.5 py-1 text-[11px] font-semibold text-red-700 border border-red-200">Revisi</span></td>
                                     <td class="px-6 py-4 text-right">
-                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="gpm-rps-action-btn">
+                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.revisi', $rps->id) }}" class="gpm-rps-action-btn">
                                             <i class="fas fa-edit"></i> Lihat Catatan
                                         </a>
                                     </td>
@@ -328,7 +341,7 @@
                     </div>
                     <input type="text" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" data-search-tab="disetujui" placeholder="Cari mata kuliah atau dosen...">
                 </div>
-                <button class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
+                <button class="inline-flex items-center gap-2 rounded-xl border border-primary/20 px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10">
                     <i class="fas fa-filter"></i> Filter
                 </button>
             </div>
@@ -336,13 +349,13 @@
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full">
-                        <thead class="bg-slate-50 border-b border-slate-200">
+                        <thead class="bg-primary text-white border-b border-primary/20">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mata Kuliah</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Dosen Pengampu</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tanggal Disetujui</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Status</th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Aksi</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Dosen Pengampu</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tanggal Disetujui</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Status</th>
+                                <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100">
@@ -362,7 +375,7 @@
                                                     $initials = strtoupper(substr($first, 0, 1) . substr($last, 0, 1));
                                                 @endphp
                                                 <div class="flex items-center gap-2">
-                                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-blue-50 text-blue-700 text-xs font-semibold">{{ $initials }}</div>
+                                                    <div class="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-semibold">{{ $initials }}</div>
                                                     <span class="text-sm font-medium text-slate-700">{{ $dosen->name }}</span>
                                                 </div>
                                             @empty
@@ -373,7 +386,7 @@
                                     <td class="px-6 py-4 text-sm text-slate-600">{{ $rps->updated_at->format('d M Y') }}</td>
                                     <td class="px-6 py-4"><span class="inline-flex rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 border border-emerald-200">Disetujui</span></td>
                                     <td class="px-6 py-4 text-right">
-                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="gpm-rps-action-btn">
+                                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.setuju', $rps->id) }}" class="gpm-rps-action-btn">
                                             <i class="fas fa-eye"></i> Lihat Detail
                                         </a>
                                     </td>
@@ -398,113 +411,7 @@
         </div>
     </div>
 
-    <div id="modalUploadTemplate" class="fixed inset-0 z-50 hidden" aria-hidden="true">
-        <div class="absolute inset-0 bg-slate-900/40 animate-backdrop" data-modal-overlay="modalUploadTemplate"></div>
-        <div class="relative mx-auto mt-16 w-full max-w-xl rounded-2xl bg-white shadow-xl animate-popup">
-            <form id="formUploadTemplate" enctype="multipart/form-data">
-                @csrf
-                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-                    <h2 class="text-sm font-semibold text-slate-900">Upload Template RPS</h2>
-                    <button type="button" class="text-slate-400 hover:text-slate-600" data-modal-close="modalUploadTemplate">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="px-5 py-4 space-y-4">
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600">File Template (Word Format) <span class="text-rose-500">*</span></label>
-                        <div class="upload-box-modal mt-2 rounded-xl border-2 border-dashed border-slate-200 p-4 text-center cursor-pointer">
-                            <i class="fas fa-cloud-upload-alt text-slate-400 text-2xl mb-2"></i>
-                            <p class="text-sm text-slate-500">Dragdrop file atau <span class="text-blue-600 underline">pilih file</span></p>
-                            <p class="text-xs text-slate-400">Format: .doc, .docx (Maksimal 1 MB)</p>
-                            <input type="file" name="dokumen" id="fileInputModal" accept=".doc,.docx" required class="hidden">
-                            <div class="file-selected-modal mt-3 hidden">
-                                <div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700">
-                                    <i class="fas fa-check-circle mr-2"></i>
-                                    <span class="file-name-modal"></span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600">Keterangan (Opsional)</label>
-                        <textarea class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="keterangan" rows="3" placeholder="Misal: Update struktur template, tambahan BAB, dll..."></textarea>
-                    </div>
-                    <div class="rounded-lg border border-blue-200 bg-blue-50 px-3 py-2 text-xs text-blue-700">
-                        <i class="fas fa-info-circle mr-2"></i>
-                        Template baru akan otomatis menjadi versi terbaru yang dapat diunduh dosen.
-                    </div>
-                    <div id="uploadStatusMessage"></div>
-                </div>
-                <div class="flex flex-col gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                    <button type="button" class="inline-flex items-center gap-2 rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50" id="btnDeleteInactive">
-                        <i class="fas fa-trash"></i> Hapus Versi Lama
-                    </button>
-                    <div class="flex gap-2">
-                        <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalUploadTemplate">Batal</button>
-                        <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700" id="btnSubmitTemplate">Upload Template</button>
-                    </div>
-                </div>
-            </form>
-        </div>
-    </div>
 
-    <div id="modalTambah" class="fixed inset-0 z-50 hidden" aria-hidden="true">
-        <div class="absolute inset-0 bg-slate-900/40 animate-backdrop" data-modal-overlay="modalTambah"></div>
-        <div class="relative mx-auto mt-16 w-full max-w-xl rounded-2xl bg-white shadow-xl animate-popup">
-            <form action="{{ route('banksoal.rps.gpm.periode-rps.store') }}" method="POST">
-                @csrf
-                <div class="flex items-center justify-between border-b border-slate-200 px-5 py-4">
-                    <h2 class="text-sm font-semibold text-slate-900">Buat Jadwal RPS Baru</h2>
-                    <button type="button" class="text-slate-400 hover:text-slate-600" data-modal-close="modalTambah">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="px-5 py-4 space-y-4">
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600">Judul Periode <span class="text-rose-500">*</span></label>
-                        <input type="text" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="judul" required placeholder="Contoh: Pengajuan RPS Genap 2025/2026">
-                    </div>
-                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                        <div>
-                            <label class="text-xs font-semibold text-slate-600">Semester <span class="text-rose-500">*</span></label>
-                            <select class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="semester" required>
-                                <option value="Ganjil" {{ $currentSemester == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
-                                <option value="Genap" {{ $currentSemester == 'Genap' ? 'selected' : '' }}>Genap</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-xs font-semibold text-slate-600">Tahun Ajaran <span class="text-rose-500">*</span></label>
-                            <select class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="tahun_ajaran" required>
-                                <option value="" disabled selected>Pilih Tahun Ajaran</option>
-                                @foreach($tahunAjarans as $ta)
-                                    <option value="{{ $ta }}">{{ $ta }}</option>
-                                @endforeach
-                            </select>
-                        </div>
-                    </div>
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600">Tanggal Mulai <span class="text-rose-500">*</span></label>
-                        <input type="date" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="tanggal_mulai" required>
-                    </div>
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600">Tanggal Selesai (Tenggat) <span class="text-rose-500">*</span></label>
-                        <input type="date" class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="tanggal_selesai" required>
-                    </div>
-                    <label class="flex items-start gap-3 rounded-lg border border-slate-200 p-3 text-xs text-slate-600">
-                        <input class="mt-1" type="checkbox" name="is_active" value="1" checked>
-                        <span>
-                            <span class="font-semibold text-slate-700">Otomatis aktifkan jadwal ini</span>
-                            <span class="block text-[11px] text-slate-500">GPM hanya bisa membuka 1 sesi pengajuan dalam satu waktu. Mencentang ini akan membatalkan sesi lain yang masih aktif.</span>
-                        </span>
-                    </label>
-                </div>
-                <div class="flex items-center justify-end gap-3 border-t border-slate-200 bg-slate-50 px-5 py-4">
-                    <button type="button" class="rounded-lg border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalTambah">Batal</button>
-                    <button type="submit" class="rounded-lg bg-blue-600 px-4 py-2 text-xs font-semibold text-white hover:bg-blue-700">Buat & Terapkan</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     <div id="modalCloseSession" class="fixed inset-0 z-50 hidden" aria-hidden="true">
         <div class="absolute inset-0 bg-slate-900/40 animate-backdrop" data-modal-overlay="modalCloseSession"></div>
@@ -531,7 +438,7 @@
                 @csrf
                 <input type="hidden" name="periode_id" id="periodeId">
                 <div class="px-5 py-5 text-center">
-                    <div class="text-blue-500 mb-3"><i class="fas fa-info-circle text-3xl"></i></div>
+                    <div class="text-primary mb-3"><i class="fas fa-info-circle text-3xl"></i></div>
                     <h3 class="text-sm font-semibold text-slate-900">Nyalakan Sesi Pengajuan?</h3>
                     <p class="text-xs text-slate-500 mt-2">Sesi pengajuan <strong id="periodeJudul">RPS</strong> akan diaktifkan. Dosen akan bisa mengajukan RPS sesuai dengan jadwal periode.</p>
                     <div class="mt-4 flex gap-2">
@@ -614,139 +521,6 @@
             document.body.classList.remove('overflow-hidden');
         }
 
-        const uploadBoxModal = document.querySelector('.upload-box-modal');
-        const fileInputModal = document.getElementById('fileInputModal');
-        const fileSelectedModal = document.querySelector('.file-selected-modal');
-        const fileNameModal = document.querySelector('.file-name-modal');
-        const formUploadTemplate = document.getElementById('formUploadTemplate');
-        const btnSubmitTemplate = document.getElementById('btnSubmitTemplate');
-        const uploadStatusMessage = document.getElementById('uploadStatusMessage');
 
-        function preventDefaultsModal(e) {
-            e.preventDefault();
-            e.stopPropagation();
-        }
-
-        if (uploadBoxModal && fileInputModal) {
-            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-                uploadBoxModal.addEventListener(eventName, preventDefaultsModal, false);
-            });
-
-            ['dragenter', 'dragover'].forEach(eventName => {
-                uploadBoxModal.addEventListener(eventName, () => {
-                    uploadBoxModal.classList.add('border-blue-500', 'bg-blue-50');
-                }, false);
-            });
-
-            ['dragleave', 'drop'].forEach(eventName => {
-                uploadBoxModal.addEventListener(eventName, () => {
-                    uploadBoxModal.classList.remove('border-blue-500', 'bg-blue-50');
-                }, false);
-            });
-
-            uploadBoxModal.addEventListener('drop', (e) => {
-                const dt = e.dataTransfer;
-                const files = dt.files;
-                fileInputModal.files = files;
-                updateFileDisplayModal();
-            }, false);
-
-            uploadBoxModal.addEventListener('click', () => {
-                fileInputModal.click();
-            });
-
-            fileInputModal.addEventListener('change', updateFileDisplayModal);
-        }
-
-        function updateFileDisplayModal() {
-            if (fileInputModal?.files && fileInputModal.files.length > 0) {
-                if (fileNameModal) fileNameModal.textContent = fileInputModal.files[0].name;
-                fileSelectedModal?.classList.remove('hidden');
-            } else {
-                fileSelectedModal?.classList.add('hidden');
-            }
-        }
-
-        if (formUploadTemplate) {
-            formUploadTemplate.addEventListener('submit', async (e) => {
-                e.preventDefault();
-
-                const formData = new FormData(formUploadTemplate);
-                uploadStatusMessage.innerHTML = '';
-                if (btnSubmitTemplate) {
-                    btnSubmitTemplate.disabled = true;
-                    btnSubmitTemplate.textContent = 'Uploading...';
-                }
-
-                try {
-                    const response = await fetch("{{ route('banksoal.rps.gpm.template.store') }}", {
-                        method: 'POST',
-                        body: formData,
-                        headers: {
-                            'X-Requested-With': 'XMLHttpRequest',
-                        }
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok && data.success) {
-                        uploadStatusMessage.innerHTML = `<div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700"><i class="fas fa-check-circle mr-2"></i>${data.message}</div>`;
-                        formUploadTemplate.reset();
-                        fileSelectedModal?.classList.add('hidden');
-                        setTimeout(() => {
-                            closeModalById('modalUploadTemplate');
-                            uploadStatusMessage.innerHTML = '';
-                        }, 2000);
-                    } else {
-                        throw new Error(data.message || 'Terjadi kesalahan');
-                    }
-                } catch (error) {
-                    uploadStatusMessage.innerHTML = `<div class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><i class="fas fa-exclamation-triangle mr-2"></i>${error.message}</div>`;
-                } finally {
-                    if (btnSubmitTemplate) {
-                        btnSubmitTemplate.disabled = false;
-                        btnSubmitTemplate.textContent = 'Upload Template';
-                    }
-                }
-            });
-        }
-
-        const btnDeleteInactive = document.getElementById('btnDeleteInactive');
-        if (btnDeleteInactive) {
-            btnDeleteInactive.addEventListener('click', async () => {
-                if (!confirm('Apakah Anda yakin ingin menghapus semua versi template yang tidak aktif?\n\nAksi ini tidak dapat dibatalkan.')) {
-                    return;
-                }
-
-                btnDeleteInactive.disabled = true;
-                const originalHTML = btnDeleteInactive.innerHTML;
-                btnDeleteInactive.textContent = 'Menghapus...';
-
-                try {
-                    const response = await fetch("{{ route('banksoal.rps.gpm.template.delete-inactive') }}", {
-                        method: 'DELETE',
-                        headers: {
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || document.querySelector('input[name="_token"]')?.value,
-                            'X-Requested-With': 'XMLHttpRequest',
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({})
-                    });
-
-                    const data = await response.json();
-
-                    if (response.ok && data.success) {
-                        uploadStatusMessage.innerHTML = `<div class="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-700"><i class="fas fa-check-circle mr-2"></i>${data.message}</div>`;
-                    } else {
-                        throw new Error(data.message || 'Terjadi kesalahan');
-                    }
-                } catch (error) {
-                    uploadStatusMessage.innerHTML = `<div class="rounded-lg border border-rose-200 bg-rose-50 px-3 py-2 text-xs text-rose-700"><i class="fas fa-exclamation-triangle mr-2"></i>${error.message}</div>`;
-                } finally {
-                    btnDeleteInactive.disabled = false;
-                    btnDeleteInactive.innerHTML = originalHTML;
-                }
-            });
-        }
     </script>
 </x-banksoal::layouts.gpm-master>

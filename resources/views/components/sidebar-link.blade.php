@@ -1,40 +1,102 @@
 @props(['href', 'icon', 'label', 'active' => false, 'target' => '_self', 'badge' => null, 'disabled' => false])
 
-@php
-    $bgHover   = 'var(--c-bg)';
-    $bgDefault = 'transparent';
-    $bgVal     = $active ? 'var(--c-primary)' : $bgDefault;
-    $mouseOver = (!$active && !$disabled) ? "this.style.background='" . $bgHover . "'" : '';
-    $mouseOut  = (!$active && !$disabled) ? "this.style.background='" . $bgDefault . "'" : '';
-@endphp
-
 <a href="{{ $disabled ? '#' : $href }}"
    target="{{ $target }}"
-   style="display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; cursor:{{ $disabled ? 'default' : 'pointer' }}; background:{{ $bgVal }}; opacity:{{ $disabled ? '0.45' : '1' }}; transition:background 0.12s; text-decoration:none; margin-bottom:2px;"
-   @if($mouseOver) onmouseover="{{ $mouseOver }}" @endif
-   @if($mouseOut)  onmouseout="{{ $mouseOut }}"   @endif
-   :class="!open ? 'justify-center' : ''"
+   class="sb-item {{ $active ? 'is-active' : '' }} {{ $disabled ? 'is-disabled' : '' }}"
+   :class="!open ? 'is-collapsed' : ''"
    {{ $attributes }}>
 
+    {{-- Left pill indicator --}}
+    @if($active)
+        <span class="sb-item-pill"></span>
+    @endif
+
     @if($icon)
-        <svg style="width:16px; height:16px; flex-shrink:0; color:{{ $active ? '#fff' : 'var(--c-fg-muted)' }};"
-             fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <svg viewBox="0 0 24 24"
+             fill="{{ $active ? 'var(--c-primary)' : 'none' }}"
+             stroke="{{ $active ? 'var(--c-primary)' : 'currentColor' }}"
+             stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="{{ $icon }}"/>
         </svg>
     @else
         {{ $slot }}
     @endif
 
-    <span x-show="open"
-          style="font-size:14px; font-weight:{{ $active ? '600' : '500' }}; color:{{ $active ? '#fff' : 'var(--c-fg-sec)' }}; flex:1; letter-spacing:0.01em; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-        {{ $label }}
-    </span>
+    <span x-show="open" class="sb-item-label">{{ $label }}</span>
 
     @if($badge)
-        <span x-show="open"
-              style="background:{{ $active ? 'rgba(255,255,255,0.25)' : 'var(--c-error-subtle)' }}; color:{{ $active ? '#fff' : 'var(--c-error)' }}; font-size:11px; font-weight:600; padding:2px 7px; border-radius:9999px; flex-shrink:0;">
-            {{ $badge }}
-        </span>
+        <span x-show="open" class="sb-item-badge {{ $active ? 'is-active' : '' }}">{{ $badge }}</span>
     @endif
-
 </a>
+
+<style>
+.sb-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 7px 10px 7px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--c-fg-sec);
+  cursor: pointer;
+  text-decoration: none;
+  transition: background .12s, color .12s;
+}
+.sb-item svg {
+  width: 16px;
+  height: 16px;
+  color: var(--c-fg-muted);
+  flex-shrink: 0;
+}
+.sb-item:hover { background: var(--c-bg); }
+
+/* Active state — subtle highlight + navy text */
+.sb-item.is-active {
+  background: var(--c-primary-subtle);
+  color: var(--c-primary);
+  font-weight: 600;
+}
+.sb-item.is-active svg {
+  color: var(--c-primary);
+}
+
+/* Left pill indicator */
+.sb-item-pill {
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 3px;
+  height: 20px;
+  background: var(--c-primary);
+  border-radius: 0 3px 3px 0;
+  flex-shrink: 0;
+}
+
+.sb-item.is-disabled { opacity: .45; cursor: default; pointer-events: none; }
+.sb-item.is-collapsed { justify-content: center; padding-left: 0; padding-right: 0; }
+.sb-item.is-collapsed .sb-item-pill { display: none; }
+
+.sb-item-label {
+  flex: 1;
+  letter-spacing: .01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.sb-item-badge {
+  background: var(--c-error-subtle);
+  color: var(--c-error);
+  font-size: 11px;
+  font-weight: 600;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  flex-shrink: 0;
+}
+.sb-item-badge.is-active {
+  background: var(--c-primary-subtle);
+  color: var(--c-primary);
+}
+</style>

@@ -17,9 +17,6 @@
                 </p>
             </div>
         </div>
-        <a href="#" class="btn-secondary whitespace-nowrap">
-            <i class="fas fa-circle-question text-sm"></i> Panduan
-        </a>
     </div>
 
     @if($tenggatH7 && count($unsubmittedMk) > 0)

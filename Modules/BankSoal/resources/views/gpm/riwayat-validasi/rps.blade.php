@@ -3,9 +3,9 @@
     <x-banksoal::ui.page-header title="Riwayat Validasi RPS" subtitle="Pantau riwayat dokumen RPS yang telah direview" />
 
     <div class="border-b border-slate-200 mb-4">
-        <div class="inline-flex items-center gap-2 border-b-2 border-blue-600 pb-3 text-sm font-semibold text-blue-600">
+        <div class="inline-flex items-center gap-2 border-b-2 border-primary pb-3 text-sm font-semibold text-primary">
             Selesai Direview
-            <span class="rounded-full bg-blue-50 px-2 py-0.5 text-xs font-semibold text-blue-700">{{ $riwayat_rps->total() }}</span>
+            <span class="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-semibold text-primary">{{ $riwayat_rps->total() }}</span>
         </div>
     </div>
 
@@ -25,14 +25,12 @@
                     @forelse($riwayat_rps as $rps)
                         <tr>
                             <td class="px-6 py-4">
-                                <p class="text-sm font-semibold text-slate-900">{{ $rps->mk_nama }}</p>
-                                <p class="text-xs text-slate-500">{{ $rps->kode }} &bull; {{ $rps->semester }}</p>
+                                <p class="text-sm font-semibold text-slate-900">{{ $rps->mataKuliah->nama ?? '-' }}</p>
+                                <p class="text-xs text-slate-500">{{ $rps->mataKuliah->kode ?? '-' }} &bull; {{ $rps->semester }}</p>
                             </td>
                             <td class="px-6 py-4">
                                 @php
-                                    $dosens = collect(explode(', ', $rps->dosens_list ?? ''))
-                                        ->filter()
-                                        ->map(fn($d) => explode('|', $d)[1] ?? $d);
+                                    $dosens = $rps->dosens->pluck('name');
                                 @endphp
                                 @if($dosens->isNotEmpty())
                                     <span class="text-sm text-slate-600">{{ $dosens->join(', ') }}</span>
@@ -41,13 +39,13 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 text-sm text-slate-600">
-                                {{ $rps->tanggal_disetujui ? \Carbon\Carbon::parse($rps->tanggal_disetujui)->translatedFormat('d F Y') : '-' }}
+                                {{ $rps->updated_at ? $rps->updated_at->translatedFormat('d F Y') : '-' }}
                             </td>
                             <td class="px-6 py-4">
                                 <span class="inline-flex items-center rounded-md border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700">Disetujui</span>
                             </td>
                             <td class="px-6 py-4 text-right">
-                                <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->rps_id) }}" class="inline-flex items-center gap-2 text-sm font-semibold text-blue-600 hover:text-blue-700">
+                                <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $rps->id) }}" class="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:text-primary/90">
                                     <i class="far fa-eye"></i> Lihat Detail
                                 </a>
                             </td>

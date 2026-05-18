@@ -4,6 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Portal Mahasiswa</title>
 
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -21,25 +22,37 @@
             margin: 0;
             background-color: #f5f6fa;
             font-family: 'Inter Tight', sans-serif;
+            display: flex;
+            min-height: 100vh;
+        }
+
+        .simenma-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            overflow: hidden;
         }
 
         .sidebar {
-            width: 260px;
+            width: 240px;
             height: 100vh;
-            position: fixed;
+            position: sticky;
+            top: 0;
             background: #ffffff;
-            border-right: 1px solid #e5e7eb;
-            padding: 20px;
-            transition: width 0.3s ease;
+            border-right: 1px solid #DFE1E7;
+            padding: 0;
+            transition: width 0.25s ease;
             z-index: 1000;
             display: flex;
             flex-direction: column;
+            flex-shrink: 0;
         }
 
         /* Collapsed Sidebar */
         .sidebar-collapsed .sidebar {
-            width: 80px;
-            padding: 20px 10px;
+            width: 64px;
+            padding: 0;
         }
 
         .menu-title {
@@ -57,46 +70,64 @@
         }
 
         .sidebar a {
+            position: relative;
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 10px 16px;
-            border-radius: 12px;
+            gap: 9px;
+            padding: 7px 10px 7px 14px;
+            border-radius: 8px;
             text-decoration: none;
-            color: #6C757D;
+            color: #353849;
             font-weight: 500;
-            font-size: 14px;
-            margin-bottom: 4px;
-            transition: all 0.2s;
+            font-size: 13px;
+            margin-bottom: 1px;
+            transition: background .12s, color .12s;
             white-space: nowrap;
         }
 
         .sidebar-collapsed .sidebar a {
             justify-content: center;
-            padding: 10px;
+            padding: 7px 0;
             gap: 0;
         }
 
         .sidebar a:hover {
-            background: #F8F9FA;
+            background: #F6F8FA;
             color: #1A1C1E;
         }
 
         .sidebar a.active {
-            background: #F1E9FF;
-            color: #5E53F4;
+            background: rgba(11, 38, 110, 0.08);
+            color: #0B266E;
             font-weight: 600;
-            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            box-shadow: none;
+        }
+
+        .sidebar a.active::before {
+            content: "";
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 3px;
+            height: 20px;
+            background: #0B266E;
+            border-radius: 0 3px 3px 0;
+        }
+        .sidebar-collapsed .sidebar a.active::before {
+            display: none;
         }
 
         .sidebar a svg {
-            color: #ADB5BD;
-            transition: color 0.2s;
+            color: #666D80;
+            width: 16px;
+            height: 16px;
+            transition: color 0.12s;
             flex-shrink: 0;
         }
 
         .sidebar a.active svg {
-            color: #5E53F4;
+            color: #0B266E;
         }
 
         .sidebar a:hover svg {
@@ -104,17 +135,18 @@
         }
 
         .btn-logout {
+            position: relative;
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 10px 16px;
-            border-radius: 12px;
+            gap: 9px;
+            padding: 7px 10px 7px 14px;
+            border-radius: 8px;
             text-decoration: none;
-            color: #64748b;
+            color: #353849;
             font-weight: 500;
-            font-size: 14px;
-            margin-bottom: 4px;
-            transition: all 0.2s;
+            font-size: 13px;
+            margin-bottom: 1px;
+            transition: background .12s, color .12s;
             width: 100%;
             text-align: left;
             border: none;
@@ -124,23 +156,25 @@
 
         .sidebar-collapsed .btn-logout {
             justify-content: center;
-            padding: 10px;
+            padding: 7px 0;
             gap: 0;
         }
 
         .btn-logout:hover {
-            background: #fef2f2;
-            color: #dc2626;
+            background: #FEF1F4;
+            color: #DF1C41;
         }
 
         .btn-logout svg {
-            color: #94a3b8;
-            transition: color 0.2s;
+            color: #666D80;
+            width: 16px;
+            height: 16px;
+            transition: color 0.12s;
             flex-shrink: 0;
         }
 
         .btn-logout:hover svg {
-            color: #dc2626;
+            color: #DF1C41;
         }
 
         .bottom-menu {
@@ -155,13 +189,8 @@
         }
 
         .content {
-            margin-left: 260px;
-            padding: 25px;
-            transition: margin-left 0.3s ease;
-        }
-
-        .sidebar-collapsed .content {
-            margin-left: 80px;
+            padding: 24px 28px 48px;
+            flex: 1;
         }
 
         .main-wrapper {
@@ -186,7 +215,7 @@
         }
 
         .sidebar-dropdown.open .sidebar-dropdown-menu {
-            max-height: 200px;
+            max-height: 300px;
         }
 
         .sidebar-dropdown.open .dropdown-arrow {
@@ -205,7 +234,10 @@
         .sidebar-collapsed .nav-label, 
         .sidebar-collapsed .menu-title,
         .sidebar-collapsed .portal-info,
-        .sidebar-collapsed .user-info {
+        .sidebar-collapsed .user-info,
+        .sidebar-collapsed .sb-section-label,
+        .sidebar-collapsed .sb-brand-text,
+        .sidebar-collapsed .dropdown-arrow {
             display: none;
         }
 
@@ -264,10 +296,16 @@
     <!-- Sidebar Mahasiswa -->
     <x-manajemenmahasiswa::ui.sidebar />
 
-    <!-- Content -->
-    <div class="content">
-        <div class="main-wrapper">
-            {{ $slot }}
+    <!-- Main Area (topbar + content) -->
+    <div class="simenma-main">
+        <!-- Topbar -->
+        @include('manajemenmahasiswa::components.ui.topbar')
+
+        <!-- Content -->
+        <div class="content" style="margin-left: 0;">
+            <div class="main-wrapper">
+                {{ $slot }}
+            </div>
         </div>
     </div>
 

@@ -42,18 +42,8 @@ class AuthenticatedSessionController extends Controller
         $userRoles  = $user->roles()->get();
         $roleNames  = $userRoles->pluck('name')->map(fn($r) => strtolower($r));
 
-        // 3. Cache — format konsisten dengan getCachedRoles() di User.php
+        // 3. Cache user data (roles di-cache oleh Spatie secara otomatis)
         $user->cacheUserData();
-        Cache::put(
-            "user:{$user->id}:roles",
-            $userRoles->map(fn($r) => [
-                'id'          => $r->id,
-                'name'        => $r->name,
-                'module'      => $r->module,
-                'is_academic' => (bool) $r->is_academic,
-            ])->toArray(),
-            now()->addHours(8)
-        );
 
         // 4. Simpan session_version agar middleware CheckSessionVersion bisa bekerja
         $request->session()->put('session_version', $user->session_version);
@@ -90,7 +80,7 @@ class AuthenticatedSessionController extends Controller
         }
 
         // Mahasiswa, Dosen, GPM ke dashboard global
-        if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm', 'pengurus_himpunan', 'alumni'])->isNotEmpty()) {
+        if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm', 'pengurus_himpunan', 'alumni', 'dosen_koor'])->isNotEmpty()) {
             return redirect()->intended(route('dashboard'));
         }
 

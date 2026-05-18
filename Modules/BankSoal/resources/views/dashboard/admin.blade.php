@@ -1,4 +1,8 @@
 <x-banksoal::layouts.admin>
+    @section('breadcrumbs')
+    <span class="text-slate-800 font-semibold">Dashboard</span>
+    @endsection
+
     <!-- Header Title -->
     <div class="mb-6 lg:mb-8 flex justify-between items-center">
         <h1 class="text-2xl lg:text-3xl font-bold text-slate-800 tracking-tight">Dashboard Bank Soal</h1>

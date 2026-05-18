@@ -12,9 +12,6 @@
                     <p class="text-xs text-amber-800">Segera lakukan peninjauan untuk menjaga kualitas akademik.</p>
                 </div>
             </div>
-            <button class="inline-flex items-center justify-center rounded-xl bg-amber-600 px-4 py-2.5 text-xs font-semibold text-white hover:bg-amber-700">
-                Lihat Detail
-            </button>
         </div>
     </div>
 
@@ -27,7 +24,7 @@
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-6 py-4 border-b border-slate-200 bg-slate-50 flex items-center justify-between">
             <h2 class="text-lg font-semibold text-slate-900">Tugas Prioritas</h2>
-            <a href="#" class="text-xs font-medium text-blue-600 hover:text-blue-700">Lihat Semua</a>
+            <a href="#" class="text-xs font-medium text-primary hover:text-primary/90">Lihat Semua</a>
         </div>
 
         <div class="overflow-x-auto">
@@ -49,7 +46,7 @@
                                 @elseif(($tugas->sub_status ?? '') == 'revisi')
                                     <span class="inline-flex items-center rounded-full bg-amber-50 px-3 py-1 text-[11px] font-semibold text-amber-700 border border-amber-200">RPS - Revisi</span>
                                 @else
-                                    <span class="inline-flex items-center rounded-full bg-blue-50 px-3 py-1 text-[11px] font-semibold text-blue-700 border border-blue-200">RPS - Diajukan</span>
+                                    <span class="inline-flex items-center rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary border border-primary/20">RPS - Diajukan</span>
                                 @endif
                             </td>
                             <td class="px-6 py-4">
@@ -59,9 +56,9 @@
                             <td class="px-6 py-4 text-sm text-slate-600">Menunggu Review</td>
                             <td class="px-6 py-4 text-right">
                                 @if($tugas->tipe_dokumen == 'Bank Soal')
-                                    <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}" class="inline-flex items-center rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700">Review Sekarang</a>
+                                    <a href="{{ route('banksoal.soal.gpm.validasi-bank-soal') }}" class="inline-flex items-center rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary/90">Review Sekarang</a>
                                 @else
-                                    <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $tugas->rps_id) }}" class="inline-flex items-center rounded-xl bg-blue-600 px-3 py-2 text-xs font-semibold text-white hover:bg-blue-700">Review Sekarang</a>
+                                    <a href="{{ route('banksoal.rps.gpm.validasi-rps.review', $tugas->rps_id) }}" class="inline-flex items-center rounded-xl bg-primary px-3 py-2 text-xs font-semibold text-white hover:bg-primary/90">Review Sekarang</a>
                                 @endif
                             </td>
                         </tr>
