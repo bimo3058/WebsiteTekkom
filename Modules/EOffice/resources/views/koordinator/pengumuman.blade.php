@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -25,7 +25,8 @@
     tabState: {
         pengumuman: { isEditing: false, formAction: '{{ route('eoffice.kp.koordinator.pengumuman.store') }}', formData: { judul: '', konten: '', is_active: true, fileName: '' } },
         faq: { isEditing: false, formAction: '{{ route('eoffice.kp.koordinator.pengumuman.store') }}', formData: { judul: '', konten: '', is_active: true, fileName: '' } },
-        timeline: { isEditing: false, formAction: '{{ route('eoffice.kp.koordinator.pengumuman.store') }}', formData: { judul: '', konten: '', is_active: true, fileName: '' } }
+        timeline: { isEditing: false, formAction: '{{ route('eoffice.kp.koordinator.pengumuman.store') }}', formData: { judul: '', konten: '', is_active: true, fileName: '' } },
+        keperluan_perusahaan: { isEditing: false, formAction: '{{ route('eoffice.kp.koordinator.pengumuman.store') }}', formData: { judul: '', konten: '', is_active: true, fileName: '' } }
     }
 }">
 <div class="flex h-screen w-full overflow-hidden">
@@ -188,6 +189,11 @@
                         class="px-6 py-2 rounded-lg text-sm transition-all focus:outline-none">
                         Timeline KP
                     </button>
+                    <button @click="activeTab = 'keperluan_perusahaan'"
+                        :class="activeTab === 'keperluan_perusahaan' ? 'bg-white text-indigo-700 shadow-sm font-bold' : 'text-slate-600 hover:text-slate-900 font-medium'"
+                        class="px-6 py-2 rounded-lg text-sm transition-all focus:outline-none">
+                        Keperluan Perusahaan
+                    </button>
                 </div>
 
                 <!-- Form Card -->
@@ -211,6 +217,7 @@
                                         <option value="pengumuman">Pengumuman</option>
                                         <option value="timeline">Timeline</option>
                                         <option value="faq">FAQ</option>
+                                        <option value="keperluan_perusahaan">Keperluan Perusahaan</option>
                                     </select>
                                 </div>
                             </div>
@@ -491,6 +498,64 @@
                     @endforelse
                 </div>
             </div> <!-- End Tab 3 -->
+
+            <!-- TAB 4: KEPERLUAN PERUSAHAAN -->
+            <div x-show="activeTab === 'keperluan_perusahaan'" style="display: none;" x-transition.opacity.duration.300ms>
+                <div class="space-y-4">
+                    @forelse($keperluans as $keperluan)
+                    <div class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-indigo-100 transition-all overflow-hidden p-5 flex flex-col md:flex-row gap-5">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-3 mb-2">
+                                @if($keperluan->is_published)
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide bg-emerald-50 text-emerald-700 border border-emerald-100 uppercase">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1.5"></span>
+                                        Published
+                                    </span>
+                                @else
+                                    <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide bg-amber-50 text-amber-700 border border-amber-100 uppercase">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5"></span>
+                                        Draft
+                                    </span>
+                                @endif
+                                <span class="text-xs font-medium text-slate-400 flex items-center">
+                                    <svg class="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                    {{ $keperluan->created_at->format('d M Y, H:i') }}
+                                </span>
+                            </div>
+                            
+                            <h3 class="text-lg font-bold text-slate-900 mb-2 truncate group-hover:text-indigo-700 transition-colors">{{ $keperluan->judul }}</h3>
+                            <p class="text-sm text-slate-600 line-clamp-2 leading-relaxed mb-4">{{ $keperluan->konten }}</p>
+                            
+                            @if($keperluan->lampiran)
+                            <a href="{{ Storage::url($keperluan->lampiran) }}" target="_blank" class="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 hover:text-indigo-600 cursor-pointer transition-colors w-fit">
+                                <svg class="w-4 h-4 text-indigo-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 100 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
+                                {{ basename($keperluan->lampiran) }}
+                            </a>
+                            @endif
+                        </div>
+                        
+                        <div class="flex flex-row md:flex-col items-center justify-end gap-2 shrink-0 border-t md:border-t-0 md:border-l border-slate-100 pt-4 md:pt-0 md:pl-5">
+                            <button type="button" @click='tabState[activeTab].formData = { judul: @json($keperluan->judul), konten: @json($keperluan->konten), is_active: {{ $keperluan->is_published ? "true" : "false" }}, fileName: @json($keperluan->lampiran ? basename($keperluan->lampiran) : "") }; tabState[activeTab].formAction = `/eoffice/kp/koordinator/pengumuman/{{ $keperluan->id }}`; tabState[activeTab].isEditing = true; document.getElementById("form-section").scrollIntoView({ behavior: "smooth" });' class="flex-1 md:flex-none inline-flex items-center justify-center px-4 md:px-3 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
+                                <svg class="w-4 h-4 mr-2 md:mr-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
+                                <span class="md:hidden">Edit</span>
+                            </button>
+                            <button type="button" @click="deleteId = {{ $keperluan->id }}; deleteModalOpen = true;" class="flex-1 md:flex-none inline-flex items-center justify-center px-4 md:px-3 py-2 bg-white border border-slate-200 text-red-500 text-sm font-medium rounded-lg hover:bg-red-50 hover:border-red-100 transition-colors shadow-sm">
+                                <svg class="w-4 h-4 mr-2 md:mr-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                                <span class="md:hidden">Hapus</span>
+                            </button>
+                        </div>
+                    </div>
+                    @empty
+                    <div class="bg-white rounded-2xl border border-slate-200 border-dashed p-12 text-center flex flex-col items-center justify-center">
+                        <div class="w-20 h-20 bg-indigo-50 rounded-full flex items-center justify-center mb-4">
+                            <svg class="w-10 h-10 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-900 mb-1">Belum Ada Keperluan Perusahaan</h3>
+                        <p class="text-sm text-slate-500 max-w-sm mb-6">Mulai tambahkan informasi keperluan perusahaan untuk mahasiswa.</p>
+                    </div>
+                    @endforelse
+                </div>
+            </div> <!-- End Tab 4 -->
 
         </main>
     </div>

@@ -113,8 +113,15 @@ class MahasiswaKpController extends Controller
             <h2>6. Tempat dan Waktu Pelaksanaan</h2><p><br></p>
             <h2>7. Penutup</h2><p><br></p>';
 
+        $templatesKeperluan = collect();
+        try {
+            $templatesKeperluan = \Modules\EOffice\Models\KpPengumuman::where('tipe', 'keperluan_perusahaan')->where('is_active', true)->get();
+        } catch (\Exception $e) {
+            // Ignore if table doesn't exist
+        }
+
         return view('eoffice::kp.mahasiswa.informasi', compact(
-            'mahasiswa', 'kp', 'infoPersuratan', 'templateContent'
+            'mahasiswa', 'kp', 'infoPersuratan', 'templateContent', 'templatesKeperluan'
         ));
     }
 

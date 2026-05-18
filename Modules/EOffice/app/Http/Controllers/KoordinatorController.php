@@ -90,8 +90,9 @@ class KoordinatorController extends Controller implements HasMiddleware
         $pengumumen = $allData->where('tipe', 'pengumuman');
         $faqs = $allData->where('tipe', 'faq');
         $timelines = $allData->where('tipe', 'timeline');
+        $keperluans = $allData->where('tipe', 'keperluan_perusahaan');
         
-        return view('eoffice::koordinator.pengumuman', compact('pengumumen', 'faqs', 'timelines'));
+        return view('eoffice::koordinator.pengumuman', compact('pengumumen', 'faqs', 'timelines', 'keperluans'));
     }
 
     /**
@@ -101,7 +102,7 @@ class KoordinatorController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
-            'tipe' => 'required|in:pengumuman,timeline,faq',
+            'tipe' => 'required|in:pengumuman,timeline,faq,keperluan_perusahaan',
             'konten' => 'required|string',
             'lampiran' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:10240',
         ]);
@@ -131,7 +132,7 @@ class KoordinatorController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
-            'tipe' => 'required|in:pengumuman,timeline,faq',
+            'tipe' => 'required|in:pengumuman,timeline,faq,keperluan_perusahaan',
             'konten' => 'required|string',
             'lampiran' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:10240',
         ]);
@@ -188,7 +189,7 @@ class KoordinatorController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'phase' => 'required|in:pra_kp,saat_kp,pasca_kp',
+            'phase' => 'required|in:pra_kp,saat_kp,pasca_kp,keperluan_perusahaan',
             'file_path' => 'required|file|mimes:pdf,doc,docx|max:5120', // Max 5MB
         ]);
 
@@ -217,7 +218,7 @@ class KoordinatorController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'title' => 'required|string|max:255',
-            'phase' => 'required|in:pra_kp,saat_kp,pasca_kp',
+            'phase' => 'required|in:pra_kp,saat_kp,pasca_kp,keperluan_perusahaan',
             'file_path' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
         ]);
 
