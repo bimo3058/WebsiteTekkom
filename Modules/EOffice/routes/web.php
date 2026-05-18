@@ -435,19 +435,15 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
     });
 
     // ════════════════════════════════════════════════════════════════════════
-<<<<<<< HEAD
-    // KERJA PRAKTIK (KP)
-=======
     // ADMIN E-OFFICE
     // ════════════════════════════════════════════════════════════════════════
     Route::prefix('eoffice/admin')->name('eoffice.admin.')->middleware(['role:superadmin|admin_eoffice'])->group(function () {
-        Route::get('/template-proposal', [EOfficeController::class, 'templateProposal'])->name('template_proposal');
-        Route::post('/template-proposal', [EOfficeController::class, 'storeTemplateProposal'])->name('template_proposal.store');
+        Route::get('/template-proposal', [\Modules\EOffice\Http\Controllers\EOfficeController::class, 'templateProposal'])->name('template_proposal');
+        Route::post('/template-proposal', [\Modules\EOffice\Http\Controllers\EOfficeController::class, 'storeTemplateProposal'])->name('template_proposal.store');
     });
 
     // ════════════════════════════════════════════════════════════════════════
-    // KERJA PRAKTIK (KP) — tidak berubah
->>>>>>> 6a466f3 (feat(eoffice): implementasi upload template A2 koordinator & generate dokumen dinamis mahasiswa)
+    // KERJA PRAKTIK (KP)
     // ════════════════════════════════════════════════════════════════════════
     Route::prefix('eoffice/kp')->name('eoffice.kp.')->group(function () {
         Route::get('/daftar', [KerjaPraktikController::class, 'create'])->name('register');
@@ -510,7 +506,13 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::get('/upload-berkas', [KoordinatorController::class, 'uploadBerkas'])->name('upload_berkas');
             Route::post('/upload-berkas/template-a2', [KoordinatorController::class, 'storeTemplateA2'])->name('upload_berkas.template_a2');
             Route::get('/validasi-berkas', [KoordinatorController::class, 'validasiBerkas'])->name('validasi_berkas');
+            Route::post('/validasi-berkas/{id}/approve', [KoordinatorController::class, 'approveBerkas'])->name('validasi_berkas.approve');
+            Route::post('/validasi-berkas/{id}/reject', [KoordinatorController::class, 'rejectBerkas'])->name('validasi_berkas.reject');
+            Route::post('/validasi-berkas/{id}/revise', [KoordinatorController::class, 'reviseBerkas'])->name('validasi_berkas.revise');
+            
             Route::get('/nilai-lapangan', [KoordinatorController::class, 'nilaiLapangan'])->name('nilai_lapangan');
+            Route::post('/nilai-lapangan/{id}/update', [KoordinatorController::class, 'updateNilaiLapangan'])->name('nilai_lapangan.update');
+            
             Route::get('/data-mahasiswa', [KoordinatorController::class, 'dataMahasiswa'])->name('data_mahasiswa');
         });
     });

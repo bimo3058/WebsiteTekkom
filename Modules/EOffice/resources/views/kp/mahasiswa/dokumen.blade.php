@@ -177,15 +177,17 @@
                                 $jenis = $item['key'];
                                 $docGroup = $dokumenByJenis->get($jenis);
                                 $latestDoc = $docGroup ? $docGroup->sortByDesc('created_at')->first() : null;
-                                $status = $latestDoc ? strtolower($latestDoc->status_validasi) : 'belum';
+                                $status = $latestDoc ? strtolower($latestDoc->approval_status ?? $latestDoc->status_validasi) : 'belum';
                                 
                                 $statusMap = [
                                     'belum' => ['label' => 'Belum Ada', 'class' => 'bg-slate-100 text-slate-500'],
                                     'menunggu' => ['label' => 'Menunggu Validasi', 'class' => 'bg-amber-100 text-amber-700'],
+                                    'pending' => ['label' => 'Menunggu Validasi', 'class' => 'bg-amber-100 text-amber-700'],
                                     'disetujui' => ['label' => 'Disetujui', 'class' => 'bg-emerald-100 text-emerald-700'],
                                     'approved' => ['label' => 'Disetujui', 'class' => 'bg-emerald-100 text-emerald-700'],
                                     'ditolak' => ['label' => 'Revisi', 'class' => 'bg-rose-100 text-rose-700'],
-                                    'rejected' => ['label' => 'Revisi', 'class' => 'bg-rose-100 text-rose-700'],
+                                    'rejected' => ['label' => 'Ditolak', 'class' => 'bg-red-100 text-red-700'],
+                                    'revision' => ['label' => 'Revisi', 'class' => 'bg-rose-100 text-rose-700'],
                                 ];
                                 $st = $statusMap[$status] ?? $statusMap['belum'];
                                 $isActiveCard = false;

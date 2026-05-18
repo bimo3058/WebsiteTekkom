@@ -185,11 +185,11 @@
                                     <label class="block text-sm font-bold text-slate-700 mb-1.5">
                                         Nama Template <span class="text-red-500">*</span>
                                     </label>
-                                    <input type="text" name="nama_template" x-model="formData.nama_template" required class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border bg-white hover:border-slate-300 transition-all outline-none" placeholder="Contoh: Logbook Harian">
+                                    <input type="text" name="title" x-model="formData.title" required class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border bg-white hover:border-slate-300 transition-all outline-none" placeholder="Contoh: Logbook Harian">
                                 </div>
                                 <div>
                                     <label class="block text-sm font-bold text-slate-700 mb-1.5">Fase KP <span class="text-red-500">*</span></label>
-                                    <select name="fase" x-model="formData.fase" required class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border bg-white hover:border-slate-300 transition-all outline-none">
+                                    <select name="phase" x-model="formData.phase" required class="block w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border bg-white hover:border-slate-300 transition-all outline-none">
                                         <option value="pra_kp">Pra KP (Sebelum KP)</option>
                                         <option value="saat_kp">Saat KP (Pelaksanaan)</option>
                                         <option value="pasca_kp">Pasca KP (Selesai/Seminar)</option>
@@ -240,7 +240,7 @@
                                 
                                 <div class="w-full flex flex-col justify-end h-full space-y-4 md:w-64">
                                     <div class="flex gap-2 w-full mt-7">
-                                        <button type="button" x-show="isEditing" @click="isEditing = false; formAction = '{{ route('eoffice.kp.koordinator.template.store') }}'; formData = { nama_template: '', fase: 'pra_kp' }" class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-200 transition-colors focus:ring-4 focus:ring-slate-100 outline-none flex items-center justify-center">
+                                        <button type="button" x-show="isEditing" @click="isEditing = false; formAction = '{{ route('eoffice.kp.koordinator.template.store') }}'; formData = { title: '', phase: 'pra_kp' }" class="flex-1 px-5 py-3.5 bg-slate-100 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-200 transition-colors focus:ring-4 focus:ring-slate-100 outline-none flex items-center justify-center">
                                             Batal
                                         </button>
                                         <button type="submit" class="flex-1 px-5 py-3.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 transition-colors shadow-sm shadow-indigo-200 focus:ring-4 focus:ring-indigo-100 outline-none flex items-center justify-center">
@@ -264,15 +264,15 @@
                         </div>
                         <div class="flex-1 min-w-0">
                             <div class="flex items-center gap-3 mb-1">
-                                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide {{ $item->fase == 'pra_kp' ? 'bg-amber-50 text-amber-700 border-amber-100' : ($item->fase == 'saat_kp' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100') }} border uppercase">
-                                    {{ str_replace('_', ' ', $item->fase) }}
+                                <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide {{ $item->phase == 'pra_kp' ? 'bg-amber-50 text-amber-700 border-amber-100' : ($item->phase == 'saat_kp' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' : 'bg-emerald-50 text-emerald-700 border-emerald-100') }} border uppercase">
+                                    {{ str_replace('_', ' ', $item->phase) }}
                                 </span>
                             </div>
-                            <h3 class="text-lg font-bold text-slate-900 mb-1 truncate">{{ $item->nama_template }}</h3>
+                            <h3 class="text-lg font-bold text-slate-900 mb-1 truncate">{{ $item->title }}</h3>
                         </div>
                         
                         <div class="flex flex-row items-center gap-2 shrink-0">
-                            <button type="button" @click='formData = { nama_template: @json($item->nama_template), fase: @json($item->fase) }; formAction = `/eoffice/kp/koordinator/template/{{ $item->id }}`; isEditing = true; document.getElementById("form-section").scrollIntoView({ behavior: "smooth" });' class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
+                            <button type="button" @click='formData = { title: @json($item->title), phase: @json($item->phase) }; formAction = `/eoffice/kp/koordinator/template/{{ $item->id }}`; isEditing = true; document.getElementById("form-section").scrollIntoView({ behavior: "smooth" });' class="inline-flex items-center justify-center px-4 py-2 bg-white border border-slate-200 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-50 hover:text-indigo-600 transition-colors shadow-sm">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
                                 Edit
                             </button>

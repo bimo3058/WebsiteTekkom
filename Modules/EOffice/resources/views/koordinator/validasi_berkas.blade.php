@@ -77,11 +77,6 @@
                 </svg>
                 Balancing Dosen
             </a>
-
-            <a href="{{ route('eoffice.kp.koordinator.upload_berkas') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                Upload Berkas
-            </a>
             
             <!-- Active Menu -->
             <a href="{{ route('eoffice.kp.koordinator.validasi_berkas') }}"
@@ -570,14 +565,32 @@
             },
             
             processApproval(docId, status) {
-                // Find document and update status
-                const docIndex = this.currentDocuments.findIndex(d => d.id === docId);
-                if (docIndex !== -1) {
-                    this.currentDocuments[docIndex].status = status;
-                    if(status === 'approved') {
-                        this.showToast('success', 'Dokumen Disetujui', 'Dokumen telah berhasil disetujui.');
+                const url = status === 'approved' 
+                    ? `/eoffice/kp/koordinator/validasi-berkas/${docId}/approve`
+                    : `/eoffice/kp/koordinator/validasi-berkas/${docId}/reject`;
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
                     }
-                }
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        const docIndex = this.currentDocuments.findIndex(d => d.id === docId);
+                        if (docIndex !== -1) {
+                            this.currentDocuments[docIndex].status = status;
+                        }
+                        this.showToast('success', 'Berhasil', data.message);
+                    } else {
+                        this.showToast('error', 'Gagal', 'Terjadi kesalahan sistem.');
+                    }
+                })
+                .catch(err => {
+                    this.showToast('error', 'Gagal', 'Terjadi kesalahan jaringan.');
+                });
             },
             
             submitReject() {
@@ -586,14 +599,32 @@
                     return;
                 }
                 
-                const docIndex = this.currentDocuments.findIndex(d => d.id === this.rejectDoc.id);
-                if (docIndex !== -1) {
-                    this.currentDocuments[docIndex].status = 'rejected';
-                    this.currentDocuments[docIndex].catatan = this.rejectReason;
-                    this.showToast('success', 'Dokumen Direvisi', 'Catatan revisi berhasil dikirim ke mahasiswa.');
-                }
-                
-                this.rejectModalOpen = false;
+                fetch(`/eoffice/kp/koordinator/validasi-berkas/${this.rejectDoc.id}/revise`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ revision_note: this.rejectReason })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if(data.success) {
+                        const docIndex = this.currentDocuments.findIndex(d => d.id === this.rejectDoc.id);
+                        if (docIndex !== -1) {
+                            this.currentDocuments[docIndex].status = 'revision';
+                            this.currentDocuments[docIndex].catatan = this.rejectReason;
+                        }
+                        this.showToast('success', 'Dokumen Direvisi', data.message);
+                        this.rejectModalOpen = false;
+                    } else {
+                        this.showToast('error', 'Gagal', 'Terjadi kesalahan sistem.');
+                    }
+                })
+                .catch(err => {
+                    this.showToast('error', 'Gagal', 'Terjadi kesalahan jaringan.');
+                });
             },
             
             showToast(type, title, message) {
