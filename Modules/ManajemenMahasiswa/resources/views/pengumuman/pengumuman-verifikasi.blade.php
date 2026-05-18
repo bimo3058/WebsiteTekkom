@@ -400,18 +400,27 @@
 
     <!-- Request List -->
     @forelse($requests as $req)
+        @php $isNewRequest = $req->created_at?->gt(now()->subHours(24)); @endphp
         <div class="request-card">
             <div class="request-card-header">
                 <div>
                     <div class="request-card-title">
+                        @if($req->pengumuman)
                         <a href="{{ route('manajemenmahasiswa.pengumuman.show', $req->pengumuman_id) }}">
-                            📢 {{ $req->pengumuman->judul ?? '(Pengumuman dihapus)' }}
+                            📢 {{ $req->pengumuman->judul }}
                         </a>
+                        @else
+                            <span style="color:#9ca3af;">📢 (Pengumuman telah dihapus)</span>
+                        @endif
+                        {{-- Fix #7: Badge "BARU" untuk request yang masuk dalam 24 jam terakhir --}}
+                        @if($isNewRequest && $req->status === 'pending')
+                            <span style="display:inline-flex;align-items:center;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:800;background:#dcfce7;color:#15803d;letter-spacing:.04em;margin-left:6px;vertical-align:middle;">BARU</span>
+                        @endif
                     </div>
                     <div class="request-meta">
                         <span class="request-meta-item">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                            {{ $req->requester->name ?? 'Unknown' }}
+                            {{ $req->requester?->name ?? 'Unknown' }}
                         </span>
                         <span class="request-meta-item">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -500,6 +509,13 @@
             </p>
         </div>
     @endforelse
+
+    {{-- Fix #9: Pagination links untuk admin yang punya banyak request --}}
+    @if($isAdmin && $requests->hasPages())
+        <div class="d-flex justify-content-center mt-4">
+            {{ $requests->appends(request()->query())->links('pagination::bootstrap-5') }}
+        </div>
+    @endif
 
     @push('scripts')
     <script>

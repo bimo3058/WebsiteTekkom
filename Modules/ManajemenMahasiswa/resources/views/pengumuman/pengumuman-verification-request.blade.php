@@ -322,7 +322,7 @@
             <div class="form-group">
                 <label>Verifikator <span class="required">*</span></label>
                 <select name="verifier_id" class="form-select-custom" required id="verifierSelect">
-                    <option value="">— Pilih Verifikator (Ketua / Admin) —</option>
+                    <option value="">— Pilih Ketua Verifikator —</option>
                     @foreach($verifiers as $verifier)
                         @php
                             $roleLabel = $verifier->roles->pluck('name')->map(function($r) {

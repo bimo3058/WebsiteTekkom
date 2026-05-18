@@ -10,10 +10,10 @@
             .page-title p { font-size: 14px; color: #6b7280; margin: 0; }
 
             .create-post-card {
-                background: #ffffff;
+                background: transparent;
                 border-radius: 12px;
-                padding: 30px;
-                border: 1px solid #e5e7eb;
+                padding: 30px 0;
+                border: none;
                 margin-bottom: 20px;
             }
 
@@ -40,8 +40,8 @@
             .custom-select:focus,
             .custom-textarea:focus {
                 background-color: #ffffff;
-                border-color: #818cf8;
-                box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+                border-color: #6F7DA4;
+                box-shadow: 0 0 0 3px rgba(41, 60, 121, 0.1);
                 outline: none;
             }
 
@@ -69,8 +69,8 @@
                 transition: all 0.2s;
             }
 
-            .btn-post { background-color: #4f46e5; color: white; }
-            .btn-post:hover { background-color: #4338ca; }
+            .btn-post { background-color: #293C79; color: white; }
+            .btn-post:hover { background-color: #415086; }
             .btn-cancel { background-color: #ef4444; color: white; }
             .btn-cancel:hover { background-color: #dc2626; }
 
@@ -91,8 +91,8 @@
                 text-align: left;
             }
 
-            .section-toggle:hover { background: #eef2ff; border-color: #4f46e5; color: #4338ca; }
-            .section-toggle.active { background: #eef2ff; border-color: #4f46e5; color: #4338ca; }
+            .section-toggle:hover { background: #E7E8F0; border-color: #293C79; color: #415086; }
+            .section-toggle.active { background: #E7E8F0; border-color: #293C79; color: #415086; }
 
             .section-content {
                 max-height: 0;
@@ -117,8 +117,8 @@
             }
 
             .media-dropzone:hover, .media-dropzone.dragover {
-                border-color: #4f46e5;
-                background: #eef2ff;
+                border-color: #293C79;
+                background: #E7E8F0;
             }
 
             .media-dropzone .dropzone-text { font-size: 15px; font-weight: 600; color: #374151; margin-bottom: 4px; }
@@ -210,7 +210,7 @@
 
     <div class="page-title">
         <a href="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}" class="back-btn">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+            <x-manajemenmahasiswa::ui.icon name="arrow-narrow-left" size="20" />
         </a>
         <div>
             <h1>Edit Thread</h1>
@@ -282,9 +282,9 @@
             {{-- Media Upload (Collapsible) --}}
             <div class="mb-4">
                 <button type="button" class="section-toggle {{ count($existingMedia) > 0 ? 'active' : '' }}" id="toggleMedia" onclick="toggleSection('media')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg> Gambar / Video
+                    <x-manajemenmahasiswa::ui.icon name="image-02" size="16" /> Gambar / Video
                     @if(count($existingMedia) > 0)
-                        <span style="background: #818cf8; color: white; font-size: 11px; padding: 1px 8px; border-radius: 10px; margin-left: 4px;">{{ count($existingMedia) }} file</span>
+                        <span style="background: #6F7DA4; color: white; font-size: 11px; padding: 1px 8px; border-radius: 10px; margin-left: 4px;">{{ count($existingMedia) }} file</span>
                     @endif
                     <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
                 </button>
@@ -330,7 +330,7 @@
             {{-- Link (Collapsible) --}}
             <div class="mb-3">
                 <button type="button" class="section-toggle {{ $existingLink ? 'active' : '' }}" id="toggleLink" onclick="toggleSection('link')">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> Link
+                    <x-manajemenmahasiswa::ui.icon name="link-01" size="16" /> Link
                     <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
                 </button>
                 <div class="section-content {{ $existingLink ? 'open' : '' }}" id="sectionLink">
@@ -343,10 +343,10 @@
             @php $poll = $thread->poll; @endphp
             <div class="mb-5">
                 <button type="button" class="section-toggle {{ $poll ? 'active' : '' }}" id="togglePoll" onclick="togglePollSection()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
+                    <x-manajemenmahasiswa::ui.icon name="bar-chart-11" size="16" />
                     Poll
                     @if($poll)
-                        <span style="background:#818cf8;color:#fff;font-size:11px;padding:1px 8px;border-radius:10px;margin-left:4px;">
+                        <span style="background:#6F7DA4;color:#fff;font-size:11px;padding:1px 8px;border-radius:10px;margin-left:4px;">
                             {{ $poll->options->count() }} opsi
                         </span>
                     @endif
@@ -357,16 +357,16 @@
                     <style>
                         .poll-edit-row { display:flex;align-items:center;gap:8px;margin-bottom:8px; }
                         .poll-edit-input { flex:1;padding:9px 14px;border:1.5px solid #e5e7eb;border-radius:10px;font-size:13px;font-weight:500;outline:none;transition:border-color 0.2s; }
-                        .poll-edit-input:focus { border-color:#4f46e5;box-shadow:0 0 0 3px rgba(79,70,229,0.1); }
+                        .poll-edit-input:focus { border-color:#293C79;box-shadow:0 0 0 3px rgba(41,60,121,0.1); }
                         .poll-edit-remove { width:30px;height:30px;border-radius:50%;border:none;background:#fee2e2;color:#dc2626;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:background 0.2s; }
                         .poll-edit-remove:hover { background:#fca5a5; }
                         .poll-edit-remove:disabled { opacity:0.35;cursor:not-allowed; }
                         .poll-votes-badge { font-size:11px;font-weight:700;color:#6b7280;background:#f3f4f6;padding:2px 8px;border-radius:20px;white-space:nowrap; }
-                        .poll-add-btn { font-size:13px;font-weight:600;color:#4f46e5;background:#eef2ff;border:1.5px dashed #a5b4fc;border-radius:10px;padding:8px 16px;cursor:pointer;width:100%;text-align:center;transition:all 0.2s;margin-top:4px; }
+                        .poll-add-btn { font-size:13px;font-weight:600;color:#293C79;background:#E7E8F0;border:1.5px dashed #a5b4fc;border-radius:10px;padding:8px 16px;cursor:pointer;width:100%;text-align:center;transition:all 0.2s;margin-top:4px; }
                         .poll-add-btn:hover { background:#e0e7ff; }
                         .poll-section-label { font-size:12px;font-weight:600;color:#6b7280;margin-bottom:6px;margin-top:14px;display:block; }
                         .poll-close-toggle { display:flex;align-items:center;gap:10px;padding:10px 14px;border:1.5px solid #e5e7eb;border-radius:10px;cursor:pointer;font-size:13px;font-weight:600;color:#374151;background:#fff;width:100%;margin-top:10px;transition:all 0.2s; }
-                        .poll-close-toggle:hover { border-color:#4f46e5;background:#f5f3ff; }
+                        .poll-close-toggle:hover { border-color:#293C79;background:#f5f3ff; }
                     </style>
 
                     @if($poll)
@@ -407,9 +407,9 @@
                         <button type="button" class="poll-close-toggle" id="btnClosePoll" onclick="toggleClosePoll()">
                             <span id="closePollIcon">
                                 @if($poll->isClosed())
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.52 0 10-4.48 10-10S17.52 2 12 2 2 6.48 2 12s4.48 10 10 10z"/><path d="m9 12 2 2 4-4"/></svg>
+                                    <x-manajemenmahasiswa::ui.icon name="check-circle" size="16" />
                                 @else
-                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+                                    <x-manajemenmahasiswa::ui.icon name="minus-circle" size="16" />
                                 @endif
                             </span>
                             <span id="closePollLabel">
@@ -447,10 +447,10 @@
             <div class="d-flex justify-content-end gap-3 align-items-center pb-2">
                 <a href="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}"
                     class="btn-action btn-cancel text-decoration-none shadow-sm">
-                    <span><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></span> Batal
+                    <x-manajemenmahasiswa::ui.icon name="minus-circle" size="16" /> Batal
                 </a>
                 <button type="submit" class="btn-action btn-post shadow-sm px-4">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg> Simpan Perubahan
+                    <x-manajemenmahasiswa::ui.icon name="download-01" size="16" /> Simpan Perubahan
                 </button>
             </div>
         </form>

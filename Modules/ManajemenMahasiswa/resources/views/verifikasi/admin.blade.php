@@ -233,14 +233,17 @@
                                         "{{ Str::limit($rw->verification_note, 40) }}"
                                     </div>
                                 @endif
+                                @if($rw->verification_status === 'approved' && $rw->verification_note)
+                                    <div style="font-size: 11px; color: #166534; margin-top: 4px; max-width: 180px;" title="{{ $rw->verification_note }}">
+                                        "{{ Str::limit($rw->verification_note, 40) }}"
+                                    </div>
+                                @endif
                             </td>
                             <td>
                                 @if($rw->verification_status === 'pending')
                                     <div class="d-flex gap-1">
-                                        <form method="POST" action="{{ route('manajemenmahasiswa.verifikasi.riwayat.approve', $rw->id) }}">
-                                            @csrf @method('PATCH')
-                                            <button type="submit" class="btn-approve" title="Setujui">✓</button>
-                                        </form>
+                                        <button type="button" class="btn-approve" title="Setujui"
+                                                onclick="openApproveModal('riwayat', {{ $rw->id }}, '{{ addslashes($rw->nama_kegiatan_manual ?? '') }}')">✓</button>
                                         <button type="button" class="btn-reject" title="Tolak"
                                                 onclick="openRejectModal('riwayat', {{ $rw->id }}, '{{ addslashes($rw->nama_kegiatan_manual ?? '') }}')">✗</button>
                                     </div>
@@ -327,14 +330,17 @@
                                         "{{ Str::limit($p->verification_note, 40) }}"
                                     </div>
                                 @endif
+                                @if($p->verification_status === 'approved' && $p->verification_note)
+                                    <div style="font-size: 11px; color: #166534; margin-top: 4px; max-width: 180px;" title="{{ $p->verification_note }}">
+                                        "{{ Str::limit($p->verification_note, 40) }}"
+                                    </div>
+                                @endif
                             </td>
                             <td>
                                 @if($p->verification_status === 'pending')
                                     <div class="d-flex gap-1">
-                                        <form method="POST" action="{{ route('manajemenmahasiswa.verifikasi.prestasi.approve', $p->id) }}">
-                                            @csrf @method('PATCH')
-                                            <button type="submit" class="btn-approve" title="Setujui">✓</button>
-                                        </form>
+                                        <button type="button" class="btn-approve" title="Setujui"
+                                                onclick="openApproveModal('prestasi', {{ $p->id }}, '{{ addslashes($p->nama_prestasi) }}')">✓</button>
                                         <button type="button" class="btn-reject" title="Tolak"
                                                 onclick="openRejectModal('prestasi', {{ $p->id }}, '{{ addslashes($p->nama_prestasi) }}')">✗</button>
                                     </div>
@@ -376,14 +382,57 @@
                     <p style="font-size: 14px; color: #6b7280; margin-bottom: 16px;">
                         Anda akan menolak: <strong id="rejectItemName" style="color: #1f2937;"></strong>
                     </p>
-                    <label class="form-label fw-bold" style="font-size: 13px;">Alasan Penolakan <span style="color: #dc2626;">*</span></label>
-                    <textarea name="verification_note" class="form-control" rows="3" required
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label fw-bold mb-0" style="font-size: 13px;">Alasan Penolakan <span style="color: #dc2626;">*</span></label>
+                        <span class="text-muted" style="font-size: 11px;" id="charCount_reject">0 / 200 huruf</span>
+                    </div>
+                    <textarea name="verification_note" class="form-control" rows="3" required maxlength="200"
                               placeholder="Contoh: Data kurang lengkap, bukti tidak valid, dll."
-                              style="border-radius: 10px; font-size: 14px;"></textarea>
+                              style="border-radius: 10px; font-size: 14px;" oninput="document.getElementById('charCount_reject').innerText = this.value.length + ' / 200 huruf'"></textarea>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Batal</button>
                     <button type="submit" style="padding: 8px 20px; border-radius: 10px; border: none; background: #dc2626; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer;">Tolak</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Approve Modal -->
+<div class="modal fade" id="approveModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="approveForm" method="POST">
+                @csrf @method('PATCH')
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold" style="color: #166534;">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px;"><circle cx="12" cy="12" r="10"></circle><polyline points="9 12 11 14 15 10"></polyline></svg>
+                        Setujui Pengajuan
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p style="font-size: 14px; color: #6b7280; margin-bottom: 16px;">
+                        Anda akan menyetujui: <strong id="approveItemName" style="color: #1f2937;"></strong>
+                    </p>
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                        <label class="form-label fw-bold mb-0" style="font-size: 13px;">Catatan Persetujuan <span style="font-weight: 400; color: #9ca3af;">(opsional)</span></label>
+                        <span class="text-muted" style="font-size: 11px;" id="charCount_approve">0 / 200 huruf</span>
+                    </div>
+                    <textarea name="verification_note" class="form-control" rows="3" maxlength="200"
+                              placeholder="Contoh: Dokumen lengkap dan valid. Disetujui."
+                              style="border-radius: 10px; font-size: 14px; border-color: #bbf7d0;"
+                              onfocus="this.style.borderColor='#16a34a';this.style.boxShadow='0 0 0 3px rgba(22,163,74,0.1)'"
+                              onblur="this.style.borderColor='#bbf7d0';this.style.boxShadow='none'" oninput="document.getElementById('charCount_approve').innerText = this.value.length + ' / 200 huruf'"></textarea>
+                    <p style="font-size: 12px; color: #9ca3af; margin-top: 6px; margin-bottom: 0;">Catatan akan terlihat di halaman status mahasiswa.</p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Batal</button>
+                    <button type="submit" style="padding: 8px 20px; border-radius: 10px; border: none; background: #16a34a; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px; margin-right: 4px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Setujui
+                    </button>
                 </div>
             </form>
         </div>
@@ -397,6 +446,13 @@ function openRejectModal(type, id, itemName) {
     document.getElementById('rejectItemName').textContent = itemName;
     document.getElementById('rejectForm').querySelector('textarea').value = '';
     new bootstrap.Modal(document.getElementById('rejectModal')).show();
+}
+function openApproveModal(type, id, itemName) {
+    const baseUrl = '{{ url("manajemen-mahasiswa/verifikasi") }}';
+    document.getElementById('approveForm').action = `${baseUrl}/${type}/${id}/approve`;
+    document.getElementById('approveItemName').textContent = itemName;
+    document.getElementById('approveForm').querySelector('textarea').value = '';
+    new bootstrap.Modal(document.getElementById('approveModal')).show();
 }
 </script>
 

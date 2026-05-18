@@ -58,18 +58,23 @@
         @endif
 
         <!-- Session Content Card -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm mb-8 overflow-hidden">
             <!-- Header Table Actions -->
-            <div class="px-6 py-4 flex items-center justify-end border-b border-slate-200 bg-slate-50">
-                <button @click="openModal = true" @if(!$selectedPeriode) disabled @endif class="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-xl px-4 py-2 text-slate-800 font-semibold text-[13px] border border-[#CBD5E1] shadow-sm focus:outline-none focus:ring-2 focus:ring-slate-400/20">
-                    <span class="font-bold text-lg leading-none mt-[0.5px]">+</span>
-                    Tambah Sesi
-                </button>
+            <div class="p-4 sm:px-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
+                <h2 class="text-[15px] font-semibold text-gray-900">Tabel Jadwal Sesi</h2>
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                    <button @click="openModal = true" @if(!$selectedPeriode) disabled @endif class="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-[#2A3A7C] hover:bg-[#1E2A5E] disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-lg px-4 py-2 text-[13px] font-medium shadow-sm transition-colors">
+                        <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Tambah Sesi
+                    </button>
+                </div>
             </div>
 
-            <div class="overflow-x-auto w-full">
-                <table class="w-full text-left text-sm text-slate-600">
-                    <thead class="bg-white border-b border-slate-200 text-xs font-bold text-slate-800 uppercase tracking-wider">
+            <div class="overflow-x-auto w-full relative bg-white">
+                <table class="w-full text-left text-[14px] text-gray-700 border-collapse">
+                    <thead class="bg-[#F9FAFB] border-b border-gray-200 text-[13px] font-medium text-gray-500 capitalize">
                         <tr>
                             <th scope="col" class="px-6 py-4 whitespace-nowrap w-2/12">Nama Sesi</th>
                             <th scope="col" class="px-6 py-4 whitespace-nowrap w-4/12">Waktu</th>
@@ -77,19 +82,18 @@
                             <th scope="col" class="px-6 py-4 whitespace-nowrap text-center w-2/12">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-slate-100 bg-white">
-                        
+                    <tbody>
                         @forelse($jadwals as $jadwal)
-                        <tr class="hover:bg-slate-50/50 transition-colors">
+                        <tr class="hover:bg-gray-50 transition-colors border-b border-gray-200 last:border-b-0">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="font-semibold text-slate-800">{{ $jadwal->nama_sesi }}</span>
-                                <p class="text-[11px] text-slate-400 mt-0.5">{{ $jadwal->ruangan ?? 'Ruangan belum diatur' }}</p>
+                                <span class="font-medium text-gray-900">{{ $jadwal->nama_sesi }}</span>
+                                <p class="text-[12px] text-gray-500 mt-0.5">{{ $jadwal->ruangan ?? 'Ruangan belum diatur' }}</p>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-slate-600 font-medium">
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-700 font-medium">
                                 {{ $jadwal->tanggal_ujian ? \Carbon\Carbon::parse($jadwal->tanggal_ujian)->format('d M Y') . ' • ' : '' }}
                                 {{ \Carbon\Carbon::parse($jadwal->waktu_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwal->waktu_selesai)->format('H:i') }} WIB
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-slate-600">
+                            <td class="px-6 py-4 whitespace-nowrap text-gray-700">
                                 {{ $jadwal->kuota }} Mahasiswa
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
@@ -97,7 +101,11 @@
                                     <form action="{{ route('banksoal.periode.jadwal.destroy', $jadwal->id) }}" method="POST" onsubmit="return confirm('Apakah Anda yakin ingin menghapus sesi ini?');" class="inline">
                                         @csrf
                                         @method('DELETE')
-                                        <button type="submit" class="text-red-600 hover:text-red-900 bg-red-50 p-1.5 rounded-lg transition-colors">Hapus</button>
+                                        <button type="submit" title="Hapus" class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors">
+                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-[18px] h-[18px]">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
+                                            </svg>
+                                        </button>
                                     </form>
                                 </div>
                             </td>
@@ -105,18 +113,17 @@
                         @empty
                         <!-- Empty State Row -->
                         <tr>
-                            <td colspan="4" class="px-6 py-16 text-center border-b border-transparent bg-white">
+                            <td colspan="4" class="px-6 py-20 text-center border-b border-transparent bg-white">
                                 <div class="flex flex-col items-center justify-center">
-                                    <div class="w-12 h-12 bg-slate-50 flex items-center justify-center rounded-full mb-3">
-                                        <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <div class="w-14 h-14 bg-gray-50 flex items-center justify-center rounded-2xl mb-4 border border-gray-100 shadow-sm">
+                                        <svg class="w-7 h-7 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     </div>
-                                    <h3 class="text-[13px] font-medium text-slate-700">Jadwal Sesi Kosong</h3>
-                                    <p class="text-xs text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed">Belum ada sesi ujian yang dibuat pada periode ini. Silakan klik "Tambah Sesi" di bagian atas untuk memulai pengaturan.</p>
+                                    <h3 class="text-[14px] font-semibold text-gray-900 tracking-tight">Jadwal Sesi Kosong</h3>
+                                    <p class="text-[13px] text-gray-500 mt-1 max-w-sm mx-auto leading-relaxed">Belum ada sesi ujian yang dibuat pada periode ini. Silakan klik "Tambah Sesi" di bagian atas untuk memulai pengaturan.</p>
                                 </div>
                             </td>
                         </tr>
                         @endempty
-
                     </tbody>
                 </table>
             </div>

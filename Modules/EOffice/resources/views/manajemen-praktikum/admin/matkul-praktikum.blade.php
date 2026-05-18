@@ -14,6 +14,13 @@
     </div>
 </div>
 
+{{-- Section title --}}
+<div class="sec-head flex-shrink-0">
+    <span class="sec-bar"></span>
+    <span class="sec-title">Filter &amp; Pencarian</span>
+    <span class="sec-rule"></span>
+</div>
+
 {{-- Filter & search --}}
 <div class="flex gap-2 flex-wrap items-center flex-shrink-0">
     <form method="GET" class="flex gap-2 flex-wrap">
@@ -30,7 +37,14 @@
         <a href="{{ route('eoffice.manprak.admin.matkul-praktikum.index') }}" class="mp-btn secondary sm">Reset</a>
         @endif
     </form>
-    <div class="ml-auto" style="font-size:12px;color:var(--c-fg-muted);">Total: <strong>{{ $matkulList->total() }}</strong> matkul</div>
+    <div class="ml-auto" style="font-size:12px;color:#666D80;">Total: <strong>{{ $matkulList->total() }}</strong> matkul</div>
+</div>
+
+{{-- Section title --}}
+<div class="sec-head flex-shrink-0">
+    <span class="sec-bar"></span>
+    <span class="sec-title">Daftar Mata Kuliah per Semester</span>
+    <span class="sec-rule"></span>
 </div>
 
 {{-- Tabel per semester --}}
@@ -43,26 +57,26 @@
     <div class="mp-card-header">
         <div class="flex items-center gap-3">
             <span class="mp-badge primary sm">Semester {{ $sem }}</span>
-            <span style="font-size:12px;font-weight:600;color:var(--c-fg);">{{ $items->count() }} mata kuliah</span>
+            <span style="font-size:12px;font-weight:600;color:#0D0D12;">{{ $items->count() }} mata kuliah</span>
         </div>
     </div>
     <table class="w-full" style="font-size:13px;">
         <thead>
-            <tr style="border-bottom:1px solid var(--c-border-light);">
-                <th class="mp-th text-left" style="padding:8px 20px;width:160px;">Kode MK</th>
-                <th class="mp-th text-left" style="padding:8px 20px;">Nama Mata Kuliah</th>
-                <th class="mp-th text-left" style="padding:8px 20px;width:60px;">SKS</th>
-                <th class="mp-th text-left" style="padding:8px 20px;width:120px;">Aksi</th>
+            <tr style="border-bottom:1px solid #DFE1E7;background:#F9FAFB;">
+                <th class="mp-th text-left" style="padding:10px 20px;width:160px;">Kode MK</th>
+                <th class="mp-th text-left" style="padding:10px 20px;">Nama Mata Kuliah</th>
+                <th class="mp-th text-left" style="padding:10px 20px;width:60px;">SKS</th>
+                <th class="mp-th text-left" style="padding:10px 20px;width:120px;">Aksi</th>
             </tr>
         </thead>
         <tbody>
             @foreach($items as $mk)
-            <tr class="mp-tr" style="border-bottom:1px solid var(--c-border-light);">
+            <tr class="mp-tr" style="border-bottom:1px solid #DFE1E7;">
                 <td style="padding:12px 20px;">
                     <span class="mp-badge primary sm" style="font-family:monospace;">{{ $mk->kode }}</span>
                 </td>
-                <td style="padding:12px 20px;font-weight:500;color:var(--c-fg);">{{ $mk->nama }}</td>
-                <td style="padding:12px 20px;text-align:center;font-weight:700;color:var(--c-fg-sub);">{{ $mk->sks }}</td>
+                <td style="padding:12px 20px;font-weight:500;color:#0D0D12;">{{ $mk->nama }}</td>
+                <td style="padding:12px 20px;text-align:center;font-weight:700;color:#353849;">{{ $mk->sks }}</td>
                 <td style="padding:12px 20px;">
                     <div class="flex gap-2">
                         <button onclick="openEdit({{ $mk->id }}, '{{ addslashes($mk->kode) }}', '{{ addslashes($mk->nama) }}', {{ $mk->sks }}, {{ $mk->semester ?? 'null' }})"
@@ -82,13 +96,16 @@
 @endforeach
 
 @if($matkulList->isEmpty())
-<div class="mp-card flex-shrink-0" style="padding:48px;text-align:center;font-size:13px;color:var(--c-fg-placeholder);">
-    Belum ada mata kuliah praktikum.
+<div class="mp-card flex-shrink-0">
+    <div style="padding:64px 20px;text-align:center;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#DFE1E7" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><path d="M4 19.5A2.5 2.5 0 016.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        <div style="font-size:13px;color:#666D80;">Belum ada mata kuliah praktikum.</div>
+    </div>
 </div>
 @endif
 
 @if($matkulList->hasPages())
-<div class="flex-shrink-0">{{ $matkulList->links() }}</div>
+<div class="flex-shrink-0" style="padding:12px 0;border-top:1px solid #DFE1E7;">{{ $matkulList->links() }}</div>
 @endif
 
 {{-- Modal Tambah --}}

@@ -260,12 +260,15 @@ class ThreadService
                 $thread->bestAnswer?->update(['is_best_answer' => false]);
             }
 
-            $comment = \Modules\ManajemenMahasiswa\Models\Comment::findOrFail($commentId);
+            // Pastikan comment milik thread yang sama (Fix #5)
+            $comment = \Modules\ManajemenMahasiswa\Models\Comment::where('id', $commentId)
+                ->where('thread_id', $thread->id)
+                ->firstOrFail();
             $comment->update(['is_best_answer' => true]);
             // Use query builder to avoid touching updated_at
             Thread::where('id', $thread->id)->update(['best_answer_id' => $commentId]);
 
-            // Award XP ke commenter
+            // Award XP ke commenter baru
             $this->gamificationService->awardXp(
                 $comment->user_id,
                 XpLog::ACTION_BEST_ANSWER,

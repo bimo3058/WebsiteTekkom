@@ -223,7 +223,7 @@
             }
         </style>
 
-        <div class="settings-wrap"
+        <div class="settings-wrap" id="settings-root"
             x-data="{ tab: '{{ session('status') === 'password-updated' ? 'password' : 'general' }}' }">
             <div class="settings-box">
 
@@ -292,10 +292,14 @@
             
             <script>
         function submitActiveForm() {
-    const tab = document.querySelector('[x-data]').__x.$data.tab;
-        if (tab === 'general')  document.getElementById('form-general').submit();
-    if (tab === 'password') document.getElementById('form-password').submit();
-}
+            // Target wrapper settings secara spesifik by ID (bukan querySelector('[x-data]')
+            // yang bisa menangkap elemen Alpine lain seperti dropdown phone code)
+            const el = document.getElementById('settings-root');
+            const tab = (el && window.Alpine) ? Alpine.$data(el).tab : 'general';
+
+            if (tab === 'general')  document.getElementById('form-general').submit();
+            if (tab === 'password') document.getElementById('form-password').submit();
+        }
 </script>
 
 </x-sidebar>

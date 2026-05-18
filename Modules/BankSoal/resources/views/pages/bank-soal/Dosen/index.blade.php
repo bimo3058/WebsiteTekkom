@@ -421,39 +421,20 @@
                 <!-- CPL -->
                 <div class="mb-5">
                     <label class="block text-sm font-medium text-slate-700 mb-2">CPL (Capaian Pembelajaran Lulusan)</label>
-                    <div class="relative">
-                        <select class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="cpl_id">
-                            <option value="">Pilih CPL</option>
-                        </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </div>
-                    </div>
+                    <select class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none" name="cpl_id[]" id="cplSelectElement" multiple placeholder="Pilih CPL">
+                        <option value="">Pilih CPL</option>
+                    </select>
                 </div>
 
                 <!-- CPMK -->
                 <div class="mb-5">
                     <label class="block text-sm font-medium text-slate-700 mb-2">CPMK (Capaian Pembelajaran Mata Kuliah)</label>
-                    <div class="relative">
-                        <select class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-10 shadow-sm appearance-none" name="cpmk_id">
-                            <option value="">Pilih CPMK</option>
-                        </select>
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-slate-400">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </div>
-                    </div>
+                    <select class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none" name="cpmk_id[]" id="cpmkSelectElement" multiple placeholder="Pilih CPMK">
+                        <option value="">Pilih CPMK</option>
+                    </select>
                 </div>
 
-                <!-- Bobot Total -->
-                <div class="mb-2">
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Bobot Total</label>
-                    <div class="relative">
-                        <input type="number" name="bobot_total" min="1" max="100" class="w-full bg-white border border-slate-300 rounded-lg text-sm focus:outline-none py-2.5 pl-4 pr-12 shadow-sm" placeholder="Contoh: 100" oninput="if(this.value > 100) this.value = 100; if(this.value < 0) this.value = 0;">
-                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
-                            <span class="text-xs font-medium text-slate-500 bg-slate-100 px-2 py-1 rounded-md border border-slate-200">Pts</span>
-                        </div>
-                    </div>
-                </div>
+
             </form>
         </div>
 
@@ -486,9 +467,19 @@
     window.tarikSoalsData = [];
     window.currentTarikMkId = null;
 
+    let isUpdatingFilter = false;
+
     function renderCplCpmk(selectedMk, validCplIds = null, validCpmkIds = null) {
-        const cplSelect = document.querySelector('select[name="cpl_id"]');
-        const cpmkSelect = document.querySelector('select[name="cpmk_id"]');
+        const cplSelect = document.getElementById('cplSelectElement');
+        const cpmkSelect = document.getElementById('cpmkSelectElement');
+
+        // Remember existing values
+        const currentCpls = cplSelect.tomselect ? cplSelect.tomselect.getValue() : [];
+        const currentCpmks = cpmkSelect.tomselect ? cpmkSelect.tomselect.getValue() : [];
+
+        // Destroy existing TomSelect instance if it exists
+        if (cplSelect.tomselect) cplSelect.tomselect.destroy();
+        if (cpmkSelect.tomselect) cpmkSelect.tomselect.destroy();
 
         cplSelect.innerHTML = '<option value="">Pilih CPL</option>';
         cpmkSelect.innerHTML = '<option value="">Pilih CPMK</option>';
@@ -507,6 +498,33 @@
                 }
             });
         }
+
+        // Init TomSelect for multi-select
+        new TomSelect(cplSelect, {
+            plugins: { remove_button: { title: 'Hapus CPL' } },
+            create: false,
+            placeholder: 'Pilih CPL (bisa lebih dari 1)',
+            searchField: ['text'],
+            onChange: function() {
+                if (!isUpdatingFilter) filterCplCpmk();
+            }
+        });
+        
+        new TomSelect(cpmkSelect, {
+            plugins: { remove_button: { title: 'Hapus CPMK' } },
+            create: false,
+            placeholder: 'Pilih CPMK (bisa lebih dari 1)',
+            searchField: ['text'],
+            onChange: function() {
+                if (!isUpdatingFilter) filterCplCpmk();
+            }
+        });
+
+        // Restore values
+        isUpdatingFilter = true;
+        if (currentCpls.length) cplSelect.tomselect.setValue(currentCpls);
+        if (currentCpmks.length) cpmkSelect.tomselect.setValue(currentCpmks);
+        isUpdatingFilter = false;
     }
 
     function filterCplCpmk() {
@@ -514,31 +532,52 @@
             return;
         }
         
+        if (isUpdatingFilter) return;
+        isUpdatingFilter = true;
+        
         const cbs = Array.from(document.querySelectorAll('input[name="jenis_soal[]"]:checked'));
         const typesChecked = cbs.map(cb => {
             return cb.value === 'Pilihan Ganda' ? 'pilihan_ganda' : 'essay';
         });
 
         const selectedMk = mkData.find(mk => mk.id == window.currentTarikMkId);
-        if (!selectedMk) return;
-
-        if (typesChecked.length === 0) {
-            renderCplCpmk(selectedMk, null, null);
-        } else {
-            const validCplIds = window.tarikSoalsData
-                .filter(soal => typesChecked.includes(soal.tipe_soal))
-                .map(soal => soal.cpl_id)
-                .filter(id => id !== null);
-                
-            const validCpmkIds = window.tarikSoalsData
-                .filter(soal => typesChecked.includes(soal.tipe_soal))
-                .map(soal => soal.cpmk_id)
-                .filter(id => id !== null);
-            
-            const uniqueCplIds = [...new Set(validCplIds)];
-            const uniqueCpmkIds = [...new Set(validCpmkIds)];
-            renderCplCpmk(selectedMk, uniqueCplIds, uniqueCpmkIds);
+        if (!selectedMk) {
+            isUpdatingFilter = false;
+            return;
         }
+
+        const cplSelect = document.getElementById('cplSelectElement');
+        const cpmkSelect = document.getElementById('cpmkSelectElement');
+        
+        const selectedCplIds = cplSelect && cplSelect.tomselect ? 
+            (Array.isArray(cplSelect.tomselect.getValue()) ? cplSelect.tomselect.getValue() : [cplSelect.tomselect.getValue()]).filter(v => v).map(Number) : [];
+            
+        const selectedCpmkIds = cpmkSelect && cpmkSelect.tomselect ? 
+            (Array.isArray(cpmkSelect.tomselect.getValue()) ? cpmkSelect.tomselect.getValue() : [cpmkSelect.tomselect.getValue()]).filter(v => v).map(Number) : [];
+
+        // Base filter by Tipe Soal
+        let filteredSoals = window.tarikSoalsData;
+        if (typesChecked.length > 0) {
+            filteredSoals = filteredSoals.filter(soal => typesChecked.includes(soal.tipe_soal));
+        }
+
+        // To determine available CPLs: filter by selected types & selected CPMKs
+        const availableCplsFromSoal = filteredSoals
+            .filter(soal => selectedCpmkIds.length === 0 || selectedCpmkIds.includes(soal.cpmk_id))
+            .map(soal => soal.cpl_id)
+            .filter(id => id !== null);
+
+        // To determine available CPMKs: filter by selected types & selected CPLs
+        const availableCpmksFromSoal = filteredSoals
+            .filter(soal => selectedCplIds.length === 0 || selectedCplIds.includes(soal.cpl_id))
+            .map(soal => soal.cpmk_id)
+            .filter(id => id !== null);
+
+        const uniqueCplIds = [...new Set(availableCplsFromSoal)];
+        const uniqueCpmkIds = [...new Set(availableCpmksFromSoal)];
+        
+        renderCplCpmk(selectedMk, typesChecked.length === 0 && selectedCpmkIds.length === 0 ? null : uniqueCplIds, typesChecked.length === 0 && selectedCplIds.length === 0 ? null : uniqueCpmkIds);
+        isUpdatingFilter = false;
     }
 
     function loadCplCpmk(mk_id) {
@@ -749,7 +788,6 @@
                 closeTarikModal();
                 // Pass extra param for modal filler
                 data.mk_id = formData.get('mk_id');
-                data.bobot_total = formData.get('bobot_total');
                 setTimeout(() => {
                     openReviewModal(data);
                 }, 300);
@@ -1042,22 +1080,6 @@
                 }
             });
 
-            document.querySelectorAll('[data-package-action]').forEach((button) => {
-                button.addEventListener('click', function () {
-                    const action = this.dataset.packageAction;
-                    const mkId = this.dataset.mkId;
-                    const mkNama = this.dataset.mkNama || '';
-
-                    if (action === 'lihat') {
-                        openLihatSoalModal(mkId, mkNama);
-                    }
-
-                    if (action === 'tarik') {
-                        openTarikModal(mkId);
-                    }
-                });
-            });
-
             const noResultsMsg = tabContent.querySelector('.no-results-message');
             if (noResultsMsg) {
                 if (visibleCount === 0) {
@@ -1070,6 +1092,22 @@
             // Prevent actual form submission to retain real-time UI mapping
             // But if user hits enter, it will trigger the server-side pagination flow.
         }
+
+        document.querySelectorAll('[data-package-action]').forEach((button) => {
+            button.addEventListener('click', function () {
+                const action = this.dataset.packageAction;
+                const mkId = this.dataset.mkId;
+                const mkNama = this.dataset.mkNama || '';
+
+                if (action === 'lihat') {
+                    openLihatSoalModal(mkId, mkNama);
+                }
+
+                if (action === 'tarik') {
+                    openTarikModal(mkId);
+                }
+            });
+        });
 
         const searchInputs = document.querySelectorAll('[data-search-tab]');
         searchInputs.forEach((input) => {

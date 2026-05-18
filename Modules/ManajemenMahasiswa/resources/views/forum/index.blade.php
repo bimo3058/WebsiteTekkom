@@ -2,21 +2,28 @@
 
     @push('styles')
         <style>
+            /* ── Main Wrapper Override (match Pengumuman) ─────────────────── */
+            .main-wrapper {
+                background: transparent !important;
+                box-shadow: none !important;
+                padding: 0 !important;
+            }
+
             /* ── Page Title ──────────────────────────────────────────────────── */
             .page-title {
                 margin-bottom: 22px;
             }
 
             .page-title h1 {
-                font-size: 26px;
+                font-size: 1.5rem;
                 font-weight: 700;
-                color: #111827;
-                margin: 0 0 2px;
+                color: #1e1b4b;
+                margin: 0 0 4px;
                 letter-spacing: -0.02em;
             }
 
             .page-title p {
-                font-size: 14px;
+                font-size: 0.95rem;
                 color: #6b7280;
                 margin: 0;
             }
@@ -25,23 +32,26 @@
             .dashboard-card {
                 background: #fff;
                 border-radius: 12px;
-                border: 1px solid #e5e7eb;
-                padding: 20px;
-                margin-bottom: 20px;
+                border: 1px solid #DDE1E8;
+                padding: 22px 26px;
+                margin-bottom: 16px;
+                box-shadow: 0 1px 3px rgba(22, 22, 43, 0.06), 0 1px 2px rgba(22, 22, 43, 0.04);
             }
 
             .forum-card {
                 background: #fff;
                 border-radius: 12px;
-                border: 1px solid #e5e7eb;
-                padding: 20px;
-                margin-bottom: 20px;
-                transition: transform 0.15s ease, box-shadow 0.15s ease;
+                border: 1px solid #DDE1E8;
+                padding: 22px 26px;
+                margin-bottom: 16px;
+                transition: all 0.25s ease;
+                box-shadow: 0 1px 3px rgba(22, 22, 43, 0.06), 0 1px 2px rgba(22, 22, 43, 0.04);
             }
 
             .forum-card:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+                border-color: #C6CBD2;
+                box-shadow: 0 4px 8px -2px rgba(22, 22, 43, 0.06), 0 2px 4px -2px rgba(22, 22, 43, 0.04);
+                transform: translateY(-1px);
             }
 
             .avatar-placeholder {
@@ -49,7 +59,7 @@
                 height: 40px;
                 border-radius: 50%;
                 background-color: #e0e7ff;
-                color: #4f46e5;
+                color: #293C79;
                 display: flex;
                 align-items: center;
                 justify-content: center;
@@ -58,38 +68,41 @@
             }
 
             .btn-join {
-                background-color: #4f46e5;
-                color: white;
-                border: none;
-                border-radius: 6px;
-                padding: 4px 16px;
-                font-size: 13px;
-                font-weight: 600;
-                transition: background-color 0.2s;
-            }
-
-            .btn-join:hover {
-                background-color: #4338ca;
-            }
-
-            .btn-post {
-                background-color: #4f46e5;
+                background-color: #293C79;
                 color: white;
                 border: none;
                 border-radius: 8px;
-                padding: 0 20px;
-                height: 42px;
+                padding: 4px 16px;
+                font-size: 13px;
+                font-weight: 600;
+                transition: all 0.2s ease;
+            }
+
+            .btn-join:hover {
+                background-color: #415086;
+                transform: translateY(-1px);
+            }
+
+            .btn-post {
+                background-color: #293C79;
+                color: white;
+                border: none;
+                border-radius: 12px;
+                padding: 0 24px;
+                height: 44px;
                 font-weight: 600;
                 display: inline-flex;
                 align-items: center;
                 gap: 8px;
                 white-space: nowrap;
-                transition: background-color 0.2s;
+                transition: all 0.2s ease;
             }
 
             .btn-post:hover {
-                background-color: #4338ca;
+                background-color: #415086;
                 color: white;
+                transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(41, 60, 121, 0.3);
             }
 
             .post-actions .vote-pill {
@@ -171,18 +184,24 @@
 
             .search-input {
                 border: 1px solid #e5e7eb;
-                border-radius: 8px;
-                padding: 7px 12px 7px 32px;
-                font-size: 13px;
-                color: #374151;
+                border-radius: 12px;
+                padding: 12px 18px 12px 46px;
+                font-size: 0.9rem;
+                color: #4b5563;
                 outline: none;
-                background: #f9fafb;
-                height: 42px;
+                background: #E7E8F0;
+                height: 44px;
+                transition: all 0.25s ease;
+            }
+
+            .search-input::placeholder {
+                color: #9ca3af;
             }
 
             .search-input:focus {
-                border-color: #4f46e5;
-                background: #ffffff;
+                border-color: #293C79;
+                box-shadow: 0 0 0 3px rgba(41, 60, 121, 0.12);
+                background: #fff;
             }
 
             .search-wrapper {
@@ -192,11 +211,61 @@
 
             .search-icon {
                 position: absolute;
-                left: 12px;
+                left: 16px;
                 top: 50%;
                 transform: translateY(-50%);
                 color: #9ca3af;
-                font-size: 14px;
+                pointer-events: none;
+                width: 18px;
+                height: 18px;
+                display: inline-flex;
+                align-items: center;
+                justify-content: center;
+            }
+
+            .search-icon svg {
+                width: 18px;
+                height: 18px;
+            }
+
+            /* Force SVGs inside btn-post to inherit size */
+            .btn-post svg {
+                width: 16px;
+                height: 16px;
+                flex-shrink: 0;
+            }
+
+            /* ── Sort Tabs ── */
+            .sort-tab {
+                display: inline-flex;
+                align-items: center;
+                gap: 4px;
+                padding: 6px 16px;
+                border-radius: 20px;
+                font-size: 13px;
+                font-weight: 600;
+                border: 1px solid #e5e7eb;
+                background: #fff;
+                color: #6b7280;
+                cursor: pointer;
+                transition: all 0.2s ease;
+            }
+
+            .sort-tab:hover {
+                border-color: #293C79;
+                color: #293C79;
+                background: #E7E8F0;
+            }
+
+            .sort-tab.active {
+                background: #293C79;
+                color: #fff;
+                border-color: #293C79;
+            }
+
+            .sort-tab svg {
+                width: 14px;
+                height: 14px;
             }
 
             .leaderboard-table th {
@@ -418,7 +487,7 @@
             }
 
             .report-thread-title:hover {
-                color: #6366f1;
+                color: #293C79;
             }
 
             .report-reason-text {
@@ -462,8 +531,8 @@
             }
 
             .report-action-btn:hover {
-                border-color: #6366f1;
-                color: #6366f1;
+                border-color: #293C79;
+                color: #293C79;
             }
 
             .report-action-btn.danger {
@@ -546,7 +615,7 @@
     @endpush
 
     <div class="page-title">
-        <h1>Forum Diskusi</h1>
+        <h4 style="font-size: 1.5rem; font-weight: 700; color: #1e1b4b; margin-bottom: 4px;">Forum Diskusi</h4>
         <p>Wadah komunikasi mahasiswa & alumni</p>
     </div>
 
@@ -563,10 +632,10 @@
     <div class="row mb-4">
         <!-- Leaderboard -->
         <div class="col-md-7 mb-3 mb-md-0">
-            <div class="gamification-card h-100"
-                style="overflow:hidden; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff;">
+            <div class="h-100"
+                style="overflow:hidden; border: 1px solid #DDE1E8; border-radius: 12px; background: #fff; box-shadow: 0 1px 3px rgba(22,22,43,0.06), 0 1px 2px rgba(22,22,43,0.04);">
                 <div
-                    style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a855f7 100%); padding: 16px 20px; border-radius: 12px 12px 0 0;">
+                    style="background: linear-gradient(135deg, #293C79 0%, #415086 50%, #6F7DA4 100%); padding: 16px 20px; border-radius: 12px 12px 0 0;">
                     <div class="d-flex align-items-center gap-2">
                         <div
                             style="width: 36px; height: 36px; background: rgba(255,255,255,0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
@@ -623,7 +692,7 @@
                                             <span class="d-inline-flex align-items-center gap-1" style="font-size: 13px;">
                                                 <span title="{{ $entry->tier_name }}">{!! $entry->tier_icon !!}</span>
                                                 <span
-                                                    style="color: #6366f1; font-weight: 600;">Lv.{{ $entry->level }}</span>
+                                                    style="color: #293C79; font-weight: 600;">Lv.{{ $entry->level }}</span>
                                             </span>
                                         </td>
                                         <td>
@@ -670,8 +739,8 @@
 
         <!-- User Stats Card -->
         <div class="col-md-5">
-            <div class="gamification-card h-100"
-                style="overflow:hidden; border: 1px solid #e5e7eb; border-radius: 12px; background: #fff;">
+            <div class="h-100"
+                style="overflow:hidden; border: 1px solid #DDE1E8; border-radius: 12px; background: #fff; box-shadow: 0 1px 3px rgba(22,22,43,0.06), 0 1px 2px rgba(22,22,43,0.04);">
                 {{-- Streak Banner --}}
                 <div
                     style="background: linear-gradient(135deg, #f97316 0%, #ea580c 50%, #dc2626 100%); padding: 18px 20px; border-radius: 12px 12px 0 0; position: relative; overflow: hidden;">
@@ -719,14 +788,14 @@
                         </div>
                         {{-- Level --}}
                         <div
-                            style="flex: 1; background: #f5f3ff; border: 1px solid #e9e5ff; border-radius: 10px; padding: 12px 14px; text-align: center;">
+                            style="flex: 1; background: #E7E8F0; border: 1px solid #e9e5ff; border-radius: 10px; padding: 12px 14px; text-align: center;">
                             <div
                                 style="font-size: 11px; color: #94a3b8; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 4px;">
                                 Level</div>
-                            <div style="font-size: 22px; font-weight: 800; color: #6366f1; letter-spacing: -0.02em;">
+                            <div style="font-size: 22px; font-weight: 800; color: #293C79; letter-spacing: -0.02em;">
                                 <span>{!! $userStats['tier_icon'] !!}</span> {{ $userStats['level'] }}
                             </div>
-                            <div style="font-size: 11px; color: #8b5cf6; font-weight: 600;">
+                            <div style="font-size: 11px; color: #415086; font-weight: 600;">
                                 {{ $userStats['tier_name'] }}</div>
                         </div>
                     </div>
@@ -736,15 +805,11 @@
                         <div class="d-flex justify-content-between align-items-center mb-2">
                             <span
                                 style="font-size: 12px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.03em;">
-                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#6366f1"
-                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                                    style="margin-right: 4px; vertical-align: -2px;">
-                                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
-                                </svg>
+                                <x-manajemenmahasiswa::ui.icon name="flash" size="14" />
                                 Experience
                             </span>
                             <span
-                                style="font-size: 12px; font-weight: 700; color: #6366f1;">{{ $userStats['total_xp'] }}
+                                style="font-size: 12px; font-weight: 700; color: #293C79;">{{ $userStats['total_xp'] }}
                                 / {{ $userStats['xp_for_next'] }} XP</span>
                         </div>
                         @php
@@ -754,7 +819,7 @@
                         @endphp
                         <div style="height: 10px; background: #e2e8f0; border-radius: 6px; overflow: hidden;">
                             <div
-                                style="height: 100%; width: {{ $progressPct }}%; background: linear-gradient(90deg, #6366f1, #8b5cf6, #a855f7); border-radius: 6px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);">
+                                style="height: 100%; width: {{ $progressPct }}%; background: linear-gradient(90deg, #293C79, #415086, #6F7DA4); border-radius: 6px; transition: width 0.6s cubic-bezier(0.4, 0, 0.2, 1);">
                             </div>
                         </div>
                         <div class="d-flex justify-content-between mt-1">
@@ -770,18 +835,13 @@
                         <div class="mt-3">
                             <div
                                 style="font-size: 11px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 8px;">
-                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
-                                    style="margin-right: 3px; vertical-align: -2px;">
-                                    <circle cx="12" cy="8" r="6" />
-                                    <path d="M15.477 12.89 17 22l-5-3-5 3 1.523-9.11" />
-                                </svg>
+                                <x-manajemenmahasiswa::ui.icon name="star" size="13" />
                                 Badges
                             </div>
                             <div class="d-flex align-items-center gap-2 flex-wrap">
                                 @foreach($userStats['badges'] as $badge)
                                     <div
-                                        style="background: #f5f3ff; border: 1px solid #e9e5ff; border-radius: 8px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;">
+                                        style="background: #E7E8F0; border: 1px solid #e9e5ff; border-radius: 8px; padding: 4px 10px; display: inline-flex; align-items: center; gap: 4px;">
                                         @if($badge->image)
                                             <img src="{{ asset($badge->image) }}?v={{ time() }}"
                                                 title="{{ $badge->name }}: {{ $badge->description }}"
@@ -794,7 +854,7 @@
                                                 style="font-size: 16px;">{{ $badge->icon }}</span>
                                         @endif
                                         <span
-                                            style="font-size: 11px; font-weight: 600; color: #6366f1;">{{ $badge->name }}</span>
+                                            style="font-size: 11px; font-weight: 600; color: #293C79;">{{ $badge->name }}</span>
                                     </div>
                                 @endforeach
                             </div>
@@ -809,18 +869,16 @@
     <form method="GET" action="{{ route('manajemenmahasiswa.forum.index') }}" id="forumFilterForm">
         <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-3">
             <div class="search-wrapper w-100 me-0 me-md-2">
-                <span class="search-icon"><svg width="14" height="14" viewBox="0 0 24 24" fill="none"
-                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <circle cx="11" cy="11" r="8"></circle>
-                        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                    </svg></span>
-                <input type="text" name="search" class="form-control search-input w-100" placeholder="Cari diskusi..."
+                <span class="search-icon">
+                    <x-manajemenmahasiswa::ui.icon name="search-01" size="18" />
+                </span>
+                <input type="text" name="search" class="form-control search-input w-100" placeholder="Search"
                     value="{{ request('search') }}">
             </div>
 
             <div class="d-flex gap-3">
                 <select name="kategori" class="form-select border-1"
-                    style="border-radius: 8px; height: 42px; min-width: 130px;"
+                    style="border-radius: 12px; height: 44px; min-width: 130px; background: #fff; border-color: #e5e7eb;"
                     onchange="document.getElementById('forumFilterForm').submit()">
                     <option value="semua" {{ request('kategori') == 'semua' || !request('kategori') ? 'selected' : '' }}>
                         Semua</option>
@@ -830,13 +888,9 @@
                         </option>
                     @endforeach
                 </select>
-                <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post text-decoration-none">
-                    Post
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <line x1="12" y1="5" x2="12" y2="19"></line>
-                        <line x1="5" y1="12" x2="19" y2="12"></line>
-                    </svg>
+                <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post text-decoration-none d-inline-flex align-items-center gap-1">
+                    <x-manajemenmahasiswa::ui.icon name="plus" size="16" />
+                    Buat Post
                 </a>
             </div>
         </div>
@@ -846,30 +900,19 @@
         <div class="d-flex gap-2 mb-4">
             @php $currentSort = request('sort', 'terbaru'); @endphp
             <button type="button"
-                class="btn btn-sm rounded-pill fw-semibold px-3 {{ $currentSort === 'terbaru' ? 'btn-dark' : 'btn-outline-secondary' }}"
+                class="btn btn-sm rounded-pill fw-semibold px-3 d-inline-flex align-items-center gap-1 {{ $currentSort === 'terbaru' ? 'btn-dark' : 'btn-outline-secondary' }}"
                 onclick="document.getElementById('sortInput').value='terbaru'; document.getElementById('forumFilterForm').submit();">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;">
-                    <circle cx="12" cy="12" r="10" />
-                    <polyline points="12 6 12 12 16 14" />
-                </svg> Terbaru
+                <x-manajemenmahasiswa::ui.icon name="clock-02" size="13" /> Terbaru
             </button>
             <button type="button"
-                class="btn btn-sm rounded-pill fw-semibold px-3 {{ $currentSort === 'hot' ? 'btn-dark' : 'btn-outline-secondary' }}"
+                class="btn btn-sm rounded-pill fw-semibold px-3 d-inline-flex align-items-center gap-1 {{ $currentSort === 'hot' ? 'btn-dark' : 'btn-outline-secondary' }}"
                 onclick="document.getElementById('sortInput').value='hot'; document.getElementById('forumFilterForm').submit();">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;">
-                    <path
-                        d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />
-                </svg> Hot
+                <x-manajemenmahasiswa::ui.icon name="flash" size="13" /> Hot
             </button>
             <button type="button"
-                class="btn btn-sm rounded-pill fw-semibold px-3 {{ $currentSort === 'top' ? 'btn-dark' : 'btn-outline-secondary' }}"
+                class="btn btn-sm rounded-pill fw-semibold px-3 d-inline-flex align-items-center gap-1 {{ $currentSort === 'top' ? 'btn-dark' : 'btn-outline-secondary' }}"
                 onclick="document.getElementById('sortInput').value='top'; document.getElementById('forumFilterForm').submit();">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
-                    stroke-linecap="round" stroke-linejoin="round" style="margin-right:2px;">
-                    <polyline points="18 15 12 9 6 15" />
-                </svg> Top
+                <x-manajemenmahasiswa::ui.icon name="chevron-up" size="13" /> Top
             </button>
         </div>
     </form>
@@ -880,17 +923,10 @@
             <div class="report-panel-header"
                 onclick="this.nextElementSibling.classList.toggle('open'); this.querySelector('.chevron-icon').classList.toggle('rotated')">
                 <h6>
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#991b1b" stroke-width="2.5"
-                        stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-                        <line x1="4" x2="4" y1="22" y2="15" />
-                    </svg> Laporan Masuk
+                    <x-manajemenmahasiswa::ui.icon name="alert-triangle" size="16" /> Laporan Masuk
                     <span class="report-badge">{{ $forumReports->count() }}</span>
                 </h6>
-                <svg class="chevron-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#991b1b"
-                    stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="transition:transform 0.3s;">
-                    <polyline points="6 9 12 15 18 9"></polyline>
-                </svg>
+                <x-manajemenmahasiswa::ui.icon name="chevron-down" size="16" class="chevron-icon" />
             </div>
             <div class="report-panel-body">
                 @foreach($forumReports as $report)
@@ -916,55 +952,30 @@
                                 &nbsp;• Thread oleh <strong>{{ $report->thread->author->name }}</strong>
                             @endif
                         </div>
-                        <div class="report-reason-text"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"
-                                style="margin-right: 4px;">
-                                <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-                                <line x1="4" x2="4" y1="22" y2="15" />
-                            </svg> {{ $report->alasan }}</div>
+                        <div class="report-reason-text"><x-manajemenmahasiswa::ui.icon name="alert-triangle" size="12" /> {{ $report->alasan }}</div>
                         <div class="report-actions-row">
                             @if($report->thread)
                                 <a href="{{ route('manajemenmahasiswa.forum.show', $report->thread_id) }}"
-                                    class="report-action-btn"><svg width="12" height="12" viewBox="0 0 24 24" fill="none"
-                                        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                        <path d="M2 12s3-7 10-7 10 7 10 7-3 7-10 7-10-7-10-7Z" />
-                                        <circle cx="12" cy="12" r="3" />
-                                    </svg> Lihat</a>
+                                    class="report-action-btn"><x-manajemenmahasiswa::ui.icon name="eye" size="12" /> Lihat</a>
                                 @if(!($report->thread->is_locked ?? false))
                                     <form method="POST"
                                         action="{{ route('manajemenmahasiswa.forum.reports.lock_thread', $report->id) }}"
                                         style="display:inline;" onsubmit="return confirm('Kunci thread ini?')">
                                         @csrf @method('PATCH')
-                                        <button type="submit" class="report-action-btn warning"><svg width="12" height="12"
-                                                viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                                stroke-linecap="round" stroke-linejoin="round">
-                                                <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                            </svg> Kunci</button>
+                                        <button type="submit" class="report-action-btn warning"><x-manajemenmahasiswa::ui.icon name="locked-01" size="12" /> Kunci</button>
                                     </form>
                                 @endif
                                 <form method="POST"
                                     action="{{ route('manajemenmahasiswa.forum.reports.delete_thread', $report->id) }}"
                                     style="display:inline;" onsubmit="return confirm('HAPUS thread ini secara permanen?')">
                                     @csrf @method('DELETE')
-                                    <button type="submit" class="report-action-btn danger"><svg width="12" height="12"
-                                            viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                                            stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M3 6h18" />
-                                            <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                            <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                        </svg> Hapus Thread</button>
+                                    <button type="submit" class="report-action-btn danger"><x-manajemenmahasiswa::ui.icon name="minus-circle" size="12" /> Hapus Thread</button>
                                 </form>
                             @endif
                             <form method="POST" action="{{ route('manajemenmahasiswa.forum.reports.dismiss', $report->id) }}"
                                 style="display:inline;" onsubmit="return confirm('Abaikan laporan ini?')">
                                 @csrf @method('DELETE')
-                                <button type="submit" class="report-action-btn"><svg width="12" height="12" viewBox="0 0 24 24"
-                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                                        stroke-linejoin="round">
-                                        <line x1="18" y1="6" x2="6" y2="18" />
-                                        <line x1="6" y1="6" x2="18" y2="18" />
-                                    </svg> Abaikan</button>
+                                <button type="submit" class="report-action-btn"><x-manajemenmahasiswa::ui.icon name="minus" size="12" /> Abaikan</button>
                             </form>
                         </div>
                     </div>
@@ -988,7 +999,7 @@
                                 @include('manajemenmahasiswa::forum.partials.role-badge', ['roleUser' => $thread->author])
                                 @if(isset($authorTiers[$thread->user_id]))
                                     <span class="badge rounded-pill"
-                                        style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: #fff; font-size: 10px; font-weight: 600; padding: 3px 8px;"
+                                        style="background: linear-gradient(135deg, #293C79 0%, #415086 100%); color: #fff; font-size: 10px; font-weight: 600; padding: 3px 8px;"
                                         title="{{ $authorTiers[$thread->user_id]['tier_name'] }}">
                                         {!! $authorTiers[$thread->user_id]['tier_icon'] !!}
                                         Lv.{{ $authorTiers[$thread->user_id]['level'] }}
@@ -1001,21 +1012,13 @@
                                 @endif
                                 @if($thread->is_pinned)
                                     <span class="pinned-badge">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
-                                            <path d="M14 2l8 8-2 2-3-3-4 4v7h-2v-7l-4-4-3 3-2-2 8-8z" />
-                                        </svg>
+                                        <x-manajemenmahasiswa::ui.icon name="bookmark" size="12" />
                                         Pinned
                                     </span>
                                 @endif
                                 <span class="personal-pin-badge" data-personal-pin="{{ $thread->id }}"
                                     style="display: {{ $thread->is_personal_pinned ? 'inline-flex' : 'none' }};">
-                                    <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                        stroke-width="3" stroke-linecap="round" stroke-linejoin="round"
-                                        style="margin-right:2px;">
-                                        <line x1="12" y1="17" x2="12" y2="22" />
-                                        <path
-                                            d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a3 3 0 0 0-6 0v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
-                                    </svg> Pin Pribadi
+                                    <x-manajemenmahasiswa::ui.icon name="bookmark-check" size="10" /> Pin Pribadi
                                 </span>
                             </div>
                         </div>
@@ -1024,12 +1027,7 @@
                         <button type="button"
                             class="btn btn-link p-0 text-muted fw-bold text-decoration-none shadow-none d-flex align-items-center"
                             data-bs-toggle="dropdown">
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                <circle cx="12" cy="12" r="1" />
-                                <circle cx="19" cy="12" r="1" />
-                                <circle cx="5" cy="12" r="1" />
-                            </svg>
+                            <x-manajemenmahasiswa::ui.icon name="dots" size="20" />
                         </button>
                         <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 8px;">
                             {{-- Edit (owner only) --}}
@@ -1037,10 +1035,7 @@
                                 <li>
                                     <a href="{{ route('manajemenmahasiswa.forum.edit', $thread->id) }}"
                                         class="dropdown-item d-flex align-items-center gap-2">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z" />
-                                        </svg> Edit
+                                        <x-manajemenmahasiswa::ui.icon name="file-01" size="14" /> Edit
                                     </a>
                                 </li>
                             @endif
@@ -1051,17 +1046,9 @@
                                         @csrf @method('PATCH')
                                         <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
                                             @if($thread->is_locked)
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                                                    <path d="M7 11V7a5 5 0 0 1 9.9-1" />
-                                                </svg> Unlock Thread
+                                                <x-manajemenmahasiswa::ui.icon name="unlocked-01" size="14" /> Unlock Thread
                                             @else
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2" />
-                                                    <path d="M7 11V7a5 5 0 0 1 10 0v4" />
-                                                </svg> Kunci Thread
+                                                <x-manajemenmahasiswa::ui.icon name="locked-01" size="14" /> Kunci Thread
                                             @endif
                                         </button>
                                     </form>
@@ -1074,19 +1061,9 @@
                                         @csrf @method('PATCH')
                                         <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
                                             @if($thread->is_pinned)
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                    <line x1="12" y1="17" x2="12" y2="22" />
-                                                    <path
-                                                    d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a3 3 0 0 0-6 0v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
-                                                </svg> Unpin Global
+                                                <x-manajemenmahasiswa::ui.icon name="bookmark" size="14" /> Unpin Global
                                             @else
-                                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                    stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                    <line x1="12" y1="17" x2="12" y2="22" />
-                                                    <path
-                                                    d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a3 3 0 0 0-6 0v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
-                                                </svg> Pin Global
+                                                <x-manajemenmahasiswa::ui.icon name="bookmark" size="14" /> Pin Global
                                             @endif
                                         </button>
                                     </form>
@@ -1098,12 +1075,7 @@
                                     action="{{ route('manajemenmahasiswa.forum.personal_pin', $thread->id) }}">
                                     @csrf
                                     <button type="submit" class="dropdown-item d-flex align-items-center gap-2">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                            <line x1="12" y1="17" x2="12" y2="22" />
-                                            <path
-                                                d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6a3 3 0 0 0-6 0v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z" />
-                                        </svg>
+                                        <x-manajemenmahasiswa::ui.icon name="bookmark" size="14" />
                                         @if($thread->is_personal_pinned) Unpin Pribadi @else Pin Pribadi @endif
                                     </button>
                                 </form>
@@ -1118,14 +1090,7 @@
                                         onsubmit="return confirm('Yakin ingin menghapus thread ini?')">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M3 6h18" />
-                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                                <line x1="10" x2="10" y1="11" y2="17" />
-                                                <line x1="14" x2="14" y1="11" y2="17" />
-                                            </svg> Hapus
+                                            <x-manajemenmahasiswa::ui.icon name="minus-circle" size="14" /> Hapus
                                         </button>
                                     </form>
                                 </li>
@@ -1135,14 +1100,7 @@
                                         onsubmit="return confirm('Yakin ingin menghapus thread ini (sebagai admin)?')">
                                         @csrf @method('DELETE')
                                         <button type="submit" class="dropdown-item text-danger d-flex align-items-center gap-2">
-                                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                                stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                                <path d="M3 6h18" />
-                                                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6" />
-                                                <path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2" />
-                                                <line x1="10" x2="10" y1="11" y2="17" />
-                                                <line x1="14" x2="14" y1="11" y2="17" />
-                                            </svg> Hapus (Admin)
+                                            <x-manajemenmahasiswa::ui.icon name="minus-circle" size="14" /> Hapus (Admin)
                                         </button>
                                     </form>
                                 </li>
@@ -1152,11 +1110,7 @@
                                     <button type="button" class="dropdown-item text-danger d-flex align-items-center gap-2"
                                         data-bs-toggle="modal" data-bs-target="#reportModal" data-thread-id="{{ $thread->id }}"
                                         data-thread-title="{{ $thread->judul }}">
-                                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-                                            stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                                            <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z" />
-                                            <line x1="4" x2="4" y1="22" y2="15" />
-                                        </svg> Laporkan Thread
+                                        <x-manajemenmahasiswa::ui.icon name="alert-triangle" size="14" /> Laporkan Thread
                                     </button>
                                 </li>
                             @endif
@@ -1187,7 +1141,7 @@
                         $poll = $thread->poll;
                         $threadId = $thread->id;
                     @endphp
-                    @include('manajemenmahasiswa::forum._poll', ['poll' => $poll, 'threadId' => $threadId])
+                    @include('manajemenmahasiswa::forum._poll', ['poll' => $poll, 'threadId' => $threadId, 'threadOwnerId' => $thread->user_id])
                 @endif
 
                 <!-- Labels -->
@@ -1197,7 +1151,7 @@
                         <span class="tag-label {{ $colorClass }}">{{ $lbl }}</span>
                     @endforeach
                     @if($thread->is_locked)
-                        <span class="tag-label tag-red">🔒 Dikunci</span>
+                        <span class="tag-label tag-red"><x-manajemenmahasiswa::ui.icon name="locked-01" size="12" /> Dikunci</span>
                     @endif
                 </div>
 
@@ -1233,19 +1187,12 @@
                     </div>
                     <button class="action-btn ms-2"
                         onclick="window.location.href='{{ route('manajemenmahasiswa.forum.show', $thread->id) }}'">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-                        </svg>
+                        <x-manajemenmahasiswa::ui.icon name="message-dots-circle" size="18" />
                         {{ $thread->comments_count ?? $thread->comment_count }}
                     </button>
                     <button class="action-btn share-btn ms-1"
                         data-url="{{ route('manajemenmahasiswa.forum.show', $thread->id) }}">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                            stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
-                            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
-                        </svg>
+                        <x-manajemenmahasiswa::ui.icon name="link-01" size="18" />
                         Bagikan
                     </button>
                 </div>
@@ -1253,20 +1200,13 @@
         @empty
             <div class="empty-state">
                 <div class="icon">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
+                    <x-manajemenmahasiswa::ui.icon name="message-dots-circle" size="48" />
                 </div>
                 <h5 class="fw-bold text-dark">Belum ada diskusi</h5>
                 <p>Jadilah yang pertama memulai diskusi!</p>
                 <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post text-decoration-none">
                     Buat Post Pertama
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                        class="ms-1">
-                        <circle cx="12" cy="12" r="10"></circle>
-                        <line x1="12" y1="8" x2="12" y2="16"></line>
-                        <line x1="8" y1="12" x2="16" y2="12"></line>
-                    </svg>
+                    <x-manajemenmahasiswa::ui.icon name="plus-circle" size="16" />
                 </a>
             </div>
         @endforelse
@@ -1295,9 +1235,7 @@
                     @csrf
                     <div class="modal-header border-0 pb-0">
                         <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                                <path d="M4 2v20h2v-7h10l-2-4 2-4H6V2H4z" />
-                            </svg>
+                            <x-manajemenmahasiswa::ui.icon name="alert-triangle" size="18" />
                             Laporkan Thread
                         </h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
