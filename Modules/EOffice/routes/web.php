@@ -487,6 +487,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
         Route::prefix('koordinator')->name('koordinator.')->group(function () {
             Route::get('/dashboard', [KoordinatorController::class, 'dashboard'])->name('dashboard');
+            Route::get('/pengaturan', [KoordinatorController::class, 'pengaturan'])->name('pengaturan');
+            Route::post('/pengaturan', [KoordinatorController::class, 'storePengaturan'])->name('pengaturan.store');
             Route::get('/balancing', [KoordinatorController::class, 'balancingDosen'])->name('balancing');
             Route::post('/balancing', [KoordinatorController::class, 'storeBalancing'])->name('balancing.store');
             Route::get('/pengumuman', [KoordinatorController::class, 'pengumuman'])->name('pengumuman');

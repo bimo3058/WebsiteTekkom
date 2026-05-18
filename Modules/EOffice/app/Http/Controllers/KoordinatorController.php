@@ -23,6 +23,41 @@ class KoordinatorController extends Controller implements HasMiddleware
         ];
     }
 
+    public function pengaturan()
+    {
+        $isOpen = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_buka', '0');
+        $startDate = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_mulai', '');
+        $endDate = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_selesai', '');
+        
+        return view('eoffice::koordinator.pengaturan', compact('isOpen', 'startDate', 'endDate'));
+    }
+
+    public function storePengaturan(Request $request)
+    {
+        $validated = $request->validate([
+            'pendaftaran_kp_buka' => 'required|in:1,0',
+            'pendaftaran_kp_mulai' => 'nullable|date',
+            'pendaftaran_kp_selesai' => 'nullable|date|after_or_equal:pendaftaran_kp_mulai',
+        ]);
+
+        \Modules\EOffice\Models\KpSetting::set('pendaftaran_kp_buka', $validated['pendaftaran_kp_buka']);
+        
+        if ($validated['pendaftaran_kp_mulai']) {
+            \Modules\EOffice\Models\KpSetting::set('pendaftaran_kp_mulai', $validated['pendaftaran_kp_mulai']);
+        } else {
+            // Jika kosong, hapus / set null (walau KpSetting get nya default '')
+            \Modules\EOffice\Models\KpSetting::set('pendaftaran_kp_mulai', '');
+        }
+        
+        if ($validated['pendaftaran_kp_selesai']) {
+            \Modules\EOffice\Models\KpSetting::set('pendaftaran_kp_selesai', $validated['pendaftaran_kp_selesai']);
+        } else {
+            \Modules\EOffice\Models\KpSetting::set('pendaftaran_kp_selesai', '');
+        }
+
+        return redirect()->back()->with('success', 'Pengaturan pendaftaran KP berhasil diperbarui.');
+    }
+
     /**
      * Halaman Utama Dashboard Koordinator KP
      */
@@ -612,19 +647,23 @@ class KoordinatorController extends Controller implements HasMiddleware
             if (!$kp->mahasiswa || !$kp->mahasiswa->user) continue;
 
             $mhsData = [
-                'id' => $kp->id,
-                'mahasiswa_id' => $kp->mahasiswa_id,
+                'id'             => $kp->id,
+                'mahasiswa_id'   => $kp->mahasiswa_id,
                 'nama_mahasiswa' => $kp->mahasiswa->nama_lengkap ?? $kp->mahasiswa->user->name ?? 'Unknown',
-                'nim' => $kp->mahasiswa->nim ?? '-',
-                'status' => $kp->balancing->status ?? 'belum', // belum, draft, finalized
-                'rencana_judul' => $kp->rencana_judul ?? 'Belum ada rencana judul'
+                'nim'            => $kp->mahasiswa->nim ?? '-',
+                'rencana_judul'  => $kp->rencana_judul ?? 'Belum ada rencana judul',
+                // Jika ada record balancing, pakai statusnya.
+                // Jika tidak ada record tapi sudah punya dosen_pembimbing_id → berarti sudah finalized (assign manual/legacy).
+                'status'         => $kp->balancing
+                    ? $kp->balancing->status
+                    : ($kp->dosen_pembimbing_id ? 'finalized' : 'belum'),
             ];
 
             $dosenId = null;
             if ($kp->balancing) {
                 $dosenId = $kp->balancing->dosen_id;
             } elseif ($kp->dosen_pembimbing_id) {
-                // Legacy support if they are assigned but no balancing record exists
+                // Legacy / manual assign — dosen_pembimbing_id sudah ada tapi belum ada balancing record
                 $dosenId = $kp->dosen_pembimbing_id;
             }
 
@@ -663,20 +702,27 @@ class KoordinatorController extends Controller implements HasMiddleware
                 foreach ($dosen['mahasiswas'] as $mhs) {
                     $assignedMahasiswaIds[] = $mhs['id'];
 
+                    // Jika action=draft, jangan downgrade status yang sudah finalized
+                    $existingRecord = \Modules\EOffice\Models\KpBalancing::where('kp_id', $mhs['id'])->first();
+                    $actualStatus = $status;
+                    if ($action === 'draft' && $existingRecord && $existingRecord->status === 'finalized') {
+                        $actualStatus = 'finalized'; // Pertahankan status finalized
+                    }
+
                     \Modules\EOffice\Models\KpBalancing::updateOrCreate(
                         ['kp_id' => $mhs['id']],
                         [
                             'mahasiswa_id' => $mhs['mahasiswa_id'],
-                            'dosen_id' => $dosen['id'],
-                            'status' => $status,
-                            'assigned_by' => auth()->id(),
-                            'assigned_at' => now(),
-                            'finalized_at' => $status === 'finalized' ? now() : null,
+                            'dosen_id'     => $dosen['id'],
+                            'status'       => $actualStatus,
+                            'assigned_by'  => auth()->id(),
+                            'assigned_at'  => now(),
+                            'finalized_at' => $actualStatus === 'finalized' ? now() : null,
                         ]
                     );
 
-                    // Jika finalized, perbarui eo_kerja_praktik (sync ke tabel utama)
-                    if ($status === 'finalized') {
+                    // Update eo_kerja_praktik hanya jika finalized
+                    if ($actualStatus === 'finalized') {
                         \Modules\EOffice\Models\KerjaPraktik::where('id', $mhs['id'])
                             ->update(['dosen_pembimbing_id' => $dosen['id']]);
                     }

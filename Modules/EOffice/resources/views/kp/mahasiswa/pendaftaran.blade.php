@@ -45,6 +45,30 @@
                         Kembali ke Dashboard
                     </a>
                 </div>
+            @elseif(!$registrationOpen)
+                {{-- Pendaftaran Ditutup --}}
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-8 text-center max-w-2xl mx-auto mt-10">
+                    <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-900 mb-2">Pendaftaran Ditutup</h2>
+                    <p class="text-slate-600 mb-4">
+                        Saat ini periode pendaftaran Kerja Praktik sedang ditutup.
+                        @if($startDate || $endDate)
+                            <br><br>
+                            <span class="inline-flex bg-slate-50 border border-slate-200 rounded px-3 py-2 text-sm font-medium">
+                                Jadwal Pendaftaran: 
+                                {{ $startDate ? \Carbon\Carbon::parse($startDate)->format('d M Y') : 'Kapan Saja' }}
+                                - 
+                                {{ $endDate ? \Carbon\Carbon::parse($endDate)->format('d M Y') : 'Kapan Saja' }}
+                            </span>
+                        @endif
+                    </p>
+                    <p class="text-sm text-slate-500 mb-6">Silakan cek kembali di lain waktu atau hubungi Koordinator KP untuk informasi lebih lanjut.</p>
+                    <a href="{{ route('eoffice.kp.mahasiswa.dashboard') }}" class="inline-flex items-center px-6 py-3 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors">
+                        Kembali ke Dashboard
+                    </a>
+                </div>
             @else
                 {{-- Form Pendaftaran --}}
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden max-w-3xl">

@@ -264,7 +264,26 @@ class MahasiswaKpController extends Controller
             ->whereNotIn('status_kp', ['Selesai'])
             ->first();
 
-        return view('eoffice::kp.mahasiswa.pendaftaran', compact('mahasiswa', 'existingKp'));
+        // Cek pengaturan pendaftaran KP
+        $isOpen = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_buka', '0') == '1';
+        $startDate = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_mulai', '');
+        $endDate = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_selesai', '');
+        
+        $isPeriodValid = true;
+        $now = now();
+        
+        if ($isOpen) {
+            if (!empty($startDate) && $now->startOfDay()->lt(\Carbon\Carbon::parse($startDate)->startOfDay())) {
+                $isPeriodValid = false;
+            }
+            if (!empty($endDate) && $now->startOfDay()->gt(\Carbon\Carbon::parse($endDate)->startOfDay())) {
+                $isPeriodValid = false;
+            }
+        }
+        
+        $registrationOpen = $isOpen && $isPeriodValid;
+
+        return view('eoffice::kp.mahasiswa.pendaftaran', compact('mahasiswa', 'existingKp', 'registrationOpen', 'startDate', 'endDate'));
     }
 
     /**
@@ -274,6 +293,26 @@ class MahasiswaKpController extends Controller
      */
     public function storePendaftaran(Request $request)
     {
+        // Cek apakah pendaftaran dibuka
+        $isOpen = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_buka', '0') == '1';
+        $startDate = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_mulai', '');
+        $endDate = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_selesai', '');
+        
+        $isPeriodValid = true;
+        $now = now();
+        
+        if ($isOpen) {
+            if (!empty($startDate) && $now->startOfDay()->lt(\Carbon\Carbon::parse($startDate)->startOfDay())) {
+                $isPeriodValid = false;
+            }
+            if (!empty($endDate) && $now->startOfDay()->gt(\Carbon\Carbon::parse($endDate)->startOfDay())) {
+                $isPeriodValid = false;
+            }
+        }
+        
+        if (!$isOpen || !$isPeriodValid) {
+            return redirect()->back()->with('error', 'Pendaftaran Kerja Praktik saat ini sedang ditutup.');
+        }
         $validated = $request->validate([
             'rencana_judul'   => 'required|string|max:255',
             'rencana_tempat'  => 'required|string|max:255',
