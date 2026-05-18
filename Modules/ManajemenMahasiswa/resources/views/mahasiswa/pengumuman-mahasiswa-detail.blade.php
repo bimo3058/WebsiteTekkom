@@ -48,6 +48,8 @@
                 margin: 0;
                 line-height: 1.3;
                 letter-spacing: -0.025em;
+                word-break: break-word;
+                overflow-wrap: break-word;
             }
 
             .meta-container {
