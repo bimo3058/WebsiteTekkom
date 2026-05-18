@@ -62,6 +62,7 @@
             .form-select-custom,
             .form-textarea {
                 width: 100%;
+                box-sizing: border-box;
                 padding: 12px 16px;
                 border: 1px solid #e5e7eb;
                 border-radius: 12px;

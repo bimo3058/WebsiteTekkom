@@ -173,7 +173,7 @@ class ForumController extends Controller
             'konten' => 'nullable|string',
             'media_files' => 'nullable|array|max:5',
             'media_files.*' => 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:10240',
-            'link_url' => 'nullable|url|max:2000',
+            'link_url' => 'nullable|string|max:2000',
             'has_poll' => 'nullable|boolean',
             'poll_options' => 'nullable|array|max:6',
             'poll_options.*' => 'nullable|string|max:150',
@@ -494,7 +494,7 @@ class ForumController extends Controller
             'konten' => 'nullable|string',
             'media_files' => 'nullable|array|max:5',
             'media_files.*' => 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:10240',
-            'link_url' => 'nullable|url|max:2000',
+            'link_url' => 'nullable|string|max:2000',
             'remove_media' => 'nullable|array',
             'remove_media.*' => 'string',
             // Poll fields

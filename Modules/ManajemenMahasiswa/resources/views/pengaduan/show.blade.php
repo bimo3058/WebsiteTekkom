@@ -8,14 +8,8 @@
                 padding: 0 !important;
             }
 
-            /* ── Back Bar ─────────────────────────────────────────── */
-            .back-bar {
-                display: flex;
-                justify-content: space-between;
-                align-items: center;
-                margin-bottom: 20px;
-            }
-            .back-bar a, .back-bar button {
+            /* ── Tombol Kembali ─────────────────────────────────────── */
+            .btn-back {
                 font-weight: 600;
                 font-size: 13px;
                 text-decoration: none;
@@ -25,13 +19,14 @@
                 align-items: center;
                 gap: 6px;
                 transition: all 0.2s;
+                background: transparent;
+                border: none;
+                color: #4b5563;
             }
-            .btn-back {
-                background: #fff;
-                border: 1px solid #e5e7eb;
-                color: #374151;
+            .btn-back:hover { 
+                background: #f3f4f6; 
+                color: #111827; 
             }
-            .btn-back:hover { background: #f9fafb; color: #111827; }
 
             /* ── Base Card ─────────────────────────────────────────── */
             .pgd-card {
