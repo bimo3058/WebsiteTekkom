@@ -435,19 +435,19 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
     });
 
     // ════════════════════════════════════════════════════════════════════════
-<<<<<<< HEAD
-    // KERJA PRAKTIK (KP)
-=======
     // ADMIN E-OFFICE
     // ════════════════════════════════════════════════════════════════════════
     Route::prefix('eoffice/admin')->name('eoffice.admin.')->middleware(['role:superadmin|admin_eoffice'])->group(function () {
         Route::get('/template-proposal', [EOfficeController::class, 'templateProposal'])->name('template_proposal');
         Route::post('/template-proposal', [EOfficeController::class, 'storeTemplateProposal'])->name('template_proposal.store');
+        
+        // Fitur Kelola Role dan Validasi Timeline Admin
+        Route::get('/kelola-role', [EOfficeController::class, 'kelolaRole'])->name('kelola_role');
+        Route::get('/validasi-timeline', [EOfficeController::class, 'validasiTimeline'])->name('validasi_timeline');
     });
 
     // ════════════════════════════════════════════════════════════════════════
-    // KERJA PRAKTIK (KP) — tidak berubah
->>>>>>> 6a466f3 (feat(eoffice): implementasi upload template A2 koordinator & generate dokumen dinamis mahasiswa)
+    // KERJA PRAKTIK (KP)
     // ════════════════════════════════════════════════════════════════════════
     Route::prefix('eoffice/kp')->name('eoffice.kp.')->group(function () {
         Route::get('/daftar', [KerjaPraktikController::class, 'create'])->name('register');
@@ -459,6 +459,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::get('/dashboard',                [MahasiswaKpController::class, 'dashboard'])->name('dashboard');
             Route::get('/informasi',                [MahasiswaKpController::class, 'informasi'])->name('informasi');
             Route::get('/pengumuman',               [MahasiswaKpController::class, 'pengumuman'])->name('pengumuman');
+            Route::get('/pengumuman/{id}/lampiran', [MahasiswaKpController::class, 'serveLampiran'])->name('pengumuman.lampiran');
             Route::get('/faq',                      [MahasiswaKpController::class, 'faq'])->name('faq');
             
             // Keperluan Perusahaan
@@ -505,6 +506,9 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::get('/upload-berkas', [KoordinatorController::class, 'uploadBerkas'])->name('upload_berkas');
             Route::post('/upload-berkas/template-a2', [KoordinatorController::class, 'storeTemplateA2'])->name('upload_berkas.template_a2');
             Route::get('/validasi-berkas', [KoordinatorController::class, 'validasiBerkas'])->name('validasi_berkas');
+            Route::post('/validasi-berkas/{id}/approve', [KoordinatorController::class, 'approveDokumen'])->name('validasi_berkas.approve');
+            Route::post('/validasi-berkas/{id}/reject', [KoordinatorController::class, 'rejectDokumen'])->name('validasi_berkas.reject');
+            Route::get('/kelola-role', [KoordinatorController::class, 'kelolaRole'])->name('kelola_role');
             Route::get('/nilai-lapangan', [KoordinatorController::class, 'nilaiLapangan'])->name('nilai_lapangan');
             Route::get('/data-mahasiswa', [KoordinatorController::class, 'dataMahasiswa'])->name('data_mahasiswa');
         });

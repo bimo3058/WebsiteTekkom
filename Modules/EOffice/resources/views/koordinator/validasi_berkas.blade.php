@@ -73,7 +73,6 @@
                 </svg>
                 Balancing Dosen
             </a>
-
             <a href="{{ route('eoffice.kp.koordinator.upload_berkas') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                 Upload Berkas
@@ -489,6 +488,19 @@
             mahasiswas: @json($mahasiswas),
             selectedStudent: null,
             
+            init() {
+                const stored = localStorage.getItem('eoffice_admin_approval_data');
+                if (stored) {
+                    this.mahasiswas = JSON.parse(stored);
+                } else {
+                    this.saveData();
+                }
+            },
+            
+            saveData() {
+                localStorage.setItem('eoffice_admin_approval_data', JSON.stringify(this.mahasiswas));
+            },
+            
             // Modal States
             previewModalOpen: false,
             previewDoc: null,
@@ -573,6 +585,7 @@
                     if(status === 'approved') {
                         this.showToast('success', 'Dokumen Disetujui', 'Dokumen telah berhasil disetujui.');
                     }
+                    this.saveData();
                 }
             },
             
@@ -587,6 +600,7 @@
                     this.currentDocuments[docIndex].status = 'rejected';
                     this.currentDocuments[docIndex].catatan = this.rejectReason;
                     this.showToast('success', 'Dokumen Direvisi', 'Catatan revisi berhasil dikirim ke mahasiswa.');
+                    this.saveData();
                 }
                 
                 this.rejectModalOpen = false;

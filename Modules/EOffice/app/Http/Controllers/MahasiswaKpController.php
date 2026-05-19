@@ -10,6 +10,7 @@ use Modules\EOffice\Models\KpDokumen;
 use Modules\EOffice\Models\KpMahasiswa;
 use Modules\EOffice\Models\KpPengumuman;
 use Modules\EOffice\Models\KpSeminar;
+use PhpOffice\PhpWord\TemplateProcessor;
 
 class MahasiswaKpController extends Controller
 {
@@ -63,6 +64,24 @@ class MahasiswaKpController extends Controller
         return view('eoffice::kp.mahasiswa.dashboard', compact(
             'mahasiswa', 'kp', 'pengumuman', 'timeline', 'dokumenStats'
         ));
+    }
+
+    /**
+     * Serve pengumuman lampiran PDF securely and dynamically.
+     */
+    public function serveLampiran($id)
+    {
+        $pengumuman = KpPengumuman::findOrFail($id);
+
+        if (!$pengumuman->lampiran) {
+            abort(404, 'Lampiran tidak ditemukan.');
+        }
+
+        if (!Storage::exists($pengumuman->lampiran)) {
+            abort(404, 'File lampiran tidak ditemukan di storage.');
+        }
+
+        return Storage::response($pengumuman->lampiran);
     }
 
     // =========================================================================
@@ -326,7 +345,7 @@ class MahasiswaKpController extends Controller
     public function storeDokumen(Request $request)
     {
         $validated = $request->validate([
-            'jenis_dokumen' => 'required|string|in:Bukti Terima,Laporan,Makalah,Kartu Hijau,Nilai Lapangan,A2',
+            'jenis_dokumen' => 'required|string|in:Bukti Terima,Laporan,Makalah,CV,Foto,Kartu Hijau,Nilai Lapangan,A2',
             'file'          => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
         ]);
 
@@ -435,6 +454,67 @@ class MahasiswaKpController extends Controller
         return response()->download($fullPath, $template['name']);
     }
 
+    /**
+     * Generate form A2 (Presensi & Nilai Lapangan) dengan TemplateProcessor
+     */
+    public function exportA2(Request $request)
+    {
+        $request->validate([
+            'nama'       => 'required|string',
+            'nip'        => 'required|string',
+            'jabatan'    => 'required|string',
+            'perusahaan' => 'required|string',
+        ]);
+
+        $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
+        $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)
+            ->whereNotIn('status_kp', ['Selesai'])
+            ->first();
+
+        if (!$kp) {
+            return redirect()->back()->with('error', 'Anda belum memiliki pendaftaran KP aktif.');
+        }
+
+        // Lokasi file template (yang diupload koordinator)
+        $templatePath = storage_path('app/templates/form_a2.docx');
+        
+        // Cek jika template belum ada, bisa menggunakan fallback atau error
+        if (!file_exists($templatePath)) {
+            // Coba cek path default aplikasi sebagai fallback
+            $templatePath = storage_path('app/public/templates/kp/Form_A2.docx');
+            if (!file_exists($templatePath)) {
+                return redirect()->back()->with('error', 'Template Form A2 belum tersedia. Harap hubungi Koordinator KP.');
+            }
+        }
+
+        try {
+            $templateProcessor = new TemplateProcessor($templatePath);
+
+            // Replace variabel
+            $templateProcessor->setValue('nama', htmlspecialchars($request->nama));
+            $templateProcessor->setValue('nip', htmlspecialchars($request->nip));
+            $templateProcessor->setValue('jabatan', htmlspecialchars($request->jabatan));
+            $templateProcessor->setValue('perusahaan', htmlspecialchars($request->perusahaan));
+            
+            $templateProcessor->setValue('nama_pembimbing', htmlspecialchars($request->nama));
+            $templateProcessor->setValue('nip_pembimbing', htmlspecialchars($request->nip));
+            $templateProcessor->setValue('jabatan_pembimbing', htmlspecialchars($request->jabatan));
+
+            $templateProcessor->setValue('nama_mahasiswa', htmlspecialchars($mahasiswa->user->name));
+            $templateProcessor->setValue('nim_mahasiswa', htmlspecialchars($mahasiswa->nim));
+            $templateProcessor->setValue('topik', htmlspecialchars($kp->rencana_judul ?? '-'));
+
+            // Output file sementara
+            $fileName = 'Form_A2_' . preg_replace('/[^a-zA-Z0-9]+/', '_', $mahasiswa->user->name) . '.docx';
+            $tempPath = storage_path('app/temp_' . $fileName);
+            $templateProcessor->saveAs($tempPath);
+
+            return response()->download($tempPath, $fileName)->deleteFileAfterSend(true);
+        } catch (\Exception $e) {
+            return redirect()->back()->with('error', 'Terjadi kesalahan saat membuat dokumen A2: ' . $e->getMessage());
+        }
+    }
+
     // =========================================================================
     // SEMINAR (PASCA KP)
     // =========================================================================
@@ -459,12 +539,21 @@ class MahasiswaKpController extends Controller
                 ->with('error', 'Anda belum mendaftar KP.');
         }
 
-        // Cek kelengkapan syarat seminar
+        // Kelompokkan dokumen berdasarkan jenis
         $dokumenByJenis = $kp->dokumen->groupBy('jenis_dokumen');
+
+        // Ambil dokumen spesifik secara eksplisit (untuk history)
+        $cvDoc          = $dokumenByJenis->get('CV')?->sortByDesc('created_at')->first();
+        $fotoDoc        = $dokumenByJenis->get('Foto')?->sortByDesc('created_at')->first();
+        $kartuHijauDoc  = $dokumenByJenis->get('Kartu Hijau')?->sortByDesc('created_at')->first();
+        $nilaiLapanganDoc = $dokumenByJenis->get('Nilai Lapangan')?->sortByDesc('created_at')->first();
+
+        // Cek kelengkapan syarat seminar
         $syaratSeminar = $this->cekSyaratSeminar($kp, $dokumenByJenis);
 
         return view('eoffice::kp.mahasiswa.seminar', compact(
-            'mahasiswa', 'kp', 'dokumenByJenis', 'syaratSeminar'
+            'mahasiswa', 'kp', 'dokumenByJenis', 'syaratSeminar',
+            'cvDoc', 'fotoDoc', 'kartuHijauDoc', 'nilaiLapanganDoc'
         ));
     }
 
@@ -475,8 +564,9 @@ class MahasiswaKpController extends Controller
     public function storeSeminar(Request $request)
     {
         $validated = $request->validate([
-            'tanggal_seminar' => 'required|date|after:today',
-            'waktu_seminar'   => 'required|date_format:H:i',
+            'tanggal_seminar' => 'required|date',
+            'waktu_mulai'     => 'required|date_format:H:i',
+            'waktu_selesai'   => 'required|date_format:H:i',
             'ruangan'         => 'required|string|max:100',
         ]);
 
@@ -485,20 +575,17 @@ class MahasiswaKpController extends Controller
             ->latest()
             ->firstOrFail();
 
-        // Cek syarat: laporan & makalah harus sudah disetujui
+        // Cek syarat (opsional, bisa submit kapan saja sekarang)
         $dokumenByJenis = $kp->dokumen->groupBy('jenis_dokumen');
         $syarat = $this->cekSyaratSeminar($kp, $dokumenByJenis);
 
-        if (!$syarat['semua_terpenuhi']) {
-            return redirect()->back()->with('error', 'Syarat seminar belum terpenuhi. Pastikan semua dokumen sudah lengkap dan disetujui.');
-        }
-
         // Buat atau update seminar
+        $waktuSeminar = $validated['waktu_mulai'] . ' - ' . $validated['waktu_selesai'];
         KpSeminar::updateOrCreate(
             ['kp_id' => $kp->id],
             [
                 'tanggal_seminar'         => $validated['tanggal_seminar'],
-                'waktu_seminar'           => $validated['waktu_seminar'],
+                'waktu_seminar'           => $waktuSeminar,
                 'ruangan'                 => $validated['ruangan'],
                 'status_validasi_syarat'  => 'proses',
             ]

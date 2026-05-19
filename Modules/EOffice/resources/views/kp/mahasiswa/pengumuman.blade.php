@@ -79,6 +79,22 @@
                             <div class="text-sm leading-relaxed pt-4 whitespace-pre-line" style="color:var(--grey-600);">
                                 {!! nl2br(e($item->konten)) !!}
                             </div>
+                            @if($item->lampiran)
+                            <div class="mt-5 p-3 rounded-xl border flex items-center justify-between gap-4 max-w-md hover:shadow-sm transition-all" style="background:var(--primary-50);border-color:var(--primary-100);">
+                                <div class="flex items-center gap-3">
+                                    <div class="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0" style="background:var(--grey-0);color:var(--primary-500);">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-xs font-bold" style="color:var(--grey-900);">Lampiran Dokumen</p>
+                                        <p class="text-[10px] mt-0.5" style="color:var(--grey-500);">Klik untuk melihat detail file</p>
+                                    </div>
+                                </div>
+                                <a href="{{ route('eoffice.kp.mahasiswa.pengumuman.lampiran', $item->id) }}" target="_blank" class="px-4 py-2 rounded-lg text-xs font-bold shadow-sm transition-colors" style="background:var(--primary-500);color:white;">
+                                    Buka File
+                                </a>
+                            </div>
+                            @endif
                         </div>
                     </div>
                 </div>

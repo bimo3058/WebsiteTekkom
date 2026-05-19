@@ -167,25 +167,7 @@
                             </div>
                         </div>
 
-                        {{-- Presensi KP (A2) Section --}}
-                        <div class="sikape-card p-6">
-                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                                <div>
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
-                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                        </div>
-                                        <h2 class="text-lg font-bold text-grey-900">3. Presensi KP (A2)</h2>
-                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-100 text-pink-700">Wajib</span>
-                                    </div>
-                                    <p class="text-sm text-grey-500 leading-relaxed max-w-2xl">Formulir kehadiran dan penilaian lapangan kerja praktik. Dokumen ini digenerate secara dinamis dari template yang diunggah oleh Koordinator.</p>
-                                </div>
-                                <button @click="modalA2Open = true" class="sikape-btn-primary bg-amber-600 hover:bg-amber-700 flex-shrink-0">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                                    Buat Absensi (A2)
-                                </button>
-                            </div>
-                        </div>
+
 
                     </div>
                 </div>
@@ -308,78 +290,7 @@
                 </div>
             </template>
 
-            <!-- Modal Buat Absensi (A2) -->
-            <div x-show="modalA2Open" class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4" style="display: none;">
-                <div x-show="modalA2Open" x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
-                <div x-show="modalA2Open" 
-                     x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95 translate-y-4" x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                     x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100 translate-y-0" x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-                     @click.away="modalA2Open = false"
-                     class="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden border border-slate-100 z-10">
-                    
-                    <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
-                        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
-                            <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-                            Generate Presensi KP (A2)
-                        </h3>
-                        <button @click="modalA2Open = false" class="text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg transition-colors">
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                    </div>
 
-                    @if(!file_exists(storage_path('app/templates/form_a2.docx')))
-                        <div class="p-6 text-center">
-                            <div class="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-3">
-                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
-                            </div>
-                            <h4 class="text-sm font-bold text-slate-800">Template A2 Belum Tersedia</h4>
-                            <p class="text-xs text-slate-500 mt-2">Koordinator KP belum mengunggah template Form A2 (.docx). Silakan hubungi Koordinator KP Anda.</p>
-                            <div class="mt-6 flex justify-end">
-                                <button type="button" @click="modalA2Open = false" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl">Tutup</button>
-                            </div>
-                        </div>
-                    @else
-                        <form action="{{ route('eoffice.kp.mahasiswa.dokumen.generate_a2') }}" method="POST">
-                            @csrf
-                            <div class="p-6 space-y-4">
-                                <p class="text-xs text-slate-500 leading-relaxed">
-                                    Lengkapi data di bawah ini untuk mengisi variabel pada template Word **Presensi KP (A2)** secara otomatis.
-                                </p>
-                                
-                                <div class="space-y-3">
-                                    <div>
-                                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Nama Pembimbing Lapangan <span class="text-red-500">*</span></label>
-                                        <input type="text" name="nama_pembimbing" x-model="a2Form.nama_pembimbing" required placeholder="Contoh: John Doe, S.T."
-                                               class="w-full rounded-xl border border-slate-200 py-2.5 px-4 text-sm focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all">
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">NIP / ID Pembimbing Lapangan <span class="text-red-500">*</span></label>
-                                        <input type="text" name="nip_pembimbing" x-model="a2Form.nip_pembimbing" required placeholder="Contoh: 1987654321 atau -"
-                                               class="w-full rounded-xl border border-slate-200 py-2.5 px-4 text-sm focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all">
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Jabatan Pembimbing Lapangan <span class="text-red-500">*</span></label>
-                                        <input type="text" name="jabatan_pembimbing" x-model="a2Form.jabatan_pembimbing" required placeholder="Contoh: Senior Software Engineer"
-                                               class="w-full rounded-xl border border-slate-200 py-2.5 px-4 text-sm focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all">
-                                    </div>
-                                    
-                                    <div>
-                                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Nama Perusahaan / Instansi <span class="text-red-500">*</span></label>
-                                        <input type="text" name="perusahaan" x-model="a2Form.perusahaan" required placeholder="Contoh: PT Technology Indonesia"
-                                               class="w-full rounded-xl border border-slate-200 py-2.5 px-4 text-sm focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all">
-                                    </div>
-                                </div>
-                            </div>
-                            
-                            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end">
-                                <button type="button" @click="modalA2Open = false" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50">Batal</button>
-                                <button type="submit" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold rounded-xl shadow-sm shadow-amber-200 transition-colors">Unduh Dokumen A2</button>
-                            </div>
-                        </form>
-                    @endif
-                </div>
             </div>
 
         </main>
@@ -390,14 +301,6 @@
 function documentManager(params = {}) {
     return {
         view: 'list', // 'list', 'formSurat', 'formProposal'
-        modalA2Open: false,
-        a2Form: {
-            nama_pembimbing: '',
-            nip_pembimbing: '',
-            jabatan_pembimbing: '',
-            perusahaan: params.defaultPerusahaan || ''
-        },
-
 
         // Proposal State
         proposalStep: 1, 

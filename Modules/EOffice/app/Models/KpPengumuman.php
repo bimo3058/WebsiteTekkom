@@ -15,6 +15,7 @@ class KpPengumuman extends Model
         'is_active',
         'is_published',
         'created_by',
+        'lampiran',
     ];
 
     // Relasi ke tabel users (untuk mengetahui siapa yang membuat pengumuman)

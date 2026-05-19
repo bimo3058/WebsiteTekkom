@@ -26,4 +26,9 @@ class KpDosen extends Model
     {
         return $this->hasMany(KerjaPraktik::class, 'dosen_pembimbing_id');
     }
+
+    public function getNameAttribute()
+    {
+        return $this->nama_lengkap;
+    }
 }
