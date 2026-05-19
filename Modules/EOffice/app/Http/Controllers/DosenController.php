@@ -239,7 +239,64 @@ class DosenController extends Controller
         $kp->status_kp = 'completed';
         $kp->save();
 
-        return redirect()->route('eoffice.kp.dosen.bimbingan.show', $kp->id)
-            ->with('success', 'Nilai Seminar berhasil disimpan!');
+        return back()->with('success', 'Nilai Seminar berhasil disimpan!');
+    }
+
+    /**
+     * Halaman Penilaian Seminar (Dosen)
+     */
+    public function penilaianSeminar()
+    {
+        $kpDosen = \Modules\EOffice\Models\KpDosen::where('user_id', auth()->id())->first();
+
+        $query = KerjaPraktik::select(
+            'eo_kerja_praktik.id as kp_id',
+            'u.name as nama_mahasiswa',
+            'm.nim',
+            's.id as seminar_id',
+            's.tanggal_seminar',
+            's.waktu_seminar',
+            's.ruangan',
+            's.status_validasi_dosen',
+            'p.nilai_seminar_pembimbing'
+        )
+            ->join('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
+            ->join('users as u', 'm.user_id', '=', 'u.id')
+            ->join('eo_kp_seminar as s', 'eo_kerja_praktik.id', '=', 's.kp_id')
+            ->leftJoin('eo_kp_penilaian as p', 'eo_kerja_praktik.id', '=', 'p.kp_id');
+
+        if ($kpDosen) {
+            $query->where('eo_kerja_praktik.dosen_pembimbing_id', $kpDosen->id);
+        } else {
+            $query->whereNull('eo_kerja_praktik.id');
+        }
+
+        $seminars = $query->orderBy('s.created_at', 'desc')->get();
+
+        return view('eoffice::dosen.penilaian_seminar', compact('seminars'));
+    }
+
+    /**
+     * Dosen approve jadwal seminar
+     */
+    public function approveSeminar(Request $request, $id)
+    {
+        $seminar = \Modules\EOffice\Models\KpSeminar::where('kp_id', $id)->firstOrFail();
+        $seminar->status_validasi_dosen = 'approved';
+        $seminar->save();
+
+        return back()->with('success', 'Seminar berhasil disetujui.');
+    }
+
+    /**
+     * Dosen reject jadwal seminar
+     */
+    public function rejectSeminar(Request $request, $id)
+    {
+        $seminar = \Modules\EOffice\Models\KpSeminar::where('kp_id', $id)->firstOrFail();
+        $seminar->status_validasi_dosen = 'rejected';
+        $seminar->save();
+
+        return back()->with('error', 'Seminar ditolak.');
     }
 }

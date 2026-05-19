@@ -489,6 +489,9 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::get('/bimbingan/{id}/penilaian', [DosenController::class, 'showPenilaian'])->name('bimbingan.penilaian');
             Route::post('/bimbingan/{id}/penilaian', [DosenController::class, 'storePenilaian'])->name('bimbingan.penilaian.store');
             Route::get('/validasi-berkas', [DosenController::class, 'validasiBerkas'])->name('validasi_berkas');
+            Route::get('/penilaian-seminar', [DosenController::class, 'penilaianSeminar'])->name('penilaian_seminar');
+            Route::post('/penilaian-seminar/{id}/approve', [DosenController::class, 'approveSeminar'])->name('penilaian_seminar.approve');
+            Route::post('/penilaian-seminar/{id}/reject', [DosenController::class, 'rejectSeminar'])->name('penilaian_seminar.reject');
         });
 
         Route::prefix('koordinator')->name('koordinator.')->group(function () {
