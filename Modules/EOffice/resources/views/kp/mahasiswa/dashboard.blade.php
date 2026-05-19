@@ -222,6 +222,44 @@
                     </div>
                 </div>
 
+                {{-- Template Dokumen KP --}}
+                <div class="sikape-card overflow-hidden flex flex-col max-h-[600px] mt-6">
+                    <div class="px-5 py-4 border-b flex items-center justify-between" style="border-color:var(--grey-100);">
+                        <h2 class="text-sm font-semibold" style="color:var(--grey-800);">Template Dokumen (Fase {{ ucwords(str_replace('_', ' ', $activePhase)) }})</h2>
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:var(--primary-50);color:var(--primary-500);">{{ $templates->count() }}</span>
+                    </div>
+                    <div class="flex-1 divide-y overflow-y-auto" style="divide-color:var(--grey-100);">
+                        @forelse($templates as $template)
+                        <div class="px-5 py-4 hover:bg-slate-50 transition-colors">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-start gap-3">
+                                    <div class="w-8 h-8 rounded-lg bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    </div>
+                                    <div>
+                                        <p class="text-sm font-bold" style="color:var(--grey-800);">{{ $template->title }}</p>
+                                        <p class="text-[10px] mt-0.5 text-slate-500">{{ strtoupper($template->file_type) }} • {{ $template->created_at->diffForHumans() }}</p>
+                                        @if($template->description)
+                                            <p class="text-xs mt-1 text-slate-600 line-clamp-1">{{ $template->description }}</p>
+                                        @endif
+                                    </div>
+                                </div>
+                                <a href="{{ route('eoffice.kp.mahasiswa.dokumen.template', $template->id) }}" class="inline-flex items-center justify-center p-2 rounded-lg bg-white border border-slate-200 text-slate-600 hover:text-indigo-600 hover:bg-indigo-50 hover:border-indigo-200 transition-all shadow-sm">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                </a>
+                            </div>
+                        </div>
+                        @empty
+                        <div class="flex flex-col items-center justify-center py-10 px-5 text-center">
+                            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center mb-3 text-slate-400">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                            </div>
+                            <p class="text-xs font-semibold" style="color:var(--grey-500);">Tidak ada template dokumen untuk fase ini</p>
+                        </div>
+                        @endforelse
+                    </div>
+                </div>
+
             </div>
 
         </main>

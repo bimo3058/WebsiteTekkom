@@ -55,81 +55,101 @@ class DosenController extends Controller
             'm.nim as nim_user',
             'u.email as email_mahasiswa',
             'ud.name as nama_dosen',
-            'p.nilai_seminar_pembimbing'
+            'p.nilai_seminar_pembimbing',
+            'p.nilai_lapangan',
+            's.id as seminar_id',
+            's.status_validasi_syarat as status_seminar'
         )
             ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
             ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
             ->leftJoin('users as ud', 'eo_kerja_praktik.dosen_pembimbing_id', '=', 'ud.id')
-            ->leftJoin('eo_kp_penilaian as p', 'eo_kerja_praktik.id', '=', 'p.kp_id');
+            ->leftJoin('eo_kp_penilaian as p', 'eo_kerja_praktik.id', '=', 'p.kp_id')
+            ->leftJoin('eo_kp_seminar as s', 'eo_kerja_praktik.id', '=', 's.kp_id');
             
         if ($kpDosen) {
             $query->where('eo_kerja_praktik.dosen_pembimbing_id', $kpDosen->id);
         } else {
-            $query->whereNull('eo_kerja_praktik.id'); // Kosongkan jika dosen belum terdaftar
+            $query->whereNull('eo_kerja_praktik.id');
         }
             
         $bimbingan = $query->orderBy('eo_kerja_praktik.created_at', 'desc')->get();
             
-        // Map data dummy buat UI supaya lengkap
         $mahasiswas = $bimbingan->map(function ($kp) {
+            $sudahDaftarSeminar = !is_null($kp->seminar_id);
             return (object) [
-                'id' => $kp->id,
-                'nama' => $kp->nama_mahasiswa ?? 'Unknown',
-                'nim' => $kp->nim ?? $kp->nim_user ?? '2100018000',
-                'prodi' => 'Informatika',
-                'judul_kp' => $kp->rencana_judul ?? 'Belum ada judul',
-                'tempat_kp' => $kp->rencana_tempat ?? 'Belum ada tempat',
-                'durasi_kp' => 'Feb 2026 - Mei 2026',
-                'status_kp' => $kp->status_kp,
-                'status_dokumen' => 'Lengkap',
-                'nilai_seminar' => $kp->nilai_seminar_pembimbing,
-                'nilai_laporan' => null, // Column doesn't exist yet in DB
-                'progress' => rand(40, 100), // dummy progress
+                'id'                   => $kp->id,
+                'nama'                 => $kp->nama_mahasiswa ?? 'Unknown',
+                'nim'                  => $kp->nim ?? $kp->nim_user ?? '-',
+                'judul_kp'             => $kp->rencana_judul ?? $kp->judul_fix ?? 'Belum ada judul',
+                'tempat_kp'            => $kp->rencana_tempat ?? $kp->tempat_fix ?? 'Belum ada tempat',
+                'tanggal_mulai'        => $kp->tanggal_mulai
+                    ? \Carbon\Carbon::parse($kp->tanggal_mulai)->translatedFormat('d M Y')
+                    : null,
+                'tanggal_selesai'      => $kp->tanggal_selesai
+                    ? \Carbon\Carbon::parse($kp->tanggal_selesai)->translatedFormat('d M Y')
+                    : null,
+                'status_kp'            => $kp->status_kp,
+                'status_dokumen'       => 'Lengkap',
+                'nilai_seminar'        => $kp->nilai_seminar_pembimbing,
+                'nilai_laporan'        => $kp->nilai_lapangan,
+                'sudah_daftar_seminar' => $sudahDaftarSeminar,
+                'status_seminar'       => $kp->status_seminar,
+                'progress'             => $kp->status_kp === 'completed' ? 100
+                    : ($kp->status_kp === 'active' ? 60 : 20),
             ];
         });
 
-        // Add dummy data jika kosong
+        // Fallback dummy jika belum ada data nyata (dev only)
         if ($mahasiswas->isEmpty()) {
             $mahasiswas = collect([
                 (object) [
-                    'id' => 101,
-                    'nama' => 'Ahmad Fathanah',
-                    'nim' => '2100018112',
-                    'prodi' => 'Informatika',
-                    'judul_kp' => 'Pengembangan Sistem Microservice Backend',
-                    'tempat_kp' => 'PT GoTo Gojek Tokopedia',
-                    'durasi_kp' => '1 Juni 2026 - 31 Agustus 2026',
-                    'status_kp' => 'active',
-                    'status_dokumen' => 'Lengkap',
-                    'nilai_seminar' => null,
-                    'progress' => 60,
+                    'id'                   => 101,
+                    'nama'                 => 'Ahmad Fathanah',
+                    'nim'                  => '2100018112',
+                    'judul_kp'             => 'Pengembangan Sistem Microservice Backend',
+                    'tempat_kp'            => 'PT GoTo Gojek Tokopedia',
+                    'tanggal_mulai'        => '1 Jun 2026',
+                    'tanggal_selesai'      => '31 Agu 2026',
+                    'status_kp'            => 'active',
+                    'status_dokumen'       => 'Lengkap',
+                    'nilai_seminar'        => null,
+                    'nilai_laporan'        => null,
+                    'sudah_daftar_seminar' => false,
+                    'status_seminar'       => null,
+                    'progress'             => 60,
                 ],
                 (object) [
-                    'id' => 102,
-                    'nama' => 'Siti Nurhaliza',
-                    'nim' => '2100018199',
-                    'prodi' => 'Informatika',
-                    'judul_kp' => 'Analisis Jaringan Fiber Optic',
-                    'tempat_kp' => 'PT Telkom Indonesia',
-                    'durasi_kp' => '15 Mei 2026 - 15 Agustus 2026',
-                    'status_kp' => 'pending',
-                    'status_dokumen' => 'Kurang',
-                    'nilai_seminar' => null,
-                    'progress' => 30,
+                    'id'                   => 102,
+                    'nama'                 => 'Siti Nurhaliza',
+                    'nim'                  => '2100018199',
+                    'judul_kp'             => 'Analisis Jaringan Fiber Optic',
+                    'tempat_kp'            => 'PT Telkom Indonesia',
+                    'tanggal_mulai'        => '15 Mei 2026',
+                    'tanggal_selesai'      => '15 Agu 2026',
+                    'status_kp'            => 'pending',
+                    'status_dokumen'       => 'Kurang',
+                    'nilai_seminar'        => null,
+                    'nilai_laporan'        => null,
+                    'sudah_daftar_seminar' => true,
+                    'status_seminar'       => 'proses',
+                    'progress'             => 30,
                 ],
                 (object) [
-                    'id' => 103,
-                    'nama' => 'Bima Sakti',
-                    'nim' => '2100018155',
-                    'prodi' => 'Informatika',
-                    'judul_kp' => 'Implementasi Fraud Detection System',
-                    'tempat_kp' => 'Bank Mandiri IT Group',
-                    'durasi_kp' => '1 Februari 2026 - 30 April 2026',
-                    'status_kp' => 'completed',
-                    'status_dokumen' => 'Lengkap',
-                    'nilai_seminar' => 85,
-                    'progress' => 100,
-                ]
+                    'id'                   => 103,
+                    'nama'                 => 'Bima Sakti',
+                    'nim'                  => '2100018155',
+                    'judul_kp'             => 'Implementasi Fraud Detection System',
+                    'tempat_kp'            => 'Bank Mandiri IT Group',
+                    'tanggal_mulai'        => '1 Feb 2026',
+                    'tanggal_selesai'      => '30 Apr 2026',
+                    'status_kp'            => 'completed',
+                    'status_dokumen'       => 'Lengkap',
+                    'nilai_seminar'        => 85,
+                    'nilai_laporan'        => 78,
+                    'sudah_daftar_seminar' => true,
+                    'status_seminar'       => 'proses',
+                    'progress'             => 100,
+                ],
             ]);
         }
 

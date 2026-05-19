@@ -61,8 +61,26 @@ class MahasiswaKpController extends Controller
             $dokumenStats['ditolak']   = $kp->dokumen->where('status_validasi', 'ditolak')->count();
         }
 
+        $activePhase = 'pra_kp';
+        if ($kp) {
+            $status = strtolower($kp->status_kp);
+            if (str_contains($status, 'saat kp') || str_contains($status, 'active')) {
+                $activePhase = 'saat_kp';
+            } elseif (str_contains($status, 'pasca kp') || str_contains($status, 'selesai')) {
+                $activePhase = 'pasca_kp';
+            }
+        }
+
+        try {
+            $templates = \Modules\EOffice\Models\TemplateDokumenKP::where('phase', $activePhase)
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } catch (\Illuminate\Database\QueryException $e) {
+            $templates = collect();
+        }
+
         return view('eoffice::kp.mahasiswa.dashboard', compact(
-            'mahasiswa', 'kp', 'pengumuman', 'timeline', 'dokumenStats'
+            'mahasiswa', 'kp', 'pengumuman', 'timeline', 'dokumenStats', 'templates', 'activePhase'
         ));
     }
 
@@ -114,8 +132,15 @@ class MahasiswaKpController extends Controller
             <h2>6. Tempat dan Waktu Pelaksanaan</h2><p><br></p>
             <h2>7. Penutup</h2><p><br></p>';
 
+        $templatesKeperluan = collect();
+        try {
+            $templatesKeperluan = \Modules\EOffice\Models\KpPengumuman::where('tipe', 'keperluan_perusahaan')->where('is_active', true)->get();
+        } catch (\Exception $e) {
+            // Ignore if table doesn't exist
+        }
+
         return view('eoffice::kp.mahasiswa.informasi', compact(
-            'mahasiswa', 'kp', 'infoPersuratan', 'templateContent'
+            'mahasiswa', 'kp', 'infoPersuratan', 'templateContent', 'templatesKeperluan'
         ));
     }
 
@@ -265,7 +290,26 @@ class MahasiswaKpController extends Controller
             ->whereNotIn('status_kp', ['Selesai'])
             ->first();
 
-        return view('eoffice::kp.mahasiswa.pendaftaran', compact('mahasiswa', 'existingKp'));
+        // Cek pengaturan pendaftaran KP
+        $isOpen = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_buka', '0') == '1';
+        $startDate = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_mulai', '');
+        $endDate = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_selesai', '');
+        
+        $isPeriodValid = true;
+        $now = now();
+        
+        if ($isOpen) {
+            if (!empty($startDate) && $now->startOfDay()->lt(\Carbon\Carbon::parse($startDate)->startOfDay())) {
+                $isPeriodValid = false;
+            }
+            if (!empty($endDate) && $now->startOfDay()->gt(\Carbon\Carbon::parse($endDate)->startOfDay())) {
+                $isPeriodValid = false;
+            }
+        }
+        
+        $registrationOpen = $isOpen && $isPeriodValid;
+
+        return view('eoffice::kp.mahasiswa.pendaftaran', compact('mahasiswa', 'existingKp', 'registrationOpen', 'startDate', 'endDate'));
     }
 
     /**
@@ -275,6 +319,26 @@ class MahasiswaKpController extends Controller
      */
     public function storePendaftaran(Request $request)
     {
+        // Cek apakah pendaftaran dibuka
+        $isOpen = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_buka', '0') == '1';
+        $startDate = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_mulai', '');
+        $endDate = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_selesai', '');
+        
+        $isPeriodValid = true;
+        $now = now();
+        
+        if ($isOpen) {
+            if (!empty($startDate) && $now->startOfDay()->lt(\Carbon\Carbon::parse($startDate)->startOfDay())) {
+                $isPeriodValid = false;
+            }
+            if (!empty($endDate) && $now->startOfDay()->gt(\Carbon\Carbon::parse($endDate)->startOfDay())) {
+                $isPeriodValid = false;
+            }
+        }
+        
+        if (!$isOpen || !$isPeriodValid) {
+            return redirect()->back()->with('error', 'Pendaftaran Kerja Praktik saat ini sedang ditutup.');
+        }
         $validated = $request->validate([
             'rencana_judul'   => 'required|string|max:255',
             'rencana_tempat'  => 'required|string|max:255',
@@ -347,6 +411,7 @@ class MahasiswaKpController extends Controller
         $validated = $request->validate([
             'jenis_dokumen' => 'required|string|in:Bukti Terima,Laporan,Makalah,CV,Foto,Kartu Hijau,Nilai Lapangan,A2',
             'file'          => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
+            'nilai_input_mahasiswa' => 'nullable|numeric|min:0|max:100',
         ]);
 
         $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
@@ -354,34 +419,47 @@ class MahasiswaKpController extends Controller
             ->latest()
             ->firstOrFail();
 
+        // Determine phase based on status_kp
+        $activePhase = 'pra_kp';
+        $status_kp = strtolower($kp->status_kp);
+        if (str_contains($status_kp, 'saat kp') || str_contains($status_kp, 'active')) {
+            $activePhase = 'saat_kp';
+        } elseif (str_contains($status_kp, 'pasca kp') || str_contains($status_kp, 'selesai')) {
+            $activePhase = 'pasca_kp';
+        }
+
         // Simpan file
+        $file = $request->file('file');
+        $fileName = $file->getClientOriginalName();
         $folder = strtolower(str_replace(' ', '_', $validated['jenis_dokumen']));
-        $path = $request->file('file')->store(
-            "kp/{$mahasiswa->nim}/{$folder}", 'public'
-        );
+        $path = $file->store("kp/{$mahasiswa->nim}/{$folder}", 'public');
 
         // Cek apakah sudah ada dokumen dengan jenis yang sama, update jika ya
         $existing = KpDokumen::where('kp_id', $kp->id)
             ->where('jenis_dokumen', $validated['jenis_dokumen'])
             ->first();
+            
+        $data = [
+            'file_path' => $path,
+            'file_name' => $fileName,
+            'phase' => $activePhase,
+            'status_validasi' => 'menunggu', // Legacy compatibility
+            'approval_status' => 'pending', // New approval workflow
+            'tanggal_upload' => now(),
+        ];
+        
+        if (isset($validated['nilai_input_mahasiswa'])) {
+            $data['nilai_input_mahasiswa'] = $validated['nilai_input_mahasiswa'];
+        }
 
         if ($existing) {
             // Hapus file lama
             Storage::disk('public')->delete($existing->file_path);
-
-            // Gunakan update pada builder atau ID secara eksplisit untuk mencegah error stdClass
-            KpDokumen::where('id', $existing->id)->update([
-                'file_path'       => $path,
-                'status_validasi' => 'menunggu',
-                'tanggal_upload'  => now(),
-            ]);
+            KpDokumen::where('id', $existing->id)->update($data);
         } else {
-            KpDokumen::create([
-                'kp_id'           => $kp->id,
-                'jenis_dokumen'   => $validated['jenis_dokumen'],
-                'file_path'       => $path,
-                'status_validasi' => 'menunggu',
-            ]);
+            $data['kp_id'] = $kp->id;
+            $data['jenis_dokumen'] = $validated['jenis_dokumen'];
+            KpDokumen::create($data);
         }
 
         return redirect()->back()->with('success', "Dokumen {$validated['jenis_dokumen']} berhasil diunggah!");
@@ -413,45 +491,12 @@ class MahasiswaKpController extends Controller
      */
     public function downloadTemplate(string $type)
     {
-        $templates = [
-            'surat_pengantar' => [
-                'name' => 'Template_Surat_Pengantar_KP.docx',
-                'path' => 'templates/kp/Template_Surat_Pengantar_KP.docx',
-            ],
-            'laporan' => [
-                'name' => 'Template_Laporan_KP.docx',
-                'path' => 'templates/kp/Template_Laporan_KP.docx',
-            ],
-            'makalah' => [
-                'name' => 'Template_Makalah_IEEE.docx',
-                'path' => 'templates/kp/Template_Makalah_IEEE.docx',
-            ],
-            'a2' => [
-                'name' => 'Form_Presensi_Nilai_Lapangan_A2.pdf',
-                'path' => 'templates/kp/Form_A2.pdf',
-            ],
-            'b1' => [
-                'name' => 'Form_Permohonan_Seminar_B1.pdf',
-                'path' => 'templates/kp/Form_B1.pdf',
-            ],
-            'b2' => [
-                'name' => 'Form_Kehadiran_Peserta_Seminar_B2.pdf',
-                'path' => 'templates/kp/Form_B2.pdf',
-            ],
-        ];
-
-        if (!isset($templates[$type])) {
-            abort(404, 'Template tidak ditemukan.');
+        $template = \Modules\EOffice\Models\TemplateDokumenKP::find($type);
+        if ($template && Storage::disk('public')->exists($template->file_path)) {
+            return Storage::disk('public')->download($template->file_path, $template->file_name);
         }
 
-        $template = $templates[$type];
-        $fullPath = storage_path("app/public/{$template['path']}");
-
-        if (!file_exists($fullPath)) {
-            return redirect()->back()->with('error', "File template {$template['name']} belum tersedia. Hubungi Koordinator KP.");
-        }
-
-        return response()->download($fullPath, $template['name']);
+        return redirect()->back()->with('error', 'File template tidak ditemukan.');
     }
 
     /**
@@ -609,20 +654,21 @@ class MahasiswaKpController extends Controller
      */
     private function cekSyaratSeminar(KerjaPraktik $kp, $dokumenByJenis): array
     {
+        // Laporan & Makalah don't need approval, just need to be uploaded
         $laporanAcc = isset($dokumenByJenis['Laporan'])
-            && $dokumenByJenis['Laporan']->where('status_validasi', 'disetujui')->isNotEmpty();
+            && $dokumenByJenis['Laporan']->isNotEmpty();
 
         $makalahAcc = isset($dokumenByJenis['Makalah'])
-            && $dokumenByJenis['Makalah']->where('status_validasi', 'disetujui')->isNotEmpty();
+            && $dokumenByJenis['Makalah']->isNotEmpty();
 
         $kartuHijau = isset($dokumenByJenis['Kartu Hijau'])
-            && $dokumenByJenis['Kartu Hijau']->isNotEmpty();
+            && $dokumenByJenis['Kartu Hijau']->where('approval_status', 'approved')->isNotEmpty();
 
         $nilaiLapangan = isset($dokumenByJenis['Nilai Lapangan'])
-            && $dokumenByJenis['Nilai Lapangan']->isNotEmpty();
+            && $dokumenByJenis['Nilai Lapangan']->where('approval_status', 'approved')->isNotEmpty();
 
         $buktiTerima = isset($dokumenByJenis['Bukti Terima'])
-            && $dokumenByJenis['Bukti Terima']->isNotEmpty();
+            && $dokumenByJenis['Bukti Terima']->where('approval_status', 'approved')->isNotEmpty();
 
         $judulFix = !empty($kp->judul_fix) && !empty($kp->tempat_fix);
 

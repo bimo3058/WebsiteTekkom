@@ -55,31 +55,31 @@
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 Informasi
             </a>
+            <a href="{{ route('eoffice.kp.koordinator.template') }}" class="{{ request()->routeIs('eoffice.kp.koordinator.template') ? 'flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full' : 'flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Template Dokumen
+            </a>
 
             <!-- Data Mahasiswa (Active) -->
             <a href="{{ route('eoffice.kp.koordinator.data_mahasiswa') }}" class="flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 Data Mahasiswa
             </a>
-
             <a href="{{ route('eoffice.kp.koordinator.balancing') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                 Balancing Dosen
             </a>
-            
-            <a href="{{ route('eoffice.kp.koordinator.upload_berkas') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                Upload Berkas
-            </a>
-
-            <a href="{{ route('eoffice.kp.koordinator.validasi_berkas') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
+                        <a href="{{ route('eoffice.kp.koordinator.validasi_berkas') }}" class="{{ request()->routeIs('eoffice.kp.koordinator.validasi_berkas') ? 'flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full' : 'flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium' }}">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 Approval Berkas
             </a>
-
-            <a href="{{ route('eoffice.kp.koordinator.nilai_lapangan') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
+            <a href="{{ route('eoffice.kp.koordinator.nilai_lapangan') }}" class="{{ request()->routeIs('eoffice.kp.koordinator.nilai_lapangan') ? 'flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full' : 'flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium' }}">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
                 Nilai Lapangan
+            </a>
+            <a href="{{ route('eoffice.kp.koordinator.pengaturan') }}" class="{{ request()->routeIs('eoffice.kp.koordinator.pengaturan') ? 'flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full' : 'flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Pengaturan
             </a>
         </div>
         
@@ -199,8 +199,9 @@
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50">Mahasiswa</th>
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50">Tempat KP</th>
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50">Pembimbing</th>
-                                    <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Nilai Seminar</th>
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Nilai Lapangan</th>
+                                    <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Nilai Seminar</th>
+                                    <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Nilai Laporan</th>
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Nilai Akhir</th>
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Status KP</th>
                                 </tr>
@@ -224,12 +225,16 @@
                                             <p class="text-sm text-slate-600" x-text="m.dosen_pembimbing || 'Belum diplot'"></p>
                                         </td>
                                         <td class="py-4 px-6 align-middle text-center">
-                                            <span x-show="m.nilai_seminar !== null" class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 text-slate-700" x-text="m.nilai_seminar"></span>
-                                            <span x-show="m.nilai_seminar === null" class="text-slate-400 text-xs">-</span>
+                                            <span x-show="m.nilai_lapangan !== null && m.nilai_lapangan !== undefined" class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100" x-text="m.nilai_lapangan"></span>
+                                            <span x-show="m.nilai_lapangan === null || m.nilai_lapangan === undefined" class="text-slate-400 text-xs italic">Belum</span>
                                         </td>
                                         <td class="py-4 px-6 align-middle text-center">
-                                            <span x-show="m.nilai_lapangan !== null" class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 text-slate-700" x-text="m.nilai_lapangan"></span>
-                                            <span x-show="m.nilai_lapangan === null" class="text-slate-400 text-xs">-</span>
+                                            <span x-show="m.nilai_seminar !== null" class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100" x-text="m.nilai_seminar"></span>
+                                            <span x-show="m.nilai_seminar === null" class="text-slate-400 text-xs italic">Belum</span>
+                                        </td>
+                                        <td class="py-4 px-6 align-middle text-center">
+                                            <span x-show="m.nilai_laporan !== null" class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100" x-text="m.nilai_laporan"></span>
+                                            <span x-show="m.nilai_laporan === null" class="text-slate-400 text-xs italic">Belum</span>
                                         </td>
                                         <td class="py-4 px-6 align-middle text-center">
                                             <span x-show="m.nilai_akhir !== null" class="inline-flex items-center justify-center px-3 py-1 rounded-md text-sm font-bold bg-indigo-50 text-indigo-700" x-text="m.nilai_akhir"></span>
@@ -313,7 +318,7 @@
                                         </div>
                                         <div>
                                             <h2 class="text-xl font-bold text-slate-900" x-text="selectedMahasiswa.nama"></h2>
-                                            <p class="text-sm text-slate-500 font-medium" x-text="selectedMahasiswa.nim + ' • ' + selectedMahasiswa.prodi"></p>
+                                            <p class="text-sm text-slate-500 font-medium" x-text="selectedMahasiswa.nim"></p>
                                         </div>
                                     </div>
                                 </div>
@@ -362,20 +367,29 @@
                                             <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
                                             Rekap Penilaian
                                         </h3>
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                                <p class="text-xs font-medium text-slate-500 mb-1">Nilai Seminar</p>
-                                                <p class="text-xl font-extrabold text-slate-900" x-text="selectedMahasiswa.nilai_seminar !== null ? selectedMahasiswa.nilai_seminar : '-'"></p>
+                                        <!-- 3 kartu nilai dari dosen -->
+                                        <div class="grid grid-cols-3 gap-3 mb-3">
+                                            <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                                                <p class="text-[10px] font-medium text-emerald-700 mb-1">Nilai Seminar</p>
+                                                <p class="text-xl font-extrabold text-emerald-800" x-text="selectedMahasiswa.nilai_seminar !== null ? selectedMahasiswa.nilai_seminar : '-'"></p>
+                                                <p class="text-[9px] text-emerald-600 mt-0.5">Oleh Dosen</p>
                                             </div>
-                                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                                <p class="text-xs font-medium text-slate-500 mb-1">Nilai Lapangan</p>
-                                                <p class="text-xl font-extrabold text-slate-900" x-text="selectedMahasiswa.nilai_lapangan !== null ? selectedMahasiswa.nilai_lapangan : '-'"></p>
+                                            <div class="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                                                <p class="text-[10px] font-medium text-blue-700 mb-1">Nilai Laporan</p>
+                                                <p class="text-xl font-extrabold text-blue-800" x-text="selectedMahasiswa.nilai_laporan !== null ? selectedMahasiswa.nilai_laporan : '-'"></p>
+                                                <p class="text-[9px] text-blue-600 mt-0.5">Oleh Dosen</p>
+                                            </div>
+                                            <div class="bg-amber-50 p-3 rounded-xl border border-amber-100">
+                                                <p class="text-[10px] font-medium text-amber-700 mb-1">Nilai Lapangan</p>
+                                                <p class="text-xl font-extrabold text-amber-800" x-text="selectedMahasiswa.nilai_lapangan !== null && selectedMahasiswa.nilai_lapangan !== undefined ? selectedMahasiswa.nilai_lapangan : '-'"></p>
+                                                <p class="text-[9px] text-amber-600 mt-0.5">Oleh Koordinator</p>
                                             </div>
                                         </div>
-                                        <div class="mt-4 bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex items-center justify-between">
+                                        <!-- Nilai Akhir -->
+                                        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex items-center justify-between">
                                             <div>
                                                 <p class="text-xs font-bold text-indigo-700 uppercase tracking-wider mb-0.5">Nilai Akhir</p>
-                                                <p class="text-[10px] text-indigo-500 font-medium">Rata-rata penilaian</p>
+                                                <p class="text-[10px] text-indigo-500 font-medium">Hasil kalkulasi akhir</p>
                                             </div>
                                             <p class="text-3xl font-black text-indigo-700" x-text="selectedMahasiswa.nilai_akhir !== null ? selectedMahasiswa.nilai_akhir : '-'"></p>
                                         </div>

@@ -169,6 +169,31 @@
 
 
 
+                        {{-- Dokumen Template Keperluan Perusahaan (Dinamis dari Koordinator) --}}
+                        @if($templatesKeperluan->count() > 0)
+                            @foreach($templatesKeperluan as $template)
+                            <div class="sikape-card p-6">
+                                <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                            </div>
+                                            <h2 class="text-lg font-bold text-grey-900">{{ 3 + $loop->iteration }}. {{ $template->judul }}</h2>
+                                        </div>
+                                        <p class="text-sm text-grey-500 leading-relaxed max-w-2xl">{{ $template->konten }}</p>
+                                    </div>
+                                    @if($template->lampiran)
+                                    <a href="{{ url('storage/' . $template->lampiran) }}" target="_blank" download class="sikape-btn-primary bg-blue-600 hover:bg-blue-700 flex-shrink-0 mt-4 sm:mt-0">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                        Unduh Template
+                                    </a>
+                                    @endif
+                                </div>
+                            </div>
+                            @endforeach
+                        @endif
+
                     </div>
                 </div>
             </template>

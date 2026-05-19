@@ -57,6 +57,10 @@
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 Informasi
             </a>
+            <a href="{{ route('eoffice.kp.koordinator.template') }}" class="{{ request()->routeIs('eoffice.kp.koordinator.template') ? 'flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full' : 'flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Template Dokumen
+            </a>
 
             <a href="{{ route('eoffice.kp.koordinator.data_mahasiswa') }}"
                 class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
@@ -66,13 +70,11 @@
                 Data Mahasiswa
             </a>
 
-            <a href="{{ route('eoffice.kp.koordinator.balancing') }}"
-                class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
-                </svg>
+            <a href="{{ route('eoffice.kp.koordinator.balancing') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                 Balancing Dosen
             </a>
+<<<<<<< HEAD
             <a href="{{ route('eoffice.kp.koordinator.upload_berkas') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                 Upload Berkas
@@ -84,12 +86,19 @@
                 <svg class="w-5 h-5 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
+=======
+            <a href="{{ route('eoffice.kp.koordinator.validasi_berkas') }}" class="flex items-center px-4 py-3 mb-1 text-sm font-semibold text-indigo-700 bg-indigo-50/50 rounded-xl relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full">
+                <svg class="w-5 h-5 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+>>>>>>> a6a98a16d26c5b3147576f13cf10878edc16d149
                 Approval Berkas
             </a>
-
-            <a href="{{ route('eoffice.kp.koordinator.nilai_lapangan') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
+            <a href="{{ route('eoffice.kp.koordinator.nilai_lapangan') }}" class="{{ request()->routeIs('eoffice.kp.koordinator.nilai_lapangan') ? 'flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full' : 'flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium' }}">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
                 Nilai Lapangan
+            </a>
+            <a href="{{ route('eoffice.kp.koordinator.pengaturan') }}" class="{{ request()->routeIs('eoffice.kp.koordinator.pengaturan') ? 'flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full' : 'flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Pengaturan
             </a>
         </div>
 
@@ -332,21 +341,30 @@
                                                 <div class="min-w-0">
                                                     <h4 class="text-sm font-bold text-slate-900 truncate" x-text="doc.jenis"></h4>
                                                     <p class="text-xs text-slate-500 mt-1 truncate" x-text="doc.nama_file"></p>
-                                                    <div class="flex items-center gap-2 mt-2">
-                                                        <span class="text-[10px] font-medium text-slate-400" x-text="doc.ukuran"></span>
-                                                        <span class="w-1 h-1 rounded-full bg-slate-300"></span>
+                                                    <div class="flex flex-wrap items-center gap-2 mt-2">
                                                         <span class="text-[10px] font-medium text-slate-400" x-text="'Diunggah: ' + doc.tanggal"></span>
                                                         <span class="w-1 h-1 rounded-full bg-slate-300"></span>
                                                         <span class="px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide rounded border"
                                                               :class="getDocStatusColor(doc.status)" x-text="doc.status"></span>
+                                                        <!-- Badge: file tidak tersedia -->
+                                                        <span x-show="!doc.file_url" class="inline-flex items-center gap-1 px-2 py-0.5 bg-orange-50 text-orange-600 border border-orange-200 text-[10px] font-bold rounded">
+                                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                                                            File tidak tersedia
+                                                        </span>
                                                     </div>
                                                 </div>
                                             </div>
 
                                             <!-- Actions -->
                                             <div class="flex items-center gap-2 w-full sm:w-auto shrink-0 border-t sm:border-t-0 pt-4 sm:pt-0 border-slate-100">
-                                                <button @click="openPreview(doc)" class="flex-1 sm:flex-none px-4 py-2 bg-indigo-50 text-indigo-700 hover:bg-indigo-100 font-bold text-xs rounded-xl transition-colors text-center border border-indigo-100">
-                                                    Preview
+                                                <!-- Preview button: disabled if no file -->
+                                                <button @click="doc.file_url ? openPreview(doc) : null"
+                                                        :disabled="!doc.file_url"
+                                                        :class="doc.file_url ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100 cursor-pointer' : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'"
+                                                        :title="doc.file_url ? 'Preview file' : 'File belum tersedia, minta mahasiswa upload ulang'"
+                                                        class="flex-1 sm:flex-none px-4 py-2 font-bold text-xs rounded-xl transition-colors text-center border flex items-center gap-1.5 justify-center">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                    <span x-text="doc.file_url ? 'Lihat' : 'Kosong'"></span>
                                                 </button>
                                                 
                                                 <template x-if="doc.status === 'pending'">
@@ -412,26 +430,49 @@
                         </div>
                         <div>
                             <h3 class="text-sm font-bold text-slate-900" x-text="previewDoc ? previewDoc.nama_file : ''"></h3>
-                            <p class="text-xs text-slate-500 font-medium mt-0.5">Preview PDF • Diunggah oleh Mahasiswa</p>
+                            <p class="text-xs text-slate-500 font-medium mt-0.5" x-text="previewDoc && isPdf(previewDoc.nama_file) ? 'Preview PDF • Diunggah oleh Mahasiswa' : 'File Dokumen • Klik Download untuk membuka'"></p>
                         </div>
                     </div>
                     <div class="flex gap-2">
-                        <button class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100" title="Download">
+                        <a :href="previewDoc ? previewDoc.file_url : '#'" :download="previewDoc ? previewDoc.nama_file : ''" target="_blank" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100" title="Download">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                        </button>
+                        </a>
                         <button @click="previewModalOpen = false" class="p-2 text-slate-400 hover:text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors" title="Tutup">
                             <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                         </button>
                     </div>
                 </div>
                 
-                <div class="flex-1 bg-slate-200 flex items-center justify-center relative">
-                    <!-- Dummy PDF placeholder -->
-                    <div class="text-center">
-                        <svg class="w-16 h-16 text-slate-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                        <p class="text-slate-500 font-medium">Area Preview PDF</p>
-                        <p class="text-xs text-slate-400 mt-2 max-w-sm mx-auto">Dokumen asli akan dirender di sini menggunakan tag <span class="font-mono text-[10px] bg-slate-300 px-1 rounded text-slate-600">&lt;embed&gt;</span> atau <span class="font-mono text-[10px] bg-slate-300 px-1 rounded text-slate-600">&lt;iframe&gt;</span></p>
-                    </div>
+                <div class="flex-1 bg-slate-100 flex flex-col items-center justify-center relative overflow-hidden">
+                    <!-- PDF: embed with iframe -->
+                    <template x-if="previewDoc && previewDoc.file_url && isPdf(previewDoc.nama_file)">
+                        <iframe :src="previewDoc.file_url" class="w-full h-full border-0" style="min-height:500px;"></iframe>
+                    </template>
+
+                    <!-- Word/Doc: cannot preview in browser, show download prompt -->
+                    <template x-if="previewDoc && previewDoc.file_url && !isPdf(previewDoc.nama_file)">
+                        <div class="text-center p-10">
+                            <div class="w-20 h-20 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
+                                <svg class="w-10 h-10 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>
+                            </div>
+                            <h4 class="text-base font-bold text-slate-800 mb-1" x-text="previewDoc.nama_file"></h4>
+                            <p class="text-sm text-slate-500 mb-2">File Word/Dokumen tidak bisa dipreview langsung di browser.</p>
+                            <p class="text-xs text-slate-400 mb-6">Gunakan tombol Download di atas untuk membuka file ini.</p>
+                            <a :href="previewDoc.file_url" target="_blank" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 shadow-sm transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                Buka / Download File
+                            </a>
+                        </div>
+                    </template>
+
+                    <!-- Fallback jika file_url null -->
+                    <template x-if="!previewDoc || !previewDoc.file_url">
+                        <div class="text-center p-8">
+                            <svg class="w-16 h-16 text-slate-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+                            <p class="text-slate-600 font-semibold">File tidak tersedia</p>
+                            <p class="text-xs text-slate-400 mt-1">Dokumen ini belum memiliki file yang bisa dipreview.</p>
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -445,34 +486,90 @@
                  x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95 translate-y-4" x-transition:enter-end="opacity-100 scale-100 translate-y-0"
                  @click.away="rejectModalOpen = false"
                  class="relative w-full max-w-lg rounded-2xl bg-white shadow-xl overflow-hidden border border-slate-100">
-                
+
                 <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
-                    <h3 class="text-lg font-bold text-slate-900">Tolak & Beri Catatan Revisi</h3>
+                    <h3 class="text-lg font-bold text-slate-900">Tolak / Minta Revisi</h3>
                     <button @click="rejectModalOpen = false" class="text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg transition-colors">
                         <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
                     </button>
                 </div>
-                
-                <div class="p-6">
-                    <div class="bg-red-50 p-4 rounded-xl border border-red-100 mb-5 flex gap-3 items-start">
-                        <svg class="w-5 h-5 text-red-500 shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clip-rule="evenodd" /></svg>
-                        <div>
-                            <p class="text-sm font-bold text-red-800">Penolakan Dokumen</p>
-                            <p class="text-xs text-red-600 mt-1 leading-relaxed">Anda akan menolak dokumen <span class="font-bold" x-text="rejectDoc ? rejectDoc.nama_file : ''"></span>. Mahasiswa harus mengunggah ulang dokumen ini.</p>
+
+                <div class="p-6 space-y-5">
+                    <!-- File info -->
+                    <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        <div class="w-9 h-9 bg-red-100 text-red-500 rounded-lg flex items-center justify-center shrink-0">
+                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd"/></svg>
+                        </div>
+                        <p class="text-sm font-semibold text-slate-900 truncate" x-text="rejectDoc ? rejectDoc.nama_file : ''"></p>
+                    </div>
+
+                    <!-- Pilihan aksi -->
+                    <div>
+                        <p class="text-sm font-bold text-slate-700 mb-2">Pilih Tindakan</p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <label class="flex items-start gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all"
+                                   :class="rejectAction === 'revision' ? 'border-amber-400 bg-amber-50' : 'border-slate-200 bg-white hover:border-slate-300'">
+                                <input type="radio" x-model="rejectAction" value="revision" class="mt-0.5 accent-amber-500">
+                                <div>
+                                    <p class="text-sm font-bold text-slate-800">Minta Revisi</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">Dokumen perlu diperbaiki sebelum disetujui</p>
+                                </div>
+                            </label>
+                            <label class="flex items-start gap-3 p-3 border-2 rounded-xl cursor-pointer transition-all"
+                                   :class="rejectAction === 'rejected' ? 'border-red-400 bg-red-50' : 'border-slate-200 bg-white hover:border-slate-300'">
+                                <input type="radio" x-model="rejectAction" value="rejected" class="mt-0.5 accent-red-500">
+                                <div>
+                                    <p class="text-sm font-bold text-slate-800">Tolak Dokumen</p>
+                                    <p class="text-xs text-slate-500 mt-0.5">Dokumen ditolak dan harus diupload ulang</p>
+                                </div>
+                            </label>
                         </div>
                     </div>
-                    
-                    <label class="block text-sm font-bold text-slate-700 mb-2">Catatan Revisi <span class="text-red-500">*</span></label>
-                    <textarea x-model="rejectReason" rows="4" placeholder="Tuliskan alasan penolakan atau bagian yang harus direvisi..."
-                              class="w-full rounded-xl border-slate-200 py-3 px-4 text-sm focus:border-red-500 focus:ring-4 focus:ring-red-500/10 border outline-none resize-y"></textarea>
+
+                    <!-- Catatan -->
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1.5">Catatan <span class="text-red-500">*</span></label>
+                        <textarea x-model="rejectReason" rows="3" placeholder="Tuliskan alasan atau bagian yang perlu diperbaiki..."
+                                  class="w-full rounded-xl border-slate-200 py-2.5 px-4 text-sm focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 border outline-none resize-y"></textarea>
+                    </div>
                 </div>
-                
+
                 <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end">
                     <button @click="rejectModalOpen = false" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-bold rounded-xl hover:bg-slate-50">Batal</button>
-                    <button @click="submitReject()" class="px-4 py-2 bg-red-600 text-white text-sm font-bold rounded-xl hover:bg-red-700 shadow-sm shadow-red-200">Kirim Revisi</button>
+                    <button @click="submitReject()"
+                            :disabled="isLoading"
+                            :class="rejectAction === 'rejected' ? 'bg-red-600 hover:bg-red-700 shadow-red-200' : 'bg-amber-500 hover:bg-amber-600 shadow-amber-200'"
+                            class="px-5 py-2 text-white text-sm font-bold rounded-xl shadow-sm transition-colors flex items-center gap-2 disabled:opacity-60">
+                        <svg x-show="isLoading" class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+                        <span x-text="rejectAction === 'rejected' ? 'Tolak Dokumen' : 'Kirim ke Revisi'"></span>
+                    </button>
                 </div>
             </div>
         </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div x-show="toast.show"
+         x-transition:enter="transition ease-out duration-300 transform"
+         x-transition:enter-start="opacity-0 translate-y-4 scale-95"
+         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+         x-transition:leave="transition ease-in duration-200"
+         x-transition:leave-start="opacity-100"
+         x-transition:leave-end="opacity-0 translate-y-4"
+         class="fixed bottom-6 right-6 z-[100] min-w-[320px] max-w-sm bg-white rounded-2xl shadow-2xl border border-slate-100 flex items-start gap-4 p-4"
+         style="display: none;">
+        <div class="shrink-0 w-10 h-10 rounded-full flex items-center justify-center mt-0.5"
+             :class="toast.type === 'success' ? 'bg-emerald-50 border border-emerald-100' : 'bg-red-50 border border-red-100'">
+            <svg x-show="toast.type === 'success'" class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+            <svg x-show="toast.type !== 'success'" class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </div>
+        <div class="flex-1">
+            <p class="text-sm font-bold text-slate-900" x-text="toast.title"></p>
+            <p class="text-xs text-slate-500 mt-0.5 leading-relaxed" x-text="toast.message"></p>
+        </div>
+        <button @click="toast.show = false" class="text-slate-400 hover:text-slate-600 p-1 rounded-md">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+        </button>
     </div>
 
 </div>
@@ -487,6 +584,7 @@
             activeTab: 'pra_kp',
             mahasiswas: @json($mahasiswas),
             selectedStudent: null,
+<<<<<<< HEAD
             
             init() {
                 const stored = localStorage.getItem('eoffice_admin_approval_data');
@@ -501,13 +599,18 @@
                 localStorage.setItem('eoffice_admin_approval_data', JSON.stringify(this.mahasiswas));
             },
             
+=======
+            isLoading: false,
+
+>>>>>>> a6a98a16d26c5b3147576f13cf10878edc16d149
             // Modal States
             previewModalOpen: false,
             previewDoc: null,
             rejectModalOpen: false,
             rejectDoc: null,
             rejectReason: '',
-            
+            rejectAction: 'revision', // 'revision' | 'rejected'
+
             // Toast state
             toast: {
                 show: false,
@@ -559,10 +662,11 @@
             
             getDocStatusColor(status) {
                 switch(status) {
-                    case 'pending': return 'bg-amber-50 text-amber-600 border-amber-200';
+                    case 'pending':  return 'bg-slate-100 text-slate-500 border-slate-200';
                     case 'approved': return 'bg-emerald-50 text-emerald-600 border-emerald-200';
                     case 'rejected': return 'bg-red-50 text-red-600 border-red-200';
-                    default: return 'bg-slate-100 text-slate-500 border-slate-200';
+                    case 'revision': return 'bg-amber-50 text-amber-600 border-amber-200';
+                    default:         return 'bg-slate-100 text-slate-500 border-slate-200';
                 }
             },
             
@@ -570,30 +674,65 @@
                 this.previewDoc = doc;
                 this.previewModalOpen = true;
             },
+
+            isPdf(filename) {
+                if (!filename) return false;
+                return filename.toLowerCase().endsWith('.pdf');
+            },
             
             openRejectModal(doc) {
                 this.rejectDoc = doc;
                 this.rejectReason = '';
+                this.rejectAction = 'revision';
                 this.rejectModalOpen = true;
             },
             
             processApproval(docId, status) {
-                // Find document and update status
-                const docIndex = this.currentDocuments.findIndex(d => d.id === docId);
-                if (docIndex !== -1) {
-                    this.currentDocuments[docIndex].status = status;
-                    if(status === 'approved') {
-                        this.showToast('success', 'Dokumen Disetujui', 'Dokumen telah berhasil disetujui.');
+                if (this.isLoading) return;
+                this.isLoading = true;
+
+                fetch(`/eoffice/kp/koordinator/validasi-berkas/${docId}/approve`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
                     }
+<<<<<<< HEAD
                     this.saveData();
                 }
+=======
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        // Fix Alpine reactivity: mutate nested array properly
+                        const phase = this.activeTab;
+                        const idx = this.selectedStudent.dokumen[phase].findIndex(d => d.id === docId);
+                        if (idx !== -1) {
+                            this.selectedStudent.dokumen[phase][idx] = {
+                                ...this.selectedStudent.dokumen[phase][idx],
+                                status: 'approved',
+                                catatan: ''
+                            };
+                            // Force reactivity
+                            this.selectedStudent = { ...this.selectedStudent };
+                        }
+                        this.showToast('success', 'Dokumen Disetujui ✓', data.message);
+                    } else {
+                        this.showToast('error', 'Gagal', 'Terjadi kesalahan sistem.');
+                    }
+                })
+                .catch(() => this.showToast('error', 'Gagal', 'Terjadi kesalahan jaringan.'))
+                .finally(() => { this.isLoading = false; });
+>>>>>>> a6a98a16d26c5b3147576f13cf10878edc16d149
             },
             
             submitReject() {
-                if(!this.rejectReason.trim()) {
-                    this.showToast('error', 'Error', 'Catatan revisi wajib diisi.');
+                if (!this.rejectReason.trim()) {
+                    this.showToast('error', 'Error', 'Catatan wajib diisi.');
                     return;
                 }
+<<<<<<< HEAD
                 
                 const docIndex = this.currentDocuments.findIndex(d => d.id === this.rejectDoc.id);
                 if (docIndex !== -1) {
@@ -604,6 +743,47 @@
                 }
                 
                 this.rejectModalOpen = false;
+=======
+                if (this.isLoading) return;
+                this.isLoading = true;
+
+                const endpoint = this.rejectAction === 'rejected'
+                    ? `/eoffice/kp/koordinator/validasi-berkas/${this.rejectDoc.id}/reject`
+                    : `/eoffice/kp/koordinator/validasi-berkas/${this.rejectDoc.id}/revise`;
+
+                fetch(endpoint, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json'
+                    },
+                    body: JSON.stringify({ revision_note: this.rejectReason })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        const newStatus = this.rejectAction;
+                        const phase = this.activeTab;
+                        const idx = this.selectedStudent.dokumen[phase].findIndex(d => d.id === this.rejectDoc.id);
+                        if (idx !== -1) {
+                            this.selectedStudent.dokumen[phase][idx] = {
+                                ...this.selectedStudent.dokumen[phase][idx],
+                                status: newStatus,
+                                catatan: this.rejectReason
+                            };
+                            this.selectedStudent = { ...this.selectedStudent };
+                        }
+                        const msg = newStatus === 'rejected' ? 'Dokumen Ditolak' : 'Revisi Dikirim';
+                        this.showToast('success', msg, data.message);
+                        this.rejectModalOpen = false;
+                    } else {
+                        this.showToast('error', 'Gagal', 'Terjadi kesalahan sistem.');
+                    }
+                })
+                .catch(() => this.showToast('error', 'Gagal', 'Terjadi kesalahan jaringan.'))
+                .finally(() => { this.isLoading = false; });
+>>>>>>> a6a98a16d26c5b3147576f13cf10878edc16d149
             },
             
             showToast(type, title, message) {

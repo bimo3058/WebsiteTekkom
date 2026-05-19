@@ -23,6 +23,41 @@ class KoordinatorController extends Controller implements HasMiddleware
         ];
     }
 
+    public function pengaturan()
+    {
+        $isOpen = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_buka', '0');
+        $startDate = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_mulai', '');
+        $endDate = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_selesai', '');
+
+        return view('eoffice::koordinator.pengaturan', compact('isOpen', 'startDate', 'endDate'));
+    }
+
+    public function storePengaturan(Request $request)
+    {
+        $validated = $request->validate([
+            'pendaftaran_kp_buka' => 'required|in:1,0',
+            'pendaftaran_kp_mulai' => 'nullable|date',
+            'pendaftaran_kp_selesai' => 'nullable|date|after_or_equal:pendaftaran_kp_mulai',
+        ]);
+
+        \Modules\EOffice\Models\KpSetting::set('pendaftaran_kp_buka', $validated['pendaftaran_kp_buka']);
+
+        if ($validated['pendaftaran_kp_mulai']) {
+            \Modules\EOffice\Models\KpSetting::set('pendaftaran_kp_mulai', $validated['pendaftaran_kp_mulai']);
+        } else {
+            // Jika kosong, hapus / set null (walau KpSetting get nya default '')
+            \Modules\EOffice\Models\KpSetting::set('pendaftaran_kp_mulai', '');
+        }
+
+        if ($validated['pendaftaran_kp_selesai']) {
+            \Modules\EOffice\Models\KpSetting::set('pendaftaran_kp_selesai', $validated['pendaftaran_kp_selesai']);
+        } else {
+            \Modules\EOffice\Models\KpSetting::set('pendaftaran_kp_selesai', '');
+        }
+
+        return redirect()->back()->with('success', 'Pengaturan pendaftaran KP berhasil diperbarui.');
+    }
+
     /**
      * Halaman Utama Dashboard Koordinator KP
      */
@@ -44,91 +79,7 @@ class KoordinatorController extends Controller implements HasMiddleware
         return view('eoffice::koordinator.dashboard', compact('stats'));
     }
 
-    /**
-     * Halaman Balancing Dosen
-     */
-    public function balancingDosen()
-    {
-        // 1. Ambil mahasiswa yang belum punya dosen
-        $mahasiswas = KerjaPraktik::select(
-                'eo_kerja_praktik.id',
-                'eo_kerja_praktik.nim',
-                'eo_kerja_praktik.rencana_judul',
-                'u.name as nama_mahasiswa'
-            )
-            ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
-            ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
-            ->whereNull('eo_kerja_praktik.dosen_pembimbing_id')
-            ->orderBy('eo_kerja_praktik.created_at', 'asc')
-            ->get();
 
-        // 2. Ambil semua dosen berdasarkan domain email @undip.ac.id (bukan students)
-        $dosens = \App\Models\User::where('email', 'like', '%@undip.ac.id')
-            ->where('email', 'not like', '%@students.undip.ac.id')
-            ->select('id', 'name')
-            ->get();
-
-        // 3. Hitung jumlah mahasiswa bimbingan dan ambil daftar mahasiswa untuk masing-masing dosen
-        foreach ($dosens as $dosen) {
-            $kpDosen = \Modules\EOffice\Models\KpDosen::where('user_id', $dosen->id)->first();
-            
-            if ($kpDosen) {
-                $assigned = KerjaPraktik::select(
-                        'eo_kerja_praktik.id',
-                        'eo_kerja_praktik.nim',
-                        'eo_kerja_praktik.rencana_judul',
-                        'u.name as nama_mahasiswa'
-                    )
-                    ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
-                    ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
-                    ->where('eo_kerja_praktik.dosen_pembimbing_id', $kpDosen->id)
-                    ->get();
-            } else {
-                $assigned = collect();
-            }
-            
-            $dosen->jumlah_bimbingan = $assigned->count();
-            $dosen->mahasiswas = $assigned;
-            // Dummy kuota maksimal (karena belum ada di tabel users/dosen)
-            $dosen->kuota_maksimal = 10;
-        }
-
-        // Urutkan dosen berdasarkan jumlah bimbingan (paling sedikit di atas untuk prioritas)
-        $dosens = collect($dosens)->sortBy('jumlah_bimbingan')->values();
-
-        return view('eoffice::koordinator.balancing', compact('mahasiswas', 'dosens'));
-    }
-
-    /**
-     * Proses Simpan Balancing Dosen
-     */
-    public function storeBalancing(Request $request)
-    {
-        $validated = $request->validate([
-            'assignments' => 'required|array',
-            'assignments.*.kp_id' => 'required|exists:eo_kerja_praktik,id',
-            'assignments.*.dosen_id' => 'nullable|exists:users,id',
-        ]);
-
-        $assignedCount = 0;
-        foreach ($validated['assignments'] as $assign) {
-            if (!empty($assign['dosen_id'])) {
-                // Mapping ID global ke tabel lokal eo_kp_dosen agar tidak FK violation
-                $userDosen = \App\Models\User::find($assign['dosen_id']);
-                $kpDosen = \Modules\EOffice\Models\KpDosen::firstOrCreate(
-                    ['user_id' => $assign['dosen_id']],
-                    ['nama_lengkap' => $userDosen->name ?? 'Dosen KP', 'nip' => '-']
-                );
-
-                KerjaPraktik::where('id', $assign['kp_id'])
-                    ->update(['dosen_pembimbing_id' => $kpDosen->id]);
-                $assignedCount++;
-            }
-        }
-
-        return redirect()->route('eoffice.kp.koordinator.balancing')
-            ->with('success', "Berhasil menetapkan Dosen Pembimbing untuk $assignedCount mahasiswa!");
-    }
 
     /**
      * Halaman Pengumuman & Timeline
@@ -139,8 +90,9 @@ class KoordinatorController extends Controller implements HasMiddleware
         $pengumumen = $allData->where('tipe', 'pengumuman');
         $faqs = $allData->where('tipe', 'faq');
         $timelines = $allData->where('tipe', 'timeline');
-        
-        return view('eoffice::koordinator.pengumuman', compact('pengumumen', 'faqs', 'timelines'));
+        $keperluans = $allData->where('tipe', 'keperluan_perusahaan');
+
+        return view('eoffice::koordinator.pengumuman', compact('pengumumen', 'faqs', 'timelines', 'keperluans'));
     }
 
     /**
@@ -181,13 +133,13 @@ class KoordinatorController extends Controller implements HasMiddleware
     {
         $validated = $request->validate([
             'judul' => 'required|string|max:255',
-            'tipe' => 'required|in:pengumuman,timeline,faq',
+            'tipe' => 'required|in:pengumuman,timeline,faq,keperluan_perusahaan',
             'konten' => 'required|string',
             'lampiran' => 'nullable|file|mimes:pdf,doc,docx,jpg,png|max:10240',
         ]);
 
         $pengumuman = \Modules\EOffice\Models\KpPengumuman::findOrFail($id);
-        
+
         $dataToUpdate = [
             'judul' => $validated['judul'],
             'tipe' => $validated['tipe'],
@@ -222,24 +174,105 @@ class KoordinatorController extends Controller implements HasMiddleware
         return redirect()->route('eoffice.kp.koordinator.pengumuman')->with('success', 'Informasi berhasil dihapus!');
     }
 
+    /**
+     * Manajemen Template Dokumen
+     */
+    public function template()
+    {
+        // Try to fetch real templates if table exists, otherwise return empty collection safely
+        try {
+            $templates = \Modules\EOffice\Models\TemplateDokumenKP::orderBy('created_at', 'desc')->get();
+        } catch (\Illuminate\Database\QueryException $e) {
+            $templates = collect(); // Table might not exist yet
+            session()->flash('warning', 'Tabel eo_kp_template belum ada di database. Silakan jalankan migrasi.');
+        }
+
+        return view('eoffice::koordinator.template', compact('templates'));
+    }
+
+    public function storeTemplate(Request $request)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'phase' => 'required|in:pra_kp,saat_kp,pasca_kp,keperluan_perusahaan',
+            'file_path' => 'required|file|mimes:pdf,doc,docx|max:5120', // Max 5MB
+        ]);
+
+        $data = [
+            'title' => $validated['title'],
+            'phase' => $validated['phase'],
+            'uploaded_by' => auth()->id(),
+        ];
+
+        if ($request->hasFile('file_path')) {
+            $file = $request->file('file_path');
+            $data['file_name'] = $file->getClientOriginalName();
+            $data['file_type'] = $file->getClientOriginalExtension();
+            $data['file_path'] = $file->store('kp_templates', 'public');
+        }
+
+        try {
+            \Modules\EOffice\Models\TemplateDokumenKP::create($data);
+            return redirect()->back()->with('success', 'Template berhasil diunggah!');
+        } catch (\Illuminate\Database\QueryException $e) {
+            return redirect()->back()->with('error', 'Gagal menyimpan: Tabel eo_kp_template belum ada di database Supabase.');
+        }
+    }
+
+    public function updateTemplate(Request $request, $id)
+    {
+        $validated = $request->validate([
+            'title' => 'required|string|max:255',
+            'phase' => 'required|in:pra_kp,saat_kp,pasca_kp,keperluan_perusahaan',
+            'file_path' => 'nullable|file|mimes:pdf,doc,docx|max:5120',
+        ]);
+
+        $template = \Modules\EOffice\Models\TemplateDokumenKP::findOrFail($id);
+
+        $data = [
+            'title' => $validated['title'],
+            'phase' => $validated['phase'],
+        ];
+
+        if ($request->hasFile('file_path')) {
+            $file = $request->file('file_path');
+            $data['file_name'] = $file->getClientOriginalName();
+            $data['file_type'] = $file->getClientOriginalExtension();
+            $data['file_path'] = $file->store('kp_templates', 'public');
+        }
+
+        $template->update($data);
+
+        return redirect()->back()->with('success', 'Template berhasil diperbarui!');
+    }
+
+    public function destroyTemplate($id)
+    {
+        $template = \Modules\EOffice\Models\TemplateDokumenKP::findOrFail($id);
+        $template->delete();
+        return redirect()->back()->with('success', 'Template berhasil dihapus!');
+    }
+
     public function validasiBerkas()
     {
         $kps = KerjaPraktik::with(['mahasiswa.user', 'dosenPembimbing.user', 'dokumen'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $mahasiswas = $kps->map(function($kp) {
+        $mahasiswas = $kps->map(function ($kp) {
             $dokumens = $kp->dokumen;
-            
+
             // Map status_validasi to UI status
-            $mapStatus = function($status) {
-                if ($status === 'disetujui' || $status === 'approved') return 'approved';
-                if ($status === 'ditolak' || $status === 'rejected') return 'rejected';
+            $mapStatus = function ($status) {
+                if ($status === 'disetujui' || $status === 'approved')
+                    return 'approved';
+                if ($status === 'ditolak' || $status === 'rejected')
+                    return 'rejected';
                 return 'pending';
             };
 
             $praKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['Transkrip', 'Surat Pengantar', 'Form Pendaftaran', 'Proposal']))
-                ->map(fn($d) => (object)[
+                ->map(fn($d) => (object) [
                     'id' => $d->id,
                     'nama_file' => basename($d->file_path ?? $d->jenis_dokumen),
                     'jenis' => $d->jenis_dokumen,
@@ -248,9 +281,9 @@ class KoordinatorController extends Controller implements HasMiddleware
                     'status' => $mapStatus($d->status_validasi ?? $d->approval_status),
                     'catatan' => $d->revision_note ?? ''
                 ])->values();
-            
+
             $saatKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['Logbook', 'Laporan Progress', 'Laporan']))
-                ->map(fn($d) => (object)[
+                ->map(fn($d) => (object) [
                     'id' => $d->id,
                     'nama_file' => basename($d->file_path ?? $d->jenis_dokumen),
                     'jenis' => $d->jenis_dokumen,
@@ -261,7 +294,7 @@ class KoordinatorController extends Controller implements HasMiddleware
                 ])->values();
 
             $pascaKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['A2', 'Kartu Hijau', 'Nilai Lapangan', 'Laporan Akhir', 'Bukti Terima', 'Makalah']))
-                ->map(fn($d) => (object)[
+                ->map(fn($d) => (object) [
                     'id' => $d->id,
                     'nama_file' => basename($d->file_path ?? $d->jenis_dokumen),
                     'jenis' => $d->jenis_dokumen,
@@ -339,7 +372,7 @@ class KoordinatorController extends Controller implements HasMiddleware
     {
         // Menggunakan dummy collections agar UI bisa di-render meskipun database belum ada
         // Info untuk developer: Perlu dibuat tabel eo_faq dan eo_dokumen_panduan di Supabase
-        
+
         $dokumens = collect([
             (object) [
                 'id' => 1,
@@ -423,14 +456,14 @@ class KoordinatorController extends Controller implements HasMiddleware
             'p.nilai_lapangan',
             'p.nilai_akhir'
         )
-        ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
-        ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
-        ->leftJoin('eo_kp_dosen as d', 'eo_kerja_praktik.dosen_pembimbing_id', '=', 'd.id')
-        ->leftJoin('eo_kp_penilaian as p', 'eo_kerja_praktik.id', '=', 'p.kp_id')
-        ->orderBy('eo_kerja_praktik.created_at', 'desc')
-        ->get();
+            ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
+            ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
+            ->leftJoin('eo_kp_dosen as d', 'eo_kerja_praktik.dosen_pembimbing_id', '=', 'd.id')
+            ->leftJoin('eo_kp_penilaian as p', 'eo_kerja_praktik.id', '=', 'p.kp_id')
+            ->orderBy('eo_kerja_praktik.created_at', 'desc')
+            ->get();
 
-        $mahasiswas = $kps->map(function($kp) {
+        $mahasiswas = $kps->map(function ($kp) {
             $statusStr = 'Pending';
             $tahap = 'Pra KP';
             if ($kp->status_kp === 'pending') {
@@ -443,7 +476,7 @@ class KoordinatorController extends Controller implements HasMiddleware
                 $statusStr = 'Selesai';
                 $tahap = 'Pasca KP';
             }
-            
+
             return (object) [
                 'id' => $kp->id,
                 'nama' => $kp->nama ?? 'Unknown',
@@ -456,7 +489,8 @@ class KoordinatorController extends Controller implements HasMiddleware
                 'semester' => 'Genap',
                 'tahun_kp' => date('Y', strtotime($kp->created_at)),
                 'nilai_seminar' => $kp->nilai_seminar_pembimbing,
-                'nilai_lapangan' => $kp->nilai_lapangan,
+                'nilai_laporan' => $kp->nilai_seminar_pembimbing, // alias, sama dengan nilai_seminar (diisi dosen)
+                'nilai_lapangan' => $kp->nilai_lapangan,            // diisi koordinator dari menu nilai lapangan
                 'nilai_akhir' => $kp->nilai_akhir,
                 'status_dokumen' => '-',
                 'riwayat_approval' => [
@@ -471,31 +505,213 @@ class KoordinatorController extends Controller implements HasMiddleware
 
     public function nilaiLapangan()
     {
-        $mahasiswas = collect([
-            (object) [
-                'id' => 1,
-                'nama' => 'Ahmad Budi Santoso',
-                'nim' => '2100018111',
-                'file_nilai' => 'Nilai_Lapangan_Ahmad.pdf',
-                'status_nilai' => 'Belum Dinilai',
-            ],
-            (object) [
-                'id' => 2,
-                'nama' => 'Siti Nurhaliza',
-                'nim' => '2100018199',
-                'file_nilai' => 'Form_Penilaian_Siti.pdf',
-                'status_nilai' => 'Sudah Dinilai',
-            ],
-            (object) [
-                'id' => 3,
-                'nama' => 'Bima Sakti',
-                'nim' => '2100018155',
-                'file_nilai' => null,
-                'status_nilai' => 'Menunggu Berkas',
-            ]
-        ]);
+        $kps = \Modules\EOffice\Models\KerjaPraktik::select(
+            'eo_kerja_praktik.*',
+            'u.name as nama',
+            'm.nim as nim'
+        )
+            ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
+            ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
+            ->with([
+                'dokumen' => function ($query) {
+                    $query->whereIn('jenis_dokumen', ['Nilai Lapangan', 'Form Penilaian Pembimbing', 'Form Penilaian']);
+                }
+            ])
+            ->orderBy('eo_kerja_praktik.created_at', 'desc')
+            ->get();
+
+        $mahasiswas = $kps->map(function ($kp) {
+            $dokumen_nilai = $kp->dokumen->first();
+
+            $status_nilai = 'Menunggu Berkas';
+            if ($dokumen_nilai) {
+                if ($dokumen_nilai->nilai_status === 'valid') {
+                    $status_nilai = 'Sudah Dinilai';
+                } elseif ($dokumen_nilai->nilai_status === 'pending') {
+                    $status_nilai = 'Belum Dinilai';
+                } elseif ($dokumen_nilai->nilai_status === 'rejected') {
+                    $status_nilai = 'Ditolak';
+                }
+            }
+
+            return (object) [
+                'id' => $kp->id,
+                'dokumen_id' => $dokumen_nilai ? $dokumen_nilai->id : null,
+                'nama' => $kp->nama ?? 'Unknown',
+                'nim' => $kp->nim ?? '-',
+                'file_nilai' => $dokumen_nilai ? ($dokumen_nilai->file_name ?? basename($dokumen_nilai->file_path)) : null,
+                'file_path' => $dokumen_nilai ? $dokumen_nilai->file_path : null,
+                'nilai_input_mahasiswa' => $dokumen_nilai ? $dokumen_nilai->nilai_input_mahasiswa : null,
+                'nilai_validasi_koordinator' => $dokumen_nilai ? $dokumen_nilai->nilai_validasi_koordinator : null,
+                'status_nilai' => $status_nilai,
+            ];
+        });
 
         return view('eoffice::koordinator.nilai_lapangan', compact('mahasiswas'));
+    }
+
+    public function updateNilaiLapangan(Request $request, $id)
+    {
+        $request->validate([
+            'nilai_validasi_koordinator' => 'required|numeric|min:0|max:100',
+            'nilai_status' => 'required|in:valid,rejected,pending'
+        ]);
+
+        $dokumen = \Modules\EOffice\Models\KpDokumen::findOrFail($id);
+        $dokumen->update([
+            'nilai_validasi_koordinator' => $request->nilai_validasi_koordinator,
+            'nilai_status' => $request->nilai_status
+        ]);
+
+        // Jika valid, update di eo_kp_penilaian juga jika ada (buat kalau belum ada)
+        if ($request->nilai_status === 'valid') {
+            \Modules\EOffice\Models\KpPenilaian::updateOrCreate(
+                ['kp_id' => $dokumen->kp_id],
+                ['nilai_lapangan' => $request->nilai_validasi_koordinator]
+            );
+        }
+
+        return redirect()->back()->with('success', 'Nilai lapangan berhasil diperbarui.');
+    }
+
+    public function balancingDosen()
+    {
+        $dosens = \Modules\EOffice\Models\KpDosen::with('user')->get()->map(function ($dosen) {
+            return [
+                'id' => $dosen->id,
+                'name' => $dosen->nama_lengkap ?? $dosen->user->name ?? 'Unknown',
+                'kuota_maksimal' => $dosen->kuota_maksimal ?? 10,
+                'mahasiswas' => []
+            ];
+        })->toArray();
+
+        // Get mahasiswas and their current draft/finalized assignment
+        $kps = \Modules\EOffice\Models\KerjaPraktik::with(['mahasiswa.user', 'balancing'])->get();
+
+        $unassignedStudents = [];
+        $dosenMap = collect($dosens)->keyBy('id')->toArray();
+
+        foreach ($kps as $kp) {
+            if (!$kp->mahasiswa || !$kp->mahasiswa->user)
+                continue;
+
+            $mhsData = [
+                'id' => $kp->id,
+                'mahasiswa_id' => $kp->mahasiswa_id,
+                'nama_mahasiswa' => $kp->mahasiswa->nama_lengkap ?? $kp->mahasiswa->user->name ?? 'Unknown',
+                'nim' => $kp->mahasiswa->nim ?? '-',
+                'rencana_judul' => $kp->rencana_judul ?? 'Belum ada rencana judul',
+                // Jika ada record balancing, pakai statusnya.
+                // Jika tidak ada record tapi sudah punya dosen_pembimbing_id → berarti sudah finalized (assign manual/legacy).
+                'status' => $kp->balancing
+                    ? $kp->balancing->status
+                    : ($kp->dosen_pembimbing_id ? 'finalized' : 'belum'),
+            ];
+
+            $dosenId = null;
+            if ($kp->balancing) {
+                $dosenId = $kp->balancing->dosen_id;
+            } elseif ($kp->dosen_pembimbing_id) {
+                // Legacy / manual assign — dosen_pembimbing_id sudah ada tapi belum ada balancing record
+                $dosenId = $kp->dosen_pembimbing_id;
+            }
+
+            if ($dosenId && isset($dosenMap[$dosenId])) {
+                $dosenMap[$dosenId]['mahasiswas'][] = $mhsData;
+            } else {
+                $unassignedStudents[] = $mhsData;
+            }
+        }
+
+        $dosens = array_values($dosenMap);
+
+        return view('eoffice::koordinator.balancing', compact('dosens', 'unassignedStudents'));
+    }
+
+    public function storeBalancing(Request $request)
+    {
+        $dosens = json_decode($request->input('dosens'), true);
+        $action = $request->input('action', 'draft'); // 'draft' or 'finalize'
+        $status = $action === 'finalize' ? 'finalized' : 'draft';
+
+        if (empty($dosens)) {
+            return redirect()->back()->with('error', 'Data tidak valid.');
+        }
+
+        \DB::beginTransaction();
+        try {
+            $assignedMahasiswaIds = [];
+
+            foreach ($dosens as $dosen) {
+                if (isset($dosen['kuota_maksimal'])) {
+                    \Modules\EOffice\Models\KpDosen::where('id', $dosen['id'])
+                        ->update(['kuota_maksimal' => $dosen['kuota_maksimal']]);
+                }
+
+                foreach ($dosen['mahasiswas'] as $mhs) {
+                    $assignedMahasiswaIds[] = $mhs['id'];
+
+                    // Jika action=draft, jangan downgrade status yang sudah finalized
+                    $existingRecord = \Modules\EOffice\Models\KpBalancing::where('kp_id', $mhs['id'])->first();
+                    $actualStatus = $status;
+                    if ($action === 'draft' && $existingRecord && $existingRecord->status === 'finalized') {
+                        $actualStatus = 'finalized'; // Pertahankan status finalized
+                    }
+
+                    \Modules\EOffice\Models\KpBalancing::updateOrCreate(
+                        ['kp_id' => $mhs['id']],
+                        [
+                            'mahasiswa_id' => $mhs['mahasiswa_id'],
+                            'dosen_id' => $dosen['id'],
+                            'status' => $actualStatus,
+                            'assigned_by' => auth()->id(),
+                            'assigned_at' => now(),
+                            'finalized_at' => $actualStatus === 'finalized' ? now() : null,
+                        ]
+                    );
+
+                    // Update eo_kerja_praktik hanya jika finalized
+                    if ($actualStatus === 'finalized') {
+                        \Modules\EOffice\Models\KerjaPraktik::where('id', $mhs['id'])
+                            ->update(['dosen_pembimbing_id' => $dosen['id']]);
+                    }
+                }
+            }
+
+            // Hapus/reset status untuk mahasiswa yang dikembalikan ke 'Belum Penempatan'
+            if (!empty($dosens)) {
+                $unassignedKps = \Modules\EOffice\Models\KerjaPraktik::whereNotIn('id', $assignedMahasiswaIds)
+                    ->whereNotNull('dosen_pembimbing_id')
+                    ->get();
+
+                foreach ($unassignedKps as $ukp) {
+                    // Hanya batalkan dosen_pembimbing_id jika aksi adalah finalize, 
+                    // atau jika kita mau sinkronisasi penuh
+                    if ($action === 'finalize') {
+                        $ukp->update(['dosen_pembimbing_id' => null]);
+                    }
+                }
+
+                \Modules\EOffice\Models\KpBalancing::whereNotIn('kp_id', $assignedMahasiswaIds)->delete();
+            }
+
+            \DB::commit();
+
+            $message = $status === 'finalized'
+                ? 'Balancing berhasil difinalisasi.'
+                : 'Progress balancing berhasil disimpan (Draft).';
+
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => true, 'message' => $message]);
+            }
+            return redirect()->back()->with('success', $message);
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Terjadi kesalahan sistem.']);
+            }
+            return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -520,7 +736,7 @@ class KoordinatorController extends Controller implements HasMiddleware
         ]);
 
         $file = $request->file('template_a2');
-        
+
         // Simpan file dengan nama yang tetap (akan di-overwrite)
         $file->storeAs('templates', 'form_a2.docx', 'local');
 
