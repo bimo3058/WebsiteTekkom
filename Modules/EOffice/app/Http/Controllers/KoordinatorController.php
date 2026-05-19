@@ -271,10 +271,11 @@ class KoordinatorController extends Controller implements HasMiddleware
                 return 'pending';
             };
 
-            $praKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['Transkrip', 'Surat Pengantar', 'Form Pendaftaran', 'Proposal']))
+            $praKp = $dokumens->filter(fn($d) => $d->phase === 'pra_kp')
                 ->map(fn($d) => (object) [
                     'id' => $d->id,
-                    'nama_file' => basename($d->file_path ?? $d->jenis_dokumen),
+                    'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
+                    'file_url' => $d->file_path ? asset('storage/' . $d->file_path) : null,
                     'jenis' => $d->jenis_dokumen,
                     'tanggal' => date('Y-m-d', strtotime($d->created_at)),
                     'ukuran' => '-', // Can't easily get file size without storage hit
@@ -282,10 +283,11 @@ class KoordinatorController extends Controller implements HasMiddleware
                     'catatan' => $d->revision_note ?? ''
                 ])->values();
 
-            $saatKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['Logbook', 'Laporan Progress', 'Laporan']))
+            $saatKp = $dokumens->filter(fn($d) => $d->phase === 'saat_kp')
                 ->map(fn($d) => (object) [
                     'id' => $d->id,
-                    'nama_file' => basename($d->file_path ?? $d->jenis_dokumen),
+                    'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
+                    'file_url' => $d->file_path ? asset('storage/' . $d->file_path) : null,
                     'jenis' => $d->jenis_dokumen,
                     'tanggal' => date('Y-m-d', strtotime($d->created_at)),
                     'ukuran' => '-',
@@ -293,10 +295,11 @@ class KoordinatorController extends Controller implements HasMiddleware
                     'catatan' => $d->revision_note ?? ''
                 ])->values();
 
-            $pascaKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['A2', 'Kartu Hijau', 'Nilai Lapangan', 'Laporan Akhir', 'Bukti Terima', 'Makalah']))
+            $pascaKp = $dokumens->filter(fn($d) => $d->phase === 'pasca_kp')
                 ->map(fn($d) => (object) [
                     'id' => $d->id,
-                    'nama_file' => basename($d->file_path ?? $d->jenis_dokumen),
+                    'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
+                    'file_url' => $d->file_path ? asset('storage/' . $d->file_path) : null,
                     'jenis' => $d->jenis_dokumen,
                     'tanggal' => date('Y-m-d', strtotime($d->created_at)),
                     'ukuran' => '-',
