@@ -287,23 +287,53 @@
                             <h2 class="text-base font-bold text-indigo-900">Template Dokumen</h2>
                             <p class="text-[11px] text-indigo-700/70 mt-0.5">Wajib menggunakan format standar departemen.</p>
                         </div>
-                        <div class="p-5 space-y-4">
-                            @foreach([
-                                ['type' => 'a2', 'title' => 'Presensi KP (A2)', 'desc' => 'Borang Nilai Lapangan (.pdf)', 'color' => 'amber'],
-                                ['type' => 'laporan', 'title' => 'Laporan Akhir KP', 'desc' => 'Draf Laporan (.docx)', 'color' => 'blue'],
-                                ['type' => 'makalah', 'title' => 'Makalah IEEE', 'desc' => 'Format Konferensi (.docx)', 'color' => 'indigo'],
-                            ] as $tm)
-                                <a href="{{ route('eoffice.kp.mahasiswa.dokumen.template', $tm['type']) }}" class="flex items-center p-3 rounded-xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 transition-all group">
-                                    <div class="w-10 h-10 rounded-lg bg-slate-50 text-slate-400 flex items-center justify-center mr-4 group-hover:bg-white group-hover:text-indigo-600 shadow-sm transition-all">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                        <div class="p-5 space-y-3">
+                            @forelse($templatesDokumen as $tmpl)
+                            @php
+                                $phaseLabel = [
+                                    'pra_kp'               => 'Pra KP',
+                                    'saat_kp'              => 'Saat KP',
+                                    'pasca_kp'             => 'Pasca KP',
+                                    'keperluan_perusahaan' => 'Keperluan Perusahaan',
+                                ][$tmpl->phase] ?? ucwords(str_replace('_', ' ', $tmpl->phase));
+
+                                $phaseColor = [
+                                    'pra_kp'               => 'bg-amber-50 text-amber-600 border-amber-100',
+                                    'saat_kp'              => 'bg-blue-50 text-blue-600 border-blue-100',
+                                    'pasca_kp'             => 'bg-violet-50 text-violet-600 border-violet-100',
+                                    'keperluan_perusahaan' => 'bg-emerald-50 text-emerald-600 border-emerald-100',
+                                ][$tmpl->phase] ?? 'bg-slate-50 text-slate-500 border-slate-100';
+
+                                $isPdf = strtolower($tmpl->file_type ?? '') === 'pdf';
+                            @endphp
+                            <a href="{{ route('eoffice.kp.mahasiswa.dokumen.template', $tmpl->id) }}"
+                               class="flex items-center p-3 rounded-xl border border-slate-100 hover:border-indigo-200 hover:bg-indigo-50 transition-all group">
+                                <div class="w-10 h-10 rounded-lg flex items-center justify-center mr-3 flex-shrink-0 transition-all
+                                     {{ $isPdf ? 'bg-rose-50 text-rose-400 group-hover:bg-rose-100 group-hover:text-rose-600' : 'bg-slate-50 text-slate-400 group-hover:bg-white group-hover:text-indigo-600' }} shadow-sm">
+                                    @if($isPdf)
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                    @else
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                    @endif
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-xs font-bold text-slate-800 truncate">{{ $tmpl->title }}</p>
+                                    <div class="flex items-center gap-1.5 mt-0.5">
+                                        <span class="text-[9px] font-bold px-1.5 py-0.5 rounded border {{ $phaseColor }}">{{ $phaseLabel }}</span>
+                                        <span class="text-[9px] text-slate-400 uppercase">{{ $tmpl->file_type ?? 'file' }}</span>
                                     </div>
-                                    <div class="flex-1">
-                                        <p class="text-xs font-bold text-slate-800">{{ $tm['title'] }}</p>
-                                        <p class="text-[10px] text-slate-400">{{ $tm['desc'] }}</p>
-                                    </div>
-                                    <svg class="w-4 h-4 text-slate-300 group-hover:text-indigo-400 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                </a>
-                            @endforeach
+                                </div>
+                                <svg class="w-4 h-4 flex-shrink-0 text-slate-300 group-hover:text-indigo-400 transition-colors ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                            </a>
+                            @empty
+                            <div class="flex flex-col items-center justify-center py-8 text-center">
+                                <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mb-3 text-slate-300">
+                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                </div>
+                                <p class="text-xs font-semibold text-slate-400">Belum ada template</p>
+                                <p class="text-[10px] text-slate-300 mt-0.5">Koordinator belum mengupload template dokumen.</p>
+                            </div>
+                            @endforelse
                         </div>
                     </div>
 

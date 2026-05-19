@@ -136,60 +136,128 @@
                 <div class="lg:col-span-2 sikape-card overflow-hidden flex flex-col">
                     <div class="px-6 py-5 border-b flex items-center justify-between" style="border-color:var(--grey-100);">
                         <h2 class="text-base font-bold" style="color:var(--grey-900);">Timeline KP</h2>
+                        @if(isset($timeline) && $timeline->count() > 0)
+                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="background:var(--primary-50);color:var(--primary-500);">{{ $timeline->count() }} item</span>
+                        @endif
                     </div>
                     <div class="flex-1 overflow-y-auto px-6 py-6">
                         @if(isset($timeline) && $timeline->count() > 0)
-                            <div class="relative border-l-2 ml-3 space-y-8" style="border-color:var(--grey-200);">
+                            <div class="space-y-6">
                                 @foreach($timeline as $item)
-                                <div class="relative pl-6">
-                                    <div class="absolute w-4 h-4 rounded-full -left-[9px] top-1 border-2 border-white" style="background:var(--primary-500); box-shadow: 0 0 0 4px var(--primary-50);"></div>
-                                    <p class="text-base font-bold" style="color:var(--grey-900);">{{ $item->judul }}</p>
-                                    <p class="text-sm mt-1 leading-relaxed" style="color:var(--grey-600);">{{ $item->konten }}</p>
-                                             @if($item->lampiran)
-                                    <div x-data="{ fullscreen: false }" class="mt-4 relative z-10 w-full max-w-sm">
-                                        <!-- Inline Preview -->
-                                        <div class="rounded-xl overflow-hidden border border-slate-200 shadow-sm relative group h-56 bg-slate-100">
-                                            <iframe src="{{ route('eoffice.kp.mahasiswa.pengumuman.lampiran', $item->id) }}#toolbar=0" class="w-full h-full pointer-events-none" frameborder="0"></iframe>
-                                            
-                                            <div class="absolute inset-0 bg-slate-900/10 group-hover:bg-slate-900/40 transition-colors flex items-center justify-center opacity-0 group-hover:opacity-100 cursor-pointer" @click="fullscreen = true">
-                                                <button class="bg-white text-slate-900 px-4 py-2 rounded-lg font-bold text-xs shadow-lg flex items-center gap-2 transform scale-95 group-hover:scale-100 transition-all">
-                                                    <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
-                                                    Lihat Fullscreen
-                                                </button>
+                                @php
+                                    $lampiran = $item->lampiran ?? null;
+                                    $ext = $lampiran ? strtolower(pathinfo($lampiran, PATHINFO_EXTENSION)) : null;
+                                    $isPdf = $ext === 'pdf';
+                                    $isImage = in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp']);
+                                    $fileUrl = $lampiran ? Storage::url($lampiran) : null;
+                                @endphp
+                                <div class="rounded-xl border overflow-hidden" style="border-color:var(--grey-200);">
+                                    {{-- Header item --}}
+                                    <div class="px-5 py-4 flex items-start justify-between gap-3" style="background:var(--grey-50);">
+                                        <div class="flex items-start gap-3">
+                                            <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5" style="background:var(--primary-100);color:var(--primary-500);">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                            </div>
+                                            <div>
+                                                <p class="text-sm font-bold" style="color:var(--grey-900);">{{ $item->judul }}</p>
+                                                @if($item->konten)
+                                                <p class="text-xs mt-0.5 leading-relaxed" style="color:var(--grey-600);">{{ $item->konten }}</p>
+                                                @endif
+                                                <p class="text-[10px] mt-1 font-medium uppercase tracking-wider" style="color:var(--grey-400);">{{ $item->created_at->format('d M Y') }}</p>
                                             </div>
                                         </div>
- 
-                                        <!-- Fullscreen Modal -->
-                                        <div x-show="fullscreen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm p-4 sm:p-8" style="display: none;" x-transition>
-                                            <div class="relative w-full max-w-5xl h-[90vh] bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col" @click.away="fullscreen = false">
-                                                <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50">
-                                                    <div>
-                                                        <h3 class="font-bold text-slate-800">{{ $item->judul }}</h3>
-                                                        <p class="text-xs text-slate-500 mt-0.5">Pratinjau Dokumen PDF</p>
-                                                    </div>
-                                                    <div class="flex items-center gap-3">
-                                                        <a href="{{ route('eoffice.kp.mahasiswa.pengumuman.lampiran', $item->id) }}" target="_blank" class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors shadow-sm" title="Buka di Tab Baru">
-                                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-                                                            Buka di Tab Baru
-                                                        </a>
-                                                        <button @click="fullscreen = false" class="p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-lg transition-colors">
-                                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-                                                        </button>
-                                                    </div>
-                                                </div>
-                                                <div class="flex-1 w-full bg-slate-100/50 p-2">
-                                                    <iframe src="{{ route('eoffice.kp.mahasiswa.pengumuman.lampiran', $item->id) }}" class="w-full h-full rounded-xl bg-white shadow-sm" frameborder="0"></iframe>
-                                                </div>
-                                            </div>
+                                        @if($fileUrl)
+                                        <div class="flex items-center gap-2 flex-shrink-0">
+                                            <a href="{{ $fileUrl }}" target="_blank" download
+                                               class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all"
+                                               style="background:var(--primary-50);color:var(--primary-500);border:1px solid var(--primary-100);">
+                                                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                                Unduh
+                                            </a>
                                         </div>
+                                        @endif
                                     </div>
+
+                                    {{-- Embedded file viewer --}}
+                                    @if($fileUrl)
+                                        @if($isPdf)
+                                        <div x-data="{ fullscreen: false }" class="w-full">
+                                            {{-- Inline preview --}}
+                                            <div class="relative group" style="background:#f1f5f9; height:300px;">
+                                                <iframe
+                                                    src="{{ $fileUrl }}#toolbar=0&navpanes=0&scrollbar=1"
+                                                    class="w-full h-full border-0 pointer-events-none"
+                                                    title="{{ $item->judul }}"
+                                                    loading="lazy"
+                                                ></iframe>
+                                                {{-- Hover overlay --}}
+                                                <div class="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity cursor-pointer"
+                                                     style="background:rgba(15,23,42,0.35);"
+                                                     @click="fullscreen = true">
+                                                    <button class="bg-white text-slate-900 px-4 py-2 rounded-lg font-bold text-xs shadow-lg flex items-center gap-2">
+                                                        <svg class="w-4 h-4 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"/></svg>
+                                                        Buka Fullscreen
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            {{-- Fullscreen Modal --}}
+                                            <div x-show="fullscreen" class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-8"
+                                                 style="display:none;background:rgba(15,23,42,0.8);backdrop-filter:blur(4px);"
+                                                 x-transition>
+                                                <div class="relative w-full max-w-5xl bg-white rounded-2xl overflow-hidden shadow-2xl flex flex-col"
+                                                     style="height:90vh;"
+                                                     @click.away="fullscreen = false">
+                                                    <div class="flex items-center justify-between px-5 py-4 border-b border-slate-100" style="background:#f8fafc;">
+                                                        <div>
+                                                            <h3 class="font-bold text-slate-800 text-sm">{{ $item->judul }}</h3>
+                                                            <p class="text-[11px] text-slate-500 mt-0.5">Pratinjau Dokumen PDF</p>
+                                                        </div>
+                                                        <div class="flex items-center gap-2">
+                                                            <a href="{{ $fileUrl }}" target="_blank"
+                                                               class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg transition-colors">
+                                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+                                                                Buka di Tab Baru
+                                                            </a>
+                                                            <button @click="fullscreen = false"
+                                                                    class="p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-500 rounded-lg transition-colors">
+                                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                                            </button>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex-1 p-2" style="background:#f1f5f9;">
+                                                        <iframe src="{{ $fileUrl }}"
+                                                                class="w-full h-full rounded-xl bg-white shadow-sm border-0"
+                                                                title="{{ $item->judul }}"></iframe>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @elseif($isImage)
+                                        <div class="p-4" style="background:#f8fafc;">
+                                            <img src="{{ $fileUrl }}" alt="{{ $item->judul }}"
+                                                 class="max-w-full mx-auto rounded-lg shadow-sm"
+                                                 style="max-height:480px; object-fit:contain;">
+                                        </div>
+                                        @else
+                                        <div class="px-5 py-4 flex items-center gap-3" style="background:#fffbeb;border-top:1px solid #fde68a;">
+                                            <svg class="w-5 h-5 flex-shrink-0" style="color:#d97706;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                            <div>
+                                                <p class="text-xs font-semibold" style="color:#92400e;">Lampiran tersedia</p>
+                                                <p class="text-[11px] mt-0.5" style="color:#b45309;">File {{ strtoupper($ext) }} — klik tombol "Unduh" untuk mengunduh.</p>
+                                            </div>
+                                        </div>
+                                        @endif
                                     @endif
                                 </div>
                                 @endforeach
                             </div>
                         @else
                             <div class="flex flex-col items-center justify-center py-12 text-center">
+                                <div class="w-12 h-12 rounded-full mb-3 flex items-center justify-center" style="background:var(--grey-100);">
+                                    <svg class="w-6 h-6" style="color:var(--grey-400);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                </div>
                                 <p class="text-sm font-semibold" style="color:var(--grey-500);">Belum ada timeline KP</p>
+                                <p class="text-xs mt-1" style="color:var(--grey-400);">Koordinator KP belum memposting jadwal timeline.</p>
                             </div>
                         @endif
                     </div>

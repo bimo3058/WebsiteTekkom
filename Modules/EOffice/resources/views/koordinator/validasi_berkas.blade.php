@@ -74,22 +74,13 @@
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                 Balancing Dosen
             </a>
-<<<<<<< HEAD
             <a href="{{ route('eoffice.kp.koordinator.upload_berkas') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
                 Upload Berkas
             </a>
             
-            <!-- Active Menu -->
-            <a href="{{ route('eoffice.kp.koordinator.validasi_berkas') }}"
-                class="flex items-center px-4 py-3 mb-1 text-sm font-semibold text-indigo-700 bg-white shadow-sm border border-indigo-100 rounded-xl relative">
-                <svg class="w-5 h-5 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                </svg>
-=======
-            <a href="{{ route('eoffice.kp.koordinator.validasi_berkas') }}" class="flex items-center px-4 py-3 mb-1 text-sm font-semibold text-indigo-700 bg-indigo-50/50 rounded-xl relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full">
+            <a href="{{ route('eoffice.kp.koordinator.validasi_berkas') }}" class="{{ request()->routeIs('eoffice.kp.koordinator.validasi_berkas') ? 'flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full' : 'flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium' }}">
                 <svg class="w-5 h-5 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
->>>>>>> a6a98a16d26c5b3147576f13cf10878edc16d149
                 Approval Berkas
             </a>
             <a href="{{ route('eoffice.kp.koordinator.nilai_lapangan') }}" class="{{ request()->routeIs('eoffice.kp.koordinator.nilai_lapangan') ? 'flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full' : 'flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium' }}">
@@ -584,25 +575,7 @@
             activeTab: 'pra_kp',
             mahasiswas: @json($mahasiswas),
             selectedStudent: null,
-<<<<<<< HEAD
-            
-            init() {
-                const stored = localStorage.getItem('eoffice_admin_approval_data');
-                if (stored) {
-                    this.mahasiswas = JSON.parse(stored);
-                } else {
-                    this.saveData();
-                }
-            },
-            
-            saveData() {
-                localStorage.setItem('eoffice_admin_approval_data', JSON.stringify(this.mahasiswas));
-            },
-            
-=======
             isLoading: false,
-
->>>>>>> a6a98a16d26c5b3147576f13cf10878edc16d149
             // Modal States
             previewModalOpen: false,
             previewDoc: null,
@@ -697,10 +670,6 @@
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'Accept': 'application/json'
                     }
-<<<<<<< HEAD
-                    this.saveData();
-                }
-=======
                 })
                 .then(res => res.json())
                 .then(data => {
@@ -724,7 +693,6 @@
                 })
                 .catch(() => this.showToast('error', 'Gagal', 'Terjadi kesalahan jaringan.'))
                 .finally(() => { this.isLoading = false; });
->>>>>>> a6a98a16d26c5b3147576f13cf10878edc16d149
             },
             
             submitReject() {
@@ -732,18 +700,6 @@
                     this.showToast('error', 'Error', 'Catatan wajib diisi.');
                     return;
                 }
-<<<<<<< HEAD
-                
-                const docIndex = this.currentDocuments.findIndex(d => d.id === this.rejectDoc.id);
-                if (docIndex !== -1) {
-                    this.currentDocuments[docIndex].status = 'rejected';
-                    this.currentDocuments[docIndex].catatan = this.rejectReason;
-                    this.showToast('success', 'Dokumen Direvisi', 'Catatan revisi berhasil dikirim ke mahasiswa.');
-                    this.saveData();
-                }
-                
-                this.rejectModalOpen = false;
-=======
                 if (this.isLoading) return;
                 this.isLoading = true;
 
@@ -783,7 +739,6 @@
                 })
                 .catch(() => this.showToast('error', 'Gagal', 'Terjadi kesalahan jaringan.'))
                 .finally(() => { this.isLoading = false; });
->>>>>>> a6a98a16d26c5b3147576f13cf10878edc16d149
             },
             
             showToast(type, title, message) {
