@@ -42,7 +42,7 @@ class KerjaPraktik extends Model
      */
     public function dosenPembimbing()
     {
-        return $this->belongsTo(\App\Models\User::class, 'dosen_pembimbing_id');
+        return $this->belongsTo(KpDosen::class, 'dosen_pembimbing_id');
     }
 
     /**

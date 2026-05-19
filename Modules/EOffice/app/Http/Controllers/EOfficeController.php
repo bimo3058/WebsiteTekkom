@@ -300,6 +300,18 @@ class EOfficeController extends Controller
         return redirect()->route('eoffice.admin.template_proposal')->with('success', 'Template Proposal berhasil disimpan!');
     }
 
+    public function kelolaRole()
+    {
+        $this->authorize('eoffice.edit');
+        return view('eoffice::dashboard.admin.kelola_role');
+    }
+
+    public function validasiTimeline()
+    {
+        $this->authorize('eoffice.edit');
+        return view('eoffice::dashboard.admin.validasi_timeline');
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Helpers
