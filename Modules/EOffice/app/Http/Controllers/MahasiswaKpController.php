@@ -629,9 +629,21 @@ class MahasiswaKpController extends Controller
             ->latest()
             ->firstOrFail();
 
-        // Cek syarat (opsional, bisa submit kapan saja sekarang)
         $dokumenByJenis = $kp->dokumen->groupBy('jenis_dokumen');
-        $syarat = $this->cekSyaratSeminar($kp, $dokumenByJenis);
+
+        $cvDoc          = $dokumenByJenis->get('CV dan Foto')?->sortByDesc('created_at')->first() ?? $dokumenByJenis->get('CV')?->sortByDesc('created_at')->first();
+        $fotoDoc        = $dokumenByJenis->get('Foto')?->sortByDesc('created_at')->first();
+        $kartuHijauDoc  = $dokumenByJenis->get('Kartu Hijau')?->sortByDesc('created_at')->first();
+        $nilaiLapanganDoc = $dokumenByJenis->get('Nilai Lapangan')?->sortByDesc('created_at')->first();
+
+        $cvStatus = $cvDoc ? strtolower($cvDoc->status_validasi) : 'belum';
+        $ftStatus = $fotoDoc ? strtolower($fotoDoc->status_validasi) : 'belum';
+        $khStatus = $kartuHijauDoc ? strtolower($kartuHijauDoc->status_validasi) : 'belum';
+        $nlStatus = $nilaiLapanganDoc ? strtolower($nilaiLapanganDoc->status_validasi) : 'belum';
+
+        if ($cvStatus !== 'disetujui' || $ftStatus !== 'disetujui' || $khStatus !== 'disetujui' || $nlStatus !== 'disetujui') {
+            return redirect()->back()->with('error', 'Tidak dapat mengajukan seminar. Syarat dokumen (CV, Foto, Kartu Hijau, dan Form A2) harus diunggah dan disetujui Koordinator terlebih dahulu.');
+        }
 
         // Buat atau update seminar
         $waktuSeminar = $validated['waktu_mulai'] . ' - ' . $validated['waktu_selesai'];
@@ -641,7 +653,8 @@ class MahasiswaKpController extends Controller
                 'tanggal_seminar'         => $validated['tanggal_seminar'],
                 'waktu_seminar'           => $waktuSeminar,
                 'ruangan'                 => $validated['ruangan'],
-                'status_validasi_syarat'  => 'proses',
+                'status_validasi_syarat'  => 'proses', // Tetap di-set untuk backward compatibility
+                'status_validasi_dosen'   => 'pending',
             ]
         );
 
@@ -650,7 +663,7 @@ class MahasiswaKpController extends Controller
             KerjaPraktik::where('id', $kp->id)->update(['status_kp' => 'Pasca KP']);
         }
 
-        return redirect()->back()->with('success', 'Pendaftaran seminar berhasil! Menunggu validasi dari Koordinator KP.');
+        return redirect()->back()->with('success', 'Pendaftaran seminar berhasil! Menunggu validasi jadwal dari Dosen Pembimbing.');
     }
 
     // =========================================================================

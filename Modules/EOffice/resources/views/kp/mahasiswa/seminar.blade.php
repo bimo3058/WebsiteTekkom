@@ -61,7 +61,7 @@
                 $ftStatus = $fotoDoc ? strtolower($fotoDoc->status_validasi) : 'belum';
                 $khStatus = $kartuHijauDoc ? strtolower($kartuHijauDoc->status_validasi) : 'belum';
                 $nlStatus = $nilaiLapanganDoc ? strtolower($nilaiLapanganDoc->status_validasi) : 'belum';
-                $semStatus = $kp->seminar ? strtolower($kp->seminar->status_validasi_syarat) : 'belum';
+                $semStatus = $kp->seminar ? strtolower($kp->seminar->status_validasi_dosen) : 'belum';
                 $penilaian = $kp->penilaian;
 
                 // Untuk dokumen, kita anggap "selesai" (bisa lanjut ke step berikutnya) jika statusnya 'disetujui'
@@ -69,7 +69,7 @@
                 $step2Done = ($ftStatus === 'disetujui');
                 $step3Done = ($khStatus === 'disetujui');
                 $step4Done = ($nlStatus === 'disetujui');
-                $step5Done = in_array($semStatus, ['proses', 'valid']);
+                $step5Done = in_array($semStatus, ['pending', 'approved']);
                 $step6Done = $penilaian && ($penilaian->nilai_seminar_pembimbing !== null);
 
                 $currentStep = 1;
@@ -663,13 +663,13 @@
                 @php
                     $semBadgeMap = [
                         'belum' => ['txt' => 'Belum Diajukan', 'cls' => 'bg-slate-100 text-slate-500'],
-                        'proses' => ['txt' => 'Menunggu Validasi', 'cls' => 'bg-amber-100 text-amber-700'],
-                        'valid' => ['txt' => 'Disetujui', 'cls' => 'bg-emerald-100 text-emerald-700'],
-                        'ditolak' => ['txt' => 'Ditolak', 'cls' => 'bg-rose-100 text-rose-700'],
+                        'pending' => ['txt' => 'Menunggu Validasi Dosen', 'cls' => 'bg-amber-100 text-amber-700'],
+                        'approved' => ['txt' => 'Disetujui', 'cls' => 'bg-emerald-100 text-emerald-700'],
+                        'rejected' => ['txt' => 'Ditolak', 'cls' => 'bg-rose-100 text-rose-700'],
                     ];
                     $semB = $semBadgeMap[$semStatus] ?? $semBadgeMap['belum'];
                     $canAjukan = $step1Done && $step2Done && $step3Done && $step4Done && $syaratSeminar['semua_terpenuhi']
-                        && (!$kp->seminar || $semStatus === 'ditolak');
+                        && (!$kp->seminar || $semStatus === 'rejected');
                 @endphp
                 <div class="bg-white rounded-2xl border overflow-hidden transition-all duration-300
                     {{ $currentStep === 5 ? 'border-indigo-500 ring-4 ring-indigo-100 shadow-lg shadow-indigo-100/40' : ($step5Done ? 'border-emerald-200 shadow-sm' : 'border-slate-200 shadow-sm') }}">
@@ -690,7 +690,7 @@
 
                     <div class="p-6">
                         {{-- Seminar sudah diajukan: tampilkan info --}}
-                        @if($kp->seminar && $semStatus !== 'ditolak')
+                        @if($kp->seminar && $semStatus !== 'rejected')
                             <div class="grid grid-cols-3 gap-3 mb-5">
                                 @foreach([
                                         ['label' => 'Tanggal', 'val' => $kp->seminar->tanggal_seminar->translatedFormat('d M Y')],
@@ -704,56 +704,45 @@
                                 @endforeach
                             </div>
 
-                            @if($semStatus === 'valid')
+                            @if($semStatus === 'approved')
                                 <div class="p-4 bg-blue-50 border border-blue-100 rounded-2xl flex items-start justify-between gap-4">
                                     <div>
-                                        <p class="text-sm font-bold text-blue-900">🎉 Seminar Anda Telah Disetujui!</p>
-                                        <p class="text-xs text-blue-700 mt-1">Unduh surat undangan dan form kehadiran peserta seminar.</p>
-                                    </div>
-                                    <div class="flex gap-2 flex-shrink-0">
-                                        <a href="{{ route('eoffice.kp.mahasiswa.dokumen.template', 'b1') }}"
-                                            class="inline-flex items-center gap-1 px-3 py-1.5 bg-white border border-blue-200 text-blue-700 text-xs font-bold rounded-xl hover:bg-blue-50 transition-colors">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                            Undangan
-                                        </a>
-                                        <a href="{{ route('eoffice.kp.mahasiswa.dokumen.template', 'b2') }}"
-                                            class="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-bold rounded-xl hover:bg-blue-700 transition-colors">
-                                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                            Form B2
-                                        </a>
+                                        <p class="text-sm font-bold text-blue-900">🎉 Jadwal Seminar Telah Disetujui!</p>
+                                        <p class="text-xs text-blue-700 mt-1">Jadwal seminar Anda telah disetujui oleh Dosen Pembimbing.</p>
                                     </div>
                                 </div>
-                            @elseif($semStatus === 'proses')
+                            @elseif($semStatus === 'pending')
                                 <div class="p-4 bg-amber-50 border border-amber-100 rounded-2xl flex items-center gap-3">
                                     <div class="w-8 h-8 rounded-full bg-amber-100 text-amber-600 flex items-center justify-center flex-shrink-0">
                                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                                     </div>
                                     <div>
                                         <p class="text-sm font-bold text-amber-800">Pengajuan sedang diproses...</p>
-                                        <p class="text-xs text-amber-600 mt-0.5">Koordinator KP akan segera memvalidasi jadwal seminar Anda.</p>
+                                        <p class="text-xs text-amber-600 mt-0.5">Dosen Pembimbing akan segera memvalidasi jadwal seminar Anda.</p>
                                     </div>
                                 </div>
                             @endif
 
                         @else
-                            {{-- Form Konfirmasi Seminar (Selalu Tampil Jika Belum Valid/Proses) --}}
+                            {{-- Peringatan Syarat Belum Lengkap --}}
                             @if(!$step1Done || !$step2Done || !$step3Done || !$step4Done)
                                 <div class="flex items-start gap-3 p-4 bg-amber-50 border border-amber-200 rounded-2xl mb-5">
                                     <svg class="w-5 h-5 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
                                     <div>
                                         <p class="text-sm font-semibold text-amber-800">Perhatian: Syarat Belum Lengkap</p>
                                         <p class="text-[11px] text-amber-700 mt-0.5">
-                                            Anda tetap dapat mensubmit form ini, namun validasi jadwal mungkin tertunda karena:
-                                            @if(!$step1Done) <br>• CV belum diverifikasi.@endif
-                                            @if(!$step2Done) <br>• Foto (3x4) belum diverifikasi.@endif
-                                            @if(!$step3Done) <br>• Kartu Hijau belum diverifikasi.@endif
-                                            @if(!$step4Done) <br>• Form A2 belum diverifikasi.@endif
+                                            Anda belum dapat mengajukan jadwal seminar. Harap lengkapi dan tunggu validasi persetujuan Koordinator untuk berkas berikut:
+                                            @if(!$step1Done) <br>&bull; CV belum diunggah atau belum diverifikasi.@endif
+                                            @if(!$step2Done) <br>&bull; Foto (3x4) belum diunggah atau belum diverifikasi.@endif
+                                            @if(!$step3Done) <br>&bull; Kartu Hijau belum diunggah atau belum diverifikasi.@endif
+                                            @if(!$step4Done) <br>&bull; Form A2 belum diunggah atau belum diverifikasi.@endif
                                         </p>
                                     </div>
                                 </div>
-                            @endif
+                            @else
+                                {{-- Form Konfirmasi Seminar --}}
 
-                            @if(!$kp->seminar || $semStatus === 'ditolak')
+                            @if(!$kp->seminar || $semStatus === 'rejected')
                                 <form action="{{ route('eoffice.kp.mahasiswa.seminar.store') }}" method="POST" class="space-y-4">
                                     @csrf
                                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -796,6 +785,7 @@
                                         </button>
                                     </div>
                                 </form>
+                            @endif
                             @endif
                         @endif
                     </div>
