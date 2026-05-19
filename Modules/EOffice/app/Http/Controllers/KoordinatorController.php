@@ -271,7 +271,7 @@ class KoordinatorController extends Controller implements HasMiddleware
                 return 'pending';
             };
 
-            $praKp = $dokumens->filter(fn($d) => $d->phase === 'pra_kp')
+            $praKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['Transkrip', 'Surat Pengantar', 'Form Pendaftaran', 'Proposal', 'CV', 'Foto']))
                 ->map(fn($d) => (object) [
                     'id' => $d->id,
                     'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
@@ -283,7 +283,7 @@ class KoordinatorController extends Controller implements HasMiddleware
                     'catatan' => $d->revision_note ?? ''
                 ])->values();
 
-            $saatKp = $dokumens->filter(fn($d) => $d->phase === 'saat_kp')
+            $saatKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['Bukti Terima', 'Laporan', 'Laporan Progress', 'Logbook', 'Makalah']))
                 ->map(fn($d) => (object) [
                     'id' => $d->id,
                     'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
@@ -295,7 +295,7 @@ class KoordinatorController extends Controller implements HasMiddleware
                     'catatan' => $d->revision_note ?? ''
                 ])->values();
 
-            $pascaKp = $dokumens->filter(fn($d) => $d->phase === 'pasca_kp')
+            $pascaKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['A2', 'Kartu Hijau', 'Nilai Lapangan', 'Laporan Akhir']))
                 ->map(fn($d) => (object) [
                     'id' => $d->id,
                     'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
