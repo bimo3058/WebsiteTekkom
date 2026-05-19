@@ -271,10 +271,11 @@ class KoordinatorController extends Controller implements HasMiddleware
                 return 'pending';
             };
 
-            $praKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['Transkrip', 'Surat Pengantar', 'Form Pendaftaran', 'Proposal']))
+            $praKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['Transkrip', 'Surat Pengantar', 'Form Pendaftaran', 'Proposal', 'CV', 'Foto']))
                 ->map(fn($d) => (object) [
                     'id' => $d->id,
-                    'nama_file' => basename($d->file_path ?? $d->jenis_dokumen),
+                    'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
+                    'file_url' => $d->file_path ? asset('storage/' . $d->file_path) : null,
                     'jenis' => $d->jenis_dokumen,
                     'tanggal' => date('Y-m-d', strtotime($d->created_at)),
                     'ukuran' => '-', // Can't easily get file size without storage hit
@@ -282,10 +283,11 @@ class KoordinatorController extends Controller implements HasMiddleware
                     'catatan' => $d->revision_note ?? ''
                 ])->values();
 
-            $saatKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['Logbook', 'Laporan Progress', 'Laporan']))
+            $saatKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['Bukti Terima', 'Laporan', 'Laporan Progress', 'Logbook', 'Makalah']))
                 ->map(fn($d) => (object) [
                     'id' => $d->id,
-                    'nama_file' => basename($d->file_path ?? $d->jenis_dokumen),
+                    'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
+                    'file_url' => $d->file_path ? asset('storage/' . $d->file_path) : null,
                     'jenis' => $d->jenis_dokumen,
                     'tanggal' => date('Y-m-d', strtotime($d->created_at)),
                     'ukuran' => '-',
@@ -293,10 +295,11 @@ class KoordinatorController extends Controller implements HasMiddleware
                     'catatan' => $d->revision_note ?? ''
                 ])->values();
 
-            $pascaKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['A2', 'Kartu Hijau', 'Nilai Lapangan', 'Laporan Akhir', 'Bukti Terima', 'Makalah']))
+            $pascaKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['A2', 'Kartu Hijau', 'Nilai Lapangan', 'Laporan Akhir']))
                 ->map(fn($d) => (object) [
                     'id' => $d->id,
-                    'nama_file' => basename($d->file_path ?? $d->jenis_dokumen),
+                    'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
+                    'file_url' => $d->file_path ? asset('storage/' . $d->file_path) : null,
                     'jenis' => $d->jenis_dokumen,
                     'tanggal' => date('Y-m-d', strtotime($d->created_at)),
                     'ukuran' => '-',
@@ -631,10 +634,11 @@ class KoordinatorController extends Controller implements HasMiddleware
     public function storeBalancing(Request $request)
     {
         $dosens = json_decode($request->input('dosens'), true);
-        $action = $request->input('action', 'draft'); // 'draft' or 'finalize'
-        $status = $action === 'finalize' ? 'finalized' : 'draft';
 
         if (empty($dosens)) {
+            if ($request->wantsJson() || $request->ajax()) {
+                return response()->json(['success' => false, 'message' => 'Data tidak valid.']);
+            }
             return redirect()->back()->with('error', 'Data tidak valid.');
         }
 
@@ -643,6 +647,7 @@ class KoordinatorController extends Controller implements HasMiddleware
             $assignedMahasiswaIds = [];
 
             foreach ($dosens as $dosen) {
+                // Update kuota dosen jika berubah
                 if (isset($dosen['kuota_maksimal'])) {
                     \Modules\EOffice\Models\KpDosen::where('id', $dosen['id'])
                         ->update(['kuota_maksimal' => $dosen['kuota_maksimal']]);
@@ -651,55 +656,44 @@ class KoordinatorController extends Controller implements HasMiddleware
                 foreach ($dosen['mahasiswas'] as $mhs) {
                     $assignedMahasiswaIds[] = $mhs['id'];
 
-                    // Jika action=draft, jangan downgrade status yang sudah finalized
-                    $existingRecord = \Modules\EOffice\Models\KpBalancing::where('kp_id', $mhs['id'])->first();
-                    $actualStatus = $status;
-                    if ($action === 'draft' && $existingRecord && $existingRecord->status === 'finalized') {
-                        $actualStatus = 'finalized'; // Pertahankan status finalized
-                    }
-
+                    // Simpan/update record balancing — selalu finalized
                     \Modules\EOffice\Models\KpBalancing::updateOrCreate(
                         ['kp_id' => $mhs['id']],
                         [
                             'mahasiswa_id' => $mhs['mahasiswa_id'],
                             'dosen_id' => $dosen['id'],
-                            'status' => $actualStatus,
+                            'status' => 'finalized',
                             'assigned_by' => auth()->id(),
                             'assigned_at' => now(),
-                            'finalized_at' => $actualStatus === 'finalized' ? now() : null,
+                            'finalized_at' => now(),
                         ]
                     );
 
-                    // Update eo_kerja_praktik hanya jika finalized
-                    if ($actualStatus === 'finalized') {
-                        \Modules\EOffice\Models\KerjaPraktik::where('id', $mhs['id'])
-                            ->update(['dosen_pembimbing_id' => $dosen['id']]);
-                    }
+                    // Langsung update dosen_pembimbing_id di tabel utama KP
+                    \Modules\EOffice\Models\KerjaPraktik::where('id', $mhs['id'])
+                        ->update(['dosen_pembimbing_id' => $dosen['id']]);
                 }
             }
 
-            // Hapus/reset status untuk mahasiswa yang dikembalikan ke 'Belum Penempatan'
-            if (!empty($dosens)) {
-                $unassignedKps = \Modules\EOffice\Models\KerjaPraktik::whereNotIn('id', $assignedMahasiswaIds)
-                    ->whereNotNull('dosen_pembimbing_id')
-                    ->get();
-
-                foreach ($unassignedKps as $ukp) {
-                    // Hanya batalkan dosen_pembimbing_id jika aksi adalah finalize, 
-                    // atau jika kita mau sinkronisasi penuh
-                    if ($action === 'finalize') {
-                        $ukp->update(['dosen_pembimbing_id' => null]);
-                    }
-                }
+            // Tangani mahasiswa yang dikembalikan ke daftar 'Belum Penempatan'
+            if (!empty($assignedMahasiswaIds)) {
+                // Semua KP yang memiliki dosen pembimbing tapi tidak ada di payload saat ini
+                // berarti mereka dikembalikan ke 'Belum Penempatan'
+                \Modules\EOffice\Models\KerjaPraktik::whereNotNull('dosen_pembimbing_id')
+                    ->whereNotIn('id', $assignedMahasiswaIds)
+                    ->update(['dosen_pembimbing_id' => null]);
 
                 \Modules\EOffice\Models\KpBalancing::whereNotIn('kp_id', $assignedMahasiswaIds)->delete();
+            } else {
+                // Jika semua dikosongkan (tidak ada satupun yang diassign)
+                \Modules\EOffice\Models\KerjaPraktik::whereNotNull('dosen_pembimbing_id')
+                    ->update(['dosen_pembimbing_id' => null]);
+                \Modules\EOffice\Models\KpBalancing::truncate();
             }
 
             \DB::commit();
 
-            $message = $status === 'finalized'
-                ? 'Balancing berhasil difinalisasi.'
-                : 'Progress balancing berhasil disimpan (Draft).';
+            $message = 'Balancing berhasil disimpan! Semua mahasiswa sudah ter-plot ke dosen pembimbing.';
 
             if ($request->wantsJson() || $request->ajax()) {
                 return response()->json(['success' => true, 'message' => $message]);
@@ -707,8 +701,9 @@ class KoordinatorController extends Controller implements HasMiddleware
             return redirect()->back()->with('success', $message);
         } catch (\Exception $e) {
             \DB::rollBack();
+            \Log::error('Balancing error: ' . $e->getMessage() . ' | Trace: ' . $e->getTraceAsString());
             if ($request->wantsJson() || $request->ajax()) {
-                return response()->json(['success' => false, 'message' => 'Terjadi kesalahan sistem.']);
+                return response()->json(['success' => false, 'message' => 'Terjadi kesalahan: ' . $e->getMessage()]);
             }
             return redirect()->back()->with('error', 'Terjadi kesalahan: ' . $e->getMessage());
         }

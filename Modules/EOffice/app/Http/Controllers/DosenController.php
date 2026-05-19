@@ -99,59 +99,7 @@ class DosenController extends Controller
             ];
         });
 
-        // Fallback dummy jika belum ada data nyata (dev only)
-        if ($mahasiswas->isEmpty()) {
-            $mahasiswas = collect([
-                (object) [
-                    'id'                   => 101,
-                    'nama'                 => 'Ahmad Fathanah',
-                    'nim'                  => '2100018112',
-                    'judul_kp'             => 'Pengembangan Sistem Microservice Backend',
-                    'tempat_kp'            => 'PT GoTo Gojek Tokopedia',
-                    'tanggal_mulai'        => '1 Jun 2026',
-                    'tanggal_selesai'      => '31 Agu 2026',
-                    'status_kp'            => 'active',
-                    'status_dokumen'       => 'Lengkap',
-                    'nilai_seminar'        => null,
-                    'nilai_laporan'        => null,
-                    'sudah_daftar_seminar' => false,
-                    'status_seminar'       => null,
-                    'progress'             => 60,
-                ],
-                (object) [
-                    'id'                   => 102,
-                    'nama'                 => 'Siti Nurhaliza',
-                    'nim'                  => '2100018199',
-                    'judul_kp'             => 'Analisis Jaringan Fiber Optic',
-                    'tempat_kp'            => 'PT Telkom Indonesia',
-                    'tanggal_mulai'        => '15 Mei 2026',
-                    'tanggal_selesai'      => '15 Agu 2026',
-                    'status_kp'            => 'pending',
-                    'status_dokumen'       => 'Kurang',
-                    'nilai_seminar'        => null,
-                    'nilai_laporan'        => null,
-                    'sudah_daftar_seminar' => true,
-                    'status_seminar'       => 'proses',
-                    'progress'             => 30,
-                ],
-                (object) [
-                    'id'                   => 103,
-                    'nama'                 => 'Bima Sakti',
-                    'nim'                  => '2100018155',
-                    'judul_kp'             => 'Implementasi Fraud Detection System',
-                    'tempat_kp'            => 'Bank Mandiri IT Group',
-                    'tanggal_mulai'        => '1 Feb 2026',
-                    'tanggal_selesai'      => '30 Apr 2026',
-                    'status_kp'            => 'completed',
-                    'status_dokumen'       => 'Lengkap',
-                    'nilai_seminar'        => 85,
-                    'nilai_laporan'        => 78,
-                    'sudah_daftar_seminar' => true,
-                    'status_seminar'       => 'proses',
-                    'progress'             => 100,
-                ],
-            ]);
-        }
+
 
         return view('eoffice::dosen.bimbingan', compact('mahasiswas'));
     }

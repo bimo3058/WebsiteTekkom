@@ -74,10 +74,6 @@
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                 Balancing Dosen
             </a>
-            <a href="{{ route('eoffice.kp.koordinator.upload_berkas') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
-                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                Upload Berkas
-            </a>
             
             <a href="{{ route('eoffice.kp.koordinator.validasi_berkas') }}" class="{{ request()->routeIs('eoffice.kp.koordinator.validasi_berkas') ? 'flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full' : 'flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium' }}">
                 <svg class="w-5 h-5 mr-3 text-indigo-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
@@ -348,15 +344,22 @@
 
                                             <!-- Actions -->
                                             <div class="flex items-center gap-2 w-full sm:w-auto shrink-0 border-t sm:border-t-0 pt-4 sm:pt-0 border-slate-100">
-                                                <!-- Preview button: disabled if no file -->
-                                                <button @click="doc.file_url ? openPreview(doc) : null"
-                                                        :disabled="!doc.file_url"
-                                                        :class="doc.file_url ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100 cursor-pointer' : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'"
-                                                        :title="doc.file_url ? 'Preview file' : 'File belum tersedia, minta mahasiswa upload ulang'"
-                                                        class="flex-1 sm:flex-none px-4 py-2 font-bold text-xs rounded-xl transition-colors text-center border flex items-center gap-1.5 justify-center">
-                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                                    <span x-text="doc.file_url ? 'Lihat' : 'Kosong'"></span>
-                                                </button>
+                                                <template x-if="doc.file_url">
+                                                    <a :href="doc.file_url" target="_blank"
+                                                       title="Lihat file di tab baru"
+                                                       class="flex-1 sm:flex-none px-4 py-2 font-bold text-xs rounded-xl transition-colors text-center border flex items-center gap-1.5 justify-center bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100 cursor-pointer">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                        <span>Lihat</span>
+                                                    </a>
+                                                </template>
+                                                <template x-if="!doc.file_url">
+                                                    <button disabled
+                                                            title="File belum tersedia, minta mahasiswa upload ulang"
+                                                            class="flex-1 sm:flex-none px-4 py-2 font-bold text-xs rounded-xl transition-colors text-center border flex items-center gap-1.5 justify-center bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed">
+                                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                        <span>Kosong</span>
+                                                    </button>
+                                                </template>
                                                 
                                                 <template x-if="doc.status === 'pending'">
                                                     <div class="flex gap-2 flex-1 sm:flex-none">
@@ -404,70 +407,7 @@
         </div>
     </div>
 
-    <!-- Modal Preview PDF -->
-    <div x-show="previewModalOpen" class="relative z-50" style="display: none;">
-        <div x-show="previewModalOpen" x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
-        <div class="fixed inset-0 z-10 w-screen overflow-hidden flex items-center justify-center p-4 sm:p-6 lg:p-12">
-            <div x-show="previewModalOpen" 
-                 x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95 translate-y-4" x-transition:enter-end="opacity-100 scale-100 translate-y-0"
-                 x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100 translate-y-0" x-transition:leave-end="opacity-0 scale-95 translate-y-4"
-                 @click.away="previewModalOpen = false"
-                 class="relative w-full max-w-5xl h-full flex flex-col rounded-2xl bg-white shadow-2xl border border-slate-100 overflow-hidden">
-                
-                <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
-                    <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-lg bg-red-50 text-red-500 flex items-center justify-center border border-red-100 shrink-0">
-                            <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>
-                        </div>
-                        <div>
-                            <h3 class="text-sm font-bold text-slate-900" x-text="previewDoc ? previewDoc.nama_file : ''"></h3>
-                            <p class="text-xs text-slate-500 font-medium mt-0.5" x-text="previewDoc && isPdf(previewDoc.nama_file) ? 'Preview PDF • Diunggah oleh Mahasiswa' : 'File Dokumen • Klik Download untuk membuka'"></p>
-                        </div>
-                    </div>
-                    <div class="flex gap-2">
-                        <a :href="previewDoc ? previewDoc.file_url : '#'" :download="previewDoc ? previewDoc.nama_file : ''" target="_blank" class="p-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-lg transition-colors border border-transparent hover:border-indigo-100" title="Download">
-                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
-                        </a>
-                        <button @click="previewModalOpen = false" class="p-2 text-slate-400 hover:text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-lg transition-colors" title="Tutup">
-                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="flex-1 bg-slate-100 flex flex-col items-center justify-center relative overflow-hidden">
-                    <!-- PDF: embed with iframe -->
-                    <template x-if="previewDoc && previewDoc.file_url && isPdf(previewDoc.nama_file)">
-                        <iframe :src="previewDoc.file_url" class="w-full h-full border-0" style="min-height:500px;"></iframe>
-                    </template>
 
-                    <!-- Word/Doc: cannot preview in browser, show download prompt -->
-                    <template x-if="previewDoc && previewDoc.file_url && !isPdf(previewDoc.nama_file)">
-                        <div class="text-center p-10">
-                            <div class="w-20 h-20 bg-blue-50 border border-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-5">
-                                <svg class="w-10 h-10 text-blue-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M4 4a2 2 0 012-2h4.586A2 2 0 0112 2.586L15.414 6A2 2 0 0116 7.414V16a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm2 6a1 1 0 011-1h6a1 1 0 110 2H7a1 1 0 01-1-1zm1 3a1 1 0 100 2h6a1 1 0 100-2H7z" clip-rule="evenodd" /></svg>
-                            </div>
-                            <h4 class="text-base font-bold text-slate-800 mb-1" x-text="previewDoc.nama_file"></h4>
-                            <p class="text-sm text-slate-500 mb-2">File Word/Dokumen tidak bisa dipreview langsung di browser.</p>
-                            <p class="text-xs text-slate-400 mb-6">Gunakan tombol Download di atas untuk membuka file ini.</p>
-                            <a :href="previewDoc.file_url" target="_blank" class="inline-flex items-center gap-2 px-5 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 shadow-sm transition-colors">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                                Buka / Download File
-                            </a>
-                        </div>
-                    </template>
-
-                    <!-- Fallback jika file_url null -->
-                    <template x-if="!previewDoc || !previewDoc.file_url">
-                        <div class="text-center p-8">
-                            <svg class="w-16 h-16 text-slate-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
-                            <p class="text-slate-600 font-semibold">File tidak tersedia</p>
-                            <p class="text-xs text-slate-400 mt-1">Dokumen ini belum memiliki file yang bisa dipreview.</p>
-                        </div>
-                    </template>
-                </div>
-            </div>
-        </div>
-    </div>
 
     <!-- Modal Reject / Catatan Revisi -->
     <div x-show="rejectModalOpen" class="relative z-50" style="display: none;">
@@ -577,8 +517,7 @@
             selectedStudent: null,
             isLoading: false,
             // Modal States
-            previewModalOpen: false,
-            previewDoc: null,
+
             rejectModalOpen: false,
             rejectDoc: null,
             rejectReason: '',
@@ -643,15 +582,7 @@
                 }
             },
             
-            openPreview(doc) {
-                this.previewDoc = doc;
-                this.previewModalOpen = true;
-            },
 
-            isPdf(filename) {
-                if (!filename) return false;
-                return filename.toLowerCase().endsWith('.pdf');
-            },
             
             openRejectModal(doc) {
                 this.rejectDoc = doc;
