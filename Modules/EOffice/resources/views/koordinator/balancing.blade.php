@@ -193,17 +193,13 @@
                             <svg class="w-4 h-4 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
                             Auto Balancing
                         </button>
-                        <button type="button" @click="submitForm('draft')" class="inline-flex items-center justify-center px-5 py-2 bg-slate-900 border border-transparent rounded-lg text-sm font-semibold text-white shadow-sm hover:bg-slate-800 transition-colors" :disabled="isSaving" :class="{'opacity-75 cursor-not-allowed': isSaving}">
-                            <svg x-show="!isSaving" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+                        <button type="button" @click="submitForm('finalize')" class="inline-flex items-center justify-center px-5 py-2 bg-indigo-600 border border-transparent rounded-lg text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-colors" :disabled="isSaving" :class="{'opacity-75 cursor-not-allowed': isSaving}">
+                            <svg x-show="!isSaving" class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
                             <svg x-show="isSaving" class="animate-spin w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                             </svg>
-                            <span x-text="isSaving ? 'Menyimpan...' : 'Simpan Progress'"></span>
-                        </button>
-                        <button type="button" @click="showFinalizeModal = true" class="inline-flex items-center justify-center px-5 py-2 bg-indigo-600 border border-transparent rounded-lg text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 transition-colors">
-                            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                            Finalisasi Balancing
+                            <span x-text="isSaving ? 'Menyimpan...' : 'Finalisasi Balancing'"></span>
                         </button>
                     </div>
                 </div>
@@ -434,8 +430,9 @@
                     </div>
                 <!-- Action Buttons -->
                 <div class="mt-6 flex justify-end gap-3 sticky bottom-0 bg-slate-50/80 backdrop-blur-sm p-4 border-t border-slate-200">
-                    <button type="button" @click="submitForm('draft')" class="px-6 py-2 bg-white border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-50 shadow-sm transition-all text-sm">Simpan Draft</button>
-                    <button type="button" @click="showFinalizeModal = true" class="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-sm transition-all text-sm">Finalisasi</button>
+                    <button type="button" @click="submitForm('finalize')" class="px-6 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-700 shadow-sm transition-all text-sm" :disabled="isSaving" :class="{'opacity-75 cursor-not-allowed': isSaving}">
+                        <span x-text="isSaving ? 'Menyimpan...' : 'Finalisasi Balancing'"></span>
+                    </button>
                 </div>
 
             </form>
@@ -589,7 +586,6 @@
                         srcDosen.mahasiswas = srcDosen.mahasiswas.filter(s => s.id !== this.draggedStudent.id);
                         this.draggedStudent.status = 'belum';
                         this.unassignedStudents.push(this.draggedStudent);
-                        this.autoSave();
                     }
                 }
                 this.endDrag();
@@ -611,9 +607,8 @@
                 // Move from unassigned
                 if (this.sourceType === 'unassigned') {
                     this.unassignedStudents = this.unassignedStudents.filter(s => s.id !== this.draggedStudent.id);
-                    this.draggedStudent.status = this.draggedStudent.status === 'finalized' ? 'finalized' : 'draft';
+                    this.draggedStudent.status = 'pending';
                     targetDosen.mahasiswas.push(this.draggedStudent);
-                    this.autoSave();
                 } 
                 // Move from another dosen
                 else if (this.sourceType === 'dosen') {
@@ -624,9 +619,8 @@
                     const srcDosen = this.dosens.find(d => d.id === this.sourceId);
                     if (srcDosen) {
                         srcDosen.mahasiswas = srcDosen.mahasiswas.filter(s => s.id !== this.draggedStudent.id);
-                        this.draggedStudent.status = this.draggedStudent.status === 'finalized' ? 'finalized' : 'draft';
+                        this.draggedStudent.status = 'pending';
                         targetDosen.mahasiswas.push(this.draggedStudent);
-                        this.autoSave();
                     }
                 }
 
@@ -639,7 +633,6 @@
                     dosen.mahasiswas = dosen.mahasiswas.filter(s => s.id !== mhs.id);
                     mhs.status = 'belum';
                     this.unassignedStudents.push(mhs);
-                    this.autoSave();
                 }
             },
 
@@ -691,52 +684,27 @@
                 }
 
                 if (assignedCount > 0) {
-                    this.autoSave(true, `${assignedCount} mahasiswa berhasil didistribusikan secara otomatis!`);
+                    this.showToast('success', 'Auto Balancing Selesai', `${assignedCount} mahasiswa berhasil didistribusikan. Klik "Finalisasi Balancing" untuk menyimpan.`);
                 }
             },
 
             getBadgeClass(status) {
                 if (status === 'finalized') return 'bg-indigo-100 text-indigo-700 border-indigo-200 border';
-                if (status === 'draft') return 'bg-amber-100 text-amber-700 border-amber-200 border';
+                if (status === 'pending') return 'bg-amber-100 text-amber-700 border-amber-200 border';
                 return 'bg-slate-100 text-slate-600 border-slate-200 border';
             },
 
             getBadgeText(status) {
-                if (status === 'finalized') return 'Final';
-                if (status === 'draft') return 'Draft';
+                if (status === 'finalized') return 'Ter-plot';
+                if (status === 'pending') return 'Belum Disimpan';
                 return 'Belum';
             },
 
             submitForm(action = 'draft') {
                 this.isSaving = true;
-                const form = document.getElementById('balancingForm');
-                
-                // Remove existing hidden inputs if any
-                document.querySelectorAll('.balancing-payload').forEach(el => el.remove());
-                
-                const dosensInput = document.createElement('input');
-                dosensInput.type = 'hidden';
-                dosensInput.name = 'dosens';
-                dosensInput.className = 'balancing-payload';
-                dosensInput.value = JSON.stringify(this.dosens);
-                
-                const actionInput = document.createElement('input');
-                actionInput.type = 'hidden';
-                actionInput.name = 'action';
-                actionInput.className = 'balancing-payload';
-                actionInput.value = action;
-
-                form.appendChild(dosensInput);
-                form.appendChild(actionInput);
-                
-                form.submit();
-            },
-
-            autoSave(showToast = false, customMessage = 'Perubahan otomatis tersimpan') {
-                this.isSaving = true;
                 const payload = {
                     dosens: JSON.stringify(this.dosens),
-                    action: 'draft',
+                    action: action,
                     _token: document.querySelector('meta[name="csrf-token"]') ? document.querySelector('meta[name="csrf-token"]').content : document.querySelector('input[name="_token"]').value
                 };
 
@@ -751,16 +719,23 @@
                 .then(response => response.json())
                 .then(data => {
                     this.isSaving = false;
-                    if (data.success && showToast) {
-                        this.showToast('success', 'Auto Save Aktif', customMessage);
+                    if (data.success) {
+                        this.showToast('success', 'Berhasil', data.message || 'Perubahan berhasil disimpan!');
+                        if (action === 'finalize') {
+                            setTimeout(() => window.location.reload(), 1500);
+                        }
+                    } else {
+                        this.showToast('error', 'Gagal', data.message || 'Terjadi kesalahan saat menyimpan.');
                     }
                 })
                 .catch(error => {
                     this.isSaving = false;
-                    console.error('Error auto-saving:', error);
-                    this.showToast('error', 'Gagal', 'Terjadi kesalahan saat menyimpan otomatis.');
+                    console.error('Error saving:', error);
+                    this.showToast('error', 'Gagal', 'Terjadi kesalahan sistem saat menghubungi server.');
                 });
-            }
+            },
+
+
         }
     }
 </script>
