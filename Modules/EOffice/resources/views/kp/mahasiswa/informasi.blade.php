@@ -3,10 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIKAPE — Keperluan Perusahaan</title>
+    <title>SIKAPE — Dokumen Perusahaan</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
+    <script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
     <style>
         * { font-family: 'Inter Tight', sans-serif; }
         :root {
@@ -17,19 +19,64 @@
             --success-0:#f0fdf4;--success-50:#dcfce7;--success-300:#16a34a;
             --warning-0:#fffbeb;--warning-50:#fef3c7;--warning-300:#d97706;
             --error-0:#fff1f2;--error-50:#ffe4e6;--error-200:#f87171;
-            --sky-200:#bae6fd;--sky-600:#0284c7;
         }
         .sikape-card { background:#fff; border:1px solid var(--grey-200); border-radius:12px; }
-        .sikape-btn-primary { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:var(--primary-500); color:#fff; border-radius:8px; font-size:14px; font-weight:600; border:none; cursor:pointer; transition:all .15s; text-decoration:none; }
+        .sikape-btn-primary { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:8px 16px; background:var(--primary-500); color:#fff; border-radius:8px; font-size:14px; font-weight:600; border:none; cursor:pointer; transition:all .15s; text-decoration:none; }
         .sikape-btn-primary:hover { background:#4338ca; }
-        .sikape-btn-outline { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:transparent; color:var(--grey-700); border-radius:8px; font-size:14px; font-weight:600; border:1.5px solid var(--grey-200); cursor:pointer; transition:all .15s; text-decoration:none; }
+        .sikape-btn-primary:disabled { opacity:0.6; cursor:not-allowed; }
+        .sikape-btn-outline { display:inline-flex; align-items:center; justify-content:center; gap:6px; padding:8px 16px; background:transparent; color:var(--grey-700); border-radius:8px; font-size:14px; font-weight:600; border:1.5px solid var(--grey-200); cursor:pointer; transition:all .15s; text-decoration:none; }
         .sikape-btn-outline:hover { background:var(--grey-50); border-color:var(--grey-300); }
         .sikape-btn-ghost { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:transparent; color:var(--grey-600); border-radius:8px; font-size:14px; font-weight:600; border:none; cursor:pointer; transition:all .15s; text-decoration:none; }
         .sikape-btn-ghost:hover { background:var(--grey-100); }
-        .ql-toolbar { border-radius:8px 8px 0 0 !important; border-color:var(--grey-200) !important; }
-        .ql-container { border-radius:0 0 8px 8px !important; border-color:var(--grey-200) !important; font-size:15px; min-height:320px; }
+        .form-input { w-full; rounded-lg; px-3; py-2; text-sm; border: 1px solid var(--grey-200); background:#fff; }
+        .form-input:focus { outline:none; border-color:var(--primary-500); box-shadow:0 0 0 2px var(--primary-100); }
+        .ql-toolbar { border-radius:8px 8px 0 0 !important; border-color:var(--grey-200) !important; background: var(--grey-50); }
+        .ql-container { border-radius:0 0 8px 8px !important; border-color:var(--grey-200) !important; font-size:15px; min-height:400px; background: #fff; }
+        
+        /* A4 WYSIWYG Styling */
+        .a4-editor-wrapper {
+            width: 100%;
+            overflow-x: auto;
+            background: var(--grey-100);
+            padding: 24px;
+            border-radius: 8px;
+            border: 1px solid var(--grey-200);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .a4-toolbar-container {
+            width: 21cm;
+            max-width: 100%;
+            background: #fff;
+            border: 1px solid var(--grey-300);
+            border-bottom: none;
+        }
+        #proposal-editor {
+            width: 21cm;
+            min-height: 29.7cm;
+            padding: 4cm 3cm 3cm 4cm; /* Top Right Bottom Left */
+            background-color: white;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            border: 1px solid var(--grey-300) !important;
+            border-radius: 0 !important;
+            font-family: 'Times New Roman', Times, serif; /* Sesuai standar tulisan ilmiah */
+            font-size: 12pt;
+            line-height: 1.5;
+        }
+        @media (max-width: 21cm) {
+            .a4-editor-wrapper { align-items: flex-start; }
+        }
+        
+        /* Stepper Styles */
+        .step-item { flex: 1; text-align: center; position: relative; }
+        .step-item:not(:last-child)::after { content: ''; position: absolute; top: 14px; left: 50%; width: 100%; height: 2px; background: var(--grey-200); z-index: 0; }
+        .step-item.active:not(:last-child)::after, .step-item.completed:not(:last-child)::after { background: var(--primary-500); }
+        .step-circle { width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; margin: 0 auto 8px; position: relative; z-index: 1; transition: all 0.3s; }
+        .step-item.active .step-circle { background: var(--primary-500); color: white; border: 2px solid var(--primary-500); box-shadow: 0 0 0 4px var(--primary-50); }
+        .step-item.completed .step-circle { background: white; color: var(--primary-500); border: 2px solid var(--primary-500); }
+        .step-item.pending .step-circle { background: white; color: var(--grey-400); border: 2px solid var(--grey-200); }
     </style>
-    <link href="https://cdn.quilljs.com/1.3.6/quill.snow.css" rel="stylesheet">
 </head>
 <body class="bg-grey-50" style="background:#f9fafb;" x-data="{ sidebarOpen: false }">
 <div class="flex h-screen w-full overflow-hidden">
@@ -41,225 +88,449 @@
             'breadcrumbs' => ['Informasi', 'Keperluan Perusahaan']
         ])
 
-        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8" x-data="documentManager({
+            defaultPerusahaan: '{{ $kp ? ($kp->tempat_fix ?? ($kp->rencana_tempat ?? '')) : '' }}'
+        })">
 
-            {{-- Flash --}}
-            @if(session('success'))
-            <div class="mb-5 flex items-center gap-3 p-4 rounded-xl border" style="background:var(--success-0);border-color:var(--success-50);color:var(--success-300);">
-                <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                <p class="text-sm font-medium">{{ session('success') }}</p>
-            </div>
-            @endif
+            {{-- VIEWS --}}
+            <template x-if="view === 'list'">
+                <div>
+                    {{-- Page heading --}}
+                    <div class="mb-8">
+                        <h1 class="text-2xl font-bold" style="color:var(--grey-900);">Dokumen Perusahaan</h1>
+                        <p class="text-sm mt-1" style="color:var(--grey-500);">Panduan dan pembuatan dokumen untuk keperluan pengajuan KP ke instansi.</p>
+                    </div>
 
-            {{-- Page heading --}}
-            <div class="mb-6">
-                <h1 class="text-2xl font-semibold" style="color:var(--grey-900);">Keperluan Perusahaan</h1>
-                <p class="text-sm mt-1" style="color:var(--grey-500);">Informasi persuratan dan panduan kebutuhan dokumen untuk instansi KP Anda.</p>
-            </div>
-
-            <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-
-                {{-- KIRI: Persuratan + Editor --}}
-                <div class="xl:col-span-2 space-y-6">
-
-                    {{-- SECTION 1 — Informasi Persuratan --}}
-                    <div class="sikape-card p-6">
-                        <div class="flex items-center justify-between mb-5">
-                            <h2 class="text-base font-semibold" style="color:var(--grey-800);">Informasi Persuratan KP</h2>
-                            <span class="text-[11px] font-semibold px-2.5 py-1 rounded-full" style="background:var(--warning-50);color:var(--warning-300);">Pra KP</span>
-                        </div>
-
-                        {{-- Alert penting --}}
-                        <div class="flex gap-3 p-4 rounded-xl mb-5" style="background:var(--warning-0);border:1px solid var(--warning-50);">
-                            <svg class="w-5 h-5 flex-shrink-0 mt-0.5" style="color:var(--warning-300);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z"/></svg>
-                            <div>
-                                <p class="text-sm font-semibold" style="color:var(--warning-300);">Perhatian</p>
-                                <p class="text-xs mt-0.5" style="color:#92400e;">Surat pengantar harus diajukan minimal <strong>2 minggu</strong> sebelum tanggal mulai KP yang direncanakan.</p>
-                            </div>
-                        </div>
-
-                        {{-- Daftar dokumen --}}
-                        <h3 class="text-sm font-semibold mb-3" style="color:var(--grey-700);">Dokumen yang Diperlukan Perusahaan</h3>
-                        <div class="space-y-3 mb-5">
-                            @php
-                                $docs = [
-                                    ['icon'=>'M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z','title'=>'Surat Pengantar Departemen','desc'=>'Dikeluarkan oleh TU Departemen Teknik Komputer, ditandatangani Kepala Departemen.','badge'=>'Wajib','badge_style'=>'background:#fce7f3;color:#be185d;'],
-                                    ['icon'=>'M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z','title'=>'Proposal KP','desc'=>'Berisi rencana topik, timeline, dan tujuan kegiatan KP. Bisa dibuat di bawah.','badge'=>'Wajib','badge_style'=>'background:#fce7f3;color:#be185d;'],
-                                    ['icon'=>'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2','title'=>'Transkrip Nilai Terakhir','desc'=>'Print transkip resmi yang dicetak dari sistem akademik, minimum 80 SKS.','badge'=>'Wajib','badge_style'=>'background:#fce7f3;color:#be185d;'],
-                                    ['icon'=>'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z','title'=>'CV / Curriculum Vitae','desc'=>'Dokumen opsional namun sangat dianjurkan oleh sebagian besar instansi.','badge'=>'Opsional','badge_style'=>'background:var(--grey-100);color:var(--grey-500);'],
-                                ];
-                            @endphp
-                            @foreach($docs as $doc)
-                            <div class="flex items-start gap-4 p-4 rounded-xl border transition-all hover:border-indigo-200" style="border-color:var(--grey-100);">
-                                <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background:var(--primary-50);">
-                                    <svg class="w-5 h-5" style="color:var(--primary-500);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ $doc['icon'] }}"/></svg>
-                                </div>
-                                <div class="flex-1">
-                                    <div class="flex items-center gap-2 mb-0.5">
-                                        <p class="text-sm font-semibold" style="color:var(--grey-800);">{{ $doc['title'] }}</p>
-                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full" style="{{ $doc['badge_style'] }}">{{ $doc['badge'] }}</span>
+                    <div class="space-y-8">
+                        
+                        {{-- Surat Pengantar Section --}}
+                        <div class="sikape-card p-6">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <div class="w-8 h-8 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+                                        </div>
+                                        <h2 class="text-lg font-bold text-grey-900">1. Surat Pengantar Departemen</h2>
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-100 text-pink-700">Wajib</span>
                                     </div>
-                                    <p class="text-xs" style="color:var(--grey-500);">{{ $doc['desc'] }}</p>
+                                    <p class="text-sm text-grey-500 leading-relaxed max-w-2xl">Dikeluarkan resmi oleh Departemen Teknik Komputer. Surat ini berisi permohonan agar mahasiswa dapat diterima KP di instansi yang dituju.</p>
+                                </div>
+                                <a href="{{ route('eoffice.kp.mahasiswa.dokumen.template', 'surat_pengantar') }}" class="sikape-btn-primary bg-indigo-600 hover:bg-indigo-700 flex-shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                    Unduh Template Surat
+                                </a>
+                            </div>
+                        </div>
+
+                        {{-- Proposal KP Section --}}
+                        <div class="sikape-card p-6">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4 mb-6">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <div class="w-8 h-8 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        </div>
+                                        <h2 class="text-lg font-bold text-grey-900">2. Proposal KP</h2>
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-100 text-pink-700">Wajib</span>
+                                    </div>
+                                    <p class="text-sm text-grey-500 leading-relaxed max-w-2xl">Berisi latar belakang, rencana topik, dan timeline kegiatan KP. Dokumen ini dilampirkan bersama surat pengantar.</p>
+                                </div>
+                                <button @click="buatProposal()" class="sikape-btn-primary bg-emerald-600 hover:bg-emerald-700 flex-shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                                    Buat Proposal
+                                </button>
+                            </div>
+
+                            {{-- History Proposal --}}
+                            <div class="border rounded-xl border-grey-200 overflow-hidden">
+                                <div class="bg-grey-50 px-4 py-3 border-b border-grey-200">
+                                    <h3 class="text-xs font-bold text-grey-600 uppercase tracking-wider">Riwayat Pembuatan</h3>
+                                </div>
+                                <div class="p-4" x-show="proposalHistory.length === 0">
+                                    <p class="text-sm text-grey-400 text-center italic">Belum ada riwayat pembuatan proposal.</p>
+                                </div>
+                                <ul class="divide-y divide-grey-100" x-show="proposalHistory.length > 0">
+                                    <template x-for="item in proposalHistory" :key="item.id">
+                                        <li class="p-4 hover:bg-grey-50 transition-colors flex flex-col sm:flex-row items-center justify-between gap-4">
+                                            <div>
+                                                <h4 class="text-sm font-bold text-grey-800" x-text="item.judul || 'Draft Tanpa Judul'"></h4>
+                                                <p class="text-xs text-grey-500 mt-1" x-text="item.instansi || 'Tanpa Instansi'"></p>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <button @click="editProposal(item)" class="sikape-btn-outline text-xs py-1.5 px-3">Edit</button>
+                                                <button @click="hapusProposal(item.id)" class="sikape-btn-ghost text-red-500 hover:text-red-700 hover:bg-red-50 text-xs py-1.5 px-3">Hapus</button>
+                                            </div>
+                                        </li>
+                                    </template>
+                                </ul>
+                            </div>
+                        </div>
+
+                        {{-- Presensi KP (A2) Section --}}
+                        <div class="sikape-card p-6">
+                            <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <div class="w-8 h-8 rounded-lg bg-amber-50 flex items-center justify-center text-amber-600">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                        </div>
+                                        <h2 class="text-lg font-bold text-grey-900">3. Presensi KP (A2)</h2>
+                                        <span class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-100 text-pink-700">Wajib</span>
+                                    </div>
+                                    <p class="text-sm text-grey-500 leading-relaxed max-w-2xl">Formulir kehadiran dan penilaian lapangan kerja praktik. Dokumen ini digenerate secara dinamis dari template yang diunggah oleh Koordinator.</p>
+                                </div>
+                                <button @click="modalA2Open = true" class="sikape-btn-primary bg-amber-600 hover:bg-amber-700 flex-shrink-0">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                                    Buat Absensi (A2)
+                                </button>
+                            </div>
+                        </div>
+
+                        {{-- Dokumen Template Keperluan Perusahaan (Dinamis dari Koordinator) --}}
+                        @if($templatesKeperluan->count() > 0)
+                            @foreach($templatesKeperluan as $template)
+                            <div class="sikape-card p-6">
+                                <div class="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <div class="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
+                                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"/></svg>
+                                            </div>
+                                            <h2 class="text-lg font-bold text-grey-900">{{ 3 + $loop->iteration }}. {{ $template->judul }}</h2>
+                                        </div>
+                                        <p class="text-sm text-grey-500 leading-relaxed max-w-2xl">{{ $template->konten }}</p>
+                                    </div>
+                                    @if($template->lampiran)
+                                    <a href="{{ url('storage/' . $template->lampiran) }}" target="_blank" download class="sikape-btn-primary bg-blue-600 hover:bg-blue-700 flex-shrink-0 mt-4 sm:mt-0">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                                        Unduh Template
+                                    </a>
+                                    @endif
                                 </div>
                             </div>
                             @endforeach
-                        </div>
-
-                        {{-- Pengumuman dari Koordinator --}}
-                        @if($infoPersuratan->isNotEmpty())
-                        <h3 class="text-sm font-semibold mb-3" style="color:var(--grey-700);">Pengumuman Koordinator</h3>
-                        <div class="space-y-2">
-                            @foreach($infoPersuratan as $info)
-                            <div class="p-3 rounded-lg border-l-4" style="background:var(--grey-50);border-left-color:var(--primary-500);">
-                                <p class="text-sm font-medium" style="color:var(--grey-800);">{{ $info->judul }}</p>
-                                <p class="text-xs mt-0.5" style="color:var(--grey-500);">{{ Str::limit($info->konten, 120) }}</p>
-                            </div>
-                            @endforeach
-                        </div>
                         @endif
+
+                    </div>
+                </div>
+            </template>
+
+
+            {{-- PROPOSAL KP STEPPER --}}
+            <template x-if="view === 'formProposal'">
+                <div class="max-w-4xl mx-auto">
+                    {{-- Header & Stepper --}}
+                    <div class="mb-8">
+                        <button @click="view = 'list'; simpanProposal()" class="text-sm font-semibold text-grey-500 hover:text-grey-800 flex items-center gap-1 mb-4">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                            Kembali ke Daftar Dokumen
+                        </button>
+                        <h1 class="text-2xl font-bold text-grey-900 mb-6">Pembuatan Proposal KP</h1>
+                        
+                        <div class="flex items-center justify-between max-w-lg mx-auto mb-8">
+                            <div class="step-item" :class="{ 'completed': proposalStep > 1, 'active': proposalStep === 1, 'pending': proposalStep < 1 }">
+                                <div class="step-circle">1</div>
+                                <span class="text-[11px] font-semibold text-grey-600 mt-2 block">Informasi Dasar</span>
+                            </div>
+                            <div class="step-item" :class="{ 'completed': proposalStep > 2, 'active': proposalStep === 2, 'pending': proposalStep < 2 }">
+                                <div class="step-circle">2</div>
+                                <span class="text-[11px] font-semibold text-grey-600 mt-2 block">Editor Isi</span>
+                            </div>
+                            <div class="step-item" :class="{ 'completed': proposalStep > 3, 'active': proposalStep === 3, 'pending': proposalStep < 3 }">
+                                <div class="step-circle">3</div>
+                                <span class="text-[11px] font-semibold text-grey-600 mt-2 block">Review & Unduh</span>
+                            </div>
+                        </div>
                     </div>
 
-                    {{-- SECTION 2 — Rich Text Editor --}}
-                    <div class="sikape-card overflow-hidden" x-data="proposalEditor()">
-                        {{-- Header --}}
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-5 border-b" style="border-color:var(--grey-100);">
-                            <div>
-                                <h2 class="text-base font-semibold" style="color:var(--grey-800);">Membuat Proposal KP</h2>
-                                <p class="text-xs mt-0.5" style="color:var(--grey-400);">
-                                    <span x-show="saved" class="text-green-600 font-medium">✓ Tersimpan otomatis</span>
-                                    <span x-show="!saved" style="color:var(--grey-400);">Draft tidak tersimpan</span>
-                                    &nbsp;·&nbsp; <span x-text="lastEdited"></span>
+                    <div class="sikape-card overflow-hidden shadow-sm">
+                        
+                        {{-- Step 1: Info Dasar Proposal --}}
+                        <div x-show="proposalStep === 1" class="p-6 md:p-8">
+                            <h2 class="text-lg font-bold text-grey-800 border-b border-grey-100 pb-3 mb-6">Detail Dokumen Proposal</h2>
+                            <div class="space-y-5">
+                                <div>
+                                    <label class="block text-sm font-semibold text-grey-700 mb-1.5">Judul Proposal <span class="text-red-500">*</span></label>
+                                    <input type="text" x-model="proposalForm.judul" class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-grey-50" placeholder="Rencana Kerja Praktik di..." style="border-color:var(--grey-200);">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-semibold text-grey-700 mb-1.5">Nama Instansi <span class="text-red-500">*</span></label>
+                                    <input type="text" x-model="proposalForm.instansi" class="w-full rounded-lg px-4 py-2.5 text-sm border focus:outline-none focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 bg-grey-50" placeholder="Contoh: PT ABC..." style="border-color:var(--grey-200);">
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- Step 2: Editor --}}
+                        <div x-show="proposalStep === 2" class="p-6" style="display: none;">
+                            <div class="flex items-center justify-between mb-4">
+                                <h2 class="text-lg font-bold text-grey-800">Isi Proposal</h2>
+                                <button @click="loadProposalTemplate()" class="sikape-btn-outline text-xs py-1.5 px-3">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                                    Muat Struktur Template
+                                </button>
+                            </div>
+                            <div class="a4-editor-wrapper">
+                                <div id="proposal-editor" style="background:#fff;"></div>
+                            </div>
+                        </div>
+
+                        {{-- Step 3: Review --}}
+                        <div x-show="proposalStep === 3" class="p-6 md:p-8" style="display: none;">
+                            <div class="text-center mb-8">
+                                <div class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4 text-green-600">
+                                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                                </div>
+                                <h2 class="text-xl font-bold text-grey-900">Proposal Siap Diekspor</h2>
+                                <p class="text-sm text-grey-500 mt-2">Draf telah tersimpan otomatis di perangkat Anda. Silakan unduh dokumen dalam format yang Anda butuhkan.</p>
+                            </div>
+
+                            <div class="bg-indigo-50 rounded-xl p-6 flex flex-col sm:flex-row gap-4 items-center justify-center max-w-lg mx-auto border border-indigo-100">
+                                <form action="{{ route('eoffice.kp.mahasiswa.proposal.export') }}" method="POST" target="_blank" class="w-full sm:w-auto">
+                                    @csrf
+                                    <input type="hidden" name="format" value="pdf">
+                                    <input type="hidden" name="judul" :value="proposalForm.judul">
+                                    <input type="hidden" name="instansi" :value="proposalForm.instansi">
+                                    <input type="hidden" name="content" :value="proposalForm.content">
+                                    <button type="submit" class="sikape-btn-primary w-full bg-red-600 hover:bg-red-700 py-3 shadow-sm">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        Unduh PDF
+                                    </button>
+                                </form>
+
+                                <form action="{{ route('eoffice.kp.mahasiswa.proposal.export') }}" method="POST" target="_blank" class="w-full sm:w-auto">
+                                    @csrf
+                                    <input type="hidden" name="format" value="word">
+                                    <input type="hidden" name="judul" :value="proposalForm.judul">
+                                    <input type="hidden" name="instansi" :value="proposalForm.instansi">
+                                    <input type="hidden" name="content" :value="proposalForm.content">
+                                    <button type="submit" class="sikape-btn-primary w-full bg-blue-600 hover:bg-blue-700 py-3 shadow-sm">
+                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                        Unduh Word
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+
+                        {{-- Footer Actions Stepper --}}
+                        <div class="px-6 py-4 border-t border-grey-100 bg-grey-50 flex items-center justify-between">
+                            <button @click="goToProposalStep(proposalStep - 1); simpanProposal()" x-show="proposalStep > 1" class="sikape-btn-outline">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                                Kembali
+                            </button>
+                            <div x-show="proposalStep === 1"></div> {{-- Placeholder --}}
+
+                            <button @click="goToProposalStep(proposalStep + 1); simpanProposal()" x-show="proposalStep < 3" class="sikape-btn-primary bg-grey-900 hover:bg-grey-800 px-6">
+                                Lanjut
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                            </button>
+                            
+                            <button @click="view = 'list'; simpanProposal()" x-show="proposalStep === 3" class="sikape-btn-outline">
+                                Selesai
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </template>
+
+            <!-- Modal Buat Absensi (A2) -->
+            <div x-show="modalA2Open" class="fixed inset-0 z-50 overflow-y-auto flex items-center justify-center p-4" style="display: none;">
+                <div x-show="modalA2Open" x-transition.opacity class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm"></div>
+                <div x-show="modalA2Open" 
+                     x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 scale-95 translate-y-4" x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                     x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 scale-100 translate-y-0" x-transition:leave-end="opacity-0 scale-95 translate-y-4"
+                     @click.away="modalA2Open = false"
+                     class="relative w-full max-w-lg rounded-2xl bg-white shadow-2xl overflow-hidden border border-slate-100 z-10">
+                    
+                    <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/80">
+                        <h3 class="text-sm font-bold text-slate-900 flex items-center gap-2">
+                            <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                            Generate Presensi KP (A2)
+                        </h3>
+                        <button @click="modalA2Open = false" class="text-slate-400 hover:text-slate-700 bg-slate-50 hover:bg-slate-100 p-1.5 rounded-lg transition-colors">
+                            <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </div>
+
+                    @if(!file_exists(storage_path('app/templates/form_a2.docx')))
+                        <div class="p-6 text-center">
+                            <div class="w-12 h-12 bg-red-50 text-red-500 rounded-full flex items-center justify-center mx-auto mb-3">
+                                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                            </div>
+                            <h4 class="text-sm font-bold text-slate-800">Template A2 Belum Tersedia</h4>
+                            <p class="text-xs text-slate-500 mt-2">Koordinator KP belum mengunggah template Form A2 (.docx). Silakan hubungi Koordinator KP Anda.</p>
+                            <div class="mt-6 flex justify-end">
+                                <button type="button" @click="modalA2Open = false" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-sm font-semibold rounded-xl">Tutup</button>
+                            </div>
+                        </div>
+                    @else
+                        <form action="{{ route('eoffice.kp.mahasiswa.dokumen.generate_a2') }}" method="POST">
+                            @csrf
+                            <div class="p-6 space-y-4">
+                                <p class="text-xs text-slate-500 leading-relaxed">
+                                    Lengkapi data di bawah ini untuk mengisi variabel pada template Word **Presensi KP (A2)** secara otomatis.
                                 </p>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <span class="text-[11px] px-2.5 py-1 rounded-full font-semibold" style="background:var(--grey-100);color:var(--grey-500);">Draft</span>
-                                <button @click="handlePreview()" class="sikape-btn-ghost text-sm py-1.5">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
-                                    Preview
-                                </button>
-                            </div>
-                        </div>
-
-                        {{-- Meta fields --}}
-                        <div class="px-5 pt-5 grid grid-cols-1 sm:grid-cols-2 gap-4 pb-4">
-                            <div>
-                                <label class="block text-xs font-semibold mb-1.5" style="color:var(--grey-600);">Judul Proposal</label>
-                                <input type="text" x-model="title" placeholder="Masukkan judul proposal KP..." class="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-indigo-500" style="border-color:var(--grey-200);background:#fff;">
-                            </div>
-                            <div>
-                                <label class="block text-xs font-semibold mb-1.5" style="color:var(--grey-600);">Nama Instansi / Perusahaan</label>
-                                <input type="text" x-model="company" placeholder="Contoh: PT Telkom Indonesia..." class="w-full rounded-lg px-3 py-2 text-sm border focus:outline-none focus:ring-2 focus:ring-indigo-500" style="border-color:var(--grey-200);background:#fff;">
-                            </div>
-                        </div>
-
-                        {{-- Quill Editor --}}
-                        <div class="px-5 pb-2">
-                            <label class="block text-xs font-semibold mb-1.5" style="color:var(--grey-600);">Isi Proposal</label>
-                            <div id="proposal-editor" style="min-height:280px;"></div>
-                        </div>
-
-                        {{-- Footer actions --}}
-                        <div class="flex flex-wrap items-center justify-between gap-3 px-5 py-4 border-t" style="border-color:var(--grey-100);">
-                            <p class="text-xs" style="color:var(--grey-400);" x-text="charCount + ' karakter'"></p>
-                            <div class="flex gap-2">
-                                <button @click="saveDraft()" class="sikape-btn-ghost text-sm py-2 px-4">Simpan Draft</button>
-                                <button class="sikape-btn-primary text-sm py-2 px-4">
-                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                    Export Proposal
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- KANAN: Download cards --}}
-                <div class="space-y-5">
-                    <div class="sikape-card p-5">
-                        <h2 class="text-sm font-semibold mb-4" style="color:var(--grey-800);">Unduh Dokumen</h2>
-                        <div class="space-y-3">
-                            @php
-                                $downloads = [
-                                    ['type'=>'laporan','label'=>'Template Laporan KP','ext'=>'.docx','size'=>'245 KB','color'=>'#2563eb','bg'=>'#eff6ff'],
-                                    ['type'=>'makalah','label'=>'Template Makalah IEEE','ext'=>'.docx','size'=>'187 KB','color'=>'#7c3aed','bg'=>'#f5f3ff'],
-                                    ['type'=>'a2','label'=>'Form A2 Logbook','ext'=>'.pdf','size'=>'120 KB','color'=>'#059669','bg'=>'#ecfdf5'],
-                                    ['type'=>'b1','label'=>'Permohonan Seminar B1','ext'=>'.pdf','size'=>'98 KB','color'=>'#d97706','bg'=>'#fffbeb'],
-                                    ['type'=>'b2','label'=>'Form Kehadiran B2','ext'=>'.pdf','size'=>'88 KB','color'=>'#dc2626','bg'=>'#fff1f2'],
-                                ];
-                            @endphp
-                            @foreach($downloads as $dl)
-                            <a href="{{ route('eoffice.kp.mahasiswa.dokumen.template', $dl['type']) }}"
-                               class="flex items-center gap-3 p-3 rounded-xl border transition-all hover:shadow-sm"
-                               style="border-color:var(--grey-100);">
-                                <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background:{{ $dl['bg'] }};">
-                                    <svg class="w-4 h-4" style="color:{{ $dl['color'] }};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                                
+                                <div class="space-y-3">
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Nama Pembimbing Lapangan <span class="text-red-500">*</span></label>
+                                        <input type="text" name="nama_pembimbing" x-model="a2Form.nama_pembimbing" required placeholder="Contoh: John Doe, S.T."
+                                               class="w-full rounded-xl border border-slate-200 py-2.5 px-4 text-sm focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">NIP / ID Pembimbing Lapangan <span class="text-red-500">*</span></label>
+                                        <input type="text" name="nip_pembimbing" x-model="a2Form.nip_pembimbing" required placeholder="Contoh: 1987654321 atau -"
+                                               class="w-full rounded-xl border border-slate-200 py-2.5 px-4 text-sm focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Jabatan Pembimbing Lapangan <span class="text-red-500">*</span></label>
+                                        <input type="text" name="jabatan_pembimbing" x-model="a2Form.jabatan_pembimbing" required placeholder="Contoh: Senior Software Engineer"
+                                               class="w-full rounded-xl border border-slate-200 py-2.5 px-4 text-sm focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all">
+                                    </div>
+                                    
+                                    <div>
+                                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wide mb-1.5">Nama Perusahaan / Instansi <span class="text-red-500">*</span></label>
+                                        <input type="text" name="perusahaan" x-model="a2Form.perusahaan" required placeholder="Contoh: PT Technology Indonesia"
+                                               class="w-full rounded-xl border border-slate-200 py-2.5 px-4 text-sm focus:border-amber-500 focus:ring-4 focus:ring-amber-500/10 outline-none transition-all">
+                                    </div>
                                 </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-xs font-semibold truncate" style="color:var(--grey-800);">{{ $dl['label'] }}</p>
-                                    <p class="text-[10px] mt-0.5" style="color:var(--grey-400);">{{ $dl['ext'] }} · {{ $dl['size'] }}</p>
-                                </div>
-                                <svg class="w-4 h-4 flex-shrink-0" style="color:var(--grey-400);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
-                            </a>
-                            @endforeach
-                        </div>
-                    </div>
-
-                    {{-- Info box --}}
-                    <div class="rounded-xl p-5 border" style="background:var(--primary-50);border-color:var(--primary-100);">
-                        <div class="flex items-center gap-2 mb-2">
-                            <svg class="w-4 h-4" style="color:var(--primary-500);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                            <p class="text-xs font-semibold" style="color:var(--primary-500);">Butuh bantuan?</p>
-                        </div>
-                        <p class="text-xs" style="color:#4338ca;">Hubungi Koordinator KP atau kunjungi tata usaha departemen pada jam kerja untuk meminta surat pengantar resmi.</p>
-                    </div>
+                            </div>
+                            
+                            <div class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex gap-3 justify-end">
+                                <button type="button" @click="modalA2Open = false" class="px-4 py-2 bg-white border border-slate-300 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50">Batal</button>
+                                <button type="submit" class="px-5 py-2 bg-amber-600 hover:bg-amber-700 text-white text-sm font-bold rounded-xl shadow-sm shadow-amber-200 transition-colors">Unduh Dokumen A2</button>
+                            </div>
+                        </form>
+                    @endif
                 </div>
-
             </div>
+
         </main>
     </div>
 </div>
 
-<script src="https://cdn.quilljs.com/1.3.6/quill.min.js"></script>
 <script>
-function proposalEditor() {
+function documentManager(params = {}) {
     return {
-        title: '',
-        company: '',
-        charCount: 0,
-        saved: false,
-        lastEdited: 'Belum ada perubahan',
+        view: 'list', // 'list', 'formSurat', 'formProposal'
+        modalA2Open: false,
+        a2Form: {
+            nama_pembimbing: '',
+            nip_pembimbing: '',
+            jabatan_pembimbing: '',
+            perusahaan: params.defaultPerusahaan || ''
+        },
+
+
+        // Proposal State
+        proposalStep: 1, 
+        proposalHistory: [],
+        proposalForm: {
+            id: null,
+            judul: '',
+            instansi: '',
+            content: ''
+        },
         quill: null,
+        proposalTemplate: {!! json_encode($templateContent ?? '') !!},
+
         init() {
-            this.quill = new Quill('#proposal-editor', {
-                theme: 'snow',
-                placeholder: 'Tuliskan latar belakang, tujuan, rencana kegiatan, dan jadwal KP Anda di sini...',
-                modules: {
-                    toolbar: [
-                        [{ heading: [1,2,3,false] }],
-                        ['bold','italic','underline'],
-                        [{ list:'ordered' },{ list:'bullet' }],
-                        [{ align: [] }],
-                        ['link','image'],
-                        ['clean']
-                    ]
+            this.loadHistory();
+        },
+        
+        loadHistory() {
+            try {
+                this.proposalHistory = JSON.parse(localStorage.getItem('sikape_proposal_history')) || [];
+            } catch(e) {
+                this.proposalHistory = [];
+            }
+        },
+
+        saveProposalHistory() {
+            localStorage.setItem('sikape_proposal_history', JSON.stringify(this.proposalHistory));
+        },
+
+
+
+        // PROPOSAL ACTIONS
+        buatProposal() {
+            this.proposalForm = {
+                id: Date.now(),
+                judul: '',
+                instansi: '',
+                content: this.proposalTemplate
+            };
+            this.proposalStep = 1;
+            this.view = 'formProposal';
+        },
+
+        editProposal(item) {
+            this.proposalForm = JSON.parse(JSON.stringify(item));
+            this.proposalStep = 1;
+            this.view = 'formProposal';
+        },
+
+        hapusProposal(id) {
+            if(confirm('Hapus riwayat pembuatan proposal ini?')) {
+                this.proposalHistory = this.proposalHistory.filter(i => i.id !== id);
+                this.saveProposalHistory();
+            }
+        },
+
+        simpanProposal() {
+            if (this.quill && this.proposalStep >= 2) {
+                this.proposalForm.content = this.quill.root.innerHTML;
+            }
+            const idx = this.proposalHistory.findIndex(i => i.id === this.proposalForm.id);
+            if (idx >= 0) {
+                this.proposalHistory[idx] = JSON.parse(JSON.stringify(this.proposalForm));
+            } else {
+                this.proposalHistory.push(JSON.parse(JSON.stringify(this.proposalForm)));
+            }
+            this.saveProposalHistory();
+        },
+
+        goToProposalStep(step) {
+            this.proposalStep = step;
+            if (step === 2) {
+                setTimeout(() => {
+                    if (!this.quill) {
+                        this.quill = new Quill('#proposal-editor', {
+                            theme: 'snow',
+                            placeholder: 'Ketik isi proposal di sini...',
+                            modules: {
+                                toolbar: [
+                                    [{ heading: [1,2,3,false] }],
+                                    ['bold','italic','underline'],
+                                    [{ list:'ordered' },{ list:'bullet' }],
+                                    [{ align: [] }],
+                                    ['clean']
+                                ]
+                            }
+                        });
+                        this.quill.on('text-change', () => {
+                            this.proposalForm.content = this.quill.root.innerHTML;
+                        });
+                    }
+                    if (this.proposalForm.content) {
+                        this.quill.root.innerHTML = this.proposalForm.content;
+                    }
+                }, 100);
+            } else if (step === 3 && this.quill) {
+                // Pastikan data tersimpan saat lanjut ke review
+                this.proposalForm.content = this.quill.root.innerHTML;
+            }
+        },
+
+        loadProposalTemplate() {
+            if(confirm("Memuat struktur template akan mengganti isi saat ini. Lanjutkan?")) {
+                if (this.quill) {
+                    this.quill.root.innerHTML = this.proposalTemplate;
+                    this.proposalForm.content = this.proposalTemplate;
                 }
-            });
-            this.quill.on('text-change', () => {
-                this.charCount = this.quill.getText().trim().length;
-                this.saved = false;
-                this.lastEdited = 'Baru saja diedit';
-            });
-        },
-        saveDraft() {
-            localStorage.setItem('sikape_proposal_draft', JSON.stringify({
-                title: this.title,
-                company: this.company,
-                content: this.quill.root.innerHTML
-            }));
-            this.saved = true;
-            this.lastEdited = new Date().toLocaleTimeString('id-ID');
-        },
-        handlePreview() {
-            alert('Fitur preview akan membuka jendela baru dengan tampilan proposal. (Akan diimplementasikan dengan library PDF)');
+            }
         }
     }
 }

@@ -70,6 +70,14 @@ class KerjaPraktik extends Model
     }
 
     /**
+     * Relasi ke tabel balancing (draft/final)
+     */
+    public function balancing()
+    {
+        return $this->hasOne(KpBalancing::class, 'kp_id');
+    }
+
+    /**
      * Scope: ambil KP milik user yang sedang login
      */
     public function scopeForCurrentUser($query)

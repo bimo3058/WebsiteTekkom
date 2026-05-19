@@ -13,6 +13,7 @@ class KpDosen extends Model
         'user_id',
         'nip',
         'nama_lengkap',
+        'kuota_maksimal',
     ];
 
     // ── Relationships ──────────────────────────────────────────────────────────

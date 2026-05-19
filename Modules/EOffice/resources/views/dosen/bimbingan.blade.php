@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 <head>
     <meta charset="UTF-8">
@@ -64,14 +64,22 @@
         </div>
         
         <!-- User Profile -->
+                @if(auth()->user() && auth()->user()->email === 'ike.pertiwi@undip.ac.id')
+        <div class="px-4 pb-4 mt-auto">
+            <a href="{{ route('eoffice.kp.koordinator.dashboard') }}" class="flex items-center px-4 py-2.5 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-all text-sm font-semibold border border-indigo-200 shadow-sm">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                Beralih ke Koordinator
+            </a>
+        </div>
+        @endif
         <div class="p-4 border-t border-slate-100">
             <div class="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
                 <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shadow-sm border border-indigo-200">
-                    D
+                    {{ strtoupper(substr(auth()->user()->name ?? 'D', 0, 1)) }}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-slate-900 truncate">Dosen Pembimbing</p>
-                    <p class="text-[11px] text-slate-500 truncate">Sistem Balancing Center</p>
+                    <p class="text-sm font-bold text-slate-900 truncate">{{ auth()->user()->name ?? 'Dosen Pembimbing' }}</p>
+                    <p class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email ?? 'Sistem Bimbingan' }}</p>
                 </div>
             </div>
         </div>
@@ -175,7 +183,8 @@
                                     <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/4">Mahasiswa</th>
                                     <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/4">Informasi KP</th>
                                     <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/5">Progress & Status</th>
-                                    <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center w-1/6">Nilai Seminar</th>
+                                    <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Laporan</th>
+                                    <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-center">Seminar</th>
                                     <th class="py-4 px-6 text-xs font-bold text-slate-500 uppercase tracking-wider text-right w-1/12">Aksi</th>
                                 </tr>
                             </thead>
@@ -189,7 +198,7 @@
                                                 </div>
                                                 <div>
                                                     <p class="text-sm font-bold text-slate-900 group-hover:text-indigo-700 transition-colors" x-text="item.nama"></p>
-                                                    <p class="text-xs text-slate-500 mt-0.5" x-text="item.nim + ' • ' + item.prodi"></p>
+                                                    <p class="text-xs text-slate-500 mt-0.5" x-text="item.nim"></p>
                                                 </div>
                                             </div>
                                         </td>
@@ -216,11 +225,19 @@
                                             </div>
                                         </td>
                                         <td class="py-4 px-6 text-center">
+                                            <template x-if="item.nilai_laporan !== null && item.nilai_laporan !== undefined">
+                                                <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-blue-50 text-blue-700 font-extrabold text-lg border border-blue-100 shadow-sm" x-text="item.nilai_laporan"></span>
+                                            </template>
+                                            <template x-if="item.nilai_laporan === null || item.nilai_laporan === undefined">
+                                                <span class="text-xs font-medium text-slate-400 italic">Belum</span>
+                                            </template>
+                                        </td>
+                                        <td class="py-4 px-6 text-center">
                                             <template x-if="item.nilai_seminar !== null">
                                                 <span class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 font-extrabold text-lg border border-emerald-100 shadow-sm" x-text="item.nilai_seminar"></span>
                                             </template>
                                             <template x-if="item.nilai_seminar === null">
-                                                <span class="text-xs font-medium text-slate-400 italic">Belum Dinilai</span>
+                                                <span class="text-xs font-medium text-slate-400 italic">Belum</span>
                                             </template>
                                         </td>
                                         <td class="py-4 px-6 text-right">
@@ -307,8 +324,6 @@
                                         <h3 class="text-xl font-bold text-slate-900" x-text="selectedData?.nama"></h3>
                                         <div class="flex items-center gap-2 mt-1">
                                             <span class="text-sm font-medium text-slate-600" x-text="selectedData?.nim"></span>
-                                            <span class="text-slate-300">•</span>
-                                            <span class="text-sm text-slate-500" x-text="selectedData?.prodi"></span>
                                         </div>
                                         <div class="mt-3">
                                             <span class="inline-flex items-center px-2.5 py-1 rounded-md text-[11px] font-bold tracking-wide uppercase border"
@@ -321,31 +336,48 @@
                                 </div>
 
                                 <!-- Detail Informasi KP -->
+                                <!-- Detail Informasi KP -->
                                 <div>
                                     <h4 class="text-sm font-bold text-slate-900 uppercase tracking-wider mb-4 border-b border-slate-100 pb-2">Informasi Kerja Praktik</h4>
                                     <div class="space-y-4">
+
+                                        <!-- Judul KP - samping -->
                                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
                                             <div class="text-sm font-medium text-slate-500 sm:col-span-1">Judul KP</div>
                                             <div class="text-sm font-semibold text-slate-900 sm:col-span-2 leading-relaxed" x-text="selectedData?.judul_kp"></div>
                                         </div>
+
+                                        <!-- Tempat KP - samping -->
                                         <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
                                             <div class="text-sm font-medium text-slate-500 sm:col-span-1">Tempat KP</div>
                                             <div class="text-sm font-semibold text-slate-900 sm:col-span-2" x-text="selectedData?.tempat_kp"></div>
                                         </div>
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
-                                            <div class="text-sm font-medium text-slate-500 sm:col-span-1">Durasi</div>
-                                            <div class="text-sm font-semibold text-slate-900 sm:col-span-2 flex items-center">
-                                                <svg class="w-4 h-4 mr-1.5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                                <span x-text="selectedData?.durasi_kp"></span>
+
+                                        <!-- Tanggal Mulai & Selesai - berdampingan vertikal dalam 2 kolom -->
+                                        <div class="grid grid-cols-2 gap-3">
+                                            <div class="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                                                <p class="text-xs font-medium text-slate-500 mb-1">Tanggal Mulai</p>
+                                                <div class="flex items-center gap-1.5">
+                                                    <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                    <span class="text-sm font-bold text-slate-800" x-text="selectedData?.tanggal_mulai ?? '-'"></span>
+                                                </div>
+                                            </div>
+                                            <div class="bg-slate-50 border border-slate-100 rounded-xl p-3">
+                                                <p class="text-xs font-medium text-slate-500 mb-1">Tanggal Selesai</p>
+                                                <div class="flex items-center gap-1.5">
+                                                    <svg class="w-3.5 h-3.5 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                                    <span class="text-sm font-bold text-slate-800" x-text="selectedData?.tanggal_selesai ?? '-'"></span>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-1 sm:gap-4">
-                                            <div class="text-sm font-medium text-slate-500 sm:col-span-1">Status Dokumen</div>
-                                            <div class="text-sm font-semibold text-slate-900 sm:col-span-2">
-                                                <span class="inline-flex items-center text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-xs font-bold border border-emerald-100" x-show="selectedData?.status_dokumen === 'Lengkap'">Lengkap</span>
-                                                <span class="inline-flex items-center text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-xs font-bold border border-amber-100" x-show="selectedData?.status_dokumen !== 'Lengkap'" x-text="selectedData?.status_dokumen"></span>
-                                            </div>
+
+                                        <!-- Status Dokumen - vertikal -->
+                                        <div>
+                                            <p class="text-xs font-medium text-slate-500 mb-1.5">Status Dokumen</p>
+                                            <span class="inline-flex items-center text-emerald-600 bg-emerald-50 px-2 py-0.5 rounded text-xs font-bold border border-emerald-100" x-show="selectedData?.status_dokumen === 'Lengkap'">Lengkap</span>
+                                            <span class="inline-flex items-center text-amber-600 bg-amber-50 px-2 py-0.5 rounded text-xs font-bold border border-amber-100" x-show="selectedData?.status_dokumen !== 'Lengkap'" x-text="selectedData?.status_dokumen"></span>
                                         </div>
+
                                     </div>
                                 </div>
 
