@@ -400,7 +400,16 @@ class MahasiswaKpController extends Controller
         // Kelompokkan dokumen berdasarkan jenis
         $dokumenByJenis = $kp->dokumen->groupBy('jenis_dokumen');
 
-        return view('eoffice::kp.mahasiswa.dokumen', compact('mahasiswa', 'kp', 'dokumenByJenis'));
+        // Ambil SEMUA template yang diupload Koordinator KP (semua fase)
+        try {
+            $templatesDokumen = \Modules\EOffice\Models\TemplateDokumenKP::orderBy('phase')
+                ->orderBy('created_at', 'desc')
+                ->get();
+        } catch (\Exception $e) {
+            $templatesDokumen = collect();
+        }
+
+        return view('eoffice::kp.mahasiswa.dokumen', compact('mahasiswa', 'kp', 'dokumenByJenis', 'templatesDokumen'));
     }
 
     /**
