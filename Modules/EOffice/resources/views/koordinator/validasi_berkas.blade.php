@@ -348,9 +348,9 @@
                                                         :disabled="!doc.file_url"
                                                         :class="doc.file_url ? 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 border-indigo-100 cursor-pointer' : 'bg-slate-100 text-slate-400 border-slate-200 cursor-not-allowed'"
                                                         :title="doc.file_url ? 'Preview file' : 'File belum tersedia, minta mahasiswa upload ulang'"
-                                                        class="flex-1 sm:flex-none px-4 py-2 font-bold text-xs rounded-xl transition-colors text-center border">
-                                                    <template x-if="doc.file_url">Preview</template>
-                                                    <template x-if="!doc.file_url">Tidak Ada File</template>
+                                                        class="flex-1 sm:flex-none px-4 py-2 font-bold text-xs rounded-xl transition-colors text-center border flex items-center gap-1.5 justify-center">
+                                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                                                    <span x-text="doc.file_url ? 'Lihat' : 'Kosong'"></span>
                                                 </button>
                                                 
                                                 <template x-if="doc.status === 'pending'">
