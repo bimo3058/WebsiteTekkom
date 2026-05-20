@@ -148,48 +148,86 @@
             {{-- Bottom grid: tabel + aktivitas --}}
             <div class="flex gap-[14px] flex-1 min-h-0 mb-1">
 
-                {{-- Tabel Praktikum --}}
-                <div class="flex flex-col bg-white border border-[#DFE1E7] rounded-[14px] overflow-hidden shadow-[0_1px_2px_rgba(228,229,231,.24)] min-w-0" style="flex:2;">
-                    <div class="flex items-center justify-between px-5 py-4 border-b border-[#DFE1E7] flex-shrink-0">
+                {{-- Tabel Praktikum Aktif --}}
+                <div style="background: #fff; border: 1px solid var(--c-border, #DFE1E7); border-radius: 14px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,.04); display: flex; flex-direction: column; flex: 2; min-width: 0;">
+                    
+                    {{-- Table Header / Toolbar --}}
+                    <div style="display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--c-border, #DFE1E7); gap: 10px; flex-wrap: wrap; flex-shrink: 0;">
                         <div>
-                            <div class="font-bold text-[15px] text-[#0D0D12]">Daftar Praktikum Aktif</div>
-                            <div class="text-[12px] text-[#666D80] mt-[2px]">{{ $semesterLabel ?? 'Semester Genap 2025/2026' }}</div>
+                            <h2 style="font-size: 14px; font-weight: 700; color: var(--c-fg, #0D0D12); margin: 0;">Daftar Praktikum Aktif</h2>
+                            <div style="font-size: 11px; color: var(--c-fg-muted, #666D80); margin-top: 2px;">{{ $semesterLabel ?? 'Semester Genap 2025/2026' }}</div>
                         </div>
                         <a href="{{ route('eoffice.manprak.admin.praktikum.index') }}"
-                           class="text-[12px] font-medium text-[#353849] px-3 py-[6px] rounded-[7px] border border-[#DFE1E7] bg-white no-underline transition-colors hover:bg-[#F6F8FA]">
+                        class="mp-btn secondary sm" 
+                        style="font-size: 12px; padding: 6px 12px; border-radius: 8px; text-decoration: none;">
                             Lihat Semua
                         </a>
                     </div>
-                    <div class="flex px-5 py-2 bg-[#FAFBFC] border-b border-[#DFE1E7] flex-shrink-0">
-                        <div class="text-[11px] font-semibold text-[#666D80] uppercase tracking-[.06em]" style="width:90px;">Kode</div>
-                        <div class="flex-1 text-[11px] font-semibold text-[#666D80] uppercase tracking-[.06em]">Nama Praktikum</div>
-                        <div class="text-[11px] font-semibold text-[#666D80] uppercase tracking-[.06em]" style="width:170px;">Dosen Pengampu</div>
-                        <div class="text-[11px] font-semibold text-[#666D80] uppercase tracking-[.06em]" style="width:65px;">Peserta</div>
-                        <div class="text-[11px] font-semibold text-[#666D80] uppercase tracking-[.06em]" style="width:90px;">Status</div>
-                    </div>
-                    <div class="overflow-y-auto flex-1">
-                        @forelse($praktikums ?? [] as $p)
-                        <div class="flex items-center px-5 py-[11px] border-b border-[#F8F9FB] cursor-pointer transition-colors hover:bg-[#FAFAFC] last:border-0"
-                             onclick="window.location='{{ route('eoffice.manprak.admin.praktikum.show', $p->id) }}'">
-                            <div class="text-[12px] font-semibold tracking-[.01em]" style="width:90px; color:#0B266E;">{{ $p->kode ?? '—' }}</div>
-                            <div class="flex-1 text-[13px] font-medium text-[#0D0D12] overflow-hidden text-ellipsis whitespace-nowrap pr-3">{{ $p->nama ?? '' }}</div>
-                            <div class="text-[12px] text-[#666D80] overflow-hidden text-ellipsis whitespace-nowrap" style="width:170px;">{{ $p->dosen?->name ?? '—' }}</div>
-                            <div class="text-[13px] font-semibold text-[#0D0D12]" style="width:65px;">{{ ($p->status ?? '') === 'aktif' ? ($p->peserta_count ?? 0) : '—' }}</div>
-                            <div style="width:90px;">
-                                @if(($p->status ?? '') === 'aktif')
-                                    <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-[9px] py-[3px] rounded-full bg-[#DDF2EE] text-[#174E43]">
-                                        <span class="w-[6px] h-[6px] rounded-full bg-[#40C4AA] flex-shrink-0"></span>Aktif
-                                    </span>
-                                @else
-                                    <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-[9px] py-[3px] rounded-full bg-[#F0F1F4] text-[#666D80]">
-                                        <span class="w-[6px] h-[6px] rounded-full bg-[#666D80] flex-shrink-0"></span>Nonaktif
-                                    </span>
-                                @endif
-                            </div>
-                        </div>
-                        @empty
-                        <div class="py-10 text-center text-[13px] text-[#666D80]">Belum ada praktikum aktif.</div>
-                        @endforelse
+
+                    {{-- Table Responsive Wrapper --}}
+                    <div style="overflow-x: auto; flex: 1;">
+                        <table style="width: 100%; border-collapse: collapse; min-width: 500px;">
+                            <thead>
+                                <tr style="border-bottom: 1px solid var(--c-border, #DFE1E7); background: #FAFAFA;">
+                                    <th style="padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 600; color: var(--c-fg-muted, #666D80); white-space: nowrap; width: 90px;">Kode</th>
+                                    <th style="padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 600; color: var(--c-fg-muted, #666D80); white-space: nowrap;">Nama Praktikum</th>
+                                    <th style="padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 600; color: var(--c-fg-muted, #666D80); white-space: nowrap; width: 170px;">Dosen Pengampu</th>
+                                    <th style="padding: 11px 16px; text-align: center; font-size: 11px; font-weight: 600; color: var(--c-fg-muted, #666D80); white-space: nowrap; width: 75px;">Peserta</th>
+                                    <th style="padding: 11px 16px; text-align: left; font-size: 11px; font-weight: 600; color: var(--c-fg-muted, #666D80); white-space: nowrap; width: 90px;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($praktikums ?? [] as $p)
+                                <tr style="border-bottom: 1px solid #F3F4F6; transition: background .12s; cursor: pointer;"
+                                    onmouseover="this.style.background='#FAFAFA'" 
+                                    onmouseout="this.style.background='transparent'"
+                                    onclick="window.location='{{ route('eoffice.manprak.admin.praktikum.show', $p->id) }}'">
+                                    
+                                    {{-- Kode --}}
+                                    <td style="padding: 12px 16px; font-size: 12px; font-weight: 700; color: #0B266E; font-family: monospace; white-space: nowrap;">
+                                        {{ $p->kode ?? '—' }}
+                                    </td>
+                                    
+                                    {{-- Nama Praktikum --}}
+                                    <td style="padding: 12px 16px;">
+                                        <div style="font-size: 13px; font-weight: 600; color: var(--c-fg, #0D0D12); max-width: 260px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $p->nama ?? '' }}">
+                                            {{ $p->nama ?? '—' }}
+                                        </div>
+                                    </td>
+                                    
+                                    {{-- Dosen Pengampu --}}
+                                    <td style="padding: 12px 16px;">
+                                        <div style="font-size: 12px; color: var(--c-fg-muted, #666D80); max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="{{ $p->dosen?->name ?? '—' }}">
+                                            {{ $p->dosen?->name ?? '—' }}
+                                        </div>
+                                    </td>
+                                    
+                                    {{-- Peserta (Menggunakan fallback aslinya) --}}
+                                    <td style="padding: 12px 16px; text-align: center; font-size: 13px; font-weight: 700; color: var(--c-fg, #0D0D12);">
+                                        {{ ($p->status ?? '') === 'aktif' ? ($p->peserta_count ?? 0) : '—' }}
+                                    </td>
+                                    
+                                    {{-- Status Badge --}}
+                                    <td style="padding: 12px 16px; white-space: nowrap;">
+                                        @if(($p->status ?? '') === 'aktif')
+                                            <span class="mp-badge success sm"><span class="dot"></span>Aktif</span>
+                                        @else
+                                            <span class="mp-badge neutral sm"><span class="dot"></span>Nonaktif</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                                @empty
+                                <tr>
+                                    <td colspan="5" style="padding: 40px; text-align: center;">
+                                        <svg width="36" height="36" fill="none" stroke="var(--c-fg-placeholder, #A4ABB8)" viewBox="0 0 24 24" stroke-width="1.5" stroke-linecap="round" style="margin: 0 auto 10px; display: block;">
+                                            <rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>
+                                        </svg>
+                                        <p style="font-size: 12px; font-weight: 600; color: var(--c-fg-muted, #666D80); margin: 0;">Belum ada praktikum aktif.</p>
+                                    </td>
+                                </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
                     </div>
                 </div>
 

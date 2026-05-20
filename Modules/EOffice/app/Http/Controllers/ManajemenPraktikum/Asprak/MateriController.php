@@ -2,9 +2,9 @@
 
 namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak;
 
+use App\Services\SupabaseStorage;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Facades\Storage;
 use Modules\EOffice\Models\AsistenPraktikum;
 use Modules\EOffice\Models\MateriModul;
 use Modules\EOffice\Models\Modul;
@@ -12,6 +12,8 @@ use Modules\EOffice\Models\ModulAsprak;
 
 class MateriController extends Controller
 {
+    public function __construct(private SupabaseStorage $supabase) {}
+
     public function index(Request $request)
     {
         $asprak = $request->attributes->get('asprak')
@@ -54,7 +56,7 @@ class MateriController extends Controller
         }
 
         if ($request->hasFile('file')) {
-            $path     = $request->file('file')->store('materi-modul', 'public');
+            $path     = $this->supabase->upload($request->file('file'), 'materi-modul', 'eoffice');
             $tipeFile = $request->file('file')->getClientMimeType();
         }
 
@@ -82,7 +84,7 @@ class MateriController extends Controller
         }
 
         if ($materi->file_path) {
-            Storage::disk('public')->delete($materi->file_path);
+            $this->supabase->delete($materi->file_path, 'eoffice');
         }
 
         $materi->delete();

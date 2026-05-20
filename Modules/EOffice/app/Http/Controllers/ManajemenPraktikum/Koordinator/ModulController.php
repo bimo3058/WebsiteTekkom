@@ -2,6 +2,7 @@
 
 namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator;
 
+use App\Services\SupabaseStorage;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
@@ -16,6 +17,8 @@ use Modules\EOffice\Models\Praktikum;
  */
 class ModulController extends Controller
 {
+    public function __construct(private SupabaseStorage $supabase) {}
+
     /**
      * Daftar semua modul di praktikum yang dikoordinatori.
      */
@@ -161,5 +164,72 @@ class ModulController extends Controller
             'kode_modul' => $kode,
             'message'    => 'Kode modul berhasil digenerate.',
         ]);
+    }
+
+    /**
+     * Tambah materi baru untuk modul.
+     */
+    public function storeMateri(Request $request, int $modulId)
+    {
+        $user  = auth()->user();
+        $modul = Modul::with('praktikum')->findOrFail($modulId);
+
+        // Verifikasi user adalah koordinator modul ini
+        if ($modul->praktikum?->koor_id !== $user->id) {
+            abort(403, 'Anda tidak berhak menambah materi untuk modul ini.');
+        }
+
+        $request->validate([
+            'judul'      => 'required|string|max:255',
+            'deskripsi'  => 'nullable|string|max:1000',
+            'file'       => 'nullable|file|max:51200|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx',
+        ]);
+
+        $materi = new \Modules\EOffice\Models\MateriModul();
+        $materi->modul_id = $modul->id;
+        $materi->user_id  = $user->id;
+        $materi->judul    = $request->judul;
+        $materi->deskripsi = $request->deskripsi;
+
+        // Handle file upload
+        if ($request->hasFile('file')) {
+            $file     = $request->file('file');
+            $filename = time() . '_' . str_replace(' ', '_', pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
+            $path     = $this->supabase->upload($file, "materi/modul-{$modul->id}", 'eoffice', $filename);
+
+            $materi->file_path = $path;
+            $materi->tipe_file = strtoupper($file->getClientOriginalExtension());
+        }
+
+        $materi->save();
+
+        return back()->with('success', 'Materi berhasil ditambahkan.');
+    }
+
+    /**
+     * Hapus materi dari modul.
+     */
+    public function destroyMateri(Request $request, int $materiId)
+    {
+        $user = auth()->user();
+        
+        // Gunakan Model::class sesuai namespace module mu
+        $materi = \Modules\EOffice\Models\MateriModul::findOrFail($materiId);
+        $modul = $materi->modul;
+
+        // Verifikasi user adalah koordinator
+        if ($modul->praktikum?->koor_id !== $user->id) {
+            abort(403, 'Anda tidak berhak menghapus materi ini.');
+        }
+
+        // Hapus file jika ada
+        if ($materi->file_path) {
+            $this->supabase->delete($materi->file_path, 'eoffice');
+        }
+
+        $modul_id = $modul->id;
+        $materi->delete();
+
+        return back()->with('success', 'Materi berhasil dihapus.');
     }
 }

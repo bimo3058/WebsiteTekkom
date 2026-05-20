@@ -160,7 +160,7 @@
                     </div>
                 </div>
                 @if($materi->file_path)
-                <a href="{{ Storage::url($materi->file_path) }}" target="_blank" class="mp-btn primary sm flex-shrink-0" style="text-decoration:none;">Unduh</a>
+                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice') }}" target="_blank" class="mp-btn primary sm flex-shrink-0" style="text-decoration:none;">Unduh</a>
                 @endif
             </div>
             @empty
