@@ -11,8 +11,15 @@ class DashboardController extends Controller
         $user  = auth()->user();
         $roles = $user->roles->pluck('name')->map(fn($r) => strtolower($r));
 
+        $email = strtolower($user->email ?? '');
+
+        // Bypass permission check for valid domains and specific users
+        $isAllowedEmail = str_ends_with($email, '@students.undip.ac.id') 
+                       || str_ends_with($email, '@undip.ac.id') 
+                       || $email === 'ike.pertiwi@undip.ac.id';
+
         // ── FIX: Cek permission sebelum routing berdasarkan role ──
-        if (!$user->can('eoffice.view')) {
+        if (!$user->can('eoffice.view') && !$isAllowedEmail) {
             abort(403, 'Anda tidak memiliki izin akses ke modul E-Office (eoffice.view).');
         }
 
@@ -20,12 +27,16 @@ class DashboardController extends Controller
             return app(EOfficeController::class)->adminDashboard();
         }
 
-        if ($roles->contains('dosen')) {
-            return app(EOfficeController::class)->dosenDashboard();
+        if ($email === 'ike.pertiwi@undip.ac.id') {
+            return redirect()->route('eoffice.kp.koordinator.dashboard');
         }
 
-        if ($roles->contains('mahasiswa')) {
+        if ($roles->contains('mahasiswa') || str_ends_with($email, '@students.undip.ac.id')) {
             return app(EOfficeController::class)->mahasiswaDashboard();
+        }
+
+        if ($roles->contains('dosen') || str_ends_with($email, '@undip.ac.id')) {
+            return app(EOfficeController::class)->dosenDashboard();
         }
 
         abort(403, 'Akses Ditolak.');

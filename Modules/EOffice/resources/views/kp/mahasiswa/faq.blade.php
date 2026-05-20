@@ -71,31 +71,18 @@
                 ];
             @endphp
 
-            {{-- Category tabs --}}
-            <div class="mb-5" x-data="{ activeTab: 'Semua' }">
-                <div class="flex flex-wrap gap-2 mb-6">
-                    @foreach(['Semua','Umum','Administrasi','Dokumen','Seminar'] as $tab)
-                    <button @click="activeTab = '{{ $tab }}'" :class="activeTab === '{{ $tab }}' ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-grey-600 border-grey-200 hover:border-grey-300'"
-                            class="px-4 py-1.5 rounded-full text-xs font-semibold border transition-all">
-                        {{ $tab }}
-                    </button>
-                    @endforeach
-                </div>
+            <div class="mb-5">
 
                 {{-- FAQ List --}}
                 <div class="space-y-3">
 
                     {{-- Static FAQs --}}
                     @foreach($staticFaqs as $i => $faq)
-                    <div x-show="(activeTab === 'Semua' || activeTab === '{{ $faq['cat'] }}') && ('{{ addslashes($faq['q']) }}'.toLowerCase().includes(search.toLowerCase()) || search === '')"
+                    <div x-show="('{{ addslashes($faq['q']) }}'.toLowerCase().includes(search.toLowerCase()) || search === '')"
                          class="sikape-card overflow-hidden">
                         <button @click="openItem = openItem === {{ $i }} ? null : {{ $i }}"
                                 class="flex items-center justify-between w-full p-5 text-left group">
                             <div class="flex items-center gap-3 flex-1 min-w-0">
-                                @if($faq['popular'])
-                                <span class="hidden sm:inline text-[10px] font-bold px-2 py-0.5 rounded-full flex-shrink-0" style="background:#fce7f3;color:#be185d;">Populer</span>
-                                @endif
-                                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0" style="background:var(--grey-100);color:var(--grey-600);">{{ $faq['cat'] }}</span>
                                 <p class="text-sm font-semibold pr-2" style="color:var(--grey-800);">{{ $faq['q'] }}</p>
                             </div>
                             <svg class="w-5 h-5 flex-shrink-0 transition-transform duration-200" :class="openItem === {{ $i }} ? 'rotate-180' : ''" style="color:var(--grey-400);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
@@ -110,12 +97,11 @@
 
                     {{-- Dynamic from DB --}}
                     @foreach($faqItems as $j => $faq)
-                    <div x-show="(activeTab === 'Semua') && ('{{ addslashes($faq->judul) }}'.toLowerCase().includes(search.toLowerCase()) || search === '')"
+                    <div x-show="('{{ addslashes($faq->judul) }}'.toLowerCase().includes(search.toLowerCase()) || search === '')"
                          class="sikape-card overflow-hidden">
                         <button @click="openItem = openItem === 'db{{ $j }}' ? null : 'db{{ $j }}'"
                                 class="flex items-center justify-between w-full p-5 text-left">
                             <div class="flex items-center gap-3 flex-1 min-w-0">
-                                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0" style="background:var(--primary-50);color:var(--primary-500);">Pengumuman</span>
                                 <p class="text-sm font-semibold" style="color:var(--grey-800);">{{ $faq->judul }}</p>
                             </div>
                             <svg class="w-5 h-5 flex-shrink-0 transition-transform duration-200" :class="openItem === 'db{{ $j }}' ? 'rotate-180' : ''" style="color:var(--grey-400);" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
