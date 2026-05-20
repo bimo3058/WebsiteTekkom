@@ -9,7 +9,7 @@
     $isDosen  = $user->hasRole('dosen');
     $isKoor   = $user->hasRole('koor_prak');
     $isAsprak = $user->hasRole('asprak');
-    $isMhs    = true; // semua user punya akses mahasiswa (sebagai fallback)
+    $isMhs    = $user->hasRole('mahasiswa');
 
     // Multi-role: kumpulkan semua section yang berlaku
     // Tiap section = ['label', 'icon', 'color', 'match', 'subs']
@@ -92,22 +92,23 @@
         ];
     }
 
-    // Mahasiswa selalu ada (bisa saja user adalah asprak/koor sekaligus mahasiswa)
-    $manprakSections[] = [
-        'label' => 'Mahasiswa',
-        'color' => '#D39C3D',
-        'match' => 'manprak.mahasiswa',
-        'link'  => route('eoffice.manprak.mahasiswa.dashboard'),
-        'icon'  => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
-        'subs'  => [
-            ['href' => route('eoffice.manprak.mahasiswa.dashboard'),            'label' => 'Ringkasan',    'match' => 'mahasiswa.dashboard'],
-            ['href' => route('eoffice.manprak.mahasiswa.pendaftaran-praktikan.index'), 'label' => 'Daftar Praktikan (IRS)', 'match' => 'mahasiswa.pendaftaran-praktikan'],
-            ['href' => route('eoffice.manprak.mahasiswa.pengumuman.index'),     'label' => 'Pengumuman',   'match' => 'mahasiswa.pengumuman'],
-            ['href' => route('eoffice.manprak.mahasiswa.tugas.index'),          'label' => 'Tugas',        'match' => 'mahasiswa.tugas'],
-            ['href' => route('eoffice.manprak.mahasiswa.nilai.index'),          'label' => 'Nilai',        'match' => 'mahasiswa.nilai'],
-            ['href' => route('eoffice.manprak.mahasiswa.daftar-asprak.index'),  'label' => 'Daftar Asprak/Koor', 'match' => 'daftar-asprak'],
-        ],
-    ];
+    if ($isMhs) {
+        $manprakSections[] = [
+            'label' => 'Mahasiswa',
+            'color' => '#D39C3D',
+            'match' => 'manprak.mahasiswa',
+            'link'  => route('eoffice.manprak.mahasiswa.dashboard'),
+            'icon'  => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
+            'subs'  => [
+                ['href' => route('eoffice.manprak.mahasiswa.dashboard'),            'label' => 'Ringkasan',    'match' => 'mahasiswa.dashboard'],
+                ['href' => route('eoffice.manprak.mahasiswa.pendaftaran-praktikan.index'), 'label' => 'Daftar Praktikan (IRS)', 'match' => 'mahasiswa.pendaftaran-praktikan'],
+                ['href' => route('eoffice.manprak.mahasiswa.pengumuman.index'),     'label' => 'Pengumuman',   'match' => 'mahasiswa.pengumuman'],
+                ['href' => route('eoffice.manprak.mahasiswa.tugas.index'),          'label' => 'Tugas',        'match' => 'mahasiswa.tugas'],
+                ['href' => route('eoffice.manprak.mahasiswa.nilai.index'),          'label' => 'Nilai',        'match' => 'mahasiswa.nilai'],
+                ['href' => route('eoffice.manprak.mahasiswa.daftar-asprak.index'),  'label' => 'Daftar Asprak/Koor', 'match' => 'daftar-asprak'],
+            ],
+        ];
+    }
 
     $manprakActive = str_contains($currentRoute, 'manprak');
     $multiRole     = count($manprakSections) > 1;
@@ -295,30 +296,6 @@
                       :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">Kerja Praktik (KP)</span>
             </a>
         </div>
-
-        {{-- Sistem (admin only) --}}
-        @if($isAdmin)
-        <div class="h-px bg-[#F0F1F4] mx-[14px] my-1"></div>
-        <div class="mb-1">
-            <div class="text-[10px] font-semibold text-[#A4ABB8] uppercase tracking-[.06em] px-[10px] py-1 mb-[2px] whitespace-nowrap overflow-hidden transition-opacity duration-200"
-                 :class="sidebarOpen ? 'opacity-100' : 'opacity-0'">Sistem</div>
-            @php $activeGear = str_contains($currentRoute, 'modules'); @endphp
-            <a href="{{ route('superadmin.modules') }}"
-               class="flex items-center gap-[10px] px-[10px] py-[9px] rounded-lg mb-[1px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap
-                      {{ $activeGear ? 'bg-[#0B266E]' : 'hover:bg-[#F6F8FA]' }}"
-               :class="sidebarOpen ? '' : 'justify-center'">
-                <svg class="w-[15px] h-[15px] flex-shrink-0 {{ $activeGear ? 'text-white' : 'text-[#666D80]' }}"
-                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"/>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
-                </svg>
-                <span class="text-[13px] flex-1 overflow-hidden text-ellipsis transition-[opacity,width] duration-200
-                             {{ $activeGear ? 'font-semibold text-white' : 'font-medium text-[#353849]' }}"
-                      :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">Pengaturan Modul</span>
-            </a>
-        </div>
-        @endif
-
     </nav>
 
     {{-- User footer --}}
@@ -331,7 +308,7 @@
             @if($isDosen)  <span class="text-[9px] font-bold px-[5px] py-[1px] rounded-full text-white" style="background:#0B266E;">DOSEN</span> @endif
             @if($isKoor)   <span class="text-[9px] font-bold px-[5px] py-[1px] rounded-full text-white" style="background:#6366F1;">KOOR</span> @endif
             @if($isAsprak) <span class="text-[9px] font-bold px-[5px] py-[1px] rounded-full text-white" style="background:#40C4AA;">ASPRAK</span> @endif
-            <span class="text-[9px] font-bold px-[5px] py-[1px] rounded-full text-white" style="background:#D39C3D;">MHS</span>
+            @if($isMhs)    <span class="text-[9px] font-bold px-[5px] py-[1px] rounded-full text-white" style="background:#D39C3D;">MHS</span> @endif
         </div>
         @endif
 

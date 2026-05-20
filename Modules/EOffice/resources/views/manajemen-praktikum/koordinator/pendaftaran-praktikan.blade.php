@@ -24,10 +24,6 @@
 </div>
 @endif
 
-<div class="mp-alert warning flex-shrink-0">
-    <strong>Alur:</strong> Mahasiswa unggah IRS &rarr; Anda setujui/tolak &rarr; jika disetujui role <code>praktikan</code> aktif &amp; mahasiswa memasukkan <strong>kode praktikum</strong> di dashboard untuk masuk kelas.
-</div>
-
 <div class="sec-head">
     <span class="sec-bar"></span>
     <span class="sec-title">Daftar Pendaftar Praktikan</span>
@@ -75,7 +71,7 @@
                     </td>
                     <td style="padding:12px 16px;">
                         @if($p->irs_path)
-                        <a href="{{ \Illuminate\Support\Facades\Storage::url($p->irs_path) }}" target="_blank"
+                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->irs_path, 'eoffice') }}" target="_blank"
                            style="font-size:11px;font-weight:600;color:#0B266E;text-decoration:none;" class="hover:underline">Lihat berkas</a>
                         @else
                         <span style="font-size:11px;color:#808897;">—</span>

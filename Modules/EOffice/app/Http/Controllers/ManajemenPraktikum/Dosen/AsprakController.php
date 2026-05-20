@@ -31,10 +31,15 @@ class AsprakController extends Controller
                 ->get()
             : collect();
 
+        $modulPraktikum = $praktikum
+            ? $praktikum->modul()->orderBy('urutan')->get()
+            : collect();
+
         return view('eoffice::manajemen-praktikum.dosen.asprak', compact(
             'praktikumList',
             'praktikum',
-            'aspraks'
+            'aspraks',
+            'modulPraktikum'
         ));
     }
 }

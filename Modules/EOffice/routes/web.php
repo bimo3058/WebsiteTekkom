@@ -31,6 +31,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\NilaiController as
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\PendaftaranKoorController as DosenPendaftaranKoorController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\PengumumanController as DosenPengumumanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\TugasController as DosenTugasController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\PeriodePendaftaranController as DosenPeriodePendaftaranController;
 
 // ── ManajemenPraktikum Koordinator ───────────────────────────────────────────
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\BagiModulController;
@@ -40,6 +41,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\NilaiControl
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PendaftaranAsprakController as KoorPendaftaranAsprakController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PendaftaranPraktikanController as KoorPendaftaranPraktikanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PengumumanController as KoorPengumumanController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PeriodePendaftaranController as KoorPeriodePendaftaranController;
 
 // ── ManajemenPraktikum Asprak ────────────────────────────────────────────────
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak\AbsensiController;
@@ -212,6 +214,15 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('nilai.index');
                 Route::post('nilai/{praktikumId}/approve', [DosenNilaiController::class, 'approve'])
                     ->name('nilai.approve');
+
+                Route::get('periode-pendaftaran', [DosenPeriodePendaftaranController::class, 'index'])
+                    ->name('periode-pendaftaran.index');
+                Route::post('periode-pendaftaran', [DosenPeriodePendaftaranController::class, 'store'])
+                    ->name('periode-pendaftaran.store');
+                Route::post('periode-pendaftaran/{id}/tutup', [DosenPeriodePendaftaranController::class, 'tutup'])
+                    ->name('periode-pendaftaran.tutup');
+                Route::delete('periode-pendaftaran/{id}', [DosenPeriodePendaftaranController::class, 'destroy'])
+                    ->name('periode-pendaftaran.destroy');
             });
 
         // ── KOORDINATOR ──────────────────────────────────────────────────────
@@ -273,6 +284,14 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('pendaftaran-praktikan.reject');
                 Route::post('pendaftaran-praktikan/{id}/reject-irs-default', [KoorPendaftaranPraktikanController::class, 'rejectIrsDefault'])
                     ->name('pendaftaran-praktikan.reject-irs-default');
+                Route::get('periode-pendaftaran', [KoorPeriodePendaftaranController::class, 'index'])
+                    ->name('periode-pendaftaran.index');
+                Route::post('periode-pendaftaran', [KoorPeriodePendaftaranController::class, 'store'])
+                    ->name('periode-pendaftaran.store');
+                Route::post('periode-pendaftaran/{id}/tutup', [KoorPeriodePendaftaranController::class, 'tutup'])
+                    ->name('periode-pendaftaran.tutup');
+                Route::delete('periode-pendaftaran/{id}', [KoorPeriodePendaftaranController::class, 'destroy'])
+                    ->name('periode-pendaftaran.destroy');
 
                 // Pengumuman
                 Route::get('pengumuman', [KoorPengumumanController::class, 'index'])
@@ -287,6 +306,20 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('nilai.index');
                 Route::post('nilai/approve', [KoorNilaiController::class, 'approve'])
                     ->name('nilai.approve');
+            });
+
+        // ── KOORDINATOR — Periode Pendaftaran ────────────────────────────────
+        Route::middleware(['role:koor_prak'])
+            ->prefix('koordinator')->name('koordinator.')
+            ->group(function () {
+                Route::get('periode-pendaftaran', [KoorPeriodePendaftaranController::class, 'index'])
+                    ->name('periode-pendaftaran.index');
+                Route::post('periode-pendaftaran', [KoorPeriodePendaftaranController::class, 'store'])
+                    ->name('periode-pendaftaran.store');
+                Route::post('periode-pendaftaran/{id}/tutup', [KoorPeriodePendaftaranController::class, 'tutup'])
+                    ->name('periode-pendaftaran.tutup');
+                Route::delete('periode-pendaftaran/{id}', [KoorPeriodePendaftaranController::class, 'destroy'])
+                    ->name('periode-pendaftaran.destroy');
             });
 
         // ── ASISTEN PRAKTIKUM ────────────────────────────────────────────────

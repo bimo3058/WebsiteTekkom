@@ -2,6 +2,7 @@
 
 namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa;
 
+use App\Services\SupabaseStorage;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\EOffice\Models\DaftarPraktikan;
@@ -10,6 +11,8 @@ use Modules\EOffice\Models\Tugas;
 
 class TugasController extends Controller
 {
+    public function __construct(private SupabaseStorage $supabase) {}
+
     /**
      * Daftar tugas praktikum mahasiswa + status pengumpulan.
      */
@@ -78,9 +81,10 @@ class TugasController extends Controller
             return back()->with('error', 'Tugas sudah dikumpulkan dan tidak dalam status revisi.');
         }
 
-        $path = $request->file('file')->store(
+        $path = $this->supabase->upload(
+            $request->file('file'),
             'tugas/' . $tugas->modul->praktikum_id . '/' . $tugas->id,
-            'local'
+            'eoffice'
         );
 
         PengumpulanTugas::updateOrCreate(
@@ -121,9 +125,10 @@ class TugasController extends Controller
             ->firstOrFail();
 
         $tugas = Tugas::findOrFail($tugasId);
-        $path  = $request->file('file')->store(
+        $path  = $this->supabase->upload(
+            $request->file('file'),
             'tugas/' . $tugas->modul->praktikum_id . '/' . $tugas->id,
-            'local'
+            'eoffice'
         );
 
         $pengumpulan->update([

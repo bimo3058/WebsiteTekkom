@@ -26,7 +26,7 @@ class PengumumanController extends Controller
 
         $pengumumans = $praktikumId
             ? Pengumuman::where('praktikum_id', $praktikumId)
-                ->with('user')
+                ->with(['user', 'praktikum'])
                 ->orderByDesc('created_at')
                 ->paginate(10)
             : collect();

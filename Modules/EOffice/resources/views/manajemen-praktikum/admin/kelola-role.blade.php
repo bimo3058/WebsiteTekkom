@@ -44,82 +44,86 @@
 
 <div class="flex gap-4 flex-1 min-h-0">
 
-    {{-- Daftar Anggota --}}
-    <div class="mp-card flex-1 min-h-0">
-        <div class="mp-card-header">
-            <span class="mp-card-title">
+{{-- Daftar Anggota --}}
+    <div style="background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; flex:1; min-height:0;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border, #DFE1E7);">
+            <h2 style="font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); margin:0;">
                 Anggota Terdaftar
-                @if($praktikum) &mdash; <span style="font-weight:400;color:#666D80;">{{ $praktikum->nama }}</span> @endif
-            </span>
+                @if($praktikum) &mdash; <span style="font-weight:400;color:var(--c-fg-muted, #666D80);">{{ $praktikum->nama }}</span> @endif
+            </h2>
             <span class="mp-badge neutral sm">{{ $anggota->count() }} anggota</span>
         </div>
 
-        {{-- Info dosen & koor praktikum --}}
         @if($praktikum)
-        <div style="padding:12px 20px;border-bottom:1px solid #DFE1E7;background:#F9FAFB;display:flex;gap:24px;flex-shrink:0;">
+        <div style="padding:12px 16px; border-bottom:1px solid var(--c-border, #DFE1E7); background:#FAFAFA; display:flex; gap:24px; flex-shrink:0;">
             <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:11px;font-weight:600;color:#666D80;">Dosen:</span>
+                <span style="font-size:11px;font-weight:600;color:var(--c-fg-muted, #666D80);">Dosen:</span>
                 <div class="mp-av sky" style="width:22px;height:22px;font-size:9px;">{{ strtoupper(substr($praktikum->dosen?->name ?? 'D', 0, 1)) }}</div>
-                <span style="font-size:12px;color:#0D0D12;">{{ $praktikum->dosen?->name ?? '—' }}</span>
+                <span style="font-size:12px;color:var(--c-fg, #0D0D12);">{{ $praktikum->dosen?->name ?? '—' }}</span>
             </div>
             <div style="display:flex;align-items:center;gap:8px;">
-                <span style="font-size:11px;font-weight:600;color:#666D80;">Koordinator:</span>
-                <span style="font-size:12px;color:#0D0D12;">{{ $praktikum->koordinator?->name ?? '—' }}</span>
+                <span style="font-size:11px;font-weight:600;color:var(--c-fg-muted, #666D80);">Koordinator:</span>
+                <span style="font-size:12px;color:var(--c-fg, #0D0D12);">{{ $praktikum->koordinator?->name ?? '—' }}</span>
             </div>
         </div>
         @endif
 
-        {{-- Table header --}}
-        <div style="display:flex;align-items:center;padding:10px 20px;background:#F9FAFB;border-bottom:1px solid #DFE1E7;flex-shrink:0;">
-            <div class="mp-th flex-1">Pengguna</div>
-            <div class="mp-th" style="width:110px;">Role</div>
-            <div class="mp-th" style="width:90px;text-align:right;">Aksi</div>
+        <div style="overflow-x:auto; flex:1;">
+            <table style="width:100%; border-collapse:collapse; min-width:400px;">
+                <thead>
+                    <tr style="border-bottom:1px solid var(--c-border, #DFE1E7); background:#FAFAFA;">
+                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Pengguna</th>
+                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:110px;">Role</th>
+                        <th style="padding:11px 16px; text-align:right; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:90px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($anggota as $a)
+                    <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s;"
+                        onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
+                        <td style="padding:14px 16px;">
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                @if($a->role === 'koor')
+                                <div class="mp-av violet">{{ strtoupper(substr($a->user?->name ?? 'U', 0, 1)) }}{{ strtoupper(substr($a->user?->name ?? 'U', strpos(($a->user?->name ?? 'U').' ', ' ')+1, 1)) }}</div>
+                                @else
+                                <div class="mp-av green">{{ strtoupper(substr($a->user?->name ?? 'U', 0, 1)) }}{{ strtoupper(substr($a->user?->name ?? 'U', strpos(($a->user?->name ?? 'U').' ', ' ')+1, 1)) }}</div>
+                                @endif
+                                <div style="min-width:0;">
+                                    <div style="font-size:13px;font-weight:600;color:var(--c-fg, #0D0D12);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $a->user?->name ?? '—' }}</div>
+                                    <div style="font-size:11px;color:var(--c-fg-muted, #666D80);">{{ $a->user?->email ?? '—' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding:14px 16px;">
+                            @if($a->role === 'koor')
+                            <span class="mp-badge navy sm"><span class="dot"></span>Koordinator</span>
+                            @else
+                            <span class="mp-badge success sm"><span class="dot"></span>Asprak</span>
+                            @endif
+                        </td>
+                        <td style="padding:14px 16px; text-align:right;">
+                            <form method="POST"
+                                  action="{{ route('eoffice.manprak.admin.kelola-role.revoke', $a->id) }}"
+                                  onsubmit="return confirm('Cabut role {{ $a->role }} dari {{ $a->user?->name }}?')"
+                                  style="display:inline;">
+                                @csrf
+                                @method('DELETE')
+                                <button type="submit" class="mp-btn secondary sm" style="color:#EF4444;border-color:#F87171;">Cabut</button>
+                            </form>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="3" style="padding:48px;text-align:center;">
+                            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--c-fg-muted, #A4ABB8)" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+                            <div style="font-size:13px;font-weight:500;color:var(--c-fg-muted, #666D80);">Belum ada asprak atau koordinator di praktikum ini.</div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
-
-        {{-- Rows --}}
-        <div style="overflow-y:auto;flex:1;">
-            @forelse($anggota as $a)
-            <div class="mp-tr" style="display:flex;align-items:center;padding:11px 20px;"
-                 onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background=''">
-                {{-- Avatar + Nama --}}
-                <div style="flex:1;display:flex;align-items:center;gap:10px;min-width:0;padding-right:12px;">
-                    @if($a->role === 'koor')
-                    <div class="mp-av violet">{{ strtoupper(substr($a->user?->name ?? 'U', 0, 1)) }}{{ strtoupper(substr($a->user?->name ?? 'U', strpos(($a->user?->name ?? 'U').' ', ' ')+1, 1)) }}</div>
-                    @else
-                    <div class="mp-av green">{{ strtoupper(substr($a->user?->name ?? 'U', 0, 1)) }}{{ strtoupper(substr($a->user?->name ?? 'U', strpos(($a->user?->name ?? 'U').' ', ' ')+1, 1)) }}</div>
-                    @endif
-                    <div style="min-width:0;">
-                        <div style="font-size:13px;font-weight:500;color:#0D0D12;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $a->user?->name ?? '—' }}</div>
-                        <div style="font-size:11px;color:#666D80;">{{ $a->user?->email ?? '—' }}</div>
-                    </div>
-                </div>
-                {{-- Badge role --}}
-                <div style="width:110px;">
-                    @if($a->role === 'koor')
-                    <span class="mp-badge navy sm"><span class="dot"></span>Koordinator</span>
-                    @else
-                    <span class="mp-badge success sm"><span class="dot"></span>Asprak</span>
-                    @endif
-                </div>
-                {{-- Revoke --}}
-                <div style="width:90px;text-align:right;">
-                    <form method="POST"
-                          action="{{ route('eoffice.manprak.admin.kelola-role.revoke', $a->id) }}"
-                          onsubmit="return confirm('Cabut role {{ $a->role }} dari {{ $a->user?->name }}?')"
-                          style="display:inline;">
-                        @csrf
-                        @method('DELETE')
-                        <button type="submit" class="mp-btn secondary sm" style="color:#DF1C41;border-color:#DF1C41;">Cabut</button>
-                    </form>
-                </div>
-            </div>
-            @empty
-            <div style="padding:48px;text-align:center;">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-                <div style="font-size:13px;font-weight:500;color:#666D80;">Belum ada asprak atau koordinator di praktikum ini.</div>
-            </div>
-            @endforelse
-        </div>
+        
     </div>
 
     {{-- Form Assign --}}

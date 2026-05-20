@@ -32,7 +32,7 @@
     <span class="sec-bar"></span>
     <span class="sec-title">Ringkasan Semester</span>
     <span class="sec-rule"></span>
-    <span style="font-size:12px;color:#666D80;">{{ $semesterLabel }}</span>
+    <span style="font-size:12px;color:var(--c-fg-muted, #666D80);">{{ $semesterLabel }}</span>
 </div>
 
 {{-- Stat Cards --}}
@@ -65,9 +65,9 @@
         <div class="mp-stat-icon red">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 6v6l4 2"/></svg>
         </div>
-        <div class="mp-stat-label">Asprak Pending</div>
-        <div class="mp-stat-value">{{ $totalAsprakPending ?? 0 }}</div>
-        <div class="mp-stat-sub">perlu review</div>
+        <div class="mp-stat-label">Total Praktikan</div>
+        <div class="mp-stat-value">{{ $totalPraktikan ?? 0 }}</div>
+        <div class="mp-stat-sub">terdaftar di praktikum</div>
     </div>
 </div>
 
@@ -79,78 +79,94 @@
 </div>
 
 {{-- Tabel Dosen & Mahasiswa --}}
-<div class="flex gap-[14px]" style="flex-shrink:0;">
+<div class="flex gap-[14px]" style="flex-shrink:0; margin-bottom: 4px;">
 
     {{-- Tabel Dosen --}}
-    <div class="mp-card flex-1 min-w-0">
-        <div class="mp-card-header">
-            <span class="mp-card-title">Dosen Terdaftar</span>
-            <span class="mp-badge neutral sm">{{ $totalDosen ?? 0 }}</span>
-            <div class="right">
-                <a href="{{ route('eoffice.manprak.admin.dosen.index') }}" class="mp-btn secondary sm" style="text-decoration:none;">Lihat Semua →</a>
+    <div style="background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; flex:1; min-width:0;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--c-border, #DFE1E7);">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <h2 style="font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); margin:0;">Dosen Terdaftar</h2>
+                <span class="mp-badge neutral sm">{{ $totalDosen ?? 0 }}</span>
             </div>
+            <a href="{{ route('eoffice.manprak.admin.dosen.index') }}" class="mp-btn secondary sm" style="text-decoration:none; font-size:11px; padding:4px 8px;">Lihat Semua →</a>
         </div>
-        <div class="mp-card-body">
-            <div style="display:flex;align-items:center;padding:10px 18px;background:#F9FAFB;border-bottom:1px solid #DFE1E7;">
-                <div class="mp-th flex-1">Nama Dosen</div>
-                <div class="mp-th" style="width:130px;">NIP</div>
-                <div class="mp-th" style="width:80px;text-align:center;">Praktikum</div>
-            </div>
-            <div style="overflow-y:auto;max-height:220px;">
-                @forelse($dosenTerbaru ?? [] as $d)
-                <div class="mp-tr" style="display:flex;align-items:center;padding:10px 18px;">
-                    <div class="flex-1 flex items-center gap-[10px] min-w-0 pr-2">
-                        <div class="mp-av sky">{{ strtoupper(substr($d['name'], 0, 1)) }}{{ strtoupper(substr($d['name'], strpos($d['name'].' ',' ')+1, 1)) }}</div>
-                        <div class="min-w-0">
-                            <div style="font-size:13px;font-weight:600;color:#0D0D12;" class="truncate">{{ $d['name'] }}</div>
-                            <div style="font-size:11px;color:#666D80;" class="truncate">{{ $d['email'] }}</div>
-                        </div>
-                    </div>
-                    <div style="width:130px;font-size:11px;color:#666D80;font-family:ui-monospace,monospace;">{{ $d['employee_number'] }}</div>
-                    <div style="width:80px;text-align:center;">
-                        <span class="mp-badge navy sm">{{ $d['jumlah_praktikum'] }} mk</span>
-                    </div>
-                </div>
-                @empty
-                <div style="padding:32px;text-align:center;font-size:13px;color:#808897;">Belum ada dosen terdaftar.</div>
-                @endforelse
-            </div>
+        <div style="overflow-x:auto; flex:1;">
+            <table style="width:100%; border-collapse:collapse; min-width:320px;">
+                <thead>
+                    <tr style="border-bottom:1px solid var(--c-border, #DFE1E7); background:#FAFAFA;">
+                        <th style="padding:10px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Nama Dosen</th>
+                        <th style="padding:10px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:120px;">NIP</th>
+                        <th style="padding:10px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:80px;">Praktikum</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($dosenTerbaru ?? [] as $d)
+                    <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s;" onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
+                        <td style="padding:10px 16px;">
+                            <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                                <div class="mp-av sky" style="width:28px; height:28px; font-size:10px;">{{ strtoupper(substr($d['name'], 0, 1)) }}{{ strtoupper(substr($d['name'], strpos($d['name'].' ',' ')+1, 1)) }}</div>
+                                <div style="min-width:0;">
+                                    <div style="font-size:13px;font-weight:600;color:var(--c-fg, #0D0D12);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $d['name'] }}</div>
+                                    <div style="font-size:11px;color:var(--c-fg-muted, #666D80);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $d['email'] }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding:10px 16px; font-size:11px; color:var(--c-fg-muted, #666D80); font-family:monospace;">{{ $d['employee_number'] }}</td>
+                        <td style="padding:10px 16px; text-align:center;">
+                            <span class="mp-badge navy sm" style="font-weight:600;">{{ $d['jumlah_praktikum'] }} mk</span>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="3" style="padding:32px;text-align:center;font-size:12px;color:var(--c-fg-muted, #808897);">Belum ada dosen terdaftar.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 
     {{-- Tabel Mahasiswa --}}
-    <div class="mp-card flex-1 min-w-0">
-        <div class="mp-card-header">
-            <span class="mp-card-title">Mahasiswa Terdaftar</span>
+    <div style="background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; flex:1; min-width:0;">
+        <div style="display:flex; align-items:center; gap:8px; padding:12px 16px; border-bottom:1px solid var(--c-border, #DFE1E7); height: 43px;">
+            <h2 style="font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); margin:0;">Mahasiswa Terdaftar</h2>
             <span class="mp-badge neutral sm">{{ $totalMahasiswa ?? 0 }}</span>
         </div>
-        <div class="mp-card-body">
-            <div style="display:flex;align-items:center;padding:10px 18px;background:#F9FAFB;border-bottom:1px solid #DFE1E7;">
-                <div class="mp-th flex-1">Nama Mahasiswa</div>
-                <div class="mp-th" style="width:100px;">NIM</div>
-                <div class="mp-th" style="width:70px;text-align:center;">Angkatan</div>
-                <div class="mp-th" style="width:70px;text-align:center;">Ikut</div>
-            </div>
-            <div style="overflow-y:auto;max-height:220px;">
-                @forelse($mahasiswaTerbaru ?? [] as $m)
-                <div class="mp-tr" style="display:flex;align-items:center;padding:10px 18px;">
-                    <div class="flex-1 flex items-center gap-[10px] min-w-0 pr-2">
-                        <div class="mp-av yellow">{{ strtoupper(substr($m['name'], 0, 1)) }}{{ strtoupper(substr($m['name'], strpos($m['name'].' ',' ')+1, 1)) }}</div>
-                        <div class="min-w-0">
-                            <div style="font-size:13px;font-weight:600;color:#0D0D12;" class="truncate">{{ $m['name'] }}</div>
-                            <div style="font-size:11px;color:#666D80;" class="truncate">{{ $m['email'] }}</div>
-                        </div>
-                    </div>
-                    <div style="width:100px;font-size:11px;color:#666D80;font-family:ui-monospace,monospace;">{{ $m['student_number'] }}</div>
-                    <div style="width:70px;font-size:11px;color:#666D80;text-align:center;">{{ $m['cohort_year'] }}</div>
-                    <div style="width:70px;text-align:center;">
-                        <span class="mp-badge sky sm">{{ $m['jumlah_praktikum'] }}</span>
-                    </div>
-                </div>
-                @empty
-                <div style="padding:32px;text-align:center;font-size:13px;color:#808897;">Belum ada mahasiswa terdaftar.</div>
-                @endforelse
-            </div>
+        <div style="overflow-x:auto; flex:1;">
+            <table style="width:100%; border-collapse:collapse; min-width:340px;">
+                <thead>
+                    <tr style="border-bottom:1px solid var(--c-border, #DFE1E7); background:#FAFAFA;">
+                        <th style="padding:10px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Nama Mahasiswa</th>
+                        <th style="padding:10px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:110px;">NIM</th>
+                        <th style="padding:10px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:65px;">Angkatan</th>
+                        <th style="padding:10px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:55px;">Ikut</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($mahasiswaTerbaru ?? [] as $m)
+                    <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s;" onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
+                        <td style="padding:10px 16px;">
+                            <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                                <div class="mp-av yellow" style="width:28px; height:28px; font-size:10px;">{{ strtoupper(substr($m['name'], 0, 1)) }}{{ strtoupper(substr($m['name'], strpos($m['name'].' ',' ')+1, 1)) }}</div>
+                                <div style="min-width:0;">
+                                    <div style="font-size:13px;font-weight:600;color:var(--c-fg, #0D0D12);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $m['name'] }}</div>
+                                    <div style="font-size:11px;color:var(--c-fg-muted, #666D80);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $m['email'] }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding:10px 16px; font-size:11px; color:var(--c-fg-muted, #666D80); font-family:monospace;">{{ $m['student_number'] }}</td>
+                        <td style="padding:10px 16px; text-align:center; font-size:12px; color:var(--c-fg-muted, #666D80);">{{ $m['cohort_year'] }}</td>
+                        <td style="padding:10px 16px; text-align:center;">
+                            <span class="mp-badge sky sm" style="font-weight:700;">{{ $m['jumlah_praktikum'] }}</span>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="4" style="padding:32px;text-align:center;font-size:12px;color:var(--c-fg-muted, #808897);">Belum ada mahasiswa terdaftar.</td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 
@@ -169,95 +185,111 @@
 </div>
 
 {{-- Bottom: Tabel Praktikum + Pendaftaran Pending --}}
-<div class="flex gap-[14px] flex-1 min-h-0 mb-1">
+<div class="flex gap-[14px]">
 
     {{-- Tabel Praktikum --}}
-    <div class="mp-card min-w-0" style="flex:2;">
-        <div class="mp-card-header" style="flex-shrink:0;">
-            <div>
-                <span class="mp-card-title">Daftar Praktikum</span>
-            </div>
-            <div class="right">
-                <a href="{{ route('eoffice.manprak.admin.praktikum.index') }}" class="mp-btn secondary sm" style="text-decoration:none;">Lihat Semua →</a>
-            </div>
+    <div style="background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; flex:2; min-width:0;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--c-border, #DFE1E7); flex-shrink:0;">
+            <h2 style="font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); margin:0;">Daftar Praktikum Terbaru</h2>
+            <a href="{{ route('eoffice.manprak.admin.praktikum.index') }}" class="mp-btn secondary sm" style="text-decoration:none; font-size:11px; padding:4px 8px;">Lihat Semua →</a>
         </div>
-        <div style="display:flex;align-items:center;padding:10px 20px;background:#F9FAFB;border-bottom:1px solid #DFE1E7;flex-shrink:0;">
-            <div class="mp-th" style="width:100px;">Kode</div>
-            <div class="mp-th flex-1">Nama Praktikum</div>
-            <div class="mp-th" style="width:160px;">Dosen Pengampu</div>
-            <div class="mp-th" style="width:80px;text-align:center;">Praktikan</div>
-            <div class="mp-th" style="width:90px;text-align:center;">Status</div>
-        </div>
-        <div style="overflow-y:auto;flex:1;">
-            @forelse($praktikums ?? [] as $p)
-            <div class="mp-tr" style="display:flex;align-items:center;padding:12px 20px;cursor:pointer;transition:background .12s;"
-                 onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background=''"
-                 onclick="window.location='{{ route('eoffice.manprak.admin.praktikum.show', $p->id) }}'">
-                <div style="width:100px;font-size:12px;font-weight:700;color:#0B266E;font-family:ui-monospace,monospace;">{{ $p->kode ?? '—' }}</div>
-                <div class="flex-1 truncate pr-3" style="font-size:13px;font-weight:500;color:#0D0D12;">{{ $p->nama }}</div>
-                <div style="width:160px;font-size:12px;color:#666D80;" class="truncate">{{ $p->dosen?->name ?? '—' }}</div>
-                <div style="width:80px;text-align:center;font-size:14px;font-weight:700;color:#0D0D12;">{{ $p->daftar_praktikan_count ?? 0 }}</div>
-                <div style="width:90px;text-align:center;">
-                    @if($p->status === 'aktif')
-                        <span class="mp-badge success sm"><span class="dot"></span>Aktif</span>
-                    @else
-                        <span class="mp-badge neutral sm"><span class="dot"></span>Nonaktif</span>
-                    @endif
-                </div>
-            </div>
-            @empty
-            <div style="padding:40px;text-align:center;">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
-                <div style="font-size:13px;font-weight:500;color:#666D80;">Belum ada data praktikum.</div>
-            </div>
-            @endforelse
+        <div style="overflow-x:auto; flex:1;">
+            <table style="width:100%; border-collapse:collapse; min-width:460px;">
+                <thead>
+                    <tr style="border-bottom:1px solid var(--c-border, #DFE1E7); background:#FAFAFA;">
+                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:90px;">Kode</th>
+                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Nama Praktikum</th>
+                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:150px;">Dosen Pengampu</th>
+                        <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:75px;">Peserta</th>
+                        <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:85px;">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($praktikums ?? [] as $p)
+                    <tr style="border-bottom:1px solid #F3F4F6;transition:background .12s;cursor:pointer;" onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'" onclick="window.location='{{ route('eoffice.manprak.admin.praktikum.show', $p->id) }}'">
+                        <td style="padding:12px 16px;font-size:12px;font-weight:700;color:#0B266E;font-family:monospace;">{{ $p->kode ?? '—' }}</td>
+                        <td style="padding:12px 16px; font-size:13px; font-weight:600; color:var(--c-fg, #0D0D12);" class="truncate" title="{{ $p->nama }}">{{ $p->nama }}</td>
+                        <td style="padding:12px 16px; font-size:12px; color:var(--c-fg-muted, #666D80);" class="truncate" title="{{ $p->dosen?->name ?? '—' }}">{{ $p->dosen?->name ?? '—' }}</td>
+                        <td style="padding:12px 16px; text-align:center; font-size:13px; font-weight:700; color:var(--c-fg, #0D0D12);">{{ $p->daftar_praktikan_count ?? 0 }}</td>
+                        <td style="padding:12px 16px; text-align:center;">
+                            @if($p->status === 'aktif')
+                                <span class="mp-badge success sm"><span class="dot"></span>Aktif</span>
+                            @else
+                                <span class="mp-badge neutral sm"><span class="dot"></span>Nonaktif</span>
+                            @endif
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="5" style="padding:40px;text-align:center;">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--c-fg-muted, #A4ABB8)" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                            <div style="font-size:12px;color:var(--c-fg-muted, #666D80);">Belum ada data praktikum.</div>
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 
     {{-- Pendaftaran Pending --}}
-    <div class="mp-card min-w-0 flex-1">
-        <div class="mp-card-header" style="flex-shrink:0;">
-            <div>
-                <span class="mp-card-title">Pendaftaran Pending</span>
+    <div style="background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; flex:1; min-width:0;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:12px 16px; border-bottom:1px solid var(--c-border, #DFE1E7); flex-shrink:0;">
+            <div style="display:flex; align-items:center; gap:6px;">
+                <h2 style="font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); margin:0;">Pendaftaran Pending</h2>
+                @if($totalAsprakPending ?? 0)
+                <span class="mp-badge warning sm"><span class="dot"></span>{{ $totalAsprakPending }}</span>
+                @endif
             </div>
-            @if($totalAsprakPending ?? 0)
-            <span class="mp-badge warning sm"><span class="dot"></span>{{ $totalAsprakPending }} menunggu</span>
-            @endif
-            <div class="right">
-                <a href="{{ route('eoffice.manprak.admin.pendaftaran-asprak.index') }}" class="mp-btn secondary sm" style="text-decoration:none;">Lihat Semua →</a>
-            </div>
+            <a href="{{ route('eoffice.manprak.admin.pendaftaran-asprak.index') }}" class="mp-btn secondary sm" style="text-decoration:none; font-size:11px; padding:4px 8px;">Lihat Semua →</a>
         </div>
-        <div style="overflow-y:auto;flex:1;">
-            @forelse($pendaftaranTerbaru ?? [] as $pend)
-            <div class="mp-tr" style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;">
-                <div class="flex items-center gap-[10px] min-w-0">
-                    <div class="mp-av green">{{ strtoupper(substr($pend->user?->name ?? 'A', 0, 1)) }}{{ strtoupper(substr($pend->user?->name ?? 'A', strpos(($pend->user?->name ?? 'A').' ',' ')+1, 1)) }}</div>
-                    <div class="min-w-0">
-                        <div style="font-size:13px;font-weight:600;color:#0D0D12;" class="truncate">{{ $pend->user?->name ?? '—' }}</div>
-                        <div style="font-size:11px;color:#666D80;" class="truncate">{{ $pend->praktikum?->nama ?? '—' }}</div>
-                    </div>
-                </div>
-                <div class="flex gap-1 flex-shrink-0">
-                    <form method="POST" action="{{ route('eoffice.manprak.admin.pendaftaran-asprak.approve', $pend->id) }}">
-                        @csrf
-                        <button type="submit" class="mp-btn ghost sm" title="Setujui">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                        </button>
-                    </form>
-                    <form method="POST" action="{{ route('eoffice.manprak.admin.pendaftaran-asprak.reject', $pend->id) }}">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="mp-btn destructive sm" title="Tolak">
-                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-                        </button>
-                    </form>
-                </div>
-            </div>
-            @empty
-            <div style="padding:40px;text-align:center;">
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><polyline points="20 6 9 17 4 12"/></svg>
-                <div style="font-size:13px;font-weight:500;color:#666D80;">Tidak ada pendaftaran pending.</div>
-            </div>
-            @endforelse
+        <div style="overflow-x:auto; flex:1;">
+            <table style="width:100%; border-collapse:collapse; min-width:260px;">
+                <thead>
+                    <tr style="border-bottom:1px solid var(--c-border, #DFE1E7); background:#FAFAFA;">
+                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Calon Asprak</th>
+                        <th style="padding:11px 16px; text-align:right; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:95px;">Aksi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @forelse($pendaftaranTerbaru ?? [] as $pend)
+                    <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s;" onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
+                        <td style="padding:11px 16px;">
+                            <div style="display:flex;align-items:center;gap:10px;min-width:0;">
+                                <div class="mp-av green" style="width:28px; height:28px; font-size:10px;">{{ strtoupper(substr($pend->user?->name ?? 'A', 0, 1)) }}{{ strtoupper(substr($pend->user?->name ?? 'A', strpos(($pend->user?->name ?? 'A').' ',' ')+1, 1)) }}</div>
+                                <div style="min-width:0;">
+                                    <div style="font-size:13px;font-weight:600;color:var(--c-fg, #0D0D12);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $pend->user?->name ?? '—' }}</div>
+                                    <div style="font-size:11px;color:var(--c-fg-muted, #666D80);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">{{ $pend->praktikum?->nama ?? '—' }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="padding:11px 16px; text-align:right;">
+                            <div style="display:flex; gap:6px; justify-content:flex-end;">
+                                <form method="POST" action="{{ route('eoffice.manprak.admin.pendaftaran-asprak.approve', $pend->id) }}" style="display:inline;">
+                                    @csrf
+                                    <button type="submit" class="mp-btn ghost sm" style="padding:5px 7px;" title="Setujui">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                    </button>
+                                </form>
+                                <form method="POST" action="{{ route('eoffice.manprak.admin.pendaftaran-asprak.reject', $pend->id) }}" style="display:inline;">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="mp-btn destructive sm" style="padding:5px 7px;" title="Tolak">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    @empty
+                    <tr>
+                        <td colspan="2" style="padding:40px;text-align:center;font-size:12px;color:var(--c-fg-muted, #666D80);">
+                            <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="var(--c-fg-muted, #A4ABB8)" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><polyline points="20 6 9 17 4 12"/></svg>
+                            Tidak ada pendaftaran pending.
+                        </td>
+                    </tr>
+                    @endforelse
+                </tbody>
+            </table>
         </div>
     </div>
 

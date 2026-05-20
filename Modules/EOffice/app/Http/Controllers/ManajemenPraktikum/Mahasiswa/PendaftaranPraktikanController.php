@@ -2,6 +2,7 @@
 
 namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa;
 
+use App\Services\SupabaseStorage;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\EOffice\Models\DaftarPraktikan;
@@ -11,6 +12,8 @@ use Modules\EOffice\Models\Praktikum;
 
 class PendaftaranPraktikanController extends Controller
 {
+    public function __construct(private SupabaseStorage $supabase) {}
+
     private function getPeriodeAktif(string $praktikumId): ?PeriodePendaftaran
     {
         return PeriodePendaftaran::where('praktikum_id', $praktikumId)
@@ -89,7 +92,7 @@ class PendaftaranPraktikanController extends Controller
             return back()->with('error', 'Anda sudah disetujui. Gunakan kode praktikum di dashboard untuk bergabung ke kelas.');
         }
 
-        $irsPath = $request->file('irs')->store('praktikan-irs/' . $user->id, 'public');
+        $irsPath = $this->supabase->upload($request->file('irs'), 'praktikan-irs/' . $user->id, 'eoffice');
 
         PendaftaranPraktikan::create([
             'user_id'       => $user->id,
