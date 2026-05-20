@@ -479,29 +479,7 @@
         </div>
     </div>
 
-    <!-- Toast Notification -->
-    <div x-show="toast.show"
-         x-transition:enter="transition ease-out duration-300 transform"
-         x-transition:enter-start="opacity-0 translate-y-4 scale-95"
-         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
-         x-transition:leave="transition ease-in duration-200"
-         x-transition:leave-start="opacity-100"
-         x-transition:leave-end="opacity-0 translate-y-4"
-         class="fixed bottom-6 right-6 z-[100] min-w-[320px] max-w-sm bg-white rounded-2xl shadow-2xl border border-slate-100 flex items-start gap-4 p-4"
-         style="display: none;">
-        <div class="shrink-0 w-10 h-10 rounded-full flex items-center justify-center mt-0.5"
-             :class="toast.type === 'success' ? 'bg-emerald-50 border border-emerald-100' : 'bg-red-50 border border-red-100'">
-            <svg x-show="toast.type === 'success'" class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-            <svg x-show="toast.type !== 'success'" class="w-5 h-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </div>
-        <div class="flex-1">
-            <p class="text-sm font-bold text-slate-900" x-text="toast.title"></p>
-            <p class="text-xs text-slate-500 mt-0.5 leading-relaxed" x-text="toast.message"></p>
-        </div>
-        <button @click="toast.show = false" class="text-slate-400 hover:text-slate-600 p-1 rounded-md">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
-        </button>
-    </div>
+
 
 </div>
 
