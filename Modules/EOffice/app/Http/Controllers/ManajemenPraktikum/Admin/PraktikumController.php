@@ -143,6 +143,28 @@ class PraktikumController extends Controller
         ]);
     }
 
+
+    /**
+     * GET /eoffice/manprak/admin/praktikum/{id}/edit
+     * Halaman form edit praktikum.
+     */
+    public function edit(string $id)
+    {
+        $praktikum = Praktikum::with(['dosen', 'koordinator', 'matkul'])->findOrFail($id);
+
+        $dosenList = \App\Models\Lecturer::with('user')
+            ->get()
+            ->map(fn($l) => (object)['id' => $l->user_id, 'name' => $l->user?->name ?? '—']);
+
+        $matkulList = MatkulPraktikum::orderBy('semester')->orderBy('kode')->get();
+
+        return view('eoffice::manajemen-praktikum.admin.praktikum-edit', compact(
+            'praktikum',
+            'dosenList',
+            'matkulList'
+        ));
+    }
+
     /**
      * DELETE /api/eoffice/manprak/admin/praktikum/{id}
      */

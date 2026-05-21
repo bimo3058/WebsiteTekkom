@@ -20,6 +20,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\KelolRoleControlle
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PraktikumController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\MatkulPraktikumController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PeriodePendaftaranController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PraktikumDetailController;
 
 
 // ── ManajemenPraktikum Dosen ─────────────────────────────────────────────────
@@ -83,6 +84,9 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::get('/dashboard', [AdminManprakDashboard::class, 'index'])
                     ->name('dashboard');
 
+                Route::get('praktikum/{id}/detail', [PraktikumDetailController::class, 'show'])  // ← TAMBAH INI DULU
+                    ->name('praktikum.detail');
+                    
                 // CRUD Praktikum
                 Route::resource('praktikum', PraktikumController::class)
                     ->names('praktikum');
@@ -234,6 +238,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
                 Route::get('/dashboard', [KoorManprakDashboard::class, 'index'])
                     ->name('dashboard');
+                Route::post('/switch-praktikum', [KoorManprakDashboard::class, 'switchPraktikum'])
+                    ->name('switch-praktikum');
                 Route::post('/praktikum/generate-kode', [KoorManprakDashboard::class, 'generateKodePraktikum'])
                     ->name('praktikum.generate-kode');
 

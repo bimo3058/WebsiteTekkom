@@ -11,21 +11,13 @@ use Modules\EOffice\Models\DaftarPraktikan;
 use Modules\EOffice\Models\Modul;
 use Modules\EOffice\Models\Praktikum;
 
-/**
- * Koordinator: Kelola modul praktikum.
- * Sesuai docx: generate kode, detail modul (jadwal, materi, asprak, nilai, absensi), CRUD asprak per modul.
- */
 class ModulController extends Controller
 {
     public function __construct(private SupabaseStorage $supabase) {}
 
-    /**
-     * Daftar semua modul di praktikum yang dikoordinatori.
-     */
     public function index()
     {
-        $user      = auth()->user();
-        $praktikum = Praktikum::where('koor_id', $user->id)->where('status', 'aktif')->first();
+        $praktikum = DashboardController::resolvePraktikum();
 
         $moduls = $praktikum
             ? Modul::with(['materi', 'tugas', 'modulAsprak.asprak.user'])
@@ -37,9 +29,6 @@ class ModulController extends Controller
         return view('eoffice::manajemen-praktikum.koordinator.modul', compact('praktikum', 'moduls'));
     }
 
-    /**
-     * Detail satu modul: jadwal, materi, asprak, nilai, absensi.
-     */
     public function show(int $modulId)
     {
         $user  = auth()->user();
@@ -51,7 +40,6 @@ class ModulController extends Controller
             'absensi.daftarPraktikan.user',
         ])->findOrFail($modulId);
 
-        // Pastikan modul milik praktikum yang dikoordinatori user ini
         if ($modul->praktikum?->koor_id !== $user->id) {
             abort(403, 'Anda tidak berhak melihat modul ini.');
         }
@@ -60,176 +48,71 @@ class ModulController extends Controller
             ->where('praktikum_id', $modul->praktikum_id)
             ->get();
 
-        $aspraksAvailable = AsprakPraktikum::with('user')
-            ->where('praktikum_id', $modul->praktikum_id)
-            ->where('role', 'asprak')
-            ->whereNull('deleted_at')
-            ->get();
-
-        return view('eoffice::manajemen-praktikum.koordinator.modul-detail', compact(
-            'modul',
-            'daftarPraktikan',
-            'aspraksAvailable'
-        ));
+        return view('eoffice::manajemen-praktikum.koordinator.modul-detail', compact('modul', 'daftarPraktikan'));
     }
 
-    /**
-     * Buat modul baru untuk praktikum yang dikoordinatori.
-     */
     public function store(Request $request)
     {
         $request->validate([
             'nama'          => 'required|string|max:255',
-            'deskripsi'     => 'nullable|string',
             'urutan'        => 'required|integer|min:1',
             'jadwal_minggu' => 'nullable|string|max:100',
+            'deskripsi'     => 'nullable|string',
         ]);
 
-        $user      = auth()->user();
-        $praktikum = Praktikum::where('koor_id', $user->id)->where('status', 'aktif')->firstOrFail();
+        $praktikum = DashboardController::resolvePraktikum() ?? abort(404);
 
         Modul::create([
             'praktikum_id'  => $praktikum->id,
             'nama'          => $request->nama,
-            'deskripsi'     => $request->deskripsi,
             'urutan'        => $request->urutan,
             'jadwal_minggu' => $request->jadwal_minggu,
+            'deskripsi'     => $request->deskripsi,
         ]);
 
-        return back()->with('success', 'Modul berhasil dibuat.');
+        return back()->with('success', 'Modul berhasil ditambahkan.');
     }
 
-    /**
-     * Update modul.
-     */
     public function update(Request $request, int $id)
     {
         $request->validate([
             'nama'          => 'required|string|max:255',
-            'deskripsi'     => 'nullable|string',
             'urutan'        => 'required|integer|min:1',
             'jadwal_minggu' => 'nullable|string|max:100',
+            'deskripsi'     => 'nullable|string',
         ]);
 
         $user  = auth()->user();
-        $modul = Modul::findOrFail($id);
+        $modul = Modul::with('praktikum')->findOrFail($id);
 
-        if ($modul->praktikum?->koor_id !== $user->id) {
-            abort(403);
-        }
+        if ($modul->praktikum?->koor_id !== $user->id) abort(403);
 
-        $modul->update($request->only(['nama', 'deskripsi', 'urutan', 'jadwal_minggu']));
+        $modul->update($request->only(['nama', 'urutan', 'jadwal_minggu', 'deskripsi']));
 
         return back()->with('success', 'Modul berhasil diperbarui.');
     }
 
-    /**
-     * Hapus modul.
-     */
     public function destroy(int $id)
     {
         $user  = auth()->user();
-        $modul = Modul::findOrFail($id);
+        $modul = Modul::with('praktikum')->findOrFail($id);
 
-        if ($modul->praktikum?->koor_id !== $user->id) {
-            abort(403);
-        }
+        if ($modul->praktikum?->koor_id !== $user->id) abort(403);
 
         $modul->delete();
 
         return back()->with('success', 'Modul berhasil dihapus.');
     }
 
-    /**
-     * Generate kode unik untuk modul (dipanggil oleh koordinator).
-     */
-    public function generateKode(Request $request, int $modulId): JsonResponse|\Illuminate\Http\RedirectResponse
+    public function generateKode(int $id)
     {
         $user  = auth()->user();
-        $modul = Modul::with('praktikum')->findOrFail($modulId);
+        $modul = Modul::with('praktikum')->findOrFail($id);
 
-        if ($modul->praktikum?->koor_id !== $user->id) {
-            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
-        }
+        if ($modul->praktikum?->koor_id !== $user->id) abort(403);
 
-        $kode = Modul::generateKodeModul();
-        $modul->update(['kode_modul' => $kode]);
+        $modul->update(['kode_modul' => strtoupper(substr(md5(uniqid()), 0, 6))]);
 
-        if (! $request->expectsJson()) {
-            return back()->with('success', "Kode modul {$modul->nama} berhasil digenerate: {$kode}");
-        }
-
-        return response()->json([
-            'success'    => true,
-            'kode_modul' => $kode,
-            'message'    => 'Kode modul berhasil digenerate.',
-        ]);
-    }
-
-    /**
-     * Tambah materi baru untuk modul.
-     */
-    public function storeMateri(Request $request, int $modulId)
-    {
-        $user  = auth()->user();
-        $modul = Modul::with('praktikum')->findOrFail($modulId);
-
-        // Verifikasi user adalah koordinator modul ini
-        if ($modul->praktikum?->koor_id !== $user->id) {
-            abort(403, 'Anda tidak berhak menambah materi untuk modul ini.');
-        }
-
-        $request->validate([
-            'judul'      => 'required|string|max:255',
-            'deskripsi'  => 'nullable|string|max:1000',
-            'file'       => 'nullable|file|max:51200|mimes:pdf,doc,docx,ppt,pptx,xls,xlsx',
-        ]);
-
-        $materi = new \Modules\EOffice\Models\MateriModul();
-        $materi->modul_id = $modul->id;
-        $materi->user_id  = $user->id;
-        $materi->judul    = $request->judul;
-        $materi->deskripsi = $request->deskripsi;
-
-        // Handle file upload
-        if ($request->hasFile('file')) {
-            $file     = $request->file('file');
-            $filename = time() . '_' . str_replace(' ', '_', pathinfo($file->getClientOriginalName(), PATHINFO_FILENAME));
-            $path     = $this->supabase->upload($file, "materi/modul-{$modul->id}", 'eoffice', $filename);
-
-            $materi->file_path = $path;
-            $materi->tipe_file = strtoupper($file->getClientOriginalExtension());
-        }
-
-        $materi->save();
-
-        return back()->with('success', 'Materi berhasil ditambahkan.');
-    }
-
-    /**
-     * Hapus materi dari modul.
-     */
-    public function destroyMateri(Request $request, int $materiId)
-    {
-        $user = auth()->user();
-        
-        // Gunakan Model::class sesuai namespace module mu
-        $materi = \Modules\EOffice\Models\MateriModul::findOrFail($materiId);
-        $modul = $materi->modul;
-
-        // Verifikasi user adalah koordinator
-        if ($modul->praktikum?->koor_id !== $user->id) {
-            abort(403, 'Anda tidak berhak menghapus materi ini.');
-        }
-
-        // Hapus file jika ada
-        if ($materi->file_path) {
-            $this->supabase->delete($materi->file_path, 'eoffice');
-        }
-
-        $modul_id = $modul->id;
-        $materi->delete();
-
-        return back()->with('success', 'Materi berhasil dihapus.');
+        return back()->with('success', "Kode modul: {$modul->kode_modul}");
     }
 }

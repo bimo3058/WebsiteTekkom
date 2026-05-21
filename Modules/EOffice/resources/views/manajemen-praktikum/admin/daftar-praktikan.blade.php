@@ -73,24 +73,6 @@
     </div>
 </div>
 
-{{-- Stats & Search --}}
-<div class="mp-stats-grid cols-2 flex-shrink-0">
-    <div class="mp-stat">
-        <div class="mp-stat-icon sky">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8"/></svg>
-        </div>
-        <div class="mp-stat-label">Total Praktikan</div>
-        <div class="mp-stat-value">{{ $praktikans->total() }}</div>
-    </div>
-    <div class="mp-stat">
-        <div class="mp-stat-icon green">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M9 9h6M9 12h6M9 15h4"/></svg>
-        </div>
-        <div class="mp-stat-label">Praktikum</div>
-        <div class="mp-stat-value" style="font-size:14px;font-weight:600;">{{ $praktikum->nama }}</div>
-    </div>
-</div>
-
 <div class="sec-head">
     <span class="sec-bar"></span>
     <span class="sec-title">Daftar Praktikan — {{ $praktikum->nama }}</span>

@@ -197,81 +197,36 @@
                       :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">Peminjaman Ruangan</span>
             </a>
 
-            {{-- ══ Manajemen Praktikum (multi-role expandable) ══ --}}
-            <div x-data="{ openManprak: {{ $manprakActive ? 'true' : 'false' }} }">
-                {{-- Parent button --}}
-                <button @click="if(sidebarOpen) openManprak = !openManprak; else { sidebarOpen = true; openManprak = true; }"
-                        class="w-full flex items-center gap-[10px] px-[10px] py-[9px] rounded-lg mb-[1px] transition-colors duration-[120ms] overflow-hidden whitespace-nowrap border-none cursor-pointer text-left
-                               {{ $manprakActive ? 'bg-[#0B266E]' : 'hover:bg-[#F6F8FA]' }}"
-                        :class="sidebarOpen ? '' : 'justify-center'">
-                    <svg class="w-[15px] h-[15px] flex-shrink-0 {{ $manprakActive ? 'text-white' : 'text-[#666D80]' }}"
-                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="{{ $iPraktikum }}"/>
-                    </svg>
-                    <span class="text-[13px] flex-1 overflow-hidden text-ellipsis transition-[opacity,width] duration-200
-                                 {{ $manprakActive ? 'font-semibold text-white' : 'font-medium text-[#353849]' }}"
-                          :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">Manajemen Praktikum</span>
-                    <svg class="w-[10px] h-[10px] flex-shrink-0 transition-transform duration-200 {{ $manprakActive ? 'text-white' : 'text-[#A4ABB8]' }}"
-                         :class="[sidebarOpen ? 'opacity-100' : 'opacity-0 w-0', openManprak ? 'rotate-180' : '']"
-                         viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                        <polyline points="6 9 12 15 18 9"/>
-                    </svg>
-                </button>
-
-                {{-- Multi-role sections --}}
-                <div x-show="openManprak && sidebarOpen"
-                     x-transition:enter="transition ease-out duration-150"
-                     x-transition:enter-start="opacity-0 -translate-y-1"
-                     x-transition:enter-end="opacity-100 translate-y-0"
-                     x-transition:leave="transition ease-in duration-100"
-                     x-transition:leave-end="opacity-0"
-                     class="ml-[10px] mt-[2px] mb-[4px] flex flex-col gap-[6px]">
-
-                    @foreach($manprakSections as $section)
-                    @php
-                        $sectionActive = str_contains($currentRoute, $section['match']);
-                        $sectionColor  = $section['color'];
-                    @endphp
-                    <div x-data="{ openSection: {{ $sectionActive ? 'true' : 'false' }} }">
-
-                        {{-- Role section header (hanya tampil jika multi-role) --}}
-                        @if($multiRole)
-                        <button @click="openSection = !openSection"
-                                class="w-full flex items-center gap-[8px] px-[8px] py-[5px] rounded-[7px] border-none cursor-pointer text-left transition-colors hover:bg-[#F6F8FA]"
-                                style="background: transparent;">
-                            <div class="w-[6px] h-[6px] rounded-full flex-shrink-0"
-                                 style="background: {{ $sectionColor }};"></div>
-                            <span class="text-[11px] font-bold tracking-wide flex-1"
-                                  style="color: {{ $sectionColor }};">{{ strtoupper($section['label']) }}</span>
-                            <svg class="w-[9px] h-[9px] flex-shrink-0 transition-transform duration-150 text-[#A4ABB8]"
-                                 :class="openSection ? 'rotate-180' : ''"
-                                 viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
-                                <polyline points="6 9 12 15 18 9"/>
-                            </svg>
-                        </button>
-                        @endif
-
-                        <div @if($multiRole) x-show="openSection" x-transition @endif
-                             class="pl-[14px] border-l-2 ml-[7px] mt-[2px] flex flex-col gap-[1px]"
-                             style="border-color: {{ $sectionColor }}20;">
-
-                            @foreach($section['subs'] as $sub)
-                            @php $subActive = str_contains($currentRoute, $sub['match']); @endphp
-                            <a href="{{ $sub['href'] }}"
-                               class="flex items-center gap-[8px] px-[10px] py-[7px] rounded-[7px] no-underline transition-colors duration-[100ms] whitespace-nowrap
-                                      {{ $subActive ? 'font-semibold' : 'text-[#666D80] hover:bg-[#F6F8FA] hover:text-[#353849]' }}"
-                               @if($subActive) style="background: {{ $sectionColor }}15; color: {{ $sectionColor }};" @endif>
-                                <span class="w-[4px] h-[4px] rounded-full flex-shrink-0"
-                                      style="background: {{ $subActive ? $sectionColor : '#C8CAD4' }};"></span>
-                                <span class="text-[12px]">{{ $sub['label'] }}</span>
-                            </a>
-                            @endforeach
-                        </div>
-                    </div>
-                    @endforeach
-
-                </div>
-            </div>
+            {{-- ══ Manajemen Praktikum ══ --}}
+            {{-- Single role: langsung link, tanpa dropdown --}}
+            {{-- Multi-role: dropdown expandable per role --}}
+            @if(!$multiRole && count($manprakSections) === 1)
+            <a href="{{ $manprakSections[0]['link'] }}"
+               class="flex items-center gap-[10px] px-[10px] py-[9px] rounded-lg mb-[1px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap
+                      {{ $manprakActive ? 'bg-[#0B266E]' : 'hover:bg-[#F6F8FA]' }}"
+               :class="sidebarOpen ? '' : 'justify-center'">
+                <svg class="w-[15px] h-[15px] flex-shrink-0 {{ $manprakActive ? 'text-white' : 'text-[#666D80]' }}"
+                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="{{ $iPraktikum }}"/>
+                </svg>
+                <span class="text-[13px] flex-1 overflow-hidden text-ellipsis transition-[opacity,width] duration-200
+                             {{ $manprakActive ? 'font-semibold text-white' : 'font-medium text-[#353849]' }}"
+                      :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">Manajemen Praktikum</span>
+            </a>
+            @elseif(count($manprakSections) > 1)
+            <a href="{{ route('eoffice.manprak.dashboard') }}"
+               class="flex items-center gap-[10px] px-[10px] py-[9px] rounded-lg mb-[1px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap
+                      {{ $manprakActive ? 'bg-[#0B266E]' : 'hover:bg-[#F6F8FA]' }}"
+               :class="sidebarOpen ? '' : 'justify-center'">
+                <svg class="w-[15px] h-[15px] flex-shrink-0 {{ $manprakActive ? 'text-white' : 'text-[#666D80]' }}"
+                     viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="{{ $iPraktikum }}"/>
+                </svg>
+                <span class="text-[13px] flex-1 overflow-hidden text-ellipsis transition-[opacity,width] duration-200
+                             {{ $manprakActive ? 'font-semibold text-white' : 'font-medium text-[#353849]' }}"
+                      :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">Manajemen Praktikum</span>
+            </a>
+            @endif
 
             {{-- Kerja Praktik --}}
             @php 
