@@ -13,8 +13,7 @@ class BagiModulController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
-        $praktikum = Praktikum::where('koor_id', $user->id)->where('status', 'aktif')->first();
+        $praktikum = DashboardController::resolvePraktikum();
 
         $moduls = $praktikum
             ? Modul::where('praktikum_id', $praktikum->id)
@@ -37,49 +36,31 @@ class BagiModulController extends Controller
             : collect();
 
         return view('eoffice::manajemen-praktikum.koordinator.bagi-modul', [
-            'praktikum' => $praktikum,
-            'moduls' => $moduls,
-            'aspraks' => $aspraks,
-            'modulList' => $moduls,
-            'asistenList' => $aspraks,
-            'distribusiList' => $distribusiList,
+            'praktikum'     => $praktikum,
+            'modulList'     => $moduls,
+            'asistenList'   => $aspraks,
+            'distribusiList'=> $distribusiList,
         ]);
     }
 
     public function store(Request $request)
     {
         $request->validate([
-            'modul_id'  => 'required|exists:modul_praktikum,id',
-            'asprak_id' => 'required|exists:asprak_praktikum,id',
+            'asprak_id' => 'required|exists:eo_asprak_praktikum,id',
+            'modul_id'  => 'required|exists:eo_modul,id',
         ]);
-
-        $user = auth()->user();
-        $modul = Modul::with('praktikum')->findOrFail($request->modul_id);
-        $asprak = AsistenPraktikum::findOrFail($request->asprak_id);
-
-        if ($modul->praktikum?->koor_id !== $user->id || $asprak->praktikum_id !== $modul->praktikum_id) {
-            abort(403, 'Anda tidak berhak membagikan modul ini.');
-        }
 
         ModulAsprak::firstOrCreate([
-            'modul_id'  => $request->modul_id,
             'asprak_id' => $request->asprak_id,
+            'modul_id'  => $request->modul_id,
         ]);
 
-        return back()->with('success', 'Modul berhasil dibagikan ke asprak.');
+        return back()->with('success', 'Modul berhasil di-assign ke asisten.');
     }
 
     public function destroy($id)
     {
-        $user = auth()->user();
-        $penugasan = ModulAsprak::with('modul.praktikum')->findOrFail($id);
-
-        if ($penugasan->modul?->praktikum?->koor_id !== $user->id) {
-            abort(403, 'Anda tidak berhak menghapus penugasan ini.');
-        }
-
-        $penugasan->delete();
-
-        return back()->with('success', 'Penugasan dihapus.');
+        ModulAsprak::findOrFail($id)->delete();
+        return back()->with('success', 'Distribusi dihapus.');
     }
 }

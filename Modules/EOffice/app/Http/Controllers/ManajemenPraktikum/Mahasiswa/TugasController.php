@@ -13,21 +13,37 @@ class TugasController extends Controller
 {
     public function __construct(private SupabaseStorage $supabase) {}
 
-    /**
-     * Daftar tugas praktikum mahasiswa + status pengumpulan.
-     */
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
 
-        $daftarPraktikan = DaftarPraktikan::where('user_id', $user->id)
+        $semuaPraktikan = DaftarPraktikan::with('praktikum')
+            ->where('user_id', $user->id)
             ->whereHas('praktikum', fn($q) => $q->where('status', 'aktif'))
-            ->first();
+            ->get();
+
+        // Sinkronisasi dengan session
+        $praktikumAktifId = $request->input('praktikum_id') 
+            ?? session('mhs_praktikum_id') 
+            ?? $semuaPraktikan->first()?->praktikum_id;
+
+        if ($praktikumAktifId) {
+            session(['mhs_praktikum_id' => $praktikumAktifId]);
+        }
+
+        $daftarPraktikan = $semuaPraktikan->firstWhere('praktikum_id', $praktikumAktifId);
+
+        // Fallback
+        if (!$daftarPraktikan && $semuaPraktikan->isNotEmpty()) {
+            $daftarPraktikan = $semuaPraktikan->first();
+            session(['mhs_praktikum_id' => $daftarPraktikan->praktikum_id]);
+        }
 
         if (!$daftarPraktikan) {
             return view('eoffice::manajemen-praktikum.mahasiswa.tugas', [
-                'tugasList'       => collect(),
+                'tugasList'      => collect(),
                 'daftarPraktikan' => null,
+                'semuaPraktikan'  => collect(),
             ]);
         }
 
@@ -43,20 +59,17 @@ class TugasController extends Controller
 
                 $tugas->pengumpulan  = $pengumpulan;
                 $tugas->sudah_kumpul = !is_null($pengumpulan);
-                // status: belum_dikumpul | belum_dicek | revisi | acc
                 $tugas->status_tugas = $pengumpulan?->status_pengumpulan ?? 'belum_dikumpul';
                 return $tugas;
             });
 
         return view('eoffice::manajemen-praktikum.mahasiswa.tugas', compact(
             'tugasList',
-            'daftarPraktikan'
+            'daftarPraktikan',
+            'semuaPraktikan'
         ));
     }
 
-    /**
-     * Kumpulkan tugas (pertama kali).
-     */
     public function kumpul(Request $request, string $tugasId)
     {
         $request->validate([
@@ -64,9 +77,12 @@ class TugasController extends Controller
             'catatan' => 'nullable|string|max:500',
         ]);
 
-        $user            = auth()->user();
-        $daftarPraktikan = DaftarPraktikan::where('user_id', $user->id)->firstOrFail();
-        $tugas           = Tugas::findOrFail($tugasId);
+        $user  = auth()->user();
+        $tugas = Tugas::with('modul')->findOrFail($tugasId);
+
+        $daftarPraktikan = DaftarPraktikan::where('user_id', $user->id)
+            ->where('praktikum_id', $tugas->modul->praktikum_id)
+            ->firstOrFail();
 
         if ($tugas->deadline && now()->gt($tugas->deadline)) {
             return back()->with('error', 'Deadline sudah lewat, pengumpulan tidak dapat diterima.');
@@ -76,7 +92,6 @@ class TugasController extends Controller
             ->where('daftar_praktikan_id', $daftarPraktikan->id)
             ->first();
 
-        // Hanya boleh kumpul ulang jika status revisi
         if ($existing && $existing->status_pengumpulan !== PengumpulanTugas::STATUS_REVISI) {
             return back()->with('error', 'Tugas sudah dikumpulkan dan tidak dalam status revisi.');
         }
@@ -105,10 +120,6 @@ class TugasController extends Controller
         return back()->with('success', 'Tugas berhasil dikumpulkan!');
     }
 
-    /**
-     * Kirim ulang tugas setelah mendapat revisi dari asprak.
-     * Sesuai docx: "dapat kirim kembali hasil setelah revisi".
-     */
     public function kirimUlang(Request $request, string $tugasId)
     {
         $request->validate([
@@ -116,15 +127,17 @@ class TugasController extends Controller
             'catatan' => 'nullable|string|max:500',
         ]);
 
-        $user            = auth()->user();
-        $daftarPraktikan = DaftarPraktikan::where('user_id', $user->id)->firstOrFail();
+        $user  = auth()->user();
+        $tugas = Tugas::with('modul')->findOrFail($tugasId);
+
+        $daftarPraktikan = DaftarPraktikan::where('user_id', $user->id)
+            ->where('praktikum_id', $tugas->modul->praktikum_id)
+            ->firstOrFail();
 
         $pengumpulan = PengumpulanTugas::where('tugas_id', $tugasId)
             ->where('daftar_praktikan_id', $daftarPraktikan->id)
             ->where('status_pengumpulan', PengumpulanTugas::STATUS_REVISI)
             ->firstOrFail();
-
-        $tugas = Tugas::findOrFail($tugasId);
         $path  = $this->supabase->upload(
             $request->file('file'),
             'tugas/' . $tugas->modul->praktikum_id . '/' . $tugas->id,

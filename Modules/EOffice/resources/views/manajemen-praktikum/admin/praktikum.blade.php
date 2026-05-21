@@ -68,13 +68,14 @@
             </thead>
             <tbody>
                 @forelse($praktikums ?? [] as $p)
-                <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s;"
-                    onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
+                <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s; cursor:pointer;"
+                    onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'"
+                    onclick="window.location='{{ route('eoffice.manprak.admin.praktikum.detail', $p->id) }}'">
                     <td style="padding:14px 16px; font-size:12px; font-weight:700; letter-spacing:.05em; color:#0B266E; font-family:monospace;">
                         {{ $p->kode ?? '—' }}
                     </td>
                     <td style="padding:14px 16px;">
-                        <div style="font-size:13px; font-weight:600; color:var(--c-fg, #0D0D12);" class="truncate">{{ $p->nama }}</div>
+                        <div style="font-size:13px; font-weight:600; color:#0B266E;" class="truncate">{{ $p->nama }}</div>
                         <div style="font-size:11px; color:var(--c-fg-muted, #666D80);">{{ $p->tahun_ajaran }} / Sem. {{ $p->semester }}</div>
                     </td>
                     <td style="padding:14px 16px; font-size:13px; color:var(--c-fg-muted, #666D80);" class="truncate">
