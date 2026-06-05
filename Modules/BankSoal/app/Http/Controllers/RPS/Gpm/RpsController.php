@@ -530,6 +530,7 @@ class RpsController extends Controller
             );
 
             // Log audit trail
+            $totalBobot = $parameters->sum('bobot');
             $descriptionLog = $action === 'setuju' 
                 ? 'RPS telah disetujui oleh GPM. Nilai: ' . $nilaiAkhir . '/' . $totalBobot
                 : 'RPS dikembalikan untuk revisi.';
