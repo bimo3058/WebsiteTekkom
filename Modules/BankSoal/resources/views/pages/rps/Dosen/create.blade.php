@@ -129,7 +129,8 @@
         id="rpsCreateForm"
         data-route-cpl="{{ route('banksoal.rps.dosen.cpl') }}"
         data-route-dosen="{{ route('banksoal.rps.dosen.dosen') }}"
-        data-cpmk-row-builder="1">
+        data-cpmk-row-builder="1"
+        onsubmit="if(this.checkValidity()){ window.showLoader(); return true; }">
         @csrf
 
         {{-- Informasi Mata Kuliah --}}
@@ -313,12 +314,14 @@
                     <i class="fas fa-download"></i> Download Template
                 </a>
             </div>
-            <label class="upload-zone {{ !$isUploadOpen ? 'closed' : '' }}" id="uploadZone">
-                <input type="file" name="dokumen" id="fileInput" accept=".pdf" required {{ !$isUploadOpen ? 'disabled' : '' }}>
-                <i class="fas fa-cloud-upload-alt" id="uploadIcon" style="{{ !$isUploadOpen ? 'color:#ababba;' : '' }}"></i>
-                <strong id="uploadText">{{ !$isUploadOpen ? 'Upload ditutup' : 'Klik untuk unggah atau seret file ke sini' }}</strong>
-                <span id="uploadSub">PDF (Maks. 1MB)</span>
-            </label>
+            <x-banksoal::ui.upload-zone
+                name="dokumen"
+                inputId="fileInput"
+                accept=".pdf"
+                maxLabel="PDF (Maks. 1MB)"
+                :disabled="!$isUploadOpen"
+                :required="true"
+            />
             @error('dokumen')<p class="field-error" style="margin-top:8px;">{{ $message }}</p>@enderror
         </div>
 
@@ -333,21 +336,5 @@
 
     @push('scripts')
     <script src="{{ asset('modules/banksoal/js/Banksoal/components/RpsCpmkRows.js') }}"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // File upload preview
-        const fileInput = document.getElementById('fileInput');
-        const uploadText = document.getElementById('uploadText');
-        const uploadSub  = document.getElementById('uploadSub');
-        if (fileInput) {
-            fileInput.addEventListener('change', function() {
-                if (fileInput.files[0]) {
-                    uploadText.textContent = fileInput.files[0].name;
-                    uploadSub.textContent  = (fileInput.files[0].size / 1024).toFixed(0) + ' KB';
-                }
-            });
-        }
-    });
-    </script>
     @endpush
 </x-banksoal::layouts.dosen-admin>

@@ -174,23 +174,112 @@
         </div>
 
         <div data-tab-panel="menunggu">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+                 x-data="{
+                     searchQuery: '',
+                     selectedSemester: '',
+                     selectedTahun: '',
+                     filterOpen: false,
+                     applyFilters() {
+                         const rows = document.querySelectorAll('#table-menunggu tbody tr:not(.no-results-message)');
+                         let visibleCount = 0;
+                         rows.forEach(row => {
+                             const text = row.textContent.toLowerCase();
+                             const matchesSearch = text.includes(this.searchQuery.toLowerCase().trim());
+                             const matchesSemester = this.selectedSemester === '' || text.includes('semester ' + this.selectedSemester.toLowerCase());
+                             const matchesTahun = this.selectedTahun === '' || text.includes(this.selectedTahun.toLowerCase());
+                             
+                             if (matchesSearch && matchesSemester && matchesTahun) {
+                                 row.classList.remove('hidden');
+                                 visibleCount++;
+                             } else {
+                                 row.classList.add('hidden');
+                             }
+                         });
+                         const noResults = document.querySelector('#table-menunggu .no-results-message');
+                         if (noResults) {
+                             if (visibleCount === 0) noResults.classList.remove('hidden');
+                             else noResults.classList.add('hidden');
+                         }
+                     }
+                 }">
                 <div class="relative flex-1">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                         <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
-                    <input type="text" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" data-search-tab="menunggu" placeholder="Cari mata kuliah atau dosen...">
+                    <input type="text" x-model="searchQuery" @input="applyFilters()" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none" placeholder="Cari mata kuliah atau dosen...">
                 </div>
-                <button class="inline-flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm font-semibold text-slate-600 hover:bg-slate-50">
-                    <i class="fas fa-filter"></i> Filter
-                </button>
+
+                <div class="relative" @click.away="filterOpen = false">
+                    <button @click="filterOpen = !filterOpen" type="button"
+                        class="flex items-center gap-2 px-5 py-2.5 bg-white border rounded-full text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+                        :class="selectedSemester || selectedTahun ? 'border-primary text-primary bg-primary/5' : 'border-slate-200'">
+                        <svg class="w-4 h-4" :class="selectedSemester || selectedTahun ? 'text-primary' : 'text-slate-400'" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L13 10.414V15a1 1 0 01-.553.894l-4 2A1 1 0 017 17v-6.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+                        </svg>
+                        Filter
+                        <template x-if="selectedSemester || selectedTahun">
+                            <span class="w-2 h-2 rounded-full bg-primary"></span>
+                        </template>
+                        <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="filterOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+
+                    <div x-show="filterOpen" x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         class="absolute right-0 mt-2 w-72 origin-top-right rounded-2xl border border-slate-100 bg-white shadow-xl z-50 p-5 space-y-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Semester</label>
+                            <div class="space-y-2">
+                                <select x-model="selectedSemester" @change="applyFilters()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+                                    <option value="">Semua Semester</option>
+                                    <option value="Ganjil">Ganjil</option>
+                                    <option value="Genap">Genap</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Tahun Ajaran</label>
+                            <div class="space-y-2">
+                                <select x-model="selectedTahun" @change="applyFilters()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+                                    <option value="">Semua Tahun</option>
+                                    @php
+                                        $currentYear = date('Y');
+                                        $yearsList = [];
+                                        for ($i = -3; $i <= 3; $i++) {
+                                            $y1 = $currentYear + $i;
+                                            $y2 = $y1 + 1;
+                                            $yearsList[] = "$y1/$y2";
+                                        }
+                                    @endphp
+                                    @foreach($yearsList as $yr)
+                                        <option value="{{ $yr }}">{{ $yr }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 pt-2 border-t border-slate-100">
+                            <button type="button" @click="selectedSemester = ''; selectedTahun = ''; searchQuery = ''; applyFilters(); filterOpen = false;"
+                                class="flex-1 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors">
+                                Reset
+                            </button>
+                            <button type="button" @click="filterOpen = false"
+                                class="flex-1 py-2 rounded-lg bg-primary text-white text-xs font-bold hover:opacity-90 shadow-md shadow-primary/20 transition-all">
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full">
+                    <table class="w-full" id="table-menunggu">
                         <thead class="bg-primary text-white border-b border-primary/20">
                             <tr>
                                 <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
@@ -248,28 +337,117 @@
 
             <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <span class="text-xs text-slate-500">Menampilkan {{ $rpsDiajukan->count() }} dari {{ $rpsDiajukan->total() }} entri</span>
-                {{ $rpsDiajukan->links() }}
+                {{ $rpsDiajukan->links('banksoal::components.ui.laravel-pagination') }}
             </div>
         </div>
 
         <div class="hidden" data-tab-panel="revisi">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+                 x-data="{
+                     searchQuery: '',
+                     selectedSemester: '',
+                     selectedTahun: '',
+                     filterOpen: false,
+                     applyFilters() {
+                         const rows = document.querySelectorAll('#table-revisi tbody tr:not(.no-results-message)');
+                         let visibleCount = 0;
+                         rows.forEach(row => {
+                             const text = row.textContent.toLowerCase();
+                             const matchesSearch = text.includes(this.searchQuery.toLowerCase().trim());
+                             const matchesSemester = this.selectedSemester === '' || text.includes('semester ' + this.selectedSemester.toLowerCase());
+                             const matchesTahun = this.selectedTahun === '' || text.includes(this.selectedTahun.toLowerCase());
+                             
+                             if (matchesSearch && matchesSemester && matchesTahun) {
+                                 row.classList.remove('hidden');
+                                 visibleCount++;
+                             } else {
+                                 row.classList.add('hidden');
+                             }
+                         });
+                         const noResults = document.querySelector('#table-revisi .no-results-message');
+                         if (noResults) {
+                             if (visibleCount === 0) noResults.classList.remove('hidden');
+                             else noResults.classList.add('hidden');
+                         }
+                     }
+                 }">
                 <div class="relative flex-1">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                         <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
-                    <input type="text" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" data-search-tab="revisi" placeholder="Cari mata kuliah atau dosen...">
+                    <input type="text" x-model="searchQuery" @input="applyFilters()" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none" placeholder="Cari mata kuliah atau dosen...">
                 </div>
-                <button class="inline-flex items-center gap-2 rounded-xl border border-primary/20 px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10">
-                    <i class="fas fa-filter"></i> Filter
-                </button>
+
+                <div class="relative" @click.away="filterOpen = false">
+                    <button @click="filterOpen = !filterOpen" type="button"
+                        class="flex items-center gap-2 px-5 py-2.5 bg-white border rounded-full text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+                        :class="selectedSemester || selectedTahun ? 'border-primary text-primary bg-primary/5' : 'border-slate-200'">
+                        <svg class="w-4 h-4" :class="selectedSemester || selectedTahun ? 'text-primary' : 'text-slate-400'" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L13 10.414V15a1 1 0 01-.553.894l-4 2A1 1 0 017 17v-6.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+                        </svg>
+                        Filter
+                        <template x-if="selectedSemester || selectedTahun">
+                            <span class="w-2 h-2 rounded-full bg-primary"></span>
+                        </template>
+                        <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="filterOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+
+                    <div x-show="filterOpen" x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         class="absolute right-0 mt-2 w-72 origin-top-right rounded-2xl border border-slate-100 bg-white shadow-xl z-50 p-5 space-y-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Semester</label>
+                            <div class="space-y-2">
+                                <select x-model="selectedSemester" @change="applyFilters()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+                                    <option value="">Semua Semester</option>
+                                    <option value="Ganjil">Ganjil</option>
+                                    <option value="Genap">Genap</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Tahun Ajaran</label>
+                            <div class="space-y-2">
+                                <select x-model="selectedTahun" @change="applyFilters()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+                                    <option value="">Semua Tahun</option>
+                                    @php
+                                        $currentYear = date('Y');
+                                        $yearsList = [];
+                                        for ($i = -3; $i <= 3; $i++) {
+                                            $y1 = $currentYear + $i;
+                                            $y2 = $y1 + 1;
+                                            $yearsList[] = "$y1/$y2";
+                                        }
+                                    @endphp
+                                    @foreach($yearsList as $yr)
+                                        <option value="{{ $yr }}">{{ $yr }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 pt-2 border-t border-slate-100">
+                            <button type="button" @click="selectedSemester = ''; selectedTahun = ''; searchQuery = ''; applyFilters(); filterOpen = false;"
+                                class="flex-1 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors">
+                                Reset
+                            </button>
+                            <button type="button" @click="filterOpen = false"
+                                class="flex-1 py-2 rounded-lg bg-primary text-white text-xs font-bold hover:opacity-90 shadow-md shadow-primary/20 transition-all">
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full">
+                    <table class="w-full" id="table-revisi">
                         <thead class="bg-primary text-white border-b border-primary/20">
                             <tr>
                                 <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
@@ -327,28 +505,117 @@
 
             <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <span class="text-xs text-slate-500">Menampilkan {{ $rpsRevisi->count() }} dari {{ $rpsRevisi->total() }} entri</span>
-                {{ $rpsRevisi->links() }}
+                {{ $rpsRevisi->links('banksoal::components.ui.laravel-pagination') }}
             </div>
         </div>
 
         <div class="hidden" data-tab-panel="disetujui">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-4 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between"
+                 x-data="{
+                     searchQuery: '',
+                     selectedSemester: '',
+                     selectedTahun: '',
+                     filterOpen: false,
+                     applyFilters() {
+                         const rows = document.querySelectorAll('#table-disetujui tbody tr:not(.no-results-message)');
+                         let visibleCount = 0;
+                         rows.forEach(row => {
+                             const text = row.textContent.toLowerCase();
+                             const matchesSearch = text.includes(this.searchQuery.toLowerCase().trim());
+                             const matchesSemester = this.selectedSemester === '' || text.includes('semester ' + this.selectedSemester.toLowerCase());
+                             const matchesTahun = this.selectedTahun === '' || text.includes(this.selectedTahun.toLowerCase());
+                             
+                             if (matchesSearch && matchesSemester && matchesTahun) {
+                                 row.classList.remove('hidden');
+                                 visibleCount++;
+                             } else {
+                                 row.classList.add('hidden');
+                             }
+                         });
+                         const noResults = document.querySelector('#table-disetujui .no-results-message');
+                         if (noResults) {
+                             if (visibleCount === 0) noResults.classList.remove('hidden');
+                             else noResults.classList.add('hidden');
+                         }
+                     }
+                 }">
                 <div class="relative flex-1">
                     <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                         <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                         </svg>
                     </div>
-                    <input type="text" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" data-search-tab="disetujui" placeholder="Cari mata kuliah atau dosen...">
+                    <input type="text" x-model="searchQuery" @input="applyFilters()" class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none" placeholder="Cari mata kuliah atau dosen...">
                 </div>
-                <button class="inline-flex items-center gap-2 rounded-xl border border-primary/20 px-4 py-2.5 text-sm font-semibold text-primary hover:bg-primary/10">
-                    <i class="fas fa-filter"></i> Filter
-                </button>
+
+                <div class="relative" @click.away="filterOpen = false">
+                    <button @click="filterOpen = !filterOpen" type="button"
+                        class="flex items-center gap-2 px-5 py-2.5 bg-white border rounded-full text-sm font-semibold text-slate-600 hover:bg-slate-50 transition-all shadow-sm"
+                        :class="selectedSemester || selectedTahun ? 'border-primary text-primary bg-primary/5' : 'border-slate-200'">
+                        <svg class="w-4 h-4" :class="selectedSemester || selectedTahun ? 'text-primary' : 'text-slate-400'" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 011-1h12a1 1 0 011 1v3a1 1 0 01-.293.707L13 10.414V15a1 1 0 01-.553.894l-4 2A1 1 0 017 17v-6.586L3.293 6.707A1 1 0 013 6V3z" clip-rule="evenodd" />
+                        </svg>
+                        Filter
+                        <template x-if="selectedSemester || selectedTahun">
+                            <span class="w-2 h-2 rounded-full bg-primary"></span>
+                        </template>
+                        <svg class="w-3.5 h-3.5 text-slate-400 transition-transform duration-200" :class="filterOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"/>
+                        </svg>
+                    </button>
+
+                    <div x-show="filterOpen" x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         class="absolute right-0 mt-2 w-72 origin-top-right rounded-2xl border border-slate-100 bg-white shadow-xl z-50 p-5 space-y-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Semester</label>
+                            <div class="space-y-2">
+                                <select x-model="selectedSemester" @change="applyFilters()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+                                    <option value="">Semua Semester</option>
+                                    <option value="Ganjil">Ganjil</option>
+                                    <option value="Genap">Genap</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="pt-3 border-t border-slate-100">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Tahun Ajaran</label>
+                            <div class="space-y-2">
+                                <select x-model="selectedTahun" @change="applyFilters()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+                                    <option value="">Semua Tahun</option>
+                                    @php
+                                        $currentYear = date('Y');
+                                        $yearsList = [];
+                                        for ($i = -3; $i <= 3; $i++) {
+                                            $y1 = $currentYear + $i;
+                                            $y2 = $y1 + 1;
+                                            $yearsList[] = "$y1/$y2";
+                                        }
+                                    @endphp
+                                    @foreach($yearsList as $yr)
+                                        <option value="{{ $yr }}">{{ $yr }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 pt-2 border-t border-slate-100">
+                            <button type="button" @click="selectedSemester = ''; selectedTahun = ''; searchQuery = ''; applyFilters(); filterOpen = false;"
+                                class="flex-1 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors">
+                                Reset
+                            </button>
+                            <button type="button" @click="filterOpen = false"
+                                class="flex-1 py-2 rounded-lg bg-primary text-white text-xs font-bold hover:opacity-90 shadow-md shadow-primary/20 transition-all">
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full">
+                    <table class="w-full" id="table-disetujui">
                         <thead class="bg-primary text-white border-b border-primary/20">
                             <tr>
                                 <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
@@ -406,7 +673,7 @@
 
             <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <span class="text-xs text-slate-500">Menampilkan {{ $rpsDisetujui->count() }} dari {{ $rpsDisetujui->total() }} entri</span>
-                {{ $rpsDisetujui->links() }}
+                {{ $rpsDisetujui->links('banksoal::components.ui.laravel-pagination') }}
             </div>
         </div>
     </div>
@@ -443,7 +710,7 @@
                     <p class="text-xs text-slate-500 mt-2">Sesi pengajuan <strong id="periodeJudul">RPS</strong> akan diaktifkan. Dosen akan bisa mengajukan RPS sesuai dengan jadwal periode.</p>
                     <div class="mt-4 flex gap-2">
                         <button type="button" class="flex-1 rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-600" data-modal-close="modalOpenSession">Batal</button>
-                        <button type="submit" class="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-700">Nyalakan Sesi</button>
+                        <button type="submit" class="flex-1 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-navy-700">Nyalakan Sesi</button>
                     </div>
                 </div>
             </form>

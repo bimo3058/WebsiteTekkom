@@ -24,6 +24,8 @@ use Modules\BankSoal\Http\Controllers\Komprehensif\JadwalController;
 use Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController;
 use Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController;
 use Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController;
+use Modules\BankSoal\Http\Middleware\GpmSessionCheck;
+use Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController;
 
 Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->group(function () {
 
@@ -36,6 +38,11 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->middleware('role:admin_banksoal|superadmin|dosen|gpm')
             ->name('banksoal.dashboard');
+
+        # Role Switcher
+        Route::get('/switch-role/{role}', [DashboardController::class, 'switchRole'])
+            ->name('banksoal.switch-role')
+            ->middleware('role:dosen|gpm');
 
         # Admin Routes - Kontrol Umum
         Route::middleware('role:admin_banksoal|superadmin')->prefix('admin/kontrol-umum')->name('banksoal.admin.kontrol-umum.')->group(function () {
@@ -99,7 +106,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::get('/dosen', [DosenRpsController::class, 'getDosenByMk'])->name('dosen');
             });
             // RPS - GPM
-            Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
+            Route::middleware(['role:gpm', GpmSessionCheck::class])->prefix('gpm')->name('gpm.')->group(function () {
                 Route::get('/', [RiwayatValidasiController::class, 'index'])->name('index');
                 Route::get('/validasi-rps', [GpmRpsController::class, 'validasiRps'])->name('validasi-rps');
                 Route::get('/validasi-rps/review/{rpsId}', [GpmRpsController::class, 'validasiRpsReview'])->name('validasi-rps.review');
@@ -141,7 +148,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             });
             
            // Banksoal - GPM
-            Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
+            Route::middleware(['role:gpm', GpmSessionCheck::class])->prefix('gpm')->name('gpm.')->group(function () {
                 Route::get('/riwayat-validasi', [RiwayatValidasiController::class, 'index'])->name('riwayat-validasi');
                 Route::get('/validasi-bank-soal', [ValidasiBankSoalController::class, 'index'])->name('validasi-bank-soal');
                 Route::get('/validasi-bank-soal/review', [ValidasiBankSoalController::class, 'review'])->name('validasi-bank-soal.review');
@@ -211,7 +218,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::put('/{rpsId}', [DosenRpsController::class, 'update'])->name('update');
             });
             // RPS - GPM
-            Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
+            Route::middleware(['role:gpm', GpmSessionCheck::class])->prefix('gpm')->name('gpm.')->group(function () {
                 Route::post('/validasi-rps/store', [GpmRpsController::class, 'storeValidasi'])->name('validasi-rps.store');                
                 Route::post('/periode-rps', [PeriodeRpsController::class, 'store'])->name('periode-rps.store');
                 Route::put('/periode-rps/{id}', [PeriodeRpsController::class, 'update'])->name('periode-rps.update');
@@ -224,20 +231,20 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         // 2. Blok Bank Soal
         Route::prefix('soal')->name('banksoal.soal.')->group(function () {
             // Bank Soal - GPM
-            Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
+            Route::middleware(['role:gpm', GpmSessionCheck::class])->prefix('gpm')->name('gpm.')->group(function () {
                 Route::post('/validasi-bank-soal/store', [ValidasiBankSoalController::class, 'store'])->name('validasi-bank-soal.store');            
                 Route::put('/validasi-bank-soal/update/{id}', [ValidasiBankSoalController::class, 'update'])->name('validasi-bank-soal.update');
                 
                 // Parameter Management (Full CRUD)
                 Route::prefix('parameter')->name('parameter.')->group(function () {
-                    Route::get('/', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'index'])->name('index');
-                    Route::get('/create', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'create'])->name('create');
-                    Route::post('/', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'store'])->name('store');
-                    Route::get('/{id}', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'show'])->name('show');
-                    Route::get('/{id}/edit', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'edit'])->name('edit');
-                    Route::put('/{id}', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'update'])->name('update');
-                    Route::delete('/{id}', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'destroy'])->name('destroy');
-                    Route::post('/skor', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'updateSkor'])->name('skor.update');
+                    Route::get('/', [ParameterController::class, 'index'])->name('index');
+                    Route::get('/create', [ParameterController::class, 'create'])->name('create');
+                    Route::post('/', [ParameterController::class, 'store'])->name('store');
+                    Route::get('/{id}', [ParameterController::class, 'show'])->name('show');
+                    Route::get('/{id}/edit', [ParameterController::class, 'edit'])->name('edit');
+                    Route::put('/{id}', [ParameterController::class, 'update'])->name('update');
+                    Route::delete('/{id}', [ParameterController::class, 'destroy'])->name('destroy');
+                    Route::post('/skor', [ParameterController::class, 'updateSkor'])->name('skor.update');
                 });
             });
 

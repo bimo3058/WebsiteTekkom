@@ -75,7 +75,7 @@
 
         // Show loading state
         setujuBtn.disabled = true;
-        setujuBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghapus...';
+        window.showLoader();
 
         // Send AJAX DELETE request
         fetch(pendingDeleteUrl, {
@@ -107,11 +107,11 @@
         })
         .catch(error => {
             console.error('Error:', error);
+            window.hideLoader();
             showNotification('error', error.message || 'Terjadi kesalahan saat menghapus RPS');
             
             // Reset button state
             setujuBtn.disabled = false;
-            setujuBtn.innerHTML = '<i class="fas fa-trash"></i> Hapus';
         });
     });
 

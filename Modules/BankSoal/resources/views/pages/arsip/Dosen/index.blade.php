@@ -21,38 +21,7 @@
             animation: popup 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
-        /* Loading Spinner */
-        #global-loader {
-            position: fixed;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(4px);
-            z-index: 9999;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid var(--navy-light);
-            border-top: 4px solid var(--navy);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
-
-    <!-- Global Loader Overlay -->
-    <div id="global-loader">
-        <div class="flex flex-col items-center gap-3">
-            <div class="spinner"></div>
-            <p class="text-sm font-bold text-navy">Memproses data...</p>
-        </div>
-    </div>
 
     <x-banksoal::notification.alerts />
 
@@ -118,42 +87,30 @@
                                 <input type="text" name="search" value="{{ $filters['search'] }}" placeholder="Cari nama arsip atau MK..." class="w-full pl-11 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-4 focus:ring-navy/5 focus:border-navy transition-all outline-none">
                             </div>
 
-                            <div class="relative w-full md:w-auto" x-data="{ filterOpen: false }" @click.away="filterOpen = false">
-                                <button @click="filterOpen = !filterOpen" type="button" class="flex items-center justify-center gap-2 w-full md:w-auto px-5 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:bg-slate-50 transition-all">
-                                    <i class="fas fa-filter text-slate-400"></i>
-                                    Filter
-                                    <i class="fas fa-chevron-down text-[10px] transition-transform" :class="filterOpen ? 'rotate-180' : ''"></i>
-                                </button>
-
-                                <div x-show="filterOpen" x-cloak x-transition:enter="transition ease-out duration-200" x-transition:enter-start="opacity-0 translate-y-2 scale-95" x-transition:enter-end="opacity-100 translate-y-0 scale-100" class="absolute left-0 md:right-0 md:left-auto mt-2 w-72 origin-top-right rounded-2xl border border-slate-100 bg-white shadow-xl z-50 p-5 space-y-4">
-                                    <div>
-                                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Tahun Ajaran</label>
-                                        <div class="space-y-2 max-h-40 overflow-y-auto pr-2">
-                                            @foreach($availableYears as $year)
-                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer group">
-                                                <input type="checkbox" name="years[]" value="{{ $year }}" {{ in_array($year, (array)request('years')) ? 'checked' : '' }} class="w-4 h-4 rounded border-slate-300 text-navy focus:ring-navy transition-all">
-                                                <span class="text-sm text-slate-700 group-hover:text-navy transition-colors">{{ $year }}</span>
-                                            </label>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                    <div class="pt-3 border-t border-slate-100">
-                                        <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Semester</label>
-                                        <div class="space-y-2">
-                                            @foreach(['Ganjil', 'Genap'] as $sem)
-                                            <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer group">
-                                                <input type="checkbox" name="semesters[]" value="{{ $sem }}" {{ in_array($sem, (array)request('semesters')) ? 'checked' : '' }} class="w-4 h-4 rounded border-slate-300 text-navy focus:ring-navy transition-all">
-                                                <span class="text-sm text-slate-700 group-hover:text-navy transition-colors">{{ $sem }}</span>
-                                            </label>
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                    <div class="flex gap-2 pt-2">
-                                        <button type="button" @click="filterOpen = false" class="flex-1 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors">Tutup</button>
-                                        <button type="submit" class="flex-1 py-2 rounded-lg bg-navy text-white text-xs font-bold hover:opacity-90 shadow-md shadow-navy/20 transition-all">Terapkan</button>
+                            <x-banksoal::ui.filter-panel formId="filterForm" :hasActiveFilter="request('years') || request('semesters') ? true : false" resetRoute="{{ route('banksoal.arsip.dosen.index') }}" applyLabel="Terapkan">
+                                <div>
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Tahun Ajaran</label>
+                                    <div class="space-y-2 max-h-40 overflow-y-auto pr-2">
+                                        @foreach($availableYears as $year)
+                                        <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer group">
+                                            <input type="checkbox" name="years[]" value="{{ $year }}" {{ in_array($year, (array)request('years')) ? 'checked' : '' }} class="w-4 h-4 rounded border-slate-300 text-navy focus:ring-navy transition-all">
+                                            <span class="text-sm text-slate-700 group-hover:text-navy transition-colors">{{ $year }}</span>
+                                        </label>
+                                        @endforeach
                                     </div>
                                 </div>
-                            </div>
+                                <div class="pt-3 border-t border-slate-100">
+                                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Semester</label>
+                                    <div class="space-y-2">
+                                        @foreach(['Ganjil', 'Genap'] as $sem)
+                                        <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer group">
+                                            <input type="checkbox" name="semesters[]" value="{{ $sem }}" {{ in_array($sem, (array)request('semesters')) ? 'checked' : '' }} class="w-4 h-4 rounded border-slate-300 text-navy focus:ring-navy transition-all">
+                                            <span class="text-sm text-slate-700 group-hover:text-navy transition-colors">{{ $sem }}</span>
+                                        </label>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            </x-banksoal::ui.filter-panel>
 
                             @if($filters['search'] || request('years') || request('semesters'))
                             <a href="{{ route('banksoal.arsip.dosen.index') }}" class="text-rose-500 hover:text-rose-700 text-xs font-bold underline px-2">Reset</a>
@@ -167,7 +124,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-slate-50/50 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <tr class="bg-primary text-[10px] font-bold text-white uppercase tracking-widest">
                                 <th class="w-12 px-8 py-4"></th>
                                 <th class="px-4 py-4">Mata Kuliah</th>
                                 <th class="px-8 py-4">Jumlah Arsip</th>
@@ -265,7 +222,7 @@
                                                         <a href="{{ route('banksoal.arsip.dosen.show', $arsip->id) }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-navy transition-all">
                                                             <i class="fas fa-external-link-alt w-4"></i> Buka Detail
                                                         </a>
-                                                        <form action="{{ route('banksoal.arsip.dosen.destroy', $arsip->id) }}" method="POST" onsubmit="return confirm('Hapus arsip ini?')" class="block">
+                                                        <form action="{{ route('banksoal.arsip.dosen.destroy', $arsip->id) }}" method="POST" onsubmit="if(confirm('Hapus arsip ini?')){ window.showLoader(); return true; } else { return false; }" class="block">
                                                             @csrf @method('DELETE')
                                                             <button type="submit" class="flex w-full items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-rose-500 hover:bg-rose-50 transition-all">
                                                                 <i class="fas fa-trash-alt w-4"></i> Hapus Arsip
@@ -291,7 +248,7 @@
                 </div>
 
                 <div class="px-8 py-6 border-t border-slate-100 bg-slate-50/30">
-                    {{ $arsipPaginated->appends(request()->all())->links() }}
+                    {{ $arsipPaginated->appends(request()->all())->links('banksoal::components.ui.laravel-pagination') }}
                 </div>
             </div>
         </div>
@@ -311,7 +268,7 @@
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-slate-50/30 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            <tr class="bg-primary text-[10px] font-bold text-white uppercase tracking-widest">
                                 <th class="px-8 py-4">Detail Penarikan</th>
                                 <th class="px-8 py-4">Mata Kuliah</th>
                                 <th class="px-8 py-4">Waktu</th>
@@ -350,7 +307,7 @@
                                             <a href="{{ route('banksoal.arsip.dosen.penarikan.edit', $penarikan->id) }}" class="flex items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-navy hover:bg-slate-50 transition-all">
                                                 <i class="fas fa-file-export w-4"></i> Konversi
                                             </a>
-                                            <form action="{{ route('banksoal.arsip.dosen.penarikan.destroy', $penarikan->id) }}" method="POST" onsubmit="return confirm('Hapus riwayat penarikan ini?')" class="block">
+                                            <form action="{{ route('banksoal.arsip.dosen.penarikan.destroy', $penarikan->id) }}" method="POST" onsubmit="if(confirm('Hapus riwayat penarikan ini?')){ window.showLoader(); return true; } else { return false; }" class="block">
                                                 @csrf @method('DELETE')
                                                 <button type="submit" class="flex w-full items-center gap-3 px-3 py-2 rounded-lg text-xs font-bold text-rose-500 hover:bg-rose-50 transition-all">
                                                     <i class="fas fa-trash-alt w-4"></i> Hapus
@@ -370,15 +327,13 @@
     </div>
 
     <script>
-        function showLoader() {
-            document.getElementById('global-loader').style.display = 'flex';
-        }
-        function hideLoader() {
-            document.getElementById('global-loader').style.display = 'none';
-        }
-        document.getElementById('filterForm').addEventListener('submit', showLoader);
+        document.getElementById('filterForm').addEventListener('submit', function() {
+            window.showLoader();
+        });
         document.querySelectorAll('.pagination a').forEach(link => {
-            link.addEventListener('click', showLoader);
+            link.addEventListener('click', function() {
+                window.showLoader();
+            });
         });
     </script>
 </x-banksoal::layouts.dosen-admin>

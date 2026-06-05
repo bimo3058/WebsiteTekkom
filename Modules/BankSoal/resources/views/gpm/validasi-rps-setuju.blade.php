@@ -94,30 +94,49 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-6 xl:grid-cols-5">
-        <div class="xl:col-span-3">
-            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden min-h-[500px] flex flex-col">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-5">
+        <div class="lg:col-span-3">
+            <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden lg:h-[700px] h-[500px] flex flex-col">
                 <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
                     <div class="text-xs font-semibold text-slate-600 flex items-center gap-2">
                         <i class="fas fa-file-pdf text-rose-500"></i> {{ basename($rps->dokumen) }}
                     </div>
-                    <div class="flex items-center gap-2 text-slate-500">
-                        <a href="{{ route('banksoal.rps.gpm.validasi-rps.preview', ['rpsId' => $rps->rps_id]) }}" target="_blank" class="rounded-md p-1 hover:bg-slate-200" title="Buka PDF"><i class="fas fa-external-link-alt"></i></a>
+                    <div class="flex items-center gap-2">
+                        @if(!empty($fileUrl))
+                            <a href="{{ $fileUrl }}" target="_blank" class="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors" title="Buka PDF di tab baru">
+                                <i class="fas fa-external-link-alt text-xs"></i>
+                            </a>
+                        @endif
+                        @if(!empty($downloadUrl))
+                            <a href="{{ $downloadUrl }}" class="rounded-lg p-1.5 text-slate-500 hover:bg-slate-200 hover:text-slate-800 transition-colors" title="Unduh berkas PDF">
+                                <i class="fas fa-download text-xs"></i>
+                            </a>
+                        @endif
                     </div>
                 </div>
                 <div class="flex-1 bg-slate-100 relative"> 
-                    <iframe
-                     id="pdfFrame"
-                     src="{{ route('banksoal.rps.gpm.validasi-rps.preview', ['rpsId' => $rps->rps_id]) }}"
-                     loading="eager"
-                     title="PDF Preview RPS"
-                      class="absolute inset-0 w-full h-full border-0">
-                 </iframe>
+                    @if(!empty($fileUrl))
+                        <iframe
+                            id="pdfFrame"
+                            src="{{ $fileUrl }}"
+                            loading="eager"
+                            title="PDF Preview RPS"
+                            class="absolute inset-0 w-full h-full border-0">
+                        </iframe>
+                    @else
+                        <div class="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                            <i class="fas fa-exclamation-triangle text-3xl text-amber-500 mb-3 animate-pulse"></i>
+                            <h3 class="text-sm font-bold text-slate-700">Berkas PDF Tidak Tersedia</h3>
+                            <p class="text-xs text-slate-500 mt-1 max-w-xs leading-relaxed">
+                                {{ $errorMessage ?? 'File RPS belum diunggah atau tidak ditemukan di storage.' }}
+                            </p>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
 
-        <div class="xl:col-span-2 space-y-6">
+        <div class="lg:col-span-2 lg:sticky lg:top-6 lg:self-start space-y-6">
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
                 <div class="text-sm font-semibold text-emerald-700 flex items-center gap-2 mb-4">
                     <i class="fas fa-check-circle text-emerald-500"></i> Ringkasan Penilaian

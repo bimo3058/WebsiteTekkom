@@ -92,20 +92,45 @@ class MataKuliahService
     public function syncSemester(): int
     {
         $updatedCount = 0;
-        MataKuliah::chunk(100, function ($mks) use (&$updatedCount) {
-            foreach ($mks as $mk) {
-                $shouldBeActive = $this->getActiveStatusForSemester((int) $mk->semester);
-                if ($mk->is_active !== $shouldBeActive) {
-                    $mk->update(['is_active' => $shouldBeActive]);
-                    $updatedCount++;
+
+        // Prefer using an explicit active PeriodeRps if present (admin-controlled).
+        $activePeriode = null;
+        try {
+            $activePeriode = \Modules\BankSoal\Models\PeriodeRps::where('is_active', true)->first();
+        } catch (\Throwable $e) {
+            // If model/table not available for some reason, fallback to month parity.
+            $activePeriode = null;
+        }
+
+        if ($activePeriode) {
+            $targetSemester = (int) $activePeriode->semester;
+
+            MataKuliah::chunk(100, function ($mks) use (&$updatedCount, $targetSemester) {
+                foreach ($mks as $mk) {
+                    $shouldBeActive = ((int) $mk->semester === $targetSemester);
+                    if ($mk->is_active !== $shouldBeActive) {
+                        $mk->update(['is_active' => $shouldBeActive]);
+                        $updatedCount++;
+                    }
                 }
-            }
-        });
-        
+            });
+        } else {
+            // Fallback: determine active semester parity using current month
+            MataKuliah::chunk(100, function ($mks) use (&$updatedCount) {
+                foreach ($mks as $mk) {
+                    $shouldBeActive = $this->getActiveStatusForSemester((int) $mk->semester);
+                    if ($mk->is_active !== $shouldBeActive) {
+                        $mk->update(['is_active' => $shouldBeActive]);
+                        $updatedCount++;
+                    }
+                }
+            });
+        }
+
         if ($updatedCount > 0) {
             $this->flushCache();
         }
-        
+
         return $updatedCount;
     }
 

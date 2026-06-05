@@ -55,14 +55,8 @@
         .pm-page .sa-row input{width:15px;height:15px;accent-color:var(--pm);cursor:pointer}
         .pm-page .sa-row label{font-size:12px;font-weight:600;color:var(--s500);cursor:pointer}
         .pm-page .form-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:20px}
-        .pm-loader{position:fixed;inset:0;background:rgba(255,255,255,.7);display:none;align-items:center;justify-content:center;z-index:50}
-        .pm-loader.show{display:flex}
-        .pm-spinner{width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:rgb(11,38,110);border-radius:50%;animation:pm-spin .7s linear infinite}
-        @keyframes pm-spin{to{transform:rotate(360deg)}}
     </style>
     @endpush
-
-    <div class="pm-loader" id="loaderOverlay"><div class="pm-spinner"></div></div>
 
     <div class="pm-page">
     <div class="page-header">
@@ -152,7 +146,7 @@
     let opt={mk:[],dosen:[]};
 
     document.addEventListener('DOMContentLoaded',async()=>{
-        document.getElementById('loaderOverlay').classList.add('show');
+        window.showLoader();
         try{
             const r=await fetch(BASE+'/pemetaan/options',{headers:{'Accept':'application/json','X-CSRF-TOKEN':CSRF}});
             const d=await r.json();
@@ -161,7 +155,7 @@
                 opt.dosen=d.data.dosen.sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:'base'}));
             }
         }catch(e){console.error(e);}
-        document.getElementById('loaderOverlay').classList.remove('show');
+        window.hideLoader();
         T[0].leftPool=opt.mk; T[0].rightPool=opt.dosen;
         T[1].leftPool=opt.dosen; T[1].rightPool=opt.mk;
         renderLeft(0);renderRight(0);
@@ -263,6 +257,7 @@
     async function doSubmit(i){
         const t=T[i];if(t.selId===null||t.selIds.size===0)return;
         const btn=document.getElementById('saveBtn'+i);btn.disabled=true;btn.textContent='Menyimpan...';
+        window.showLoader();
         try{
             const r=await fetch(t.endpoint,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':CSRF},
                 body:JSON.stringify({[t.leftKey]:t.selId,[t.rightKey]:[...t.selIds]})});
@@ -270,6 +265,7 @@
             if(r.ok&&d.success){await Swal.fire({icon:'success',title:'Berhasil',text:d.message,timer:1600,showConfirmButton:false});window.location.href=BACK;}
             else{Swal.fire({icon:'error',title:'Gagal',text:d.message||'Terjadi kesalahan'});btn.disabled=false;btn.textContent='Simpan Pemetaan';}
         }catch(e){Swal.fire({icon:'error',title:'Error',text:e.message});btn.disabled=false;btn.textContent='Simpan Pemetaan';}
+        finally { window.hideLoader(); }
     }
     </script>
     @endpush

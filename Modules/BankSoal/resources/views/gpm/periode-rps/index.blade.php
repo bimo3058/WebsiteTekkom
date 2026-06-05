@@ -11,7 +11,7 @@
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
-                <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                <thead class="bg-primary text-xs uppercase text-white">
                     <tr>
                         <th class="px-6 py-4 text-left">No</th>
                         <th class="px-6 py-4 text-left">Info Periode</th>
