@@ -148,8 +148,8 @@
         </div>
     @endif
 
-    <div class="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <div class="lg:col-span-3">
+    <div class="grid grid-cols-1 gap-6 md:grid-cols-5">
+        <div class="md:col-span-3">
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden lg:h-[700px] h-[500px] flex flex-col">
                 <div class="flex items-center justify-between border-b border-slate-200 bg-slate-50 px-4 py-3">
                     <div class="text-xs font-semibold text-slate-600 flex items-center gap-2">
@@ -192,7 +192,7 @@
             </div>
         </div>
 
-        <div class="lg:col-span-2 lg:sticky lg:top-6 lg:self-start space-y-6">
+        <div class="md:col-span-2 md:sticky md:top-6 md:self-start space-y-6">
             <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-5 flex flex-col">
                 <div class="text-sm font-semibold text-slate-900 flex items-center gap-2 mb-4">
                     <i class="fas fa-clipboard-check text-primary"></i> Form Penilaian GPM
@@ -202,7 +202,7 @@
                     @csrf
                     <input type="hidden" name="rps_id" value="{{ $rps->rps_id }}">
                     <input type="hidden" name="action" id="actionInput" value="">
-                    <div class="flex-1 overflow-y-auto pr-4 lg:max-h-[380px] max-h-[320px]">
+                    <div class="flex-1 overflow-y-auto pr-4 md:max-h-[380px] max-h-[320px]">
                         @forelse($parameters as $index => $param)
                             <div class="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-4 shadow-sm">
                                 <p class="text-sm font-semibold text-slate-700">{{ $index + 1 }}. {{ $param->aspek }} <span class="text-primary">({{ $param->bobot }} poin)</span></p>
