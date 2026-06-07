@@ -35,9 +35,12 @@ class DashboardController extends Controller
             \in_array('superadmin', $roles) ||
             \in_array('admin', $roles) ||
             \in_array('admin_kemahasiswaan', $roles) ||
-            \in_array('gpm', $roles)
+            \in_array('gpm', $roles) ||
+            \in_array('dpm', $roles) ||
+            \in_array('ketua_departemen', $roles)
         ) {
-            $dashboard = $this->analitikService->getRealTimeDashboard();
+            $scope     = $this->analitikService->resolveScope($roles);
+            $dashboard = $this->analitikService->getRealTimeDashboard($scope);
 
             return view('manajemenmahasiswa::dashboard.dashboard-analitik', compact('dashboard'));
         }
@@ -200,6 +203,65 @@ class DashboardController extends Controller
                     'data'          => $rows,
                     'total'         => $rows->count(),
                     'angkatan_list' => $angkatanList,
+                ]);
+
+            case 'calon-do':
+                // Mahasiswa aktif yang sudah memasuki semester >= 13 (early warning DO)
+                $thresholdAngkatan = now()->year - 6;
+                $currentYear  = now()->year;
+                $currentMonth = now()->month;
+
+                $rows = Kemahasiswaan::aktif()
+                    ->whereNotNull('angkatan')
+                    ->where('angkatan', '<=', $thresholdAngkatan)
+                    ->with('user:id,email')
+                    ->orderBy('angkatan')
+                    ->orderBy('nama')
+                    ->get()
+                    ->map(function ($m) use ($currentYear, $currentMonth) {
+                        $yearsElapsed = $currentYear - $m->angkatan;
+                        $semester = $currentMonth >= 8 ? ($yearsElapsed * 2 + 1) : ($yearsElapsed * 2);
+                        return [
+                            'nama'     => $m->nama ?? $m->user?->name ?? '-',
+                            'nim'      => $m->nim ?? '-',
+                            'angkatan' => (int) $m->angkatan,
+                            'semester' => max($semester, 13),
+                            'email'    => $m->user?->email ?? '-',
+                        ];
+                    });
+
+                $angkatanList = $rows->pluck('angkatan')->unique()->sort()->values();
+
+                return response()->json([
+                    'data'          => $rows,
+                    'total'         => $rows->count(),
+                    'angkatan_list' => $angkatanList,
+                ]);
+
+            case 'lulusan-periode':
+                // Mahasiswa berstatus alumni — dipantau per tahun lulus + status sinkron
+                $alumniUserIds = Alumni::whereNotNull('user_id')->pluck('user_id')->all();
+
+                $rows = Kemahasiswaan::alumni()
+                    ->whereNotNull('tahun_lulus')
+                    ->with('user:id,email')
+                    ->orderByDesc('tahun_lulus')
+                    ->orderBy('nama')
+                    ->get()
+                    ->map(fn ($m) => [
+                        'nama'        => $m->nama ?? $m->user?->name ?? '-',
+                        'nim'         => $m->nim ?? '-',
+                        'angkatan'    => (int) $m->angkatan,
+                        'tahun_lulus' => (int) $m->tahun_lulus,
+                        'tersinkron'  => in_array($m->user_id, $alumniUserIds, true),
+                    ]);
+
+                $tahunList = $rows->pluck('tahun_lulus')->unique()->sort()->values();
+
+                return response()->json([
+                    'data'       => $rows,
+                    'total'      => $rows->count(),
+                    'tahun_list' => $tahunList,
                 ]);
 
             default:

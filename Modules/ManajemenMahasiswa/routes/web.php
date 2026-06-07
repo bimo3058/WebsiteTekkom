@@ -42,14 +42,14 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
         // Modal data endpoint untuk dashboard analitik (AJAX)
         Route::get('/dashboard/modal-data', [DashboardController::class, 'modalData'])
             ->name('dashboard.modal')
-            ->middleware('role:superadmin|admin|admin_kemahasiswaan|gpm');
+            ->middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm|ketua_departemen');
 
         // Switch tampilan dashboard antar-role (untuk user multi-role)
         Route::post('/dashboard/switch-mode', [DashboardController::class, 'switchMode'])
             ->name('switch.mode');
 
         // ── Pengurus Himpunan ─────────────────────────────────────────────
-        Route::middleware('role:pengurus_himpunan|gpm|admin|admin_kemahasiswaan|superadmin')
+        Route::middleware('role:pengurus_himpunan|gpm|admin|admin_kemahasiswaan|superadmin|dpm|ketua_departemen')
             ->prefix('pengurus')
             ->name('pengurus.')
             ->group(function () {
@@ -59,7 +59,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
         });
 
         // ── Alumni ────────────────────────────────────────────────────────
-        Route::middleware('role:alumni|gpm|admin|admin_kemahasiswaan|superadmin')
+        Route::middleware('role:alumni|gpm|admin|admin_kemahasiswaan|superadmin|dpm|ketua_departemen')
             ->prefix('alumni')
             ->name('alumni.')
             ->group(function () {
@@ -69,7 +69,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
         });
 
         // ── Dosen ─────────────────────────────────────────────────────────
-        Route::middleware('role:dosen|dosen_koordinator|dpm|gpm|admin|admin_kemahasiswaan|superadmin')
+        Route::middleware('role:dosen|dosen_koordinator|dpm|gpm|ketua_departemen|admin|admin_kemahasiswaan|superadmin')
             ->prefix('dosen')
             ->name('dosen.')
             ->group(function () {
@@ -85,7 +85,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::get('/', [PengumumanController::class, 'index'])->name('index');
 
             // Create/Edit/Delete — pengurus + admin + staff_himpunan
-            Route::middleware('role:pengurus_himpunan|staff_himpunan|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit|dosen|gpm|admin|admin_kemahasiswaan|superadmin')->group(function () {
+            Route::middleware('role:pengurus_himpunan|staff_himpunan|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit|dosen|gpm|admin|admin_kemahasiswaan|superadmin|dpm|ketua_departemen')->group(function () {
                 Route::get('/create', [PengumumanController::class, 'create'])->name('create');
                 Route::post('/drafts', [PengumumanController::class, 'saveDraft'])->name('drafts.store');
                 Route::delete('/drafts/{id}', [PengumumanController::class, 'deleteDraft'])->name('drafts.destroy');
@@ -128,7 +128,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::patch('/{pengumuman}/pin', [PengumumanController::class, 'pin'])
                 ->name('pin')
                 ->whereNumber('pengumuman')
-                ->middleware('role:superadmin|admin|admin_kemahasiswaan|gpm');
+                ->middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm|ketua_departemen');
 
             // Pin Pribadi — semua user terautentikasi (dilindungi auth di level parent)
             Route::post('/{pengumuman}/personal-pin', [PengumumanController::class, 'personalPin'])
@@ -163,7 +163,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             });
 
             // Akses pengaduan: mahasiswa, pengurus himpunan, dan staff (dosen/gpm/admin)
-            Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|dosen|dosen_koordinator|dpm|gpm|admin|superadmin|admin_kemahasiswaan')->group(function () {
+            Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|dosen|dosen_koordinator|dpm|gpm|ketua_departemen|admin|superadmin|admin_kemahasiswaan')->group(function () {
                 Route::get('/', [PengaduanController::class, 'index'])->name('index');
                 Route::get('/{pengaduan}', [PengaduanController::class, 'show'])
                     ->whereNumber('pengaduan')
@@ -171,7 +171,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             });
 
             // Admin: jawab langsung, delegasi, forward, tutup paksa
-            Route::middleware('role:admin|superadmin|admin_kemahasiswaan|gpm')->group(function () {
+            Route::middleware('role:admin|superadmin|admin_kemahasiswaan|gpm|dpm|ketua_departemen')->group(function () {
                 Route::post('/{pengaduan}/reply', [PengaduanController::class, 'reply'])
                     ->name('reply')->whereNumber('pengaduan');
                 Route::post('/{pengaduan}/delegate', [PengaduanController::class, 'delegate'])
@@ -186,7 +186,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::delete('/{pengaduan}', [PengaduanController::class, 'destroy'])
                 ->name('destroy')
                 ->whereNumber('pengaduan')
-                ->middleware('role:admin|superadmin|admin_kemahasiswaan|gpm');
+                ->middleware('role:admin|superadmin|admin_kemahasiswaan|gpm|dpm|ketua_departemen');
 
             // ── Delegasi (khusus Dosen) ────────────────────────────────────
             Route::prefix('delegasi')->name('delegasi.')->middleware('role:dosen|dosen_koordinator')->group(function () {
@@ -213,7 +213,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::post('/', [ForumController::class, 'store'])->name('store');
 
             // Report Management (admin only) — MUST be before /{id} wildcard
-            Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm')->group(function () {
+            Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm|ketua_departemen')->group(function () {
                 Route::delete('/reports/{reportId}/dismiss', [ForumController::class, 'dismissReport'])->name('reports.dismiss');
                 Route::delete('/reports/{reportId}/delete-thread', [ForumController::class, 'deleteReportedThread'])->name('reports.delete_thread');
                 Route::patch('/reports/{reportId}/lock-thread', [ForumController::class, 'lockReportedThread'])->name('reports.lock_thread');

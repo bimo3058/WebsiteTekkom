@@ -89,18 +89,60 @@ class DashboardAnalitikService
     }
 
     /**
-     * Entry point utama dashboard — merakit 4 tier data dengan cache berbeda.
-     * Tier 1 (30s) > Tier 2 (60s) > Tier 3 (120s) > Tier 4 (300s).
+     * Tentukan scope dashboard berdasarkan role user.
+     * - gpm  : GPM & Ketua Departemen (fokus evaluasi mutu)
+     * - dpm  : DPM (fokus data mahasiswa akademik)
+     * - admin: Superadmin, Admin, Admin Kemahasiswaan (dashboard penuh)
      */
-    public function getRealTimeDashboard(): array
+    public function resolveScope(array $roles): string
     {
-        return [
-            'action_items' => $this->getActionItems(),      // 🔴 30s — paling sering berubah
-            'activity'     => $this->getActivityStats(),    // 🟠 60s — berubah tiap hari
-            'mahasiswa'    => $this->getMahasiswaStats(),   // 🟡 120s — berubah mingguan
-            'alumni'       => $this->getAlumniStats(),      // 🟢 300s — berubah bulanan
+        if (array_intersect($roles, ['gpm', 'ketua_departemen'])) {
+            return 'gpm';
+        }
+        if (in_array('dpm', $roles, true)) {
+            return 'dpm';
+        }
+        return 'admin';
+    }
+
+    /**
+     * Daftar section yang ditampilkan untuk tiap scope.
+     */
+    public function sectionsForScope(string $scope): array
+    {
+        return match ($scope) {
+            // GPM & Ketua Departemen — semua data + metrik evaluasi mutu
+            'gpm' => ['action_items', 'activity', 'evaluasi_mutu', 'mahasiswa', 'calon_do', 'lulusan', 'alumni'],
+            // DPM — fokus mahasiswa akademik saja (tanpa alumni karir / operasional / mutu)
+            'dpm' => ['mahasiswa', 'calon_do', 'lulusan'],
+            // Admin — dashboard penuh tanpa section metrik mutu
+            default => ['action_items', 'activity', 'mahasiswa', 'calon_do', 'lulusan', 'alumni'],
+        };
+    }
+
+    /**
+     * Entry point utama dashboard — merakit data sesuai scope role.
+     * Setiap section punya cache berbeda agar efisien.
+     */
+    public function getRealTimeDashboard(string $scope = 'admin'): array
+    {
+        $sections = $this->sectionsForScope($scope);
+
+        $data = [
+            'scope'        => $scope,
+            'sections'     => $sections,
             'generated_at' => now(),
         ];
+
+        if (in_array('action_items', $sections, true))  $data['action_items'] = $this->getActionItems();
+        if (in_array('activity', $sections, true))       $data['activity']     = $this->getActivityStats();
+        if (in_array('evaluasi_mutu', $sections, true))  $data['evaluasi']     = $this->getEvaluasiMutu();
+        if (in_array('mahasiswa', $sections, true))      $data['mahasiswa']    = $this->getMahasiswaStats();
+        if (in_array('calon_do', $sections, true))       $data['calon_do']     = $this->getCalonDO();
+        if (in_array('lulusan', $sections, true))        $data['lulusan']      = $this->getLulusanPerPeriode();
+        if (in_array('alumni', $sections, true))         $data['alumni']       = $this->getAlumniStats();
+
+        return $data;
     }
 
     /**
@@ -265,6 +307,147 @@ class DashboardAnalitikService
     }
 
     /**
+     * METRIK EVALUASI MUTU — untuk GPM & Ketua Departemen (cache 300 detik).
+     * Mengukur kualitas penyelenggaraan prodi: kelulusan, masa studi, DO rate,
+     * waktu tunggu kerja, dan responsivitas layanan pengaduan.
+     */
+    public function getEvaluasiMutu(): array
+    {
+        return Cache::remember('mk.dashboard.evaluasi', 300, function () {
+            // Distribusi status per angkatan untuk hitung kelulusan & DO rate
+            $perAngkatan = Kemahasiswaan::selectRaw('angkatan, status, count(*) as total')
+                ->whereNotNull('angkatan')
+                ->groupBy('angkatan', 'status')
+                ->get()
+                ->groupBy('angkatan');
+
+            $kelulusan = [];
+            foreach ($perAngkatan as $angkatan => $rows) {
+                $byStatus = $rows->pluck('total', 'status');
+                $total    = $rows->sum('total');
+                $lulus    = (int) ($byStatus[Kemahasiswaan::STATUS_ALUMNI] ?? 0);
+                $do       = (int) ($byStatus[Kemahasiswaan::STATUS_DO] ?? 0);
+                $kelulusan[$angkatan] = [
+                    'total'        => $total,
+                    'lulus'        => $lulus,
+                    'do'           => $do,
+                    'rate_lulus'   => $total > 0 ? round($lulus / $total * 100, 1) : 0,
+                    'rate_do'      => $total > 0 ? round($do / $total * 100, 1) : 0,
+                ];
+            }
+            ksort($kelulusan);
+
+            // Rata-rata masa studi (tahun) dari alumni — ideal 4 tahun
+            $rataMasaStudi = (float) Alumni::whereNotNull('tahun_lulus')
+                ->whereNotNull('angkatan')
+                ->whereRaw('tahun_lulus >= angkatan')
+                ->avg(DB::raw('tahun_lulus - angkatan'));
+
+            // Rata-rata waktu tunggu kerja (tahun) dari lulus sampai mulai bekerja
+            $rataWaktuTunggu = (float) Alumni::whereNotNull('tahun_mulai_bekerja')
+                ->whereNotNull('tahun_lulus')
+                ->whereRaw('tahun_mulai_bekerja >= tahun_lulus')
+                ->avg(DB::raw('tahun_mulai_bekerja - tahun_lulus'));
+
+            // Responsivitas layanan pengaduan — % yang sudah ditangani
+            $totalPengaduan = Pengaduan::where('status', '!=', Pengaduan::STATUS_DRAFT)->count();
+            $pengaduanDitangani = Pengaduan::whereIn('status', [
+                Pengaduan::STATUS_DIJAWAB,
+                Pengaduan::STATUS_DITANGGAPI_DOSEN,
+                Pengaduan::STATUS_SELESAI,
+            ])->count();
+
+            // Serapan kerja keseluruhan (bekerja + wirausaha dari yang terdata)
+            $totalTerdata = Alumni::whereNotNull('status_karir')->count();
+            $totalBekerja = Alumni::whereIn('status_karir', [Alumni::STATUS_BEKERJA, Alumni::STATUS_WIRAUSAHA])->count();
+
+            return [
+                'kelulusan_per_angkatan' => $kelulusan,
+                'rata_masa_studi'        => round($rataMasaStudi, 1),
+                'rata_waktu_tunggu'      => round($rataWaktuTunggu, 1),
+                'responsivitas'          => $totalPengaduan > 0 ? round($pengaduanDitangani / $totalPengaduan * 100) : 0,
+                'pengaduan_ditangani'    => $pengaduanDitangani,
+                'pengaduan_total'        => $totalPengaduan,
+                'serapan_kerja'          => $totalTerdata > 0 ? round($totalBekerja / $totalTerdata * 100) : 0,
+            ];
+        });
+    }
+
+    /**
+     * EVALUASI CALON DO — mahasiswa aktif yang sudah memasuki semester ≥ 13.
+     * Mahasiswa masuk Agustus, 1 tahun = 2 semester. Semester 13 dimulai
+     * 6 tahun setelah angkatan, jadi: angkatan ≤ (tahun sekarang − 6).
+     */
+    public function getCalonDO(): array
+    {
+        return Cache::remember('mk.dashboard.calon_do', 300, function () {
+            $thresholdAngkatan = now()->year - 6;
+            $currentYear  = now()->year;
+            $currentMonth = now()->month;
+
+            $base = Kemahasiswaan::aktif()
+                ->whereNotNull('angkatan')
+                ->where('angkatan', '<=', $thresholdAngkatan);
+
+            $list = (clone $base)
+                ->with('user:id,email')
+                ->orderBy('angkatan')
+                ->orderBy('nama')
+                ->limit(8)
+                ->get()
+                ->map(function ($m) use ($currentYear, $currentMonth) {
+                    $yearsElapsed = $currentYear - $m->angkatan;
+                    // Estimasi semester berjalan (ganjil mulai Agustus)
+                    $semester = $currentMonth >= 8 ? ($yearsElapsed * 2 + 1) : ($yearsElapsed * 2);
+                    return [
+                        'nama'     => $m->nama ?? $m->user?->name ?? '-',
+                        'nim'      => $m->nim ?? '-',
+                        'angkatan' => (int) $m->angkatan,
+                        'semester' => max($semester, 13),
+                    ];
+                });
+
+            return [
+                'count'              => (clone $base)->count(),
+                'threshold_angkatan' => $thresholdAngkatan,
+                'list'               => $list,
+            ];
+        });
+    }
+
+    /**
+     * LULUSAN PER PERIODE — pantau kelulusan & sinkronisasi ke direktori alumni.
+     * Menampilkan jumlah lulusan per tahun + deteksi mahasiswa berstatus alumni
+     * yang belum punya record di tabel mk_alumni (belum tersinkron).
+     */
+    public function getLulusanPerPeriode(): array
+    {
+        return Cache::remember('mk.dashboard.lulusan', 300, function () {
+            $perTahun = Kemahasiswaan::alumni()
+                ->whereNotNull('tahun_lulus')
+                ->selectRaw('tahun_lulus, count(*) as total')
+                ->groupBy('tahun_lulus')
+                ->orderBy('tahun_lulus')
+                ->pluck('total', 'tahun_lulus')
+                ->toArray();
+
+            // Mahasiswa berstatus alumni yang belum tersinkron ke mk_alumni
+            $alumniUserIds = Alumni::whereNotNull('user_id')->pluck('user_id')->all();
+            $belumSinkron  = Kemahasiswaan::alumni()
+                ->whereNotNull('user_id')
+                ->when(!empty($alumniUserIds), fn ($q) => $q->whereNotIn('user_id', $alumniUserIds))
+                ->count();
+
+            return [
+                'per_tahun'        => $perTahun,
+                'total_lulus'      => array_sum($perTahun),
+                'belum_sinkron'    => $belumSinkron,
+                'total_alumni'     => Alumni::count(),
+            ];
+        });
+    }
+
+    /**
      * Invalidate semua tier cache.
      */
     public function invalidateCache(): void
@@ -274,5 +457,8 @@ class DashboardAnalitikService
         Cache::forget('mk.dashboard.tier2');
         Cache::forget('mk.dashboard.tier3');
         Cache::forget('mk.dashboard.tier4');
+        Cache::forget('mk.dashboard.evaluasi');
+        Cache::forget('mk.dashboard.calon_do');
+        Cache::forget('mk.dashboard.lulusan');
     }
 }

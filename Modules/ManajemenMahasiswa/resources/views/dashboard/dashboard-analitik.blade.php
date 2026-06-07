@@ -230,22 +230,30 @@
 @endpush
 
 @php
-    $act  = $dashboard['action_items'];   // Tier 1 — 30s
-    $acty = $dashboard['activity'];       // Tier 2 — 60s
-    $mhs  = $dashboard['mahasiswa'];      // Tier 3 — 120s
-    $alm  = $dashboard['alumni'];         // Tier 4 — 300s
+    // Section yang aktif untuk scope role ini
+    $sections = $dashboard['sections'] ?? [];
+    $hasSection = fn ($key) => in_array($key, $sections, true);
+
+    // Akses data null-safe — sebagian scope (mis. DPM) tidak punya semua section
+    $act   = $dashboard['action_items'] ?? [];   // Tier 1
+    $acty  = $dashboard['activity']     ?? [];    // Tier 2
+    $eval  = $dashboard['evaluasi']     ?? [];    // Metrik Evaluasi Mutu (GPM)
+    $mhs   = $dashboard['mahasiswa']    ?? [];    // Tier 3
+    $alm   = $dashboard['alumni']       ?? [];    // Tier 4
+    $cdo   = $dashboard['calon_do']     ?? [];    // Calon DO
+    $lulus = $dashboard['lulusan']      ?? [];    // Lulusan per periode
     $genAt = $dashboard['generated_at'];
 
     $tingkatLabels = ['internasional'=>'Internasional','nasional'=>'Nasional','regional'=>'Regional','universitas'=>'Universitas','prodi'=>'Prodi'];
     $karirLabels   = ['bekerja'=>'Bekerja','wirausaha'=>'Wirausaha','studi_lanjut'=>'Studi Lanjut','belum_bekerja'=>'Belum Terdata','belum_terdata'=>'Belum Terdata'];
     $industryLabels = \Modules\ManajemenMahasiswa\Models\Alumni::BIDANG_INDUSTRI_LIST;
 
-    // Serapan kerja total dari terdata
+    // Serapan kerja total dari terdata (hanya jika section alumni ada)
     $totalBekerja = ($alm['per_status_karir']['bekerja'] ?? 0) + ($alm['per_status_karir']['wirausaha'] ?? 0);
-    $pctSerapan   = $alm['total_terdata'] > 0 ? round($totalBekerja / $alm['total_terdata'] * 100) : 0;
+    $pctSerapan   = ($alm['total_terdata'] ?? 0) > 0 ? round($totalBekerja / $alm['total_terdata'] * 100) : 0;
 
     // Total mahasiswa semua status
-    $totalSemuaMhs = $mhs['total_aktif'] + $mhs['total_cuti'] + $mhs['total_do'] + $mhs['total_pindah'] + $mhs['total_alumni_status'] + ($mhs['total_wafat'] ?? 0) + ($mhs['total_mangkir'] ?? 0);
+    $totalSemuaMhs = ($mhs['total_aktif'] ?? 0) + ($mhs['total_cuti'] ?? 0) + ($mhs['total_do'] ?? 0) + ($mhs['total_pindah'] ?? 0) + ($mhs['total_alumni_status'] ?? 0) + ($mhs['total_wafat'] ?? 0) + ($mhs['total_mangkir'] ?? 0);
 @endphp
 
 {{-- ─── Page Header ─────────────────────────────────────────────── --}}
@@ -267,6 +275,7 @@
      🔴 TIER 1 — BUTUH TINDAKAN SEGERA (cache 30 detik)
      Data yang paling sering berubah — admin/GPM harus tangani segera.
 ══════════════════════════════════════════════════════════════════════ --}}
+@if($hasSection('action_items'))
 <div class="section-header section-gap">
     <span class="section-label">Butuh Tindakan Segera</span>
     <div class="section-line"></div>
@@ -350,12 +359,14 @@
     </a>
 
 </div>
+@endif
 
 
 {{-- ══════════════════════════════════════════════════════════════════
      🟠 TIER 2 — AKTIVITAS TERKINI (cache 60 detik)
      Berubah beberapa kali sehari: kegiatan, pengumuman, forum.
 ══════════════════════════════════════════════════════════════════════ --}}
+@if($hasSection('activity'))
 <div class="section-header section-gap">
     <span class="section-label">Aktivitas Terkini</span>
     <div class="section-line"></div>
@@ -411,12 +422,109 @@
     </div>
     <div class="chart-wrap"><canvas id="chartKegiatanTrend"></canvas></div>
 </div>
+@endif
+
+
+{{-- ══════════════════════════════════════════════════════════════════
+     📊 METRIK EVALUASI MUTU (GPM & Ketua Departemen)
+     Indikator kualitas penyelenggaraan prodi untuk evaluasi.
+══════════════════════════════════════════════════════════════════════ --}}
+@if($hasSection('evaluasi_mutu') && !empty($eval))
+<div class="section-header section-gap">
+    <span class="section-label">Metrik Evaluasi Mutu</span>
+    <div class="section-line"></div>
+</div>
+
+<div class="kpi-row" style="grid-template-columns:repeat(4,1fr);margin-bottom:18px;">
+    {{-- Rata-rata Masa Studi --}}
+    <div class="kpi-mini">
+        <div class="kpi-mini-icon" style="background:#eff6ff;color:#2563eb;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 14l9-5-9-5-9 5 9 5z"/><path d="M12 14l6.16-3.42a12 12 0 0 1 .84 4.42 12 12 0 0 1-7 1 12 12 0 0 1-7-1 12 12 0 0 1 .84-4.42L12 14z"/></svg>
+        </div>
+        <div>
+            <div class="kpi-mini-val" style="color:#2563eb;">{{ $eval['rata_masa_studi'] }} <span style="font-size:.8rem;font-weight:600;">thn</span></div>
+            <div class="kpi-mini-label">Rata-rata Masa Studi</div>
+        </div>
+    </div>
+    {{-- Rata-rata Waktu Tunggu Kerja --}}
+    <div class="kpi-mini">
+        <div class="kpi-mini-icon" style="background:#fffbeb;color:#d97706;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        </div>
+        <div>
+            <div class="kpi-mini-val" style="color:#d97706;">{{ $eval['rata_waktu_tunggu'] }} <span style="font-size:.8rem;font-weight:600;">thn</span></div>
+            <div class="kpi-mini-label">Waktu Tunggu Kerja</div>
+        </div>
+    </div>
+    {{-- Serapan Kerja --}}
+    <div class="kpi-mini">
+        <div class="kpi-mini-icon" style="background:#ecfdf5;color:#059669;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+        </div>
+        <div>
+            <div class="kpi-mini-val" style="color:#059669;">{{ $eval['serapan_kerja'] }}%</div>
+            <div class="kpi-mini-label">Serapan Kerja Alumni</div>
+        </div>
+    </div>
+    {{-- Responsivitas Pengaduan --}}
+    <div class="kpi-mini">
+        <div class="kpi-mini-icon" style="background:#fdf4ff;color:#a855f7;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+        </div>
+        <div>
+            <div class="kpi-mini-val" style="color:#a855f7;">{{ $eval['responsivitas'] }}%</div>
+            <div class="kpi-mini-label">Responsivitas Pengaduan</div>
+        </div>
+    </div>
+</div>
+
+{{-- Tabel kelulusan & DO rate per angkatan --}}
+<div class="chart-card section-gap">
+    <div class="chart-title">
+        <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/bar-chart-11.svg'))) !!}</span>
+        Tingkat Kelulusan &amp; Drop Out per Angkatan
+    </div>
+    <div style="overflow-x:auto;">
+        <table class="da-table" style="width:100%;border-collapse:collapse;">
+            <thead>
+                <tr>
+                    <th style="text-align:left;font-size:.72rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Angkatan</th>
+                    <th style="text-align:center;font-size:.72rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Total</th>
+                    <th style="text-align:center;font-size:.72rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Lulus</th>
+                    <th style="text-align:center;font-size:.72rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">% Kelulusan</th>
+                    <th style="text-align:center;font-size:.72rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">Drop Out</th>
+                    <th style="text-align:center;font-size:.72rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;padding:8px 12px;border-bottom:1px solid #f3f4f6;">% DO</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($eval['kelulusan_per_angkatan'] as $angkatan => $row)
+                    <tr style="border-bottom:1px solid #f9fafb;">
+                        <td style="padding:9px 12px;font-size:.85rem;font-weight:700;color:#1e1b4b;">{{ $angkatan }}</td>
+                        <td style="padding:9px 12px;text-align:center;font-size:.85rem;color:#374151;">{{ $row['total'] }}</td>
+                        <td style="padding:9px 12px;text-align:center;font-size:.85rem;color:#059669;font-weight:600;">{{ $row['lulus'] }}</td>
+                        <td style="padding:9px 12px;text-align:center;">
+                            <span style="display:inline-block;min-width:46px;padding:2px 8px;border-radius:50px;font-size:.78rem;font-weight:700;background:#ecfdf5;color:#059669;">{{ $row['rate_lulus'] }}%</span>
+                        </td>
+                        <td style="padding:9px 12px;text-align:center;font-size:.85rem;color:#dc2626;font-weight:600;">{{ $row['do'] }}</td>
+                        <td style="padding:9px 12px;text-align:center;">
+                            <span style="display:inline-block;min-width:46px;padding:2px 8px;border-radius:50px;font-size:.78rem;font-weight:700;background:{{ $row['rate_do'] > 0 ? '#fef2f2' : '#f3f4f6' }};color:{{ $row['rate_do'] > 0 ? '#dc2626' : '#9ca3af' }};">{{ $row['rate_do'] }}%</span>
+                        </td>
+                    </tr>
+                @empty
+                    <tr><td colspan="6" style="padding:24px;text-align:center;color:#9ca3af;font-size:.85rem;">Belum ada data angkatan</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
 
 
 {{-- ══════════════════════════════════════════════════════════════════
      🟡 TIER 3 — MAHASISWA AKTIF (cache 120 detik)
      Berubah saat admin update status — biasanya mingguan/bulanan.
 ══════════════════════════════════════════════════════════════════════ --}}
+@if($hasSection('mahasiswa'))
 <div class="section-header section-gap">
     <span class="section-label">Mahasiswa Aktif</span>
     <div class="section-line"></div>
@@ -666,12 +774,122 @@
         </table>
     </div>
 </div>
+@endif
+
+
+{{-- ══════════════════════════════════════════════════════════════════
+     ⚠️ EVALUASI CALON DO & LULUSAN PER PERIODE
+══════════════════════════════════════════════════════════════════════ --}}
+@if($hasSection('calon_do') || $hasSection('lulusan'))
+<div class="section-header section-gap">
+    <span class="section-label">Pemantauan Akademik</span>
+    <div class="section-line"></div>
+</div>
+
+<div class="chart-grid-2" style="margin-bottom:18px;">
+    {{-- Evaluasi Calon DO --}}
+    @if($hasSection('calon_do') && !empty($cdo))
+    <div class="chart-card" style="{{ ($cdo['count'] ?? 0) > 0 ? 'border:1px solid #fecaca;' : '' }}">
+        <div class="chart-title">
+            <span style="display:inline-flex;width:15px;height:15px;color:#dc2626;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/alert-triangle.svg'))) !!}</span>
+            Evaluasi Calon Drop Out
+            @if(($cdo['count'] ?? 0) > 0)
+                <button onclick="openDashModal('calon-do',{},'Calon Drop Out (Semester ≥ 13)')"
+                    style="margin-left:auto;font-size:.78rem;font-weight:700;color:#dc2626;background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                    Lihat Detail
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+                </button>
+            @endif
+        </div>
+
+        <div style="display:flex;align-items:center;gap:16px;margin-bottom:14px;">
+            <div style="flex:0 0 auto;text-align:center;padding:12px 18px;border-radius:14px;background:{{ ($cdo['count'] ?? 0) > 0 ? '#fef2f2' : '#f0fdf4' }};">
+                <div style="font-size:2.4rem;font-weight:900;line-height:1;color:{{ ($cdo['count'] ?? 0) > 0 ? '#dc2626' : '#059669' }};">{{ $cdo['count'] ?? 0 }}</div>
+                <div style="font-size:.72rem;color:#9ca3af;font-weight:600;margin-top:4px;">mahasiswa</div>
+            </div>
+            <div style="flex:1;font-size:.83rem;color:#6b7280;line-height:1.6;">
+                Mahasiswa <strong>aktif</strong> yang sudah memasuki <strong>semester ≥ 13</strong>
+                (angkatan ≤ {{ $cdo['threshold_angkatan'] ?? '-' }}). Perlu evaluasi & pendampingan akademik.
+            </div>
+        </div>
+
+        @if(!empty($cdo['list']) && count($cdo['list']) > 0)
+        <div style="border-top:1px solid #f3f4f6;padding-top:10px;">
+            <div style="font-size:.72rem;font-weight:700;color:#9ca3af;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Perlu Perhatian</div>
+            <div style="display:flex;flex-direction:column;gap:6px;">
+                @foreach($cdo['list'] as $m)
+                    <div style="display:flex;align-items:center;gap:9px;padding:6px 10px;background:#fafafa;border-radius:8px;">
+                        <div class="avatar-sm" style="width:26px;height:26px;font-size:9px;flex-shrink:0;">{{ strtoupper(substr($m['nama'],0,2)) }}</div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:.8rem;font-weight:600;color:#1e1b4b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $m['nama'] }}</div>
+                            <div style="font-size:.72rem;color:#9ca3af;">{{ $m['nim'] }} · Angkatan {{ $m['angkatan'] }}</div>
+                        </div>
+                        <span style="font-size:.72rem;font-weight:700;color:#dc2626;background:#fef2f2;padding:2px 8px;border-radius:50px;white-space:nowrap;flex-shrink:0;">Smt {{ $m['semester'] }}</span>
+                    </div>
+                @endforeach
+            </div>
+        </div>
+        @else
+        <div style="text-align:center;padding:16px;color:#059669;font-size:.85rem;font-weight:600;">✓ Tidak ada mahasiswa yang perlu evaluasi DO</div>
+        @endif
+    </div>
+    @endif
+
+    {{-- Lulusan per Periode --}}
+    @if($hasSection('lulusan') && !empty($lulus))
+    <div class="chart-card">
+        <div class="chart-title">
+            <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/bank-02.svg'))) !!}</span>
+            Lulusan per Periode
+            <button onclick="openDashModal('lulusan-periode',{},'Lulusan Mahasiswa per Periode')"
+                style="margin-left:auto;font-size:.78rem;font-weight:700;color:#293C79;background:none;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:4px;">
+                Lihat Detail
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
+            </button>
+        </div>
+
+        {{-- Indikator sinkronisasi alumni --}}
+        @if(($lulus['belum_sinkron'] ?? 0) > 0)
+        <div style="display:flex;align-items:center;gap:10px;padding:10px 14px;background:#fffbeb;border:1px solid #fde68a;border-radius:10px;margin-bottom:14px;">
+            <span style="display:inline-flex;width:18px;height:18px;color:#d97706;flex-shrink:0;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/alert-circle.svg'))) !!}</span>
+            <div style="flex:1;font-size:.8rem;color:#92400e;line-height:1.5;">
+                <strong>{{ $lulus['belum_sinkron'] }}</strong> mahasiswa berstatus lulus belum tersinkron ke direktori alumni.
+            </div>
+        </div>
+        @else
+        <div style="display:flex;align-items:center;gap:8px;padding:10px 14px;background:#f0fdf4;border:1px solid #bbf7d0;border-radius:10px;margin-bottom:14px;font-size:.8rem;color:#166534;font-weight:600;">
+            ✓ Semua lulusan sudah tersinkron ke direktori alumni
+        </div>
+        @endif
+
+        {{-- Bar lulusan per tahun --}}
+        @php $maxLulus = max(1, (int) (collect($lulus['per_tahun'] ?? [])->max() ?? 0)); @endphp
+        @if(!empty($lulus['per_tahun']))
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                @foreach($lulus['per_tahun'] as $tahun => $jml)
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="font-size:.8rem;font-weight:700;color:#374151;width:46px;flex-shrink:0;">{{ $tahun }}</span>
+                        <div style="flex:1;height:22px;background:#f3f4f6;border-radius:6px;overflow:hidden;position:relative;">
+                            <div style="height:100%;width:{{ round($jml / $maxLulus * 100) }}%;background:linear-gradient(90deg,#293C79,#415086);border-radius:6px;min-width:24px;"></div>
+                        </div>
+                        <span style="font-size:.82rem;font-weight:700;color:#1e1b4b;width:32px;text-align:right;flex-shrink:0;">{{ $jml }}</span>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div style="text-align:center;padding:24px;color:#9ca3af;font-size:.85rem;">Belum ada data lulusan</div>
+        @endif
+    </div>
+    @endif
+</div>
+@endif
 
 
 {{-- ══════════════════════════════════════════════════════════════════
      🟢 TIER 4 — ALUMNI (cache 300 detik / 5 menit)
      Paling jarang berubah — alumni update profil karir setiap beberapa bulan.
 ══════════════════════════════════════════════════════════════════════ --}}
+@if($hasSection('alumni') && !empty($alm))
 <div class="section-header section-gap">
     <span class="section-label">Alumni</span>
     <div class="section-line"></div>
@@ -819,6 +1037,7 @@
         </tbody>
     </table>
 </div>
+@endif
 
 {{-- ── Dashboard Modal ───────────────────────────────────────────────────── --}}
 <div class="dm-overlay" id="dashModal" onclick="if(event.target===this)closeDashModal()">
@@ -901,13 +1120,16 @@ function toggleAngkatanLine(statusKey, btn) {
 document.addEventListener('DOMContentLoaded', () => {
 
     // Tier 2 — Trend Kegiatan
+    @if($hasSection('activity'))
     mkBar('chartKegiatanTrend',
-        {!! json_encode(array_keys($acty['kegiatan_trend'])) !!},
-        {!! json_encode(array_values($acty['kegiatan_trend'])) !!},
+        {!! json_encode(array_keys($acty['kegiatan_trend'] ?? [])) !!},
+        {!! json_encode(array_values($acty['kegiatan_trend'] ?? [])) !!},
         '#293C79'
     );
+    @endif
 
     // Tier 3 — Mahasiswa
+    @if($hasSection('mahasiswa'))
     mkDonut('chartStatusMhs',
         ['Aktif','Alumni','Cuti','Drop Out','Pindah','Mangkir','Wafat'],
         [{{ $mhs['total_aktif'] }},{{ $mhs['total_alumni_status'] }},{{ $mhs['total_cuti'] }},{{ $mhs['total_do'] }},{{ $mhs['total_pindah'] }},{{ $mhs['total_mangkir'] ?? 0 }},{{ $mhs['total_wafat'] ?? 0 }}],
@@ -979,15 +1201,17 @@ document.addEventListener('DOMContentLoaded', () => {
             },
         },
     });
-    @if($mhs['total_prestasi'] > 0)
+    @if(($mhs['total_prestasi'] ?? 0) > 0)
     mkDonut('chartPrestasi',
-        {!! json_encode(array_map(fn($k) => $tingkatLabels[$k] ?? ucfirst($k), array_keys($mhs['prestasi_per_tingkat']))) !!},
-        {!! json_encode(array_values($mhs['prestasi_per_tingkat'])) !!},
+        {!! json_encode(array_map(fn($k) => $tingkatLabels[$k] ?? ucfirst($k), array_keys($mhs['prestasi_per_tingkat'] ?? []))) !!},
+        {!! json_encode(array_values($mhs['prestasi_per_tingkat'] ?? [])) !!},
         ['#293C79','#3b82f6','#10b981','#f59e0b','#ef4444']
     );
     @endif
+    @endif {{-- /mahasiswa charts --}}
 
     // Tier 4 — Alumni
+    @if($hasSection('alumni') && !empty($alm))
     @php
         $kChartL=[]; $kChartD=[]; $kChartC=[];
         $kCM=['bekerja'=>'#10b981','wirausaha'=>'#3b82f6','studi_lanjut'=>'#6F7DA4','belum_bekerja'=>'#f59e0b','belum_terdata'=>'#9ca3af'];
@@ -1003,11 +1227,11 @@ document.addEventListener('DOMContentLoaded', () => {
         {!! json_encode($kChartC) !!}
     );
     mkBar('chartSerapan',
-        {!! json_encode(array_keys($alm['serapan_per_angkatan'])) !!},
-        {!! json_encode(array_values($alm['serapan_per_angkatan'])) !!},
+        {!! json_encode(array_keys($alm['serapan_per_angkatan'] ?? [])) !!},
+        {!! json_encode(array_values($alm['serapan_per_angkatan'] ?? [])) !!},
         '#10b981', '%'
     );
-    @if(count($alm['distribusi_industri']) > 0)
+    @if(count($alm['distribusi_industri'] ?? []) > 0)
     @php
         $iL=[]; $iD=[]; $iC=[]; $iCols=['#293C79','#3b82f6','#10b981','#f59e0b','#ef4444','#6F7DA4','#06b6d4','#84cc16']; $ic=0;
         foreach($alm['distribusi_industri'] as $b=>$v) {
@@ -1021,6 +1245,7 @@ document.addEventListener('DOMContentLoaded', () => {
         {!! json_encode($iC) !!}
     );
     @endif
+    @endif {{-- /alumni charts --}}
 
 });
 
@@ -1029,7 +1254,8 @@ document.addEventListener('DOMContentLoaded', () => {
 const MODAL_URL = '{{ route('manajemenmahasiswa.dashboard.modal') }}';
 let _modalAllRows = [];   // semua row yang difetch
 let _modalType    = '';   // tipe modal aktif
-let _activeAngkatan = 'semua'; // filter angkatan aktif
+let _activeAngkatan = 'semua'; // nilai filter chip aktif
+let _filterField    = 'angkatan'; // field yang difilter oleh chip (angkatan / tahun_lulus)
 
 // FIX Bug #4: helper sanitasi XSS — escape karakter berbahaya sebelum render ke innerHTML
 function escHtml(str) {
@@ -1052,10 +1278,12 @@ function openDashModal(type, params, title) {
     document.getElementById('dashModal').classList.add('open');
     document.body.style.overflow = 'hidden';
 
-    // FIX Bug #3: Reset chips dan visibilitas toolbar setiap kali modal dibuka
+    // Reset chips & tentukan field filter sesuai tipe modal
     const chipsWrap = document.getElementById('dmAngkatanChips');
     chipsWrap.innerHTML = '';
-    chipsWrap.style.display = type === 'mahasiswa' ? 'flex' : 'none';
+    const chipTypes = ['mahasiswa', 'calon-do', 'lulusan-periode'];
+    chipsWrap.style.display = chipTypes.includes(type) ? 'flex' : 'none';
+    _filterField = type === 'lulusan-periode' ? 'tahun_lulus' : 'angkatan';
 
     const qs = new URLSearchParams({ type, ...params }).toString();
     fetch(`${MODAL_URL}?${qs}`, {
@@ -1070,9 +1298,10 @@ function openDashModal(type, params, title) {
             document.getElementById('dmBadge').textContent = `${json.total ?? _modalAllRows.length} data`;
             document.getElementById('dmFooter').textContent = `Total: ${json.total ?? _modalAllRows.length} item`;
 
-            // Angkatan filter chips — hanya untuk tipe mahasiswa
-            if (type === 'mahasiswa' && json.angkatan_list?.length) {
-                buildAngkatanChips(json.angkatan_list);
+            // Filter chips — angkatan (mahasiswa/calon-do) atau tahun lulus (lulusan-periode)
+            const chipList = json.angkatan_list ?? json.tahun_list ?? null;
+            if (chipTypes.includes(type) && chipList?.length) {
+                buildAngkatanChips(chipList);
             }
 
             renderTable(_modalAllRows, type);
@@ -1121,9 +1350,10 @@ function filterModalRows() {
     const q = document.getElementById('dmSearch').value.toLowerCase().trim();
     let rows = _modalAllRows;
 
-    // Filter angkatan (mahasiswa saja)
-    if (_modalType === 'mahasiswa' && _activeAngkatan !== 'semua') {
-        rows = rows.filter(r => r.angkatan == _activeAngkatan);
+    // Filter chip (angkatan untuk mahasiswa/calon-do, tahun_lulus untuk lulusan-periode)
+    const chipTypes = ['mahasiswa', 'calon-do', 'lulusan-periode'];
+    if (chipTypes.includes(_modalType) && _activeAngkatan !== 'semua') {
+        rows = rows.filter(r => r[_filterField] == _activeAngkatan);
     }
     // Filter search
     if (q) {
@@ -1164,6 +1394,14 @@ function renderTable(rows, type) {
         thread: {
             headers: ['Judul Thread', 'Kategori', 'Pembuat', '👍', '💬', 'Dibuat'],
             cells: r => `<td style="font-weight:600;color:#1e1b4b;max-width:220px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${escHtml(r.judul)}</td><td style="color:#6b7280;font-size:.8rem;">${escHtml(r.kategori)}</td><td style="color:#6b7280;">${escHtml(r.author)}</td><td style="color:#6b7280;">${escHtml(r.vote_count)}</td><td style="color:#6b7280;">${escHtml(r.comment_count)}</td><td style="color:#9ca3af;white-space:nowrap;font-size:.8rem;">${escHtml(r.created_at)}</td>`,
+        },
+        'calon-do': {
+            headers: ['Nama', 'NIM', 'Angkatan', 'Semester', 'Email'],
+            cells: r => `${nameCell(r.nama)}<td style="font-family:monospace;color:#9ca3af;font-size:.82rem;">${escHtml(r.nim)}</td><td>${escHtml(r.angkatan)}</td><td><span style="display:inline-block;padding:2px 8px;border-radius:50px;font-size:.75rem;font-weight:700;background:#fef2f2;color:#dc2626;">Smt ${escHtml(r.semester)}</span></td><td style="color:#6b7280;font-size:.82rem;">${escHtml(r.email)}</td>`,
+        },
+        'lulusan-periode': {
+            headers: ['Nama', 'NIM', 'Angkatan', 'Th. Lulus', 'Sinkron Alumni'],
+            cells: r => `${nameCell(r.nama)}<td style="font-family:monospace;color:#9ca3af;font-size:.82rem;">${escHtml(r.nim)}</td><td>${escHtml(r.angkatan)}</td><td style="font-weight:600;color:#1e1b4b;">${escHtml(r.tahun_lulus)}</td><td>${r.tersinkron ? '<span style="display:inline-block;padding:2px 8px;border-radius:50px;font-size:.72rem;font-weight:700;background:#ecfdf5;color:#059669;">✓ Tersinkron</span>' : '<span style="display:inline-block;padding:2px 8px;border-radius:50px;font-size:.72rem;font-weight:700;background:#fffbeb;color:#d97706;">Belum</span>'}</td>`,
         },
     };
 
