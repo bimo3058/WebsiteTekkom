@@ -867,53 +867,63 @@
 
     <!-- Search & Filter Area -->
     <form method="GET" action="{{ route('manajemenmahasiswa.forum.index') }}" id="forumFilterForm">
-        <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-3">
-            <div class="search-wrapper w-100 me-0 me-md-2">
+        {{-- Search Row --}}
+        <div class="mb-3">
+            <div class="search-wrapper w-100">
                 <span class="search-icon">
                     <x-manajemenmahasiswa::ui.icon name="search-01" size="18" />
                 </span>
                 <input type="text" name="search" class="form-control search-input w-100" placeholder="Search"
                     value="{{ request('search') }}">
             </div>
+        </div>
 
-            <div class="d-flex gap-3">
+        {{-- Sort & Filter Row --}}
+        <input type="hidden" name="sort" id="sortInput" value="{{ request('sort', 'terbaru') }}">
+        <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-md-center mb-4">
+            
+            {{-- Left: Filter & Action --}}
+            <div class="d-flex gap-2" style="max-width: 100%;">
                 <select name="kategori" class="form-select border-1"
-                    style="border-radius: 12px; height: 44px; min-width: 130px; background: #fff; border-color: #e5e7eb;"
+                    style="border-radius: 12px; height: 40px; width: auto; min-width: 160px; background-color: #fff; border-color: #e5e7eb; flex-shrink: 1;"
                     onchange="document.getElementById('forumFilterForm').submit()">
                     <option value="semua" {{ request('kategori') == 'semua' || !request('kategori') ? 'selected' : '' }}>
-                        Semua</option>
+                        Semua Kategori</option>
                     @foreach($categories as $key => $label)
                         <option value="{{ $key }}" {{ request('kategori') == $key ? 'selected' : '' }}>
                             {{ $label }}
                         </option>
                     @endforeach
                 </select>
-                <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post text-decoration-none d-inline-flex align-items-center gap-1">
+                <a href="{{ route('manajemenmahasiswa.forum.create') }}" class="btn-post text-decoration-none d-inline-flex align-items-center justify-content-center gap-1 flex-shrink-0" style="height: 40px; padding: 0 16px; border-radius: 12px;">
                     <x-manajemenmahasiswa::ui.icon name="plus" size="16" />
                     Buat Post
                 </a>
             </div>
-        </div>
 
-        {{-- Sort Tabs --}}
-        <input type="hidden" name="sort" id="sortInput" value="{{ request('sort', 'terbaru') }}">
-        <div class="d-flex gap-2 mb-4">
-            @php $currentSort = request('sort', 'terbaru'); @endphp
-            <button type="button"
-                class="btn btn-sm rounded-pill fw-semibold px-3 d-inline-flex align-items-center gap-1 {{ $currentSort === 'terbaru' ? 'btn-dark' : 'btn-outline-secondary' }}"
-                onclick="document.getElementById('sortInput').value='terbaru'; document.getElementById('forumFilterForm').submit();">
-                <x-manajemenmahasiswa::ui.icon name="clock-02" size="13" /> Terbaru
-            </button>
-            <button type="button"
-                class="btn btn-sm rounded-pill fw-semibold px-3 d-inline-flex align-items-center gap-1 {{ $currentSort === 'hot' ? 'btn-dark' : 'btn-outline-secondary' }}"
-                onclick="document.getElementById('sortInput').value='hot'; document.getElementById('forumFilterForm').submit();">
-                <x-manajemenmahasiswa::ui.icon name="flash" size="13" /> Hot
-            </button>
-            <button type="button"
-                class="btn btn-sm rounded-pill fw-semibold px-3 d-inline-flex align-items-center gap-1 {{ $currentSort === 'top' ? 'btn-dark' : 'btn-outline-secondary' }}"
-                onclick="document.getElementById('sortInput').value='top'; document.getElementById('forumFilterForm').submit();">
-                <x-manajemenmahasiswa::ui.icon name="chevron-up" size="13" /> Top
-            </button>
+            {{-- Right: Sort Tabs --}}
+            <div class="d-flex gap-2 flex-wrap justify-content-md-end">
+                @php $currentSort = request('sort', 'terbaru'); @endphp
+                <button type="button"
+                    class="btn btn-sm rounded-pill fw-semibold px-3 d-inline-flex align-items-center gap-1 {{ $currentSort === 'terbaru' ? 'btn-dark' : 'btn-outline-secondary' }}"
+                    onclick="document.getElementById('sortInput').value='terbaru'; document.getElementById('forumFilterForm').submit();"
+                    style="height: 40px;">
+                    <x-manajemenmahasiswa::ui.icon name="clock-02" size="14" /> Terbaru
+                </button>
+                <button type="button"
+                    class="btn btn-sm rounded-pill fw-semibold px-3 d-inline-flex align-items-center gap-1 {{ $currentSort === 'hot' ? 'btn-dark' : 'btn-outline-secondary' }}"
+                    onclick="document.getElementById('sortInput').value='hot'; document.getElementById('forumFilterForm').submit();"
+                    style="height: 40px;">
+                    <x-manajemenmahasiswa::ui.icon name="flash" size="14" /> Hot
+                </button>
+                <button type="button"
+                    class="btn btn-sm rounded-pill fw-semibold px-3 d-inline-flex align-items-center gap-1 {{ $currentSort === 'top' ? 'btn-dark' : 'btn-outline-secondary' }}"
+                    onclick="document.getElementById('sortInput').value='top'; document.getElementById('forumFilterForm').submit();"
+                    style="height: 40px;">
+                    <x-manajemenmahasiswa::ui.icon name="chevron-up" size="14" /> Top
+                </button>
+            </div>
+            
         </div>
     </form>
 
@@ -1261,12 +1271,51 @@
         </div>
     </div>
 
+    <!-- Rules Modal Overlay -->
+    @if(isset($showRulesOverlay) && $showRulesOverlay)
+    <div class="modal fade" id="rulesModal" tabindex="-1" aria-labelledby="rulesModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content" style="border-radius: 12px; border: none;">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold text-dark d-flex align-items-center gap-2" id="rulesModalLabel">
+                        <x-manajemenmahasiswa::ui.icon name="info-circle" size="20" />
+                        Peraturan Forum Diskusi
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="font-size: 14px; line-height: 1.6; color: #374151;">
+                    <p>Selamat datang di Forum Diskusi! Untuk menjaga kenyamanan bersama, mohon patuhi peraturan berikut:</p>
+                    <ol class="ps-3 mb-0">
+                        <li class="mb-2"><strong>Gunakan bahasa yang sopan:</strong> Dilarang menggunakan kata-kata kasar, umpatan, atau konten SARA.</li>
+                        <li class="mb-2"><strong>Dilarang Spam:</strong> Terdapat batasan dalam pembuatan thread dan komentar untuk mencegah spam. Promosi ilegal (seperti judi online) akan diblokir otomatis.</li>
+                        <li class="mb-2"><strong>Hargai sesama pengguna:</strong> Jangan menyebarkan ujaran kebencian, ancaman, atau konten diskriminatif.</li>
+                        <li class="mb-2"><strong>Sesuai Topik (On-Topic):</strong> Pilih kategori thread yang sesuai dengan isi pembahasan agar forum terorganisir.</li>
+                        <li><strong>Laporkan pelanggaran:</strong> Gunakan fitur <i>"Laporkan Thread"</i> jika menemukan konten yang melanggar.</li>
+                    </ol>
+                </div>
+                <div class="modal-footer border-0 pt-0 mt-3">
+                    <button type="button" class="btn btn-primary w-100" data-bs-dismiss="modal" style="border-radius: 8px; font-weight: 600; background-color: #293C79; border-color: #293C79;">Saya Mengerti & Setuju</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
     @push('scripts')
 
         <script>
             const csrfToken = '{{ csrf_token() }}';
 
-
+            // ---- Rules Modal Overlay ----
+            @if(isset($showRulesOverlay) && $showRulesOverlay)
+            document.addEventListener('DOMContentLoaded', function() {
+                const rulesModalEl = document.getElementById('rulesModal');
+                if (rulesModalEl && typeof bootstrap !== 'undefined') {
+                    const rulesModal = new bootstrap.Modal(rulesModalEl);
+                    rulesModal.show();
+                }
+            });
+            @endif
 
             // ---- Vote Thread (AJAX) ----
             document.querySelectorAll('.vote-thread-btn').forEach(btn => {
