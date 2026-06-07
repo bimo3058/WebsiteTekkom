@@ -17,12 +17,22 @@ class ModulController extends Controller
             ->where('user_id', $user->id)
             ->get();
 
-        $praktikumAktifId = $request->input('praktikum_id',
-            $daftarPraktikan->first()?->praktikum_id
-        );
+        // Sama seperti dashboard, ambil state dari session
+        $praktikumAktifId = $request->input('praktikum_id') 
+            ?? session('mhs_praktikum_id') 
+            ?? $daftarPraktikan->first()?->praktikum_id;
 
-        $terdaftarDi = $daftarPraktikan->firstWhere('praktikum_id', $praktikumAktifId)?->praktikum
-            ?? $daftarPraktikan->first()?->praktikum;
+        if ($praktikumAktifId) {
+            session(['mhs_praktikum_id' => $praktikumAktifId]);
+        }
+
+        $terdaftarDi = $daftarPraktikan->firstWhere('praktikum_id', $praktikumAktifId)?->praktikum;
+
+        // Fallback jika session salah/kadaluwarsa
+        if (!$terdaftarDi && $daftarPraktikan->isNotEmpty()) {
+            $terdaftarDi = $daftarPraktikan->first()->praktikum;
+            session(['mhs_praktikum_id' => $terdaftarDi->id]);
+        }
 
         $modulList = $terdaftarDi
             ? Modul::with(['materi', 'modulAsprak.asprak.user'])

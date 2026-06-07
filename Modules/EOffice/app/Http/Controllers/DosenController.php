@@ -11,8 +11,10 @@ class DosenController extends Controller
 {
     public function dashboard()
     {
+        $kpDosen = \Modules\EOffice\Models\KpDosen::where('user_id', auth()->id())->first();
+
         // Ambil data KP + nama mahasiswa dari tabel global users (READ ONLY, tidak mengubah apapun)
-        $bimbingan = KerjaPraktik::select(
+        $bimbinganQuery = KerjaPraktik::select(
             'eo_kerja_praktik.*',
             'u.name as nama_mahasiswa',
             'u.email as email_mahasiswa',
@@ -20,9 +22,15 @@ class DosenController extends Controller
         )
             ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
             ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
-            ->leftJoin('users as ud', 'eo_kerja_praktik.dosen_pembimbing_id', '=', 'ud.id')
-            ->orderBy('eo_kerja_praktik.created_at', 'desc')
-            ->get();
+            ->leftJoin('users as ud', 'eo_kerja_praktik.dosen_pembimbing_id', '=', 'ud.id');
+            
+        if ($kpDosen) {
+            $bimbinganQuery->where('eo_kerja_praktik.dosen_pembimbing_id', $kpDosen->id);
+        } else {
+            $bimbinganQuery->whereNull('eo_kerja_praktik.id'); // Kosongkan jika dosen belum terdaftar
+        }
+            
+        $bimbingan = $bimbinganQuery->orderBy('eo_kerja_praktik.created_at', 'desc')->get();
 
         $stats = [
             'total_bimbingan' => $bimbingan->count(),
@@ -39,85 +47,59 @@ class DosenController extends Controller
      */
     public function bimbingan()
     {
-        $bimbingan = KerjaPraktik::select(
+        $kpDosen = \Modules\EOffice\Models\KpDosen::where('user_id', auth()->id())->first();
+
+        $query = KerjaPraktik::select(
             'eo_kerja_praktik.*',
             'u.name as nama_mahasiswa',
             'm.nim as nim_user',
             'u.email as email_mahasiswa',
             'ud.name as nama_dosen',
-            'p.nilai_seminar_pembimbing'
+            'p.nilai_seminar_pembimbing',
+            'p.nilai_lapangan',
+            's.id as seminar_id',
+            's.status_validasi_syarat as status_seminar'
         )
             ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
             ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
             ->leftJoin('users as ud', 'eo_kerja_praktik.dosen_pembimbing_id', '=', 'ud.id')
             ->leftJoin('eo_kp_penilaian as p', 'eo_kerja_praktik.id', '=', 'p.kp_id')
-            // Dummy limit for current user ID context if needed, but keeping global for now
-            // ->where('eo_kerja_praktik.dosen_pembimbing_id', auth()->id())
-            ->orderBy('eo_kerja_praktik.created_at', 'desc')
-            ->get();
+            ->leftJoin('eo_kp_seminar as s', 'eo_kerja_praktik.id', '=', 's.kp_id');
             
-        // Map data dummy buat UI supaya lengkap
+        if ($kpDosen) {
+            $query->where('eo_kerja_praktik.dosen_pembimbing_id', $kpDosen->id);
+        } else {
+            $query->whereNull('eo_kerja_praktik.id');
+        }
+            
+        $bimbingan = $query->orderBy('eo_kerja_praktik.created_at', 'desc')->get();
+            
         $mahasiswas = $bimbingan->map(function ($kp) {
+            $sudahDaftarSeminar = !is_null($kp->seminar_id);
             return (object) [
-                'id' => $kp->id,
-                'nama' => $kp->nama_mahasiswa ?? 'Unknown',
-                'nim' => $kp->nim ?? $kp->nim_user ?? '2100018000',
-                'prodi' => 'Informatika',
-                'judul_kp' => $kp->rencana_judul ?? 'Belum ada judul',
-                'tempat_kp' => $kp->rencana_tempat ?? 'Belum ada tempat',
-                'durasi_kp' => 'Feb 2026 - Mei 2026',
-                'status_kp' => $kp->status_kp,
-                'status_dokumen' => 'Lengkap',
-                'nilai_seminar' => $kp->nilai_seminar_pembimbing,
-                'nilai_laporan' => null, // Column doesn't exist yet in DB
-                'progress' => rand(40, 100), // dummy progress
+                'id'                   => $kp->id,
+                'nama'                 => $kp->nama_mahasiswa ?? 'Unknown',
+                'nim'                  => $kp->nim ?? $kp->nim_user ?? '-',
+                'judul_kp'             => $kp->rencana_judul ?? $kp->judul_fix ?? 'Belum ada judul',
+                'tempat_kp'            => $kp->rencana_tempat ?? $kp->tempat_fix ?? 'Belum ada tempat',
+                'tanggal_mulai'        => $kp->tanggal_mulai
+                    ? \Carbon\Carbon::parse($kp->tanggal_mulai)->translatedFormat('d M Y')
+                    : null,
+                'tanggal_selesai'      => $kp->tanggal_selesai
+                    ? \Carbon\Carbon::parse($kp->tanggal_selesai)->translatedFormat('d M Y')
+                    : null,
+                'status_kp'            => $kp->status_kp,
+                'status_dokumen'       => 'Lengkap',
+                'nilai_seminar'        => $kp->nilai_seminar_pembimbing,
+                'nilai_laporan'        => $kp->nilai_lapangan,
+                'sudah_daftar_seminar' => $sudahDaftarSeminar,
+                'status_seminar'       => $kp->status_seminar,
+                'progress'             => $kp->status_kp === 'completed' ? 100
+                    : ($kp->status_kp === 'active' ? 60 : 20),
             ];
         });
 
-        // Add dummy data jika kosong
-        if ($mahasiswas->isEmpty()) {
-            $mahasiswas = collect([
-                (object) [
-                    'id' => 101,
-                    'nama' => 'Ahmad Fathanah',
-                    'nim' => '2100018112',
-                    'prodi' => 'Informatika',
-                    'judul_kp' => 'Pengembangan Sistem Microservice Backend',
-                    'tempat_kp' => 'PT GoTo Gojek Tokopedia',
-                    'durasi_kp' => '1 Juni 2026 - 31 Agustus 2026',
-                    'status_kp' => 'active',
-                    'status_dokumen' => 'Lengkap',
-                    'nilai_seminar' => null,
-                    'progress' => 60,
-                ],
-                (object) [
-                    'id' => 102,
-                    'nama' => 'Siti Nurhaliza',
-                    'nim' => '2100018199',
-                    'prodi' => 'Informatika',
-                    'judul_kp' => 'Analisis Jaringan Fiber Optic',
-                    'tempat_kp' => 'PT Telkom Indonesia',
-                    'durasi_kp' => '15 Mei 2026 - 15 Agustus 2026',
-                    'status_kp' => 'pending',
-                    'status_dokumen' => 'Kurang',
-                    'nilai_seminar' => null,
-                    'progress' => 30,
-                ],
-                (object) [
-                    'id' => 103,
-                    'nama' => 'Bima Sakti',
-                    'nim' => '2100018155',
-                    'prodi' => 'Informatika',
-                    'judul_kp' => 'Implementasi Fraud Detection System',
-                    'tempat_kp' => 'Bank Mandiri IT Group',
-                    'durasi_kp' => '1 Februari 2026 - 30 April 2026',
-                    'status_kp' => 'completed',
-                    'status_dokumen' => 'Lengkap',
-                    'nilai_seminar' => 85,
-                    'progress' => 100,
-                ]
-            ]);
-        }
+
 
         return view('eoffice::dosen.bimbingan', compact('mahasiswas'));
     }
@@ -176,8 +158,10 @@ class DosenController extends Controller
      */
     public function validasiBerkas()
     {
+        $kpDosen = \Modules\EOffice\Models\KpDosen::where('user_id', auth()->id())->first();
+
         // Ambil semua dokumen (Laporan & Makalah) beserta nama mahasiswa dari global users
-        $dokumens = \Modules\EOffice\Models\KpDokumen::select(
+        $query = \Modules\EOffice\Models\KpDokumen::select(
             'eo_kp_dokumen.*',
             'kp.nim',
             'kp.rencana_judul',
@@ -188,8 +172,15 @@ class DosenController extends Controller
             ->join('eo_kerja_praktik as kp', 'eo_kp_dokumen.kp_id', '=', 'kp.id')
             ->leftJoin('eo_kp_mahasiswa as m', 'kp.mahasiswa_id', '=', 'm.id')
             ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
-            ->whereIn('eo_kp_dokumen.jenis_dokumen', ['Laporan', 'Makalah'])
-            ->orderByRaw("CASE eo_kp_dokumen.status_validasi WHEN 'pending' THEN 0 ELSE 1 END")
+            ->whereIn('eo_kp_dokumen.jenis_dokumen', ['Laporan', 'Makalah']);
+
+        if ($kpDosen) {
+            $query->where('kp.dosen_pembimbing_id', $kpDosen->id);
+        } else {
+            $query->whereNull('kp.id'); // Kosongkan jika dosen belum terdaftar
+        }
+
+        $dokumens = $query->orderByRaw("CASE eo_kp_dokumen.status_validasi WHEN 'pending' THEN 0 ELSE 1 END")
             ->orderBy('eo_kp_dokumen.tanggal_upload', 'desc')
             ->get();
 
@@ -248,7 +239,64 @@ class DosenController extends Controller
         $kp->status_kp = 'completed';
         $kp->save();
 
-        return redirect()->route('eoffice.kp.dosen.bimbingan.show', $kp->id)
-            ->with('success', 'Nilai Seminar berhasil disimpan!');
+        return back()->with('success', 'Nilai Seminar berhasil disimpan!');
+    }
+
+    /**
+     * Halaman Penilaian Seminar (Dosen)
+     */
+    public function penilaianSeminar()
+    {
+        $kpDosen = \Modules\EOffice\Models\KpDosen::where('user_id', auth()->id())->first();
+
+        $query = KerjaPraktik::select(
+            'eo_kerja_praktik.id as kp_id',
+            'u.name as nama_mahasiswa',
+            'm.nim',
+            's.id as seminar_id',
+            's.tanggal_seminar',
+            's.waktu_seminar',
+            's.ruangan',
+            's.status_validasi_dosen',
+            'p.nilai_seminar_pembimbing'
+        )
+            ->join('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
+            ->join('users as u', 'm.user_id', '=', 'u.id')
+            ->join('eo_kp_seminar as s', 'eo_kerja_praktik.id', '=', 's.kp_id')
+            ->leftJoin('eo_kp_penilaian as p', 'eo_kerja_praktik.id', '=', 'p.kp_id');
+
+        if ($kpDosen) {
+            $query->where('eo_kerja_praktik.dosen_pembimbing_id', $kpDosen->id);
+        } else {
+            $query->whereNull('eo_kerja_praktik.id');
+        }
+
+        $seminars = $query->orderBy('s.created_at', 'desc')->get();
+
+        return view('eoffice::dosen.penilaian_seminar', compact('seminars'));
+    }
+
+    /**
+     * Dosen approve jadwal seminar
+     */
+    public function approveSeminar(Request $request, $id)
+    {
+        $seminar = \Modules\EOffice\Models\KpSeminar::where('kp_id', $id)->firstOrFail();
+        $seminar->status_validasi_dosen = 'approved';
+        $seminar->save();
+
+        return back()->with('success', 'Seminar berhasil disetujui.');
+    }
+
+    /**
+     * Dosen reject jadwal seminar
+     */
+    public function rejectSeminar(Request $request, $id)
+    {
+        $seminar = \Modules\EOffice\Models\KpSeminar::where('kp_id', $id)->firstOrFail();
+        $seminar->status_validasi_dosen = 'rejected';
+        $seminar->save();
+
+        return back()->with('error', 'Seminar ditolak.');
     }
 }

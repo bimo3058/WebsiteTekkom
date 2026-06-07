@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIKP - Validasi & Approval Berkas</title>
+    <title>SIKP - Penilaian Laporan</title>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>body { font-family: 'Inter', sans-serif; }</style>
@@ -44,7 +44,12 @@
 
             <a href="{{ route('eoffice.kp.dosen.validasi_berkas') }}" class="flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                Validasi Berkas
+                Penilaian Laporan
+            </a>
+
+            <a href="{{ route('eoffice.kp.dosen.penilaian_seminar') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                Penilaian Seminar
             </a>
 
             <a href="#" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
@@ -54,14 +59,22 @@
         </div>
         
         <!-- User Profile -->
+                @if(auth()->user() && auth()->user()->email === 'ike.pertiwi@undip.ac.id')
+        <div class="px-4 pb-4 mt-auto">
+            <a href="{{ route('eoffice.kp.koordinator.dashboard') }}" class="flex items-center px-4 py-2.5 text-indigo-700 bg-indigo-50 hover:bg-indigo-100 rounded-xl transition-all text-sm font-semibold border border-indigo-200 shadow-sm">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                Beralih ke Koordinator
+            </a>
+        </div>
+        @endif
         <div class="p-4 border-t border-slate-100">
             <div class="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
                 <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shadow-sm border border-indigo-200">
-                    D
+                    {{ strtoupper(substr(auth()->user()->name ?? 'D', 0, 1)) }}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-slate-900 truncate">Dosen Pembimbing</p>
-                    <p class="text-[11px] text-slate-500 truncate">Sistem Balancing Center</p>
+                    <p class="text-sm font-bold text-slate-900 truncate">{{ auth()->user()->name ?? 'Dosen Pembimbing' }}</p>
+                    <p class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email ?? 'Sistem Bimbingan' }}</p>
                 </div>
             </div>
         </div>
@@ -77,7 +90,7 @@
                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
                 </button>
                 <nav class="hidden sm:flex items-center space-x-2 text-sm text-slate-500 font-medium">
-                    <span class="text-indigo-700 font-semibold bg-indigo-50 px-2.5 py-1 rounded-md">Validasi Berkas</span>
+                    <span class="text-indigo-700 font-semibold bg-indigo-50 px-2.5 py-1 rounded-md">Penilaian Laporan</span>
                 </nav>
             </div>
             <div class="flex items-center gap-3">
@@ -109,7 +122,7 @@
 
             <!-- Page Header -->
             <div class="mb-6">
-                <h1 class="text-2xl font-bold text-slate-900">Validasi & Approval Berkas</h1>
+                <h1 class="text-2xl font-bold text-slate-900">Penilaian Laporan</h1>
                 <p class="text-sm text-slate-500 mt-1">Tinjau dan setujui laporan serta makalah KP mahasiswa bimbingan Anda.</p>
             </div>
 

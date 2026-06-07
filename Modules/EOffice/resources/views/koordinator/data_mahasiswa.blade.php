@@ -55,32 +55,50 @@
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 Informasi
             </a>
+            <a href="{{ route('eoffice.kp.koordinator.template') }}" class="{{ request()->routeIs('eoffice.kp.koordinator.template') ? 'flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full' : 'flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                Template Dokumen
+            </a>
 
             <!-- Data Mahasiswa (Active) -->
             <a href="{{ route('eoffice.kp.koordinator.data_mahasiswa') }}" class="flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
                 Data Mahasiswa
             </a>
-
             <a href="{{ route('eoffice.kp.koordinator.balancing') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>
                 Balancing Dosen
             </a>
-            
-            <a href="{{ route('eoffice.kp.koordinator.validasi_berkas') }}" class="flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium">
+                        <a href="{{ route('eoffice.kp.koordinator.validasi_berkas') }}" class="{{ request()->routeIs('eoffice.kp.koordinator.validasi_berkas') ? 'flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full' : 'flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium' }}">
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
                 Approval Berkas
             </a>
+            <a href="{{ route('eoffice.kp.koordinator.nilai_lapangan') }}" class="{{ request()->routeIs('eoffice.kp.koordinator.nilai_lapangan') ? 'flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full' : 'flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4" /></svg>
+                Nilai Lapangan
+            </a>
+            <a href="{{ route('eoffice.kp.koordinator.pengaturan') }}" class="{{ request()->routeIs('eoffice.kp.koordinator.pengaturan') ? 'flex items-center px-4 py-3 mb-1 text-indigo-700 bg-indigo-50/50 rounded-xl transition-all text-sm font-semibold relative before:absolute before:left-0 before:top-2 before:bottom-2 before:w-1 before:bg-indigo-600 before:rounded-r-full' : 'flex items-center px-4 py-3 mb-1 text-slate-600 hover:text-indigo-700 hover:bg-indigo-50 rounded-xl transition-all text-sm font-medium' }}">
+                <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                Pengaturan
+            </a>
         </div>
         
+                @if(auth()->user() && auth()->user()->email === 'ike.pertiwi@undip.ac.id')
+        <div class="px-4 pb-4 mt-auto">
+            <a href="{{ route('eoffice.kp.dosen.dashboard') }}" class="flex items-center px-4 py-2.5 text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-xl transition-all text-sm font-semibold border border-emerald-200 shadow-sm">
+                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                Beralih ke Dosen
+            </a>
+        </div>
+        @endif
         <div class="p-4 border-t border-slate-100">
             <div class="flex items-center gap-3 px-4 py-3 bg-slate-50 rounded-xl border border-slate-100">
                 <div class="w-9 h-9 rounded-full bg-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-sm shadow-sm border border-indigo-200">
-                    K
+                    {{ strtoupper(substr(auth()->user()->name ?? 'K', 0, 1)) }}
                 </div>
                 <div class="flex-1 min-w-0">
-                    <p class="text-sm font-bold text-slate-900 truncate">Koordinator KP</p>
-                    <p class="text-[11px] text-slate-500 truncate">Sistem Balancing</p>
+                    <p class="text-sm font-bold text-slate-900 truncate">{{ auth()->user()->name ?? 'Koordinator KP' }}</p>
+                    <p class="text-[11px] text-slate-500 truncate">{{ auth()->user()->email ?? 'Sistem Balancing' }}</p>
                 </div>
             </div>
         </div>
@@ -181,8 +199,9 @@
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50">Mahasiswa</th>
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50">Tempat KP</th>
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50">Pembimbing</th>
-                                    <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Nilai Seminar</th>
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Nilai Lapangan</th>
+                                    <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Nilai Seminar</th>
+                                    <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Nilai Laporan</th>
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Nilai Akhir</th>
                                     <th class="py-4 px-6 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center">Status KP</th>
                                 </tr>
@@ -206,12 +225,16 @@
                                             <p class="text-sm text-slate-600" x-text="m.dosen_pembimbing || 'Belum diplot'"></p>
                                         </td>
                                         <td class="py-4 px-6 align-middle text-center">
-                                            <span x-show="m.nilai_seminar !== null" class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 text-slate-700" x-text="m.nilai_seminar"></span>
-                                            <span x-show="m.nilai_seminar === null" class="text-slate-400 text-xs">-</span>
+                                            <span x-show="m.nilai_lapangan !== null && m.nilai_lapangan !== undefined" class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100" x-text="m.nilai_lapangan"></span>
+                                            <span x-show="m.nilai_lapangan === null || m.nilai_lapangan === undefined" class="text-slate-400 text-xs italic">Belum</span>
                                         </td>
                                         <td class="py-4 px-6 align-middle text-center">
-                                            <span x-show="m.nilai_lapangan !== null" class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-slate-100 text-slate-700" x-text="m.nilai_lapangan"></span>
-                                            <span x-show="m.nilai_lapangan === null" class="text-slate-400 text-xs">-</span>
+                                            <span x-show="m.nilai_seminar !== null" class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100" x-text="m.nilai_seminar"></span>
+                                            <span x-show="m.nilai_seminar === null" class="text-slate-400 text-xs italic">Belum</span>
+                                        </td>
+                                        <td class="py-4 px-6 align-middle text-center">
+                                            <span x-show="m.nilai_laporan !== null" class="inline-flex items-center justify-center px-2.5 py-1 rounded-md text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100" x-text="m.nilai_laporan"></span>
+                                            <span x-show="m.nilai_laporan === null" class="text-slate-400 text-xs italic">Belum</span>
                                         </td>
                                         <td class="py-4 px-6 align-middle text-center">
                                             <span x-show="m.nilai_akhir !== null" class="inline-flex items-center justify-center px-3 py-1 rounded-md text-sm font-bold bg-indigo-50 text-indigo-700" x-text="m.nilai_akhir"></span>
@@ -295,7 +318,7 @@
                                         </div>
                                         <div>
                                             <h2 class="text-xl font-bold text-slate-900" x-text="selectedMahasiswa.nama"></h2>
-                                            <p class="text-sm text-slate-500 font-medium" x-text="selectedMahasiswa.nim + ' • ' + selectedMahasiswa.prodi"></p>
+                                            <p class="text-sm text-slate-500 font-medium" x-text="selectedMahasiswa.nim"></p>
                                         </div>
                                     </div>
                                 </div>
@@ -305,7 +328,6 @@
                                     
                                     <!-- Status Badges -->
                                     <div class="flex flex-wrap gap-2 mb-8">
-                                        <span class="inline-flex items-center px-3 py-1 rounded-md text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-100" x-text="'TA ' + selectedMahasiswa.tahun_kp + ' • ' + selectedMahasiswa.semester"></span>
                                         <span :class="{
                                             'bg-emerald-50 text-emerald-700 border-emerald-200': selectedMahasiswa.status_dokumen === 'Lengkap',
                                             'bg-rose-50 text-rose-700 border-rose-200': selectedMahasiswa.status_dokumen === 'Tidak Lengkap',
@@ -345,32 +367,29 @@
                                             <svg class="w-4 h-4 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4M7.835 4.697a3.42 3.42 0 001.946-.806 3.42 3.42 0 014.438 0 3.42 3.42 0 001.946.806 3.42 3.42 0 013.138 3.138 3.42 3.42 0 00.806 1.946 3.42 3.42 0 010 4.438 3.42 3.42 0 00-.806 1.946 3.42 3.42 0 01-3.138 3.138 3.42 3.42 0 00-1.946.806 3.42 3.42 0 01-4.438 0 3.42 3.42 0 00-1.946-.806 3.42 3.42 0 01-3.138-3.138 3.42 3.42 0 00-.806-1.946 3.42 3.42 0 010-4.438 3.42 3.42 0 00.806-1.946 3.42 3.42 0 013.138-3.138z"/></svg>
                                             Rekap Penilaian
                                         </h3>
-                                        <div class="grid grid-cols-2 gap-4">
-                                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
-                                                <p class="text-xs font-medium text-slate-500 mb-1">Nilai Seminar</p>
-                                                <p class="text-xl font-extrabold text-slate-900" x-text="selectedMahasiswa.nilai_seminar !== null ? selectedMahasiswa.nilai_seminar : '-'"></p>
+                                        <!-- 3 kartu nilai dari dosen -->
+                                        <div class="grid grid-cols-3 gap-3 mb-3">
+                                            <div class="bg-emerald-50 p-3 rounded-xl border border-emerald-100">
+                                                <p class="text-[10px] font-medium text-emerald-700 mb-1">Nilai Seminar</p>
+                                                <p class="text-xl font-extrabold text-emerald-800" x-text="selectedMahasiswa.nilai_seminar !== null ? selectedMahasiswa.nilai_seminar : '-'"></p>
+                                                <p class="text-[9px] text-emerald-600 mt-0.5">Oleh Dosen</p>
                                             </div>
-                                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 relative group">
-                                                <p class="text-xs font-medium text-slate-500 mb-1">Nilai Lapangan</p>
-                                                <div x-show="!isEditingNilai" class="flex items-center justify-between">
-                                                    <p class="text-xl font-extrabold text-slate-900" x-text="selectedMahasiswa.nilai_lapangan !== null ? selectedMahasiswa.nilai_lapangan : '-'"></p>
-                                                    <button @click="isEditingNilai = true; tempNilai = selectedMahasiswa.nilai_lapangan" class="text-slate-400 hover:text-indigo-600 transition-colors p-1 rounded-md hover:bg-indigo-50" title="Input/Edit Nilai Lapangan">
-                                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"/></svg>
-                                                    </button>
-                                                </div>
-                                                <div x-show="isEditingNilai" x-cloak class="mt-1 flex flex-col gap-2">
-                                                    <input type="number" x-model="tempNilai" min="0" max="100" step="0.1" class="w-full rounded-lg border border-slate-300 py-1.5 px-3 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none" placeholder="0 - 100">
-                                                    <div class="flex gap-2">
-                                                        <button @click="saveNilai()" class="flex-1 bg-indigo-600 text-white px-2 py-1.5 rounded-lg text-xs font-bold hover:bg-indigo-700 transition-colors">Simpan</button>
-                                                        <button @click="isEditingNilai = false" class="flex-1 bg-white border border-slate-300 text-slate-600 px-2 py-1.5 rounded-lg text-xs font-bold hover:bg-slate-50 transition-colors">Batal</button>
-                                                    </div>
-                                                </div>
+                                            <div class="bg-blue-50 p-3 rounded-xl border border-blue-100">
+                                                <p class="text-[10px] font-medium text-blue-700 mb-1">Nilai Laporan</p>
+                                                <p class="text-xl font-extrabold text-blue-800" x-text="selectedMahasiswa.nilai_laporan !== null ? selectedMahasiswa.nilai_laporan : '-'"></p>
+                                                <p class="text-[9px] text-blue-600 mt-0.5">Oleh Dosen</p>
+                                            </div>
+                                            <div class="bg-amber-50 p-3 rounded-xl border border-amber-100">
+                                                <p class="text-[10px] font-medium text-amber-700 mb-1">Nilai Lapangan</p>
+                                                <p class="text-xl font-extrabold text-amber-800" x-text="selectedMahasiswa.nilai_lapangan !== null && selectedMahasiswa.nilai_lapangan !== undefined ? selectedMahasiswa.nilai_lapangan : '-'"></p>
+                                                <p class="text-[9px] text-amber-600 mt-0.5">Oleh Koordinator</p>
                                             </div>
                                         </div>
-                                        <div class="mt-4 bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex items-center justify-between">
+                                        <!-- Nilai Akhir -->
+                                        <div class="bg-indigo-50 p-4 rounded-xl border border-indigo-100 flex items-center justify-between">
                                             <div>
                                                 <p class="text-xs font-bold text-indigo-700 uppercase tracking-wider mb-0.5">Nilai Akhir</p>
-                                                <p class="text-[10px] text-indigo-500 font-medium">Rata-rata penilaian</p>
+                                                <p class="text-[10px] text-indigo-500 font-medium">Hasil kalkulasi akhir</p>
                                             </div>
                                             <p class="text-3xl font-black text-indigo-700" x-text="selectedMahasiswa.nilai_akhir !== null ? selectedMahasiswa.nilai_akhir : '-'"></p>
                                         </div>
@@ -424,8 +443,6 @@ function pageData() {
         mahasiswas: @json($mahasiswas),
         selectedMahasiswa: null,
         detailModal: false,
-        isEditingNilai: false,
-        tempNilai: '',
         toast: { show: false, type: 'success', title: '', message: '' },
         get filteredMahasiswas() {
             return this.mahasiswas.filter(m => {
@@ -436,34 +453,7 @@ function pageData() {
         },
         openDetail(m) {
             this.selectedMahasiswa = m;
-            this.isEditingNilai = false;
             this.detailModal = true;
-        },
-        saveNilai() {
-            let nilai = parseFloat(this.tempNilai);
-            if(isNaN(nilai) || nilai < 0 || nilai > 100) {
-                this.showToast('error', 'Validasi Gagal', 'Nilai harus berada antara 0 dan 100.');
-                return;
-            }
-            
-            let idx = this.mahasiswas.findIndex(m => m.id === this.selectedMahasiswa.id);
-            if(idx !== -1) {
-                this.mahasiswas[idx].nilai_lapangan = nilai;
-                
-                // Recalculate nilai akhir if needed
-                let ns = this.mahasiswas[idx].nilai_seminar;
-                let nl = this.mahasiswas[idx].nilai_lapangan;
-                if(ns !== null && nl !== null) {
-                    this.mahasiswas[idx].nilai_akhir = parseFloat(((ns + nl) / 2).toFixed(1));
-                }
-                
-                this.selectedMahasiswa = this.mahasiswas[idx];
-                this.isEditingNilai = false;
-                this.showToast('success', 'Berhasil', 'Nilai lapangan berhasil disimpan.');
-                
-                // In a real app, you would make an AJAX/fetch request here to save to database.
-                // fetch(`/eoffice/kp/koordinator/data-mahasiswa/${this.selectedMahasiswa.id}/nilai`, { ... })
-            }
         },
         showToast(type, title, message) {
             this.toast.type = type;

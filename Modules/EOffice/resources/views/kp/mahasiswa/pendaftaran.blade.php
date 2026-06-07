@@ -45,6 +45,30 @@
                         Kembali ke Dashboard
                     </a>
                 </div>
+            @elseif(!$registrationOpen)
+                {{-- Pendaftaran Ditutup --}}
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-8 text-center max-w-2xl mx-auto mt-10">
+                    <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-900 mb-2">Pendaftaran Ditutup</h2>
+                    <p class="text-slate-600 mb-4">
+                        Saat ini periode pendaftaran Kerja Praktik sedang ditutup.
+                        @if($startDate || $endDate)
+                            <br><br>
+                            <span class="inline-flex bg-slate-50 border border-slate-200 rounded px-3 py-2 text-sm font-medium">
+                                Jadwal Pendaftaran: 
+                                {{ $startDate ? \Carbon\Carbon::parse($startDate)->format('d M Y') : 'Kapan Saja' }}
+                                - 
+                                {{ $endDate ? \Carbon\Carbon::parse($endDate)->format('d M Y') : 'Kapan Saja' }}
+                            </span>
+                        @endif
+                    </p>
+                    <p class="text-sm text-slate-500 mb-6">Silakan cek kembali di lain waktu atau hubungi Koordinator KP untuk informasi lebih lanjut.</p>
+                    <a href="{{ route('eoffice.kp.mahasiswa.dashboard') }}" class="inline-flex items-center px-6 py-3 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors">
+                        Kembali ke Dashboard
+                    </a>
+                </div>
             @else
                 {{-- Form Pendaftaran --}}
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden max-w-3xl">
@@ -52,30 +76,11 @@
                         <h2 class="text-base font-bold text-slate-800">Formulir Pengajuan</h2>
                         <p class="text-sm text-slate-500 mt-0.5">Pastikan data yang Anda isi sudah benar dan final.</p>
                     </div>
-
-                    <form action="{{ route('eoffice.kp.mahasiswa.pendaftaran.store') }}" method="POST" enctype="multipart/form-data" class="p-6">
+                    <form action="{{ route('eoffice.kp.mahasiswa.pendaftaran.store') }}" method="POST" class="p-6">
                         @csrf
                         
                         <div class="space-y-6">
-                            {{-- Transkrip --}}
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-2">Upload Transkrip Nilai Terakhir <span class="text-red-500">*</span></label>
-                                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-lg hover:border-blue-500 transition-colors bg-slate-50" x-data="{ fileName: '' }">
-                                    <div class="space-y-1 text-center">
-                                        <svg class="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                                        <div class="flex text-sm text-slate-600 justify-center">
-                                            <label for="transkrip" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none px-1">
-                                                <span>Upload a file</span>
-                                                <input id="transkrip" name="transkrip" type="file" class="sr-only" required accept=".pdf,.jpg,.jpeg,.png" @change="fileName = $event.target.files[0].name">
-                                            </label>
-                                            <p class="pl-1">or drag and drop</p>
-                                        </div>
-                                        <p class="text-xs text-slate-500">PDF, PNG, JPG up to 5MB</p>
-                                        <p class="text-sm font-semibold text-blue-600 mt-2" x-show="fileName" x-text="fileName"></p>
-                                    </div>
-                                </div>
-                                @error('transkrip') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                            </div>
+
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {{-- Rencana Judul --}}

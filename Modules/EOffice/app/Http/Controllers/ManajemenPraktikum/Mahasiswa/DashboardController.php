@@ -27,12 +27,24 @@ class DashboardController extends Controller
 
         $belumTerdaftar = $daftarPraktikan->isEmpty();
 
-        // Pilih praktikum aktif untuk tampilan utama dashboard
-        $praktikumAktifId = $request->input('praktikum_id',
-            $daftarPraktikan->first()?->praktikum_id
-        );
-        $terdaftarDi = $daftarPraktikan->firstWhere('praktikum_id', $praktikumAktifId)?->praktikum
-            ?? $daftarPraktikan->first()?->praktikum;
+        // 1. Ambil dari request, fallback ke session, fallback terakhir ke data pertama
+        $praktikumAktifId = $request->input('praktikum_id') 
+            ?? session('mhs_praktikum_id') 
+            ?? $daftarPraktikan->first()?->praktikum_id;
+
+        // 2. Simpan pilihan ke session
+        if ($praktikumAktifId) {
+            session(['mhs_praktikum_id' => $praktikumAktifId]);
+        }
+
+        // 3. Cari entri pendaftaran yang cocok
+        $terdaftarDi = $daftarPraktikan->firstWhere('praktikum_id', $praktikumAktifId)?->praktikum;
+
+        // Fallback jika session menyimpan ID praktikum lama yang sudah tidak diikuti
+        if (!$terdaftarDi && $daftarPraktikan->isNotEmpty()) {
+            $terdaftarDi = $daftarPraktikan->first()->praktikum;
+            session(['mhs_praktikum_id' => $terdaftarDi->id]);
+        }
 
         $tugasMendatang = collect();
         $nilaiList      = collect();
@@ -107,10 +119,6 @@ class DashboardController extends Controller
         ));
     }
 
-    /**
-     * Masukkan kode praktikum untuk bergabung.
-     * Sesuai docx: kode unik yang digenerate oleh koordinator.
-     */
     public function masukkanKode(Request $request)
     {
         $request->validate(['kode' => 'required|string']);

@@ -24,10 +24,6 @@
 </div>
 @endif
 
-<div class="mp-alert warning flex-shrink-0">
-    <strong>Alur:</strong> Mahasiswa mendaftar &rarr; Anda review (IPK, motivasi, transkrip) &rarr; Terima &rarr; Role <code>asprak</code> di-assign otomatis sesuai praktikum Anda.
-</div>
-
 <div class="sec-head">
     <span class="sec-bar"></span>
     <span class="sec-title">Daftar Pendaftar Asprak</span>
@@ -84,11 +80,11 @@
                     </td>
                     <td style="padding:12px 16px;">
                         @if($p->cv_path)
-                        <a href="{{ Storage::url($p->cv_path) }}" target="_blank"
+                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->cv_path, 'eoffice') }}" target="_blank"
                            style="font-size:11px;font-weight:600;color:#0B266E;text-decoration:none;display:block;" class="hover:underline">CV</a>
                         @endif
                         @if($p->transkrip_path)
-                        <a href="{{ Storage::url($p->transkrip_path) }}" target="_blank"
+                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->transkrip_path, 'eoffice') }}" target="_blank"
                            style="font-size:11px;font-weight:600;color:#0B266E;text-decoration:none;display:block;" class="hover:underline">Transkrip</a>
                         @endif
                         @if(!$p->cv_path && !$p->transkrip_path)

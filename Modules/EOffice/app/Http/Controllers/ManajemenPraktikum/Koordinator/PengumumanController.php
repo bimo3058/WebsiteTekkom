@@ -11,14 +11,13 @@ class PengumumanController extends Controller
 {
     public function index()
     {
-        $user = auth()->user();
-        $praktikum = Praktikum::where('koor_id', $user->id)->where('status', 'aktif')->first();
+        $praktikum = DashboardController::resolvePraktikum();
 
-        $pengumumans = $praktikum
+        $pengumuman = $praktikum
             ? Pengumuman::where('praktikum_id', $praktikum->id)->orderByDesc('created_at')->get()
             : collect();
 
-        return view('eoffice::manajemen-praktikum.koordinator.pengumuman', compact('praktikum', 'pengumumans'));
+        return view('eoffice::manajemen-praktikum.koordinator.pengumuman', compact('praktikum', 'pengumuman'));
     }
 
     public function store(Request $request)
@@ -50,7 +49,6 @@ class PengumumanController extends Controller
         }
 
         $pengumuman->delete();
-
         return back()->with('success', 'Pengumuman dihapus.');
     }
 }

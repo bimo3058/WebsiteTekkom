@@ -42,7 +42,7 @@ class KerjaPraktik extends Model
      */
     public function dosenPembimbing()
     {
-        return $this->belongsTo(\App\Models\User::class, 'dosen_pembimbing_id');
+        return $this->belongsTo(KpDosen::class, 'dosen_pembimbing_id');
     }
 
     /**
@@ -67,6 +67,14 @@ class KerjaPraktik extends Model
     public function penilaian()
     {
         return $this->hasOne(KpPenilaian::class, 'kp_id');
+    }
+
+    /**
+     * Relasi ke tabel balancing (draft/final)
+     */
+    public function balancing()
+    {
+        return $this->hasOne(KpBalancing::class, 'kp_id');
     }
 
     /**
