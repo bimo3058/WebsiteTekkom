@@ -3,9 +3,25 @@
 <div class="mp-page-header">
     <div>
         <h1 class="mp-page-title">Tugas Praktikum</h1>
-        <p class="mp-page-sub">Lihat dan kumpulkan tugas praktikum Anda</p>
+        <p class="mp-page-sub">
+            Lihat dan kumpulkan tugas praktikum Anda
+            @if($daftarPraktikan) · {{ $daftarPraktikan->praktikum?->nama }} @endif
+        </p>
     </div>
 </div>
+
+{{-- Switcher praktikum jika ikut lebih dari 1 --}}
+@if(isset($semuaPraktikan) && $semuaPraktikan->count() > 1)
+<div style="display:flex;flex-wrap:wrap;gap:8px;" class="flex-shrink-0">
+    @foreach($semuaPraktikan as $dp)
+    <a href="{{ route('eoffice.manprak.mahasiswa.tugas.index') }}?praktikum_id={{ $dp->praktikum_id }}"
+       class="{{ $dp->praktikum_id === $daftarPraktikan?->praktikum_id ? 'mp-btn primary sm' : 'mp-btn secondary sm' }}"
+       style="text-decoration:none;">
+        {{ $dp->praktikum?->nama ?? 'Praktikum' }}
+    </a>
+    @endforeach
+</div>
+@endif
 
 <div class="sec-head">
     <span class="sec-bar"></span>

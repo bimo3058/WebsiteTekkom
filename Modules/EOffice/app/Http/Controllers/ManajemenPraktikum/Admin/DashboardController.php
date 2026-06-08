@@ -26,21 +26,19 @@ class DashboardController extends Controller
         $totalPraktikumAktif = Praktikum::where('status', 'aktif')->count();
         $totalPraktikum      = Praktikum::count();
 
-        // Praktikan (mahasiswa terdaftar di praktikum)
-        $totalPraktikan = DaftarPraktikan::count();
+        // 1. HITUNG TOTAL PRAKTIKAN (Bypass model Eloquent langsung ke tabel Supabase)
+        $totalPraktikan = DaftarPraktikan::whereHas('praktikum', function($query) {
+            $query->where('status', 'aktif');
+        })->count();
 
         // Pendaftaran pending
         $totalAsprakPending = PendaftaranAsprak::where('status', 'pending')->count();
         $totalKoorPending   = PendaftaranKoordinator::where('status', 'pending')->count();
         $pendingTindakan    = $totalAsprakPending + $totalKoorPending;
 
-        // Modul
-        $totalModul = Modul::count();
-
-        // Dosen — langsung dari tabel lecturers
-        $totalDosen = Lecturer::count();
-
-        // Mahasiswa — langsung dari tabel students
+        // Modul, Dosen, Mahasiswa
+        $totalModul     = Modul::count();
+        $totalDosen     = Lecturer::count();
         $totalMahasiswa = Student::count();
 
         // ── Daftar praktikum terbaru ────────────────────────────────────────────
@@ -51,7 +49,7 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
-        // ── Daftar dosen terbaru (dari lecturers join users) ────────────────────
+        // ── Daftar dosen terbaru ────────────────────────────────────────────────
 
         $dosenTerbaru = Lecturer::with('user')
             ->orderByDesc('created_at')
@@ -64,7 +62,7 @@ class DashboardController extends Controller
                 'jumlah_praktikum'=> Praktikum::where('dosen_id', $l->user_id)->count(),
             ]);
 
-        // ── Daftar mahasiswa terbaru (dari students join users) ─────────────────
+        // ── Daftar mahasiswa terbaru ─────────────────────────────────────────────
 
         $mahasiswaTerbaru = Student::with('user')
             ->orderByDesc('created_at')
@@ -75,7 +73,8 @@ class DashboardController extends Controller
                 'email'          => $s->user?->email ?? '—',
                 'student_number' => $s->student_number,
                 'cohort_year'    => $s->cohort_year,
-                'jumlah_praktikum' => DaftarPraktikan::where('user_id', $s->user_id)->count(),
+                // Hitung jumlah praktikum per mahasiswa langsung ke tabel Supabase
+                'jumlah_praktikum' => \DB::table('daftar_praktikan')->where('user_id', $s->user_id)->count(),
             ]);
 
         // ── Pendaftaran asprak terbaru yang perlu di-approve ────────────────────

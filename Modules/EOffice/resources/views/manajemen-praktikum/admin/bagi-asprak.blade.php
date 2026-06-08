@@ -44,24 +44,24 @@
 <div class="flex gap-4 flex-1 min-h-0">
 
     {{-- Daftar Modul --}}
-    <div class="mp-card flex-1 min-h-0">
-        <div class="mp-card-header">
-            <span class="mp-card-title">
+<div style="background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; flex:1; min-height:0;">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border, #DFE1E7); background:#FAFAFA;">
+            <h2 style="font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); margin:0;">
                 Modul Praktikum
-                @if($selectedPraktikum) &mdash; <span style="font-weight:400;color:#666D80;">{{ $selectedPraktikum->nama }}</span> @endif
-            </span>
+                @if($selectedPraktikum) &mdash; <span style="font-weight:400;color:var(--c-fg-muted, #666D80);">{{ $selectedPraktikum->nama }}</span> @endif
+            </h2>
         </div>
-        <div style="overflow-y:auto;flex:1;">
+        <div style="overflow-y:auto; flex:1;">
             @forelse($moduls as $modul)
-            <div style="padding:16px 20px;border-bottom:1px solid #DFE1E7;"
-                 onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background=''">
+            <div style="padding:14px 16px; border-bottom:1px solid #F3F4F6; transition:background .12s;"
+                 onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
                 <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">
                     <div style="flex:1;min-width:0;">
-                        <div style="font-size:13px;font-weight:600;color:#0D0D12;margin-bottom:2px;">
+                        <div style="font-size:13px;font-weight:600;color:var(--c-fg, #0D0D12);margin-bottom:2px;">
                             {{ $modul->urutan }}. {{ $modul->nama }}
                         </div>
                         @if($modul->deskripsi)
-                        <div style="font-size:11px;color:#666D80;margin-bottom:6px;">{{ $modul->deskripsi }}</div>
+                        <div style="font-size:12px;color:var(--c-fg-muted, #666D80);margin-bottom:6px;">{{ $modul->deskripsi }}</div>
                         @endif
 
                         {{-- Asprak yang sudah ditugaskan --}}
@@ -72,7 +72,7 @@
                             @endforeach
                         </div>
                         @else
-                        <div style="font-size:11px;color:#808897;margin-top:4px;font-style:italic;">Belum ada asprak ditugaskan</div>
+                        <div style="font-size:11px;color:var(--c-fg-muted, #808897);margin-top:4px;font-style:italic;">Belum ada asprak ditugaskan</div>
                         @endif
                     </div>
 
@@ -94,8 +94,8 @@
             </div>
             @empty
             <div style="padding:48px;text-align:center;">
-                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                <div style="font-size:13px;font-weight:500;color:#666D80;">Belum ada modul untuk praktikum ini.</div>
+                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--c-fg-muted, #A4ABB8)" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                <div style="font-size:13px;font-weight:500;color:var(--c-fg-muted, #666D80);">Belum ada modul untuk praktikum ini.</div>
             </div>
             @endforelse
         </div>

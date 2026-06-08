@@ -6,6 +6,7 @@
 <meta name="csrf-token" content="{{ csrf_token() }}">
 <title>{{ $pageTitle ?? 'Manajemen Praktikum' }} — SIPERKOM</title>
 @vite(['resources/css/app.css', 'resources/js/app.js'])
+@vite(['resources/assets/sass/app.scss', 'resources/assets/js/app.js'], 'build-eoffice')
 <style>
 /* ─── SITKOM Design System — ManajemenPraktikum component layer ─── */
 
@@ -94,6 +95,15 @@
          letter-spacing:.06em; }
 .mp-tr { border-bottom:1px solid #F8F9FB; }
 .mp-tr:last-child { border-bottom:none; }
+.mp-table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+.mp-table { width:100%; border-collapse:collapse; }
+.mp-table th { padding:10px 14px; text-align:left; font-size:11px; font-weight:600;
+               color:var(--c-fg-placeholder); text-transform:uppercase; letter-spacing:.06em;
+               background:#F8F9FB; border-bottom:1px solid var(--c-border); white-space:nowrap; }
+.mp-table td { padding:10px 14px; text-align:left; font-size:13px; color:var(--c-fg);
+               border-bottom:1px solid #F2F4F7; white-space:nowrap; vertical-align:middle; }
+.mp-table tbody tr:last-child td { border-bottom:none; }
+.mp-table tbody tr:hover td { background:#FAFBFC; }
 
 /* Form inputs */
 .mp-input { width:100%; padding:8px 12px; border:1px solid var(--c-border); border-radius:8px;
@@ -169,7 +179,7 @@
     $isDosen  = $user->hasRole('dosen');
     $isKoor   = $user->hasRole('koor_prak');
     $isAsprak = $user->hasRole('asprak');
-    // Mahasiswa selalu ada (semua user bisa jadi mahasiswa praktikum)
+    $isMhs    = $user->hasRole('mahasiswa');
 
     // Icon path strings
     $iHome    = "M4.8787 8.90834L10.5858 3.54999C11.3669 2.81667 12.6332 2.81667 13.4142 3.54999L19.1213 8.90834M4.8787 8.90834C4.31629 9.43653 4.00002 10.1531 4.00002 10.9V18.1833C4.00002 19.7389 5.34317 21 7.00002 21H9V16C9 14.8954 9.89543 14 11 14H13C14.1046 14 15 14.8954 15 16V21H17C18.6569 21 20 19.7389 20 18.1833V10.9C20 10.153 19.684 9.43656 19.1213 8.90834M4.8787 8.90834L3.00031 10.6722M19.1213 8.90834L21 10.6722";
@@ -201,8 +211,6 @@
                     ['href' => route('eoffice.manprak.admin.praktikum.index'),              'label' => 'Daftar Praktikum',   'match' => 'admin.praktikum',          'icon' => $iBook],
                     ['href' => route('eoffice.manprak.admin.matkul-praktikum.index'),       'label' => 'Matkul Praktikum',   'match' => 'matkul-praktikum',         'icon' => $iList],
                     ['href' => route('eoffice.manprak.admin.dosen.index'),                  'label' => 'Daftar Dosen',       'match' => 'admin.dosen',              'icon' => $iUser],
-                    ['href' => route('eoffice.manprak.admin.asprak.index'),                 'label' => 'Asisten Praktikum',  'match' => 'admin.asprak',             'icon' => $iUser],
-                    ['href' => route('eoffice.manprak.admin.daftar-praktikan.index'),       'label' => 'Daftar Praktikan',   'match' => 'daftar-praktikan',         'icon' => $iList],
                 ],
                 'Pendaftaran' => [
                     ['href' => route('eoffice.manprak.admin.periode-pendaftaran.index'),    'label' => 'Periode Pendaftaran','match' => 'periode-pendaftaran',      'icon' => $iCal],
@@ -225,8 +233,11 @@
                 'Utama' => [
                     ['href' => route('eoffice.manprak.dosen.dashboard'),                             'label' => 'Dashboard',        'match' => 'dosen.dashboard',        'icon' => $iHome],
                 ],
-                'Kelola' => [
+                'Pendaftaran' => [
+                    ['href' => route('eoffice.manprak.dosen.periode-pendaftaran.index'),             'label' => 'Buka Periode Koor','match' => 'dosen.periode-pendaftaran', 'icon' => $iCal],
                     ['href' => route('eoffice.manprak.dosen.pendaftaran-koor.index'),                'label' => 'Seleksi Koor',     'match' => 'dosen.pendaftaran-koor', 'icon' => $iCheck],
+                ],
+                'Kelola' => [
                     ['href' => route('eoffice.manprak.dosen.asprak.index'),                          'label' => 'Asisten Praktikum','match' => 'dosen.asprak',           'icon' => $iUser],
                     ['href' => route('eoffice.manprak.dosen.daftar-praktikan.index'),                'label' => 'Daftar Praktikan', 'match' => 'dosen.daftar-praktikan', 'icon' => $iList],
                 ],
@@ -251,6 +262,7 @@
                     ['href' => route('eoffice.manprak.koor.dashboard'),                'label' => 'Dashboard',        'match' => 'koor.dashboard',             'icon' => $iHome],
                 ],
                 'Pendaftaran' => [
+                    ['href' => route('eoffice.manprak.koordinator.periode-pendaftaran.index'), 'label' => 'Buka Periode Asprak','match' => 'koordinator.periode-pendaftaran', 'icon' => $iCal],
                     ['href' => route('eoffice.manprak.koor.pendaftaran-asprak.index'), 'label' => 'Seleksi Asprak',   'match' => 'koor.pendaftaran-asprak',    'icon' => $iCheck],
                     ['href' => route('eoffice.manprak.koor.pendaftaran-praktikan.index'), 'label' => 'Pendaftaran Praktikan', 'match' => 'koor.pendaftaran-praktikan', 'icon' => $iList],
                 ],
@@ -286,26 +298,27 @@
         ];
     }
 
-    // Mahasiswa — selalu muncul
-    $sections[] = [
-        'label' => 'Mahasiswa',
-        'color' => '#D39C3D',
-        'bg'    => 'rgba(211,156,61,0.10)',
-        'match' => 'manprak.mahasiswa',
-        'groups' => [
-            'Utama' => [
-                ['href' => route('eoffice.manprak.mahasiswa.dashboard'),            'label' => 'Dashboard',         'match' => 'mahasiswa.dashboard',  'icon' => $iHome],
+    if ($isMhs) {
+        $sections[] = [
+            'label' => 'Mahasiswa',
+            'color' => '#D39C3D',
+            'bg'    => 'rgba(211,156,61,0.10)',
+            'match' => 'manprak.mahasiswa',
+            'groups' => [
+                'Utama' => [
+                    ['href' => route('eoffice.manprak.mahasiswa.dashboard'),            'label' => 'Dashboard',         'match' => 'mahasiswa.dashboard',  'icon' => $iHome],
+                ],
+                'Aktivitas' => [
+                    ['href' => route('eoffice.manprak.mahasiswa.pendaftaran-praktikan.index'), 'label' => 'Daftar Praktikan (IRS)', 'match' => 'mahasiswa.pendaftaran-praktikan', 'icon' => $iUser],
+                    ['href' => route('eoffice.manprak.mahasiswa.modul.index'),          'label' => 'Daftar Modul',      'match' => 'mahasiswa.modul',      'icon' => $iBook],
+                    ['href' => route('eoffice.manprak.mahasiswa.pengumuman.index'),     'label' => 'Pengumuman',        'match' => 'mahasiswa.pengumuman', 'icon' => $iBell],
+                    ['href' => route('eoffice.manprak.mahasiswa.tugas.index'),          'label' => 'Tugas',             'match' => 'mahasiswa.tugas',      'icon' => $iEdit],
+                    ['href' => route('eoffice.manprak.mahasiswa.nilai.index'),          'label' => 'Nilai',             'match' => 'mahasiswa.nilai',      'icon' => $iCheck],
+                    ['href' => route('eoffice.manprak.mahasiswa.daftar-asprak.index'), 'label' => 'Daftar Asprak/Koor','match' => 'daftar-asprak',        'icon' => $iUser],
+                ],
             ],
-            'Aktivitas' => [
-                ['href' => route('eoffice.manprak.mahasiswa.pendaftaran-praktikan.index'), 'label' => 'Daftar Praktikan (IRS)', 'match' => 'mahasiswa.pendaftaran-praktikan', 'icon' => $iUser],
-                ['href' => route('eoffice.manprak.mahasiswa.modul.index'),          'label' => 'Daftar Modul',      'match' => 'mahasiswa.modul',      'icon' => $iBook],
-                ['href' => route('eoffice.manprak.mahasiswa.pengumuman.index'),     'label' => 'Pengumuman',        'match' => 'mahasiswa.pengumuman', 'icon' => $iBell],
-                ['href' => route('eoffice.manprak.mahasiswa.tugas.index'),          'label' => 'Tugas',             'match' => 'mahasiswa.tugas',      'icon' => $iEdit],
-                ['href' => route('eoffice.manprak.mahasiswa.nilai.index'),          'label' => 'Nilai',             'match' => 'mahasiswa.nilai',      'icon' => $iCheck],
-                ['href' => route('eoffice.manprak.mahasiswa.daftar-asprak.index'), 'label' => 'Daftar Asprak/Koor','match' => 'daftar-asprak',        'icon' => $iUser],
-            ],
-        ],
-    ];
+        ];
+    }
 
     $multiRole    = count($sections) > 1;
     $manprakActive= str_contains($currentRoute, 'manprak');
@@ -349,7 +362,7 @@
             @if($isDosen)  <span class="text-[9px] font-bold px-[6px] py-[1px] rounded-full text-white whitespace-nowrap" style="background:#0B266E;">DOSEN</span>  @endif
             @if($isKoor)   <span class="text-[9px] font-bold px-[6px] py-[1px] rounded-full text-white whitespace-nowrap" style="background:#6366F1;">KOOR</span>   @endif
             @if($isAsprak) <span class="text-[9px] font-bold px-[6px] py-[1px] rounded-full text-white whitespace-nowrap" style="background:#40C4AA;">ASPRAK</span> @endif
-            <span class="text-[9px] font-bold px-[6px] py-[1px] rounded-full text-white whitespace-nowrap" style="background:#D39C3D;">MHS</span>
+            @if($isMhs)    <span class="text-[9px] font-bold px-[6px] py-[1px] rounded-full text-white whitespace-nowrap" style="background:#D39C3D;">MHS</span>    @endif
         </div>
         @endif
 
@@ -492,6 +505,121 @@
                 </div>
             </div>
             <div class="flex items-center gap-2">
+
+                {{-- ── Praktikum Switcher Kontekstual ── --}}
+                @php
+                    $switcherPraktikumList = collect();
+                    $switcherActiveId = null;
+                    $switcherContext = null;
+
+                    // 1. Context Koordinator
+                    if (str_contains($currentRoute, 'manprak.koor') || str_contains($currentRoute, 'manprak.koordinator')) {
+                        if ($isKoor) {
+                            $switcherContext = 'koor';
+                            $switcherPraktikumList = \Modules\EOffice\Models\Praktikum::where('koor_id', $user->id)
+                                ->whereIn('status', ['aktif', 'nonaktif'])
+                                ->orderByRaw("status = 'aktif' DESC")
+                                ->orderBy('created_at', 'desc')
+                                ->get();
+                            $switcherActiveId = session('koor_praktikum_id') ?? $switcherPraktikumList->first()?->id;
+                        }
+                    } 
+                    // 2. Context Asisten Praktikum (Asprak)
+                    elseif (str_contains($currentRoute, 'manprak.asprak')) {
+                        if ($isAsprak) {
+                            $switcherContext = 'asprak';
+                            $aspraks = \Modules\EOffice\Models\AsprakPraktikum::with('praktikum')
+                                ->where('user_id', $user->id)
+                                ->where('role', 'asprak')
+                                ->whereNull('deleted_at')
+                                ->get();
+                            $switcherPraktikumList = $aspraks->pluck('praktikum')->filter()->unique('id');
+                            $switcherActiveId = session('manprak_asprak_praktikum_id') ?? $switcherPraktikumList->first()?->id;
+                        }
+                    } 
+                    // 3. Context Mahasiswa (Praktikan)
+                    elseif (str_contains($currentRoute, 'manprak.mahasiswa')) {
+                        if ($isMhs) {
+                            $switcherContext = 'mahasiswa';
+                            $dps = \Modules\EOffice\Models\DaftarPraktikan::with('praktikum')
+                                ->where('user_id', $user->id)
+                                ->get();
+                            $switcherPraktikumList = $dps->pluck('praktikum')->filter()->unique('id');
+                            $switcherActiveId = session('mhs_praktikum_id') ?? $switcherPraktikumList->first()?->id;
+                        }
+                    }
+
+                    $switcherActivePraktikum = $switcherPraktikumList->firstWhere('id', $switcherActiveId) ?? $switcherPraktikumList->first();
+                @endphp
+
+                @if($switcherContext && $switcherPraktikumList->count() > 0)
+                <div class="relative" x-data="{ open: false }">
+                    <button @click="open = !open" @click.outside="open = false"
+                            class="flex items-center gap-[8px] px-3 py-[7px] rounded-[9px] border border-[#DFE1E7] bg-white hover:bg-[#F6F8FA] transition-colors cursor-pointer"
+                            style="max-width:260px;">
+                        {{-- Status dot --}}
+                        <span class="w-[7px] h-[7px] rounded-full flex-shrink-0"
+                              style="background:{{ ($switcherActivePraktikum?->status === 'aktif') ? '#40C4AA' : '#A4ABB8' }};"></span>
+                        <span class="text-[12px] font-semibold text-[#0D0D12] truncate" style="max-width:160px;">
+                            {{ $switcherActivePraktikum?->nama ?? 'Pilih Praktikum' }}
+                        </span>
+                        <svg class="w-[10px] h-[10px] flex-shrink-0 text-[#A4ABB8] transition-transform duration-150"
+                             :class="open ? 'rotate-180' : ''"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+                            <polyline points="6 9 12 15 18 9"/>
+                        </svg>
+                    </button>
+
+                    {{-- Dropdown --}}
+                    <div x-show="open" x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="opacity-0 scale-95" x-transition:enter-end="opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-end="opacity-0 scale-95"
+                         class="absolute right-0 top-[calc(100%+6px)] z-50 bg-white border border-[#DFE1E7] rounded-[12px] shadow-[0_8px_24px_rgba(0,0,0,.12)] overflow-hidden"
+                         style="min-width:240px;">
+                        <div class="px-4 py-[10px] border-b border-[#F0F1F4]">
+                            <div class="text-[10px] font-bold text-[#A4ABB8] uppercase tracking-[.06em]">Ganti Tampilan Praktikum</div>
+                        </div>
+                        @foreach($switcherPraktikumList as $p)
+                        @if($switcherContext === 'koor')
+                        <form method="POST" action="{{ route('eoffice.manprak.koor.switch-praktikum') }}">
+                            @csrf
+                            <input type="hidden" name="praktikum_id" value="{{ $p->id }}">
+                        @else
+                        {{-- Form GET Dinamis untuk Asprak & Mahasiswa --}}
+                        <form method="GET" action="{{ url()->current() }}">
+                            {{-- Mempertahankan query parameters yang sedang aktif (misal filter dll) --}}
+                            @foreach(request()->except('praktikum_id') as $key => $value)
+                                @if(is_array($value))
+                                    @foreach($value as $v)
+                                        <input type="hidden" name="{{ $key }}[]" value="{{ $v }}">
+                                    @endforeach
+                                @else
+                                    <input type="hidden" name="{{ $key }}" value="{{ $value }}">
+                                @endif
+                            @endforeach
+                            <input type="hidden" name="praktikum_id" value="{{ $p->id }}">
+                        @endif
+                            <button type="submit"
+                                    class="w-full flex items-center gap-3 px-4 py-[10px] text-left transition-colors hover:bg-[#F6F8FA] border-none cursor-pointer"
+                                    style="background:{{ $p->id === $switcherActiveId ? '#EEF1FA' : 'transparent' }};">
+                                <span class="w-[7px] h-[7px] rounded-full flex-shrink-0"
+                                      style="background:{{ $p->status === 'aktif' ? '#40C4AA' : '#A4ABB8' }};"></span>
+                                <div class="flex-1 min-w-0">
+                                    <div class="text-[13px] font-{{ $p->id === $switcherActiveId ? 'semibold' : 'medium' }} text-[#0D0D12] truncate">{{ $p->nama }}</div>
+                                    <div class="text-[11px] text-[#666D80]">{{ $p->kode ?? 'Tanpa kode' }} · {{ ucfirst($p->status) }}</div>
+                                </div>
+                                @if($p->id === $switcherActiveId)
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                @endif
+                            </button>
+                        </form>
+                        @endforeach
+                    </div>
+                </div>
+                @endif
+                {{-- ── /Praktikum Switcher Kontekstual ── --}}
+
                 <div class="relative flex items-center justify-center w-[34px] h-[34px] rounded-lg border border-[#DFE1E7] bg-white cursor-pointer hover:bg-[#F6F8FA]">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="1.8" stroke-linecap="round">
                         <path d="{{ $iBell }}"/>

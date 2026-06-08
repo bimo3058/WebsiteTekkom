@@ -18,24 +18,55 @@ class DashboardController extends Controller
 {
     public function __construct(protected KoorPraktikumService $koorService) {}
 
-    public function index()
+    /**
+     * Resolve praktikum yang sedang aktif untuk koor ini.
+     * Priority: session → praktikum aktif pertama.
+     */
+    public static function resolvePraktikum(): ?Praktikum
     {
         $user = auth()->user();
 
-        $praktikum = Praktikum::with(['dosen', 'modul.asprak'])
-            ->where('koor_id', $user->id)
-            ->where('status', 'aktif')
-            ->withCount(['daftarPraktikan', 'modul', 'asprakPraktikum'])
-            ->first();
+        // Ambil semua praktikum yang dikoor oleh user ini
+        $all = Praktikum::where('koor_id', $user->id)
+            ->whereIn('status', ['aktif', 'nonaktif'])
+            ->orderByRaw("status = 'aktif' DESC")
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-        if ($praktikum) {
-            $this->koorService->assign($praktikum, $user);
-            $praktikum->loadCount(['daftarPraktikan', 'modul', 'asprakPraktikum']);
+        if ($all->isEmpty()) return null;
+
+        $sessionId = session('koor_praktikum_id');
+        if ($sessionId) {
+            $found = $all->firstWhere('id', $sessionId);
+            if ($found) return $found;
         }
 
-        $totalAsprak          = $praktikum?->asprak_praktikum_count ?? 0;
-        $totalPraktikan       = $praktikum?->daftar_praktikan_count ?? 0;
-        $totalModul           = $praktikum?->modul_count ?? 0;
+        // Fallback: praktikum aktif pertama
+        $fallback = $all->firstWhere('status', 'aktif') ?? $all->first();
+        session(['koor_praktikum_id' => $fallback->id]);
+        return $fallback;
+    }
+
+    public function index()
+    {
+        $user      = auth()->user();
+        $praktikum = self::resolvePraktikum();
+
+        // Semua praktikum koor ini untuk switcher
+        $allPraktikum = Praktikum::where('koor_id', $user->id)
+            ->whereIn('status', ['aktif', 'nonaktif'])
+            ->orderByRaw("status = 'aktif' DESC")
+            ->orderBy('created_at', 'desc')
+            ->get();
+
+        if ($praktikum) {
+            $praktikum->loadCount(['daftarPraktikan', 'modul', 'asprakPraktikum']);
+            $this->koorService->assign($praktikum, $user);
+        }
+
+        $totalAsprak         = $praktikum?->asprak_praktikum_count ?? 0;
+        $totalPraktikan      = $praktikum?->daftar_praktikan_count ?? 0;
+        $totalModul          = $praktikum?->modul_count ?? 0;
 
         $asprakTerdistribusi = ModulAsprak::whereHas('modul', fn($q) => $q->where('praktikum_id', $praktikum?->id))
             ->distinct('asprak_id')
@@ -67,6 +98,7 @@ class DashboardController extends Controller
 
         return view('eoffice::manajemen-praktikum.koordinator.dashboard', compact(
             'praktikum',
+            'allPraktikum',
             'totalAsprak',
             'totalPraktikan',
             'totalModul',
@@ -80,12 +112,28 @@ class DashboardController extends Controller
     }
 
     /**
+     * Switch praktikum aktif untuk session koor ini.
+     */
+    public function switchPraktikum(Request $request)
+    {
+        $request->validate(['praktikum_id' => 'required|uuid|exists:eo_praktikum,id']);
+
+        $user = auth()->user();
+        $praktikum = Praktikum::where('id', $request->praktikum_id)
+            ->where('koor_id', $user->id)
+            ->firstOrFail();
+
+        session(['koor_praktikum_id' => $praktikum->id]);
+
+        return back()->with('success', "Tampilan beralih ke: {$praktikum->nama}");
+    }
+
+    /**
      * Generate / refresh kode join kelas untuk praktikum yang dikoordinatori.
      */
     public function generateKodePraktikum()
     {
-        $user = auth()->user();
-        $p    = Praktikum::where('koor_id', $user->id)->where('status', 'aktif')->firstOrFail();
+        $p = self::resolvePraktikum() ?? abort(404);
         $p->update(['kode' => Praktikum::generateKode()]);
 
         return back()->with('success', "Kode praktikum baru: {$p->kode} — bagikan ke praktikan yang sudah disetujui.");
@@ -97,9 +145,8 @@ class DashboardController extends Controller
     public function praktikan(Request $request)
     {
         $user      = auth()->user();
-        $praktikum = Praktikum::where('koor_id', $user->id)->where('status', 'aktif')->first();
-
-        $search = $request->input('search');
+        $praktikum = self::resolvePraktikum();
+        $search    = $request->input('search');
 
         $query = DaftarPraktikan::with(['user'])
             ->where('praktikum_id', $praktikum?->id);
@@ -120,7 +167,6 @@ class DashboardController extends Controller
 
     /**
      * Import praktikan dari file (CSV/Excel) atau tambah manual.
-     * Sesuai docx: admin/koor bisa unggah/menambah data praktikan.
      */
     public function importPraktikan(Request $request)
     {
@@ -138,7 +184,6 @@ class DashboardController extends Controller
 
         $added = 0;
 
-        // Tambah user manual (by ID)
         if ($request->has('user_ids')) {
             foreach ($request->user_ids as $userId) {
                 DaftarPraktikan::firstOrCreate([
@@ -149,7 +194,6 @@ class DashboardController extends Controller
             }
         }
 
-        // Import dari file CSV (format: kolom nim atau email)
         if ($request->hasFile('file')) {
             $path   = $request->file('file')->getRealPath();
             $rows   = array_map('str_getcsv', file($path));

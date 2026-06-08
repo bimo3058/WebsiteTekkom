@@ -6,7 +6,28 @@ export default defineConfig({
         laravel({
             input: ["resources/css/app.css", "resources/js/app.js"],
 
-            refresh: true,
+            // refresh: true,
+            refresh: [
+                "resources/views/**",
+                "routes/**",
+                "app/Livewire/**",
+
+                // ─── MODUL: EOFFICE ───
+                "Modules/EOffice/resources/views/**/*.blade.php",
+                "Modules/EOffice/routes/**/*.php",
+
+                // ─── MODUL: BANK SOAL ───
+                "Modules/BankSoal/resources/views/**/*.blade.php",
+                "Modules/BankSoal/routes/**/*.php",
+
+                // ─── MODUL: CAPSTONE ───
+                "Modules/Capstone/resources/views/**/*.blade.php",
+                "Modules/Capstone/routes/**/*.php",
+
+                // ─── MODUL: MANAJEMEN MAHASISWA ───
+                "Modules/ManajemenMahasiswa/resources/views/**/*.blade.php",
+                "Modules/ManajemenMahasiswa/routes/**/*.php",
+            ],
         }),
     ],
     server: {

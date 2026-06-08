@@ -2,6 +2,7 @@
 
 namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa;
 
+use App\Services\SupabaseStorage;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\EOffice\Models\AsprakPraktikum;
@@ -13,9 +14,8 @@ use Modules\EOffice\Models\Praktikum;
 
 class DaftarAsprakController extends Controller
 {
-    /**
-     * Ambil periode yang sedang aktif untuk praktikum & jenis tertentu.
-     */
+    public function __construct(private SupabaseStorage $supabase) {}
+
     private function getPeriodeAktif(string $praktikumId, string $jenis): ?PeriodePendaftaran
     {
         return PeriodePendaftaran::where('praktikum_id', $praktikumId)
@@ -142,10 +142,10 @@ class DaftarAsprakController extends Controller
         }
 
         $cvPath = $request->hasFile('cv')
-            ? $request->file('cv')->store('asprak-cv/' . $user->id, 'local')
+            ? $this->supabase->upload($request->file('cv'), 'asprak-cv/' . $user->id, 'eoffice')
             : null;
         $transkripPath = $request->hasFile('transkrip')
-            ? $request->file('transkrip')->store('asprak-transkrip/' . $user->id, 'local')
+            ? $this->supabase->upload($request->file('transkrip'), 'asprak-transkrip/' . $user->id, 'eoffice')
             : null;
 
         PendaftaranAsprak::create([
