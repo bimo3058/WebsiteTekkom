@@ -14,13 +14,34 @@
             </div>
         </div>
 
-        {{-- Hidden Form for GET filters --}}
-        <form method="GET" action="{{ route('banksoal.admin.cbt.riwayat') }}" id="filter-form" class="hidden">
-            <input type="hidden" name="q" id="hidden-q" value="{{ request('q') }}">
-            <input type="hidden" name="periode_id" id="hidden-periode" value="{{ request('periode_id') }}">
-            <input type="hidden" name="keterangan" id="hidden-keterangan" value="{{ request('keterangan') }}">
-            <input type="hidden" name="per_page" id="hidden-per-page" value="{{ request('per_page', 5) }}">
-        </form>
+        {{-- Filter Panel: Alpine.js state is on the outer wrapper div --}}
+        <div
+            x-data="{
+                openFilter: false,
+                pendingPeriode: '{{ request('periode_id') }}',
+                pendingKeterangan: '{{ request('keterangan') }}',
+                activeCount: {{ (request('periode_id') ? 1 : 0) + (request('keterangan') ? 1 : 0) }},
+                applyFilters() {
+                    const url = new URL(window.location.href);
+                    if (this.pendingPeriode) url.searchParams.set('periode_id', this.pendingPeriode);
+                    else url.searchParams.delete('periode_id');
+                    if (this.pendingKeterangan) url.searchParams.set('keterangan', this.pendingKeterangan);
+                    else url.searchParams.delete('keterangan');
+                    url.searchParams.delete('page');
+                    window.location.href = url.toString();
+                },
+                clearFilters() {
+                    this.pendingPeriode = '';
+                    this.pendingKeterangan = '';
+                    const url = new URL(window.location.href);
+                    url.searchParams.delete('periode_id');
+                    url.searchParams.delete('keterangan');
+                    url.searchParams.delete('page');
+                    window.location.href = url.toString();
+                }
+            }"
+            @mousedown.outside="openFilter = false"
+        >
 
         {{-- Table Container --}}
         <div class="bg-white border border-gray-200 rounded-xl shadow-sm mb-8 overflow-hidden">
@@ -31,45 +52,98 @@
                 <!-- Filters & Search (Kanan) -->
                 <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
                     <!-- Search -->
-                    <div class="relative w-full sm:w-64">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <form method="GET" action="{{ route('banksoal.admin.cbt.riwayat') }}" class="relative w-full sm:w-64 flex items-center">
+                        @if(request('periode_id'))<input type="hidden" name="periode_id" value="{{ request('periode_id') }}">@endif
+                        @if(request('keterangan'))<input type="hidden" name="keterangan" value="{{ request('keterangan') }}">@endif
+                        @if(request('per_page'))<input type="hidden" name="per_page" value="{{ request('per_page') }}">@endif
+                        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                             </svg>
                         </div>
-                        <input type="text" value="{{ request('q') }}"
-                            placeholder="Cari NIM atau nama..."
-                            oninput="document.getElementById('hidden-q').value = this.value;"
-                            onkeydown="if(event.key === 'Enter') { document.getElementById('hidden-q').value = this.value; document.getElementById('filter-form').submit(); }"
-                            class="w-full pl-9 pr-4 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-[#2A3A7C]/20 focus:border-[#2A3A7C] transition-all placeholder:text-gray-400 bg-white text-gray-900">
-                    </div>
+                        <input type="text" name="q" value="{{ request('q') }}"
+                            placeholder="Search mahasiswa..."
+                            class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-[#2A3A7C] focus:ring-0 transition-all placeholder:text-gray-400 bg-white text-gray-700">
+                    </form>
 
-                    <!-- Filter Periode -->
-                    <div class="relative w-full sm:w-48">
-                        <select onchange="document.getElementById('hidden-periode').value = this.value; document.getElementById('filter-form').submit();"
-                            class="w-full pl-3 pr-8 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-[#2A3A7C]/20 focus:border-[#2A3A7C] transition-all cursor-pointer bg-white text-gray-700">
-                            <option value="">Semua Periode</option>
-                            @foreach($periodes as $periode)
-                                <option value="{{ $periode->id }}" {{ request('periode_id') == $periode->id ? 'selected' : '' }}>
-                                    {{ $periode->nama_periode }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
+                    <!-- Filter Button -->
+                    <div class="relative">
+                        <button @click="openFilter = !openFilter" type="button"
+                            class="relative inline-flex items-center gap-2 px-4 py-2 bg-white border rounded-lg text-[13px] font-medium transition-all"
+                            :class="activeCount > 0 ? 'border-[#2A3A7C] text-[#2A3A7C] bg-[#2A3A7C]/5' : 'border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-800'">
+                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
+                            </svg>
+                            Filter
+                            <span x-show="activeCount > 0"
+                                class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold bg-[#2A3A7C] text-white rounded-full"
+                                x-text="activeCount">
+                            </span>
+                        </button>
 
-                    <!-- Filter Keterangan -->
-                    <div class="relative w-full sm:w-40">
-                        <select onchange="document.getElementById('hidden-keterangan').value = this.value; document.getElementById('filter-form').submit();"
-                            class="w-full pl-3 pr-8 py-2 border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-[#2A3A7C]/20 focus:border-[#2A3A7C] transition-all cursor-pointer bg-white text-gray-700">
-                            <option value="">Semua Keterangan</option>
-                            <option value="lulus" {{ request('keterangan') === 'lulus' ? 'selected' : '' }}>Lulus</option>
-                            <option value="mengulang" {{ request('keterangan') === 'mengulang' ? 'selected' : '' }}>Mengulang</option>
-                        </select>
+                        {{-- Filter Panel --}}
+                        <div x-show="openFilter"
+                            x-transition:enter="transition ease-out duration-150"
+                            x-transition:enter-start="opacity-0 scale-95 translate-y-1"
+                            x-transition:enter-end="opacity-100 scale-100 translate-y-0"
+                            x-transition:leave="transition ease-in duration-100"
+                            x-transition:leave-start="opacity-100 scale-100"
+                            x-transition:leave-end="opacity-0 scale-95"
+                            x-cloak
+                            class="absolute right-0 mt-2 w-72 bg-white border border-gray-200 rounded-xl shadow-xl z-50 overflow-hidden">
+
+                            {{-- Panel Header --}}
+                            <div class="px-5 py-3.5 border-b border-gray-100 flex items-center justify-between">
+                                <span class="text-[13px] font-semibold text-gray-800">Filter</span>
+                                <button @click="openFilter = false" type="button" class="text-gray-400 hover:text-gray-600 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+                                </button>
+                            </div>
+
+                            {{-- Panel Body --}}
+                            <div class="px-5 py-4 space-y-4">
+
+                                <!-- Filter Periode Ujian -->
+                                <div>
+                                    <label class="block text-[12px] font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Periode Ujian</label>
+                                    <select x-model="pendingPeriode"
+                                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-[#2A3A7C] transition-all cursor-pointer bg-white text-gray-700">
+                                        <option value="">Semua Periode</option>
+                                        @foreach($periodes as $periode)
+                                            <option value="{{ $periode->id }}">{{ $periode->nama_periode }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+
+                                <!-- Filter Keterangan -->
+                                <div>
+                                    <label class="block text-[12px] font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Keterangan</label>
+                                    <select x-model="pendingKeterangan"
+                                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-[#2A3A7C] transition-all cursor-pointer bg-white text-gray-700">
+                                        <option value="">Semua Keterangan</option>
+                                        <option value="lulus">Lulus</option>
+                                        <option value="tidak_lulus">Tidak Lulus</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            {{-- Panel Footer --}}
+                            <div class="px-5 py-3.5 border-t border-gray-100 flex items-center justify-between bg-gray-50/50">
+                                <button @click="clearFilters()" type="button"
+                                    class="px-4 py-1.5 text-[13px] font-medium text-gray-600 hover:text-gray-800 rounded-lg hover:bg-gray-100 transition-colors">
+                                    Clear
+                                </button>
+                                <button @click="applyFilters()" type="button"
+                                    class="px-5 py-1.5 text-[13px] font-semibold bg-[#2A3A7C] text-white rounded-lg hover:bg-[#1e2d60] transition-colors shadow-sm">
+                                    Terapkan
+                                </button>
+                            </div>
+                        </div>
                     </div>
 
                     @if(request()->hasAny(['q','periode_id','keterangan']))
                         <a href="{{ route('banksoal.admin.cbt.riwayat') }}"
-                           class="inline-flex items-center justify-center px-3 py-2 border border-gray-200 text-gray-600 hover:bg-gray-50 text-[13px] font-medium rounded-lg transition-colors shrink-0">
+                           class="inline-flex items-center justify-center px-4 py-2 border border-gray-200 text-gray-500 hover:bg-gray-50 hover:text-gray-700 text-[13px] font-medium rounded-lg transition-colors shrink-0">
                             Reset
                         </a>
                     @endif
@@ -84,6 +158,7 @@
                             <th class="px-6 py-4 w-10 text-center">No.</th>
                             <th class="px-6 py-4 whitespace-nowrap">NIM</th>
                             <th class="px-6 py-4 whitespace-nowrap">Nama Mahasiswa</th>
+                            <th class="px-6 py-4 whitespace-nowrap">Periode Ujian</th>
                             <th class="px-6 py-4 whitespace-nowrap text-center">Ujian Ke-</th>
                             <th class="px-6 py-4 whitespace-nowrap text-center">Total Poin</th>
                             <th class="px-6 py-4 whitespace-nowrap text-center">Keterangan</th>
@@ -108,6 +183,16 @@
                                 </td>
                                 <td class="px-6 py-4 font-medium text-gray-900 whitespace-nowrap">
                                     {{ $nama }}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="text-[13px] text-gray-800 font-medium whitespace-nowrap">
+                                        {{ $session->jadwal?->periode?->nama_periode ?? '—' }}
+                                    </p>
+                                    @if($session->jadwal)
+                                        <p class="text-[11px] text-gray-400 mt-0.5 whitespace-nowrap">
+                                            Sesi {{ $session->jadwal->nama_sesi ?? '—' }}
+                                        </p>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <span class="inline-flex items-center justify-center w-7 h-7 rounded-full text-[12px] font-bold
@@ -135,7 +220,7 @@
                                             </span>
                                         @else
                                             <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[12px] font-semibold bg-rose-50 text-rose-700 border border-rose-200">
-                                                MENGULANG
+                                                TIDAK LULUS
                                             </span>
                                         @endif
                                     @else
@@ -183,7 +268,7 @@
                     <div class="flex items-center gap-2">
                         <span class="text-[13px] text-gray-700 font-medium whitespace-nowrap">Per page</span>
                         <div class="relative">
-                            <select onchange="document.getElementById('hidden-per-page').value = this.value; document.getElementById('filter-form').submit();" class="pl-3 pr-8 py-1.5 bg-white border border-gray-300 rounded-lg text-[13px] text-gray-700 font-medium focus:ring-2 focus:ring-[#2A3A7C]/20 focus:border-[#2A3A7C] transition-all cursor-pointer outline-none disabled:bg-gray-50 disabled:cursor-not-allowed">
+                            <select onchange="const url = new URL(window.location.href); url.searchParams.set('per_page', this.value); url.searchParams.delete('page'); window.location.href = url.toString();" class="pl-3 pr-8 py-1.5 bg-white border border-gray-300 rounded-lg text-[13px] text-gray-700 font-medium focus:ring-2 focus:ring-[#2A3A7C]/20 focus:border-[#2A3A7C] transition-all cursor-pointer outline-none disabled:bg-gray-50 disabled:cursor-not-allowed">
                                 <option value="5"  {{ request('per_page', 5) == 5  ? 'selected' : '' }}>5</option>
                                 <option value="10" {{ request('per_page', 5) == 10 ? 'selected' : '' }}>10</option>
                                 <option value="15" {{ request('per_page', 5) == 15 ? 'selected' : '' }}>15</option>
@@ -297,4 +382,7 @@
         </div>
 
     </div>
+
+</div>{{-- /end Alpine x-data wrapper --}}
+
 </x-banksoal::layouts.admin>
