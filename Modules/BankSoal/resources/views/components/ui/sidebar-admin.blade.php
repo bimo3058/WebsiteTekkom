@@ -123,70 +123,73 @@
             <div>
                 <p x-show="sidebarOpen" class="px-4 mb-3 text-[11px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap" x-transition.opacity.duration.300ms>Ujian Komprehensif</p>
                 <div class="space-y-1">
-                    @php $isKontrolUjianActive = request()->routeIs('banksoal.periode.*') || request()->routeIs('banksoal.pendaftaran.*') || request()->routeIs('banksoal.aktivasi.*'); @endphp
-                    <div x-data="{ open: {{ $isKontrolUjianActive ? 'true' : 'false' }} }" class="space-y-1">
+                    <!-- Setup Ujian -->
+                    @php $isPeriodeActive = request()->routeIs('banksoal.periode.*') || request()->routeIs('banksoal.pendaftaran.*'); @endphp
+                    <div x-data="{ open: {{ $isPeriodeActive ? 'true' : 'false' }} }" class="space-y-1">
                         <button @click="if (!sidebarOpen) { sidebarOpen = true; open = true } else { open = !open }"
-                            class="group w-full relative flex items-center justify-between py-2.5 px-4 rounded-xl transition-all {{ $isKontrolUjianActive ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}">
-                            @if($isKontrolUjianActive)
+                            class="group w-full relative flex items-center justify-between py-2.5 px-4 rounded-xl transition-all {{ $isPeriodeActive ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}">
+                            @if($isPeriodeActive)
                                 <div class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1.5 bg-primary rounded-r-full"></div>
                             @endif
                             <div class="flex items-center gap-3">
-                                <svg class="w-5 h-5 flex-shrink-0 {{ $isKontrolUjianActive ? 'text-primary' : 'text-slate-400 group-hover:text-slate-500' }}"
-                                    fill="{{ $isKontrolUjianActive ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
-                                    </path>
+                                <svg class="w-5 h-5 flex-shrink-0 {{ $isPeriodeActive ? 'text-primary' : 'text-slate-400 group-hover:text-slate-500' }}"
+                                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path>
                                 </svg>
-                                <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap" x-transition.opacity.duration.300ms>Sistem Ujian</span>
+                                <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap" x-transition.opacity.duration.300ms>Setup Ujian</span>
                             </div>
-                            <svg x-show="sidebarOpen" class="w-4 h-4 flex-shrink-0 transition-transform duration-200 {{ $isKontrolUjianActive ? 'text-slate-900' : 'text-slate-400' }}"
-                                :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"
-                                xmlns="http://www.w3.org/2000/svg">
+                            <svg x-show="sidebarOpen" class="w-4 h-4 flex-shrink-0 transition-transform duration-200 {{ $isPeriodeActive ? 'text-slate-900' : 'text-slate-400' }}"
+                                :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
                             </svg>
                         </button>
-                        <div x-show="open && sidebarOpen" x-cloak class="pl-12 pr-4 py-2 space-y-3 bg-slate-50/50 rounded-xl mx-2 mb-2">
-                            <!-- Manajemen Ujian & Peserta (Sub-Accordion) -->
-                            @php $isPeriodeActive = request()->routeIs('banksoal.periode.*') || request()->routeIs('banksoal.pendaftaran.*'); @endphp
-                            <div x-data="{ subOpen: {{ $isPeriodeActive ? 'true' : 'false' }} }" class="space-y-1">
-                                <button @click="subOpen = !subOpen" class="w-full flex items-center justify-between text-xs font-semibold {{ $isPeriodeActive ? 'text-primary' : 'text-slate-500 hover:text-slate-700' }}">
-                                    <span>Manajemen Peserta</span>
-                                    <svg class="w-3 h-3 transition-transform" :class="subOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                </button>
-                                <div x-show="subOpen" class="pl-2 space-y-1.5 mt-1 border-l border-slate-200">
-                                    <a href="{{ route('banksoal.periode.setup') }}" class="block text-[12px] {{ request()->routeIs('banksoal.periode.setup') ? 'text-primary font-bold' : 'text-slate-500 hover:text-slate-800' }}">Setup Periode</a>
-                                    <a href="{{ route('banksoal.pendaftaran.alokasi-sesi.index') }}" class="block text-[12px] {{ request()->routeIs('banksoal.pendaftaran.alokasi-sesi.*') ? 'text-primary font-bold' : 'text-slate-500 hover:text-slate-800' }}">Jadwal & Sesi</a>
-                                    <a href="{{ route('banksoal.pendaftaran.index') }}" class="block text-[12px] {{ request()->routeIs('banksoal.pendaftaran.index') ? 'text-primary font-bold' : 'text-slate-500 hover:text-slate-800' }}">Daftar Peserta</a>
-                                </div>
-                            </div>
-
-                            <!-- Monitoring (Sub-Accordion) -->
-                            @php $isMonitoringActive = request()->routeIs('banksoal.aktivasi.*') || request()->routeIs('banksoal.admin.cbt.live-proctoring'); @endphp
-                            <div x-data="{ subOpen: {{ $isMonitoringActive ? 'true' : 'false' }} }" class="space-y-1">
-                                <button @click="subOpen = !subOpen" class="w-full flex items-center justify-between text-xs font-semibold {{ $isMonitoringActive ? 'text-primary' : 'text-slate-500 hover:text-slate-700' }}">
-                                    <span>Monitoring Ujian</span>
-                                    <svg class="w-3 h-3 transition-transform" :class="subOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                </button>
-                                <div x-show="subOpen" class="pl-2 space-y-1.5 mt-1 border-l border-slate-200">
-                                    <a href="{{ route('banksoal.aktivasi.index') }}" class="block text-[12px] {{ request()->routeIs('banksoal.aktivasi.index') ? 'text-primary font-bold' : 'text-slate-500 hover:text-slate-800' }}">Aktivasi Sesi</a>
-                                    <a href="{{ route('banksoal.admin.cbt.live-proctoring') }}" class="block text-[12px] {{ request()->routeIs('banksoal.admin.cbt.live-proctoring') ? 'text-primary font-bold' : 'text-slate-500 hover:text-slate-800' }}">Live Pengawasan</a>
-                                </div>
-                            </div>
-
-                            <!-- Hasil (Sub-Accordion) -->
-                            @php $isHasilActive = request()->routeIs('banksoal.admin.cbt.riwayat') || request()->routeIs('banksoal.admin.cbt.analitik'); @endphp
-                            <div x-data="{ subOpen: {{ $isHasilActive ? 'true' : 'false' }} }" class="space-y-1">
-                                <button @click="subOpen = !subOpen" class="w-full flex items-center justify-between text-xs font-semibold {{ $isHasilActive ? 'text-primary' : 'text-slate-500 hover:text-slate-700' }}">
-                                    <span>Hasil & Analitik</span>
-                                    <svg class="w-3 h-3 transition-transform" :class="subOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                </button>
-                                <div x-show="subOpen" class="pl-2 space-y-1.5 mt-1 border-l border-slate-200">
-                                    <a href="{{ route('banksoal.admin.cbt.riwayat') }}" class="block text-[12px] {{ request()->routeIs('banksoal.admin.cbt.riwayat') ? 'text-primary font-bold' : 'text-slate-500 hover:text-slate-800' }}">Riwayat Ujian</a>
-                                    <a href="{{ route('banksoal.admin.cbt.analitik') }}" class="block text-[12px] {{ request()->routeIs('banksoal.admin.cbt.analitik') ? 'text-primary font-bold' : 'text-slate-500 hover:text-slate-800' }}">Dasbor Analitik</a>
-                                </div>
-                            </div>
+                        <div x-show="open && sidebarOpen" x-cloak class="pl-12 pr-4 py-1 space-y-1">
+                            <a href="{{ route('banksoal.periode.setup') }}" class="block text-sm {{ request()->routeIs('banksoal.periode.setup') ? 'text-primary font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Periode Ujian</a>
+                            <a href="{{ route('banksoal.pendaftaran.alokasi-sesi.index') }}" class="block text-sm {{ request()->routeIs('banksoal.pendaftaran.alokasi-sesi.*') ? 'text-primary font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Jadwal & Sesi</a>
+                            <a href="{{ route('banksoal.pendaftaran.index') }}" class="block text-sm {{ request()->routeIs('banksoal.pendaftaran.index') ? 'text-primary font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Daftar Peserta</a>
                         </div>
                     </div>
+
+                    <!-- Monitoring Ujian -->
+                    @php $isMonitoringActive = request()->routeIs('banksoal.aktivasi.*') || request()->routeIs('banksoal.admin.cbt.live-proctoring'); @endphp
+                    <div x-data="{ open: {{ $isMonitoringActive ? 'true' : 'false' }} }" class="space-y-1">
+                        <button @click="if (!sidebarOpen) { sidebarOpen = true; open = true } else { open = !open }"
+                            class="group w-full relative flex items-center justify-between py-2.5 px-4 rounded-xl transition-all {{ $isMonitoringActive ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}">
+                            @if($isMonitoringActive)
+                                <div class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1.5 bg-primary rounded-r-full"></div>
+                            @endif
+                            <div class="flex items-center gap-3">
+                                <svg class="w-5 h-5 flex-shrink-0 {{ $isMonitoringActive ? 'text-primary' : 'text-slate-400 group-hover:text-slate-500' }}"
+                                    fill="{{ $isMonitoringActive ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                </svg>
+                                <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap" x-transition.opacity.duration.300ms>Monitoring Ujian</span>
+                            </div>
+                            <svg x-show="sidebarOpen" class="w-4 h-4 flex-shrink-0 transition-transform duration-200 {{ $isMonitoringActive ? 'text-slate-900' : 'text-slate-400' }}"
+                                :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </button>
+                        <div x-show="open && sidebarOpen" x-cloak class="pl-12 pr-4 py-1 space-y-1">
+                            <a href="{{ route('banksoal.aktivasi.index') }}" class="block text-sm {{ request()->routeIs('banksoal.aktivasi.index') ? 'text-primary font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Aktivasi Sesi</a>
+                            <a href="{{ route('banksoal.admin.cbt.live-proctoring') }}" class="block text-sm {{ request()->routeIs('banksoal.admin.cbt.live-proctoring') ? 'text-primary font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Pantau Ujian</a>
+                        </div>
+                    </div>
+
+                    <!-- Riwayat Ujian — flat direct link -->
+                    @php $isRiwayatActive = request()->routeIs('banksoal.admin.cbt.riwayat') || request()->routeIs('banksoal.admin.cbt.detail'); @endphp
+                    <a href="{{ route('banksoal.admin.cbt.riwayat') }}"
+                        @click="if (!sidebarOpen) sidebarOpen = true"
+                        class="group w-full relative flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all {{ $isRiwayatActive ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}">
+                        @if($isRiwayatActive)
+                            <div class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1.5 bg-primary rounded-r-full"></div>
+                        @endif
+                        <svg class="w-5 h-5 flex-shrink-0 {{ $isRiwayatActive ? 'text-primary' : 'text-slate-400 group-hover:text-slate-500' }}"
+                            fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                        </svg>
+                        <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap" x-transition.opacity.duration.300ms>Riwayat Ujian</span>
+                    </a>
                 </div>
             </div>
         </nav>

@@ -89,7 +89,7 @@ class MahasiswaController extends Controller
             return redirect()->route('komprehensif.mahasiswa.dashboard')->with('info', $msg);
         }
 
-        $dosens = User::whereHas('roles', fn($q) => $q->where('name', 'dosen'))
+        $dosens = User::role('dosen')
             ->orderBy('name')
             ->get(['id', 'name']);
 
