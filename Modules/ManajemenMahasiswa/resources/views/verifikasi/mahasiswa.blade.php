@@ -223,12 +223,12 @@
             <table class="verif-table">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Nama Kegiatan</th>
-                        <th>Peran</th>
-                        <th>Tanggal</th>
-                        <th>Bukti</th>
-                        <th>Status</th>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 30%;">Nama Kegiatan</th>
+                        <th style="width: 20%;">Peran</th>
+                        <th style="width: 12%;">Tanggal</th>
+                        <th style="width: 10%;">Bukti</th>
+                        <th style="width: 23%;">Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -269,8 +269,13 @@
                                     @endif
                                 </span>
                                 @if($rw->verification_status === 'rejected' && $rw->verification_note)
-                                    <div style="font-size: 11px; color: #dc2626; margin-top: 4px; font-style: italic;">
-                                        "{{ $rw->verification_note }}"
+                                    <div style="font-size: 11px; color: #b91c1c; margin-top: 6px; padding: 6px 10px; background: #fef2f2; border-left: 3px solid #ef4444; border-radius: 4px; overflow-wrap: anywhere; white-space: normal; width: 100%; box-sizing: border-box; line-height: 1.4;">
+                                        {{ $rw->verification_note }}
+                                    </div>
+                                @endif
+                                @if($rw->verification_status === 'approved' && $rw->verification_note)
+                                    <div style="font-size: 11px; color: #15803d; margin-top: 6px; padding: 6px 10px; background: #f0fdf4; border-left: 3px solid #22c55e; border-radius: 4px; overflow-wrap: anywhere; white-space: normal; width: 100%; box-sizing: border-box; line-height: 1.4;">
+                                        {{ $rw->verification_note }}
                                     </div>
                                 @endif
                             </td>
@@ -308,12 +313,12 @@
             <table class="verif-table">
                 <thead>
                     <tr>
-                        <th>#</th>
-                        <th>Nama Prestasi</th>
-                        <th>Tingkat</th>
-                        <th>Tanggal</th>
-                        <th>Bukti</th>
-                        <th>Status</th>
+                        <th style="width: 5%;">#</th>
+                        <th style="width: 35%;">Nama Prestasi</th>
+                        <th style="width: 15%;">Tingkat</th>
+                        <th style="width: 12%;">Tanggal</th>
+                        <th style="width: 10%;">Bukti</th>
+                        <th style="width: 23%;">Status</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -354,8 +359,13 @@
                                     @endif
                                 </span>
                                 @if($p->verification_status === 'rejected' && $p->verification_note)
-                                    <div style="font-size: 11px; color: #dc2626; margin-top: 4px; font-style: italic;">
-                                        "{{ $p->verification_note }}"
+                                    <div style="font-size: 11px; color: #b91c1c; margin-top: 6px; padding: 6px 10px; background: #fef2f2; border-left: 3px solid #ef4444; border-radius: 4px; overflow-wrap: anywhere; white-space: normal; width: 100%; box-sizing: border-box; line-height: 1.4;">
+                                        {{ $p->verification_note }}
+                                    </div>
+                                @endif
+                                @if($p->verification_status === 'approved' && $p->verification_note)
+                                    <div style="font-size: 11px; color: #15803d; margin-top: 6px; padding: 6px 10px; background: #f0fdf4; border-left: 3px solid #22c55e; border-radius: 4px; overflow-wrap: anywhere; white-space: normal; width: 100%; box-sizing: border-box; line-height: 1.4;">
+                                        {{ $p->verification_note }}
                                     </div>
                                 @endif
                             </td>
@@ -385,15 +395,21 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label-custom">Nama Kegiatan <span style="color: #dc2626;">*</span></label>
-                        <input type="text" name="nama_kegiatan_manual" class="form-control form-control-custom" required
-                               placeholder="Contoh: Lomba Debat Nasional 2026">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label-custom mb-0">Nama Kegiatan <span style="color: #dc2626;">*</span></label>
+                            <span class="text-muted" style="font-size: 11px;" id="charCount_nama_kegiatan_manual">0 / 50 huruf</span>
+                        </div>
+                        <input type="text" name="nama_kegiatan_manual" class="form-control form-control-custom" required maxlength="50"
+                               placeholder="Contoh: Lomba Debat Nasional 2026" oninput="document.getElementById('charCount_nama_kegiatan_manual').innerText = this.value.length + ' / 50 huruf'">
                         <small class="text-muted" style="font-size: 11px;">Ketik nama kegiatan yang pernah Anda ikuti</small>
                     </div>
                     <div class="mb-3">
-                        <label class="form-label-custom">Peran <span style="color: #dc2626;">*</span></label>
-                        <input type="text" name="peran_manual" class="form-control form-control-custom" required
-                               placeholder="Contoh: Peserta, Delegasi, Koordinator">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label-custom mb-0">Peran <span style="color: #dc2626;">*</span></label>
+                            <span class="text-muted" style="font-size: 11px;" id="charCount_peran_manual">0 / 50 huruf</span>
+                        </div>
+                        <input type="text" name="peran_manual" class="form-control form-control-custom" required maxlength="50"
+                               placeholder="Contoh: Peserta, Delegasi, Koordinator" oninput="document.getElementById('charCount_peran_manual').innerText = this.value.length + ' / 50 huruf'">
                     </div>
                     <div class="mb-3">
                         <label class="form-label-custom">Tanggal Kegiatan <span style="color: #dc2626;">*</span></label>
@@ -443,9 +459,12 @@
                 </div>
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label-custom">Nama Prestasi <span style="color: #dc2626;">*</span></label>
-                        <input type="text" name="nama_prestasi" class="form-control form-control-custom" required
-                               placeholder="Contoh: Juara 1 Hackathon IT Del 2026">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label-custom mb-0">Nama Prestasi <span style="color: #dc2626;">*</span></label>
+                            <span class="text-muted" style="font-size: 11px;" id="charCount_nama_prestasi">0 / 50 huruf</span>
+                        </div>
+                        <input type="text" name="nama_prestasi" class="form-control form-control-custom" required maxlength="50"
+                               placeholder="Contoh: Juara 1 Hackathon IT Del 2026" oninput="document.getElementById('charCount_nama_prestasi').innerText = this.value.length + ' / 50 huruf'">
                     </div>
                     <div class="mb-3">
                         <label class="form-label-custom">Tingkat <span style="color: #dc2626;">*</span></label>

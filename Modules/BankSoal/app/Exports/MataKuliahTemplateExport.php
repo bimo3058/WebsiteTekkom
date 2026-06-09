@@ -10,8 +10,8 @@ class MataKuliahTemplateExport implements FromArray, WithHeadings
     public function array(): array
     {
         return [
-            ['PTSK6103', 'Contoh Mata Kuliah 1', '3', '1'],
-            ['PTSK6104', 'Contoh Mata Kuliah 2', '2', '2'],
+            ['TSK6103', 'Contoh Mata Kuliah 1', '3', '1'],
+            ['TSK6104', 'Contoh Mata Kuliah 2', '2', '2'],
         ];
     }
 

@@ -305,6 +305,84 @@ class ManajemenPenggunaController extends Controller
         }
     }
 
+    // ── Reset Role Pengurus Himpunan ──────────────────────────────────────────
+
+    /**
+     * Preview / eksekusi reset seluruh role pengurus himpunan ke mahasiswa biasa.
+     * Mendukung dry_run untuk preview sebelum eksekusi.
+     */
+    public function resetPengurusRoles(Request $request)
+    {
+        abort_unless(auth()->user()->hasAnyRole(['admin_kemahasiswaan', 'admin', 'superadmin']), 403);
+
+        $dryRun       = $request->boolean('dry_run', false);
+        $pengurusNames = ['pengurus_himpunan', ...self::HIMPUNAN_POSITION_ROLES];
+
+        // Ambil semua user yang masih punya role pengurus himpunan
+        $pengurusUsers = User::with('roles')
+            ->whereNull('deleted_at')
+            ->whereHas('roles', fn ($q) => $q->whereIn('name', $pengurusNames))
+            ->get();
+
+        $count = $pengurusUsers->count();
+
+        if ($dryRun) {
+            return response()->json([
+                'count'   => $count,
+                'message' => "Ditemukan {$count} pengurus himpunan yang akan direset menjadi mahasiswa biasa.",
+                'preview' => $pengurusUsers->take(10)->map(fn ($u) => [
+                    'name'  => $u->name,
+                    'email' => $u->email,
+                    'roles' => $u->roles->whereIn('name', $pengurusNames)->pluck('name')->join(', '),
+                ]),
+            ]);
+        }
+
+        $mahasiswaRole = Role::where('name', 'mahasiswa')->first();
+
+        if (!$mahasiswaRole) {
+            return response()->json(['error' => 'Role mahasiswa tidak ditemukan.'], 422);
+        }
+
+        DB::beginTransaction();
+        try {
+            foreach ($pengurusUsers as $user) {
+                // Hapus semua role pengurus, pertahankan role lain (misal: alumni jika ada)
+                $keepRoles = $user->roles
+                    ->whereNotIn('name', $pengurusNames)
+                    ->pluck('id')
+                    ->toArray();
+
+                // Pastikan minimal ada role mahasiswa
+                $newRoleIds = array_unique([...$keepRoles, $mahasiswaRole->id]);
+
+                $user->roles()->sync($newRoleIds);
+                $user->load('roles');
+                $user->syncPermissionsFromRoles();
+                $user->clearUserCache();
+            }
+
+            AuditLogger::update(
+                module:  'manajemen_mahasiswa',
+                desc:    "Reset role pengurus himpunan: {$count} pengguna dikembalikan ke mahasiswa biasa",
+                subject: null,
+                oldData: [],
+                newData: ['count' => $count, 'reset_by' => auth()->user()->name],
+            );
+
+            DB::commit();
+            return response()->json([
+                'success' => true,
+                'count'   => $count,
+                'message' => "{$count} pengurus himpunan berhasil direset menjadi mahasiswa biasa.",
+            ]);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
+    }
+
     // ── Private Helpers ───────────────────────────────────────────────────────
 
     /**

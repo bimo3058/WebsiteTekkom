@@ -1,136 +1,169 @@
 <x-eoffice::manajemen-praktikum.layout pageTitle="Dashboard Dosen — Manajemen Praktikum">
-@php $name = auth()->user()->name; @endphp
+@php
+    $name = auth()->user()->name;
+    $nameParts = explode(' ', $name);
+    $firstName = $nameParts[0];
+@endphp
 
-{{-- Welcome Banner --}}
-<div class="flex items-center justify-between rounded-[14px] px-6 py-5 text-white flex-shrink-0"
-     style="background:linear-gradient(120deg,#6B21A8 0%,#9B59B6 100%);">
+{{-- Page Header --}}
+<div class="mp-page-header">
     <div>
-        <div class="text-[18px] font-bold tracking-tight">Halo, {{ $name }}!</div>
-        <div class="text-[12px] opacity-75 mt-1">
-            {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }} · {{ $semesterLabel ?? 'Semester Genap 2025/2026' }}
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <h1 class="mp-page-title">Dashboard Dosen</h1>
+            <span class="mp-badge primary sm"><span class="dot"></span>Dosen</span>
         </div>
+        <p class="mp-page-sub">Selamat datang, {{ $firstName }} · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }} · {{ $semesterLabel ?? 'Semester Genap 2025/2026' }}</p>
     </div>
-    <div class="flex gap-3 flex-shrink-0">
-        <div class="rounded-[10px] px-4 py-[10px] text-center" style="background:rgba(255,255,255,0.15);">
-            <div class="text-[20px] font-bold">{{ $totalPraktikumDiampu ?? 0 }}</div>
-            <div class="text-[10px] opacity-75 mt-[2px]">Praktikum Diampu</div>
-        </div>
-        <div class="rounded-[10px] px-4 py-[10px] text-center" style="background:rgba(255,255,255,0.15);">
-            <div class="text-[20px] font-bold">{{ $nilaiPending ?? 0 }}</div>
-            <div class="text-[10px] opacity-75 mt-[2px]">Nilai Belum Dinput</div>
-        </div>
+    <div class="mp-page-actions">
+        <a href="{{ route('eoffice.manprak.dosen.pendaftaran-koor.index') }}" class="mp-btn secondary md" style="text-decoration:none;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M22 11l-3.5 3.5-1.5-1.5"/></svg>
+            Seleksi Koordinator
+        </a>
     </div>
+</div>
+
+{{-- Section: Ringkasan --}}
+<div class="sec-head">
+    <span class="sec-bar"></span>
+    <span class="sec-title">Ringkasan</span>
+    <span class="sec-rule"></span>
+    <span style="font-size:12px;color:#666D80;">{{ $semesterLabel ?? 'Semester Genap 2025/2026' }}</span>
 </div>
 
 {{-- Stat Cards --}}
-<div class="grid grid-cols-4 gap-[14px] flex-shrink-0">
-@php
-$stats = [
-    ['lbl'=>'Praktikum Aktif',  'val'=>$totalPraktikumAktif??0,  'sub'=>'diampu semester ini',    'ibg'=>'#F0E6FA','ic'=>'#9B59B6'],
-    ['lbl'=>'Total Mahasiswa',  'val'=>$totalMahasiswa??0,        'sub'=>'semua praktikum',        'ibg'=>'#D1F0F9','ic'=>'#106A97'],
-    ['lbl'=>'Total Modul',      'val'=>$totalModul??0,            'sub'=>'modul tersedia',         'ibg'=>'#DDF2EE','ic'=>'#40C4AA'],
-    ['lbl'=>'Nilai Pending',    'val'=>$nilaiPending??0,          'sub'=>'perlu diinput',          'ibg'=>'#F9ECCB','ic'=>'#D39C3D'],
-];
-@endphp
-@foreach($stats as $s)
-<div class="flex flex-col gap-[10px] bg-white border border-[#DFE1E7] rounded-[14px] p-5 shadow-[0_1px_2px_rgba(228,229,231,.24)]">
-    <div class="flex items-start justify-between">
-        <span class="text-[12px] font-medium text-[#666D80]">{{ $s['lbl'] }}</span>
-        <div class="flex items-center justify-center w-[34px] h-[34px] rounded-[9px]" style="background:{{ $s['ibg'] }};"></div>
-    </div>
-    <div class="text-[28px] font-bold text-[#0D0D12] leading-none tracking-tight">{{ $s['val'] }}</div>
-    <span class="text-[11px] text-[#666D80]">{{ $s['sub'] }}</span>
-</div>
-@endforeach
-</div>
-
-{{-- Daftar Praktikum yang Diampu --}}
-<div class="flex flex-col bg-white border border-[#DFE1E7] rounded-[14px] overflow-hidden shadow-[0_1px_2px_rgba(228,229,231,.24)] flex-shrink-0">
-    <div class="flex items-center justify-between px-5 py-4 border-b border-[#DFE1E7]">
-        <div>
-            <div class="font-bold text-[15px] text-[#0D0D12]">Praktikum yang Diampu</div>
-            <div class="text-[12px] text-[#666D80] mt-[2px]">{{ $semesterLabel ?? 'Semester Genap 2025/2026' }}</div>
+<div class="mp-stats-grid cols-4">
+    <div class="mp-stat">
+        <div class="mp-stat-icon navy">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         </div>
+        <div class="mp-stat-label">Praktikum Aktif</div>
+        <div class="mp-stat-value">{{ $totalPraktikumAktif ?? 0 }}</div>
+        <div class="mp-stat-sub">diampu semester ini</div>
     </div>
-
-    @if($praktikums->isEmpty())
-    <div class="py-12 text-center text-[13px] text-[#666D80]">Belum ada praktikum yang diampu.</div>
-    @else
-    <div class="grid grid-cols-2 gap-4 p-5">
-        @foreach($praktikums as $p)
-        <div class="border border-[#DFE1E7] rounded-[12px] p-4 hover:border-[#C1C7CF] transition-colors">
-            <div class="flex items-start justify-between mb-3">
-                <div>
-                    <div class="text-[13px] font-bold text-[#0D0D12]">{{ $p->nama }}</div>
-                    <div class="text-[11px] text-[#666D80] mt-[2px]">Kode: <span class="font-semibold text-[#9B59B6]">{{ $p->kode ?? '—' }}</span></div>
-                </div>
-                @if($p->status === 'aktif')
-                <span class="text-[11px] font-semibold px-2 py-[2px] rounded-full bg-[#DDF2EE] text-[#174E43]">Aktif</span>
-                @else
-                <span class="text-[11px] font-semibold px-2 py-[2px] rounded-full bg-[#F0F1F4] text-[#666D80]">Nonaktif</span>
-                @endif
-            </div>
-
-            <div class="grid grid-cols-3 gap-2 mb-3">
-                <div class="text-center p-2 bg-[#F6F8FA] rounded-[8px]">
-                    <div class="text-[16px] font-bold text-[#0D0D12]">{{ $p->daftar_praktikan_count ?? 0 }}</div>
-                    <div class="text-[10px] text-[#666D80]">Mahasiswa</div>
-                </div>
-                <div class="text-center p-2 bg-[#F6F8FA] rounded-[8px]">
-                    <div class="text-[16px] font-bold text-[#0D0D12]">{{ $p->modul_count ?? 0 }}</div>
-                    <div class="text-[10px] text-[#666D80]">Modul</div>
-                </div>
-                <div class="text-center p-2 bg-[#F6F8FA] rounded-[8px]">
-                    <div class="text-[16px] font-bold text-[#0D0D12]">{{ $p->asisten_praktikum_count ?? 0 }}</div>
-                    <div class="text-[10px] text-[#666D80]">Asprak</div>
-                </div>
-            </div>
-
-            {{-- Koordinator status --}}
-            <div class="flex items-center gap-2 mb-3">
-                <span class="text-[11px] text-[#666D80]">Koordinator:</span>
-                @if($p->koordinator)
-                <span class="text-[11px] font-semibold text-[#0D0D12]">{{ $p->koordinator->name }}</span>
-                @else
-                <span class="text-[11px] font-semibold text-[#DF1C41]">Belum ditunjuk</span>
-                @endif
-            </div>
-
-            <div class="flex gap-2">
-                <a href="{{ route('eoffice.manprak.dosen.modul.index', $p->id) }}"
-                   class="flex-1 text-center text-[12px] font-medium py-[7px] rounded-[8px] border border-[#DFE1E7] text-[#353849] no-underline hover:bg-[#F6F8FA]">Lihat Modul</a>
-                <a href="{{ route('eoffice.manprak.dosen.nilai.index', $p->id) }}"
-                   class="flex-1 text-center text-[12px] font-medium py-[7px] rounded-[8px] bg-[#9B59B6] text-white no-underline hover:bg-[#8e44ad]">Input Nilai</a>
-            </div>
+    <div class="mp-stat">
+        <div class="mp-stat-icon yellow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
         </div>
-        @endforeach
+        <div class="mp-stat-label">Total Mahasiswa</div>
+        <div class="mp-stat-value">{{ $totalMahasiswa ?? 0 }}</div>
+        <div class="mp-stat-sub">semua praktikum</div>
     </div>
-    @endif
+    <div class="mp-stat">
+        <div class="mp-stat-icon sky">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/></svg>
+        </div>
+        <div class="mp-stat-label">Total Modul</div>
+        <div class="mp-stat-value">{{ $totalModul ?? 0 }}</div>
+        <div class="mp-stat-sub">modul tersedia</div>
+    </div>
+    <div class="mp-stat">
+        <div class="mp-stat-icon yellow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8zM14 2v6h6M9 15l2 2 4-4"/></svg>
+        </div>
+        <div class="mp-stat-label">Nilai Pending</div>
+        <div class="mp-stat-value">{{ $nilaiPending ?? 0 }}</div>
+        <div class="mp-stat-sub">perlu diinput</div>
+    </div>
 </div>
 
-{{-- Perlu Tindakan: Tunjuk Koordinator --}}
-@if($praktikumTanpaKoor->isNotEmpty())
-<div class="bg-[#FADAE1] border border-[#DF1C41] rounded-[12px] p-4 flex-shrink-0">
-    <div class="flex items-center gap-2 mb-2">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#DF1C41" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        <span class="text-[13px] font-bold text-[#7C1028]">Praktikum Belum Punya Koordinator</span>
+{{-- Alert: Praktikum Tanpa Koordinator --}}
+@if(isset($praktikumTanpaKoor) && $praktikumTanpaKoor->isNotEmpty())
+<div class="mp-alert error flex-shrink-0">
+    <div class="flex items-center gap-2 mb-3">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span style="font-size:13px;font-weight:700;">Praktikum Belum Punya Koordinator</span>
     </div>
     <div class="flex flex-col gap-2">
         @foreach($praktikumTanpaKoor as $p)
-        <div class="flex items-center justify-between bg-white rounded-[8px] px-3 py-2">
-            <span class="text-[13px] font-medium text-[#0D0D12]">{{ $p->nama }}</span>
-            <form method="POST" action="{{ route('eoffice.manprak.dosen.tunjuk-koor') }}" class="flex items-center gap-2">
+        <div class="flex items-center justify-between bg-white rounded-[8px] px-3 py-2 gap-4">
+            <span style="font-size:13px;font-weight:500;color:#0D0D12;">{{ $p->nama }}</span>
+            <form method="POST" action="{{ route('eoffice.manprak.dosen.tunjuk-koor') }}" class="flex items-center gap-2 flex-shrink-0">
                 @csrf
                 <input type="hidden" name="praktikum_id" value="{{ $p->id }}">
-                <input type="text" name="nim" placeholder="NIM Koordinator"
-                       class="text-[12px] border border-[#DFE1E7] rounded-[6px] px-2 py-[5px] w-[150px] focus:outline-none focus:border-[#9B59B6]">
-                <button type="submit"
-                        class="text-[12px] font-semibold px-3 py-[5px] rounded-[6px] bg-[#9B59B6] text-white border-none cursor-pointer hover:bg-[#8e44ad]">Tunjuk</button>
+                <input type="text" name="nim" placeholder="NIM Koordinator" class="mp-input" style="width:160px;font-size:12px;">
+                <button type="submit" class="mp-btn primary sm">Tunjuk</button>
             </form>
         </div>
         @endforeach
     </div>
 </div>
 @endif
+
+{{-- Section: Praktikum yang Diampu --}}
+<div class="sec-head">
+    <span class="sec-bar"></span>
+    <span class="sec-title">Praktikum yang Diampu</span>
+    <span class="sec-rule"></span>
+    @if(isset($praktikums) && !$praktikums->isEmpty())
+    <span class="mp-badge navy sm">{{ $praktikums->count() }} praktikum</span>
+    @endif
+</div>
+
+<div class="mp-card flex-shrink-0">
+    @if(!isset($praktikums) || $praktikums->isEmpty())
+    <div style="padding:48px;text-align:center;">
+        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        <div style="font-size:13px;font-weight:500;color:#666D80;">Belum ada praktikum yang diampu.</div>
+    </div>
+    @else
+    <div style="display:grid;grid-template-columns:repeat(2,1fr);gap:14px;padding:18px;">
+        @foreach($praktikums as $p)
+        <div style="border:1px solid #DFE1E7;border-radius:14px;padding:18px;transition:border-color .15s,box-shadow .15s;"
+             onmouseover="this.style.borderColor='#B7C2DE';this.style.boxShadow='0 4px 14px rgba(11,38,110,.07)'"
+             onmouseout="this.style.borderColor='#DFE1E7';this.style.boxShadow=''">
+
+            {{-- Header --}}
+            <div class="flex items-start justify-between mb-3 gap-3">
+                <div class="min-w-0">
+                    <div style="font-size:14px;font-weight:700;color:#0D0D12;margin-bottom:3px;" class="truncate">{{ $p->nama }}</div>
+                    <div style="font-size:11px;color:#666D80;">
+                        Kode: <span style="font-weight:700;color:#0B266E;font-family:ui-monospace,monospace;">{{ $p->kode ?? '—' }}</span>
+                    </div>
+                </div>
+                @if($p->status === 'aktif')
+                    <span class="mp-badge success sm flex-shrink-0"><span class="dot"></span>Aktif</span>
+                @else
+                    <span class="mp-badge neutral sm flex-shrink-0"><span class="dot"></span>Nonaktif</span>
+                @endif
+            </div>
+
+            {{-- Mini stats --}}
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;">
+                <div style="text-align:center;padding:8px 6px;background:#F9FAFB;border-radius:10px;border:1px solid #DFE1E7;">
+                    <div style="font-size:18px;font-weight:700;color:#0D0D12;line-height:1;">{{ $p->daftar_praktikan_count ?? 0 }}</div>
+                    <div style="font-size:10px;color:#666D80;margin-top:3px;">Mahasiswa</div>
+                </div>
+                <div style="text-align:center;padding:8px 6px;background:#F9FAFB;border-radius:10px;border:1px solid #DFE1E7;">
+                    <div style="font-size:18px;font-weight:700;color:#0D0D12;line-height:1;">{{ $p->modul_count ?? 0 }}</div>
+                    <div style="font-size:10px;color:#666D80;margin-top:3px;">Modul</div>
+                </div>
+                <div style="text-align:center;padding:8px 6px;background:#F9FAFB;border-radius:10px;border:1px solid #DFE1E7;">
+                    <div style="font-size:18px;font-weight:700;color:#0D0D12;line-height:1;">{{ $p->asisten_praktikum_count ?? 0 }}</div>
+                    <div style="font-size:10px;color:#666D80;margin-top:3px;">Asprak</div>
+                </div>
+            </div>
+
+            {{-- Koordinator --}}
+            <div style="font-size:11px;color:#666D80;margin-bottom:12px;display:flex;align-items:center;gap:6px;">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M22 11l-3.5 3.5-1.5-1.5"/></svg>
+                @if($p->koordinator)
+                    <span style="font-weight:600;color:#0D0D12;">{{ $p->koordinator->name }}</span>
+                @else
+                    <span style="font-weight:600;color:#DF1C41;">Belum ditunjuk</span>
+                @endif
+            </div>
+
+            {{-- Actions --}}
+            <div class="flex gap-2">
+                <a href="{{ route('eoffice.manprak.dosen.modul.index', $p->id) }}"
+                   class="mp-btn secondary sm flex-1 text-center" style="text-decoration:none;">Lihat Modul</a>
+                <a href="{{ route('eoffice.manprak.dosen.nilai.index', $p->id) }}"
+                   class="mp-btn primary sm flex-1 text-center" style="text-decoration:none;">Input Nilai</a>
+            </div>
+        </div>
+        @endforeach
+    </div>
+    @endif
+</div>
 
 </x-eoffice::manajemen-praktikum.layout>

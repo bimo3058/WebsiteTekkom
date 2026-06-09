@@ -14,6 +14,9 @@ class Notifikasi extends Model
 {
     protected $table = 'eo_notifikasi';
 
+    // Tabel hanya punya created_at, tidak ada updated_at
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'user_id',
         'peminjaman_id',

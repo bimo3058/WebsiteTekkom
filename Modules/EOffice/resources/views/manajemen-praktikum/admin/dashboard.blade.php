@@ -2,223 +2,261 @@
 @php
     $semesterLabel = $semesterLabel ?? 'Semester Genap 2025/2026';
     $name = auth()->user()->name;
+    $nameParts = explode(' ', $name);
+    $firstName = $nameParts[0];
 @endphp
 
-{{-- Welcome Banner --}}
-<div class="flex items-center justify-between rounded-[14px] px-6 py-5 text-white flex-shrink-0"
-     style="background:linear-gradient(120deg,#0B266E 0%,#1a3a8f 100%);">
+{{-- Page Header --}}
+<div class="mp-page-header">
     <div>
-        <div class="text-[18px] font-bold tracking-tight">Selamat Datang, {{ $name }}!</div>
-        <div class="text-[12px] opacity-75 mt-1">
-            {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }} · {{ $semesterLabel }}
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
+            <h1 class="mp-page-title">Dashboard Admin</h1>
+            <span class="mp-badge error sm"><span class="dot"></span>Admin</span>
         </div>
+        <p class="mp-page-sub">Selamat datang, {{ $firstName }} · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }} · {{ $semesterLabel }}</p>
     </div>
-    <div class="flex gap-3 flex-shrink-0">
-        <div class="rounded-[10px] px-4 py-[10px] text-center" style="background:rgba(255,255,255,0.12);">
-            <div class="text-[20px] font-bold">{{ ($totalAsprakPending??0) + ($totalKoorPending??0) }}</div>
-            <div class="text-[10px] opacity-75 mt-[2px]">Perlu Tindakan</div>
-        </div>
-        <div class="rounded-[10px] px-4 py-[10px] text-center" style="background:rgba(255,255,255,0.12);">
-            <div class="text-[20px] font-bold">{{ $totalPraktikumAktif ?? 0 }}</div>
-            <div class="text-[10px] opacity-75 mt-[2px]">Praktikum Aktif</div>
-        </div>
+    <div class="mp-page-actions">
+        <a href="{{ route('eoffice.manprak.admin.praktikum.index') }}" class="mp-btn secondary md" style="text-decoration:none;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            Kelola Praktikum
+        </a>
+        <a href="{{ route('eoffice.manprak.admin.periode-pendaftaran.index') }}" class="mp-btn primary md" style="text-decoration:none;">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+            Periode Pendaftaran
+        </a>
     </div>
+</div>
+
+{{-- Section: Ringkasan --}}
+<div class="sec-head">
+    <span class="sec-bar"></span>
+    <span class="sec-title">Ringkasan Semester</span>
+    <span class="sec-rule"></span>
+    <span style="font-size:12px;color:#666D80;">{{ $semesterLabel }}</span>
 </div>
 
 {{-- Stat Cards --}}
-<div class="grid grid-cols-4 gap-[14px] flex-shrink-0">
-@php
-$stats = [
-    ['lbl'=>'Praktikum Aktif',   'val'=>$totalPraktikumAktif??0, 'sub'=>'semester ini',         'ibg'=>'rgba(11,38,110,0.08)','ic'=>'#0B266E','ip'=>'<path d="M4 19.5A2.5 2.5 0 016.5 17H20M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>'],
-    ['lbl'=>'Total Mahasiswa',   'val'=>$totalMahasiswa??0,       'sub'=>'terdaftar di sistem',  'ibg'=>'#D1F0F9',             'ic'=>'#106A97','ip'=>'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>'],
-    ['lbl'=>'Total Dosen',       'val'=>$totalDosen??0,           'sub'=>'dari tabel lecturers', 'ibg'=>'#F0E6FA',             'ic'=>'#9B59B6','ip'=>'<path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/>'],
-    ['lbl'=>'Asprak Pending',    'val'=>$totalAsprakPending??0,   'sub'=>'perlu review',         'ibg'=>'#F9ECCB',             'ic'=>'#D39C3D','ip'=>'<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/>'],
-];
-@endphp
-@foreach($stats as $s)
-<div class="flex flex-col gap-[10px] bg-white border border-[#DFE1E7] rounded-[14px] p-5 shadow-[0_1px_2px_rgba(228,229,231,.24)]">
-    <div class="flex items-start justify-between">
-        <span class="text-[12px] font-medium text-[#666D80] leading-[1.4]">{{ $s['lbl'] }}</span>
-        <div class="flex items-center justify-center w-[34px] h-[34px] rounded-[9px] flex-shrink-0"
-             style="background:{{ $s['ibg'] }};">
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="{{ $s['ic'] }}" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">{!! $s['ip'] !!}</svg>
+<div class="mp-stats-grid cols-4">
+    <div class="mp-stat">
+        <div class="mp-stat-icon navy">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
         </div>
+        <div class="mp-stat-label">Praktikum Aktif</div>
+        <div class="mp-stat-value">{{ $totalPraktikumAktif ?? 0 }}</div>
+        <div class="mp-stat-sub">semester ini</div>
     </div>
-    <div class="text-[28px] font-bold text-[#0D0D12] leading-none tracking-tight">{{ $s['val'] }}</div>
-    <span class="text-[11px] text-[#666D80]">{{ $s['sub'] }}</span>
+    <div class="mp-stat">
+        <div class="mp-stat-icon yellow">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8zM23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        </div>
+        <div class="mp-stat-label">Total Mahasiswa</div>
+        <div class="mp-stat-value">{{ $totalMahasiswa ?? 0 }}</div>
+        <div class="mp-stat-sub">terdaftar di sistem</div>
+    </div>
+    <div class="mp-stat">
+        <div class="mp-stat-icon sky">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8"/></svg>
+        </div>
+        <div class="mp-stat-label">Total Dosen</div>
+        <div class="mp-stat-value">{{ $totalDosen ?? 0 }}</div>
+        <div class="mp-stat-sub">dari tabel lecturers</div>
+    </div>
+    <div class="mp-stat">
+        <div class="mp-stat-icon red">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10zM12 6v6l4 2"/></svg>
+        </div>
+        <div class="mp-stat-label">Asprak Pending</div>
+        <div class="mp-stat-value">{{ $totalAsprakPending ?? 0 }}</div>
+        <div class="mp-stat-sub">perlu review</div>
+    </div>
 </div>
-@endforeach
+
+{{-- Section: Data Pengguna --}}
+<div class="sec-head">
+    <span class="sec-bar"></span>
+    <span class="sec-title">Data Pengguna</span>
+    <span class="sec-rule"></span>
 </div>
 
 {{-- Tabel Dosen & Mahasiswa --}}
-<div class="flex gap-[14px] flex-shrink-0">
+<div class="flex gap-[14px]" style="flex-shrink:0;">
 
     {{-- Tabel Dosen --}}
-    <div class="flex flex-col bg-white border border-[#DFE1E7] rounded-[14px] overflow-hidden shadow-[0_1px_2px_rgba(228,229,231,.24)] flex-1 min-w-0">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-[#DFE1E7]">
-            <div>
-                <div class="font-bold text-[14px] text-[#0D0D12]">Dosen Terdaftar</div>
-                <div class="text-[11px] text-[#666D80] mt-[1px]">{{ $totalDosen ?? 0 }} dosen dari tabel lecturers</div>
+    <div class="mp-card flex-1 min-w-0">
+        <div class="mp-card-header">
+            <span class="mp-card-title">Dosen Terdaftar</span>
+            <span class="mp-badge neutral sm">{{ $totalDosen ?? 0 }}</span>
+            <div class="right">
+                <a href="{{ route('eoffice.manprak.admin.dosen.index') }}" class="mp-btn secondary sm" style="text-decoration:none;">Lihat Semua →</a>
             </div>
-            <a href="{{ route('eoffice.manprak.admin.dosen.index') }}"
-               class="text-[12px] font-medium text-[#353849] px-3 py-[6px] rounded-[7px] border border-[#DFE1E7] bg-white no-underline hover:bg-[#F6F8FA]">Lihat Semua</a>
         </div>
-        <div class="flex px-5 py-2 bg-[#FAFBFC] border-b border-[#DFE1E7]">
-            <div class="flex-1 text-[10px] font-semibold text-[#666D80] uppercase tracking-[.06em]">Nama</div>
-            <div class="text-[10px] font-semibold text-[#666D80] uppercase tracking-[.06em]" style="width:110px;">NIP / No. Pegawai</div>
-            <div class="text-[10px] font-semibold text-[#666D80] uppercase tracking-[.06em]" style="width:80px;">Praktikum</div>
-        </div>
-        <div class="overflow-y-auto" style="max-height:220px;">
-            @forelse($dosenTerbaru ?? [] as $d)
-            <div class="flex items-center px-5 py-[10px] border-b border-[#F8F9FB] hover:bg-[#FAFAFC] last:border-0">
-                <div class="flex-1 flex items-center gap-[8px] min-w-0 pr-2">
-                    <div class="w-[28px] h-[28px] rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-                         style="background:linear-gradient(135deg,#7B2FBE,#9B59B6);">
-                        {{ strtoupper(substr($d['name'], 0, 2)) }}
+        <div class="mp-card-body">
+            <div style="display:flex;align-items:center;padding:10px 18px;background:#F9FAFB;border-bottom:1px solid #DFE1E7;">
+                <div class="mp-th flex-1">Nama Dosen</div>
+                <div class="mp-th" style="width:130px;">NIP</div>
+                <div class="mp-th" style="width:80px;text-align:center;">Praktikum</div>
+            </div>
+            <div style="overflow-y:auto;max-height:220px;">
+                @forelse($dosenTerbaru ?? [] as $d)
+                <div class="mp-tr" style="display:flex;align-items:center;padding:10px 18px;">
+                    <div class="flex-1 flex items-center gap-[10px] min-w-0 pr-2">
+                        <div class="mp-av sky">{{ strtoupper(substr($d['name'], 0, 1)) }}{{ strtoupper(substr($d['name'], strpos($d['name'].' ',' ')+1, 1)) }}</div>
+                        <div class="min-w-0">
+                            <div style="font-size:13px;font-weight:600;color:#0D0D12;" class="truncate">{{ $d['name'] }}</div>
+                            <div style="font-size:11px;color:#666D80;" class="truncate">{{ $d['email'] }}</div>
+                        </div>
                     </div>
-                    <div class="min-w-0">
-                        <div class="text-[12px] font-semibold text-[#0D0D12] truncate">{{ $d['name'] }}</div>
-                        <div class="text-[10px] text-[#666D80] truncate">{{ $d['email'] }}</div>
+                    <div style="width:130px;font-size:11px;color:#666D80;font-family:ui-monospace,monospace;">{{ $d['employee_number'] }}</div>
+                    <div style="width:80px;text-align:center;">
+                        <span class="mp-badge navy sm">{{ $d['jumlah_praktikum'] }} mk</span>
                     </div>
                 </div>
-                <div class="text-[11px] text-[#666D80] font-mono" style="width:110px;">{{ $d['employee_number'] }}</div>
-                <div class="text-center" style="width:80px;">
-                    <span class="text-[11px] font-semibold px-2 py-[2px] rounded-full bg-[#F0E6FA] text-[#9B59B6]">
-                        {{ $d['jumlah_praktikum'] }} matkul
-                    </span>
-                </div>
+                @empty
+                <div style="padding:32px;text-align:center;font-size:13px;color:#808897;">Belum ada dosen terdaftar.</div>
+                @endforelse
             </div>
-            @empty
-            <div class="py-8 text-center text-[12px] text-[#A4ABB8]">Belum ada dosen terdaftar.</div>
-            @endforelse
         </div>
     </div>
 
     {{-- Tabel Mahasiswa --}}
-    <div class="flex flex-col bg-white border border-[#DFE1E7] rounded-[14px] overflow-hidden shadow-[0_1px_2px_rgba(228,229,231,.24)] flex-1 min-w-0">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-[#DFE1E7]">
-            <div>
-                <div class="font-bold text-[14px] text-[#0D0D12]">Mahasiswa Terdaftar</div>
-                <div class="text-[11px] text-[#666D80] mt-[1px]">{{ $totalMahasiswa ?? 0 }} mahasiswa dari tabel students</div>
+    <div class="mp-card flex-1 min-w-0">
+        <div class="mp-card-header">
+            <span class="mp-card-title">Mahasiswa Terdaftar</span>
+            <span class="mp-badge neutral sm">{{ $totalMahasiswa ?? 0 }}</span>
+        </div>
+        <div class="mp-card-body">
+            <div style="display:flex;align-items:center;padding:10px 18px;background:#F9FAFB;border-bottom:1px solid #DFE1E7;">
+                <div class="mp-th flex-1">Nama Mahasiswa</div>
+                <div class="mp-th" style="width:100px;">NIM</div>
+                <div class="mp-th" style="width:70px;text-align:center;">Angkatan</div>
+                <div class="mp-th" style="width:70px;text-align:center;">Ikut</div>
             </div>
-        </div>
-        <div class="flex px-5 py-2 bg-[#FAFBFC] border-b border-[#DFE1E7]">
-            <div class="flex-1 text-[10px] font-semibold text-[#666D80] uppercase tracking-[.06em]">Nama</div>
-            <div class="text-[10px] font-semibold text-[#666D80] uppercase tracking-[.06em]" style="width:90px;">NIM</div>
-            <div class="text-[10px] font-semibold text-[#666D80] uppercase tracking-[.06em]" style="width:60px;">Angkatan</div>
-            <div class="text-[10px] font-semibold text-[#666D80] uppercase tracking-[.06em]" style="width:80px;">Praktikum</div>
-        </div>
-        <div class="overflow-y-auto" style="max-height:220px;">
-            @forelse($mahasiswaTerbaru ?? [] as $m)
-            <div class="flex items-center px-5 py-[10px] border-b border-[#F8F9FB] hover:bg-[#FAFAFC] last:border-0">
-                <div class="flex-1 flex items-center gap-[8px] min-w-0 pr-2">
-                    <div class="w-[28px] h-[28px] rounded-full flex items-center justify-center text-[10px] font-bold text-white flex-shrink-0"
-                         style="background:linear-gradient(135deg,#106A97,#3C9DBE);">
-                        {{ strtoupper(substr($m['name'], 0, 2)) }}
+            <div style="overflow-y:auto;max-height:220px;">
+                @forelse($mahasiswaTerbaru ?? [] as $m)
+                <div class="mp-tr" style="display:flex;align-items:center;padding:10px 18px;">
+                    <div class="flex-1 flex items-center gap-[10px] min-w-0 pr-2">
+                        <div class="mp-av yellow">{{ strtoupper(substr($m['name'], 0, 1)) }}{{ strtoupper(substr($m['name'], strpos($m['name'].' ',' ')+1, 1)) }}</div>
+                        <div class="min-w-0">
+                            <div style="font-size:13px;font-weight:600;color:#0D0D12;" class="truncate">{{ $m['name'] }}</div>
+                            <div style="font-size:11px;color:#666D80;" class="truncate">{{ $m['email'] }}</div>
+                        </div>
                     </div>
-                    <div class="min-w-0">
-                        <div class="text-[12px] font-semibold text-[#0D0D12] truncate">{{ $m['name'] }}</div>
-                        <div class="text-[10px] text-[#666D80] truncate">{{ $m['email'] }}</div>
+                    <div style="width:100px;font-size:11px;color:#666D80;font-family:ui-monospace,monospace;">{{ $m['student_number'] }}</div>
+                    <div style="width:70px;font-size:11px;color:#666D80;text-align:center;">{{ $m['cohort_year'] }}</div>
+                    <div style="width:70px;text-align:center;">
+                        <span class="mp-badge sky sm">{{ $m['jumlah_praktikum'] }}</span>
                     </div>
                 </div>
-                <div class="text-[11px] text-[#666D80] font-mono" style="width:90px;">{{ $m['student_number'] }}</div>
-                <div class="text-[11px] text-[#666D80] text-center" style="width:60px;">{{ $m['cohort_year'] }}</div>
-                <div class="text-center" style="width:80px;">
-                    <span class="text-[11px] font-semibold px-2 py-[2px] rounded-full bg-[#D1F0F9] text-[#106A97]">
-                        {{ $m['jumlah_praktikum'] }} ikut
-                    </span>
-                </div>
+                @empty
+                <div style="padding:32px;text-align:center;font-size:13px;color:#808897;">Belum ada mahasiswa terdaftar.</div>
+                @endforelse
             </div>
-            @empty
-            <div class="py-8 text-center text-[12px] text-[#A4ABB8]">Belum ada mahasiswa terdaftar.</div>
-            @endforelse
         </div>
     </div>
 
+</div>
+
+{{-- Section: Praktikum & Pendaftaran --}}
+<div class="sec-head">
+    <span class="sec-bar"></span>
+    <span class="sec-title">Praktikum &amp; Pendaftaran</span>
+    <span class="sec-rule"></span>
+    @if(($totalAsprakPending??0) + ($totalKoorPending??0) > 0)
+    <span class="mp-badge error sm">
+        <span class="dot"></span>{{ ($totalAsprakPending??0) + ($totalKoorPending??0) }} perlu tindakan
+    </span>
+    @endif
 </div>
 
 {{-- Bottom: Tabel Praktikum + Pendaftaran Pending --}}
 <div class="flex gap-[14px] flex-1 min-h-0 mb-1">
 
     {{-- Tabel Praktikum --}}
-    <div class="flex flex-col bg-white border border-[#DFE1E7] rounded-[14px] overflow-hidden shadow-[0_1px_2px_rgba(228,229,231,.24)] min-w-0" style="flex:2;">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-[#DFE1E7] flex-shrink-0">
+    <div class="mp-card min-w-0" style="flex:2;">
+        <div class="mp-card-header" style="flex-shrink:0;">
             <div>
-                <div class="font-bold text-[15px] text-[#0D0D12]">Daftar Praktikum</div>
-                <div class="text-[12px] text-[#666D80] mt-[2px]">{{ $semesterLabel }}</div>
+                <span class="mp-card-title">Daftar Praktikum</span>
             </div>
-            <a href="{{ route('eoffice.manprak.admin.praktikum.index') }}"
-               class="text-[12px] font-medium text-[#353849] px-3 py-[6px] rounded-[7px] border border-[#DFE1E7] bg-white no-underline hover:bg-[#F6F8FA]">Lihat Semua</a>
+            <div class="right">
+                <a href="{{ route('eoffice.manprak.admin.praktikum.index') }}" class="mp-btn secondary sm" style="text-decoration:none;">Lihat Semua →</a>
+            </div>
         </div>
-        <div class="flex px-5 py-2 bg-[#FAFBFC] border-b border-[#DFE1E7] flex-shrink-0">
-            <div class="text-[11px] font-semibold text-[#666D80] uppercase tracking-[.06em]" style="width:90px;">Kode</div>
-            <div class="flex-1 text-[11px] font-semibold text-[#666D80] uppercase tracking-[.06em]">Nama Praktikum</div>
-            <div class="text-[11px] font-semibold text-[#666D80] uppercase tracking-[.06em]" style="width:150px;">Dosen</div>
-            <div class="text-[11px] font-semibold text-[#666D80] uppercase tracking-[.06em]" style="width:75px;">Praktikan</div>
-            <div class="text-[11px] font-semibold text-[#666D80] uppercase tracking-[.06em]" style="width:80px;">Status</div>
+        <div style="display:flex;align-items:center;padding:10px 20px;background:#F9FAFB;border-bottom:1px solid #DFE1E7;flex-shrink:0;">
+            <div class="mp-th" style="width:100px;">Kode</div>
+            <div class="mp-th flex-1">Nama Praktikum</div>
+            <div class="mp-th" style="width:160px;">Dosen Pengampu</div>
+            <div class="mp-th" style="width:80px;text-align:center;">Praktikan</div>
+            <div class="mp-th" style="width:90px;text-align:center;">Status</div>
         </div>
-        <div class="overflow-y-auto flex-1">
+        <div style="overflow-y:auto;flex:1;">
             @forelse($praktikums ?? [] as $p)
-            <div class="flex items-center px-5 py-[11px] border-b border-[#F8F9FB] hover:bg-[#FAFAFC] last:border-0 cursor-pointer"
+            <div class="mp-tr" style="display:flex;align-items:center;padding:12px 20px;cursor:pointer;transition:background .12s;"
+                 onmouseover="this.style.background='#F9FAFB'" onmouseout="this.style.background=''"
                  onclick="window.location='{{ route('eoffice.manprak.admin.praktikum.show', $p->id) }}'">
-                <div class="text-[12px] font-semibold" style="width:90px; color:#0B266E;">{{ $p->kode ?? '—' }}</div>
-                <div class="flex-1 text-[13px] font-medium text-[#0D0D12] overflow-hidden text-ellipsis whitespace-nowrap pr-3">{{ $p->nama }}</div>
-                <div class="text-[12px] text-[#666D80] overflow-hidden text-ellipsis whitespace-nowrap" style="width:150px;">{{ $p->dosen?->name ?? '—' }}</div>
-                <div class="text-[13px] font-semibold text-[#0D0D12]" style="width:75px;">{{ $p->daftar_praktikan_count ?? 0 }}</div>
-                <div style="width:80px;">
+                <div style="width:100px;font-size:12px;font-weight:700;color:#0B266E;font-family:ui-monospace,monospace;">{{ $p->kode ?? '—' }}</div>
+                <div class="flex-1 truncate pr-3" style="font-size:13px;font-weight:500;color:#0D0D12;">{{ $p->nama }}</div>
+                <div style="width:160px;font-size:12px;color:#666D80;" class="truncate">{{ $p->dosen?->name ?? '—' }}</div>
+                <div style="width:80px;text-align:center;font-size:14px;font-weight:700;color:#0D0D12;">{{ $p->daftar_praktikan_count ?? 0 }}</div>
+                <div style="width:90px;text-align:center;">
                     @if($p->status === 'aktif')
-                        <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-[9px] py-[3px] rounded-full bg-[#DDF2EE] text-[#174E43]">
-                            <span class="w-[5px] h-[5px] rounded-full bg-[#40C4AA]"></span>Aktif
-                        </span>
+                        <span class="mp-badge success sm"><span class="dot"></span>Aktif</span>
                     @else
-                        <span class="inline-flex items-center gap-1 text-[11px] font-semibold px-[9px] py-[3px] rounded-full bg-[#F0F1F4] text-[#666D80]">
-                            <span class="w-[5px] h-[5px] rounded-full bg-[#A4ABB8]"></span>Nonaktif
-                        </span>
+                        <span class="mp-badge neutral sm"><span class="dot"></span>Nonaktif</span>
                     @endif
                 </div>
             </div>
             @empty
-            <div class="py-10 text-center text-[13px] text-[#666D80]">Belum ada data praktikum.</div>
+            <div style="padding:40px;text-align:center;">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+                <div style="font-size:13px;font-weight:500;color:#666D80;">Belum ada data praktikum.</div>
+            </div>
             @endforelse
         </div>
     </div>
 
     {{-- Pendaftaran Pending --}}
-    <div class="flex flex-col bg-white border border-[#DFE1E7] rounded-[14px] overflow-hidden shadow-[0_1px_2px_rgba(228,229,231,.24)] min-w-0 flex-1">
-        <div class="flex items-center justify-between px-5 py-4 border-b border-[#DFE1E7] flex-shrink-0">
+    <div class="mp-card min-w-0 flex-1">
+        <div class="mp-card-header" style="flex-shrink:0;">
             <div>
-                <div class="font-bold text-[15px] text-[#0D0D12]">Pendaftaran Pending</div>
-                <div class="text-[12px] text-[#666D80] mt-[2px]">Perlu persetujuan</div>
+                <span class="mp-card-title">Pendaftaran Pending</span>
             </div>
-            <a href="{{ route('eoffice.manprak.admin.pendaftaran-asprak.index') }}"
-               class="text-[12px] font-medium text-[#353849] px-3 py-[6px] rounded-[7px] border border-[#DFE1E7] bg-white no-underline hover:bg-[#F6F8FA]">Lihat Semua</a>
+            @if($totalAsprakPending ?? 0)
+            <span class="mp-badge warning sm"><span class="dot"></span>{{ $totalAsprakPending }} menunggu</span>
+            @endif
+            <div class="right">
+                <a href="{{ route('eoffice.manprak.admin.pendaftaran-asprak.index') }}" class="mp-btn secondary sm" style="text-decoration:none;">Lihat Semua →</a>
+            </div>
         </div>
-        <div class="overflow-y-auto flex-1">
+        <div style="overflow-y:auto;flex:1;">
             @forelse($pendaftaranTerbaru ?? [] as $pend)
-            <div class="flex items-center justify-between px-5 py-[11px] border-b border-[#F8F9FB] last:border-0">
+            <div class="mp-tr" style="display:flex;align-items:center;justify-content:space-between;padding:12px 18px;">
                 <div class="flex items-center gap-[10px] min-w-0">
-                    <div class="w-[32px] h-[32px] rounded-full flex items-center justify-center text-[11px] font-bold text-white flex-shrink-0"
-                         style="background:linear-gradient(135deg,#3C518B,#0B266E);">
-                        {{ strtoupper(substr($pend->user?->name ?? 'A', 0, 2)) }}
-                    </div>
+                    <div class="mp-av green">{{ strtoupper(substr($pend->user?->name ?? 'A', 0, 1)) }}{{ strtoupper(substr($pend->user?->name ?? 'A', strpos(($pend->user?->name ?? 'A').' ',' ')+1, 1)) }}</div>
                     <div class="min-w-0">
-                        <div class="text-[13px] font-semibold text-[#0D0D12] truncate">{{ $pend->user?->name ?? '—' }}</div>
-                        <div class="text-[11px] text-[#666D80] truncate">{{ $pend->praktikum?->nama ?? '—' }}</div>
+                        <div style="font-size:13px;font-weight:600;color:#0D0D12;" class="truncate">{{ $pend->user?->name ?? '—' }}</div>
+                        <div style="font-size:11px;color:#666D80;" class="truncate">{{ $pend->praktikum?->nama ?? '—' }}</div>
                     </div>
                 </div>
                 <div class="flex gap-1 flex-shrink-0">
                     <form method="POST" action="{{ route('eoffice.manprak.admin.pendaftaran-asprak.approve', $pend->id) }}">
                         @csrf
-                        <button type="submit" class="text-[11px] font-semibold px-2 py-[4px] rounded-[6px] bg-[#DDF2EE] text-[#174E43] border-none cursor-pointer hover:bg-[#c0e8e0]">✓</button>
+                        <button type="submit" class="mp-btn ghost sm" title="Setujui">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        </button>
                     </form>
                     <form method="POST" action="{{ route('eoffice.manprak.admin.pendaftaran-asprak.reject', $pend->id) }}">
                         @csrf @method('DELETE')
-                        <button type="submit" class="text-[11px] font-semibold px-2 py-[4px] rounded-[6px] bg-[#FADAE1] text-[#7C1028] border-none cursor-pointer hover:bg-[#f5b8c5]">✕</button>
+                        <button type="submit" class="mp-btn destructive sm" title="Tolak">
+                            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                        </button>
                     </form>
                 </div>
             </div>
             @empty
-            <div class="py-8 text-center text-[13px] text-[#666D80]">Tidak ada pendaftaran pending.</div>
+            <div style="padding:40px;text-align:center;">
+                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><polyline points="20 6 9 17 4 12"/></svg>
+                <div style="font-size:13px;font-weight:500;color:#666D80;">Tidak ada pendaftaran pending.</div>
+            </div>
             @endforelse
         </div>
     </div>

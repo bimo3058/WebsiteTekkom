@@ -40,6 +40,30 @@
     </div>
 </x-banksoal::ui.panel>
 
+@if(!empty($pdfUrl))
+<div class="mt-6">
+    <x-banksoal::ui.panel title="File PDF Soal Asli" padding="p-0 overflow-hidden">
+        <div class="p-4 bg-slate-50 border-b border-slate-100 flex items-center justify-between">
+            <span class="text-sm font-bold text-slate-700 flex items-center gap-2">
+                <i class="fas fa-file-pdf text-rose-500 text-lg"></i>
+                Dokumen Soal.pdf
+            </span>
+            <a href="{{ $pdfUrl }}" target="_blank" class="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all">
+                <i class="fas fa-external-link-alt"></i> Buka di Tab Baru
+            </a>
+        </div>
+        <div class="w-full h-[650px] bg-slate-100">
+            <object data="{{ $pdfUrl }}" type="application/pdf" class="w-full h-full">
+                <iframe src="{{ $pdfUrl }}" class="w-full h-full border-0">
+                    <p class="p-6 text-center text-slate-500">Browser Anda tidak mendukung pratinjau PDF. Silakan <a href="{{ $pdfUrl }}" class="text-primary underline">unduh file PDF</a> untuk melihatnya.</p>
+                </iframe>
+            </object>
+        </div>
+    </x-banksoal::ui.panel>
+</div>
+@endif
+
+@if(empty($pdfUrl) || !empty($soalList))
 <div class="mt-6">
     <x-banksoal::ui.panel title="Daftar Soal" padding="p-0">
         <div class="divide-y divide-slate-100">
@@ -60,10 +84,13 @@
                     </div>
                 </div>
             @empty
-                <div class="p-8 text-center text-slate-500">Tidak ada soal yang tersimpan.</div>
+                @if(empty($pdfUrl))
+                    <div class="p-8 text-center text-slate-500">Tidak ada soal yang tersimpan.</div>
+                @endif
             @endforelse
         </div>
     </x-banksoal::ui.panel>
 </div>
+@endif
 
 </x-banksoal::layouts.dosen-admin>

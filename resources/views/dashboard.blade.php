@@ -1,5 +1,6 @@
 {{-- resources/views/dashboard.blade.php --}}
 
+
 <x-app-layout>
 <div class="min-h-screen bg-[#F6F8FA]">
 
@@ -102,7 +103,7 @@
             <p class="text-[#808897] text-[13px] mt-1">Pilih modul yang ingin kamu akses hari ini.</p>
         </div>
 
-        {{-- ── MODULE CARDS ─────────────────────────────────────────────── --}}
+{{-- ── MODULE CARDS ─────────────────────────────────────────────── --}}
         @php
             $moduleColors = [
                 'blue'   => ['icon_bg' => '#E8EDF7', 'icon_color' => '#0B266E', 'hover_border' => '#8FA3D1'],
@@ -112,7 +113,6 @@
             ];
 
             $moduleIcons = [
-                // Bank Soal -> Ikon Invoice / Lembar Kertas
                 'quiz'        => '<path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9h6m-6 4h6"/>',
                 'school'      => '<path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2M2 7h20v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7z M12 12v1"/>',
                 'groups'      => '<path d="M17 20.6622V19.5C17 17.2909 15.2091 15.5 13 15.5H11C8.79086 15.5 7 17.2909 7 19.5V20.6622M17 20.6622C19.989 18.9331 22 15.7014 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 15.7014 4.01099 18.9331 7 20.6622M17 20.6622C15.5291 21.513 13.8214 22 12 22C10.1786 22 8.47087 21.513 7 20.6622M15 9C15 10.6569 13.6569 12 12 12C10.3431 12 9 10.6569 9 9C9 7.34315 10.3431 6 12 6C13.6569 6 15 7.34315 15 9Z"/>',
@@ -120,6 +120,8 @@
                 'bar_chart'   => '<path d="M4.8787 8.90834L10.5858 3.54999C11.3669 2.81667 12.6332 2.81667 13.4142 3.54999L19.1213 8.90834M4.8787 8.90834C4.31629 9.43653 4.00002 10.1531 4.00002 10.9V18.1833C4.00002 19.7389 5.34317 21 7.00002 21H9V16C9 14.8954 9.89543 14 11 14H13C14.1046 14 15 14.8954 15 16V21H17C18.6569 21 20 19.7389 20 18.1833V10.9C20 10.153 19.684 9.43656 19.1213 8.90834M4.8787 8.90834L3.00031 10.6722M19.1213 8.90834L21 10.6722"/>',
                 'folder'      => '<path d="M12 4H6C4.34315 4 3 5.34315 3 7V18C3 19.6569 4.34315 21 6 21H17C18.6569 21 20 19.6569 20 18V12M7 17H12M7 13H15M21 5.5C21 6.88071 19.8807 8 18.5 8C17.1193 8 16 6.88071 16 5.5C16 4.11929 17.1193 3 18.5 3C19.8807 3 21 4.11929 21 5.5Z"/>',
                 'settings'    => '<path d="M6.78883 3.18702L9.45314 2.08342C10.0104 1.85259 10.6493 2.11723 10.8801 2.6745C11.0637 3.11762 11.5233 3.38148 12.0029 3.38184C12.4828 3.38219 12.9361 3.11793 13.1197 2.67459C13.3506 2.11727 13.9895 1.85261 14.5469 2.08346L17.211 3.187C17.7683 3.41784 18.033 4.05676 17.8021 4.61407C17.6185 5.0574 17.7523 5.56484 18.0918 5.90389C18.4312 6.24278 18.9429 6.38129 19.386 6.19774C19.9433 5.96691 20.5822 6.23155 20.813 6.78882L21.9166 9.45314C22.1474 10.0104 21.8828 10.6493 21.3255 10.8801C20.8824 11.0637 20.6185 11.5234 20.6182 12.003C20.6178 12.4828 20.8821 12.9362 21.3254 13.1198C21.8827 13.3507 22.1473 13.9896 21.9165 14.5469L20.813 17.2111C20.5821 17.7684 19.9432 18.033 19.3859 17.8022C18.9426 17.6186 18.4351 17.7523 18.0961 18.0918C17.7572 18.4312 17.6187 18.9429 17.8023 19.386C18.0331 19.9433 17.7685 20.5821 17.2112 20.813L14.5469 21.9166C13.9896 22.1474 13.3507 21.8828 13.1199 21.3255C12.9363 20.8824 12.4766 20.6185 11.997 20.6182C11.5171 20.6178 11.0637 20.8821 10.8801 21.3254C10.6492 21.8827 10.0103 22.1474 9.45297 21.9165L6.78887 20.813C6.23152 20.5822 5.96686 19.9432 6.19772 19.3859C6.38136 18.9425 6.24769 18.4351 5.90812 18.096C5.56872 17.7571 5.05713 17.6187 4.61402 17.8022C4.05674 18.0331 3.41786 17.7684 3.18703 17.2112L2.08343 14.5469C1.8526 13.9896 2.11723 13.3507 2.67451 13.1199C3.11762 12.9363 3.38149 12.4766 3.38185 11.997C3.3822 11.5171 3.11794 11.0638 2.67458 10.8801C2.11724 10.6493 1.85257 10.0103 2.08343 9.45299L3.18693 6.78891C3.41779 6.23157 4.05675 5.9669 4.61409 6.19776C5.05745 6.38141 5.56487 6.24771 5.90395 5.90813C6.24284 5.56874 6.38129 5.05713 6.19775 4.61401C5.96692 4.05674 6.23155 3.41785 6.78883 3.18702Z"/>',
+                'folder_open' => '<path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/>',
+                'menu_book'   => '<path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5A2.5 2.5 0 0 0 6.5 22H20M4 19.5V3.5A2.5 2.5 0 0 1 6.5 1V17"/>',
             ];
         @endphp
 
@@ -128,37 +130,57 @@
             @php
                 $mc  = $moduleColors[$card['color']] ?? $moduleColors['blue'];
                 $svg = $moduleIcons[$card['icon']] ?? $moduleIcons['folder'];
+
+                // Logika penentuan teks singkatan aplikasi
+                $appText = '';
+                if ($card['color'] === 'blue') {
+                    $appText = 'SIBASO';
+                } elseif ($card['color'] === 'purple') {
+                    $appText = 'SICATA';
+                } elseif ($card['color'] === 'green') {
+                    $appText = 'SIMENMA';
+                } elseif ($card['color'] === 'orange') {
+                    $appText = 'SIPERKOM';
+                }
             @endphp
 
             <a href="{{ route($card['route']) }}"
-               class="group bg-white border border-[#DFE1E7] rounded-2xl p-5 flex flex-col gap-4 transition-all duration-200 hover:shadow-[0_4px_8px_-2px_rgba(22,22,43,0.06)] hover:border-[{{ $mc['hover_border'] }}] relative overflow-hidden">
+               class="group bg-white border border-[#DFE1E7] rounded-2xl p-5 flex flex-col gap-3 transition-all duration-200 hover:shadow-[0_4px_12px_-2px_rgba(22,22,43,0.08)] hover:border-{{ $card['color'] === 'blue' ? '[#8FA3D1]' : ($card['color'] === 'purple' ? '[#5C78B8]' : ($card['color'] === 'green' ? '[#40C4AA]' : '[#D39C3D]')) }} relative overflow-hidden min-h-[165px]">
 
                 {{-- Subtle bg shape --}}
                 <div class="absolute -top-5 -right-5 w-20 h-20 rounded-full opacity-40 group-hover:opacity-80 transition-opacity pointer-events-none"
                      style="background:{{ $mc['icon_bg'] }}"></div>
 
-                {{-- Icon --}}
-                <div class="relative w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                     style="background:{{ $mc['icon_bg'] }}">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
-                         stroke="{{ $mc['icon_color'] }}" stroke-width="1.8"
-                         stroke-linecap="round" stroke-linejoin="round">
-                        {!! $svg !!}
-                    </svg>
+                {{-- Top Row: Icon + App Token --}}
+                <div class="flex items-center justify-between relative z-10">
+                    <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                         style="background:{{ $mc['icon_bg'] }}">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none"
+                             stroke="{{ $mc['icon_color'] }}" stroke-width="1.8"
+                             stroke-linecap="round" stroke-linejoin="round">
+                            {!! $svg !!}
+                        </svg>
+                    </div>
+                    
+                    @if($appText)
+                    <span class="text-[10px] font-extrabold tracking-wider px-2 py-0.5 rounded-md text-slate-500 bg-slate-100 uppercase select-none">
+                        {{ $appText }}
+                    </span>
+                    @endif
                 </div>
 
-                {{-- Text --}}
-                <div class="relative flex-1">
-                    <h3 class="text-[13px] font-semibold text-[#0D0D12] group-hover:text-[#0B266E] transition-colors leading-tight mb-1.5">
+                {{-- Text Content --}}
+                <div class="relative flex-1 flex flex-col justify-end mt-1">
+                    <h3 class="text-[13px] font-bold text-[#0D0D12] group-hover:text-[#0B266E] transition-colors leading-tight mb-1">
                         {{ $card['title'] }}
                     </h3>
-                    <p class="text-[#A4ABB8] text-[12px] leading-relaxed">
+                    <p class="text-[#A4ABB8] text-[11px] leading-normal line-clamp-2">
                         {{ $card['description'] }}
                     </p>
                 </div>
 
-                {{-- Arrow --}}
-                <div class="flex justify-end">
+                {{-- Arrow Row --}}
+                <div class="flex justify-end mt-1">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none"
                          stroke="#DFE1E7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                          class="group-hover:stroke-[#0B266E] group-hover:translate-x-0.5 transition-all">
@@ -205,40 +227,48 @@
                     :class="activeTab === '{{ $tab['key'] }}'
                         ? 'border-b-2 border-[#0B266E] text-[#0B266E] font-semibold bg-white'
                         : 'text-[#A4ABB8] hover:text-[#666D80] border-b-2 border-transparent hover:bg-[#F6F8FA]'"
-                    class="px-4 py-2.5 text-[12px] transition-all duration-150 -mb-px whitespace-nowrap rounded-t-lg flex-shrink-0">
-                    {{ $tab['label'] }}
+                    class="px-4 py-2.5 text-[12px] transition-all duration-150 -mb-px whitespace-nowrap rounded-t-lg flex-shrink-0 flex items-center gap-1.5">
+                    
+                    <span>{{ $tab['label'] }}</span>
+                    
+                    {{-- Badge Count Pengumuman --}}
+                    <span :class="activeTab === '{{ $tab['key'] }}' ? 'bg-[#E8EDF7] text-[#0B266E]' : 'bg-[#F0F1F4] text-[#A4ABB8]'" 
+                          class="px-1.5 py-0.5 text-[10px] font-bold rounded-full transition-colors">
+                        {{ $announcementCounts[$tab['key']] ?? 0 }}
+                    </span>
 
                 </button>
                 @endforeach
             </div>
 
-            {{-- Announcement pane --}}
-            <div class="bg-white border border-t-0 border-[#DFE1E7] rounded-b-2xl overflow-hidden">
+            {{-- Announcement pane + Scroll Container --}}
+            <div class="bg-white border border-t-0 border-[#DFE1E7] rounded-b-2xl overflow-hidden max-h-[440px] overflow-y-auto custom-scrollbar flex flex-col">
 
                 {{-- Tab: Semua --}}
                 <div x-show="activeTab === 'all'"
                      x-transition:enter="transition ease-out duration-150"
                      x-transition:enter-start="opacity-0 translate-y-1"
-                     x-transition:enter-end="opacity-100 translate-y-0">
+                     x-transition:enter-end="opacity-100 translate-y-0"
+                     class="w-full flex flex-col">
                     @forelse($announcements['all'] ?? [] as $item)
                     @php $b = $badgeMap[$item['module']] ?? $badgeMap['bank_soal']; @endphp
-                    <a href="{{ $item['link'] ?? '#' }}"
-                       class="flex items-start gap-4 px-5 py-4 border-b border-[#F0F1F4] last:border-b-0 hover:bg-[#F6F8FA] transition-colors group no-underline"
-                       style="border-left: 3px solid {{ $b['border_l'] }}">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                    <div class="w-full flex items-start gap-4 px-5 py-4 border-b border-[#F0F1F4] last:border-b-0 hover:bg-[#F6F8FA] transition-colors group {{ !empty($item['url']) ? 'cursor-pointer' : '' }}"
+                         style="border-left: 3px solid {{ $b['border_l'] }}"
+                         @if(!empty($item['url'])) onclick="window.location.href='{{ e($item['url']) }}'" @endif>
+                        <div class="flex-1 min-w-0 w-full">
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold flex-shrink-0"
                                       style="background:{{ $b['bg'] }};color:{{ $b['text'] }}">
                                     <span class="w-1.5 h-1.5 rounded-full inline-block"
                                           style="background:{{ $b['dot'] }}"></span>
                                     {{ $b['label'] }}
                                 </span>
-                                <span class="text-[10px] text-[#C1C7CF]">{{ $item['date'] }}</span>
+                                <span class="text-[10px] text-[#C1C7CF] flex-shrink-0">{{ $item['date'] }}</span>
                             </div>
-                            <p class="text-[13px] font-semibold text-[#0D0D12] leading-snug group-hover:text-[#0B266E] truncate transition-colors">
+                            <p class="text-[13px] font-semibold text-[#0D0D12] leading-snug group-hover:text-[#0B266E] truncate transition-colors w-full">
                                 {{ $item['title'] }}
                             </p>
-                            <p class="text-[12px] text-[#808897] mt-0.5 leading-relaxed line-clamp-2">
+                            <p class="text-[12px] text-[#808897] mt-0.5 leading-relaxed line-clamp-2 w-full whitespace-normal">
                                 {{ $item['body'] }}
                             </p>
                         </div>
@@ -247,9 +277,9 @@
                              class="flex-shrink-0 mt-1 group-hover:stroke-[#0B266E] transition-colors">
                             <polyline points="9 18 15 12 9 6"/>
                         </svg>
-                    </a>
+                    </div>
                     @empty
-                    <div class="flex flex-col items-center justify-center py-12 text-[#DFE1E7]">
+                    <div class="flex flex-col items-center justify-center py-12 text-[#DFE1E7] w-full">
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                         </svg>
@@ -265,25 +295,26 @@
                      x-transition:enter="transition ease-out duration-150"
                      x-transition:enter-start="opacity-0 translate-y-1"
                      x-transition:enter-end="opacity-100 translate-y-0"
+                     class="w-full flex flex-col"
                      style="display:none">
                     @forelse($announcements[$moduleKey] ?? [] as $item)
-                    <a href="{{ $item['link'] ?? '#' }}"
-                       class="flex items-start gap-4 px-5 py-4 border-b border-[#F0F1F4] last:border-b-0 hover:bg-[#F6F8FA] transition-colors group no-underline"
-                       style="border-left: 3px solid {{ $b['border_l'] }}">
-                        <div class="flex-1 min-w-0">
-                            <div class="flex items-center gap-2 mb-1">
-                                <span class="text-[10px] text-[#C1C7CF]">{{ $item['date'] }}</span>
+                    <div class="w-full flex items-start gap-4 px-5 py-4 border-b border-[#F0F1F4] last:border-b-0 hover:bg-[#F6F8FA] transition-colors group {{ !empty($item['url']) ? 'cursor-pointer' : '' }}"
+                         style="border-left: 3px solid {{ $b['border_l'] }}"
+                         @if(!empty($item['url'])) onclick="window.location.href='{{ e($item['url']) }}'" @endif>
+                        <div class="flex-1 min-w-0 w-full">
+                            <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                <span class="text-[10px] text-[#C1C7CF] flex-shrink-0">{{ $item['date'] }}</span>
                                 @if(!empty($item['pinned']))
-                                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                                      style="background:#F9ECCB;color:#956321">
+                                <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
+                                      style="background:{{ $b['bg'] }};color:{{ $b['text'] }}">
                                     Penting
                                 </span>
                                 @endif
                             </div>
-                            <p class="text-[13px] font-semibold text-[#0D0D12] leading-snug group-hover:text-[#0B266E] truncate transition-colors">
+                            <p class="text-[13px] font-semibold text-[#0D0D12] leading-snug group-hover:text-[#0B266E] truncate transition-colors w-full">
                                 {{ $item['title'] }}
                             </p>
-                            <p class="text-[12px] text-[#808897] mt-0.5 leading-relaxed line-clamp-2">
+                            <p class="text-[12px] text-[#808897] mt-0.5 leading-relaxed line-clamp-2 w-full whitespace-normal">
                                 {{ $item['body'] }}
                             </p>
                         </div>
@@ -292,10 +323,10 @@
                              class="flex-shrink-0 mt-1 group-hover:stroke-[#0B266E] transition-colors">
                             <polyline points="9 18 15 12 9 6"/>
                         </svg>
-                    </a>
+                    </div>
                     @empty
-                    <div class="flex flex-col items-center justify-center py-12">
-                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#DFE1E7" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2">
+                    <div class="flex flex-col items-center justify-center py-12 w-full text-[#DFE1E7]">
+                        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" class="mb-2">
                             <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>
                         </svg>
                         <p class="text-[12px] text-[#A4ABB8]">Belum ada pengumuman dari {{ $b['label'] }}</p>

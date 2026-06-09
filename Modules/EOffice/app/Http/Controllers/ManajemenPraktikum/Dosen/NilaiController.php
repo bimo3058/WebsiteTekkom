@@ -4,10 +4,14 @@ namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Modules\EOffice\Models\Praktikum;
-use Modules\EOffice\Models\Nilai;
 use Modules\EOffice\Models\DaftarPraktikan;
+use Modules\EOffice\Models\Nilai;
+use Modules\EOffice\Models\Praktikum;
 
+/**
+ * Dosen: Lihat & approve publikasi daftar nilai + absensi.
+ * Sesuai docx: dosen menyetujui untuk mempublikasikan ke mahasiswa.
+ */
 class NilaiController extends Controller
 {
     /**
@@ -17,13 +21,10 @@ class NilaiController extends Controller
     {
         $user = auth()->user();
 
-        // Ambil semua praktikum milik dosen untuk dropdown pemilih
         $praktikums = Praktikum::where('dosen_id', $user->id)
-            ->where('status', 'aktif')
             ->orderByDesc('created_at')
             ->get();
 
-        // Jika praktikumId = '0' atau tidak valid, tampilkan halaman pilih praktikum
         $praktikum = $praktikums->firstWhere('id', $praktikumId);
         if (!$praktikum) {
             return view('eoffice::manajemen-praktikum.dosen.nilai', [
@@ -33,12 +34,10 @@ class NilaiController extends Controller
             ]);
         }
 
-        // Ambil semua daftar_praktikan di praktikum ini beserta nilainya
         $daftarPraktikan = DaftarPraktikan::with(['user', 'nilai'])
             ->where('praktikum_id', $praktikum->id)
             ->get();
 
-        // Rekapitulasi nilai per mahasiswa
         $nilaiList = $daftarPraktikan->map(function ($dp) {
             $nilai = $dp->nilai ?? null;
             return [
@@ -47,6 +46,7 @@ class NilaiController extends Controller
                 'nilai_tugas'     => $nilai?->nilai_tugas,
                 'nilai_absensi'   => $nilai?->nilai_absensi,
                 'nilai_akhir'     => $nilai?->nilai_akhir,
+                'disetujui_koor'  => $nilai?->disetujui_koor ?? false,
                 'disetujui_dosen' => $nilai?->disetujui_dosen ?? false,
                 'dipublikasikan'  => $nilai?->dipublikasikan ?? false,
             ];
@@ -54,12 +54,14 @@ class NilaiController extends Controller
 
         return view('eoffice::manajemen-praktikum.dosen.nilai', compact(
             'praktikum',
-            'nilaiList'
+            'nilaiList',
+            'praktikums'
         ));
     }
 
     /**
-     * Dosen menyetujui publikasi nilai untuk satu praktikum.
+     * Dosen menyetujui dan mempublikasikan nilai ke mahasiswa.
+     * Hanya bisa approve jika koor sudah approve terlebih dulu.
      */
     public function approve(Request $request, string $praktikumId)
     {
@@ -73,16 +75,24 @@ class NilaiController extends Controller
             return back()->with('error', 'Praktikum tidak ditemukan.');
         }
 
-        // Approve semua nilai di praktikum ini
-        $daftarIds = DaftarPraktikan::where('praktikum_id', $praktikum->id)
-            ->pluck('id');
+        $daftarIds = DaftarPraktikan::where('praktikum_id', $praktikum->id)->pluck('id');
 
+        // Cek apakah koor sudah approve semua nilai
+        $belumDisetujuiKoor = Nilai::whereIn('daftar_praktikan_id', $daftarIds)
+            ->where('disetujui_koor', false)
+            ->count();
+
+        if ($belumDisetujuiKoor > 0) {
+            return back()->with('error', 'Masih ada nilai yang belum disetujui oleh koordinator. Minta koordinator untuk approve terlebih dulu.');
+        }
+
+        // Approve & publikasikan semua nilai
         Nilai::whereIn('daftar_praktikan_id', $daftarIds)
             ->update([
                 'disetujui_dosen' => true,
                 'dipublikasikan'  => true,
             ]);
 
-        return back()->with('success', 'Nilai berhasil disetujui dan dipublikasikan.');
+        return back()->with('success', 'Nilai berhasil disetujui dan dipublikasikan ke mahasiswa.');
     }
 }

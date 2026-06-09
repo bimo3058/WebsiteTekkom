@@ -4,9 +4,6 @@ namespace Modules\BankSoal\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use App\Models\User;
-use Modules\BankSoal\Models\Shared\Cpl as SharedCpl;
-use Modules\BankSoal\Models\Shared\Cpmk as SharedCpmk;
-use Modules\BankSoal\Models\Shared\MataKuliah as SharedMataKuliah;
 use Modules\BankSoal\Enums\RpsStatus;
 
 class RpsDetail extends Model
@@ -22,13 +19,13 @@ class RpsDetail extends Model
 
     public function mataKuliah()
     {
-        return $this->belongsTo(SharedMataKuliah::class, 'mk_id');
+        return $this->belongsTo(MataKuliah::class, 'mk_id');
     }
     
     public function cpls()
     {
         return $this->belongsToMany(
-            SharedCpl::class,
+            Cpl::class,
             'bs_rps_cpl',
             'rps_id',
             'cpl_id'
@@ -38,7 +35,7 @@ class RpsDetail extends Model
     public function cpmks()
     {
         return $this->belongsToMany(
-            SharedCpmk::class,
+            Cpmk::class,
             'bs_rps_cpmk',
             'rps_id',
             'cpmk_id'

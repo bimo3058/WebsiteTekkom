@@ -7,15 +7,13 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Cache;
 use App\Models\User;
+use App\Services\AuditLogger;
 use Modules\ManajemenMahasiswa\Models\Pengumuman;
 use Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest;
 use Modules\ManajemenMahasiswa\Models\PengumumanPersonalPin;
 
 class PengumumanService
 {
-    /**
-     * Listing pengumuman untuk admin/operator dengan dukungan pin global & personal.
-     */
     /**
      * Listing pengumuman untuk admin/operator dengan dukungan pin global & personal.
      *
@@ -47,11 +45,21 @@ class PengumumanService
                     $q->where('mk_pengumuman.user_id', $userId);
                 }
             })
-            ->when(!isset($filters['status']), function ($q) use ($userId, $privateStatuses) {
-                // Tanpa filter: sembunyikan draft & pending_review milik orang lain
-                $q->where(function ($sub) use ($userId, $privateStatuses) {
-                    $sub->whereNotIn('mk_pengumuman.status_publish', $privateStatuses)
-                        ->orWhere('mk_pengumuman.user_id', $userId);
+            ->when(!isset($filters['status']), function ($q) use ($userId) {
+                // Tampilan default (semua role termasuk admin):
+                // - Sembunyikan pending_review → dikelola via dashboard verifikasi
+                // - Sembunyikan draft yang pernah masuk alur verifikasi (rejected/cancelled)
+                // - Hanya "fresh draft" (belum pernah diajukan) milik sendiri yang terlihat
+                $q->where(function ($sub) use ($userId) {
+                    $sub->whereNotIn('mk_pengumuman.status_publish', ['draft', 'pending_review'])
+                        ->orWhere(function ($fresh) use ($userId) {
+                            $fresh->where('mk_pengumuman.status_publish', 'draft')
+                                  ->where('mk_pengumuman.user_id', $userId)
+                                  ->whereNotExists(function ($e) {
+                                      $e->from('mk_pengumuman_approval_requests')
+                                        ->whereColumn('pengumuman_id', 'mk_pengumuman.id');
+                                  });
+                        });
                 });
             })
             ->when(isset($filters['audience']), fn ($q) => $q->forAudience($filters['audience']))
@@ -231,6 +239,9 @@ class PengumumanService
     private function flushCache(): void
     {
         Cache::forget('mk.dashboard.snapshot');
+        // Fix #6: flush tier cache dashboard yang menyimpan pengumuman_pending & pengumuman_bulan_ini
+        Cache::forget('mk.dashboard.tier1');
+        Cache::forget('mk.dashboard.tier2');
     }
 
     // =========================================================================
@@ -255,7 +266,8 @@ class PengumumanService
 
     /**
      * Ambil daftar user yang dapat dijadikan verifikator.
-     * Hanya ketua-ketua himpunan — admin/GPM tidak terlibat dalam alur ini.
+     * Hanya ketua-ketua himpunan — admin tidak dipilih langsung,
+     * tapi tetap bisa memproses semua request via dashboard verifikasi.
      */
     public function getAvailableVerifiers(): Collection
     {
@@ -266,6 +278,9 @@ class PengumumanService
             'ketua_unit',
         ];
 
+        // Filter berdasarkan role saja — filter PengurusHimaskom.status_keaktifan
+        // dihapus karena tidak semua ketua punya record di tabel tersebut,
+        // yang menyebabkan dropdown kosong.
         return User::whereHas('roles', function ($q) use ($verifierRoleNames) {
             $q->whereIn('name', $verifierRoleNames);
         })
@@ -279,8 +294,23 @@ class PengumumanService
     /**
      * Buat approval request dan set pengumuman ke pending_review.
      */
+    /**
+     * Fix #2: Batasi jumlah pengajuan ulang maks 5 per pengumuman untuk mencegah
+     * "verifier shopping" — memilih verifikator bergantian sampai dapat yang lunak.
+     */
     public function requestApproval(int $pengumumanId, int $requesterId, int $verifierId, ?string $pesan): PengumumanApprovalRequest
     {
+        // Hitung total pengajuan yang pernah dibuat untuk pengumuman ini
+        $totalSubmissions = PengumumanApprovalRequest::where('pengumuman_id', $pengumumanId)
+            ->where('requester_id', $requesterId)
+            ->count();
+
+        if ($totalSubmissions >= 5) {
+            throw new \RuntimeException(
+                'Batas maksimal pengajuan verifikasi (5 kali) telah tercapai untuk pengumuman ini. Hubungi admin kemahasiswaan.'
+            );
+        }
+
         return DB::transaction(function () use ($pengumumanId, $requesterId, $verifierId, $pesan) {
             // Set pengumuman ke pending_review
             Pengumuman::where('id', $pengumumanId)->update([
@@ -306,44 +336,73 @@ class PengumumanService
 
     /**
      * Approve pengumuman — publish langsung.
+     * Fix #4: Tambah audit log untuk tracking siapa yang approve dan kapan.
      */
     public function approveRequest(int $requestId, ?string $catatan): void
     {
         DB::transaction(function () use ($requestId, $catatan) {
-            $request = PengumumanApprovalRequest::findOrFail($requestId);
+            $approvalReq = PengumumanApprovalRequest::with('pengumuman', 'requester')->findOrFail($requestId);
 
-            $request->update([
+            // Fix #8: Validasi state pengumuman masih pending_review sebelum publish
+            if ($approvalReq->pengumuman?->status_publish !== Pengumuman::STATUS_PENDING_REVIEW) {
+                throw new \RuntimeException(
+                    'Pengumuman sudah tidak dalam status menunggu verifikasi. Mungkin sudah dibatalkan atau diproses sebelumnya.'
+                );
+            }
+
+            $approvalReq->update([
                 'status'              => PengumumanApprovalRequest::STATUS_APPROVED,
                 'catatan_verifikator' => $catatan,
                 'verified_at'         => now(),
             ]);
 
             // Publish pengumuman
-            $this->update($request->pengumuman_id, [
+            $this->update($approvalReq->pengumuman_id, [
                 'status_publish' => Pengumuman::STATUS_PUBLISHED,
                 'published_at'   => now(),
             ]);
+
+            // Fix #4: Audit log
+            AuditLogger::update(
+                module:  'manajemen_mahasiswa',
+                desc:    "Pengumuman disetujui: \"{$approvalReq->pengumuman?->judul}\"",
+                subject: $approvalReq->pengumuman,
+                oldData: ['status' => 'pending_review', 'diajukan_oleh' => $approvalReq->requester?->name],
+                newData: ['status' => 'published', 'disetujui_oleh' => auth()->user()?->name, 'catatan' => $catatan],
+            );
+
+            $this->flushCache();
         });
     }
 
     /**
      * Reject pengumuman — kembalikan ke draft.
+     * Fix #4: Tambah audit log untuk tracking siapa yang reject, kapan, dan alasan.
      */
     public function rejectRequest(int $requestId, string $catatan): void
     {
         DB::transaction(function () use ($requestId, $catatan) {
-            $request = PengumumanApprovalRequest::findOrFail($requestId);
+            $approvalReq = PengumumanApprovalRequest::with('pengumuman', 'requester')->findOrFail($requestId);
 
-            $request->update([
+            $approvalReq->update([
                 'status'              => PengumumanApprovalRequest::STATUS_REJECTED,
                 'catatan_verifikator' => $catatan,
                 'verified_at'         => now(),
             ]);
 
             // Kembalikan ke draft agar staff bisa edit & ajukan ulang
-            Pengumuman::where('id', $request->pengumuman_id)->update([
+            Pengumuman::where('id', $approvalReq->pengumuman_id)->update([
                 'status_publish' => Pengumuman::STATUS_DRAFT,
             ]);
+
+            // Fix #4: Audit log
+            AuditLogger::update(
+                module:  'manajemen_mahasiswa',
+                desc:    "Pengumuman ditolak: \"{$approvalReq->pengumuman?->judul}\"",
+                subject: $approvalReq->pengumuman,
+                oldData: ['status' => 'pending_review', 'diajukan_oleh' => $approvalReq->requester?->name],
+                newData: ['status' => 'draft', 'ditolak_oleh' => auth()->user()?->name, 'alasan' => $catatan],
+            );
 
             $this->flushCache();
         });
@@ -394,6 +453,26 @@ class PengumumanService
     }
 
     /**
+     * Ambil SEMUA approval request (untuk admin) dengan pagination.
+     * Fix #9: Ganti ->get() dengan ->paginate() agar tidak load semua sekaligus.
+     */
+    public function getAllRequests(?string $status = null, int $perPage = 20)
+    {
+        return PengumumanApprovalRequest::with(['pengumuman.author', 'requester', 'verifier'])
+            ->when($status && $status !== 'all', fn ($q) => $q->where('status', $status))
+            ->orderByDesc('created_at')
+            ->paginate($perPage);
+    }
+
+    /**
+     * Hitung semua approval request pending (untuk counter badge admin).
+     */
+    public function getAllPendingCount(): int
+    {
+        return PengumumanApprovalRequest::where('status', PengumumanApprovalRequest::STATUS_PENDING)->count();
+    }
+
+    /**
      * Ambil semua approval request yang DIAJUKAN oleh requester (staff himpunan).
      * Digunakan untuk halaman "Status Verifikasi" milik staff sendiri.
      */
@@ -404,6 +483,24 @@ class PengumumanService
             ->when($status && $status !== 'all', fn ($q) => $q->where('status', $status))
             ->orderByDesc('created_at')
             ->get();
+    }
+
+    /**
+     * Fix #5: Ambil stats semua status dalam SATU query GROUP BY — menggantikan 4 query terpisah.
+     */
+    public function getStatsByRequester(int $userId): array
+    {
+        $counts = PengumumanApprovalRequest::where('requester_id', $userId)
+            ->selectRaw('status, count(*) as total')
+            ->groupBy('status')
+            ->pluck('total', 'status');
+
+        return [
+            'pending'   => (int) ($counts['pending']   ?? 0),
+            'approved'  => (int) ($counts['approved']  ?? 0),
+            'rejected'  => (int) ($counts['rejected']  ?? 0),
+            'cancelled' => (int) ($counts['cancelled'] ?? 0),
+        ];
     }
 
     /**

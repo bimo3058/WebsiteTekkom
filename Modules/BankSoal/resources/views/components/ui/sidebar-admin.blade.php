@@ -78,9 +78,8 @@
                         </button>
                         <div x-show="open && sidebarOpen" x-cloak class="pl-12 pr-4 py-1 space-y-1">
                             <a href="{{ route('banksoal.admin.kontrol-umum.mata-kuliah') }}"
-                                class="block text-sm {{ request()->routeIs('banksoal.admin.kontrol-umum.mata-kuliah') ? 'text-primary font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Manajemen Mata Kuliah</a>
-                            <a href="{{ route('banksoal.admin.kontrol-umum.cpl-cpmk') }}"
-                                class="block text-sm {{ request()->routeIs('banksoal.admin.kontrol-umum.cpl-cpmk') ? 'text-primary font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Manajemen CPL & CPMK</a>
+                                class="block text-sm {{ request()->routeIs('banksoal.admin.kontrol-umum.mata-kuliah') ? 'text-primary font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Manajemen Data</a>
+
                             <a href="{{ route('banksoal.admin.kontrol-umum.pemetaan') }}"
                                 class="block text-sm {{ request()->routeIs('banksoal.admin.kontrol-umum.pemetaan') || request()->routeIs('banksoal.admin.kontrol-umum.pemetaan.*') ? 'text-primary font-semibold' : 'text-slate-500 hover:text-slate-800' }} py-1.5 transition-colors">Pemetaan</a>
                         </div>
