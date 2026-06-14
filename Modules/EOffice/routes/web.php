@@ -563,6 +563,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::post('/nilai-lapangan/{id}/update', [KoordinatorController::class, 'updateNilaiLapangan'])->name('nilai_lapangan.update');
 
             Route::get('/data-mahasiswa', [KoordinatorController::class, 'dataMahasiswa'])->name('data_mahasiswa');
+            Route::get('/data-mahasiswa/export', [KoordinatorController::class, 'exportDataMahasiswa'])->name('data_mahasiswa.export');
 
             Route::get('/periode', [KoordinatorController::class, 'periode'])->name('periode');
             Route::get('/periode/create', [KoordinatorController::class, 'createPeriode'])->name('periode.create');
@@ -570,6 +571,9 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::get('/periode/{id}/edit', [KoordinatorController::class, 'editPeriode'])->name('periode.edit');
             Route::put('/periode/{id}', [KoordinatorController::class, 'updatePeriode'])->name('periode.update');
             Route::delete('/periode/{id}', [KoordinatorController::class, 'destroyPeriode'])->name('periode.destroy');
+
+            Route::get('/pendaftar', [KoordinatorController::class, 'pendaftarKp'])->name('pendaftar');
+            Route::delete('/pendaftar/{id}', [KoordinatorController::class, 'resetPendaftar'])->name('pendaftar.destroy');
         });
     });
 

@@ -77,12 +77,14 @@
 
                 @php
                     $isPeriode = request()->routeIs('eoffice.kp.koordinator.periode*');
+                    $isPendaftar = request()->routeIs('eoffice.kp.koordinator.pendaftar*');
                     $isDataMhs = request()->routeIs('eoffice.kp.koordinator.data_mahasiswa');
                     $isBalancing = request()->routeIs('eoffice.kp.koordinator.balancing');
                     $isValidasi = request()->routeIs('eoffice.kp.koordinator.validasi_berkas');
                     $isNilai = request()->routeIs('eoffice.kp.koordinator.nilai_lapangan');
                     $menuItems = [
                         ['active' => $isPeriode, 'route' => 'eoffice.kp.koordinator.periode', 'label' => 'Periode', 'icon' => 'periode'],
+                        ['active' => $isPendaftar, 'route' => 'eoffice.kp.koordinator.pendaftar', 'label' => 'Pendaftar KP', 'icon' => 'users'],
                         ['active' => $isDataMhs, 'route' => 'eoffice.kp.koordinator.data_mahasiswa', 'label' => 'Data Mahasiswa', 'icon' => 'users'],
                         ['active' => $isBalancing, 'route' => 'eoffice.kp.koordinator.balancing', 'label' => 'Balancing Dosen', 'icon' => 'balance'],
                         ['active' => $isValidasi, 'route' => 'eoffice.kp.koordinator.validasi_berkas', 'label' => 'Approval Berkas', 'icon' => 'doc'],
@@ -96,7 +98,7 @@
                             <span class="absolute left-0 top-2 bottom-2 w-[3.5px] bg-[#0065FF] rounded-r-full z-10"></span>
                         @endif
                         <a href="{{ route($item['route']) }}" class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                                        {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                                                {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
                             @if($item['active'])
                                 <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
                                     @if($item['icon'] === 'periode')
@@ -192,7 +194,7 @@
                             <span class="absolute left-0 top-2 bottom-2 w-[3.5px] bg-[#0065FF] rounded-r-full z-10"></span>
                         @endif
                         <a href="{{ route($item['route']) }}" class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                                        {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                                                {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
                             @if($item['active'])
                                 <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
                                     @if($item['icon'] === 'annc')

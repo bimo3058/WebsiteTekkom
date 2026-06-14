@@ -159,26 +159,28 @@
                             </td>
                             <td style="padding:16px;">
                                 @if($periode->is_active)
-                                    <span style="
-                                                                                                                            display:inline-flex; align-items:center; gap:6px;
-                                                                                                                            padding:4px 10px;
-                                                                                                                            background:#F0FDF4;
-                                                                                                                            border:1px solid #BBF7D0;
-                                                                                                                            border-radius:9999px;
-                                                                                                                            font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#15803D;
-                                                                                                                        ">
+                                    <span
+                                        style="
+                                                                                                                                    display:inline-flex; align-items:center; gap:6px;
+                                                                                                                                    padding:4px 10px;
+                                                                                                                                    background:#F0FDF4;
+                                                                                                                                    border:1px solid #BBF7D0;
+                                                                                                                                    border-radius:9999px;
+                                                                                                                                    font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#15803D;
+                                                                                                                                ">
                                         <span style="width:6px; height:6px; background:#15803D; border-radius:50%;"></span>
                                         Aktif
                                     </span>
                                 @else
-                                    <span style="
-                                                                                                                            display:inline-flex; align-items:center; gap:6px;
-                                                                                                                            padding:4px 10px;
-                                                                                                                            background:#F1F1F3;
-                                                                                                                            border:1px solid #E2E8F0;
-                                                                                                                            border-radius:9999px;
-                                                                                                                            font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#666D80;
-                                                                                                                        ">
+                                    <span
+                                        style="
+                                                                                                                                    display:inline-flex; align-items:center; gap:6px;
+                                                                                                                                    padding:4px 10px;
+                                                                                                                                    background:#F1F1F3;
+                                                                                                                                    border:1px solid #E2E8F0;
+                                                                                                                                    border-radius:9999px;
+                                                                                                                                    font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#666D80;
+                                                                                                                                ">
                                         <span style="width:6px; height:6px; background:#666D80; border-radius:50%;"></span>
                                         Nonaktif
                                     </span>
@@ -237,45 +239,68 @@
                                     <div style="width: 48px; flex-shrink: 0;"></div>
 
                                     <!-- Content Area -->
-                                    <div class="flex-1 max-w-[600px]">
-                                        <h4
-                                            style="font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:700; color:#A0AABF; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:12px;">
-                                            Tanggal Fase
-                                        </h4>
-                                        <div class="flex flex-col gap-4">
-                                            <div class="flex items-center text-sm"
-                                                style="font-family:'Inter Tight',sans-serif;">
-                                                <div class="w-[120px] text-[#848A96] font-medium">Pra KP</div>
-                                                <div class="text-[#272835] font-semibold">
-                                                    {{ $periode->pra_kp_mulai ? \Carbon\Carbon::parse($periode->pra_kp_mulai)->translatedFormat('d M Y') : '-' }}
-                                                    -
-                                                    {{ $periode->pra_kp_akhir ? \Carbon\Carbon::parse($periode->pra_kp_akhir)->translatedFormat('d M Y') : '-' }}
+                                    <div class="flex-1 max-w-[600px] flex flex-col gap-6">
+
+                                        <!-- Kelas Dibuka -->
+                                        <div>
+                                            <h4
+                                                style="font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:700; color:#A0AABF; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:12px;">
+                                                Kelas yang Dibuka
+                                            </h4>
+                                            @if($periode->kelas_dibuka && is_array($periode->kelas_dibuka) && count($periode->kelas_dibuka) > 0)
+                                                <div class="flex flex-wrap gap-2">
+                                                    @foreach($periode->kelas_dibuka as $kelas)
+                                                        <span
+                                                            class="px-3 py-1 bg-white border border-[#E2E8F0] text-[#4B5563] text-xs font-semibold rounded-full shadow-sm">{{ $kelas }}</span>
+                                                    @endforeach
                                                 </div>
-                                            </div>
-                                            <div class="flex items-center text-sm"
-                                                style="font-family:'Inter Tight',sans-serif;">
-                                                <div class="w-[120px] text-[#848A96] font-medium">Saat KP</div>
-                                                <div class="text-[#272835] font-semibold">
-                                                    {{ $periode->saat_kp_mulai ? \Carbon\Carbon::parse($periode->saat_kp_mulai)->translatedFormat('d M Y') : '-' }}
-                                                    -
-                                                    {{ $periode->saat_kp_akhir ? \Carbon\Carbon::parse($periode->saat_kp_akhir)->translatedFormat('d M Y') : '-' }}
+                                            @else
+                                                <div class="text-[#848A96] text-sm font-medium"
+                                                    style="font-family:'Inter Tight',sans-serif;">Belum ada kelas didefinisikan
                                                 </div>
-                                            </div>
-                                            <div class="flex items-center text-sm"
-                                                style="font-family:'Inter Tight',sans-serif;">
-                                                <div class="w-[120px] text-[#848A96] font-medium">Pasca KP</div>
-                                                <div class="text-[#272835] font-semibold">
-                                                    {{ $periode->pasca_kp_mulai ? \Carbon\Carbon::parse($periode->pasca_kp_mulai)->translatedFormat('d M Y') : '-' }}
-                                                    -
-                                                    {{ $periode->pasca_kp_akhir ? \Carbon\Carbon::parse($periode->pasca_kp_akhir)->translatedFormat('d M Y') : '-' }}
+                                            @endif
+                                        </div>
+
+                                        <!-- Tanggal Fase -->
+                                        <div>
+                                            <h4
+                                                style="font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:700; color:#A0AABF; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:12px;">
+                                                Tanggal Fase
+                                            </h4>
+                                            <div class="flex flex-col gap-4">
+                                                <div class="flex items-center text-sm"
+                                                    style="font-family:'Inter Tight',sans-serif;">
+                                                    <div class="w-[120px] text-[#848A96] font-medium">Pra KP</div>
+                                                    <div class="text-[#272835] font-semibold">
+                                                        {{ $periode->pra_kp_mulai ? \Carbon\Carbon::parse($periode->pra_kp_mulai)->translatedFormat('d M Y') : '-' }}
+                                                        -
+                                                        {{ $periode->pra_kp_akhir ? \Carbon\Carbon::parse($periode->pra_kp_akhir)->translatedFormat('d M Y') : '-' }}
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center text-sm"
+                                                    style="font-family:'Inter Tight',sans-serif;">
+                                                    <div class="w-[120px] text-[#848A96] font-medium">Saat KP</div>
+                                                    <div class="text-[#272835] font-semibold">
+                                                        {{ $periode->saat_kp_mulai ? \Carbon\Carbon::parse($periode->saat_kp_mulai)->translatedFormat('d M Y') : '-' }}
+                                                        -
+                                                        {{ $periode->saat_kp_akhir ? \Carbon\Carbon::parse($periode->saat_kp_akhir)->translatedFormat('d M Y') : '-' }}
+                                                    </div>
+                                                </div>
+                                                <div class="flex items-center text-sm"
+                                                    style="font-family:'Inter Tight',sans-serif;">
+                                                    <div class="w-[120px] text-[#848A96] font-medium">Pasca KP</div>
+                                                    <div class="text-[#272835] font-semibold">
+                                                        {{ $periode->pasca_kp_mulai ? \Carbon\Carbon::parse($periode->pasca_kp_mulai)->translatedFormat('d M Y') : '-' }}
+                                                        -
+                                                        {{ $periode->pasca_kp_akhir ? \Carbon\Carbon::parse($periode->pasca_kp_akhir)->translatedFormat('d M Y') : '-' }}
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
 
-                                    <!-- Right Column: Optional configuration (Empty for now) -->
-                                    <div class="flex-1"></div>
-                                </div>
+                                        <!-- Right Column: Optional configuration (Empty for now) -->
+                                        <div class="flex-1"></div>
+                                    </div>
                             </td>
                         </tr>
                     </tbody>

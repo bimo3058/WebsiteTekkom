@@ -181,6 +181,18 @@
                                     style="font-family:'Inter Tight',sans-serif; font-size:14px;">
                             </div>
 
+                            <div>
+                                <label
+                                    style="font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:600; color:#272835; margin-bottom:8px; display:block;">Pilihan
+                                    Kelas yang Dibuka
+                                    <span class="text-gray-400 font-normal text-xs ml-1">(Pisahkan dengan
+                                        koma)</span></label>
+                                <input type="text" name="kelas_dibuka" x-model="formData.kelas_dibuka"
+                                    placeholder="contoh: A, B, C, Paralel, Unggulan"
+                                    class="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] font-medium"
+                                    style="font-family:'Inter Tight',sans-serif; font-size:14px;">
+                            </div>
+
                             {{-- Dates --}}
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div>
@@ -447,6 +459,7 @@
                 formData: {
                     semester: '{{ old('semester', $periode->semester) }}',
                     tahun_ajaran: '{{ old('tahun_ajaran', $periode->tahun_ajaran) }}',
+                    kelas_dibuka: '{{ is_array(old('kelas_dibuka', $periode->kelas_dibuka)) ? implode(', ', old('kelas_dibuka', $periode->kelas_dibuka)) : old('kelas_dibuka', $periode->kelas_dibuka) }}',
                     tanggal_buka: '{{ old('tanggal_buka', $periode->tanggal_buka) }}',
                     tanggal_tutup: '{{ old('tanggal_tutup', $periode->tanggal_tutup) }}',
                     is_active: {{ old('is_active', $periode->is_active) ? 'true' : 'false' }},

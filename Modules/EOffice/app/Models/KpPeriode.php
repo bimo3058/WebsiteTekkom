@@ -30,6 +30,26 @@ class KpPeriode extends Model
         'pasca_kp_mulai',
         'pasca_kp_akhir',
         'pasca_kp_pengingat',
+        'kelas_dibuka'
+    ];
+
+    /**
+     * The attributes that should be cast.
+     *
+     * @var array<string, string>
+     */
+    protected $casts = [
+        'is_active' => 'boolean',
+        'pra_kp_mulai' => 'date',
+        'pra_kp_akhir' => 'date',
+        'pra_kp_pengingat' => 'date',
+        'saat_kp_mulai' => 'date',
+        'saat_kp_akhir' => 'date',
+        'saat_kp_pengingat' => 'date',
+        'pasca_kp_mulai' => 'date',
+        'pasca_kp_akhir' => 'date',
+        'pasca_kp_pengingat' => 'date',
+        'kelas_dibuka' => 'array',
     ];
 
     // protected static function newFactory(): KpPeriodeFactory
