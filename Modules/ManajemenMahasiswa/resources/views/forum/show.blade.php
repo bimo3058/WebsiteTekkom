@@ -919,7 +919,7 @@
                     const data = await res.json();
 
                     if (!res.ok || !data.success) {
-                        showToast(data.message ?? 'Gagal mengirim komentar.');
+                        showToast(data.error ?? data.message ?? 'Gagal mengirim komentar.');
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = origHtml;
                         form.dataset.submitting = '';

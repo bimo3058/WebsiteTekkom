@@ -30,7 +30,9 @@ class RedirectBasedOnRole
         'gpm',
         'pengurus_himpunan', // ← tambah
         'alumni',            // ← tambah
-        'dosen_koor'         // ← tambah
+        'dosen_koor',        // ← tambah
+        'dpm',               // ← tambah
+        'ketua_departemen',  // ← tambah
     ];
 
     public function handle(Request $request, Closure $next): Response

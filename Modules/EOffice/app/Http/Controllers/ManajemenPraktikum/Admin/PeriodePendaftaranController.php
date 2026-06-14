@@ -12,7 +12,9 @@ use Modules\EOffice\Services\NotifikasiService;
 use Modules\EOffice\Services\PeriodePendaftaranService;
 
 /**
- * Admin: Kelola periode pendaftaran koor & asprak.
+ * Admin: Kelola periode pendaftaran PRAKTIKAN.
+ *
+ * Periode koor dibuka oleh Dosen, periode asprak dibuka oleh Koordinator.
  * Dropdown utama dari eo_matkul_praktikum (sudah di-seed).
  */
 class PeriodePendaftaranController extends Controller
@@ -119,7 +121,7 @@ class PeriodePendaftaranController extends Controller
 
         $request->validate([
             'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
-            'jenis'        => 'required|in:koor,asprak,praktikan',
+            'jenis'        => 'required|in:praktikan',
             'nama'         => 'required|string|max:255',
             'dibuka_pada'  => 'nullable|date',
             'ditutup_pada' => 'nullable|date|after_or_equal:dibuka_pada',
@@ -164,7 +166,7 @@ class PeriodePendaftaranController extends Controller
     {
         $request->validate([
             'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
-            'jenis'        => 'required|in:koor,asprak,praktikan',
+            'jenis'        => 'required|in:praktikan',
             'nama'         => 'nullable|string|max:255',
             'dibuka_pada'  => 'nullable|date',
             'ditutup_pada' => 'nullable|date|after_or_equal:dibuka_pada',

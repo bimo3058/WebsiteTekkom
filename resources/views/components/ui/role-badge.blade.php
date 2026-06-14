@@ -16,6 +16,8 @@
         'admin_capstone'      => ['bg' => '#EFF6FF', 'color' => '#1D4ED8', 'border' => '#BFDBFE'],
         'admin_eoffice'       => ['bg' => '#ECFDF5', 'color' => '#047857', 'border' => '#A7F3D0'],
         'admin_kemahasiswaan' => ['bg' => '#FFF1F2', 'color' => '#9D174D', 'border' => '#FECDD3'],
+        'dpm'                 => ['bg' => '#EDE9FE', 'color' => '#4C1D95', 'border' => '#C4B5FD'],
+        'ketua_departemen'    => ['bg' => '#D1F0F9', 'color' => '#0C4D6E', 'border' => '#BAE6FD'],
     ];
 
     $key = strtolower(trim($role));
@@ -28,6 +30,8 @@
         'admin_capstone'      => 'Admin SICATA',
         'admin_eoffice'       => 'Admin SIMENMA',
         'admin_kemahasiswaan' => 'Admin SIPERKOM',
+        'dpm'                 => 'DPM',
+        'ketua_departemen'    => 'Ketua Departemen',
         default               => ucfirst(str_replace('_', ' ', $role)),
     };
 

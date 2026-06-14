@@ -60,9 +60,9 @@
         </a>
 
         {{-- Informasi (collapsible) --}}
-        <div x-data="{ open: {{ isActive('mahasiswa.informasi', $route) || isActive('mahasiswa.faq', $route) ? 'true' : 'false' }} }">
+        <div x-data="{ open: {{ isActive('mahasiswa.informasi', $route) || isActive('mahasiswa.pengumuman', $route) || isActive('mahasiswa.faq', $route) ? 'true' : 'false' }} }">
             <button @click="open = !open"
-                    class="sikape-nav-item w-full {{ isActive('mahasiswa.informasi', $route) || isActive('mahasiswa.faq', $route) ? 'active' : '' }}">
+                    class="sikape-nav-item w-full {{ isActive('mahasiswa.informasi', $route) || isActive('mahasiswa.pengumuman', $route) || isActive('mahasiswa.faq', $route) ? 'active' : '' }}">
                 <span class="sikape-nav-icon">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.8"><path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
                 </span>
@@ -70,13 +70,17 @@
                 <svg class="ml-auto w-4 h-4 text-grey-400 transition-transform duration-200" :class="open ? 'rotate-180' : ''" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
             </button>
             <div x-show="open" x-collapse class="mt-0.5 ml-3 pl-3 border-l border-grey-100 space-y-0.5">
-                <a href="{{ route('eoffice.kp.mahasiswa.informasi') }}"
-                   class="sikape-sub-item {{ isActive('mahasiswa.informasi', $route) ? 'active' : '' }}">
-                    Keperluan Perusahaan
+                <a href="{{ route('eoffice.kp.mahasiswa.pengumuman') }}"
+                   class="sikape-sub-item {{ isActive('mahasiswa.pengumuman', $route) ? 'active' : '' }}">
+                    Pengumuman
                 </a>
                 <a href="{{ route('eoffice.kp.mahasiswa.faq') }}"
                    class="sikape-sub-item {{ isActive('mahasiswa.faq', $route) ? 'active' : '' }}">
                     Pertanyaan Umum
+                </a>
+                <a href="{{ route('eoffice.kp.mahasiswa.informasi') }}"
+                   class="sikape-sub-item {{ isActive('mahasiswa.informasi', $route) ? 'active' : '' }}">
+                    Keperluan Perusahaan
                 </a>
             </div>
         </div>

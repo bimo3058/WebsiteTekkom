@@ -1,8 +1,8 @@
 <div class="sidebar">
     @php
         $sidebarRoles = auth()->user()->roles->pluck('name')->toArray();
-        $showDashboardAnalitik = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm'])) > 0;
-        $showManajemenPengguna = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit'])) > 0;
+        $showDashboardAnalitik = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen'])) > 0;
+        $showManajemenPengguna = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'dpm'])) > 0;
 
         $mainDashboardUrl = in_array('superadmin', $sidebarRoles) ? route('superadmin.dashboard') : route('dashboard');
         $currentRoute = request()->route()->getName();
@@ -203,7 +203,7 @@
 
         @php
             $isKetua = (bool) array_intersect($sidebarRoles, ['ketua_unit', 'ketua_bidang', 'ketua_himpunan', 'wakil_ketua_himpunan']);
-            $isAdminVerifier = (bool) array_intersect($sidebarRoles, ['admin', 'admin_kemahasiswaan', 'superadmin']);
+            $isAdminVerifier = (bool) array_intersect($sidebarRoles, ['admin', 'admin_kemahasiswaan', 'superadmin', 'dpm']);
             $isStaffHimpunan = in_array('staff_himpunan', $sidebarRoles) && !$isKetua && !$isAdminVerifier;
 
             $pengumumanDropdownActive = request()->routeIs('manajemenmahasiswa.pengumuman.*');
@@ -307,7 +307,7 @@
         <div x-show="sidebarOpen" class="sb-section-label">Direktori Mahasiswa</div>
         @php
             $isDirektoriActive = request()->routeIs('manajemenmahasiswa.direktori.*');
-            $canViewAll = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dosen', 'dosen_koordinator', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa', 'alumni']);
+            $canViewAll = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen', 'dosen', 'dosen_koordinator', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'mahasiswa', 'alumni']);
             $mahasiswaRoute = $canViewAll ? route('manajemenmahasiswa.direktori.mahasiswa.index') : route('manajemenmahasiswa.direktori.mahasiswa.profil');
             $alumniRoute = $canViewAll ? route('manajemenmahasiswa.direktori.alumni.index') : route('manajemenmahasiswa.direktori.alumni.profil');
         @endphp
@@ -350,8 +350,8 @@
         @php
             $kegiatanRoutes = ['manajemenmahasiswa.proker.*', 'manajemenmahasiswa.pelaksanaan.*', 'manajemenmahasiswa.kegiatan.*'];
             $kegiatanActive = collect($kegiatanRoutes)->contains(fn($r) => request()->routeIs($r));
-            $canViewProker = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'wakil_ketua_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit']);
-            $canViewPelaksanaan = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'wakil_ketua_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan']);
+            $canViewProker = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'ketua_departemen', 'wakil_ketua_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit']);
+            $canViewPelaksanaan = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'ketua_departemen', 'wakil_ketua_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan']);
         @endphp
         <div class="sidebar-dropdown {{ $kegiatanActive ? 'open' : '' }}">
             <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $kegiatanActive ? 'active' : '' }}"
@@ -403,7 +403,7 @@
             <span class="nav-label" style="flex-grow:1;">Forum Diskusi</span>
         </a>
 
-        @if(array_intersect($sidebarRoles, ['mahasiswa', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dosen', 'dosen_koordinator', 'dpm']))
+        @if(array_intersect($sidebarRoles, ['mahasiswa', 'pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan', 'superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dosen', 'dosen_koordinator', 'dpm', 'ketua_departemen']))
             <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}"
                 class="{{ request()->routeIs('manajemenmahasiswa.pengaduan.*') ? 'active' : '' }}">
                 <span class="nav-icon d-inline-flex">

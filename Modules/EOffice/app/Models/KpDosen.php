@@ -13,6 +13,7 @@ class KpDosen extends Model
         'user_id',
         'nip',
         'nama_lengkap',
+        'kuota_maksimal',
     ];
 
     // ── Relationships ──────────────────────────────────────────────────────────
@@ -25,5 +26,10 @@ class KpDosen extends Model
     public function bimbingan()
     {
         return $this->hasMany(KerjaPraktik::class, 'dosen_pembimbing_id');
+    }
+
+    public function getNameAttribute()
+    {
+        return $this->nama_lengkap;
     }
 }

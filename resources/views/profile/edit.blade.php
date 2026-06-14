@@ -267,23 +267,25 @@
                       {{-- Content --}}
             <div class="settings-content">
 
-                    <div x-show="tab==='general'" x-transition.opacity.duration.150ms>
-                        @include('profile.partials.settings-panel-general')
-                    </div>
+                          <div       x-show="tab==='general'" x-transition.opacity.duration.150ms>
+                            @include('profile.partials.settings-panel-general')
+                </div>
+      
+                  <div         x-show="tab==='password'" x-transition.opacity.duration.150ms>
+                            @include('profile.partials.settings-panel-password')
+                </div>
 
-                    <div x-show="tab==='password'" x-transition.opacity.duration.150ms>
-                        @include('profile.partials.settings-panel-password')
-                    </div>
+                        <div         x-show="tab==='tema'" x-transition.opacity.duration.150ms>
+                            @include('profile.partials.settings-panel-tema')
+                </div>
 
-                    <div x-show="tab==='tema'" x-transition.opacity.duration.150ms>
-                        @include('profile.partials.settings-panel-tema')
-                    </div>
+                                <div x-show="tab==='notifikasi'" x-transition.opacity.duration.150ms>
+                            @include('profile.partials.settings-panel-notifikasi')
+                        </div>
 
                     <div x-show="tab==='notifikasi'" x-transition.opacity.duration.150ms>
                         @include('profile.partials.settings-panel-notifikasi')
                     </div>
-
-                </div>
         </div>
             </div>
             </div>

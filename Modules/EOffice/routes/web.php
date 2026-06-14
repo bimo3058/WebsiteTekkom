@@ -20,6 +20,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\KelolRoleControlle
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PraktikumController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\MatkulPraktikumController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PeriodePendaftaranController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PraktikumDetailController;
 
 
 // ── ManajemenPraktikum Dosen ─────────────────────────────────────────────────
@@ -31,6 +32,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\NilaiController as
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\PendaftaranKoorController as DosenPendaftaranKoorController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\PengumumanController as DosenPengumumanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\TugasController as DosenTugasController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Dosen\PeriodePendaftaranController as DosenPeriodePendaftaranController;
 
 // ── ManajemenPraktikum Koordinator ───────────────────────────────────────────
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\BagiModulController;
@@ -40,6 +42,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\NilaiControl
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PendaftaranAsprakController as KoorPendaftaranAsprakController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PendaftaranPraktikanController as KoorPendaftaranPraktikanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PengumumanController as KoorPengumumanController;
+use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PeriodePendaftaranController as KoorPeriodePendaftaranController;
 
 // ── ManajemenPraktikum Asprak ────────────────────────────────────────────────
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak\AbsensiController;
@@ -81,6 +84,9 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::get('/dashboard', [AdminManprakDashboard::class, 'index'])
                     ->name('dashboard');
 
+                Route::get('praktikum/{id}/detail', [PraktikumDetailController::class, 'show'])  // ← TAMBAH INI DULU
+                    ->name('praktikum.detail');
+                    
                 // CRUD Praktikum
                 Route::resource('praktikum', PraktikumController::class)
                     ->names('praktikum');
@@ -212,6 +218,15 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('nilai.index');
                 Route::post('nilai/{praktikumId}/approve', [DosenNilaiController::class, 'approve'])
                     ->name('nilai.approve');
+
+                Route::get('periode-pendaftaran', [DosenPeriodePendaftaranController::class, 'index'])
+                    ->name('periode-pendaftaran.index');
+                Route::post('periode-pendaftaran', [DosenPeriodePendaftaranController::class, 'store'])
+                    ->name('periode-pendaftaran.store');
+                Route::post('periode-pendaftaran/{id}/tutup', [DosenPeriodePendaftaranController::class, 'tutup'])
+                    ->name('periode-pendaftaran.tutup');
+                Route::delete('periode-pendaftaran/{id}', [DosenPeriodePendaftaranController::class, 'destroy'])
+                    ->name('periode-pendaftaran.destroy');
             });
 
         // ── KOORDINATOR ──────────────────────────────────────────────────────
@@ -223,6 +238,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
                 Route::get('/dashboard', [KoorManprakDashboard::class, 'index'])
                     ->name('dashboard');
+                Route::post('/switch-praktikum', [KoorManprakDashboard::class, 'switchPraktikum'])
+                    ->name('switch-praktikum');
                 Route::post('/praktikum/generate-kode', [KoorManprakDashboard::class, 'generateKodePraktikum'])
                     ->name('praktikum.generate-kode');
 
@@ -273,6 +290,14 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('pendaftaran-praktikan.reject');
                 Route::post('pendaftaran-praktikan/{id}/reject-irs-default', [KoorPendaftaranPraktikanController::class, 'rejectIrsDefault'])
                     ->name('pendaftaran-praktikan.reject-irs-default');
+                Route::get('periode-pendaftaran', [KoorPeriodePendaftaranController::class, 'index'])
+                    ->name('periode-pendaftaran.index');
+                Route::post('periode-pendaftaran', [KoorPeriodePendaftaranController::class, 'store'])
+                    ->name('periode-pendaftaran.store');
+                Route::post('periode-pendaftaran/{id}/tutup', [KoorPeriodePendaftaranController::class, 'tutup'])
+                    ->name('periode-pendaftaran.tutup');
+                Route::delete('periode-pendaftaran/{id}', [KoorPeriodePendaftaranController::class, 'destroy'])
+                    ->name('periode-pendaftaran.destroy');
 
                 // Pengumuman
                 Route::get('pengumuman', [KoorPengumumanController::class, 'index'])
@@ -287,6 +312,20 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('nilai.index');
                 Route::post('nilai/approve', [KoorNilaiController::class, 'approve'])
                     ->name('nilai.approve');
+            });
+
+        // ── KOORDINATOR — Periode Pendaftaran ────────────────────────────────
+        Route::middleware(['role:koor_prak'])
+            ->prefix('koordinator')->name('koordinator.')
+            ->group(function () {
+                Route::get('periode-pendaftaran', [KoorPeriodePendaftaranController::class, 'index'])
+                    ->name('periode-pendaftaran.index');
+                Route::post('periode-pendaftaran', [KoorPeriodePendaftaranController::class, 'store'])
+                    ->name('periode-pendaftaran.store');
+                Route::post('periode-pendaftaran/{id}/tutup', [KoorPeriodePendaftaranController::class, 'tutup'])
+                    ->name('periode-pendaftaran.tutup');
+                Route::delete('periode-pendaftaran/{id}', [KoorPeriodePendaftaranController::class, 'destroy'])
+                    ->name('periode-pendaftaran.destroy');
             });
 
         // ── ASISTEN PRAKTIKUM ────────────────────────────────────────────────
@@ -412,10 +451,15 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
         // ── Redirect root manprak ke dashboard sesuai role ───────────────────
         Route::get('/', function () {
             $user = auth()->user();
+            $email = strtolower($user->email ?? '');
+
+            if ($email === 'ike.pertiwi@undip.ac.id') {
+                return redirect()->route('eoffice.kp.koordinator.dashboard');
+            }
             if ($user->hasRole('superadmin') || $user->hasRole('admin_eoffice', 'eoffice')) {
                 return redirect()->route('eoffice.manprak.admin.dashboard');
             }
-            if ($user->hasRole('dosen', 'eoffice')) {
+            if ($user->hasRole('dosen', 'eoffice') || (str_ends_with($email, '@undip.ac.id') && !str_ends_with($email, '@students.undip.ac.id'))) {
                 return redirect()->route('eoffice.manprak.dosen.dashboard');
             }
             if ($user->hasRole('koor_prak', 'eoffice')) {
@@ -430,6 +474,19 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
     });
 
     // ════════════════════════════════════════════════════════════════════════
+    // ADMIN E-OFFICE
+    // ════════════════════════════════════════════════════════════════════════
+    Route::prefix('eoffice/admin')->name('eoffice.admin.')->middleware(['role:superadmin|admin_eoffice'])->group(function () {
+        Route::get('/template-proposal', [EOfficeController::class, 'templateProposal'])->name('template_proposal');
+        Route::post('/template-proposal', [EOfficeController::class, 'storeTemplateProposal'])->name('template_proposal.store');
+
+        // Fitur Kelola Role dan Validasi Timeline Admin
+        Route::get('/kelola-role', [EOfficeController::class, 'kelolaRole'])->name('kelola_role');
+        Route::get('/validasi-timeline', [EOfficeController::class, 'validasiTimeline'])->name('validasi_timeline');
+    });
+
+    // ════════════════════════════════════════════════════════════════════════
+    // KERJA PRAKTIK (KP)
     // KERJA PRAKTIK (KP)
     // ════════════════════════════════════════════════════════════════════════
     Route::prefix('eoffice/kp')->name('eoffice.kp.')->group(function () {
@@ -439,17 +496,26 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
         // ── Route Mahasiswa KP (baru) ──────────────────────────────────────
         Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
-            Route::get('/dashboard',                [MahasiswaKpController::class, 'dashboard'])->name('dashboard');
-            Route::get('/informasi',                [MahasiswaKpController::class, 'informasi'])->name('informasi');
-            Route::get('/faq',                      [MahasiswaKpController::class, 'faq'])->name('faq');
-            Route::get('/pendaftaran',              [MahasiswaKpController::class, 'pendaftaran'])->name('pendaftaran');
-            Route::post('/pendaftaran',             [MahasiswaKpController::class, 'storePendaftaran'])->name('pendaftaran.store');
-            Route::get('/dokumen',                  [MahasiswaKpController::class, 'dokumen'])->name('dokumen');
-            Route::post('/dokumen',                 [MahasiswaKpController::class, 'storeDokumen'])->name('dokumen.store');
-            Route::put('/dokumen/update-data',      [MahasiswaKpController::class, 'updateDataKp'])->name('dokumen.update_data');
-            Route::get('/dokumen/template/{type}',  [MahasiswaKpController::class, 'downloadTemplate'])->name('dokumen.template');
-            Route::get('/seminar',                  [MahasiswaKpController::class, 'seminar'])->name('seminar');
-            Route::post('/seminar',                 [MahasiswaKpController::class, 'storeSeminar'])->name('seminar.store');
+            Route::get('/dashboard', [MahasiswaKpController::class, 'dashboard'])->name('dashboard');
+            Route::get('/informasi', [MahasiswaKpController::class, 'informasi'])->name('informasi');
+            Route::get('/pengumuman', [MahasiswaKpController::class, 'pengumuman'])->name('pengumuman');
+            Route::get('/pengumuman/{id}/lampiran', [MahasiswaKpController::class, 'serveLampiran'])->name('pengumuman.lampiran');
+            Route::get('/faq', [MahasiswaKpController::class, 'faq'])->name('faq');
+
+            // Keperluan Perusahaan
+            Route::post('/surat-pengantar/export', [MahasiswaKpController::class, 'exportSuratPengantar'])->name('surat_pengantar.export');
+            Route::post('/proposal/export', [MahasiswaKpController::class, 'exportProposal'])->name('proposal.export');
+
+            Route::get('/pendaftaran', [MahasiswaKpController::class, 'pendaftaran'])->name('pendaftaran');
+            Route::post('/pendaftaran', [MahasiswaKpController::class, 'storePendaftaran'])->name('pendaftaran.store');
+            Route::get('/dokumen', [MahasiswaKpController::class, 'dokumen'])->name('dokumen');
+            Route::post('/dokumen', [MahasiswaKpController::class, 'storeDokumen'])->name('dokumen.store');
+            Route::put('/dokumen/update-data', [MahasiswaKpController::class, 'updateDataKp'])->name('dokumen.update_data');
+            Route::get('/dokumen/template/{type}', [MahasiswaKpController::class, 'downloadTemplate'])->name('dokumen.template');
+            Route::post('/dokumen/export-a2', [MahasiswaKpController::class, 'exportA2'])->name('dokumen.export_a2');
+            Route::post('/dokumen/generate-a2', [MahasiswaKpController::class, 'generateA2'])->name('dokumen.generate_a2');
+            Route::get('/seminar', [MahasiswaKpController::class, 'seminar'])->name('seminar');
+            Route::post('/seminar', [MahasiswaKpController::class, 'storeSeminar'])->name('seminar.store');
         });
 
         Route::prefix('dosen')->name('dosen.')->group(function () {
@@ -462,22 +528,40 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::get('/bimbingan/{id}/penilaian', [DosenController::class, 'showPenilaian'])->name('bimbingan.penilaian');
             Route::post('/bimbingan/{id}/penilaian', [DosenController::class, 'storePenilaian'])->name('bimbingan.penilaian.store');
             Route::get('/validasi-berkas', [DosenController::class, 'validasiBerkas'])->name('validasi_berkas');
+            Route::get('/penilaian-seminar', [DosenController::class, 'penilaianSeminar'])->name('penilaian_seminar');
+            Route::post('/penilaian-seminar/{id}/approve', [DosenController::class, 'approveSeminar'])->name('penilaian_seminar.approve');
+            Route::post('/penilaian-seminar/{id}/reject', [DosenController::class, 'rejectSeminar'])->name('penilaian_seminar.reject');
         });
 
         Route::prefix('koordinator')->name('koordinator.')->group(function () {
             Route::get('/dashboard', [KoordinatorController::class, 'dashboard'])->name('dashboard');
+            Route::get('/pengaturan', [KoordinatorController::class, 'pengaturan'])->name('pengaturan');
+            Route::post('/pengaturan', [KoordinatorController::class, 'storePengaturan'])->name('pengaturan.store');
             Route::get('/balancing', [KoordinatorController::class, 'balancingDosen'])->name('balancing');
             Route::post('/balancing', [KoordinatorController::class, 'storeBalancing'])->name('balancing.store');
             Route::get('/pengumuman', [KoordinatorController::class, 'pengumuman'])->name('pengumuman');
             Route::post('/pengumuman', [KoordinatorController::class, 'storePengumuman'])->name('pengumuman.store');
             Route::put('/pengumuman/{id}', [KoordinatorController::class, 'updatePengumuman'])->name('pengumuman.update');
             Route::delete('/pengumuman/{id}', [KoordinatorController::class, 'destroyPengumuman'])->name('pengumuman.destroy');
+
+            Route::get('/template', [KoordinatorController::class, 'template'])->name('template');
+            Route::post('/template', [KoordinatorController::class, 'storeTemplate'])->name('template.store');
+            Route::put('/template/{id}', [KoordinatorController::class, 'updateTemplate'])->name('template.update');
+            Route::delete('/template/{id}', [KoordinatorController::class, 'destroyTemplate'])->name('template.destroy');
             Route::get('/faq', [KoordinatorController::class, 'faq'])->name('faq');
             Route::post('/faq/dokumen', [KoordinatorController::class, 'storeDokumenPanduan'])->name('faq.dokumen.store');
             Route::delete('/faq/dokumen/{id}', [KoordinatorController::class, 'destroyDokumenPanduan'])->name('faq.dokumen.destroy');
             Route::post('/faq', [KoordinatorController::class, 'storeFaq'])->name('faq.store');
             Route::delete('/faq/{id}', [KoordinatorController::class, 'destroyFaq'])->name('faq.destroy');
+            Route::get('/upload-berkas', [KoordinatorController::class, 'uploadBerkas'])->name('upload_berkas');
+            Route::post('/upload-berkas/template-a2', [KoordinatorController::class, 'storeTemplateA2'])->name('upload_berkas.template_a2');
             Route::get('/validasi-berkas', [KoordinatorController::class, 'validasiBerkas'])->name('validasi_berkas');
+            Route::post('/validasi-berkas/{id}/approve', [KoordinatorController::class, 'approveDokumen'])->name('validasi_berkas.approve');
+            Route::post('/validasi-berkas/{id}/reject', [KoordinatorController::class, 'rejectDokumen'])->name('validasi_berkas.reject');
+            Route::get('/kelola-role', [KoordinatorController::class, 'kelolaRole'])->name('kelola_role');
+            Route::get('/nilai-lapangan', [KoordinatorController::class, 'nilaiLapangan'])->name('nilai_lapangan');
+            Route::post('/nilai-lapangan/{id}/update', [KoordinatorController::class, 'updateNilaiLapangan'])->name('nilai_lapangan.update');
+
             Route::get('/data-mahasiswa', [KoordinatorController::class, 'dataMahasiswa'])->name('data_mahasiswa');
         });
     });
