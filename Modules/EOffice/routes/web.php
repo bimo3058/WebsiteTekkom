@@ -567,6 +567,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::get('/periode', [KoordinatorController::class, 'periode'])->name('periode');
             Route::get('/periode/create', [KoordinatorController::class, 'createPeriode'])->name('periode.create');
             Route::post('/periode', [KoordinatorController::class, 'storePeriode'])->name('periode.store');
+            Route::get('/periode/{id}/edit', [KoordinatorController::class, 'editPeriode'])->name('periode.edit');
             Route::put('/periode/{id}', [KoordinatorController::class, 'updatePeriode'])->name('periode.update');
             Route::delete('/periode/{id}', [KoordinatorController::class, 'destroyPeriode'])->name('periode.destroy');
         });

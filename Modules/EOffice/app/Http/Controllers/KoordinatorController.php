@@ -779,6 +779,12 @@ class KoordinatorController extends Controller implements HasMiddleware
         return redirect()->route('eoffice.kp.koordinator.periode')->with('success', 'Periode baru berhasil ditambahkan.');
     }
 
+    public function editPeriode($id)
+    {
+        $periode = \Modules\EOffice\Models\KpPeriode::findOrFail($id);
+        return view('eoffice::koordinator.periode.edit', compact('periode'));
+    }
+
     public function updatePeriode(Request $request, $id)
     {
         $periode = \Modules\EOffice\Models\KpPeriode::findOrFail($id);

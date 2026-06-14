@@ -35,8 +35,12 @@
 
     @if(session('success'))
         <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)"
-            x-transition.opacity.duration.500ms
-            class="mb-6 p-4 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] flex items-center gap-3">
+            x-transition:enter="transition ease-out duration-300"
+            x-transition:enter-start="opacity-0 translate-y-2 sm:translate-y-0 sm:translate-x-2"
+            x-transition:enter-end="opacity-100 translate-y-0 sm:translate-x-0"
+            x-transition:leave="transition ease-in duration-200" x-transition:leave-start="opacity-100"
+            x-transition:leave-end="opacity-0"
+            class="fixed top-8 right-8 z-50 p-4 rounded-xl bg-[#F0FDF4] border border-[#BBF7D0] shadow-lg flex items-center gap-3">
             <svg width="20" height="20" fill="none" stroke="#15803D" stroke-width="2" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z">
                 </path>
@@ -121,7 +125,7 @@
                 <thead>
                     <tr style="border-bottom:1px solid #F1F1F3; background-color:#FAFAFC;">
                         <th
-                            style="padding:12px 16px; font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#666D80; text-transform:uppercase; letter-spacing:0.02em;">
+                            style="padding:12px 16px 12px 48px; font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#666D80; text-transform:uppercase; letter-spacing:0.02em;">
                             Nama Periode</th>
                         <th
                             style="padding:12px 16px; font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#666D80; text-transform:uppercase; letter-spacing:0.02em;">
@@ -134,13 +138,19 @@
                             Action</th>
                     </tr>
                 </thead>
-                <tbody>
-                    @forelse($periodes as $periode)
-                        <tr style="border-bottom:1px solid #F1F1F3;" class="hover:bg-[#F8F5FF] transition-colors"
-                            x-data="{ openOptions: false }">
+                @forelse($periodes as $periode)
+                    <tbody x-data="{ openOptions: false, expanded: false }">
+                        <tr style="border-bottom:1px solid #F1F1F3;" class="hover:bg-[#F8F5FF] transition-colors">
                             <td
-                                style="padding:16px; font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:500; color:#0D0D12;">
-                                Semester {{ $periode->semester }} {{ $periode->tahun_ajaran }}
+                                style="padding:16px 16px 16px 20px; font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:500; color:#0D0D12;">
+                                <div class="flex items-center gap-3 cursor-pointer" @click="expanded = !expanded">
+                                    <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                                        viewBox="0 0 24 24" :class="expanded ? 'rotate-180' : ''"
+                                        class="transition-transform duration-200 text-[#666D80]">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                    <span>Semester {{ $periode->semester }} {{ $periode->tahun_ajaran }}</span>
+                                </div>
                             </td>
                             <td style="padding:16px; font-family:'Inter Tight',sans-serif; font-size:14px; color:#4B5563;">
                                 {{ $periode->tanggal_buka ? \Carbon\Carbon::parse($periode->tanggal_buka)->translatedFormat('d F Y') : '-' }}
@@ -150,25 +160,25 @@
                             <td style="padding:16px;">
                                 @if($periode->is_active)
                                     <span style="
-                                                        display:inline-flex; align-items:center; gap:6px;
-                                                        padding:4px 10px;
-                                                        background:#F0FDF4;
-                                                        border:1px solid #BBF7D0;
-                                                        border-radius:9999px;
-                                                        font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#15803D;
-                                                    ">
+                                                                                                                            display:inline-flex; align-items:center; gap:6px;
+                                                                                                                            padding:4px 10px;
+                                                                                                                            background:#F0FDF4;
+                                                                                                                            border:1px solid #BBF7D0;
+                                                                                                                            border-radius:9999px;
+                                                                                                                            font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#15803D;
+                                                                                                                        ">
                                         <span style="width:6px; height:6px; background:#15803D; border-radius:50%;"></span>
                                         Aktif
                                     </span>
                                 @else
                                     <span style="
-                                                        display:inline-flex; align-items:center; gap:6px;
-                                                        padding:4px 10px;
-                                                        background:#F1F1F3;
-                                                        border:1px solid #E2E8F0;
-                                                        border-radius:9999px;
-                                                        font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#666D80;
-                                                    ">
+                                                                                                                            display:inline-flex; align-items:center; gap:6px;
+                                                                                                                            padding:4px 10px;
+                                                                                                                            background:#F1F1F3;
+                                                                                                                            border:1px solid #E2E8F0;
+                                                                                                                            border-radius:9999px;
+                                                                                                                            font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#666D80;
+                                                                                                                        ">
                                         <span style="width:6px; height:6px; background:#666D80; border-radius:50%;"></span>
                                         Nonaktif
                                     </span>
@@ -188,9 +198,8 @@
                                 {{-- Dropdown --}}
                                 <div x-show="openOptions" style="display:none;" x-transition
                                     class="absolute right-0 mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-100 z-10 py-1">
-                                    {{-- Edit could be a modal or redirect, let's keep it aesthetic --}}
                                     <!-- Edit Link -->
-                                    <a href="#"
+                                    <a href="{{ route('eoffice.kp.koordinator.periode.edit', $periode->id) }}"
                                         class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
                                         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
                                             viewBox="0 0 24 24">
@@ -220,15 +229,66 @@
                                 </div>
                             </td>
                         </tr>
-                    @empty
+                        <!-- Expandable Details Row -->
+                        <tr x-show="expanded" style="display:none;" x-transition>
+                            <td colspan="4" class="p-0 border-b border-[#F1F1F3] bg-[#FAFAFC]">
+                                <div class="flex" style="padding: 16px 16px 24px 16px;">
+                                    <!-- Spacer for chevron (20px pad + 16px icon + 12px gap = 48px) -->
+                                    <div style="width: 48px; flex-shrink: 0;"></div>
+
+                                    <!-- Content Area -->
+                                    <div class="flex-1 max-w-[600px]">
+                                        <h4
+                                            style="font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:700; color:#A0AABF; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:12px;">
+                                            Tanggal Fase
+                                        </h4>
+                                        <div class="flex flex-col gap-4">
+                                            <div class="flex items-center text-sm"
+                                                style="font-family:'Inter Tight',sans-serif;">
+                                                <div class="w-[120px] text-[#848A96] font-medium">Pra KP</div>
+                                                <div class="text-[#272835] font-semibold">
+                                                    {{ $periode->pra_kp_mulai ? \Carbon\Carbon::parse($periode->pra_kp_mulai)->translatedFormat('d M Y') : '-' }}
+                                                    -
+                                                    {{ $periode->pra_kp_akhir ? \Carbon\Carbon::parse($periode->pra_kp_akhir)->translatedFormat('d M Y') : '-' }}
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center text-sm"
+                                                style="font-family:'Inter Tight',sans-serif;">
+                                                <div class="w-[120px] text-[#848A96] font-medium">Saat KP</div>
+                                                <div class="text-[#272835] font-semibold">
+                                                    {{ $periode->saat_kp_mulai ? \Carbon\Carbon::parse($periode->saat_kp_mulai)->translatedFormat('d M Y') : '-' }}
+                                                    -
+                                                    {{ $periode->saat_kp_akhir ? \Carbon\Carbon::parse($periode->saat_kp_akhir)->translatedFormat('d M Y') : '-' }}
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center text-sm"
+                                                style="font-family:'Inter Tight',sans-serif;">
+                                                <div class="w-[120px] text-[#848A96] font-medium">Pasca KP</div>
+                                                <div class="text-[#272835] font-semibold">
+                                                    {{ $periode->pasca_kp_mulai ? \Carbon\Carbon::parse($periode->pasca_kp_mulai)->translatedFormat('d M Y') : '-' }}
+                                                    -
+                                                    {{ $periode->pasca_kp_akhir ? \Carbon\Carbon::parse($periode->pasca_kp_akhir)->translatedFormat('d M Y') : '-' }}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Right Column: Optional configuration (Empty for now) -->
+                                    <div class="flex-1"></div>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                @empty
+                    <tbody>
                         <tr>
                             <td colspan="4" class="text-center py-6 text-gray-500 font-medium"
                                 style="font-family:'Inter Tight',sans-serif;">
                                 Belum ada data periode.
                             </td>
                         </tr>
-                    @endforelse
-                </tbody>
+                    </tbody>
+                @endforelse
             </table>
         </div>
 
