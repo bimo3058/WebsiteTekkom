@@ -76,11 +76,13 @@
                     x-transition.opacity.duration.200ms>Manajemen KP</p>
 
                 @php
+                    $isPeriode = request()->routeIs('eoffice.kp.koordinator.periode*');
                     $isDataMhs = request()->routeIs('eoffice.kp.koordinator.data_mahasiswa');
                     $isBalancing = request()->routeIs('eoffice.kp.koordinator.balancing');
                     $isValidasi = request()->routeIs('eoffice.kp.koordinator.validasi_berkas');
                     $isNilai = request()->routeIs('eoffice.kp.koordinator.nilai_lapangan');
                     $menuItems = [
+                        ['active' => $isPeriode, 'route' => 'eoffice.kp.koordinator.periode', 'label' => 'Periode', 'icon' => 'periode'],
                         ['active' => $isDataMhs, 'route' => 'eoffice.kp.koordinator.data_mahasiswa', 'label' => 'Data Mahasiswa', 'icon' => 'users'],
                         ['active' => $isBalancing, 'route' => 'eoffice.kp.koordinator.balancing', 'label' => 'Balancing Dosen', 'icon' => 'balance'],
                         ['active' => $isValidasi, 'route' => 'eoffice.kp.koordinator.validasi_berkas', 'label' => 'Approval Berkas', 'icon' => 'doc'],
@@ -94,10 +96,16 @@
                             <span class="absolute left-0 top-2 bottom-2 w-[3.5px] bg-[#0065FF] rounded-r-full z-10"></span>
                         @endif
                         <a href="{{ route($item['route']) }}" class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                                {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                                        {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
                             @if($item['active'])
                                 <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
-                                    @if($item['icon'] === 'users')
+                                    @if($item['icon'] === 'periode')
+                                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                            </path>
+                                        </svg>
+                                    @elseif($item['icon'] === 'users')
                                         <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                 d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -120,7 +128,14 @@
                                     @endif
                                 </span>
                             @else
-                                @if($item['icon'] === 'users')
+                                @if($item['icon'] === 'periode')
+                                    <svg class="w-[18px] h-[18px] flex-shrink-0 text-[#A4ABB8] group-hover:text-[#666D80]"
+                                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                                            d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z">
+                                        </path>
+                                    </svg>
+                                @elseif($item['icon'] === 'users')
                                     <svg class="w-[18px] h-[18px] flex-shrink-0 text-[#A4ABB8] group-hover:text-[#666D80]"
                                         fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
@@ -177,7 +192,7 @@
                             <span class="absolute left-0 top-2 bottom-2 w-[3.5px] bg-[#0065FF] rounded-r-full z-10"></span>
                         @endif
                         <a href="{{ route($item['route']) }}" class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                                {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                                        {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
                             @if($item['active'])
                                 <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
                                     @if($item['icon'] === 'annc')

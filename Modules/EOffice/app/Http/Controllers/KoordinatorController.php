@@ -738,4 +738,79 @@ class KoordinatorController extends Controller implements HasMiddleware
         return redirect()->route('eoffice.kp.koordinator.upload_berkas')
             ->with('success', 'Template Form Kehadiran & Nilai (A2) berhasil diunggah dan diperbarui!');
     }
+    /**
+     * Halaman Manajemen Periode
+     */
+    public function periode()
+    {
+        $periodes = \Modules\EOffice\Models\KpPeriode::orderBy('created_at', 'desc')->get();
+        return view('eoffice::koordinator.periode.index', compact('periodes'));
+    }
+
+    public function createPeriode()
+    {
+        return view('eoffice::koordinator.periode.create');
+    }
+
+    public function storePeriode(Request $request)
+    {
+        $validated = $request->validate([
+            'tahun_ajaran' => 'required|string',
+            'semester' => 'required|in:Ganjil,Genap',
+            'is_active' => 'nullable|boolean',
+            'tanggal_buka' => 'required|date',
+            'tanggal_tutup' => 'required|date',
+            'pra_kp_mulai' => 'nullable|date',
+            'pra_kp_akhir' => 'nullable|date',
+            'pra_kp_pengingat' => 'nullable|date',
+            'saat_kp_mulai' => 'nullable|date',
+            'saat_kp_akhir' => 'nullable|date',
+            'saat_kp_pengingat' => 'nullable|date',
+            'pasca_kp_mulai' => 'nullable|date',
+            'pasca_kp_akhir' => 'nullable|date',
+            'pasca_kp_pengingat' => 'nullable|date',
+        ]);
+
+        $validated['is_active'] = $request->has('is_active');
+
+        // Note: The unique constraint on ('tahun_ajaran', 'semester') might fail if duplicate
+        \Modules\EOffice\Models\KpPeriode::create($validated);
+
+        return redirect()->route('eoffice.kp.koordinator.periode')->with('success', 'Periode baru berhasil ditambahkan.');
+    }
+
+    public function updatePeriode(Request $request, $id)
+    {
+        $periode = \Modules\EOffice\Models\KpPeriode::findOrFail($id);
+
+        $validated = $request->validate([
+            'tahun_ajaran' => 'required|string',
+            'semester' => 'required|in:Ganjil,Genap',
+            'is_active' => 'nullable|boolean',
+            'tanggal_buka' => 'required|date',
+            'tanggal_tutup' => 'required|date',
+            'pra_kp_mulai' => 'nullable|date',
+            'pra_kp_akhir' => 'nullable|date',
+            'pra_kp_pengingat' => 'nullable|date',
+            'saat_kp_mulai' => 'nullable|date',
+            'saat_kp_akhir' => 'nullable|date',
+            'saat_kp_pengingat' => 'nullable|date',
+            'pasca_kp_mulai' => 'nullable|date',
+            'pasca_kp_akhir' => 'nullable|date',
+            'pasca_kp_pengingat' => 'nullable|date',
+        ]);
+
+        $validated['is_active'] = $request->has('is_active');
+
+        $periode->update($validated);
+
+        return redirect()->route('eoffice.kp.koordinator.periode')->with('success', 'Periode berhasil diperbarui.');
+    }
+
+    public function destroyPeriode($id)
+    {
+        $periode = \Modules\EOffice\Models\KpPeriode::findOrFail($id);
+        $periode->delete();
+        return redirect()->route('eoffice.kp.koordinator.periode')->with('success', 'Periode berhasil dihapus.');
+    }
 }
