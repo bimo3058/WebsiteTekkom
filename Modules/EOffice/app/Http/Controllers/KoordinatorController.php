@@ -594,8 +594,26 @@ class KoordinatorController extends Controller implements HasMiddleware
                 ];
             })->toArray();
 
-        // Get mahasiswas and their current draft/finalized assignment
-        $kps = \Modules\EOffice\Models\KerjaPraktik::with(['mahasiswa.user', 'balancing'])->get();
+        // Locate the currently relevant active period (Preferably one that is ongoing, or fallback to the latest active)
+        $activePeriod = \Modules\EOffice\Models\KpPeriode::where('is_active', true)
+            ->whereDate('pra_kp_mulai', '<=', now())
+            ->whereDate('pra_kp_akhir', '>=', now())
+            ->first();
+
+        if (!$activePeriod) {
+            $activePeriod = \Modules\EOffice\Models\KpPeriode::where('is_active', true)->latest()->first();
+        }
+
+        if ($activePeriod) {
+            // Get mahasiswas strictly bound to the detected active period and their current draft/finalized assignment
+            // Karena eo_kerja_praktik tidak punya periode_id, kita filter berdasarkan waktu pendaftaran
+            $kps = \Modules\EOffice\Models\KerjaPraktik::with(['mahasiswa.user', 'balancing'])
+                ->whereDate('created_at', '>=', $activePeriod->pra_kp_mulai)
+                ->whereDate('created_at', '<=', $activePeriod->pra_kp_akhir)
+                ->get();
+        } else {
+            $kps = collect(); // Kosongkan jika tak ada periode yang relevan
+        }
 
         $unassignedStudents = [];
         $dosenMap = collect($dosens)->keyBy('id')->toArray();
