@@ -579,14 +579,20 @@ class KoordinatorController extends Controller implements HasMiddleware
 
     public function balancingDosen()
     {
-        $dosens = \Modules\EOffice\Models\KpDosen::with('user')->get()->map(function ($dosen) {
-            return [
-                'id' => $dosen->id,
-                'name' => $dosen->nama_lengkap ?? $dosen->user->name ?? 'Unknown',
-                'kuota_maksimal' => $dosen->kuota_maksimal ?? 10,
-                'mahasiswas' => []
-            ];
-        })->toArray();
+        $dosens = \Modules\EOffice\Models\KpDosen::with('user')
+            ->get()
+            ->sortBy(function ($d) {
+                return $d->nama_lengkap ?? $d->user->name ?? 'Unknown';
+            })
+            ->values()
+            ->map(function ($dosen) {
+                return [
+                    'id' => $dosen->id,
+                    'name' => $dosen->nama_lengkap ?? $dosen->user->name ?? 'Unknown',
+                    'kuota_maksimal' => $dosen->kuota_maksimal ?? 10,
+                    'mahasiswas' => []
+                ];
+            })->toArray();
 
         // Get mahasiswas and their current draft/finalized assignment
         $kps = \Modules\EOffice\Models\KerjaPraktik::with(['mahasiswa.user', 'balancing'])->get();
