@@ -81,23 +81,6 @@
             {{-- MAIN --}}
             <div x-show="open" class="sb-section-label">Main Menu</div>
 
-<<<<<<< HEAD
-                @if($isSuperadmin)
-                    <x-sidebar-link href="{{ route('superadmin.dashboard') }}"
-                        icon="{{ $iconDashboard }}"
-                        label="Dashboard"
-                        :active="str_contains($currentRoute, 'dashboard')"/>
-                @else
-                    <x-sidebar-link href="{{ route('dashboard') }}"
-                        icon="{{ $iconDashboard }}"
-                        label="Dashboard"
-                        :active="$currentRoute === 'dashboard'"/>
-                @endif
-            </div>
-
-            {{-- KENDALI (Superadmin) --}}
-=======
->>>>>>> d6381d8f518da8a9d88010bb391d0a2195d0578d
             @if($isSuperadmin)
                 <x-sidebar-link :href="route('superadmin.dashboard')" :icon="$iconDashboard" label="Dashboard"
                     :active="str_contains($currentRoute, 'dashboard')" />
