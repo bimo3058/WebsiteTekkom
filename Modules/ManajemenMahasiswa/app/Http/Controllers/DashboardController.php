@@ -206,14 +206,15 @@ class DashboardController extends Controller
                 ]);
 
             case 'calon-do':
-                // Mahasiswa aktif yang sudah memasuki semester >= 13 (early warning DO)
-                $thresholdAngkatan = now()->year - 6;
+                // Deteksi dini bertingkat (FASE 3B): semester >= 9 (pemantauan) & >= 12 (kritis)
                 $currentYear  = now()->year;
                 $currentMonth = now()->month;
+                $yPantau = $currentMonth >= 8 ? 4 : 5;      // semester >= 9
+                $thresholdPantau = $currentYear - $yPantau;
 
                 $rows = Kemahasiswaan::aktif()
                     ->whereNotNull('angkatan')
-                    ->where('angkatan', '<=', $thresholdAngkatan)
+                    ->where('angkatan', '<=', $thresholdPantau)
                     ->with('user:id,email')
                     ->orderBy('angkatan')
                     ->orderBy('nama')
@@ -225,7 +226,8 @@ class DashboardController extends Controller
                             'nama'     => $m->nama ?? $m->user?->name ?? '-',
                             'nim'      => $m->nim ?? '-',
                             'angkatan' => (int) $m->angkatan,
-                            'semester' => max($semester, 13),
+                            'semester' => $semester,
+                            'tier'     => $semester >= 12 ? 'Kritis' : 'Perlu Pemantauan',
                             'email'    => $m->user?->email ?? '-',
                         ];
                     });
