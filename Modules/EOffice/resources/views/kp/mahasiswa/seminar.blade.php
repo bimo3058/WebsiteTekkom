@@ -207,12 +207,12 @@
                             <button @click="modalOpen = true"
                                 class="w-full flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 transition-all active:scale-95">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                {{ $cvDoc ? 'Unggah Ulang CV & Foto' : 'Unggah CV & Foto' }}
+                                {{ $cvDoc ? 'Unggah Ulang CV' : 'Unggah CV' }}
                             </button>
                         @else
                             <div class="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-100">
                                 <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                <p class="text-sm font-bold text-emerald-700">CV & Foto telah diverifikasi ✓</p>
+                                <p class="text-sm font-bold text-emerald-700">CV telah diverifikasi ✓</p>
                             </div>
                         @endif
 
@@ -223,15 +223,15 @@
                                 <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 overflow-hidden">
                                     <form action="{{ route('eoffice.kp.mahasiswa.dokumen.store') }}" method="POST" enctype="multipart/form-data">
                                         @csrf
-                                        <input type="hidden" name="jenis_dokumen" value="CV dan Foto">
+                                        <input type="hidden" name="jenis_dokumen" value="CV">
                                         <div class="p-6">
                                             <div class="flex items-center gap-4 mb-5">
                                                 <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
                                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z"/></svg>
                                                 </div>
                                                 <div>
-                                                    <h3 class="text-lg font-bold text-slate-900">Unggah CV & Foto</h3>
-                                                    <p class="text-xs text-slate-400">Jadikan satu file PDF (CV & Foto 3x4) &mdash; maks. 10MB</p>
+                                                    <h3 class="text-lg font-bold text-slate-900">Unggah CV</h3>
+                                                    <p class="text-xs text-slate-400">Jadikan satu file PDF (CV) &mdash; maks. 10MB</p>
                                                 </div>
                                             </div>
                                             <div x-data="{ fn: '' }" class="p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:border-indigo-400 hover:bg-white transition-all text-center">

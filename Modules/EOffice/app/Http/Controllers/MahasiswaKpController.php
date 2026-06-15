@@ -437,6 +437,12 @@ class MahasiswaKpController extends Controller
             $activePhase = 'pasca_kp';
         }
 
+        // Override phase for specific documents
+        $pasca_kp_docs = ['CV', 'Foto', 'Kartu Hijau', 'Nilai Lapangan', 'A2', 'Laporan Akhir'];
+        if (in_array($validated['jenis_dokumen'], $pasca_kp_docs)) {
+            $activePhase = 'pasca_kp';
+        }
+
         // Simpan file
         $file = $request->file('file');
         $fileName = $file->getClientOriginalName();

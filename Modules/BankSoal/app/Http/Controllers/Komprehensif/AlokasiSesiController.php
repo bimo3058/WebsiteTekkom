@@ -14,6 +14,15 @@ class AlokasiSesiController extends Controller
     public function index(Request $request)
     {
         $periodes = PeriodeUjian::orderBy('created_at', 'desc')->get();
+
+        // Default ke periode aktif jika tidak ada filter di URL
+        if (!$request->filled('periode_id')) {
+            $activePeriodeId = $periodes->firstWhere('status', 'aktif')?->id ?? $periodes->first()?->id;
+            if ($activePeriodeId) {
+                return redirect()->route('banksoal.pendaftaran.alokasi-sesi.index', ['periode_id' => $activePeriodeId]);
+            }
+        }
+
         $selectedPeriodeId = $request->query('periode_id');
         
         $jadwals = collect();

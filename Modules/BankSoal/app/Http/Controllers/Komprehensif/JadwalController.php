@@ -13,8 +13,16 @@ class JadwalController extends Controller
     public function index(Request $request)
     {
         $periodes = PeriodeUjian::orderBy('created_at', 'desc')->get();
-        $selectedPeriodeId = $request->periode_id ?? ($periodes->first()->id ?? null);
-        
+
+        // Default ke periode aktif jika tidak ada filter di URL
+        if (!$request->filled('periode_id')) {
+            $activePeriodeId = $periodes->firstWhere('status', 'aktif')?->id ?? $periodes->first()?->id;
+            if ($activePeriodeId) {
+                return redirect()->route('banksoal.periode.jadwal', ['periode_id' => $activePeriodeId]);
+            }
+        }
+
+        $selectedPeriodeId = $request->query('periode_id');
         $jadwals = collect();
         $selectedPeriode = null;
 
