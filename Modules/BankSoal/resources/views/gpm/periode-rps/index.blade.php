@@ -11,7 +11,7 @@
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
-                <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                <thead class="bg-primary text-xs uppercase text-white">
                     <tr>
                         <th class="px-6 py-4 text-left">No</th>
                         <th class="px-6 py-4 text-left">Info Periode</th>
@@ -31,11 +31,11 @@
                             <td class="px-6 py-4 text-sm text-slate-600">
                                 <div class="flex items-center gap-2">
                                     <i class="fas fa-calendar-alt text-slate-400"></i>
-                                    {{ \Carbon\Carbon::parse($periode->tanggal_mulai)->format('d M Y, H:i') }}
+                                    {{ \Carbon\Carbon::parse($periode->tanggal_mulai)->locale('id')->translatedFormat('d M Y, H:i') }}
                                 </div>
                                 <div class="mt-2 flex items-center gap-2 text-rose-500">
                                     <i class="fas fa-flag-checkered"></i>
-                                    <span class="text-slate-600">{{ \Carbon\Carbon::parse($periode->tanggal_selesai)->format('d M Y, H:i') }}</span>
+                                    <span class="text-slate-600">{{ \Carbon\Carbon::parse($periode->tanggal_selesai)->locale('id')->translatedFormat('d M Y, H:i') }}</span>
                                 </div>
                             </td>
                             <td class="px-6 py-4">
@@ -96,19 +96,21 @@
                         <div class="grid grid-cols-1 gap-3 sm:grid-cols-2">
                             <div>
                                 <label class="text-xs font-semibold text-slate-600">Semester <span class="text-rose-500">*</span></label>
-                                <select class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="semester" required>
+                                <select class="mt-2 w-full rounded-lg border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed px-3 py-2 text-sm" disabled>
                                     <option value="Ganjil" {{ $periode->semester == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
                                     <option value="Genap" {{ $periode->semester == 'Genap' ? 'selected' : '' }}>Genap</option>
                                 </select>
+                                <input type="hidden" name="semester" value="{{ $periode->semester }}">
                             </div>
                             <div>
                                 <label class="text-xs font-semibold text-slate-600">Tahun Ajaran <span class="text-rose-500">*</span></label>
-                                <select class="mt-2 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm" name="tahun_ajaran" required>
+                                <select class="mt-2 w-full rounded-lg border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed px-3 py-2 text-sm" disabled>
                                     <option value="" disabled>Pilih Tahun Ajaran</option>
                                     @foreach($tahunAjarans as $ta)
                                         <option value="{{ $ta }}" {{ $periode->tahun_ajaran == $ta ? 'selected' : '' }}>{{ $ta }}</option>
                                     @endforeach
                                 </select>
+                                <input type="hidden" name="tahun_ajaran" value="{{ $periode->tahun_ajaran }}">
                             </div>
                         </div>
                         <div>

@@ -86,7 +86,7 @@
             <div class="flex items-center justify-between gap-4 border-b border-slate-200 px-4 py-3">
                 <div>
                     <h3 class="text-base font-semibold text-slate-900">CPMK per Baris</h3>
-                    <p class="text-xs text-slate-500 mt-1">Format: CPMK 1.1 - Mahasiswa mampu (KKO C6) merancang ...</p>
+                    <p class="text-xs text-slate-500 mt-1">Format: CPMK 1 - Mahasiswa mampu (KKO C6) merancang ...</p>
                 </div>
                 <button type="button" class="btn-primary inline-flex items-center gap-2" id="addCpmkRowBtn" {{ !$isUploadOpen ? 'disabled' : '' }}>
                     <i class="fas fa-plus"></i> Tambah
@@ -125,7 +125,7 @@
                                     <label class="text-xs font-semibold text-slate-500">Kode CPMK</label>
                                     <div class="flex items-stretch gap-2">
                                         <span class="inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500">CPMK</span>
-                                        <input type="text" name="cpmk_rows[{{ $index }}][kode]" value="{{ $row['kode'] }}" class="form-control compact-control" placeholder="1.1" required {{ !$isUploadOpen ? 'disabled' : '' }}>
+                                        <input type="text" name="cpmk_rows[{{ $index }}][kode]" value="{{ $row['kode'] }}" class="form-control compact-control" placeholder="1" required {{ !$isUploadOpen ? 'disabled' : '' }}>
                                     </div>
                                     @error('cpmk_rows.' . $index . '.kode')
                                         <p class="text-xs text-red-600">{{ $message }}</p>
@@ -197,7 +197,7 @@
                             <label class="text-xs font-semibold text-slate-500">Kode CPMK</label>
                             <div class="flex items-stretch gap-2">
                                 <span class="inline-flex items-center rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm font-semibold text-slate-500">CPMK</span>
-                                <input type="text" name="cpmk_rows[__INDEX__][kode]" class="form-control compact-control" placeholder="1.1" required>
+                                <input type="text" name="cpmk_rows[__INDEX__][kode]" class="form-control compact-control" placeholder="1" required>
                             </div>
                         </div>
 

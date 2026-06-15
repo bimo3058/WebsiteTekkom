@@ -40,8 +40,11 @@ class PeriodeRpsController extends Controller
         ];
         
         $currentSemester = now()->month >= 7 ? 'Ganjil' : 'Genap';
+        $currentTahunAjaran = now()->month >= 7
+            ? $currentYear . '/' . ($currentYear + 1)
+            : ($currentYear - 1) . '/' . $currentYear;
         
-        return view('banksoal::gpm.periode-rps.create', compact('tahunAjarans', 'currentSemester'));
+        return view('banksoal::gpm.periode-rps.create', compact('tahunAjarans', 'currentSemester', 'currentTahunAjaran'));
     }
 
     public function store(Request $request)
@@ -66,8 +69,8 @@ class PeriodeRpsController extends Controller
                 'judul' => $validated['judul'],
                 'semester' => $validated['semester'],
                 'tahun_ajaran' => $validated['tahun_ajaran'],
-                'tanggal_mulai' => $validated['tanggal_mulai'],
-                'tanggal_selesai' => $validated['tanggal_selesai'],
+                'tanggal_mulai' => \Illuminate\Support\Carbon::parse($validated['tanggal_mulai'])->startOfDay(),
+                'tanggal_selesai' => \Illuminate\Support\Carbon::parse($validated['tanggal_selesai'])->endOfDay(),
                 'is_active' => !empty($validated['is_active']) ? 'true' : 'false',
             ]);
 
@@ -113,8 +116,8 @@ class PeriodeRpsController extends Controller
                 'judul' => $validated['judul'],
                 'semester' => $validated['semester'],
                 'tahun_ajaran' => $validated['tahun_ajaran'],
-                'tanggal_mulai' => $validated['tanggal_mulai'],
-                'tanggal_selesai' => $validated['tanggal_selesai'],
+                'tanggal_mulai' => \Illuminate\Support\Carbon::parse($validated['tanggal_mulai'])->startOfDay(),
+                'tanggal_selesai' => \Illuminate\Support\Carbon::parse($validated['tanggal_selesai'])->endOfDay(),
                 'is_active' => !empty($validated['is_active']) ? 'true' : 'false',
             ]);
 

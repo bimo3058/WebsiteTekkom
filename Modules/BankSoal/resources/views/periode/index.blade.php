@@ -609,64 +609,81 @@
 
     {{-- Register Alpine component after Livewire+Alpine initializes --}}
     <script>
-        document.addEventListener('livewire:init', function () {
-            if (!window.Alpine || !window.Alpine.data) return;
+        (function () {
+            function registerPeriodeManagerApp() {
+                if (!window.Alpine || !window.Alpine.data) return false;
 
-            window.Alpine.data('periodeManagerApp', function () {
-                var initEl = document.getElementById('periode-init-data');
-                var init = {};
-                try { if (initEl) init = JSON.parse(initEl.textContent); } catch (e) { }
+                window.Alpine.data('periodeManagerApp', function () {
+                    var initEl = document.getElementById('periode-init-data');
+                    var init = {};
+                    try { if (initEl) init = JSON.parse(initEl.textContent); } catch (e) { }
 
-                return {
-                    openModal: init.openModal !== undefined ? init.openModal : false,
-                    editModal: init.editModal !== undefined ? init.editModal : false,
-                    editData: init.editData || { id: null, nama_periode: '', tanggal_mulai: '', tanggal_selesai: '', tanggal_mulai_ujian: '', tanggal_selesai_ujian: '', kuota_peserta: '' },
-                    createOptions: init.createOptions || [''],
-                    editOptions: [''],
+                    return {
+                        openModal: init.openModal !== undefined ? init.openModal : false,
+                        editModal: init.editModal !== undefined ? init.editModal : false,
+                        editData: init.editData || { id: null, nama_periode: '', tanggal_mulai: '', tanggal_selesai: '', tanggal_mulai_ujian: '', tanggal_selesai_ujian: '', kuota_peserta: '' },
+                        createOptions: init.createOptions || [''],
+                        editOptions: [''],
 
-                    confirmModal: false,
-                    confirmAction: '',
-                    confirmMethod: 'POST',
-                    confirmTitle: '',
-                    confirmText: '',
-                    confirmBtnColor: '',
-                    confirmIconColor: '',
-                    confirmIconBg: '',
+                        confirmModal: false,
+                        confirmAction: '',
+                        confirmMethod: 'POST',
+                        confirmTitle: '',
+                        confirmText: '',
+                        confirmBtnColor: '',
+                        confirmIconColor: '',
+                        confirmIconBg: '',
 
-                    openConfirm: function(action, method, title, text, btnColor, iconColor, iconBg) {
-                        this.confirmAction = action;
-                        this.confirmMethod = method;
-                        this.confirmTitle = title;
-                        this.confirmText = text;
-                        this.confirmBtnColor = btnColor;
-                        this.confirmIconColor = iconColor;
-                        this.confirmIconBg = iconBg;
-                        this.confirmModal = true;
-                    },
-                    closeConfirm: function() {
-                        this.confirmModal = false;
-                    },
+                        openConfirm: function(action, method, title, text, btnColor, iconColor, iconBg) {
+                            this.confirmAction = action;
+                            this.confirmMethod = method;
+                            this.confirmTitle = title;
+                            this.confirmText = text;
+                            this.confirmBtnColor = btnColor;
+                            this.confirmIconColor = iconColor;
+                            this.confirmIconBg = iconBg;
+                            this.confirmModal = true;
+                        },
+                        closeConfirm: function() {
+                            this.confirmModal = false;
+                        },
 
-                    openEdit: function (periodeData) {
-                        this.editData = {
-                            id: periodeData.id,
-                            nama_periode: periodeData.nama_periode,
-                            tanggal_mulai: periodeData.tanggal_mulai,
-                            tanggal_selesai: periodeData.tanggal_selesai,
-                            tanggal_mulai_ujian: periodeData.tanggal_mulai_ujian,
-                            tanggal_selesai_ujian: periodeData.tanggal_selesai_ujian,
-                            kuota_peserta: periodeData.kuota_peserta,
-                        };
-                        this.editOptions = (periodeData.target_wisuda_options && periodeData.target_wisuda_options.length > 0)
-                            ? periodeData.target_wisuda_options.slice()
-                            : [''];
-                        this.editModal = true;
-                    }
-                };
-            });
+                        openEdit: function (periodeData) {
+                            this.editData = {
+                                id: periodeData.id,
+                                nama_periode: periodeData.nama_periode,
+                                tanggal_mulai: periodeData.tanggal_mulai,
+                                tanggal_selesai: periodeData.tanggal_selesai,
+                                tanggal_mulai_ujian: periodeData.tanggal_mulai_ujian,
+                                tanggal_selesai_ujian: periodeData.tanggal_selesai_ujian,
+                                kuota_peserta: periodeData.kuota_peserta,
+                            };
+                            this.editOptions = (periodeData.target_wisuda_options && periodeData.target_wisuda_options.length > 0)
+                                ? periodeData.target_wisuda_options.slice()
+                                : [''];
+                            this.editModal = true;
+                        }
+                    };
+                });
 
-            // Re-initialize Alpine on the container so the new component is recognized
-            window.Alpine.initTree(document.querySelector('[x-data="periodeManagerApp()"]'));
-        });
+                return true;
+            }
+
+            function initPeriodeManagerApp() {
+                if (!registerPeriodeManagerApp()) return;
+
+                var root = document.querySelector('[x-data="periodeManagerApp()"]');
+                if (root && window.Alpine.initTree) {
+                    window.Alpine.initTree(root);
+                }
+            }
+
+            if (window.Alpine && window.Alpine.data) {
+                initPeriodeManagerApp();
+            }
+
+            document.addEventListener('livewire:init', initPeriodeManagerApp, { once: true });
+            document.addEventListener('alpine:init', initPeriodeManagerApp, { once: true });
+        })();
     </script>
 </x-banksoal::layouts.admin>

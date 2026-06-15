@@ -1,7 +1,7 @@
 <div 
     x-data="toastManager()"
     @notify.window="addToast($event.detail)"
-    class="fixed top-6 left-0 right-0 z-[100] flex flex-col items-center gap-3 pointer-events-none"
+    class="fixed top-20 right-10 z-[100] flex flex-col items-end gap-3 pointer-events-none"
 >
     <!-- Menangkap session flash default dari Laravel -->
     @if(session('success'))
@@ -31,20 +31,20 @@
     <template x-for="toast in toasts" :key="toast.id">
         <div 
             x-show="toast.visible"
-            x-transition:enter="transition ease-&lsqb;cubic-bezier(0.16,1,0.3,1)&rsqb; duration-500"
-            x-transition:enter-start="opacity-0 -translate-y-6 scale-95"
+            x-transition:enter="transition ease-[cubic-bezier(0.16,1,0.3,1)] duration-500"
+            x-transition:enter-start="opacity-0 translate-y-6 scale-95"
             x-transition:enter-end="opacity-100 translate-y-0 scale-100"
             x-transition:leave="transition ease-in duration-200"
             x-transition:leave-start="opacity-100 scale-100 translate-y-0"
-            x-transition:leave-end="opacity-0 scale-95 -translate-y-4"
+            x-transition:leave-end="opacity-0 scale-95 translate-y-4"
             @mouseenter="pauseToast(toast.id)"
             @mouseleave="resumeToast(toast.id)"
             class="pointer-events-auto w-80 sm:w-96 flex items-start gap-3 p-4 rounded-2xl shadow-2xl border bg-white overflow-hidden relative"
             :class="{
-                'border-emerald-100 shadow-emerald-500/10': toast.type === 'success',
-                'border-rose-100 shadow-rose-500/10': toast.type === 'error',
-                'border-amber-100 shadow-amber-500/10': toast.type === 'warning',
-                'border-primary/20 shadow-primary/10': toast.type === 'info'
+                'border-emerald-100 shadow-emerald-500/10 border-t-4 border-t-emerald-500': toast.type === 'success',
+                'border-rose-100 shadow-rose-500/10 border-t-4 border-t-rose-500': toast.type === 'error',
+                'border-amber-100 shadow-amber-500/10 border-t-4 border-t-amber-500': toast.type === 'warning',
+                'border-primary/20 shadow-primary/10 border-t-4 border-t-blue-500': toast.type === 'info'
             }"
         >
             <!-- Progress Bar Atas -->

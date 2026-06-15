@@ -10,26 +10,6 @@
         </x-slot:actions>
     </x-banksoal::ui.page-header>
 
-    @if(session('error'))
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Waduh, Gagal...',
-                    text: @json(session('error')),
-                    confirmButtonColor: '#ef4444',
-                    background: '#ffffff',
-                    customClass: {
-                        title: 'text-slate-800 text-xl font-bold',
-                        htmlContainer: 'text-slate-600 text-sm',
-                        confirmButton: 'rounded-xl px-5 py-2.5 font-semibold transition-colors'
-                    }
-                });
-            });
-        </script>
-    @endif
-
     <x-banksoal::ui.panel title="Form Edit Soal" subtitle="Pastikan jawaban benar tetap ditandai sebelum menyimpan." padding="p-0">
         @if(isset($review) && !empty($review->catatan))
         <div class="p-6 pb-0">
@@ -182,7 +162,7 @@
             });
 
             var form = document.getElementById('formSoal');
-            form.onsubmit = function() {
+            form.addEventListener('submit', function() {
                 var soalInput = document.getElementById('soalInput');
                 var htmlContent = quill.root.innerHTML;
                 if (quill.getText().trim().length === 0 && !htmlContent.includes('<img')) {
@@ -190,7 +170,11 @@
                 } else {
                     soalInput.value = htmlContent;
                 }
-            };
+                
+                if (form.checkValidity()) {
+                    window.showLoader();
+                }
+            });
 
             const mkSelect = document.getElementById('mk_id');
             const cplSelect = document.getElementById('cpl_id');

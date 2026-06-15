@@ -32,6 +32,7 @@ class RpsCpmkRows {
         this.ensureAtLeastOneRow();
         this.loadLinkedData();
         this.refreshAllPreviews();
+        this.updateCpmkFormState();
 
         window.BanksoalRpsUploadForm = this;
     }
@@ -61,6 +62,7 @@ class RpsCpmkRows {
             const row = event.target.closest("[data-cpmk-row]");
             if (row) {
                 this.updatePreview(row);
+                this.updateCpmkFormState();
             }
         });
 
@@ -68,6 +70,7 @@ class RpsCpmkRows {
             const row = event.target.closest("[data-cpmk-row]");
             if (row) {
                 this.updatePreview(row);
+                this.updateCpmkFormState();
             }
         });
     }
@@ -180,8 +183,10 @@ class RpsCpmkRows {
             return;
         }
 
-        // Load all CPL so the user can pick freely per row.
-        const url = this.routeCpl;
+        const mkId = this.mkSelect?.value || "";
+        const url = mkId
+            ? `${this.routeCpl}?mk_id=${encodeURIComponent(String(mkId))}`
+            : this.routeCpl;
 
         try {
             const response = await fetch(url);
@@ -192,6 +197,7 @@ class RpsCpmkRows {
             const data = await response.json();
             this.cplOptions = Array.isArray(data) ? data : [];
             this.renderAllCplSelects();
+            this.updateCpmkFormState();
         } catch (error) {
             console.error("Error loading CPL options:", error);
         }
@@ -200,6 +206,7 @@ class RpsCpmkRows {
     renderAllCplSelects() {
         const rows = this.rowContainer.querySelectorAll("[data-cpmk-row]");
         rows.forEach((row) => this.renderCplSelect(row));
+        this.updateCpmkFormState();
     }
 
     renderCplSelect(row) {
@@ -257,6 +264,7 @@ class RpsCpmkRows {
         this.applyInitialValues(row, initialValues);
         this.renderCplSelect(row);
         this.updatePreview(row);
+        this.updateCpmkFormState();
 
         return row;
     }
@@ -307,11 +315,13 @@ class RpsCpmkRows {
                 }
             });
             this.updatePreview(row);
+            this.updateCpmkFormState();
             return;
         }
 
         row.remove();
         this.refreshAllPreviews();
+        this.updateCpmkFormState();
     }
 
     refreshAllPreviews() {
@@ -387,6 +397,102 @@ class RpsCpmkRows {
 
     cleanValue(value) {
         return String(value || "").trim();
+    }
+
+    updateCpmkFormState() {
+        const hasMk = !!(this.mkSelect?.value);
+        
+        let allRequiredFilled = true;
+        const rows = this.rowContainer ? this.rowContainer.querySelectorAll("[data-cpmk-row]") : [];
+        
+        rows.forEach(row => {
+            const cplSelect = row.querySelector("[data-cpmk-cpl-select]");
+            const kodeInput = row.querySelector('input[name*="[kode]"]');
+            const kkoSelect = row.querySelector('select[name*="[kko]"]');
+            const objekInput = row.querySelector('input[name*="[objek]"]');
+            const konteksInput = row.querySelector('input[name*="[konteks]"]');
+            const removeBtn = row.querySelector("[data-remove-cpmk-row]");
+            
+            if (!hasMk) {
+                if (cplSelect) {
+                    cplSelect.disabled = true;
+                    cplSelect.title = "Pilih Mata Kuliah terlebih dahulu";
+                }
+                if (kodeInput) {
+                    kodeInput.disabled = true;
+                    kodeInput.title = "Pilih Mata Kuliah terlebih dahulu";
+                }
+                if (kkoSelect) {
+                    kkoSelect.disabled = true;
+                    kkoSelect.title = "Pilih Mata Kuliah terlebih dahulu";
+                }
+                if (objekInput) {
+                    objekInput.disabled = true;
+                    objekInput.title = "Pilih Mata Kuliah terlebih dahulu";
+                }
+                if (konteksInput) {
+                    konteksInput.disabled = true;
+                    konteksInput.title = "Pilih Mata Kuliah terlebih dahulu";
+                }
+                if (removeBtn) {
+                    removeBtn.disabled = true;
+                    removeBtn.title = "Pilih Mata Kuliah terlebih dahulu";
+                    removeBtn.style.opacity = "0.5";
+                    removeBtn.style.cursor = "not-allowed";
+                }
+                allRequiredFilled = false;
+            } else {
+                if (cplSelect) {
+                    cplSelect.disabled = !this.cplOptions.length;
+                    cplSelect.title = cplSelect.disabled 
+                        ? "Tidak ada CPL yang terpetakan dengan Mata Kuliah ini" 
+                        : "Pilih CPL";
+                }
+                if (kodeInput) {
+                    kodeInput.disabled = false;
+                    kodeInput.title = "";
+                }
+                if (kkoSelect) {
+                    kkoSelect.disabled = false;
+                    kkoSelect.title = "";
+                }
+                if (objekInput) {
+                    objekInput.disabled = false;
+                    objekInput.title = "";
+                }
+                if (konteksInput) {
+                    konteksInput.disabled = false;
+                    konteksInput.title = "";
+                }
+                if (removeBtn) {
+                    removeBtn.disabled = false;
+                    removeBtn.title = "Hapus baris CPMK ini";
+                    removeBtn.style.opacity = "";
+                    removeBtn.style.cursor = "";
+                }
+
+                // Check required values
+                const isCplFilled = cplSelect ? !!cplSelect.value : false;
+                const isKodeFilled = kodeInput ? !!kodeInput.value.trim() : false;
+                const isKkoFilled = kkoSelect ? !!kkoSelect.value : false;
+                const isObjekFilled = objekInput ? !!objekInput.value.trim() : false;
+
+                if (!isCplFilled || !isKodeFilled || !isKkoFilled || !isObjekFilled) {
+                    allRequiredFilled = false;
+                }
+            }
+        });
+
+        if (this.addButton) {
+            if (!hasMk) {
+                this.addButton.title = "Pilih Mata Kuliah terlebih dahulu";
+            } else if (!allRequiredFilled) {
+                this.addButton.title = "Lengkapi seluruh kolom CPMK yang ada terlebih dahulu";
+            } else {
+                this.addButton.title = "Tambah baris CPMK baru";
+            }
+            this.addButton.disabled = !(hasMk && allRequiredFilled);
+        }
     }
 }
 

@@ -140,7 +140,8 @@
         data-selected-dosen-ids='{{ json_encode($selectedDosenIds) }}'
         data-cpmk-row-builder="1"
         data-edit-mode="1"
-        data-rps-id="{{ $rps->id }}">
+        data-rps-id="{{ $rps->id }}"
+        onsubmit="if(this.checkValidity()){ window.showLoader(); return true; }">
         @csrf
         @method('PUT')
 
@@ -169,18 +170,20 @@
             <div class="form-row">
                 <div class="form-group">
                     <label class="field-label">Semester <span class="req">*</span></label>
-                    <select name="semester" id="semester" class="field-control" required {{ !$isUploadOpen ? 'disabled' : '' }}>
+                    <select id="semester" class="field-control bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed" disabled>
                         <option value="Ganjil" {{ old('semester', $rps->semester) == 'Ganjil' ? 'selected' : '' }}>Ganjil</option>
                         <option value="Genap"  {{ old('semester', $rps->semester) == 'Genap'  ? 'selected' : '' }}>Genap</option>
                     </select>
+                    <input type="hidden" name="semester" value="{{ old('semester', $rps->semester) }}">
                 </div>
                 <div class="form-group">
                     <label class="field-label">Tahun Ajaran <span class="req">*</span></label>
-                    <select name="tahun_ajaran" id="tahun_ajaran" class="field-control" required {{ !$isUploadOpen ? 'disabled' : '' }}>
+                    <select id="tahun_ajaran" class="field-control bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed" disabled>
                         @foreach($tahunAjarans as $ta)
                             <option value="{{ $ta }}" {{ old('tahun_ajaran', $rps->tahun_ajaran) == $ta ? 'selected' : '' }}>{{ $ta }}</option>
                         @endforeach
                     </select>
+                    <input type="hidden" name="tahun_ajaran" value="{{ old('tahun_ajaran', $rps->tahun_ajaran) }}">
                 </div>
             </div>
         </div>
@@ -219,7 +222,7 @@
                             <label class="field-label" style="font-size:11px;">Kode <span class="req">*</span></label>
                             <div style="display:flex;align-items:center;gap:6px;">
                                 <span style="font-size:12px;font-weight:600;color:var(--slate-500);white-space:nowrap;padding:10px 8px;background:var(--slate-50);border:1px solid var(--slate-200);border-radius:8px;">CPMK</span>
-                                <input type="text" name="cpmk_rows[{{ $index }}][kode]" value="{{ $row['kode'] ?? '' }}" class="field-control" style="font-size:13px;" placeholder="1.1" required {{ !$isUploadOpen ? 'disabled' : '' }}>
+                                <input type="text" name="cpmk_rows[{{ $index }}][kode]" value="{{ $row['kode'] ?? '' }}" class="field-control" style="font-size:13px;" placeholder="1" required {{ !$isUploadOpen ? 'disabled' : '' }}>
                             </div>
                             @error('cpmk_rows.'.$index.'.kode')<p class="field-error">{{ $message }}</p>@enderror
                         </div>
@@ -265,7 +268,7 @@
                         <label class="field-label" style="font-size:11px;">Kode <span class="req">*</span></label>
                         <div style="display:flex;align-items:center;gap:6px;">
                             <span style="font-size:12px;font-weight:600;color:var(--slate-500);white-space:nowrap;padding:10px 8px;background:var(--slate-50);border:1px solid var(--slate-200);border-radius:8px;">CPMK</span>
-                            <input type="text" name="cpmk_rows[__INDEX__][kode]" class="field-control" style="font-size:13px;" placeholder="1.1" required>
+                            <input type="text" name="cpmk_rows[__INDEX__][kode]" class="field-control" style="font-size:13px;" placeholder="1" required>
                         </div>
                     </div>
                     <div>
@@ -320,12 +323,14 @@
                     <i class="fas fa-download"></i> Download Template
                 </a>
             </div>
-            <label class="upload-zone {{ !$isUploadOpen ? 'closed' : '' }}" id="uploadZone">
-                <input type="file" name="dokumen" id="fileInput" accept=".pdf" {{ (!$isUploadOpen || $rps->status->value === 'revisi') ? 'required' : '' }} {{ !$isUploadOpen ? 'disabled' : '' }}>
-                <i class="fas fa-cloud-upload-alt" id="uploadIcon" style="{{ !$isUploadOpen ? 'color:#ababba;' : '' }}"></i>
-                <strong id="uploadText">{{ !$isUploadOpen ? 'Upload ditutup' : ($rps->status->value === 'revisi' ? 'Upload file revisi baru' : 'Klik untuk unggah atau seret file ke sini') }}</strong>
-                <span id="uploadSub">PDF (Maks. 1MB) - File lama akan diganti jika ada</span>
-            </label>
+            <x-banksoal::ui.upload-zone
+                name="dokumen"
+                inputId="fileInput"
+                accept=".pdf"
+                maxLabel="PDF (Maks. 1MB) — File lama akan diganti jika ada"
+                :disabled="!$isUploadOpen"
+                :required="!$isUploadOpen || $rps->status->value === 'revisi'"
+            />
             @error('dokumen')<p class="field-error" style="margin-top:8px;">{{ $message }}</p>@enderror
         </div>
 
@@ -360,21 +365,5 @@
 
     @push('scripts')
     <script src="{{ asset('modules/banksoal/js/Banksoal/components/RpsCpmkRows.js') }}"></script>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // File upload preview
-        const fileInput = document.getElementById('fileInput');
-        const uploadText = document.getElementById('uploadText');
-        const uploadSub  = document.getElementById('uploadSub');
-        if (fileInput) {
-            fileInput.addEventListener('change', function() {
-                if (fileInput.files[0]) {
-                    uploadText.textContent = fileInput.files[0].name;
-                    uploadSub.textContent  = (fileInput.files[0].size / 1024).toFixed(0) + ' KB';
-                }
-            });
-        }
-    });
-    </script>
     @endpush
 </x-banksoal::layouts.dosen-admin>

@@ -99,10 +99,10 @@ class RpsController extends Controller
         })->values()->all();
     }
 
-    // Halaman utama RPS untuk Dosen
     public function index(): \Illuminate\View\View
     {
         $user = Auth::user()->load('lecturer');
+        $activePeriode = PeriodeRps::where('is_active', 'true')->first();
 
         $currentYear  = (int) now()->format('Y');
         $tahunAjarans = [
@@ -111,15 +111,18 @@ class RpsController extends Controller
             ($currentYear + 1) . '/' . ($currentYear + 2),
         ];
 
-        // Semester Ganjil: Juli-Desember (bulan 7-12)
-        // Semester Genap: Januari-Juni (bulan 1-6)
-        $semester = now()->month >= 7 ? 'Ganjil' : 'Genap';
-        $semesterParity = now()->month >= 7 ? 1 : 0; // 1 = Ganjil, 0 = Genap
-        
-        // Set tahun ajaran
-        $academicYear = $semester === 'Ganjil'
-            ? $currentYear . '/' . ($currentYear + 1)
-            : ($currentYear - 1) . '/' . $currentYear;
+        if ($activePeriode) {
+            $semester = $activePeriode->semester;
+            $academicYear = $activePeriode->tahun_ajaran;
+        } else {
+            // Semester Ganjil: Juli-Desember (bulan 7-12)
+            // Semester Genap: Januari-Juni (bulan 1-6)
+            $semester = now()->month >= 7 ? 'Ganjil' : 'Genap';
+            $academicYear = $semester === 'Ganjil'
+                ? $currentYear . '/' . ($currentYear + 1)
+                : ($currentYear - 1) . '/' . $currentYear;
+        }
+        $semesterParity = $semester === 'Ganjil' ? 1 : 0;
 
 
             $mkIdsWithActiveRps = RpsDetail::whereIn('status', [
@@ -219,9 +222,6 @@ class RpsController extends Controller
             ->get()
             ->groupBy('mk_id');
 
-        // Fetch Active Periode
-        $activePeriode = PeriodeRps::where('is_active', 'true')->first();
-        
         $isUploadOpen = false;
         $tenggatH7 = false;
         $isHourFormat = false; // Track apakah daysLeft dalam format jam atau hari
@@ -302,6 +302,7 @@ class RpsController extends Controller
     public function create(): \Illuminate\View\View
     {
         $user = Auth::user()->load('lecturer');
+        $activePeriode = PeriodeRps::where('is_active', 'true')->first();
 
         $currentYear  = (int) now()->format('Y');
         $tahunAjarans = [
@@ -310,11 +311,16 @@ class RpsController extends Controller
             ($currentYear + 1) . '/' . ($currentYear + 2),
         ];
 
-        $semester = now()->month >= 7 ? 'Ganjil' : 'Genap';
-        $semesterParity = now()->month >= 7 ? 1 : 0;
-        $academicYear = $semester === 'Ganjil'
-            ? $currentYear . '/' . ($currentYear + 1)
-            : ($currentYear - 1) . '/' . $currentYear;
+        if ($activePeriode) {
+            $semester = $activePeriode->semester;
+            $academicYear = $activePeriode->tahun_ajaran;
+        } else {
+            $semester = now()->month >= 7 ? 'Ganjil' : 'Genap';
+            $academicYear = $semester === 'Ganjil'
+                ? $currentYear . '/' . ($currentYear + 1)
+                : ($currentYear - 1) . '/' . $currentYear;
+        }
+        $semesterParity = $semester === 'Ganjil' ? 1 : 0;
 
         $mkIdsWithActiveRps = RpsDetail::whereIn('status', [
                 RpsStatus::DIAJUKAN->value,
@@ -334,7 +340,6 @@ class RpsController extends Controller
             ->orderBy('nama')
             ->get();
 
-        $activePeriode = PeriodeRps::where('is_active', 'true')->first();
         $isUploadOpen  = false;
 
         if ($activePeriode) {
@@ -418,6 +423,8 @@ class RpsController extends Controller
 
         DB::beginTransaction();
 
+        $uploadedDokumenPath = null;
+
         try {
             // Upload File ke Supabase
             $file = $request->file('dokumen');
@@ -438,6 +445,8 @@ class RpsController extends Controller
             if (!$pathDokumen) {
                 throw new \Exception('Gagal mengupload file ke Supabase. Silakan periksa koneksi internet atau coba lagi');
             }
+
+            $uploadedDokumenPath = $pathDokumen;
 
             // Simpan data ke Tabel RPS
             $rps = RpsDetail::create([
@@ -507,6 +516,18 @@ class RpsController extends Controller
         } catch (\Exception $e) {            
             // Rollback jika error
             DB::rollBack();
+
+            if (!empty($uploadedDokumenPath)) {
+                try {
+                    $supabaseStorage = new SupabaseStorage();
+                    $supabaseStorage->delete($uploadedDokumenPath, 'rps');
+                } catch (\Exception $deleteError) {
+                    \Log::error('Failed to rollback RPS upload', [
+                        'file_path' => $uploadedDokumenPath,
+                        'error' => $deleteError->getMessage(),
+                    ]);
+                }
+            }
             
             // Log error untuk debugging
             \Log::error('RPS Store Error', [
@@ -519,12 +540,10 @@ class RpsController extends Controller
         }
     }
 
-    /**
-     * Fetch CPL berdasarkan relasi di bs_mata_kuliah_cpl junction table
-     */
-    public function getCplByMk(int $mkId = null): JsonResponse
+    public function getCplByMk(Request $request, $mkId = null): JsonResponse
     {
         try {
+            $mkId = $mkId ?: $request->input('mk_id');
             $query = Cpl::orderBy('kode');
             
             if ($mkId) {
@@ -576,8 +595,8 @@ class RpsController extends Controller
                 $query->where(function ($subQuery) use ($mkId) {
                     $subQuery->where('mk_id', $mkId)
                         ->orWhereIn('id', function ($legacyQuery) use ($mkId) {
-                            $legacyQuery->select('cpmk_id')
-                                ->from('bs_cpl_cpmk')
+                            $legacyQuery->select('id')
+                                ->from('bs_cpmk')
                                 ->where('mk_id', $mkId);
                         });
                 });
@@ -604,8 +623,8 @@ class RpsController extends Controller
             $query->where(function ($subQuery) use ($cplIds) {
                 $subQuery->whereIn('cpl_id', $cplIds)
                     ->orWhereIn('id', function ($legacyQuery) use ($cplIds) {
-                        $legacyQuery->select('cpmk_id')
-                            ->from('bs_cpl_cpmk')
+                        $legacyQuery->select('id')
+                            ->from('bs_cpmk')
                             ->whereIn('cpl_id', $cplIds);
                     });
             });
@@ -808,23 +827,85 @@ class RpsController extends Controller
     public function previewDokumen(int $rpsId)
     {
         try {
-            // Fetch RPS record atau throw 404
-            $rps = RpsDetail::findOrFail($rpsId);
-            
-            if (!$rps->dokumen) {
-                abort(404, 'Dokumen tidak ditemukan');
+            $rpsService = app(\Modules\BankSoal\Services\RpsService::class);
+            $data = $rpsService->getRpsReviewData($rpsId);
+            $rps = $data['rps'];
+
+            $fileUrl = null;
+            $downloadUrl = null;
+            $errorMessage = null;
+
+            if ($rps->dokumen) {
+                $supabaseStorage = new SupabaseStorage();
+                $fileUrl = $supabaseStorage->getPublicUrl($rps->dokumen, 'rps');
+                
+                try {
+                    $response = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(2)->get($fileUrl);
+                    if ($response->status() === 404) {
+                        // Coba lakukan pencarian self-healing dengan nama berkas baru yang mungkin sudah direname
+                        $mkName = trim($rps->mk_nama ?? 'MataKuliah');
+                        $mkName = preg_replace('/\s+/', ' ', $mkName);
+                        $tahunAjaranSafe = str_replace('/', '-', (string) $rps->tahun_ajaran);
+                        $semesterSafe = ucfirst(strtolower((string) $rps->semester));
+                        
+                        $baseFileName = sprintf('RPS_%s_%s_%s', $mkName, $tahunAjaranSafe, $semesterSafe);
+                        $baseFileName = preg_replace('/[\\\\:*?"<>|]+/', '', $baseFileName);
+                        $baseFileName = trim((string) $baseFileName, " \t\n\r\0\x0B._");
+                        
+                        $healedPath = 'rps/' . $baseFileName . '.pdf';
+                        $healedUrl = $supabaseStorage->getPublicUrl($healedPath, 'rps');
+                        
+                        $healedResponse = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(2)->get($healedUrl);
+                        if ($healedResponse->status() === 200) {
+                            // Berkas ditemukan di Supabase! Lakukan self-healing sinkronisasi database
+                            DB::table('bs_rps_detail')->where('id', $rpsId)->update(['dokumen' => $healedPath]);
+                            $rps->dokumen = $healedPath;
+                            $fileUrl = $healedUrl;
+                            $errorMessage = null;
+                        } else {
+                            $fileUrl = null;
+                            $errorMessage = 'Berkas PDF tidak ditemukan di server penyimpanan (Supabase Storage). Silakan hubungi dosen pengampu atau unggah ulang dokumen RPS.';
+                        }
+                    }
+                } catch (\Exception $ex) {
+                    // Fallback to let the browser attempt loading if network check fails/timeouts
+                }
+
+                if ($fileUrl) {
+                    $downloadUrl = route('banksoal.rps.dosen.download', ['rpsId' => $rpsId]);
+                }
+            } else {
+                $errorMessage = 'Dokumen RPS belum diunggah atau tidak dapat ditemukan.';
             }
 
-            // Generate Supabase public URL dari path yang disimpan
-            $supabaseStorage = new SupabaseStorage();
-            $publicUrl = $supabaseStorage->getPublicUrl($rps->dokumen, 'rps');
-            
-            // Redirect ke Supabase untuk preview
-            return redirect($publicUrl);
-                
+            $data['fileUrl'] = $fileUrl;
+            $data['downloadUrl'] = $downloadUrl;
+            $data['errorMessage'] = $errorMessage;
+
+            return view('banksoal::pages.rps.preview-page', $data);
+
         } catch (\Exception $e) {
             \Log::error('previewDokumen Error', ['rps_id' => $rpsId, 'error' => $e->getMessage()]);
-            abort(404, 'Dokumen tidak ditemukan');
+            $rps = null;
+            $fileUrl = null;
+            $downloadUrl = null;
+            $errorMessage = 'Terjadi kesalahan saat memuat dokumen: ' . $e->getMessage();
+            
+            $data = [
+                'rps' => null,
+                'fileUrl' => null,
+                'downloadUrl' => null,
+                'errorMessage' => $errorMessage,
+                'parameters' => collect(),
+                'existingReview' => null,
+                'history' => collect(),
+                'selectedCpls' => collect(),
+                'cplCpmkMappings' => collect(),
+                'draftCpmkItems' => collect(),
+                'dosenPengampu' => collect(),
+                'totalBobot' => 0
+            ];
+            return view('banksoal::pages.rps.preview-page', $data);
         }
     }
 
@@ -1019,6 +1100,8 @@ class RpsController extends Controller
 
         DB::beginTransaction();
 
+        $uploadedDokumenPath = null;
+
         try {
             $oldData = [
                 'mk_id' => $rps->mk_id,
@@ -1052,6 +1135,8 @@ class RpsController extends Controller
                 if (!$pathDokumen) {
                     throw new \Exception('Gagal mengupload file ke Supabase. Silakan periksa koneksi internet atau coba lagi');
                 }
+
+                $uploadedDokumenPath = $pathDokumen;
 
                 $rps->dokumen = $pathDokumen;
             }
@@ -1138,6 +1223,18 @@ class RpsController extends Controller
 
         } catch (\Exception $e) {
             DB::rollBack();
+
+            if (!empty($uploadedDokumenPath)) {
+                try {
+                    $supabaseStorage = new SupabaseStorage();
+                    $supabaseStorage->delete($uploadedDokumenPath, 'rps');
+                } catch (\Exception $deleteError) {
+                    \Log::error('Failed to rollback RPS update upload', [
+                        'file_path' => $uploadedDokumenPath,
+                        'error' => $deleteError->getMessage(),
+                    ]);
+                }
+            }
             
             \Log::error('RPS Update Error', [
                 'rps_id' => $rpsId,
