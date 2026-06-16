@@ -63,20 +63,42 @@ class KoordinatorController extends Controller implements HasMiddleware
      */
     public function dashboard()
     {
-        // Statistik untuk dashboard Koordinator (Hanya READ)
-        $totalMahasiswa = KerjaPraktik::count();
-        $menungguDosen = KerjaPraktik::whereNull('dosen_pembimbing_id')->count();
-        $sedangKp = KerjaPraktik::where('status_kp', 'active')->count();
-        $menungguValidasi = \Modules\EOffice\Models\KpDokumen::where('status_validasi', 'pending')->count();
+        $periodes = \Modules\EOffice\Models\KpPeriode::orderBy('created_at', 'desc')->get();
+        $allKps = KerjaPraktik::all();
 
-        $stats = [
-            'total_mahasiswa' => $totalMahasiswa,
-            'menunggu_dosen' => $menungguDosen,
-            'sedang_kp' => $sedangKp,
-            'menunggu_validasi' => $menungguValidasi,
+        // Build per-periode stats keyed by period ID
+        $periodeStats = [];
+
+        foreach ($periodes as $p) {
+            // Filter KPs that fall within this periode's Pra-KP registration window
+            $kpsInPeriode = $allKps->filter(function ($kp) use ($p) {
+                return $kp->created_at
+                    && $kp->created_at->format('Y-m-d') >= $p->pra_kp_mulai->format('Y-m-d')
+                    && $kp->created_at->format('Y-m-d') <= $p->pra_kp_akhir->format('Y-m-d');
+            });
+
+            $periodeStats[$p->id] = [
+                'total_mahasiswa' => $kpsInPeriode->count(),
+                'menunggu_dosen' => $kpsInPeriode->whereNull('dosen_pembimbing_id')->count(),
+                'sedang_kp' => $kpsInPeriode->where('status_kp', 'active')->count(),
+                'menunggu_validasi' => \Modules\EOffice\Models\KpDokumen::whereIn('kp_id', $kpsInPeriode->pluck('id'))
+                    ->where('status_validasi', 'pending')->count(),
+            ];
+        }
+
+        // Global aggregate (all periods combined)
+        $periodeStats['all'] = [
+            'total_mahasiswa' => KerjaPraktik::count(),
+            'menunggu_dosen' => KerjaPraktik::whereNull('dosen_pembimbing_id')->count(),
+            'sedang_kp' => KerjaPraktik::where('status_kp', 'active')->count(),
+            'menunggu_validasi' => \Modules\EOffice\Models\KpDokumen::where('status_validasi', 'pending')->count(),
         ];
 
-        return view('eoffice::koordinator.dashboard', compact('stats'));
+        // Detect the current active period for the default selection
+        $activePeriode = $periodes->first(fn($p) => $p->is_active);
+        $defaultPeriodeId = $activePeriode ? $activePeriode->id : 'all';
+
+        return view('eoffice::koordinator.dashboard', compact('periodes', 'periodeStats', 'defaultPeriodeId'));
     }
 
 
@@ -466,19 +488,34 @@ class KoordinatorController extends Controller implements HasMiddleware
             ->orderBy('eo_kerja_praktik.created_at', 'desc')
             ->get();
 
-        $mahasiswas = $kps->map(function ($kp) {
-            $statusStr = 'Pending';
+        $allPeriodes = \Modules\EOffice\Models\KpPeriode::orderBy('created_at', 'desc')->get();
+
+        $mahasiswas = $kps->map(function ($kp) use ($allPeriodes) {
+            $statusStr = 'Pra KP';
             $tahap = 'Pra KP';
-            if ($kp->status_kp === 'pending') {
-                $statusStr = 'Pending';
+
+            // Normalize various possible DB states into the 3 requested phases
+            $rawStatus = strtolower($kp->status_kp ?? 'pending');
+
+            if (in_array($rawStatus, ['pending', 'pra-kp', 'pra kp'])) {
+                $statusStr = 'Pra KP';
                 $tahap = 'Pra KP';
-            } elseif ($kp->status_kp === 'active') {
-                $statusStr = 'Aktif KP';
+            } elseif (in_array($rawStatus, ['active', 'saat kp', 'aktif', 'aktif kp'])) {
+                $statusStr = 'Saat KP';
                 $tahap = 'Saat KP';
-            } elseif ($kp->status_kp === 'completed') {
-                $statusStr = 'Selesai';
+            } elseif (in_array($rawStatus, ['completed', 'pasca kp', 'pasca-kp', 'selesai'])) {
+                $statusStr = 'Pasca KP';
                 $tahap = 'Pasca KP';
             }
+
+            // Find matching periode based on dates (because eo_kerja_praktik lacks exact periode_id)
+            $matchedPeriode = $allPeriodes->first(function ($p) use ($kp) {
+                return $kp->created_at->format('Y-m-d') >= $p->pra_kp_mulai->format('Y-m-d')
+                    && $kp->created_at->format('Y-m-d') <= $p->pra_kp_akhir->format('Y-m-d');
+            });
+
+            $periodeName = $matchedPeriode ? "Semester {$matchedPeriode->semester} {$matchedPeriode->tahun_ajaran}" : 'Unknown';
+            $periodeId = $matchedPeriode ? (string) $matchedPeriode->id : 'unknown';
 
             return (object) [
                 'id' => $kp->id,
@@ -500,10 +537,15 @@ class KoordinatorController extends Controller implements HasMiddleware
                     ['tanggal' => date('Y-m-d', strtotime($kp->updated_at)), 'status' => 'Info', 'keterangan' => 'Tahap saat ini: ' . $tahap]
                 ],
                 'status_seminar' => '-',
+                'periode_id' => $periodeId,
+                'periode_name' => $periodeName,
             ];
         });
 
-        return view('eoffice::koordinator.data_mahasiswa', compact('mahasiswas'));
+        // Unique filtered Periodes list for the dropdown
+        $periodes = $allPeriodes;
+
+        return view('eoffice::koordinator.data_mahasiswa', compact('mahasiswas', 'periodes'));
     }
 
     public function nilaiLapangan()
