@@ -224,10 +224,10 @@
                                             :class="getBadgeClass(mhs.status)" x-text="getBadgeText(mhs.status)"></span>
                                     </div>
                                     <p class="text-[11px] font-semibold text-blue-700 mt-2 line-clamp-1 border-t border-slate-50 pt-2"
-                                        :title="mhs.rencana_tempat"
-                                        x-text="mhs.rencana_tempat || 'Belum ada tempat KP'"></p>
-                                    <p class="text-[10px] text-slate-500 line-clamp-1" :title="mhs.rencana_judul"
-                                        x-text="mhs.rencana_judul || 'Belum ada rencana judul'"></p>
+                                        :title="mhs.instansi_kp"
+                                        x-text="mhs.instansi_kp || 'Belum ada tempat KP'"></p>
+                                    <p class="text-[10px] text-slate-500 line-clamp-1" :title="mhs.judul_kp"
+                                        x-text="mhs.judul_kp || 'Belum ada rencana judul'"></p>
                                 </div>
                             </template>
                         </div>
@@ -288,7 +288,7 @@
                                                                 x-text="getBadgeText(mhs.status)"></span>
                                                         </div>
                                                         <p class="text-[10px] text-blue-600 font-semibold truncate mt-1"
-                                                            :title="mhs.rencana_tempat" x-text="mhs.rencana_tempat"></p>
+                                                            :title="mhs.instansi_kp" x-text="mhs.instansi_kp"></p>
                                                     </div>
                                                 </div>
                                                 <button type="button" @click.stop="removeFromDosen(dosen.id, mhs)"
@@ -553,7 +553,7 @@
                             const normalizedCompany = companyName.toLowerCase().trim();
                             for (let d of this.dosens) {
                                 if (d.mahasiswas.length >= parseInt(d.kuota_maksimal)) continue;
-                                let hasCompany = d.mahasiswas.some(m => m.rencana_tempat && m.rencana_tempat.toLowerCase().trim() === normalizedCompany);
+                                let hasCompany = d.mahasiswas.some(m => m.instansi_kp && m.instansi_kp.toLowerCase().trim() === normalizedCompany);
                                 if (hasCompany) return d;
                             }
                             return null;
@@ -561,7 +561,7 @@
 
                         while (unassigned.length > 0) {
                             let student = unassigned.shift();
-                            let targetDosen = findDosenWithSameCompany(student.rencana_tempat);
+                            let targetDosen = findDosenWithSameCompany(student.instansi_kp);
 
                             if (!targetDosen) {
                                 let availableDosens = [...this.dosens].filter(d => d.mahasiswas.length < parseInt(d.kuota_maksimal));

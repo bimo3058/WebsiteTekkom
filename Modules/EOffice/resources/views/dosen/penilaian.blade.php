@@ -41,7 +41,7 @@
                 <div>
                     <h1 class="text-lg font-bold text-slate-900">{{ $kp->nama_mahasiswa ?? 'Mahasiswa' }}</h1>
                     <p class="text-sm text-slate-500">NIM: <span class="font-semibold text-slate-700">{{ $kp->nim ?? '-' }}</span></p>
-                    <p class="text-xs text-slate-400 mt-0.5 line-clamp-1">{{ $kp->rencana_judul ?? '-' }}</p>
+                    <p class="text-xs text-slate-400 mt-0.5 line-clamp-1">{{ $kp->judul_kp ?? '-' }}</p>
                 </div>
             </div>
         </div>

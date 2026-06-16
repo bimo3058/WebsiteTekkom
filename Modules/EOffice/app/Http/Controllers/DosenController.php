@@ -80,8 +80,8 @@ class DosenController extends Controller
                 'id'                   => $kp->id,
                 'nama'                 => $kp->nama_mahasiswa ?? 'Unknown',
                 'nim'                  => $kp->nim ?? $kp->nim_user ?? '-',
-                'judul_kp'             => $kp->rencana_judul ?? $kp->judul_fix ?? 'Belum ada judul',
-                'tempat_kp'            => $kp->rencana_tempat ?? $kp->tempat_fix ?? 'Belum ada tempat',
+                'judul_kp'             => $kp->judul_kp ?? $kp->judul_fix ?? 'Belum ada judul',
+                'tempat_kp'            => $kp->instansi_kp ?? $kp->tempat_fix ?? 'Belum ada tempat',
                 'tanggal_mulai'        => $kp->tanggal_mulai
                     ? \Carbon\Carbon::parse($kp->tanggal_mulai)->translatedFormat('d M Y')
                     : null,
@@ -164,8 +164,8 @@ class DosenController extends Controller
         $query = \Modules\EOffice\Models\KpDokumen::select(
             'eo_kp_dokumen.*',
             'kp.nim',
-            'kp.rencana_judul',
-            'kp.rencana_tempat',
+            'kp.judul_kp',
+            'kp.instansi_kp',
             'kp.status_kp',
             'u.name as nama_mahasiswa',
         )

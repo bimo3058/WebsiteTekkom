@@ -98,18 +98,18 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {{-- Rencana Judul --}}
                                 <div class="md:col-span-2">
-                                    <label for="rencana_judul" class="block text-sm font-medium text-slate-700 mb-1">Rencana Topik / Judul KP <span class="text-red-500">*</span></label>
-                                    <input type="text" name="rencana_judul" id="rencana_judul" value="{{ old('rencana_judul') }}" required placeholder="Contoh: Pembuatan Sistem Otomasi Jaringan..."
+                                    <label for="judul_kp" class="block text-sm font-medium text-slate-700 mb-1">Rencana Topik / Judul KP <span class="text-red-500">*</span></label>
+                                    <input type="text" name="judul_kp" id="judul_kp" value="{{ old('judul_kp') }}" required placeholder="Contoh: Pembuatan Sistem Otomasi Jaringan..."
                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2.5 px-4 border">
-                                    @error('rencana_judul') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    @error('judul_kp') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
 
                                 {{-- Rencana Tempat --}}
                                 <div class="md:col-span-2">
-                                    <label for="rencana_tempat" class="block text-sm font-medium text-slate-700 mb-1">Rencana Tempat Instansi <span class="text-red-500">*</span></label>
-                                    <input type="text" name="rencana_tempat" id="rencana_tempat" value="{{ old('rencana_tempat') }}" required placeholder="Contoh: PT Telekomunikasi Indonesia (Telkom)"
+                                    <label for="instansi_kp" class="block text-sm font-medium text-slate-700 mb-1">Rencana Tempat Instansi <span class="text-red-500">*</span></label>
+                                    <input type="text" name="instansi_kp" id="instansi_kp" value="{{ old('instansi_kp') }}" required placeholder="Contoh: PT Telekomunikasi Indonesia (Telkom)"
                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2.5 px-4 border">
-                                    @error('rencana_tempat') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    @error('instansi_kp') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
 
                                 {{-- IPK --}}

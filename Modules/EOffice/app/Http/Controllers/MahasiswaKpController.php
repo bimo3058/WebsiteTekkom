@@ -213,7 +213,7 @@ class MahasiswaKpController extends Controller
         // 3. Replace variabel-variabel di dalam template Word
         $templateProcessor->setValue('nama', $mahasiswa->user->name ?? '-');
         $templateProcessor->setValue('nip', $mahasiswa->nim ?? '-');
-        $templateProcessor->setValue('topik', $kp->rencana_judul ?? ($kp->judul_fix ?? '-'));
+        $templateProcessor->setValue('topik', $kp->judul_kp ?? ($kp->judul_fix ?? '-'));
         
         $templateProcessor->setValue('nama_pembimbing', $validated['nama_pembimbing']);
         $templateProcessor->setValue('nip_pembimbing', $validated['nip_pembimbing']);
@@ -340,8 +340,8 @@ class MahasiswaKpController extends Controller
         $listKelas = $activePeriod ? ($activePeriod->kelas_dibuka ?? []) : [];
 
         $rules = [
-            'rencana_judul'     => 'required|string|max:255',
-            'rencana_tempat'    => 'required|string|max:255',
+            'judul_kp'          => 'required|string|max:255',
+            'instansi_kp'       => 'required|string|max:255',
             'tanggal_mulai'     => 'required|date',
             'tanggal_selesai'   => 'required|date|after:tanggal_mulai',
             'ipk'               => 'required|numeric|min:0|max:4.00',
@@ -371,8 +371,8 @@ class MahasiswaKpController extends Controller
         $kp = KerjaPraktik::create([
             'nim'             => $mahasiswa->nim,
             'mahasiswa_id'    => $mahasiswa->id,
-            'rencana_judul'   => $validated['rencana_judul'],
-            'rencana_tempat'  => $validated['rencana_tempat'],
+            'judul_kp'        => $validated['judul_kp'],
+            'instansi_kp'     => $validated['instansi_kp'],
             'ipk'             => $validated['ipk'],
             'kelas'           => $validated['kelas'],
             'sks_diambil'     => $validated['sks_diambil'],
@@ -518,8 +518,8 @@ class MahasiswaKpController extends Controller
     public function updateDataKp(Request $request)
     {
         $validated = $request->validate([
-            'judul_fix'  => 'required|string|max:255',
-            'tempat_fix' => 'required|string|max:255',
+            'judul_kp'  => 'required|string|max:255',
+            'instansi_kp' => 'required|string|max:255',
         ]);
 
         $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
@@ -594,7 +594,7 @@ class MahasiswaKpController extends Controller
 
             $templateProcessor->setValue('nama_mahasiswa', htmlspecialchars($mahasiswa->user->name));
             $templateProcessor->setValue('nim_mahasiswa', htmlspecialchars($mahasiswa->nim));
-            $templateProcessor->setValue('topik', htmlspecialchars($kp->rencana_judul ?? '-'));
+            $templateProcessor->setValue('topik', htmlspecialchars($kp->judul_kp ?? '-'));
 
             // Output file sementara
             $fileName = 'Form_A2_' . preg_replace('/[^a-zA-Z0-9]+/', '_', $mahasiswa->user->name) . '.docx';
@@ -734,7 +734,7 @@ class MahasiswaKpController extends Controller
             'kartu_hijau'      => $kartuHijau,
             'nilai_lapangan'   => $nilaiLapangan,
             'bukti_terima'     => $buktiTerima,
-            'judul_fix'        => $judulFix,
+            'judul_kp'        => $judulFix,
             'semua_terpenuhi'  => $laporanAcc && $makalahAcc && $kartuHijau && $nilaiLapangan && $buktiTerima && $judulFix,
         ];
     }
