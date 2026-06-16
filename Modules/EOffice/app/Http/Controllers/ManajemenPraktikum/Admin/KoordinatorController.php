@@ -38,7 +38,7 @@ class KoordinatorController extends Controller
         $mahasiswas = KerjaPraktik::select(
                 'eo_kerja_praktik.id',
                 'eo_kerja_praktik.nim',
-                'eo_kerja_praktik.rencana_judul',
+                'eo_kerja_praktik.judul_kp',
                 'u.name as nama_mahasiswa'
             )
             ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')

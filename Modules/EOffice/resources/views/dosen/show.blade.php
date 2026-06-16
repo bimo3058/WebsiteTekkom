@@ -93,11 +93,11 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-8">
                     <div>
                         <p class="text-sm font-medium text-slate-500">Rencana Judul / Topik</p>
-                        <p class="mt-1 text-base font-semibold text-slate-900">{{ $kp->rencana_judul ?? '-' }}</p>
+                        <p class="mt-1 text-base font-semibold text-slate-900">{{ $kp->judul_kp ?? '-' }}</p>
                     </div>
                     <div>
                         <p class="text-sm font-medium text-slate-500">Instansi / Perusahaan Tujuan</p>
-                        <p class="mt-1 text-base font-semibold text-slate-900">{{ $kp->rencana_tempat ?? '-' }}</p>
+                        <p class="mt-1 text-base font-semibold text-slate-900">{{ $kp->instansi_kp ?? '-' }}</p>
                     </div>
                     <div>
                         <p class="text-sm font-medium text-slate-500">Tanggal Mulai</p>
