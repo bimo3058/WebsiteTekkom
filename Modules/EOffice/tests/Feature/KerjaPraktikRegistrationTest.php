@@ -29,8 +29,8 @@ class KerjaPraktikRegistrationTest extends TestCase
     {
         // 1. Siapkan data dummy seolah-olah diketik oleh mahasiswa
         $data = [
-            'rencana_tempat' => 'PT. Teknologi Masa Depan',
-            'rencana_judul' => 'Pengembangan Sistem Informasi Cerdas',
+            'instansi_kp' => 'PT. Teknologi Masa Depan',
+            'judul_kp' => 'Pengembangan Sistem Informasi Cerdas',
             'tanggal_mulai' => '2026-06-01',
             'tanggal_selesai' => '2026-08-01',
         ];
@@ -44,8 +44,8 @@ class KerjaPraktikRegistrationTest extends TestCase
 
         // 4. Pastikan data tersebut BENAR-BENAR MASUK ke tabel Supabase
         $this->assertDatabaseHas('eo_kerja_praktik', [
-            'rencana_tempat' => 'PT. Teknologi Masa Depan',
-            'rencana_judul' => 'Pengembangan Sistem Informasi Cerdas',
+            'instansi_kp' => 'PT. Teknologi Masa Depan',
+            'judul_kp' => 'Pengembangan Sistem Informasi Cerdas',
         ]);
     }
 
@@ -57,8 +57,8 @@ class KerjaPraktikRegistrationTest extends TestCase
 
         // Harus ada error validasi di kolom-kolom ini karena wajib diisi
         $response->assertSessionHasErrors([
-            'rencana_tempat', 
-            'rencana_judul', 
+            'instansi_kp', 
+            'judul_kp', 
             'tanggal_mulai', 
             'tanggal_selesai'
         ]);
