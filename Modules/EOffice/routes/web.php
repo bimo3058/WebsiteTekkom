@@ -497,7 +497,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
         // ── Route Mahasiswa KP (baru) ──────────────────────────────────────
         Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
             Route::get('/dashboard', [MahasiswaKpController::class, 'dashboard'])->name('dashboard');
-            Route::get('/informasi', [MahasiswaKpController::class, 'informasi'])->name('informasi');
+            Route::get('/proposal', [MahasiswaKpController::class, 'proposal'])->name('proposal');
+            Route::get('/surat', [MahasiswaKpController::class, 'surat'])->name('surat');
             Route::get('/pengumuman', [MahasiswaKpController::class, 'pengumuman'])->name('pengumuman');
             Route::get('/pengumuman/{id}/lampiran', [MahasiswaKpController::class, 'serveLampiran'])->name('pengumuman.lampiran');
             Route::get('/faq', [MahasiswaKpController::class, 'faq'])->name('faq');
