@@ -141,9 +141,17 @@
                                 <td class="px-6 py-4 whitespace-nowrap text-center">
                                     <div class="flex items-center justify-center gap-1">
                                         {{-- Edit --}}
-                                        <button type="button" @click="openEdit({{ \Illuminate\Support\Js::from($periodeData) }})" class="p-1.5 text-gray-400 hover:text-[#2A3A7C] hover:bg-gray-100 rounded-lg transition-colors" title="Edit">
-                                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-[18px] h-[18px]"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-                                        </button>
+                                        @if($periode->status === 'selesai')
+                                            <button type="button" disabled
+                                                class="p-1.5 text-gray-300 cursor-not-allowed rounded-lg"
+                                                title="Tidak dapat diedit — periode sudah selesai">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-[18px] h-[18px]"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                            </button>
+                                        @else
+                                            <button type="button" @click="openEdit({{ \Illuminate\Support\Js::from($periodeData) }})" class="p-1.5 text-gray-400 hover:text-[#2A3A7C] hover:bg-gray-100 rounded-lg transition-colors" title="Edit">
+                                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" class="w-[18px] h-[18px]"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
+                                            </button>
+                                        @endif
 
                                         {{-- Tutup Pendaftaran --}}
                                         @if($periode->pendaftaran_terbuka)

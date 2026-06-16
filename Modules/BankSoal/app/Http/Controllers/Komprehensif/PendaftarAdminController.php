@@ -23,6 +23,14 @@ class PendaftarAdminController extends Controller
     {
         $periodes = PeriodeUjian::orderBy('created_at', 'desc')->get();
 
+        // Default ke periode aktif jika tidak ada filter di URL
+        if (!$request->filled('periode_id')) {
+            $activePeriodeId = $periodes->firstWhere('status', 'aktif')?->id ?? $periodes->first()?->id;
+            if ($activePeriodeId) {
+                return redirect()->route('banksoal.pendaftaran.index', ['periode_id' => $activePeriodeId]);
+            }
+        }
+
         $pendaftars = collect();
         $selectedPeriode = null;
         $totalCount = 0;
@@ -60,7 +68,7 @@ class PendaftarAdminController extends Controller
         }
 
         // Ambil semua dosen untuk dropdown
-        $dosenList = User::whereHas('roles', fn($q) => $q->where('name', 'dosen'))
+        $dosenList = User::role('dosen')
             ->orderBy('name')
             ->get(['id', 'name']);
 

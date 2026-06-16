@@ -271,7 +271,7 @@ class KoordinatorController extends Controller implements HasMiddleware
                 return 'pending';
             };
 
-            $praKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['Transkrip', 'Surat Pengantar', 'Form Pendaftaran', 'Proposal', 'CV', 'Foto']))
+            $praKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['Transkrip', 'Surat Pengantar', 'Form Pendaftaran', 'Proposal']))
                 ->map(fn($d) => (object) [
                     'id' => $d->id,
                     'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
@@ -295,7 +295,7 @@ class KoordinatorController extends Controller implements HasMiddleware
                     'catatan' => $d->revision_note ?? ''
                 ])->values();
 
-            $pascaKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['A2', 'Kartu Hijau', 'Nilai Lapangan', 'Laporan Akhir']))
+            $pascaKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['CV', 'Foto', 'A2', 'Kartu Hijau', 'Nilai Lapangan', 'Laporan Akhir']))
                 ->map(fn($d) => (object) [
                     'id' => $d->id,
                     'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
@@ -579,17 +579,41 @@ class KoordinatorController extends Controller implements HasMiddleware
 
     public function balancingDosen()
     {
-        $dosens = \Modules\EOffice\Models\KpDosen::with('user')->get()->map(function ($dosen) {
-            return [
-                'id' => $dosen->id,
-                'name' => $dosen->nama_lengkap ?? $dosen->user->name ?? 'Unknown',
-                'kuota_maksimal' => $dosen->kuota_maksimal ?? 10,
-                'mahasiswas' => []
-            ];
-        })->toArray();
+        $dosens = \Modules\EOffice\Models\KpDosen::with('user')
+            ->get()
+            ->sortBy(function ($d) {
+                return $d->nama_lengkap ?? $d->user->name ?? 'Unknown';
+            })
+            ->values()
+            ->map(function ($dosen) {
+                return [
+                    'id' => $dosen->id,
+                    'name' => $dosen->nama_lengkap ?? $dosen->user->name ?? 'Unknown',
+                    'kuota_maksimal' => $dosen->kuota_maksimal ?? 10,
+                    'mahasiswas' => []
+                ];
+            })->toArray();
 
-        // Get mahasiswas and their current draft/finalized assignment
-        $kps = \Modules\EOffice\Models\KerjaPraktik::with(['mahasiswa.user', 'balancing'])->get();
+        // Locate the currently relevant active period (Preferably one that is ongoing, or fallback to the latest active)
+        $activePeriod = \Modules\EOffice\Models\KpPeriode::where('is_active', true)
+            ->whereDate('pra_kp_mulai', '<=', now())
+            ->whereDate('pra_kp_akhir', '>=', now())
+            ->first();
+
+        if (!$activePeriod) {
+            $activePeriod = \Modules\EOffice\Models\KpPeriode::where('is_active', true)->latest()->first();
+        }
+
+        if ($activePeriod) {
+            // Get mahasiswas strictly bound to the detected active period and their current draft/finalized assignment
+            // Karena eo_kerja_praktik tidak punya periode_id, kita filter berdasarkan waktu pendaftaran
+            $kps = \Modules\EOffice\Models\KerjaPraktik::with(['mahasiswa.user', 'balancing'])
+                ->whereDate('created_at', '>=', $activePeriod->pra_kp_mulai)
+                ->whereDate('created_at', '<=', $activePeriod->pra_kp_akhir)
+                ->get();
+        } else {
+            $kps = collect(); // Kosongkan jika tak ada periode yang relevan
+        }
 
         $unassignedStudents = [];
         $dosenMap = collect($dosens)->keyBy('id')->toArray();
@@ -604,6 +628,7 @@ class KoordinatorController extends Controller implements HasMiddleware
                 'nama_mahasiswa' => $kp->mahasiswa->nama_lengkap ?? $kp->mahasiswa->user->name ?? 'Unknown',
                 'nim' => $kp->mahasiswa->nim ?? '-',
                 'rencana_judul' => $kp->rencana_judul ?? 'Belum ada rencana judul',
+                'rencana_tempat' => $kp->rencana_tempat ?? 'Belum ada tempat KP',
                 // Jika ada record balancing, pakai statusnya.
                 // Jika tidak ada record tapi sudah punya dosen_pembimbing_id → berarti sudah finalized (assign manual/legacy).
                 'status' => $kp->balancing
@@ -737,5 +762,129 @@ class KoordinatorController extends Controller implements HasMiddleware
 
         return redirect()->route('eoffice.kp.koordinator.upload_berkas')
             ->with('success', 'Template Form Kehadiran & Nilai (A2) berhasil diunggah dan diperbarui!');
+    }
+    /**
+     * Halaman Manajemen Periode
+     */
+    public function periode()
+    {
+        $periodes = \Modules\EOffice\Models\KpPeriode::orderBy('created_at', 'desc')->get();
+        return view('eoffice::koordinator.periode.index', compact('periodes'));
+    }
+
+    public function createPeriode()
+    {
+        return view('eoffice::koordinator.periode.create');
+    }
+
+    public function storePeriode(Request $request)
+    {
+        $validated = $request->validate([
+            'tahun_ajaran' => 'required|string',
+            'semester' => 'required|in:Ganjil,Genap',
+            'is_active' => 'nullable|boolean',
+            'tanggal_buka' => 'required|date',
+            'tanggal_tutup' => 'required|date',
+            'pra_kp_mulai' => 'nullable|date',
+            'pra_kp_akhir' => 'nullable|date',
+            'pra_kp_pengingat' => 'nullable|date',
+            'saat_kp_mulai' => 'nullable|date',
+            'saat_kp_akhir' => 'nullable|date',
+            'saat_kp_pengingat' => 'nullable|date',
+            'pasca_kp_mulai' => 'nullable|date',
+            'pasca_kp_akhir' => 'nullable|date',
+            'pasca_kp_pengingat' => 'nullable|date',
+            'kelas_dibuka' => 'nullable|string',
+        ]);
+
+        $validated['is_active'] = $request->has('is_active');
+
+        if (isset($validated['kelas_dibuka'])) {
+            $kelasArray = array_map('trim', explode(',', $validated['kelas_dibuka']));
+            $kelasArray = array_filter($kelasArray);
+            $validated['kelas_dibuka'] = array_values($kelasArray);
+        }
+
+        // Note: The unique constraint on ('tahun_ajaran', 'semester') might fail if duplicate
+        \Modules\EOffice\Models\KpPeriode::create($validated);
+
+        return redirect()->route('eoffice.kp.koordinator.periode')->with('success', 'Periode baru berhasil ditambahkan.');
+    }
+
+    public function editPeriode($id)
+    {
+        $periode = \Modules\EOffice\Models\KpPeriode::findOrFail($id);
+        return view('eoffice::koordinator.periode.edit', compact('periode'));
+    }
+
+    public function updatePeriode(Request $request, $id)
+    {
+        $periode = \Modules\EOffice\Models\KpPeriode::findOrFail($id);
+
+        $validated = $request->validate([
+            'tahun_ajaran' => 'required|string',
+            'semester' => 'required|in:Ganjil,Genap',
+            'is_active' => 'nullable|boolean',
+            'tanggal_buka' => 'required|date',
+            'tanggal_tutup' => 'required|date',
+            'pra_kp_mulai' => 'nullable|date',
+            'pra_kp_akhir' => 'nullable|date',
+            'pra_kp_pengingat' => 'nullable|date',
+            'saat_kp_mulai' => 'nullable|date',
+            'saat_kp_akhir' => 'nullable|date',
+            'saat_kp_pengingat' => 'nullable|date',
+            'pasca_kp_mulai' => 'nullable|date',
+            'pasca_kp_akhir' => 'nullable|date',
+            'pasca_kp_pengingat' => 'nullable|date',
+            'kelas_dibuka' => 'nullable|string',
+        ]);
+
+        $validated['is_active'] = $request->has('is_active');
+
+        if (isset($validated['kelas_dibuka'])) {
+            $kelasArray = array_map('trim', explode(',', $validated['kelas_dibuka']));
+            $kelasArray = array_filter($kelasArray);
+            $validated['kelas_dibuka'] = array_values($kelasArray);
+        }
+
+        $periode->update($validated);
+
+        return redirect()->route('eoffice.kp.koordinator.periode')->with('success', 'Periode berhasil diperbarui.');
+    }
+
+    public function destroyPeriode($id)
+    {
+        $periode = \Modules\EOffice\Models\KpPeriode::findOrFail($id);
+        $periode->delete();
+        return redirect()->route('eoffice.kp.koordinator.periode')->with('success', 'Periode berhasil dihapus.');
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // MANAJEMEN PENDAFTAR KP
+    // ════════════════════════════════════════════════════════════════════════
+
+    public function pendaftarKp()
+    {
+        $pendaftar = \Modules\EOffice\Models\KerjaPraktik::with(['mahasiswa.user', 'dosenPembimbing.user'])->orderBy('created_at', 'desc')->paginate(10);
+        return view('eoffice::koordinator.pendaftar.index', compact('pendaftar'));
+    }
+
+    public function resetPendaftar($id)
+    {
+        $kp = \Modules\EOffice\Models\KerjaPraktik::findOrFail($id);
+        if ($kp->dokumen()->exists()) {
+            $kp->dokumen()->delete();
+        }
+        $kp->delete();
+        return redirect()->route('eoffice.kp.koordinator.pendaftar')->with('success', 'Data pendaftar berhasil di-reset!');
+    }
+
+    // ════════════════════════════════════════════════════════════════════════
+    // EXPORT DATA MAHASISWA
+    // ════════════════════════════════════════════════════════════════════════
+
+    public function exportDataMahasiswa()
+    {
+        return \Maatwebsite\Excel\Facades\Excel::download(new \Modules\EOffice\Exports\DataMahasiswaExport, 'Rekap_Data_Mahasiswa_KP.xlsx');
     }
 }

@@ -64,11 +64,11 @@ class AdminCbtController extends Controller
             $query->whereHas('jadwal', fn($q) => $q->where('periode_id', $request->periode_id));
         }
 
-        // Filter keterangan (LULUS / MENGULANG)
+        // Filter keterangan (LULUS / TIDAK LULUS)
         if ($request->filled('keterangan')) {
             if ($request->keterangan === 'lulus') {
                 $query->where('bs_kompre_session.score', '>=', 60);
-            } elseif ($request->keterangan === 'mengulang') {
+            } elseif ($request->keterangan === 'tidak_lulus') {
                 $query->where('bs_kompre_session.score', '<', 60);
             }
         }
@@ -96,7 +96,7 @@ class AdminCbtController extends Controller
     {
         $session = KompreSession::with([
             'user.student',
-            'jadwal',
+            'jadwal.periode',
             'jawabans.pertanyaan.jawabans',
             'jawabans.pertanyaan.cpl',
             'jawabans.opsiTerpilih',
@@ -104,7 +104,30 @@ class AdminCbtController extends Controller
 
         $this->authorize('view', $session);
 
-        return view('banksoal::admin.cbt.detail-hasil', compact('session'));
+        // Kelompokkan jawaban per CPL, urutkan berdasarkan kode CPL
+        $jawabansPerCpl = $session->jawabans
+            ->sortBy('urutan_soal')
+            ->groupBy(fn($j) => optional($j->pertanyaan?->cpl)->kode ?? 'Tanpa CPL')
+            ->sortKeys();
+
+        // Hitung statistik per CPL untuk analitik strip
+        $cplStats = $jawabansPerCpl->map(function ($jawabans, $kode) {
+            $total  = $jawabans->count();
+            $benar  = $jawabans->filter(fn($j) => $j->opsiTerpilih?->is_benar)->count();
+            $salah  = $jawabans->filter(fn($j) => $j->jawaban_dipilih && !$j->opsiTerpilih?->is_benar)->count();
+
+            return [
+                'kode'      => $kode,
+                'deskripsi' => $jawabans->first()->pertanyaan?->cpl?->deskripsi ?? '',
+                'total'     => $total,
+                'benar'     => $benar,
+                'salah'     => $salah,
+                'kosong'    => $total - $benar - $salah,
+                'pct_benar' => $total > 0 ? round($benar / $total * 100) : 0,
+            ];
+        })->values();
+
+        return view('banksoal::admin.cbt.detail-hasil', compact('session', 'jawabansPerCpl', 'cplStats'));
     }
 
     /**
