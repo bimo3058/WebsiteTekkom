@@ -15,7 +15,7 @@ class KoordinatorController extends Controller implements HasMiddleware
     {
         return [
             new Middleware(function ($request, $next) {
-                if (auth()->user() && auth()->user()->email !== 'ike.pertiwi@undip.ac.id') {
+                if (auth()->user() && !auth()->user()->hasRole('koor_kp')) {
                     abort(403, 'Akses Ditolak. Halaman ini khusus Koordinator KP.');
                 }
                 return $next($request);

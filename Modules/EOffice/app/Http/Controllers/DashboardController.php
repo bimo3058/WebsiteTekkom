@@ -8,15 +8,15 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $user  = auth()->user();
+        $user = auth()->user();
         $roles = $user->roles->pluck('name')->map(fn($r) => strtolower($r));
 
         $email = strtolower($user->email ?? '');
 
         // Bypass permission check for valid domains and specific users
-        $isAllowedEmail = str_ends_with($email, '@students.undip.ac.id') 
-                       || str_ends_with($email, '@undip.ac.id') 
-                       || $email === 'ike.pertiwi@undip.ac.id';
+        $isAllowedEmail = str_ends_with($email, '@students.undip.ac.id')
+            || str_ends_with($email, '@undip.ac.id')
+            || $roles->contains('koor_kp');
 
         // ── FIX: Cek permission sebelum routing berdasarkan role ──
         if (!$user->can('eoffice.view') && !$isAllowedEmail) {
@@ -27,7 +27,7 @@ class DashboardController extends Controller
             return app(EOfficeController::class)->adminDashboard();
         }
 
-        if ($email === 'ike.pertiwi@undip.ac.id') {
+        if ($roles->contains('koor_kp')) {
             return redirect()->route('eoffice.kp.koordinator.dashboard');
         }
 

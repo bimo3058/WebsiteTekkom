@@ -453,7 +453,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             $user = auth()->user();
             $email = strtolower($user->email ?? '');
 
-            if ($email === 'ike.pertiwi@undip.ac.id') {
+            if ($user->hasRole('koor_kp')) {
                 return redirect()->route('eoffice.kp.koordinator.dashboard');
             }
             if ($user->hasRole('superadmin') || $user->hasRole('admin_eoffice', 'eoffice')) {
