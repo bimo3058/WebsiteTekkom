@@ -31,11 +31,11 @@ class DashboardController extends Controller
             return redirect()->route('eoffice.kp.koordinator.dashboard');
         }
 
-        if ($roles->contains('mahasiswa') || str_ends_with($email, '@students.undip.ac.id')) {
+        if ($roles->contains('mahasiswa')) {
             return app(EOfficeController::class)->mahasiswaDashboard();
         }
 
-        if ($roles->contains('dosen') || str_ends_with($email, '@undip.ac.id')) {
+        if ($roles->contains('dosen')) {
             return app(EOfficeController::class)->dosenDashboard();
         }
 

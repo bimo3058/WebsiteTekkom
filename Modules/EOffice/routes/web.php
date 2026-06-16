@@ -459,7 +459,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             if ($user->hasRole('superadmin') || $user->hasRole('admin_eoffice', 'eoffice')) {
                 return redirect()->route('eoffice.manprak.admin.dashboard');
             }
-            if ($user->hasRole('dosen', 'eoffice') || (str_ends_with($email, '@undip.ac.id') && !str_ends_with($email, '@students.undip.ac.id'))) {
+            if ($user->hasRole('dosen', 'eoffice')) {
                 return redirect()->route('eoffice.manprak.dosen.dashboard');
             }
             if ($user->hasRole('koor_prak', 'eoffice')) {
