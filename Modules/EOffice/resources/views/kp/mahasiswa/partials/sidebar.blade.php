@@ -133,6 +133,18 @@
 
     </nav>
 
+    <!-- Back to E-Office -->
+    <div class="px-3 pb-2 flex-shrink-0" :class="sidebarCollapsed ? 'lg:px-2' : ''">
+        <a href="{{ route('eoffice.dashboard') }}"
+           class="sikape-back-btn flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200"
+           :class="sidebarCollapsed ? 'lg:justify-center lg:px-0' : ''">
+            <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            <span x-show="!sidebarCollapsed" class="whitespace-nowrap overflow-hidden">Kembali ke E-Office</span>
+        </a>
+    </div>
+
     <!-- User Profile Bottom -->
     <div class="px-3 py-3 flex-shrink-0 sikape-user-container">
         <div class="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-grey-50 transition-colors cursor-pointer group sikape-user-wrapper">
@@ -206,6 +218,19 @@
     --error-100: #fecdd3;
     --error-200: #f87171;
     --error-300: #dc2626;
+}
+
+/* ── Back Button ──────────────────────────────────────── */
+.sikape-back-btn {
+    color: var(--grey-500);
+    background: transparent;
+    border: 1px solid var(--grey-200);
+    font-size: 13px;
+}
+.sikape-back-btn:hover {
+    background: #293C79;
+    color: #ffffff;
+    border-color: #293C79;
 }
 
 /* ── Nav Items ────────────────────────────────────────── */

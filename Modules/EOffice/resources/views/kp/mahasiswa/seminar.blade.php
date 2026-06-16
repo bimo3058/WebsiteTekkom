@@ -94,23 +94,23 @@
                                 ['label' => 'Konfirmasi Seminar', 'icon' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'],
                                 ['label' => 'Nilai Seminar', 'icon' => 'M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z'],
                             ] as $idx => $st)
-                                        @php $n = $idx + 1;
-                                            $done = $currentStep > $n;
-                                        $active = $currentStep === $n; @endphp
-                                        <div class="flex flex-col items-center">
-                                            <div class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm
-                                                {{ $done ? 'bg-indigo-600 text-white' : ($active ? 'bg-white border-2 border-indigo-600 text-indigo-600' : 'bg-white border-2 border-slate-200 text-slate-400') }}">
-                                                @if($done)
-                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
-                                                @else
-                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $st['icon'] }}"/></svg>
-                                                @endif
+                                            @php $n = $idx + 1;
+                                                $done = $currentStep > $n;
+                                            $active = $currentStep === $n; @endphp
+                                            <div class="flex flex-col items-center">
+                                                <div class="w-10 h-10 rounded-full flex items-center justify-center transition-all duration-300 shadow-sm
+                                                    {{ $done ? 'bg-indigo-600 text-white' : ($active ? 'bg-white border-2 border-indigo-600 text-indigo-600' : 'bg-white border-2 border-slate-200 text-slate-400') }}">
+                                                    @if($done)
+                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+                                                    @else
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="{{ $st['icon'] }}"/></svg>
+                                                    @endif
+                                                </div>
+                                                <div class="mt-2 text-center">
+                                                    <p class="text-[11px] font-bold uppercase tracking-wider {{ $active ? 'text-indigo-600' : ($done ? 'text-slate-700' : 'text-slate-400') }}">{{ $st['label'] }}</p>
+                                                    <p class="text-[9px] {{ $done ? 'text-indigo-500' : ($active ? 'text-slate-500' : 'text-slate-300') }}">{{ $done ? 'Selesai' : ($active ? 'Sedang Berjalan' : 'Belum') }}</p>
+                                                </div>
                                             </div>
-                                            <div class="mt-2 text-center">
-                                                <p class="text-[11px] font-bold uppercase tracking-wider {{ $active ? 'text-indigo-600' : ($done ? 'text-slate-700' : 'text-slate-400') }}">{{ $st['label'] }}</p>
-                                                <p class="text-[9px] {{ $done ? 'text-indigo-500' : ($active ? 'text-slate-500' : 'text-slate-300') }}">{{ $done ? 'Selesai' : ($active ? 'Sedang Berjalan' : 'Belum') }}</p>
-                                            </div>
-                                        </div>
                         @endforeach
                     </div>
                 </div>
@@ -199,12 +199,12 @@
                             <button @click="modalOpen = true"
                                 class="w-full flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 transition-all active:scale-95">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                {{ $cvDoc ? 'Unggah Ulang CV & Foto' : 'Unggah CV & Foto' }}
+                                {{ $cvDoc ? 'Unggah Ulang CV' : 'Unggah CV' }}
                             </button>
                         @else
                             <div class="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-100">
                                 <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                <p class="text-sm font-bold text-emerald-700">CV & Foto telah diverifikasi ✓</p>
+                                <p class="text-sm font-bold text-emerald-700">CV telah diverifikasi ✓</p>
                             </div>
                         @endif
 
@@ -215,15 +215,15 @@
                                 <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 overflow-hidden">
                                     <form action="{{ route('eoffice.kp.mahasiswa.dokumen.store') }}" method="POST" enctype="multipart/form-data">
                                         @csrf
-                                        <input type="hidden" name="jenis_dokumen" value="CV dan Foto">
+                                        <input type="hidden" name="jenis_dokumen" value="CV">
                                         <div class="p-6">
                                             <div class="flex items-center gap-4 mb-5">
                                                 <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
                                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z"/></svg>
                                                 </div>
                                                 <div>
-                                                    <h3 class="text-lg font-bold text-slate-900">Unggah CV & Foto</h3>
-                                                    <p class="text-xs text-slate-400">Jadikan satu file PDF (CV & Foto 3x4) &mdash; maks. 10MB</p>
+                                                    <h3 class="text-lg font-bold text-slate-900">Unggah CV</h3>
+                                                    <p class="text-xs text-slate-400">Jadikan satu file PDF (CV) &mdash; maks. 10MB</p>
                                                 </div>
                                             </div>
                                             <div x-data="{ fn: '' }" class="p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:border-indigo-400 hover:bg-white transition-all text-center">
@@ -847,12 +847,12 @@
                                             ['label' => 'Nilai Seminar (dari Dosen Pembimbing)', 'val' => $nilaiSeminar],
                                             ['label' => 'Nilai Akhir KP', 'val' => $nilaiAkhir, 'bold' => true],
                                         ] as $row)
-                                                <div class="flex items-center justify-between px-5 py-3 {{ isset($row['bold']) ? 'bg-slate-50/50' : '' }}">
-                                                    <p class="text-xs {{ isset($row['bold']) ? 'font-bold text-slate-800' : 'text-slate-600' }}">{{ $row['label'] }}</p>
-                                                    <span class="text-sm font-bold {{ isset($row['bold']) ? 'text-indigo-700' : 'text-slate-800' }}">
-                                                        {{ $row['val'] !== null ? $row['val'] : '—' }}
-                                                    </span>
-                                                </div>
+                                                    <div class="flex items-center justify-between px-5 py-3 {{ isset($row['bold']) ? 'bg-slate-50/50' : '' }}">
+                                                        <p class="text-xs {{ isset($row['bold']) ? 'font-bold text-slate-800' : 'text-slate-600' }}">{{ $row['label'] }}</p>
+                                                        <span class="text-sm font-bold {{ isset($row['bold']) ? 'text-indigo-700' : 'text-slate-800' }}">
+                                                            {{ $row['val'] !== null ? $row['val'] : '—' }}
+                                                        </span>
+                                                    </div>
                                     @endforeach
                                 </div>
                             </div>
