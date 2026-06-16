@@ -88,19 +88,19 @@
                 <thead>
                     <tr style="border-bottom:1px solid #F1F1F3; background-color:#FAFAFC;">
                         <th
-                            style="padding:12px 16px; font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#666D80; text-transform:uppercase; letter-spacing:0.02em;">
+                            style="padding:8px 12px; font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:700; color:#666D80; text-transform:uppercase; letter-spacing:0.02em;">
                             Mahasiswa
                         </th>
                         <th
-                            style="padding:12px 16px; font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#666D80; text-transform:uppercase; letter-spacing:0.02em;">
+                            style="padding:8px 12px; font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:700; color:#666D80; text-transform:uppercase; letter-spacing:0.02em;">
                             Pembimbing
                         </th>
                         <th
-                            style="padding:12px 16px; font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#666D80; text-transform:uppercase; letter-spacing:0.02em;">
+                            style="padding:8px 12px; font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:700; color:#666D80; text-transform:uppercase; letter-spacing:0.02em;">
                             Status
                         </th>
                         <th
-                            style="padding:12px 16px; font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#666D80; text-transform:uppercase; letter-spacing:0.02em;">
+                            style="padding:8px 12px; font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:700; color:#666D80; text-transform:uppercase; letter-spacing:0.02em;">
                             Action
                         </th>
                     </tr>
@@ -108,19 +108,20 @@
                 <tbody>
                     @forelse($pendaftar as $kp)
                         <tr style="border-bottom:1px solid #F1F1F3;" class="hover:bg-[#F8F5FF] transition-colors">
-                            <td style="padding:16px;">
+                            <td style="padding:8px 12px;">
                                 <div class="flex flex-col">
                                     <span
-                                        style="font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:600; color:#0D0D12;">
+                                        style="font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#0D0D12;">
                                         {{ optional(optional($kp->mahasiswa)->user)->name ?? 'Nama Tidak Ditemukan' }}
                                     </span>
                                     <span
-                                        style="font-family:'Inter Tight',sans-serif; font-size:12px; color:#666D80; margin-top:4px;">
+                                        style="font-family:'Inter Tight',sans-serif; font-size:11px; color:#666D80; margin-top:2px;">
                                         NIM: {{ $kp->nim ?? '-' }}
                                     </span>
                                 </div>
                             </td>
-                            <td style="padding:16px; font-family:'Inter Tight',sans-serif; font-size:14px; color:#4B5563;">
+                            <td
+                                style="padding:8px 12px; font-family:'Inter Tight',sans-serif; font-size:12px; color:#4B5563;">
                                 @if($kp->dosenPembimbing)
                                     <div class="flex flex-col">
                                         <span style="font-weight:500; color:#0D0D12;">
@@ -131,31 +132,31 @@
                                     <span class="text-gray-400 italic">Belum ada</span>
                                 @endif
                             </td>
-                            <td style="padding:16px;">
+                            <td style="padding:8px 12px;">
                                 <span style="
-                                        display:inline-flex; align-items:center; gap:6px;
-                                        padding:4px 10px;
-                                        background:#EFF6FF;
-                                        border:1px solid #BFDBFE;
-                                        border-radius:9999px;
-                                        font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#1D4ED8;
-                                    ">
+                                            display:inline-flex; align-items:center; gap:6px;
+                                            padding:4px 10px;
+                                            background:#EFF6FF;
+                                            border:1px solid #BFDBFE;
+                                            border-radius:9999px;
+                                            font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#1D4ED8;
+                                        ">
                                     <span style="width:6px; height:6px; background:#1D4ED8; border-radius:50%;"></span>
                                     {{ $kp->status_kp ?? 'Terdaftar' }}
                                 </span>
                             </td>
-                            <td style="padding:16px;">
+                            <td style="padding:8px 12px;">
                                 <form action="{{ route('eoffice.kp.koordinator.pendaftar.destroy', $kp->id) }}"
                                     method="POST"
                                     onsubmit="return confirm('Apakah Anda yakin ingin membatalkan/mereset pendaftaran mahasiswa ini? Data KP terkait akan dihapus secara permanen.');">
                                     @csrf
                                     @method('DELETE')
                                     <button type="submit" style="
-                                            display:flex; align-items:center; gap:6px;
-                                            padding:6px 12px; border-radius:6px;
-                                            background:#FEF2F2; color:#DC2626; border:1px solid #FECACA;
-                                            font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600;
-                                            transition:all 0.2s;" class="hover:bg-red-100 hover:border-red-300">
+                                                display:flex; align-items:center; gap:6px;
+                                                padding:6px 12px; border-radius:6px;
+                                                background:#FEF2F2; color:#DC2626; border:1px solid #FECACA;
+                                                font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600;
+                                                transition:all 0.2s;" class="hover:bg-red-100 hover:border-red-300">
                                         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
                                             viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round"

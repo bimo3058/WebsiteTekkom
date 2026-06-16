@@ -98,7 +98,7 @@
                             <span class="absolute left-0 top-2 bottom-2 w-[3.5px] bg-[#0065FF] rounded-r-full z-10"></span>
                         @endif
                         <a href="{{ route($item['route']) }}" class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                                                {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                                                    {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
                             @if($item['active'])
                                 <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
                                     @if($item['icon'] === 'periode')
@@ -194,7 +194,7 @@
                             <span class="absolute left-0 top-2 bottom-2 w-[3.5px] bg-[#0065FF] rounded-r-full z-10"></span>
                         @endif
                         <a href="{{ route($item['route']) }}" class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                                                {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                                                    {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
                             @if($item['active'])
                                 <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
                                     @if($item['icon'] === 'annc')
@@ -249,7 +249,7 @@
     <!-- ── BOTTOM SECTION ── -->
     <div class="border-t border-[#DFE1E6] pt-2 pb-3">
 
-        @if(auth()->user() && auth()->user()->email === 'ike.pertiwi@undip.ac.id')
+        @if(auth()->user() && auth()->user()->hasRole('koor_kp'))
             <div class="px-2">
                 <a href="{{ route('eoffice.kp.dosen.dashboard') }}"
                     class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] text-[#666D80] hover:bg-[#F8F9FB] hover:text-[#353849] transition-all group">
