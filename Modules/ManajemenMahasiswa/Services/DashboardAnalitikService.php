@@ -111,8 +111,8 @@ class DashboardAnalitikService
     public function sectionsForScope(string $scope): array
     {
         return match ($scope) {
-            // GPM & Ketua Departemen — semua data + metrik evaluasi mutu
-            'gpm' => ['action_items', 'activity', 'evaluasi_mutu', 'mahasiswa', 'calon_do', 'lulusan', 'alumni'],
+            // GPM & Ketua Departemen — fokus data evaluasi (tanpa action items operasional)
+            'gpm' => ['activity', 'evaluasi_mutu', 'mahasiswa', 'calon_do', 'lulusan', 'alumni'],
             // DPM — fokus mahasiswa akademik saja (tanpa alumni karir / operasional / mutu)
             'dpm' => ['mahasiswa', 'calon_do', 'lulusan'],
             // Admin — dashboard penuh tanpa section metrik mutu
@@ -172,11 +172,17 @@ class DashboardAnalitikService
     public function getActivityStats(): array
     {
         return Cache::remember('mk.dashboard.tier2', 60, function () {
-            $kegiatanTrend = [];
+            $kegiatanTrend = [];            // berdasarkan tanggal input (created_at) — dipakai admin
+            $kegiatanTrendPelaksanaan = []; // berdasarkan tanggal pelaksanaan (tanggal_mulai) — dipakai GPM (2D)
             for ($i = 5; $i >= 0; $i--) {
                 $m = now()->subMonths($i);
-                $kegiatanTrend[$m->translatedFormat('M Y')] = Kegiatan::whereYear('created_at', $m->year)
+                $label = $m->translatedFormat('M Y');
+                $kegiatanTrend[$label] = Kegiatan::whereYear('created_at', $m->year)
                     ->whereMonth('created_at', $m->month)
+                    ->count();
+                $kegiatanTrendPelaksanaan[$label] = Kegiatan::whereNotNull('tanggal_mulai')
+                    ->whereYear('tanggal_mulai', $m->year)
+                    ->whereMonth('tanggal_mulai', $m->month)
                     ->count();
             }
 
@@ -195,6 +201,7 @@ class DashboardAnalitikService
                                                     )
                                                     ->count(),
                 'kegiatan_trend'               => $kegiatanTrend,
+                'kegiatan_trend_pelaksanaan'   => $kegiatanTrendPelaksanaan,
             ];
         });
     }
@@ -264,6 +271,9 @@ class DashboardAnalitikService
                 'per_angkatan_by_status'     => $perAngkatanByStatus,
                 'prestasi_per_tingkat' => $prestasiPerTingkat,
                 'total_prestasi'       => array_sum($prestasiPerTingkat),
+                // Counter prestasi menunggu review (FASE 2B) — tersedia lintas scope
+                // tanpa bergantung pada section action_items (yang tak dimuat GPM).
+                'prestasi_pending'     => Prestasi::pending()->count(),
                 'prestasi_terbaru'     => Prestasi::approved()
                                             ->with(['kemahasiswaan.user'])
                                             ->orderByDesc('verified_at')
@@ -321,95 +331,228 @@ class DashboardAnalitikService
                 ->get()
                 ->groupBy('angkatan');
 
+            // Masa studi normal prodi = 4 tahun. Angkatan yang belum mencapai
+            // usia 4 tahun belum jatuh tempo kelulusan, jadi % kelulusan 0%
+            // di angkatan tersebut bukan indikasi kegagalan.
+            $currentYear   = now()->year;
+            $masaStudiNormal = 4;
+
             $kelulusan = [];
             foreach ($perAngkatan as $angkatan => $rows) {
                 $byStatus = $rows->pluck('total', 'status');
                 $total    = $rows->sum('total');
                 $lulus    = (int) ($byStatus[Kemahasiswaan::STATUS_ALUMNI] ?? 0);
                 $do       = (int) ($byStatus[Kemahasiswaan::STATUS_DO] ?? 0);
+                // Kohort dianggap jatuh tempo bila usianya >= masa studi normal
+                $jatuhTempo = ($currentYear - (int) $angkatan) >= $masaStudiNormal;
                 $kelulusan[$angkatan] = [
                     'total'        => $total,
                     'lulus'        => $lulus,
                     'do'           => $do,
-                    'rate_lulus'   => $total > 0 ? round($lulus / $total * 100, 1) : 0,
+                    'jatuh_tempo'  => $jatuhTempo,
+                    // Rate kelulusan hanya bermakna untuk kohort yang sudah jatuh tempo
+                    'rate_lulus'   => ($jatuhTempo && $total > 0) ? round($lulus / $total * 100, 1) : 0,
+                    // DO bisa terjadi kapan saja — selalu dihitung
                     'rate_do'      => $total > 0 ? round($do / $total * 100, 1) : 0,
                 ];
             }
             ksort($kelulusan);
 
             // Rata-rata masa studi (tahun) dari alumni — ideal 4 tahun
-            $rataMasaStudi = (float) Alumni::whereNotNull('tahun_lulus')
+            $masaStudiQuery = Alumni::whereNotNull('tahun_lulus')
                 ->whereNotNull('angkatan')
-                ->whereRaw('tahun_lulus >= angkatan')
-                ->avg(DB::raw('tahun_lulus - angkatan'));
+                ->whereRaw('tahun_lulus >= angkatan');
+            $sampleMasaStudi = (clone $masaStudiQuery)->count();
+            $rataMasaStudi   = (float) (clone $masaStudiQuery)->avg(DB::raw('tahun_lulus - angkatan'));
 
             // Rata-rata waktu tunggu kerja (tahun) dari lulus sampai mulai bekerja
-            $rataWaktuTunggu = (float) Alumni::whereNotNull('tahun_mulai_bekerja')
+            $waktuTungguQuery = Alumni::whereNotNull('tahun_mulai_bekerja')
                 ->whereNotNull('tahun_lulus')
-                ->whereRaw('tahun_mulai_bekerja >= tahun_lulus')
-                ->avg(DB::raw('tahun_mulai_bekerja - tahun_lulus'));
+                ->whereRaw('tahun_mulai_bekerja >= tahun_lulus');
+            $sampleWaktuTunggu = (clone $waktuTungguQuery)->count();
+            $rataWaktuTunggu   = (float) (clone $waktuTungguQuery)->avg(DB::raw('tahun_mulai_bekerja - tahun_lulus'));
 
-            // Responsivitas layanan pengaduan — % yang sudah ditangani
+            // Responsivitas layanan pengaduan — berbasis SLA (FASE 3C):
+            // % pengaduan (non-draft) yang DIJAWAB dalam ≤ 7 hari sejak dibuat.
+            $slaHari = 7;
             $totalPengaduan = Pengaduan::where('status', '!=', Pengaduan::STATUS_DRAFT)->count();
+            $pengaduanSlaTerpenuhi = Pengaduan::where('status', '!=', Pengaduan::STATUS_DRAFT)
+                ->whereNotNull('answered_at')
+                ->whereRaw("answered_at <= created_at + interval '{$slaHari} days'")
+                ->count();
             $pengaduanDitangani = Pengaduan::whereIn('status', [
                 Pengaduan::STATUS_DIDELEGASIKAN,
                 Pengaduan::STATUS_SELESAI,
             ])->count();
 
             // Serapan kerja keseluruhan (bekerja + wirausaha dari yang terdata)
+            $totalAlumni  = Alumni::count();
             $totalTerdata = Alumni::whereNotNull('status_karir')->count();
             $totalBekerja = Alumni::whereIn('status_karir', [Alumni::STATUS_BEKERJA, Alumni::STATUS_WIRAUSAHA])->count();
+            // Ambang minimum sampel agar metrik persentase/rata-rata layak ditampilkan
+            $minSampel = 3;
+
+            // Kelulusan tepat waktu (FASE 3A) — % alumni yang lulus dalam ≤ 4 tahun
+            $lulusTepatWaktu = (clone $masaStudiQuery)->whereRaw('tahun_lulus - angkatan <= 4')->count();
+            $kelulusanTepatWaktu = $sampleMasaStudi > 0 ? round($lulusTepatWaktu / $sampleMasaStudi * 100) : 0;
+
+            // Nilai metrik yang dibandingkan dengan target mutu
+            $serapanKerja = $totalTerdata > 0 ? round($totalBekerja / $totalTerdata * 100) : 0;
+            $responsivitas = $totalPengaduan > 0 ? round($pengaduanSlaTerpenuhi / $totalPengaduan * 100) : 0;
+
+            // ── Evaluasi Kegiatan Kemahasiswaan (bahan evaluasi GPM/Kadep) ──
+            // Distribusi kegiatan per kategori — untuk menilai relevansi kurikulum
+            $kegiatanPerKategori = DB::table('mk_kegiatan_kategori as kk')
+                ->join('mk_kategori_kegiatan as kat', 'kk.kategori_kegiatan_id', '=', 'kat.id')
+                ->selectRaw('kat.nama_kategori, count(*) as total')
+                ->groupBy('kat.nama_kategori')
+                ->orderByDesc('total')
+                ->pluck('total', 'kat.nama_kategori')
+                ->toArray();
+
+            // Tingkat realisasi kegiatan — % kegiatan yang sudah terlaksana (selesai)
+            $totalKegiatan   = Kegiatan::count();
+            $kegiatanSelesai = Kegiatan::where('status', Kegiatan::STATUS_SELESAI)->count();
+            $kegiatanBerjalan = Kegiatan::where('status', Kegiatan::STATUS_DISETUJUI)->count();
+            $kegiatanTahunIni = Kegiatan::whereYear('created_at', now()->year)->count();
+
+            // Breakdown SEMUA status kegiatan (FASE 3D) — agar jumlah konsisten dgn total.
+            // Termasuk status legacy bila masih ada di data lama.
+            $kegiatanPerStatus = Kegiatan::selectRaw('status, count(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status')
+                ->toArray();
+
+            // Evaluasi terhadap target mutu (FASE 3A)
+            $targets = [
+                'masa_studi'            => $this->evaluateQualityTarget('masa_studi', round($rataMasaStudi, 1), $sampleMasaStudi >= $minSampel),
+                'waktu_tunggu_kerja'    => $this->evaluateQualityTarget('waktu_tunggu_kerja', round($rataWaktuTunggu, 1), $sampleWaktuTunggu >= $minSampel),
+                'serapan_kerja'         => $this->evaluateQualityTarget('serapan_kerja', $serapanKerja, $totalTerdata >= $minSampel),
+                'kelulusan_tepat_waktu' => $this->evaluateQualityTarget('kelulusan_tepat_waktu', $kelulusanTepatWaktu, $sampleMasaStudi >= $minSampel),
+            ];
 
             return [
                 'kelulusan_per_angkatan' => $kelulusan,
                 'rata_masa_studi'        => round($rataMasaStudi, 1),
                 'rata_waktu_tunggu'      => round($rataWaktuTunggu, 1),
-                'responsivitas'          => $totalPengaduan > 0 ? round($pengaduanDitangani / $totalPengaduan * 100) : 0,
-                'pengaduan_ditangani'    => $pengaduanDitangani,
+                // Responsivitas berbasis SLA (FASE 3C)
+                'responsivitas'          => $responsivitas,
+                'sla_hari'               => $slaHari,
+                'pengaduan_sla_terpenuhi' => $pengaduanSlaTerpenuhi,
                 'pengaduan_total'        => $totalPengaduan,
-                'serapan_kerja'          => $totalTerdata > 0 ? round($totalBekerja / $totalTerdata * 100) : 0,
+                'serapan_kerja'          => $serapanKerja,
+                // Kelulusan tepat waktu (≤ 4 thn) untuk pembanding target
+                'kelulusan_tepat_waktu'  => $kelulusanTepatWaktu,
+                // ── Denominator & kecukupan data alumni (FASE 1A/1C) ──
+                'total_alumni'           => $totalAlumni,
+                'total_terdata'          => $totalTerdata,
+                'min_sampel'             => $minSampel,
+                'sample_masa_studi'      => $sampleMasaStudi,
+                'sample_waktu_tunggu'    => $sampleWaktuTunggu,
+                // Kelengkapan data karir = alumni terdata / total alumni
+                'kelengkapan_data_alumni' => $totalAlumni > 0 ? round($totalTerdata / $totalAlumni * 100) : 0,
+                // Target mutu pembanding (FASE 3A)
+                'targets'                => $targets,
+                // Evaluasi kegiatan kemahasiswaan
+                'kegiatan_per_kategori'  => $kegiatanPerKategori,
+                'kegiatan_per_status'    => $kegiatanPerStatus,
+                'kegiatan_total'         => $totalKegiatan,
+                'kegiatan_selesai'       => $kegiatanSelesai,
+                'kegiatan_berjalan'      => $kegiatanBerjalan,
+                'kegiatan_tahun_ini'     => $kegiatanTahunIni,
+                'rate_realisasi_kegiatan' => $totalKegiatan > 0 ? round($kegiatanSelesai / $totalKegiatan * 100) : 0,
             ];
         });
     }
 
     /**
-     * EVALUASI CALON DO — mahasiswa aktif yang sudah memasuki semester ≥ 13.
-     * Mahasiswa masuk Agustus, 1 tahun = 2 semester. Semester 13 dimulai
-     * 6 tahun setelah angkatan, jadi: angkatan ≤ (tahun sekarang − 6).
+     * Evaluasi sebuah nilai metrik terhadap target mutu di config/quality_targets.
+     *
+     * @param  string      $metricKey  Kunci metrik (mis. 'masa_studi').
+     * @param  float|null  $value      Nilai metrik aktual.
+     * @param  bool        $cukup      Apakah sampel cukup untuk dinilai.
+     * @return array  ['target','comparison','label','unit','status'] — status: tercapai|tidak|kurang.
+     */
+    private function evaluateQualityTarget(string $metricKey, ?float $value, bool $cukup): array
+    {
+        $cfg = config("quality_targets.$metricKey");
+        if (!$cfg) {
+            return [];
+        }
+
+        $status = 'kurang'; // data belum cukup
+        if ($cukup && $value !== null) {
+            $tercapai = $cfg['comparison'] === '<='
+                ? $value <= $cfg['target']
+                : $value >= $cfg['target'];
+            $status = $tercapai ? 'tercapai' : 'tidak';
+        }
+
+        return [
+            'target'     => $cfg['target'],
+            'comparison' => $cfg['comparison'],
+            'label'      => $cfg['label'],
+            'unit'       => $cfg['unit'] ?? '',
+            'status'     => $status,
+        ];
+    }
+
+    /**
+     * EVALUASI CALON DO — deteksi dini bertingkat (FASE 3B).
+     * Mahasiswa masuk Agustus, 1 tahun = 2 semester.
+     *  - "Perlu Pemantauan": mahasiswa aktif semester ≥ 9
+     *  - "Kritis": mahasiswa aktif semester ≥ 12
      */
     public function getCalonDO(): array
     {
         return Cache::remember('mk.dashboard.calon_do', 300, function () {
-            $thresholdAngkatan = now()->year - 6;
             $currentYear  = now()->year;
             $currentMonth = now()->month;
 
+            // Estimasi semester berjalan dari angkatan (ganjil mulai Agustus)
+            $semFor = function (int $angkatan) use ($currentYear, $currentMonth) {
+                $y = $currentYear - $angkatan;
+                return $currentMonth >= 8 ? ($y * 2 + 1) : ($y * 2);
+            };
+
+            // Tahun berlalu minimal agar semester mencapai ambang
+            $yPantau = $currentMonth >= 8 ? 4 : 5; // semester ≥ 9
+            $yKritis = 6;                          // semester ≥ 12
+            $thresholdPantau = $currentYear - $yPantau; // angkatan ≤ ini → semester ≥ 9
+            $thresholdKritis = $currentYear - $yKritis; // angkatan ≤ ini → semester ≥ 12
+
             $base = Kemahasiswaan::aktif()
                 ->whereNotNull('angkatan')
-                ->where('angkatan', '<=', $thresholdAngkatan);
+                ->where('angkatan', '<=', $thresholdPantau);
+
+            $totalCount  = (clone $base)->count();
+            $kritisCount = (clone $base)->where('angkatan', '<=', $thresholdKritis)->count();
+            $pantauCount = max(0, $totalCount - $kritisCount);
 
             $list = (clone $base)
                 ->with('user:id,email')
-                ->orderBy('angkatan')
+                ->orderBy('angkatan')   // angkatan terlama (paling kritis) dahulu
                 ->orderBy('nama')
-                ->limit(8)
+                ->limit(12)
                 ->get()
-                ->map(function ($m) use ($currentYear, $currentMonth) {
-                    $yearsElapsed = $currentYear - $m->angkatan;
-                    // Estimasi semester berjalan (ganjil mulai Agustus)
-                    $semester = $currentMonth >= 8 ? ($yearsElapsed * 2 + 1) : ($yearsElapsed * 2);
+                ->map(function ($m) use ($semFor) {
+                    $semester = $semFor((int) $m->angkatan);
                     return [
                         'nama'     => $m->nama ?? $m->user?->name ?? '-',
                         'nim'      => $m->nim ?? '-',
                         'angkatan' => (int) $m->angkatan,
-                        'semester' => max($semester, 13),
+                        'semester' => $semester,
+                        'tier'     => $semester >= 12 ? 'kritis' : 'pantau',
                     ];
                 });
 
             return [
-                'count'              => (clone $base)->count(),
-                'threshold_angkatan' => $thresholdAngkatan,
-                'list'               => $list,
+                'total_count'      => $totalCount,
+                'kritis_count'     => $kritisCount,
+                'pantau_count'     => $pantauCount,
+                'threshold_pantau' => $thresholdPantau,
+                'threshold_kritis' => $thresholdKritis,
+                'list'             => $list,
             ];
         });
     }
