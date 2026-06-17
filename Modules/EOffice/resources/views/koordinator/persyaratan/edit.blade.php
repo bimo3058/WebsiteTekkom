@@ -20,9 +20,10 @@
     'existing_file' => $t->file_name ?: '',
     'existing_path' => $t->file_path ?: '',
     'new_file' => '',
+    'file_url' => '',
 ])->values()) }},
         addDoc() {
-            this.docs.push({ id: null, title: '', description: '', existing_file: '', existing_path: '', new_file: '' });
+            this.docs.push({ id: null, title: '', description: '', existing_file: '', existing_path: '', new_file: '', file_url: '' });
         },
         removeDoc(index) {
             this.docs.splice(index, 1);
@@ -128,7 +129,7 @@
                                                 </div>
 
                                                 <!-- Row: File Upload Box -->
-                                                <div class="w-full sm:w-[calc(100%-1.5rem)]">
+                                                <div class="w-full">
                                                     <!-- State: Empty (No file) -->
                                                     <label x-show="!doc.existing_file && !doc.new_file"
                                                         class="flex justify-between items-center w-full border border-[#E4E7EC] rounded-[8px] px-3.5 py-2 cursor-pointer bg-white hover:bg-[#F8F9FA] transition-colors group">
@@ -142,7 +143,7 @@
                                                                 d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                                                         </svg>
                                                         <input type="file" :name="'files[' + index + ']'" class="hidden"
-                                                            @change="if($event.target.files.length) { doc.new_file = $event.target.files[0].name; }"
+                                                            @change="if($event.target.files.length) { doc.new_file = $event.target.files[0].name; if(doc.file_url) URL.revokeObjectURL(doc.file_url); doc.file_url = URL.createObjectURL($event.target.files[0]); }"
                                                             accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx">
                                                     </label>
 
@@ -157,9 +158,19 @@
                                                                 <path stroke-linecap="round" stroke-linejoin="round"
                                                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                             </svg>
-                                                            <span
-                                                                class="text-[13px] text-[#0D0D12] font-medium truncate"
-                                                                x-text="doc.new_file || doc.existing_file"></span>
+                                                            <template x-if="doc.existing_path && !doc.new_file">
+                                                                <a :href="'/storage/' + doc.existing_path"
+                                                                    target="_blank"
+                                                                    class="text-[13px] text-[#2E3182] hover:text-[#1c1e54] font-medium hover:underline truncate"
+                                                                    x-text="doc.existing_file"
+                                                                    title="Lihat Dokumen"></a>
+                                                            </template>
+                                                            <template x-if="doc.new_file">
+                                                                <a :href="doc.file_url" target="_blank"
+                                                                    class="text-[13px] text-[#2E3182] hover:text-[#1c1e54] font-medium hover:underline truncate"
+                                                                    x-text="doc.new_file"
+                                                                    title="Preview File Lokal"></a>
+                                                            </template>
                                                         </div>
                                                         <button type="button"
                                                             @click="$event.target.closest('div[x-show]').previousElementSibling.querySelector('input').value = ''; doc.new_file = ''; doc.existing_file = ''; doc.existing_path = '';"
