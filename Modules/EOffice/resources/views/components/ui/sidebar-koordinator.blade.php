@@ -98,7 +98,7 @@
                             <span class="absolute left-0 top-2 bottom-2 w-[3.5px] bg-[#0065FF] rounded-r-full z-10"></span>
                         @endif
                         <a href="{{ route($item['route']) }}" class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                                                    {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                                                        {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
                             @if($item['active'])
                                 <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
                                     @if($item['icon'] === 'periode')
@@ -180,11 +180,11 @@
                 @php
                     $isPengumuman = request()->routeIs('eoffice.kp.koordinator.pengumuman');
                     $isFaq = request()->routeIs('eoffice.kp.koordinator.faq');
-                    $isTemplate = request()->routeIs('eoffice.kp.koordinator.template');
+                    $isPersyaratan = request()->routeIs('eoffice.kp.koordinator.persyaratan_dokumen');
                     $infoItems = [
                         ['active' => $isPengumuman, 'route' => 'eoffice.kp.koordinator.pengumuman', 'label' => 'Pengumuman', 'icon' => 'annc'],
                         ['active' => $isFaq, 'route' => 'eoffice.kp.koordinator.faq', 'label' => 'FAQ & Dokumen', 'icon' => 'faq'],
-                        ['active' => $isTemplate, 'route' => 'eoffice.kp.koordinator.template', 'label' => 'Template Dokumen', 'icon' => 'tpl'],
+                        ['active' => $isPersyaratan, 'route' => 'eoffice.kp.koordinator.persyaratan_dokumen', 'label' => 'Persyaratan Dokumen', 'icon' => 'tpl'],
                     ];
                 @endphp
 
@@ -194,7 +194,7 @@
                             <span class="absolute left-0 top-2 bottom-2 w-[3.5px] bg-[#0065FF] rounded-r-full z-10"></span>
                         @endif
                         <a href="{{ route($item['route']) }}" class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                                                    {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                                                        {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
                             @if($item['active'])
                                 <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
                                     @if($item['icon'] === 'annc')
