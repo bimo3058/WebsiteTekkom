@@ -141,262 +141,6 @@
                                 @if($step1Done)<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>@else 1 @endif
                             </div>
                             <div>
-                                <h2 class="text-base font-bold text-slate-900">Curriculum Vitae (CV)</h2>
-                                <p class="text-[11px] text-slate-500">Unggah Curriculum Vitae terbaru dalam format PDF.</p>
-                            </div>
-                        </div>
-                        <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $cvB['cls'] }}">{{ $cvB['txt'] }}</span>
-                    </div>
-
-                    <div class="p-6" x-data="{ modalOpen: false }">
-                        {{-- Riwayat Validasi --}}
-                        <div class="mb-5">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Riwayat Validasi</p>
-                            <div class="relative pl-5 space-y-3">
-                                <div class="absolute left-1.5 top-2 bottom-2 w-0.5 bg-slate-100"></div>
-                                {{-- Fase Upload --}}
-                                <div class="flex items-start gap-3">
-                                    <div class="w-3 h-3 rounded-full mt-0.5 -ml-[18px] flex-shrink-0 border-2 border-white shadow {{ $cvDoc ? 'bg-indigo-500' : 'bg-slate-200' }}"></div>
-                                    <div>
-                                        <p class="text-xs font-semibold {{ $cvDoc ? 'text-slate-800' : 'text-slate-400' }}">
-                                            {{ $cvDoc ? 'Dokumen berhasil diunggah' : 'Menunggu dokumen diunggah' }}
-                                        </p>
-                                        @if($cvDoc)
-                                            <p class="text-[10px] text-slate-400 mt-0.5">{{ \Carbon\Carbon::parse($cvDoc->created_at)->translatedFormat('d M Y \p\u\k\u\l H:i') }}</p>
-                                        @endif
-                                    </div>
-                                </div>
-                                {{-- Fase Validasi --}}
-                                @if($cvDoc)
-                                    <div class="flex items-start gap-3">
-                                        <div class="w-3 h-3 rounded-full mt-0.5 -ml-[18px] flex-shrink-0 border-2 border-white shadow
-                                            {{ $cvStatus === 'disetujui' ? 'bg-emerald-500' : ($cvStatus === 'ditolak' ? 'bg-rose-500' : 'bg-amber-400') }}"></div>
-                                        <div>
-                                            <p class="text-xs font-semibold {{ $cvStatus === 'disetujui' ? 'text-emerald-700' : ($cvStatus === 'ditolak' ? 'text-rose-700' : 'text-amber-700') }}">
-                                                @if($cvStatus === 'disetujui') ✓ Disetujui oleh Koordinator KP
-                                                @elseif($cvStatus === 'ditolak') ✗ Ditolak — perlu revisi
-                                                @else ⏳ Menunggu validasi Koordinator KP
-                                                @endif
-                                            </p>
-                                            <p class="text-[10px] text-slate-400 mt-0.5">{{ \Carbon\Carbon::parse($cvDoc->updated_at)->translatedFormat('d M Y \p\u\k\u\l H:i') }}</p>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-
-                        {{-- File preview --}}
-                        @if($cvDoc)
-                            <div class="mb-4 flex items-center gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                                <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                <p class="text-[11px] text-slate-600 flex-1 font-medium">cv_foto.{{ pathinfo($cvDoc->file_path, PATHINFO_EXTENSION) }}</p>
-                                <a href="{{ asset('storage/' . $cvDoc->file_path) }}" target="_blank" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 flex-shrink-0 uppercase">Lihat File</a>
-                            </div>
-                        @endif
-
-                        {{-- Action --}}
-                        @if($cvStatus !== 'disetujui')
-                            <button @click="modalOpen = true"
-                                class="w-full flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 transition-all active:scale-95">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                {{ $cvDoc ? 'Unggah Ulang CV' : 'Unggah CV' }}
-                            </button>
-                        @else
-                            <div class="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-100">
-                                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                <p class="text-sm font-bold text-emerald-700">CV telah diverifikasi ✓</p>
-                            </div>
-                        @endif
-
-                        {{-- Modal Upload --}}
-                        <div x-show="modalOpen" class="fixed inset-0 z-50" style="display:none;">
-                            <div class="flex items-center justify-center min-h-screen px-4">
-                                <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="modalOpen = false"></div>
-                                <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 overflow-hidden">
-                                    <form action="{{ route('eoffice.kp.mahasiswa.dokumen.store') }}" method="POST" enctype="multipart/form-data">
-                                        @csrf
-                                        <input type="hidden" name="jenis_dokumen" value="CV">
-                                        <div class="p-6">
-                                            <div class="flex items-center gap-4 mb-5">
-                                                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
-                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 21h7a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v11m0 5l4.879-4.879m0 0a3 3 0 104.243-4.242 3 3 0 00-4.243 4.242z"/></svg>
-                                                </div>
-                                                <div>
-                                                    <h3 class="text-lg font-bold text-slate-900">Unggah CV</h3>
-                                                    <p class="text-xs text-slate-400">Jadikan satu file PDF (CV) &mdash; maks. 10MB</p>
-                                                </div>
-                                            </div>
-                                            <div x-data="{ fn: '' }" class="p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:border-indigo-400 hover:bg-white transition-all text-center">
-                                                <input type="file" name="file" required id="cv-file" class="hidden" @change="fn = $event.target.files[0].name" accept=".pdf">
-                                                <label for="cv-file" class="cursor-pointer block">
-                                                    <svg class="w-10 h-10 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-                                                    <p class="text-sm font-semibold text-slate-600" x-text="fn || 'Klik untuk memilih file'"></p>
-                                                    <p class="text-[10px] text-slate-400 mt-1">Format PDF</p>
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="bg-slate-50 px-6 py-4 flex flex-row-reverse gap-3">
-                                            <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 shadow-md transition-all active:scale-95">Simpan Unggahan</button>
-                                            <button type="button" @click="modalOpen = false" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all">Batal</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- ═══════════════════════════════════════════ --}}
-                {{-- CARD 2: FOTO                               --}}
-                {{-- ═══════════════════════════════════════════ --}}
-                @php
-                    $ftBadgeMap = [
-                        'belum' => ['txt' => 'Belum Diunggah', 'cls' => 'bg-slate-100 text-slate-500'],
-                        'menunggu' => ['txt' => 'Menunggu Validasi', 'cls' => 'bg-amber-100 text-amber-700'],
-                        'disetujui' => ['txt' => 'Disetujui', 'cls' => 'bg-emerald-100 text-emerald-700'],
-                        'ditolak' => ['txt' => 'Perlu Revisi', 'cls' => 'bg-rose-100 text-rose-700'],
-                    ];
-                    $ftB = $ftBadgeMap[$ftStatus] ?? $ftBadgeMap['belum'];
-                @endphp
-                <div class="bg-white rounded-2xl border overflow-hidden transition-all duration-300
-                    {{ $currentStep === 2 ? 'border-indigo-500 ring-4 ring-indigo-100 shadow-lg shadow-indigo-100/40' : ($step2Done ? 'border-emerald-200 shadow-sm' : 'border-slate-200 shadow-sm') }}">
-
-                    {{-- Header --}}
-                    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between {{ $currentStep === 2 ? 'bg-indigo-50/40' : '' }}">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
-                                {{ $step2Done ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-white' }}">
-                                @if($step2Done)<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>@else 2 @endif
-                            </div>
-                            <div>
-                                <h2 class="text-base font-bold text-slate-900">Foto (3x4)</h2>
-                                <p class="text-[11px] text-slate-500">Unggah pas foto formal berukuran 3x4 dalam format PDF.</p>
-                            </div>
-                        </div>
-                        <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider {{ $ftB['cls'] }}">{{ $ftB['txt'] }}</span>
-                    </div>
-
-                    <div class="p-6" x-data="{ modalOpen: false }">
-                        {{-- Riwayat Validasi --}}
-                        <div class="mb-5">
-                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Riwayat Validasi</p>
-                            <div class="relative pl-5 space-y-3">
-                                <div class="absolute left-1.5 top-2 bottom-2 w-0.5 bg-slate-100"></div>
-                                {{-- Fase Upload --}}
-                                <div class="flex items-start gap-3">
-                                    <div class="w-3 h-3 rounded-full mt-0.5 -ml-[18px] flex-shrink-0 border-2 border-white shadow {{ $fotoDoc ? 'bg-indigo-500' : 'bg-slate-200' }}"></div>
-                                    <div>
-                                        <p class="text-xs font-semibold {{ $fotoDoc ? 'text-slate-800' : 'text-slate-400' }}">
-                                            {{ $fotoDoc ? 'Dokumen berhasil diunggah' : 'Menunggu dokumen diunggah' }}
-                                        </p>
-                                        @if($fotoDoc)
-                                            <p class="text-[10px] text-slate-400 mt-0.5">{{ \Carbon\Carbon::parse($fotoDoc->created_at)->translatedFormat('d M Y \p\u\k\u\l H:i') }}</p>
-                                        @endif
-                                    </div>
-                                </div>
-                                {{-- Fase Validasi --}}
-                                @if($fotoDoc)
-                                    <div class="flex items-start gap-3">
-                                        <div class="w-3 h-3 rounded-full mt-0.5 -ml-[18px] flex-shrink-0 border-2 border-white shadow
-                                            {{ $ftStatus === 'disetujui' ? 'bg-emerald-500' : ($ftStatus === 'ditolak' ? 'bg-rose-500' : 'bg-amber-400') }}"></div>
-                                        <div>
-                                            <p class="text-xs font-semibold {{ $ftStatus === 'disetujui' ? 'text-emerald-700' : ($ftStatus === 'ditolak' ? 'text-rose-700' : 'text-amber-700') }}">
-                                                @if($ftStatus === 'disetujui') ✓ Disetujui oleh Koordinator KP
-                                                @elseif($ftStatus === 'ditolak') ✗ Ditolak — perlu revisi
-                                                @else ⏳ Menunggu validasi Koordinator KP
-                                                @endif
-                                            </p>
-                                            <p class="text-[10px] text-slate-400 mt-0.5">{{ \Carbon\Carbon::parse($fotoDoc->updated_at)->translatedFormat('d M Y \p\u\k\u\l H:i') }}</p>
-                                        </div>
-                                    </div>
-                                @endif
-                            </div>
-                        </div>
-
-                        {{-- File preview --}}
-                        @if($fotoDoc)
-                            <div class="mb-4 flex items-center gap-2 p-3 rounded-xl bg-slate-50 border border-slate-100">
-                                <svg class="w-4 h-4 text-slate-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-                                <p class="text-[11px] text-slate-600 flex-1 font-medium">foto_3x4.{{ pathinfo($fotoDoc->file_path, PATHINFO_EXTENSION) }}</p>
-                                <a href="{{ asset('storage/' . $fotoDoc->file_path) }}" target="_blank" class="text-[10px] font-bold text-indigo-600 hover:text-indigo-700 flex-shrink-0 uppercase">Lihat File</a>
-                            </div>
-                        @endif
-
-                        {{-- Action --}}
-                        @if($ftStatus !== 'disetujui')
-                            <button @click="modalOpen = true"
-                                class="w-full flex items-center justify-center gap-2 px-4 py-2.5 border-2 border-slate-200 rounded-xl text-sm font-bold text-slate-700 hover:border-indigo-400 hover:bg-indigo-50 hover:text-indigo-700 transition-all active:scale-95">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
-                                {{ $fotoDoc ? 'Unggah Ulang Foto' : 'Unggah Foto' }}
-                            </button>
-                        @else
-                            <div class="flex items-center gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-100">
-                                <svg class="w-5 h-5 text-emerald-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                                <p class="text-sm font-bold text-emerald-700">Foto telah diverifikasi ✓</p>
-                            </div>
-                        @endif
-
-                        {{-- Modal Upload --}}
-                        <div x-show="modalOpen" class="fixed inset-0 z-50" style="display:none;">
-                            <div class="flex items-center justify-center min-h-screen px-4">
-                                <div class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="modalOpen = false"></div>
-                                <div class="relative bg-white rounded-2xl shadow-2xl w-full max-w-md z-10 overflow-hidden">
-                                    <form action="{{ route('eoffice.kp.mahasiswa.dokumen.store') }}" method="POST" enctype="multipart/form-data">
-                                        @csrf
-                                        <input type="hidden" name="jenis_dokumen" value="Foto">
-                                        <div class="p-6">
-                                            <div class="flex items-center gap-4 mb-5">
-                                                <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 flex items-center justify-center flex-shrink-0">
-                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                                                </div>
-                                                <div>
-                                                    <h3 class="text-lg font-bold text-slate-900">Unggah Foto</h3>
-                                                    <p class="text-xs text-slate-400">Foto 3x4 formal &mdash; maks. 10MB</p>
-                                                </div>
-                                            </div>
-                                            <div x-data="{ fn: '' }" class="p-6 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 hover:border-indigo-400 hover:bg-white transition-all text-center">
-                                                <input type="file" name="file" required id="ft-file" class="hidden" @change="fn = $event.target.files[0].name" accept=".pdf">
-                                                <label for="ft-file" class="cursor-pointer block">
-                                                    <svg class="w-10 h-10 mx-auto text-slate-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/></svg>
-                                                    <p class="text-sm font-semibold text-slate-600" x-text="fn || 'Klik untuk memilih file'"></p>
-                                                    <p class="text-[10px] text-slate-400 mt-1">Format PDF</p>
-                                                </label>
-                                            </div>
-                                        </div>
-                                        <div class="bg-slate-50 px-6 py-4 flex flex-row-reverse gap-3">
-                                            <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 shadow-md transition-all active:scale-95">Simpan Unggahan</button>
-                                            <button type="button" @click="modalOpen = false" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all">Batal</button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {{-- ═══════════════════════════════════════════ --}}
-                {{-- CARD 3: KARTU HIJAU                        --}}
-                {{-- ═══════════════════════════════════════════ --}}
-                @php
-                    $khBadgeMap = [
-                        'belum' => ['txt' => 'Belum Diunggah', 'cls' => 'bg-slate-100 text-slate-500'],
-                        'menunggu' => ['txt' => 'Menunggu Validasi', 'cls' => 'bg-amber-100 text-amber-700'],
-                        'disetujui' => ['txt' => 'Disetujui', 'cls' => 'bg-emerald-100 text-emerald-700'],
-                        'ditolak' => ['txt' => 'Perlu Revisi', 'cls' => 'bg-rose-100 text-rose-700'],
-                    ];
-                    $khB = $khBadgeMap[$khStatus] ?? $khBadgeMap['belum'];
-                @endphp
-                <div class="bg-white rounded-2xl border overflow-hidden transition-all duration-300
-                    {{ $currentStep === 3 ? 'border-indigo-500 ring-4 ring-indigo-100 shadow-lg shadow-indigo-100/40' : ($step3Done ? 'border-emerald-200 shadow-sm' : 'border-slate-200 shadow-sm') }}">
-
-                    {{-- Header --}}
-                    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between {{ $currentStep === 3 ? 'bg-indigo-50/40' : '' }}">
-                        <div class="flex items-center gap-3">
-                            <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
-                                {{ $step3Done ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-white' }}">
-                                @if($step3Done)<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>@else 3 @endif
-                            </div>
-                            <div>
                                 <h2 class="text-base font-bold text-slate-900">Kartu Hijau</h2>
                                 <p class="text-[11px] text-slate-500">Bukti persetujuan seminar dari program studi.</p>
                             </div>
@@ -640,7 +384,16 @@
                                         </div>
                                         <div class="bg-slate-50 px-6 py-4 flex flex-row-reverse gap-3">
                                             <button type="submit" class="px-6 py-2.5 bg-indigo-600 text-white text-sm font-bold rounded-xl hover:bg-indigo-700 shadow-md transition-all active:scale-95">Simpan Unggahan</button>
-                                            <button type="button" @click="modalOpen = false" class="px-6 py-2.5 bg-white                {{-- ═══════════════════════════════════════════ --}}
+                                            <button type="button" @click="modalOpen = false" class="px-6 py-2.5 bg-white border border-slate-200 text-slate-600 text-sm font-bold rounded-xl hover:bg-slate-100 transition-all">Batal</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {{-- ═══════════════════════════════════════════ --}}
                 {{-- CARD 3: AJUKAN SEMINAR                     --}}
                 {{-- ═══════════════════════════════════════════ --}}
                 @php
@@ -768,20 +521,20 @@
                 </div>
 
                 {{-- ═══════════════════════════════════════════ --}}
-                {{-- CARD 6: NILAI SEMINAR                      --}}
+                {{-- CARD 4: NILAI SEMINAR                      --}}
                 {{-- ═══════════════════════════════════════════ --}}
                 @php
                     $nilaiSeminar = $penilaian?->nilai_seminar_pembimbing;
                     $nilaiAkhir = $penilaian?->nilai_akhir;
                 @endphp
                 <div class="bg-white rounded-2xl border overflow-hidden transition-all duration-300
-                    {{ $currentStep === 6 ? 'border-indigo-500 ring-4 ring-indigo-100 shadow-lg shadow-indigo-100/40' : ($step6Done ? 'border-emerald-200 shadow-sm' : 'border-slate-200 shadow-sm') }}">
+                    {{ $currentStep === 4 ? 'border-indigo-500 ring-4 ring-indigo-100 shadow-lg shadow-indigo-100/40' : ($step4Done ? 'border-emerald-200 shadow-sm' : 'border-slate-200 shadow-sm') }}">
 
-                    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between {{ $currentStep === 6 ? 'bg-indigo-50/40' : '' }}">
+                    <div class="px-6 py-4 border-b border-slate-100 flex items-center justify-between {{ $currentStep === 4 ? 'bg-indigo-50/40' : '' }}">
                         <div class="flex items-center gap-3">
                             <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm
-                                {{ $step6Done ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-white' }}">
-                                @if($step6Done)<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>@else 6 @endif
+                                {{ $step4Done ? 'bg-indigo-600 text-white' : 'bg-slate-900 text-white' }}">
+                                @if($step4Done)<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>@else 4 @endif
                             </div>
                             <div>
                                 <h2 class="text-base font-bold text-slate-900">Nilai Seminar</h2>
@@ -789,13 +542,13 @@
                             </div>
                         </div>
                         <span class="px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider
-                            {{ $step6Done ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500' }}">
-                            {{ $step6Done ? 'Nilai Tersedia' : 'Menunggu Penilaian' }}
+                            {{ $step4Done ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-500' }}">
+                            {{ $step4Done ? 'Nilai Tersedia' : 'Menunggu Penilaian' }}
                         </span>
                     </div>
 
                     <div class="p-6">
-                        @if($step6Done)
+                        @if($step4Done)
                             {{-- Nilai tersedia --}}
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-5">
                                 {{-- Nilai Seminar --}}
@@ -865,7 +618,7 @@
                                 </div>
                                 <p class="text-sm font-bold text-slate-600">Nilai belum tersedia</p>
                                 <p class="text-xs text-slate-400 mt-1 max-w-xs">
-                                    @if(!$step5Done)
+                                    @if(!$step3Done)
                                         Selesaikan pengajuan seminar terlebih dahulu.
                                     @else
                                         Nilai akan muncul setelah dosen pembimbing menginput penilaian pasca seminar.

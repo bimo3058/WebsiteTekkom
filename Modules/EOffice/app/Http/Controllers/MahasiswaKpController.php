@@ -213,7 +213,7 @@ class MahasiswaKpController extends Controller
         // 3. Replace variabel-variabel di dalam template Word
         $templateProcessor->setValue('nama', $mahasiswa->user->name ?? '-');
         $templateProcessor->setValue('nip', $mahasiswa->nim ?? '-');
-        $templateProcessor->setValue('topik', $kp->judul_kp ?? ($kp->judul_fix ?? '-'));
+        $templateProcessor->setValue('topik', $kp->judul_kp ?? '-');
         
         $templateProcessor->setValue('nama_pembimbing', $validated['nama_pembimbing']);
         $templateProcessor->setValue('nip_pembimbing', $validated['nip_pembimbing']);
@@ -726,7 +726,7 @@ class MahasiswaKpController extends Controller
         $buktiTerima = isset($dokumenByJenis['Bukti Terima'])
             && $dokumenByJenis['Bukti Terima']->where('approval_status', 'approved')->isNotEmpty();
 
-        $judulFix = !empty($kp->judul_fix) && !empty($kp->tempat_fix);
+        $judulFix = !empty($kp->judul_kp) && !empty($kp->instansi_kp);
 
         return [
             'laporan_acc'      => $laporanAcc,

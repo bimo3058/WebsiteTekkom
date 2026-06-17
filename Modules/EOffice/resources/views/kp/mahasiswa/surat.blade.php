@@ -41,7 +41,7 @@
         ])
 
         <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8" x-data="suratManager({
-            defaultPerusahaan: '{{ $kp ? ($kp->tempat_fix ?? ($kp->rencana_tempat ?? "")) : "" }}'
+            defaultPerusahaan: '{{ $kp ? ($kp->instansi_kp ?? "") : "" }}'
         })">
 
             <div>
