@@ -72,10 +72,11 @@ class KegiatanController extends Controller
         // Cek apakah user adalah admin/pengurus (untuk tombol Tambah)
         $user  = Auth::user();
         $roles = $user->roles->pluck('name');
+        // GPM & Kadep view-only — tidak masuk daftar pengelola (hanya bisa lihat)
         $isAdmin = $roles->intersect([
             'superadmin', 'admin_kemahasiswaan',
             'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
-            'gpm', 'dpm',
+            'dpm',
         ])->isNotEmpty();
 
         return view('manajemenmahasiswa::kegiatan.index', compact(
@@ -106,10 +107,11 @@ class KegiatanController extends Controller
         // Cek apakah user adalah admin/pengurus (untuk tombol Edit/Hapus)
         $user  = Auth::user();
         $roles = $user->roles->pluck('name');
+        // GPM & Kadep view-only — tidak masuk daftar pengelola (hanya bisa lihat)
         $isAdmin = $roles->intersect([
             'superadmin', 'admin_kemahasiswaan',
             'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
-            'gpm', 'dpm',
+            'dpm',
         ])->isNotEmpty();
 
         return view('manajemenmahasiswa::kegiatan.show', compact('kegiatan', 'isAdmin'));

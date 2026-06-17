@@ -44,9 +44,6 @@ class Pengaduan extends Model
     public const STATUS_BARU              = 'baru';
     public const STATUS_DIBACA            = 'dibaca';
     public const STATUS_DIDELEGASIKAN     = 'didelegasikan';
-    public const STATUS_DITANGGAPI_DOSEN  = 'ditanggapi_dosen';
-    public const STATUS_DIJAWAB           = 'dijawab';
-    public const STATUS_DIAJUKAN_ULANG    = 'diajukan_ulang';
     public const STATUS_SELESAI           = 'selesai';
 
     public const MAX_REOPEN = 2;
@@ -119,10 +116,6 @@ class Pengaduan extends Model
         return $this->belongsTo(\App\Models\User::class, 'read_by');
     }
 
-    public function dijawabOleh(): BelongsTo
-    {
-        return $this->belongsTo(\App\Models\User::class, 'answered_by');
-    }
 
     public function ditutupOleh(): BelongsTo
     {
@@ -159,11 +152,5 @@ class Pengaduan extends Model
     public function isSelesai(): bool
     {
         return $this->status === self::STATUS_SELESAI;
-    }
-
-    public function canReopen(): bool
-    {
-        return $this->status === self::STATUS_DIJAWAB
-            && $this->reopen_count < self::MAX_REOPEN;
     }
 }
