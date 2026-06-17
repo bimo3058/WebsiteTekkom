@@ -27,15 +27,13 @@ class DashboardController extends Controller
             return app(EOfficeController::class)->adminDashboard();
         }
 
-        if ($roles->contains('koor_kp')) {
-            return redirect()->route('eoffice.kp.koordinator.dashboard');
-        }
-
         if ($roles->contains('mahasiswa')) {
             return app(EOfficeController::class)->mahasiswaDashboard();
         }
 
-        if ($roles->contains('dosen')) {
+        // Koordinator KP dan Dosen berbagi tampilan portal Dashboard Siperkom yang sama, 
+        // sehingga mereka bisa memilih masuk ke Manajemen Praktikum atau KP.
+        if ($roles->contains('dosen') || $roles->contains('koor_kp')) {
             return app(EOfficeController::class)->dosenDashboard();
         }
 

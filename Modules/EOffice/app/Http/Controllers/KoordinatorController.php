@@ -743,6 +743,7 @@ class KoordinatorController extends Controller implements HasMiddleware
                 'nama' => $kp->nama ?? 'Unknown',
                 'nim' => $kp->nim ?? '-',
                 'prodi' => 'Teknik Komputer',
+                'kelas' => $kp->kelas ?? '-',
                 'tempat_kp' => $kp->instansi_kp ?? 'Belum ditentukan',
                 'judul_kp' => $kp->judul_kp ?? 'Belum ditentukan',
                 'dosen_pembimbing' => $kp->dosen_pembimbing,
@@ -765,8 +766,67 @@ class KoordinatorController extends Controller implements HasMiddleware
 
         // Unique filtered Periodes list for the dropdown
         $periodes = $allPeriodes;
+        $dosens = \Modules\EOffice\Models\KpDosen::with('user')->get();
 
-        return view('eoffice::koordinator.data_mahasiswa', compact('mahasiswas', 'periodes'));
+        return view('eoffice::koordinator.data_mahasiswa', compact('mahasiswas', 'periodes', 'dosens'));
+    }
+
+    /**
+     * Override / Update Data & Nilai Mahasiswa dari Modal Edit
+     */
+    public function updateDataMahasiswa(Request $request, $id)
+    {
+        $kp = \Modules\EOffice\Models\KerjaPraktik::findOrFail($id);
+
+        $request->validate([
+            'dosen_pembimbing_id' => 'nullable|exists:eo_kp_dosen,id',
+            'nilai_lapangan' => 'nullable|numeric|min:0|max:100',
+            'kelas' => 'nullable|string|max:50',
+            // Kita bisa juga override status_kp di sini jika user menyediakan
+        ]);
+
+        if ($request->has('kelas')) {
+            $kp->kelas = $request->kelas;
+        }
+
+        if ($request->has('dosen_pembimbing_id')) {
+            $kp->dosen_pembimbing_id = $request->dosen_pembimbing_id;
+
+            // Juga update status balancing menjadi finalized bila override manual
+            if ($request->dosen_pembimbing_id) {
+                \Modules\EOffice\Models\KpBalancing::updateOrCreate(
+                    ['kp_id' => $kp->id],
+                    [
+                        'mahasiswa_id' => $kp->mahasiswa_id,
+                        'dosen_id' => $request->dosen_pembimbing_id,
+                        'status' => 'finalized',
+                        'assigned_by' => auth()->id(),
+                    ]
+                );
+            }
+        }
+
+        $kp->save();
+
+        if ($request->has('nilai_lapangan') || $request->has('nilai_akhir')) {
+            $penilaianData = [];
+            if ($request->has('nilai_lapangan')) {
+                $penilaianData['nilai_lapangan'] = $request->nilai_lapangan;
+            }
+            if ($request->has('nilai_akhir')) {
+                // Di sistem aslinya, nilai akhir dihitung otomatis. Namun request bilang ada field override Nilai.
+                $penilaianData['nilai_akhir'] = $request->nilai_akhir;
+            }
+
+            if (!empty($penilaianData)) {
+                \Modules\EOffice\Models\KpPenilaian::updateOrCreate(
+                    ['kp_id' => $kp->id],
+                    $penilaianData
+                );
+            }
+        }
+
+        return redirect()->back()->with('success', 'Data Mahasiswa berhasil diperbarui!');
     }
 
     public function nilaiLapangan()

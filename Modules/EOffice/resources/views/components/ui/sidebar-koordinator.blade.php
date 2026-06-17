@@ -97,8 +97,9 @@
                         @if($item['active'])
                             <span class="absolute left-0 top-2 bottom-2 w-[3.5px] bg-[#0065FF] rounded-r-full z-10"></span>
                         @endif
-                        <a href="{{ route($item['route']) }}" class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                                                        {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                        <a href="{{ route($item['route']) }}"
+                            class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
+                                                                {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
                             @if($item['active'])
                                 <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
                                     @if($item['icon'] === 'periode')
@@ -193,8 +194,9 @@
                         @if($item['active'])
                             <span class="absolute left-0 top-2 bottom-2 w-[3.5px] bg-[#0065FF] rounded-r-full z-10"></span>
                         @endif
-                        <a href="{{ route($item['route']) }}" class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                                                        {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                        <a href="{{ route($item['route']) }}"
+                            class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
+                                                                {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
                             @if($item['active'])
                                 <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
                                     @if($item['icon'] === 'annc')
@@ -264,35 +266,18 @@
             </div>
         @endif
 
-        <!-- Pengaturan -->
-        @php $isPengaturan = request()->routeIs('eoffice.kp.koordinator.pengaturan'); @endphp
-        <div class="relative px-2">
-            @if($isPengaturan)
-                <span class="absolute left-0 top-2 bottom-2 w-[3.5px] bg-[#0065FF] rounded-r-full z-10"></span>
-            @endif
-            <a href="{{ route('eoffice.kp.koordinator.pengaturan') }}" class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                    {{ $isPengaturan ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
-                @if($isPengaturan)
-                    <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
-                        <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        </svg>
-                    </span>
-                @else
-                    <svg class="w-[18px] h-[18px] flex-shrink-0 text-[#A4ABB8] group-hover:text-[#666D80]" fill="none"
-                        stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
-                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
-                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                @endif
-                <span x-show="sidebarOpen"
-                    class="text-[13px] whitespace-nowrap {{ $isPengaturan ? 'font-semibold text-[#272835]' : 'text-[#666D80] group-hover:text-[#353849]' }}"
-                    x-transition.opacity.duration.200ms>Pengaturan</span>
+        <!-- Kembali ke Global Dashboard -->
+        <div class="px-2 mt-2 border-t border-[#DFE1E6] pt-2">
+            <a href="{{ route('eoffice.dashboard') }}"
+                class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] text-[#A4ABB8] hover:bg-[#F8F9FB] hover:text-[#353849] transition-all group">
+                <svg class="w-[18px] h-[18px] flex-shrink-0 group-hover:text-[#666D80]" fill="none"
+                    stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.75"
+                        d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+                </svg>
+                <span x-show="sidebarOpen" class="text-[13px] whitespace-nowrap" x-transition.opacity.duration.200ms>
+                    Kembali ke E-Office
+                </span>
             </a>
         </div>
 
