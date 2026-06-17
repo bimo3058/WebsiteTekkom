@@ -29,17 +29,15 @@ class PengaduanDelegasiController extends Controller
         }
 
         $validated = $request->validate([
-            'tanggapan'   => ['required', 'string', 'min:10', 'max:5000'],
-            'notes_balik' => ['required', 'string', 'min:5', 'max:1000'],
+            'notes_balik' => ['nullable', 'string', 'max:2000'],
         ]);
 
         $this->pengaduanService->dosenRespond(
             $delegasi,
-            $validated['tanggapan'],
-            $validated['notes_balik']
+            $validated['notes_balik'] ?? null
         );
 
-        return back()->with('success', 'Tanggapan berhasil dikirim ke Admin.');
+        return back()->with('success', 'Penugasan berhasil diselesaikan dan tiket telah ditutup.');
     }
 
     /**

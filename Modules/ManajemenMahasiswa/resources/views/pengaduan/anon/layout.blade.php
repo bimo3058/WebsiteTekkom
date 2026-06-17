@@ -24,7 +24,7 @@
         }
         .anon-header {
             background: #ffffff;
-            border-bottom: 1px solid #e5e7eb;
+            border-bottom: 1px solid #DDE1E8;
             padding: 16px 24px;
             display: flex;
             align-items: center;
@@ -35,7 +35,7 @@
         .anon-header-logo {
             width: 32px;
             height: 32px;
-            background: #0B266E;
+            background: #293C79;
             color: #ffffff;
             border-radius: 8px;
             display: flex;

@@ -8,15 +8,15 @@
             background: #ffffff;
             border-radius: 12px;
             padding: 32px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            border: 1px solid #e5e7eb;
+            box-shadow: 0 1px 3px rgba(22,22,43,0.06);
+            border: 1px solid #DDE1E8;
             margin-bottom: 24px;
         }
         .btn-custom {
-            background-color: #4D4DFF;
+            background-color: #293C79;
             color: white;
             border: none;
-            border-radius: 8px;
+            border-radius: 12px;
             padding: 12px 24px;
             font-weight: 600;
             width: 100%;
@@ -24,27 +24,28 @@
             font-size: 15px;
         }
         .btn-custom:hover {
-            background-color: #3b3be5;
+            background-color: #415086;
             color: white;
             transform: translateY(-1px);
         }
         .btn-outline-custom {
             background-color: transparent;
             color: #6b7280;
-            border: 2px solid #e5e7eb;
-            border-radius: 8px;
+            border: 1px solid #DDE1E8;
+            border-radius: 12px;
             padding: 8px 20px;
             font-weight: 600;
             transition: all 0.2s;
         }
         .btn-outline-custom:hover {
-            background-color: #f3f4f6;
+            background-color: #E7E8F0;
             color: #374151;
+            border-color: #293C79;
         }
         .form-control-custom, .form-select-custom {
             background-color: #f9fafb;
-            border: 2px solid #f3f4f6;
-            border-radius: 8px;
+            border: 1px solid #DDE1E8;
+            border-radius: 12px;
             padding: 12px 16px;
             font-size: 14px;
             transition: all 0.2s;
@@ -52,8 +53,8 @@
         }
         .form-control-custom:focus, .form-select-custom:focus {
             background-color: #ffffff;
-            border-color: #a5a5ff;
-            box-shadow: 0 0 0 4px rgba(77, 77, 255, 0.1);
+            border-color: #293C79;
+            box-shadow: 0 0 0 3px rgba(41,60,121,0.12);
             outline: none;
         }
         .form-label-custom {
@@ -73,7 +74,7 @@
             font-size: 16px;
             margin-bottom: 24px;
             padding-bottom: 12px;
-            border-bottom: 2px solid #f3f4f6;
+            border-bottom: 1px solid #DDE1E8;
         }
         .info-box {
             background: #f1f5f9;

@@ -25,8 +25,6 @@ Route::middleware(['module.active:manajemen_mahasiswa'])
             Route::post('/track/{token}/confirm', [AnonPengaduanController::class, 'confirm'])->name('anon.confirm');
             Route::post('/track/{token}/store', [AnonPengaduanController::class, 'store'])->name('anon.store');
             Route::get('/track/{token}', [AnonPengaduanController::class, 'track'])->name('track');
-            Route::post('/track/{token}/close', [AnonPengaduanController::class, 'close'])->name('track.close');
-            Route::post('/track/{token}/reopen', [AnonPengaduanController::class, 'reopen'])->name('track.reopen');
         });
     });
 
@@ -154,12 +152,6 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 Route::get('/create', [PengaduanController::class, 'create'])->name('create');
                 Route::post('/confirm', [PengaduanController::class, 'confirm'])->name('confirm');
                 Route::post('/', [PengaduanController::class, 'store'])->name('store');
-
-                // Mahasiswa: tandai selesai & ajukan ulang
-                Route::post('/{pengaduan}/close', [PengaduanController::class, 'closeByMahasiswa'])
-                    ->name('close')->whereNumber('pengaduan');
-                Route::post('/{pengaduan}/reopen', [PengaduanController::class, 'reopen'])
-                    ->name('reopen')->whereNumber('pengaduan');
             });
 
             // Akses pengaduan: mahasiswa, pengurus himpunan, dan staff (dosen/gpm/admin)
@@ -170,14 +162,10 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->name('show');
             });
 
-            // Admin: jawab langsung, delegasi, forward, tutup paksa
+            // Admin: delegasi, tutup paksa
             Route::middleware('role:admin|superadmin|admin_kemahasiswaan|gpm|dpm|ketua_departemen')->group(function () {
-                Route::post('/{pengaduan}/reply', [PengaduanController::class, 'reply'])
-                    ->name('reply')->whereNumber('pengaduan');
                 Route::post('/{pengaduan}/delegate', [PengaduanController::class, 'delegate'])
                     ->name('delegate')->whereNumber('pengaduan');
-                Route::post('/{pengaduan}/forward', [PengaduanController::class, 'forwardAnswer'])
-                    ->name('forward')->whereNumber('pengaduan');
                 Route::post('/{pengaduan}/close-admin', [PengaduanController::class, 'closeByAdmin'])
                     ->name('close.admin')->whereNumber('pengaduan');
             });

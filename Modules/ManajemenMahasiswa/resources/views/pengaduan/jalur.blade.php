@@ -39,8 +39,8 @@
                 display: flex;
                 flex-direction: column;
                 background: #ffffff;
-                border: 2px solid #e5e7eb;
-                border-radius: 18px;
+                border: 1px solid #DDE1E8;
+                border-radius: 12px;
                 padding: 32px 28px;
                 text-decoration: none;
                 color: inherit;
@@ -59,7 +59,7 @@
                 transition: opacity 0.22s;
             }
             .jalur-card.reguler::before {
-                background: linear-gradient(135deg, #4D4DFF, #7c7cff);
+                background: linear-gradient(135deg, #293C79, #6F7DA4);
             }
             .jalur-card.konfidensial::before {
                 background: linear-gradient(135deg, #475569, #94a3b8);
@@ -67,23 +67,23 @@
             .jalur-card:hover {
                 border-color: transparent;
                 transform: translateY(-4px);
-                box-shadow: 0 16px 48px rgba(0,0,0,0.10);
+                box-shadow: 0 8px 24px rgba(22,22,43,0.10);
             }
             .jalur-card.reguler:hover {
-                box-shadow: 0 16px 48px rgba(77,77,255,0.14);
+                box-shadow: 0 8px 24px rgba(41,60,121,0.18);
             }
             .jalur-card:hover::before {
                 opacity: 1;
             }
             .jalur-icon-wrap {
                 width: 56px; height: 56px;
-                border-radius: 14px;
+                border-radius: 12px;
                 display: flex;
                 align-items: center;
                 justify-content: center;
             }
             .jalur-card.reguler .jalur-icon-wrap {
-                background: #eef2ff;
+                background: #E7E8F0;
             }
             .jalur-card.konfidensial .jalur-icon-wrap {
                 background: #f1f5f9;
@@ -91,7 +91,7 @@
             .jalur-icon-wrap span {
                 font-size: 28px;
             }
-            .jalur-card.reguler .jalur-icon-wrap span { color: #4f46e5; }
+            .jalur-card.reguler .jalur-icon-wrap span { color: #293C79; }
             .jalur-card.konfidensial .jalur-icon-wrap span { color: #64748b; }
 
             .jalur-title {
@@ -114,7 +114,7 @@
                 align-items: center;
                 gap: 4px;
             }
-            .jalur-card.reguler .jalur-cta { color: #4D4DFF; }
+            .jalur-card.reguler .jalur-cta { color: #293C79; }
             .jalur-card.konfidensial .jalur-cta { color: #475569; }
 
             .jalur-pill {
@@ -126,8 +126,8 @@
                 align-self: flex-start;
             }
             .jalur-card.reguler .jalur-pill {
-                background: #e0e7ff;
-                color: #4f46e5;
+                background: #E7E8F0;
+                color: #293C79;
             }
             .jalur-card.konfidensial .jalur-pill {
                 background: #f1f5f9;

@@ -48,28 +48,7 @@ class PengaduanService
         return $pengaduan;
     }
 
-    public function closeByMahasiswa(Pengaduan $pengaduan, int $userId): void
-    {
-        $pengaduan->forceFill([
-            'status'    => Pengaduan::STATUS_SELESAI,
-            'closed_at' => now(),
-            'closed_by' => $userId,
-        ])->save();
 
-        $this->logAction($pengaduan, $userId, PengaduanLog::ACTION_DITUTUP_MAHASISWA);
-    }
-
-    public function reopenByMahasiswa(Pengaduan $pengaduan, int $userId, string $alasan): void
-    {
-        $pengaduan->forceFill([
-            'status'        => Pengaduan::STATUS_BARU,
-            'reopen_count'  => $pengaduan->reopen_count + 1,
-            'reopen_reason' => $alasan,
-            'auto_close_at' => null,
-        ])->save();
-
-        $this->logAction($pengaduan, $userId, PengaduanLog::ACTION_DIAJUKAN_ULANG, $alasan);
-    }
 
     // ── Lifecycle: Admin ───────────────────────────────────────────────────
 
@@ -88,23 +67,7 @@ class PengaduanService
         $this->logAction($pengaduan, $readerUserId, PengaduanLog::ACTION_DIBACA);
     }
 
-    /**
-     * Admin tangani sendiri (tanpa delegasi) — langsung kirim jawaban ke mahasiswa.
-     */
-    public function reply(Pengaduan $pengaduan, int $answererUserId, string $jawaban): Pengaduan
-    {
-        $pengaduan->forceFill([
-            'jawaban'       => $jawaban,
-            'answered_at'   => now(),
-            'answered_by'   => $answererUserId,
-            'status'        => Pengaduan::STATUS_DIJAWAB,
-            'auto_close_at' => now()->addDays(7),
-        ])->save();
 
-        $this->logAction($pengaduan, $answererUserId, PengaduanLog::ACTION_DIJAWAB);
-
-        return $pengaduan->fresh();
-    }
 
     /**
      * Admin mendelegasikan ke dosen.
@@ -130,29 +93,7 @@ class PengaduanService
         return $delegasi;
     }
 
-    /**
-     * Admin meneruskan tanggapan dosen ke mahasiswa (jawaban final).
-     */
-    public function forwardAnswer(Pengaduan $pengaduan, int $adminId, string $jawaban): Pengaduan
-    {
-        // Tandai delegasi aktif sebagai selesai
-        $pengaduan->delegasiAktif?->forceFill([
-            'status'       => PengaduanDelegasi::STATUS_DITANGGAPI,
-            'responded_at' => now(),
-        ])->save();
 
-        $pengaduan->forceFill([
-            'jawaban'       => $jawaban,
-            'answered_at'   => now(),
-            'answered_by'   => $adminId,
-            'status'        => Pengaduan::STATUS_DIJAWAB,
-            'auto_close_at' => now()->addDays(7),
-        ])->save();
-
-        $this->logAction($pengaduan, $adminId, PengaduanLog::ACTION_DIJAWAB);
-
-        return $pengaduan->fresh();
-    }
 
     /**
      * Admin menutup tiket secara paksa.
@@ -171,25 +112,26 @@ class PengaduanService
     // ── Lifecycle: Dosen ───────────────────────────────────────────────────
 
     /**
-     * Dosen menanggapi delegasi dan mengirim balik ke admin.
+     * Dosen menyelesaikan tugas delegasi dan menutup pengaduan.
      */
-    public function dosenRespond(PengaduanDelegasi $delegasi, string $tanggapan, string $notesBalik): void
+    public function dosenRespond(PengaduanDelegasi $delegasi, ?string $notesBalik): void
     {
         $delegasi->forceFill([
-            'tanggapan'    => $tanggapan,
             'notes_balik'  => $notesBalik,
             'status'       => PengaduanDelegasi::STATUS_DITANGGAPI,
             'responded_at' => now(),
         ])->save();
 
         $delegasi->pengaduan->forceFill([
-            'status' => Pengaduan::STATUS_DITANGGAPI_DOSEN,
+            'status'    => Pengaduan::STATUS_SELESAI,
+            'closed_at' => now(),
+            'closed_by' => $delegasi->delegated_to,
         ])->save();
 
         $this->logAction(
             $delegasi->pengaduan,
             $delegasi->delegated_to,
-            PengaduanLog::ACTION_DITANGGAPI_DOSEN,
+            PengaduanLog::ACTION_DITUTUP_ADMIN,
             $notesBalik
         );
     }
@@ -217,30 +159,7 @@ class PengaduanService
         );
     }
 
-    // ── Scheduler ─────────────────────────────────────────────────────────
 
-    /**
-     * Dipanggil oleh command pengaduan:auto-close setiap hari.
-     * Menutup tiket yang sudah dijawab lebih dari 7 hari tanpa respons mahasiswa.
-     */
-    public function autoCloseExpired(): int
-    {
-        $tikets = Pengaduan::query()
-            ->where('status', Pengaduan::STATUS_DIJAWAB)
-            ->where('auto_close_at', '<=', now())
-            ->get();
-
-        foreach ($tikets as $tiket) {
-            $tiket->forceFill([
-                'status'    => Pengaduan::STATUS_SELESAI,
-                'closed_at' => now(),
-            ])->save();
-
-            $this->logAction($tiket, null, PengaduanLog::ACTION_DITUTUP_OTOMATIS);
-        }
-
-        return $tikets->count();
-    }
 
     // ── Internal helper ───────────────────────────────────────────────────
 

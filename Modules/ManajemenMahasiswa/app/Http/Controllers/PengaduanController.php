@@ -16,6 +16,7 @@ class PengaduanController extends Controller
         'mahasiswa',
         'dosen',
         'gpm',
+        'kaprodi',
         'admin',
         'superadmin',
         'admin_kemahasiswaan',
@@ -24,6 +25,7 @@ class PengaduanController extends Controller
     private const STAFF_VIEW_ROLES = [
         'dosen',
         'gpm',
+        'kaprodi',
         'admin',
         'superadmin',
         'admin_kemahasiswaan',
@@ -31,6 +33,7 @@ class PengaduanController extends Controller
 
     private const REPLY_ROLES = [
         'gpm',
+        'kaprodi',
         'admin',
         'superadmin',
         'admin_kemahasiswaan',
@@ -38,6 +41,7 @@ class PengaduanController extends Controller
 
     private const DELETE_ROLES = [
         'gpm',
+        'kaprodi',
         'admin',
         'superadmin',
         'admin_kemahasiswaan',
@@ -69,13 +73,10 @@ class PengaduanController extends Controller
             Pengaduan::STATUS_BARU,
             Pengaduan::STATUS_DIBACA,
             Pengaduan::STATUS_DIDELEGASIKAN,
-            Pengaduan::STATUS_DITANGGAPI_DOSEN,
-            Pengaduan::STATUS_DIJAWAB,
-            Pengaduan::STATUS_DIAJUKAN_ULANG,
             Pengaduan::STATUS_SELESAI,
         ];
 
-        $isDosenOnly = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['dosen', 'dosen_koordinator']) && !$user->hasAnyRole(['admin', 'superadmin', 'admin_kemahasiswaan', 'gpm']);
+        $isDosenOnly = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['dosen', 'dosen_koordinator']) && !$user->hasAnyRole(['admin', 'superadmin', 'admin_kemahasiswaan', 'gpm', 'kaprodi']);
 
         $query = Pengaduan::query();
         if ($isStaff) {
@@ -93,6 +94,9 @@ class PengaduanController extends Controller
         }
 
         $query->where('status', '!=', Pengaduan::STATUS_DRAFT);
+
+        // ── Base query untuk stats (sebelum filter user) ─────────
+        $baseQuery = clone $query;
 
         if ($filters['kategori'] !== '' && in_array($filters['kategori'], $allowedKategori, true)) {
             $kategoriUtama = $filters['kategori'];
@@ -118,13 +122,52 @@ class PengaduanController extends Controller
             });
         }
 
-        $belumDijawabCount = (clone $query)
-            ->whereNotIn('status', [Pengaduan::STATUS_DIJAWAB, Pengaduan::STATUS_SELESAI])
+        $belumDijawabCount = (clone $baseQuery)
+            ->where('status', '!=', Pengaduan::STATUS_SELESAI)
             ->count();
 
-        $selesaiCount = (clone $query)
+        $selesaiCount = (clone $baseQuery)
             ->where('status', Pengaduan::STATUS_SELESAI)
             ->count();
+
+        // ── Stats lanjutan per role ──────────────────────────────
+        $summaryStats = [];
+
+        if ($isStaff) {
+            $perluDitindakCount = (clone $baseQuery)
+                ->where('status', Pengaduan::STATUS_BARU)
+                ->count();
+
+            $baruCount = $perluDitindakCount;
+
+            $menungguDosenCount = (clone $baseQuery)
+                ->where('status', Pengaduan::STATUS_DIDELEGASIKAN)
+                ->count();
+
+            $totalNonDraft = (clone $baseQuery)->count();
+            $ditanganiCount = (clone $baseQuery)
+                ->where('status', Pengaduan::STATUS_SELESAI)
+                ->count();
+            $responsivitas = $totalNonDraft > 0 ? round($ditanganiCount / $totalNonDraft * 100) : 0;
+
+            // Distribusi per kategori (top 5)
+            $kategoriDistribusi = (clone $baseQuery)
+                ->selectRaw("kategori, COUNT(*) as total")
+                ->groupBy('kategori')
+                ->orderByDesc('total')
+                ->limit(5)
+                ->pluck('total', 'kategori');
+
+            $summaryStats = compact(
+                'perluDitindakCount', 'baruCount',
+                'menungguDosenCount',
+                'responsivitas', 'ditanganiCount', 'totalNonDraft',
+                'kategoriDistribusi',
+            );
+        } else {
+            // Mahasiswa stats disederhanakan
+            $summaryStats = [];
+        }
 
         $pengaduan = $query
             ->orderByDesc('created_at')
@@ -136,15 +179,15 @@ class PengaduanController extends Controller
             Pengaduan::STATUS_BARU => 'Baru',
             Pengaduan::STATUS_DIBACA => 'Dibaca',
             Pengaduan::STATUS_DIDELEGASIKAN => 'Didelegasikan',
-            Pengaduan::STATUS_DITANGGAPI_DOSEN => 'Ditanggapi Dosen',
-            Pengaduan::STATUS_DIJAWAB => 'Dijawab',
-            Pengaduan::STATUS_DIAJUKAN_ULANG => 'Diajukan Ulang',
             Pengaduan::STATUS_SELESAI => 'Selesai',
         ];
+
+        $isDosenOnlyView = $isDosenOnly;
 
         return view('manajemenmahasiswa::pengaduan.index', compact(
             'pengaduan',
             'isStaff',
+            'isDosenOnlyView',
             'canCreate',
             'canDelete',
             'filters',
@@ -152,6 +195,7 @@ class PengaduanController extends Controller
             'statusOptions',
             'belumDijawabCount',
             'selesaiCount',
+            'summaryStats',
         ));
     }
 
@@ -257,7 +301,7 @@ class PengaduanController extends Controller
             abort(403, 'Anda tidak memiliki akses ke pengaduan ini.');
         }
 
-        $isDosenOnly = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['dosen', 'dosen_koordinator']) && !$user->hasAnyRole(['admin', 'superadmin', 'admin_kemahasiswaan', 'gpm']);
+        $isDosenOnly = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['dosen', 'dosen_koordinator']) && !$user->hasAnyRole(['admin', 'superadmin', 'admin_kemahasiswaan', 'gpm', 'kaprodi']);
         if ($isDosenOnly) {
             $hasDelegation = $pengaduan->delegasi()->where('delegated_to', $user->id)->exists();
             if (!$hasDelegation) {
@@ -295,24 +339,6 @@ class PengaduanController extends Controller
         ));
     }
 
-    public function reply(Request $request, Pengaduan $pengaduan)
-    {
-        $user = $request->user();
-
-        $this->ensureViewer($user);
-
-        if (!$this->canReply($user)) {
-            abort(403, 'Anda tidak memiliki akses untuk menjawab pengaduan.');
-        }
-
-        $validated = $request->validate([
-            'jawaban' => ['required', 'string', 'min:5', 'max:5000'],
-        ]);
-
-        $this->pengaduanService->reply($pengaduan, $user->id, $validated['jawaban']);
-
-        return back()->with('success', 'Jawaban berhasil dikirim.');
-    }
 
     public function destroy(Request $request, Pengaduan $pengaduan)
     {
@@ -357,25 +383,6 @@ class PengaduanController extends Controller
         return back()->with('success', 'Pengaduan berhasil didelegasikan.');
     }
 
-    public function forwardAnswer(Request $request, Pengaduan $pengaduan)
-    {
-        $user = $request->user();
-        $this->ensureViewer($user);
-        if (!$this->canReply($user)) {
-            abort(403);
-        }
-        if ($pengaduan->status !== Pengaduan::STATUS_DITANGGAPI_DOSEN) {
-            abort(403, 'Pengaduan belum ditanggapi dosen.');
-        }
-
-        $validated = $request->validate([
-            'jawaban' => ['required', 'string', 'min:5', 'max:5000'],
-        ]);
-
-        $this->pengaduanService->forwardAnswer($pengaduan, $user->id, $validated['jawaban']);
-
-        return back()->with('success', 'Jawaban berhasil diteruskan ke mahasiswa.');
-    }
 
     public function closeByAdmin(Request $request, Pengaduan $pengaduan)
     {
@@ -393,43 +400,6 @@ class PengaduanController extends Controller
         return back()->with('success', 'Tiket berhasil ditutup.');
     }
 
-    public function closeByMahasiswa(Request $request, Pengaduan $pengaduan)
-    {
-        $user = $request->user();
-        $this->ensureMahasiswa($user);
-
-        if ($pengaduan->user_id !== $user->id) {
-            abort(403);
-        }
-        if ($pengaduan->status !== Pengaduan::STATUS_DIJAWAB) {
-            abort(403, 'Tiket belum dijawab.');
-        }
-
-        $this->pengaduanService->closeByMahasiswa($pengaduan, $user->id);
-
-        return back()->with('success', 'Terima kasih! Tiket pengaduan telah ditutup.');
-    }
-
-    public function reopen(Request $request, Pengaduan $pengaduan)
-    {
-        $user = $request->user();
-        $this->ensureMahasiswa($user);
-
-        if ($pengaduan->user_id !== $user->id) {
-            abort(403);
-        }
-        if (!$pengaduan->canReopen()) {
-            abort(403, 'Pengaduan tidak dapat diajukan ulang.');
-        }
-
-        $validated = $request->validate([
-            'reopen_reason' => ['required', 'string', 'min:10', 'max:1000'],
-        ]);
-
-        $this->pengaduanService->reopenByMahasiswa($pengaduan, $user->id, $validated['reopen_reason']);
-
-        return back()->with('success', 'Pengaduan berhasil diajukan ulang. Kami akan segera meninjau kembali.');
-    }
 
     private function ensureViewer($user): void
     {

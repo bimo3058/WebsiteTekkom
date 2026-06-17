@@ -12,11 +12,11 @@
             }
             .success-card {
                 background: #ffffff;
-                border-radius: 16px;
+                border-radius: 12px;
                 padding: 48px 40px;
                 text-align: center;
-                box-shadow: 0 10px 40px rgba(0,0,0,0.08);
-                border: 1px solid #e5e7eb;
+                box-shadow: 0 4px 16px rgba(22,22,43,0.08);
+                border: 1px solid #DDE1E8;
                 max-width: 600px;
                 width: 100%;
             }
@@ -35,7 +35,7 @@
             }
             .link-box {
                 background: #f8fafc;
-                border: 2px dashed #cbd5e1;
+                border: 2px dashed #DDE1E8;
                 border-radius: 12px;
                 padding: 24px;
                 margin: 32px 0;
@@ -44,7 +44,7 @@
                 font-family: monospace;
                 font-size: 16px;
                 font-weight: 600;
-                color: #4D4DFF;
+                color: #293C79;
                 word-break: break-all;
                 margin-bottom: 16px;
                 display: block;
@@ -53,7 +53,7 @@
                 background: #111827;
                 color: white;
                 border: none;
-                border-radius: 8px;
+                border-radius: 12px;
                 padding: 10px 24px;
                 font-weight: 600;
                 display: inline-flex;
@@ -92,7 +92,7 @@
                 ⚠️ Tautan ini bersifat sangat rahasia. Jika hilang, Anda tidak dapat memulihkannya. Pastikan Anda menyalinnya sebelum membuka form.
             </p>
 
-            <a href="{{ $trackUrl }}" target="_blank" class="btn btn-outline-secondary fw-bold px-4 py-2" style="border-radius: 8px;">
+            <a href="{{ $trackUrl }}" target="_blank" class="btn btn-outline-secondary fw-bold px-4 py-2" style="border-radius: 12px;">
                 Buka Form Pengaduan (Tab Baru)
             </a>
         </div>

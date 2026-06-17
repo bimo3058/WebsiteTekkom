@@ -352,8 +352,7 @@ class DashboardAnalitikService
             // Responsivitas layanan pengaduan — % yang sudah ditangani
             $totalPengaduan = Pengaduan::where('status', '!=', Pengaduan::STATUS_DRAFT)->count();
             $pengaduanDitangani = Pengaduan::whereIn('status', [
-                Pengaduan::STATUS_DIJAWAB,
-                Pengaduan::STATUS_DITANGGAPI_DOSEN,
+                Pengaduan::STATUS_DIDELEGASIKAN,
                 Pengaduan::STATUS_SELESAI,
             ])->count();
 
