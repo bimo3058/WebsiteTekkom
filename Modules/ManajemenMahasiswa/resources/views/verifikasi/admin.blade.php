@@ -103,6 +103,32 @@
     .tingkat-badge.regional { background: #f3e8ff; color: #7c3aed; }
     .tingkat-badge.universitas { background: #dcfce7; color: #166534; }
     .tingkat-badge.prodi { background: #eef2ff; color: #4f46e5; }
+
+    /* ── Reward Badge & Aksi (Request Bu Bellia / B.2 — SK FT 774) ── */
+    .claim-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; display: inline-block; }
+    .claim-badge.belum     { background: #f3f4f6; color: #6b7280; }
+    .claim-badge.diajukan  { background: #dbeafe; color: #1e40af; }
+    .claim-badge.disetujui { background: #dcfce7; color: #166534; }
+    .claim-badge.ditolak   { background: #fef2f2; color: #dc2626; }
+
+    .reward-mini { font-size: 11px; color: #6b7280; margin-top: 4px; max-width: 200px; line-height: 1.4; }
+
+    .btn-tinjau {
+        background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; padding: 5px 12px;
+        border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-tinjau:hover { background: #e0e7ff; }
+
+    .tinjau-info {
+        font-size: 13px; color: #374151; background: #f8fafc; border: 1px solid #e5e7eb;
+        border-radius: 10px; padding: 12px 14px; line-height: 1.7;
+    }
+    .tinjau-info .lbl { color: #9ca3af; }
+    .kuota-pill {
+        display: inline-block; margin-top: 10px; font-size: 12px; font-weight: 600;
+        padding: 5px 12px; border-radius: 20px; background: #eef2ff; color: #4f46e5;
+    }
+    .kuota-pill.penuh { background: #fef2f2; color: #dc2626; }
 </style>
 
 <!-- Flash Messages -->
@@ -114,19 +140,52 @@
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
 @endif
+@if(session('error'))
+    <div class="alert alert-danger alert-dismissible fade show" role="alert"
+         style="border-radius: 10px; border: none; background: #fef2f2; color: #dc2626; font-weight: 500; font-size: 14px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        {{ session('error') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
+@if($errors->any())
+    <div class="alert alert-danger alert-dismissible fade show" role="alert"
+         style="border-radius: 10px; border: none; background: #fef2f2; color: #dc2626; font-weight: 500; font-size: 14px;">
+        <ul style="margin: 0; padding-left: 18px;">
+            @foreach($errors->all() as $err)
+                <li>{{ $err }}</li>
+            @endforeach
+        </ul>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+@endif
 
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-start mb-4">
     <div>
-        <h3 class="fw-bold mb-1 text-dark">Verifikasi Data Mahasiswa</h3>
-        <p class="text-dark fw-bold mb-0" style="font-size: 14px;">Review dan verifikasi data riwayat kegiatan serta prestasi lomba</p>
+        @if($tab === 'prestasi')
+            <h3 class="fw-bold mb-1 text-dark">Verifikasi Prestasi</h3>
+            <p class="text-dark fw-bold mb-0" style="font-size: 14px;">Review &amp; verifikasi prestasi lomba yang diajukan mahasiswa</p>
+        @else
+            <h3 class="fw-bold mb-1 text-dark">Verifikasi Riwayat Kegiatan</h3>
+            <p class="text-dark fw-bold mb-0" style="font-size: 14px;">Review &amp; verifikasi riwayat keikutsertaan kegiatan yang diajukan mahasiswa</p>
+        @endif
     </div>
+    @if($tab === 'prestasi')
+        <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}"
+           style="background:#4f46e5; color:#fff; font-weight:600; font-size:13px; padding:10px 18px; border-radius:10px; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; gap:8px;">
+            🎁 Klaim Reward
+            @if($pendingPrestasiReward > 0)
+                <span style="background:#fff; color:#4f46e5; font-size:11px; font-weight:700; padding:2px 8px; border-radius:50px;">{{ $pendingPrestasiReward }}</span>
+            @endif
+        </a>
+    @endif
 </div>
 
 <!-- Tabs & Filter Area -->
 <form method="GET" action="{{ route('manajemenmahasiswa.verifikasi.index') }}" id="filterForm">
     <input type="hidden" name="tab" value="{{ $tab }}">
-    
+
     <div class="d-flex flex-column flex-md-row gap-3 justify-content-between align-items-center mb-3">
         <!-- Search -->
         <div class="search-wrapper w-100 me-0 me-md-2">
@@ -152,21 +211,6 @@
         </div>
     </div>
 
-    <!-- Tabs (Filter Chips) -->
-    <div class="filter-section">
-        <a href="{{ route('manajemenmahasiswa.verifikasi.index', array_merge(request()->only(['status','search','angkatan']), ['tab' => 'riwayat'])) }}"
-           class="filter-chip {{ $tab === 'riwayat' ? 'active' : '' }}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
-            Riwayat Kegiatan
-            <span class="tab-badge {{ $pendingRiwayat == 0 ? 'zero' : '' }}">{{ $pendingRiwayat }}</span>
-        </a>
-        <a href="{{ route('manajemenmahasiswa.verifikasi.index', array_merge(request()->only(['status','search','angkatan']), ['tab' => 'prestasi'])) }}"
-           class="filter-chip {{ $tab === 'prestasi' ? 'active' : '' }}">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
-            Prestasi Lomba
-            <span class="tab-badge {{ $pendingPrestasi == 0 ? 'zero' : '' }}">{{ $pendingPrestasi }}</span>
-        </a>
-    </div>
 </form>
 
 <!-- Tab Content: Riwayat Kegiatan -->
@@ -270,6 +314,8 @@
 
 <!-- Tab Content: Prestasi Lomba -->
 @if($tab === 'prestasi')
+    @php $P = \Modules\ManajemenMahasiswa\Models\Prestasi::class; @endphp
+
     @if($prestasiData->count() > 0)
         <div class="form-card p-0" style="overflow-x: auto;">
             <table class="verif-table">
@@ -417,10 +463,10 @@
                         Anda akan menyetujui: <strong id="approveItemName" style="color: #1f2937;"></strong>
                     </p>
                     <div class="d-flex justify-content-between align-items-center mb-1">
-                        <label class="form-label fw-bold mb-0" style="font-size: 13px;">Catatan Persetujuan <span style="color: #16a34a;">*</span></label>
+                        <label class="form-label fw-bold mb-0" style="font-size: 13px;">Catatan Persetujuan <span style="font-weight: 400; color: #9ca3af;">(opsional)</span></label>
                         <span class="text-muted" style="font-size: 11px;" id="charCount_approve">0 / 200 huruf</span>
                     </div>
-                    <textarea name="verification_note" class="form-control" rows="3" required maxlength="200"
+                    <textarea name="verification_note" class="form-control" rows="3" maxlength="200"
                               placeholder="Contoh: Dokumen lengkap dan valid. Disetujui."
                               style="border-radius: 10px; font-size: 14px; border-color: #bbf7d0;"
                               onfocus="this.style.borderColor='#16a34a';this.style.boxShadow='0 0 0 3px rgba(22,163,74,0.1)'"

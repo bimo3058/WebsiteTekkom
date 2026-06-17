@@ -445,11 +445,27 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 ->group(function () {
                 Route::post('/riwayat', [VerifikasiController::class, 'storeRiwayat'])->name('riwayat.store');
                 Route::post('/prestasi', [VerifikasiController::class, 'storePrestasi'])->name('prestasi.store');
+
+                // Pengajuan reward prestasi — dilakukan mahasiswa pemilik (Request Bu Bellia / B.2)
+                Route::patch('/prestasi/{id}/reward/ajukan', [VerifikasiController::class, 'ajukanReward'])
+                    ->name('prestasi.reward.ajukan')->where('id', '[0-9]+');
+                Route::patch('/prestasi/{id}/reward/batal', [VerifikasiController::class, 'batalkanReward'])
+                    ->name('prestasi.reward.batal')->where('id', '[0-9]+');
             });
 
             // Approve/Reject — admin only
             Route::middleware('role:superadmin|admin|admin_kemahasiswaan')
                 ->group(function () {
+                // Halaman khusus daftar klaim reward prestasi (Request Bu Bellia / B.2)
+                Route::get('/klaim-reward', [VerifikasiController::class, 'rewardIndex'])
+                    ->name('reward.index');
+
+                // Dokumen aturan reward (SK FT 774 / aturan terbaru) — admin kelola
+                Route::post('/aturan', [VerifikasiController::class, 'aturanStore'])
+                    ->name('aturan.store');
+                Route::delete('/aturan/{id}', [VerifikasiController::class, 'aturanDestroy'])
+                    ->name('aturan.destroy')->where('id', '[0-9]+');
+
                 Route::patch('/riwayat/{id}/approve', [VerifikasiController::class, 'approveRiwayat'])
                     ->name('riwayat.approve')->where('id', '[0-9]+');
                 Route::patch('/riwayat/{id}/reject', [VerifikasiController::class, 'rejectRiwayat'])
@@ -458,6 +474,14 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->name('prestasi.approve')->where('id', '[0-9]+');
                 Route::patch('/prestasi/{id}/reject', [VerifikasiController::class, 'rejectPrestasi'])
                     ->name('prestasi.reject')->where('id', '[0-9]+');
+
+                // Persetujuan reward prestasi — admin/departemen (Request Bu Bellia / B.2)
+                Route::patch('/prestasi/{id}/reward/setujui', [VerifikasiController::class, 'setujuiReward'])
+                    ->name('prestasi.reward.setujui')->where('id', '[0-9]+');
+                Route::patch('/prestasi/{id}/reward/tolak', [VerifikasiController::class, 'tolakReward'])
+                    ->name('prestasi.reward.tolak')->where('id', '[0-9]+');
+                Route::patch('/prestasi/{id}/reward/batalkan-persetujuan', [VerifikasiController::class, 'batalkanPersetujuanReward'])
+                    ->name('prestasi.reward.batalkan')->where('id', '[0-9]+');
             });
         });
 

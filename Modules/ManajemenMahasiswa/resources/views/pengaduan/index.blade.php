@@ -88,7 +88,7 @@
                 overflow: hidden;
             }
             .table-custom th {
-                color: #6b7280;
+                color: #374151;
                 font-weight: 700;
                 font-size: 12px;
                 text-transform: uppercase;
@@ -114,7 +114,7 @@
             /* ── Badges ────────────────────────────────────────────── */
             .custom-badge {
                 font-size: 12px;
-                font-weight: 600;
+                font-weight: 700;
                 padding: 5px 12px;
                 border-radius: 20px;
                 white-space: nowrap;
@@ -273,7 +273,7 @@
                                 @endif
                             </td>
                             <td>
-                                <span class="custom-badge" style="background: #e0e7ff; color: #4f46e5;">
+                                <span class="custom-badge" style="background: #e0e7ff; color: #3730a3; font-weight: 700;">
                                     {{ $kategoriLabel }}
                                 </span>
                             </td>

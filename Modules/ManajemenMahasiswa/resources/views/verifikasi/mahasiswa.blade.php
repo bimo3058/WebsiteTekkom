@@ -84,6 +84,92 @@
     .tingkat-badge.universitas { background: #dcfce7; color: #166534; }
     .tingkat-badge.prodi { background: #eef2ff; color: #4f46e5; }
 
+    /* ── Reward Badge & Button (Request Bu Bellia / B.2 — SK FT 774) ── */
+    .claim-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; display: inline-block; }
+    .claim-badge.belum     { background: #f3f4f6; color: #6b7280; }
+    .claim-badge.diajukan  { background: #dbeafe; color: #1e40af; }
+    .claim-badge.disetujui { background: #dcfce7; color: #166534; }
+    .claim-badge.ditolak   { background: #fef2f2; color: #dc2626; }
+
+    .btn-claim {
+        background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; padding: 5px 12px;
+        border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-claim:hover { background: #e0e7ff; }
+    .btn-unclaim {
+        background: #f9fafb; color: #6b7280; border: 1px solid #e5e7eb; padding: 5px 12px;
+        border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-unclaim:hover { background: #f3f4f6; }
+
+    /* Kotak detail & preview jatah reward */
+    .reward-detail {
+        font-size: 11px; color: #374151; margin-top: 6px; padding: 6px 10px;
+        background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px;
+        line-height: 1.5; max-width: 100%;
+    }
+    .reward-detail .lbl { color: #6b7280; }
+    .reward-detail.ditolak { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+
+    /* Kolom reward: badge + tombol (detail dipindah ke modal Tinjau) */
+    .reward-stack { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
+    .reward-actions { display: flex; flex-wrap: wrap; gap: 6px; }
+    .btn-tinjau {
+        background: #ffffff; color: #4f46e5; border: 1px solid #c7d2fe; padding: 5px 12px;
+        border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+    }
+    .btn-tinjau:hover { background: #eef2ff; }
+
+    /* Isi modal detail reward (selaras dgn kotak tinjau sisi admin) */
+    .rd-info { font-size: 13px; color: #374151; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+    .rc-line { font-size: 13px; color: #374151; line-height: 1.4; }
+    .rc-line .rc-inv { font-size: 11px; color: #9ca3af; }
+    .rc-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+    .rc-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; min-width: 42px; }
+    .rc-pill { font-size: 12px; font-weight: 600; color: #4f46e5; background: #eef2ff; border-radius: 10px; padding: 2px 10px; }
+    .rc-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+    .rc-chip { font-size: 12px; color: #3730a3; background: #fff; border: 1px solid #c7d2fe; border-radius: 10px; padding: 2px 10px; }
+    .rc-note { font-size: 12px; color: #374151; line-height: 1.4; overflow-wrap: anywhere; }
+    .rc-note.ditolak { color: #b91c1c; }
+
+    /* Catatan verifikasi ringkas (clamp + tooltip), selaras dgn sisi admin */
+    .verif-note {
+        font-size: 11px; margin-top: 5px; max-width: 210px; line-height: 1.4;
+        overflow-wrap: anywhere;
+    }
+    .verif-note.approved { color: #15803d; }
+    .verif-note.rejected { color: #b91c1c; }
+    .jatah-preview {
+        margin-top: 10px; padding: 10px 12px; border-radius: 8px;
+        background: #eef2ff; border: 1px solid #c7d2fe; font-size: 13px; color: #3730a3;
+    }
+    .jatah-preview strong { font-weight: 700; }
+    .kuota-info {
+        font-size: 12px; color: #6b7280; background: #f8fafc; border: 1px solid #f3f4f6;
+        border-radius: 8px; padding: 8px 12px; margin-bottom: 12px;
+    }
+    .kuota-info b { color: #4f46e5; }
+
+    .aturan-box { background: #fff; border: 1px solid #eef2ff; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
+    .aturan-box-title { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 10px; }
+
+    /* Picker usulan mata kuliah (reward) */
+    .mk-chosen { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .mk-chip {
+        display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
+        color: #3730a3; background: #eef2ff; border: 1px solid #c7d2fe;
+        border-radius: 20px; padding: 4px 6px 4px 12px;
+    }
+    .mk-chip .mk-sks { font-weight: 500; color: #6366f1; }
+    .mk-chip .mk-remove {
+        width: 18px; height: 18px; border-radius: 50%; background: #c7d2fe; color: #3730a3;
+        border: none; font-size: 12px; font-weight: 700; cursor: pointer; line-height: 1;
+        display: inline-flex; align-items: center; justify-content: center;
+    }
+    .mk-chip .mk-remove:hover { background: #a5b4fc; }
+    .mk-counter { font-size: 12px; font-weight: 600; color: #6b7280; margin-top: 8px; }
+    .mk-counter.over { color: #dc2626; }
+
     .modal-content { border-radius: 16px; border: none; }
     .modal-header { border-bottom: 1px solid #f3f4f6; padding: 20px 24px; }
     .modal-body { padding: 24px; }
@@ -175,8 +261,13 @@
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-start mb-4">
     <div>
-        <h3 class="fw-bold mb-1 text-dark">Verifikasi Data Saya</h3>
-        <p class="text-dark fw-bold mb-0" style="font-size: 14px;">Ajukan riwayat kegiatan dan prestasi lomba Anda untuk diverifikasi oleh admin</p>
+        @if($tab === 'prestasi')
+            <h3 class="fw-bold mb-1 text-dark">Prestasi Saya</h3>
+            <p class="text-dark fw-bold mb-0" style="font-size: 14px;">Ajukan prestasi lomba untuk diverifikasi admin. Prestasi yang sudah disetujui bisa Anda ajukan rewardnya (konversi nilai mata kuliah, SK FT 774).</p>
+        @else
+            <h3 class="fw-bold mb-1 text-dark">Riwayat Kegiatan Saya</h3>
+            <p class="text-dark fw-bold mb-0" style="font-size: 14px;">Ajukan riwayat keikutsertaan kegiatan untuk diverifikasi admin.</p>
+        @endif
     </div>
 </div>
 
@@ -196,6 +287,15 @@
     </div>
 </div>
 
+@php
+    $canSubmit = auth()->user()->hasAnyRole([
+        'mahasiswa','pengurus_himpunan',
+        'ketua_himpunan','wakil_ketua_himpunan','ketua_bidang',
+        'ketua_unit','staff_himpunan','superadmin','admin','admin_kemahasiswaan'
+    ]);
+@endphp
+
+@if($tab === 'riwayat')
 <!-- Riwayat Kegiatan -->
 <div class="form-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -203,13 +303,6 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
             Riwayat Kegiatan
         </div>
-        @php
-            $canSubmit = auth()->user()->hasAnyRole([
-                'mahasiswa','pengurus_himpunan',
-                'ketua_himpunan','wakil_ketua_himpunan','ketua_bidang',
-                'ketua_unit','staff_himpunan','superadmin','admin','admin_kemahasiswaan'
-            ]);
-        @endphp
         @if($canSubmit)
             <button class="btn-submit" data-bs-toggle="modal" data-bs-target="#addRiwayatModal">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
@@ -269,13 +362,13 @@
                                     @endif
                                 </span>
                                 @if($rw->verification_status === 'rejected' && $rw->verification_note)
-                                    <div style="font-size: 11px; color: #b91c1c; margin-top: 6px; padding: 6px 10px; background: #fef2f2; border-left: 3px solid #ef4444; border-radius: 4px; overflow-wrap: anywhere; white-space: normal; width: 100%; box-sizing: border-box; line-height: 1.4;">
-                                        {{ $rw->verification_note }}
+                                    <div class="verif-note rejected" title="{{ $rw->verification_note }}">
+                                        💬 "{{ Str::limit($rw->verification_note, 60) }}"
                                     </div>
                                 @endif
                                 @if($rw->verification_status === 'approved' && $rw->verification_note)
-                                    <div style="font-size: 11px; color: #15803d; margin-top: 6px; padding: 6px 10px; background: #f0fdf4; border-left: 3px solid #22c55e; border-radius: 4px; overflow-wrap: anywhere; white-space: normal; width: 100%; box-sizing: border-box; line-height: 1.4;">
-                                        {{ $rw->verification_note }}
+                                    <div class="verif-note approved" title="{{ $rw->verification_note }}">
+                                        💬 "{{ Str::limit($rw->verification_note, 60) }}"
                                     </div>
                                 @endif
                             </td>
@@ -292,7 +385,9 @@
         </div>
     @endif
 </div>
+@endif
 
+@if($tab === 'prestasi')
 <!-- Prestasi Lomba -->
 <div class="form-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
@@ -308,17 +403,33 @@
         @endif
     </div>
 
+    <div class="kuota-info">
+        Kuota reward Anda (SK FT 774): umum <b>{{ $kuota['umum'] ?? 0 }}/2</b> &nbsp;•&nbsp; invention/expo/fair <b>{{ $kuota['invention'] ?? 0 }}/1</b>.
+        Reward = peningkatan nilai mata kuliah; mata kuliah final ditetapkan departemen.
+    </div>
+
+    @if($rewardAturan->count())
+        <div class="aturan-box">
+            <div class="aturan-box-title">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                Aturan Reward (SK FT 774)
+            </div>
+            @include('manajemenmahasiswa::verifikasi._aturan_links', ['items' => $rewardAturan])
+        </div>
+    @endif
+
     @if($prestasiData->count() > 0)
         <div style="overflow-x: auto;">
             <table class="verif-table">
                 <thead>
                     <tr>
-                        <th style="width: 5%;">#</th>
-                        <th style="width: 35%;">Nama Prestasi</th>
-                        <th style="width: 15%;">Tingkat</th>
-                        <th style="width: 12%;">Tanggal</th>
-                        <th style="width: 10%;">Bukti</th>
-                        <th style="width: 23%;">Status</th>
+                        <th style="width: 4%;">#</th>
+                        <th style="width: 26%;">Nama Prestasi</th>
+                        <th style="width: 11%;">Tingkat</th>
+                        <th style="width: 10%;">Tanggal</th>
+                        <th style="width: 8%;">Bukti</th>
+                        <th style="width: 19%;">Status Verifikasi</th>
+                        <th style="width: 22%;">Reward</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -359,14 +470,70 @@
                                     @endif
                                 </span>
                                 @if($p->verification_status === 'rejected' && $p->verification_note)
-                                    <div style="font-size: 11px; color: #b91c1c; margin-top: 6px; padding: 6px 10px; background: #fef2f2; border-left: 3px solid #ef4444; border-radius: 4px; overflow-wrap: anywhere; white-space: normal; width: 100%; box-sizing: border-box; line-height: 1.4;">
-                                        {{ $p->verification_note }}
+                                    <div class="verif-note rejected" title="{{ $p->verification_note }}">
+                                        💬 "{{ Str::limit($p->verification_note, 60) }}"
                                     </div>
                                 @endif
                                 @if($p->verification_status === 'approved' && $p->verification_note)
-                                    <div style="font-size: 11px; color: #15803d; margin-top: 6px; padding: 6px 10px; background: #f0fdf4; border-left: 3px solid #22c55e; border-radius: 4px; overflow-wrap: anywhere; white-space: normal; width: 100%; box-sizing: border-box; line-height: 1.4;">
-                                        {{ $p->verification_note }}
+                                    <div class="verif-note approved" title="{{ $p->verification_note }}">
+                                        💬 "{{ Str::limit($p->verification_note, 60) }}"
                                     </div>
+                                @endif
+                            </td>
+                            <td>
+                                @if($p->verification_status === 'approved')
+                                    @php
+                                        $rdData = [
+                                            'nama'          => $p->nama_prestasi,
+                                            'status'        => $p->reward_status,
+                                            'penyelenggara' => $p->reward_penyelenggara_label,
+                                            'capaian'       => $p->reward_capaian_label,
+                                            'invention'     => (bool) $p->reward_is_invention,
+                                            'jml_mk_max'    => $p->reward_jml_mk_max,
+                                            'sks_max'       => $p->reward_sks_max,
+                                            'mk'            => $p->reward_mk_diajukan ?? [],
+                                            'mk_disetujui'  => $p->reward_mk_disetujui,
+                                            'note'          => $p->reward_note,
+                                        ];
+                                    @endphp
+                                    @if($p->reward_status === \Modules\ManajemenMahasiswa\Models\Prestasi::CLAIM_DIAJUKAN)
+                                        <div class="reward-stack">
+                                            <span class="claim-badge diajukan">● Menunggu persetujuan</span>
+                                            <div class="reward-actions">
+                                                <button type="button" class="btn-tinjau" onclick="openRewardDetail(@js($rdData))">Tinjau</button>
+                                                <form method="POST" id="batalRewardForm{{ $p->id }}" action="{{ route('manajemenmahasiswa.verifikasi.prestasi.reward.batal', $p->id) }}" style="margin:0;">
+                                                    @csrf @method('PATCH')
+                                                    <button type="button" class="btn-unclaim"
+                                                            onclick="openBatalConfirm('batalRewardForm{{ $p->id }}', @js($p->nama_prestasi))">Batalkan</button>
+                                                </form>
+                                            </div>
+                                        </div>
+                                    @elseif($p->reward_status === \Modules\ManajemenMahasiswa\Models\Prestasi::CLAIM_DISETUJUI)
+                                        <div class="reward-stack">
+                                            <span class="claim-badge disetujui">✓ Reward disetujui</span>
+                                            <div class="reward-actions">
+                                                <button type="button" class="btn-tinjau" onclick="openRewardDetail(@js($rdData))">Tinjau</button>
+                                            </div>
+                                        </div>
+                                    @elseif($p->reward_status === \Modules\ManajemenMahasiswa\Models\Prestasi::CLAIM_DITOLAK)
+                                        <div class="reward-stack">
+                                            <span class="claim-badge ditolak">✗ Reward ditolak</span>
+                                            <div class="reward-actions">
+                                                <button type="button" class="btn-tinjau" onclick="openRewardDetail(@js($rdData))">Tinjau</button>
+                                                <button type="button" class="btn-claim"
+                                                        onclick="openAjukanReward({{ $p->id }}, @js($p->nama_prestasi))">Ajukan Ulang</button>
+                                            </div>
+                                        </div>
+                                    @else
+                                        <div class="reward-stack">
+                                            <span class="claim-badge belum">● Belum diajukan</span>
+                                            <button type="button" class="btn-claim"
+                                                    onclick="openAjukanReward({{ $p->id }}, @js($p->nama_prestasi))">Ajukan Reward</button>
+                                        </div>
+                                    @endif
+                                @else
+                                    <span style="color: #d1d5db;">—</span>
+                                    <div style="font-size: 11px; color: #9ca3af; margin-top: 4px;">Tersedia setelah disetujui</div>
                                 @endif
                             </td>
                         </tr>
@@ -382,6 +549,7 @@
         </div>
     @endif
 </div>
+@endif
 
 <!-- Modal Ajukan Riwayat -->
 <div class="modal fade" id="addRiwayatModal" tabindex="-1">
@@ -514,6 +682,141 @@
     </div>
 </div>
 
+<!-- Modal Ajukan Reward Prestasi (SK FT 774) -->
+<div class="modal fade" id="ajukanRewardModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="ajukanRewardForm">
+                @csrf @method('PATCH')
+                <div class="modal-header">
+                    <h5 class="modal-title fw-bold">Ajukan Reward Prestasi</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <p style="font-size: 13px; color: #6b7280; margin-bottom: 16px;">
+                        Prestasi: <strong id="arNamaPrestasi" style="color:#1f2937;"></strong>
+                    </p>
+                    <div class="mb-3">
+                        <label class="form-label-custom">Kategori Penyelenggara <span style="color:#dc2626;">*</span></label>
+                        <select name="reward_penyelenggara" id="arPenyelenggara" class="form-select form-select-custom" required>
+                            <option value="">Pilih kategori...</option>
+                            @foreach(\Modules\ManajemenMahasiswa\Models\Prestasi::PENYELENGGARA_LABELS as $val => $lbl)
+                                <option value="{{ $val }}">{{ $lbl }}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-custom">Capaian / Peringkat <span style="color:#dc2626;">*</span></label>
+                        <select name="reward_capaian" id="arCapaian" class="form-select form-select-custom" required disabled>
+                            <option value="">Pilih penyelenggara dulu...</option>
+                        </select>
+                    </div>
+                    <div class="mb-3" id="arInventionWrap" style="display:none;">
+                        <label style="font-size:13px; color:#374151; display:flex; align-items:flex-start; gap:8px; cursor:pointer;">
+                            <input type="checkbox" name="reward_is_invention" id="arInvention" value="1" style="margin-top:3px;">
+                            <span>Kegiatan bertema <b>invention / innovation / exhibition / convention / expo / inventor / fair</b> dsb. (SK 774 poin 2.e–2.f). Jika dicentang, jatah maks 2 SKS &amp; kuota khusus 1×.</span>
+                        </label>
+                    </div>
+                    <div class="jatah-preview" id="arJatahPreview" style="display:none;"></div>
+
+                    <div class="mb-3 mt-3" id="arMkWrap" style="display:none;">
+                        <label class="form-label-custom">
+                            Usulan Mata Kuliah yang Dinaikkan Nilainya <span style="color:#dc2626;">*</span>
+                            <span style="font-weight:400; color:#9ca3af;">(maks <span id="arMkMax">0</span> MK)</span>
+                        </label>
+                        <div class="d-flex gap-2">
+                            <select id="arMkSelect" class="form-select form-select-custom" style="flex:1;">
+                                <option value="">Pilih mata kuliah...</option>
+                                @foreach(\Modules\ManajemenMahasiswa\Models\Prestasi::MATA_KULIAH as $smt => $mks)
+                                    <optgroup label="{{ $smt }}">
+                                        @foreach($mks as $namaMk => $sksMk)
+                                            <option value="{{ $namaMk }}">{{ $namaMk }} ({{ $sksMk }} SKS)</option>
+                                        @endforeach
+                                    </optgroup>
+                                @endforeach
+                            </select>
+                            <button type="button" class="btn-claim" id="arMkAddBtn" style="white-space:nowrap;">+ Tambah</button>
+                        </div>
+                        <div id="arMkChosen" class="mk-chosen"></div>
+                        <div id="arMkCounter" class="mk-counter"></div>
+                        <div id="arMkHidden"></div>
+                        <small class="text-muted" style="font-size:11px;">Pilih MK kurikulum Teknik Komputer yang nilainya ingin dinaikkan (syarat min. C). Ini usulan; MK final ditetapkan departemen.</small>
+                    </div>
+
+                    <div style="font-size:11px; color:#9ca3af; margin-top:10px; line-height:1.5;">
+                        Catatan: mata kuliah yang dinaikkan nilainya ditetapkan departemen/prodi saat persetujuan. Reward hanya untuk MK bernilai minimal C, maks 2× (atau 1× untuk invention) selama studi.
+                    </div>
+                    <div class="mt-3 pt-3" style="border-top:1px solid #f3f4f6;">
+                        <label class="form-label-custom mb-2 d-block">📄 Aturan Reward (SK FT 774)</label>
+                        @include('manajemenmahasiswa::verifikasi._aturan_links', ['items' => $rewardAturan])
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius:10px; font-weight:600; padding:10px 20px;">Batal</button>
+                    <button type="submit" class="btn-submit" id="arSubmitBtn" disabled>Ajukan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+@php
+    $rewardJatahMap = [];
+    foreach (\Modules\ManajemenMahasiswa\Models\Prestasi::CAPAIAN_BY_PENYELENGGARA as $peny => $caps) {
+        foreach ($caps as $cap) {
+            $rewardJatahMap[$peny][$cap] = \Modules\ManajemenMahasiswa\Models\Prestasi::hitungJatahReward($peny, $cap, false);
+        }
+    }
+    $rewardJatahInvention = \Modules\ManajemenMahasiswa\Models\Prestasi::hitungJatahReward(
+        \Modules\ManajemenMahasiswa\Models\Prestasi::PENYELENGGARA_LAINNYA,
+        \Modules\ManajemenMahasiswa\Models\Prestasi::CAPAIAN_FINALIS,
+        true
+    );
+@endphp
+
+<!-- Modal Konfirmasi Batalkan Pengajuan Reward -->
+<div class="modal fade" id="claimConfirmModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+        <div class="modal-content">
+            <div class="modal-body" style="padding: 28px 24px 20px; text-align: center;">
+                <div id="claimConfirmIcon" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;"></div>
+                <h5 id="claimConfirmTitle" class="fw-bold mb-2" style="color: #1f2937;"></h5>
+                <p id="claimConfirmText" style="color: #6b7280; font-size: 14px; line-height: 1.5; margin-bottom: 0;"></p>
+            </div>
+            <div class="modal-footer" style="justify-content: center; gap: 8px;">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px; font-weight: 600; padding: 10px 20px;">Batal</button>
+                <button type="button" id="claimConfirmBtn" style="border-radius: 10px; font-weight: 600; font-size: 14px; padding: 10px 20px; border: none; cursor: pointer; color: #fff;"></button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Detail Reward (Tinjau) -->
+<div class="modal fade" id="rewardDetailModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" style="color:#4f46e5;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+                    Detail Reward Prestasi
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p style="font-size:13px; color:#6b7280; margin-bottom:12px;">Prestasi: <strong id="rdNama" style="color:#1f2937;"></strong></p>
+                <div id="rdStatus" style="margin-bottom:12px;"></div>
+                <div class="rd-info" id="rdInfo"></div>
+                <div style="font-size:11px; color:#9ca3af; margin-top:12px; line-height:1.5;">
+                    Reward = peningkatan nilai mata kuliah (SK FT 774). Mata kuliah final ditetapkan departemen; keputusan akhir di Bidang Akademik Fakultas.
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius:10px; font-weight:600; padding:10px 20px;">Tutup</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Lightbox Overlay -->
 <div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightbox()">
     <span class="lightbox-close" onclick="closeLightbox()">&times;</span>
@@ -522,6 +825,51 @@
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 <script>
+// =========================================================================
+// Detail Reward (Tinjau) — tampilkan info reward di modal (read-only)
+// =========================================================================
+function rdEscape(s) {
+    return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function openRewardDetail(data) {
+    document.getElementById('rdNama').textContent = data.nama || '-';
+
+    const map = {
+        diajukan:  ['diajukan',  '● Menunggu persetujuan'],
+        disetujui: ['disetujui', '✓ Reward disetujui'],
+        ditolak:   ['ditolak',   '✗ Reward ditolak'],
+    };
+    const m = map[data.status] || ['belum', '● Belum diajukan'];
+    document.getElementById('rdStatus').innerHTML = '<span class="claim-badge ' + m[0] + '">' + m[1] + '</span>';
+
+    let html = '';
+    const inv = data.invention ? ' <span class="rc-inv">(invention/expo/fair)</span>' : '';
+    if (data.penyelenggara) {
+        html += '<div class="rc-line">' + rdEscape(data.penyelenggara) + ' · ' + rdEscape(data.capaian) + inv + '</div>';
+    }
+    html += '<div class="rc-row"><span class="rc-lbl">Jatah</span>'
+          + '<span class="rc-pill">' + rdEscape(data.jml_mk_max) + ' MK</span>'
+          + '<span class="rc-pill">' + rdEscape(data.sks_max) + ' SKS</span></div>';
+
+    const mks = data.mk || [];
+    if (mks.length) {
+        const chips = mks.map(x => '<span class="rc-chip">' + rdEscape(x) + '</span>').join('');
+        const lbl = data.status === 'disetujui' ? 'MK disetujui' : 'MK usulan';
+        html += '<div class="rc-row"><span class="rc-lbl">' + lbl + '</span><span class="rc-chips">' + chips + '</span></div>';
+    } else if (data.status === 'disetujui' && data.mk_disetujui) {
+        html += '<div class="rc-row"><span class="rc-lbl">MK</span><span class="rc-note">' + rdEscape(data.mk_disetujui) + '</span></div>';
+    }
+
+    if (data.note) {
+        const isReject = data.status === 'ditolak';
+        html += '<div class="rc-row"><span class="rc-lbl">' + (isReject ? 'Alasan' : 'Catatan') + '</span>'
+              + '<span class="rc-note' + (isReject ? ' ditolak' : '') + '">' + rdEscape(data.note) + '</span></div>';
+    }
+
+    document.getElementById('rdInfo').innerHTML = html;
+    new bootstrap.Modal(document.getElementById('rewardDetailModal')).show();
+}
+
 // =========================================================================
 // File Preview Manager — handles image thumbnails + doc list with remove
 // =========================================================================
@@ -650,6 +998,231 @@ function closeLightbox() {
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') closeLightbox();
 });
+
+// =========================================================================
+// Konfirmasi Batalkan Pengajuan Reward (reuse claimConfirmModal markup)
+// =========================================================================
+(function() {
+    const modalEl = document.getElementById('claimConfirmModal');
+    if (!modalEl) return;
+
+    const ccModal = new bootstrap.Modal(modalEl);
+    const iconEl  = document.getElementById('claimConfirmIcon');
+    const titleEl = document.getElementById('claimConfirmTitle');
+    const textEl  = document.getElementById('claimConfirmText');
+    const btnEl   = document.getElementById('claimConfirmBtn');
+
+    const ICON_WARN = '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>';
+
+    let activeFormId = null;
+
+    window.openBatalConfirm = function(formId, namaPrestasi) {
+        activeFormId = formId;
+        iconEl.style.background = '#fef3c7';
+        iconEl.innerHTML = ICON_WARN;
+        titleEl.textContent = 'Batalkan Pengajuan Reward';
+        textEl.innerHTML = 'Batalkan pengajuan reward untuk prestasi <strong class="cc-nama"></strong>? Anda bisa mengajukan ulang nanti.';
+        const namaEl = textEl.querySelector('.cc-nama');
+        if (namaEl) namaEl.textContent = '"' + namaPrestasi + '"';
+        btnEl.textContent = 'Ya, Batalkan';
+        btnEl.style.background = '#dc2626';
+        ccModal.show();
+    };
+
+    btnEl.addEventListener('click', function() {
+        if (!activeFormId) return;
+        const form = document.getElementById(activeFormId);
+        if (form) {
+            btnEl.disabled = true;
+            btnEl.style.opacity = '0.65';
+            btnEl.style.cursor = 'not-allowed';
+            form.submit();
+        }
+    });
+
+    // Reset tombol konfirmasi tiap kali modal ditutup
+    modalEl.addEventListener('hidden.bs.modal', function() {
+        btnEl.disabled = false;
+        btnEl.style.opacity = '';
+        btnEl.style.cursor = 'pointer';
+    });
+})();
+
+// =========================================================================
+// Modal Ajukan Reward — opsi capaian dinamis + preview jatah (SK FT 774)
+// =========================================================================
+(function() {
+    const modalEl = document.getElementById('ajukanRewardModal');
+    if (!modalEl) return;
+
+    const arModal   = new bootstrap.Modal(modalEl);
+    const form      = document.getElementById('ajukanRewardForm');
+    const namaEl    = document.getElementById('arNamaPrestasi');
+    const penyEl    = document.getElementById('arPenyelenggara');
+    const capEl     = document.getElementById('arCapaian');
+    const invWrap   = document.getElementById('arInventionWrap');
+    const invEl     = document.getElementById('arInvention');
+    const previewEl = document.getElementById('arJatahPreview');
+    const submitBtn = document.getElementById('arSubmitBtn');
+
+    // Picker usulan mata kuliah
+    const mkWrap    = document.getElementById('arMkWrap');
+    const mkSelect  = document.getElementById('arMkSelect');
+    const mkAddBtn  = document.getElementById('arMkAddBtn');
+    const mkChosen  = document.getElementById('arMkChosen');
+    const mkCounter = document.getElementById('arMkCounter');
+    const mkHidden  = document.getElementById('arMkHidden');
+    const mkMaxEl   = document.getElementById('arMkMax');
+
+    const LABELS       = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::CAPAIAN_LABELS);
+    const CAP_BY_PENY  = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::CAPAIAN_BY_PENYELENGGARA);
+    const JATAH        = @json($rewardJatahMap);
+    const JATAH_INV    = @json($rewardJatahInvention);
+    const PENY_LAINNYA = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::PENYELENGGARA_LAINNYA);
+    const MK_SKS       = @json(\Modules\ManajemenMahasiswa\Models\Prestasi::mataKuliahFlat());
+    const BASE_URL     = @json(url('manajemen-mahasiswa/verifikasi'));
+
+    let arMkList  = [];   // nama MK yang dipilih
+    let arJatahOk = false;
+    let arCap     = 0;    // maks jumlah MK
+    let arSksMax  = 0;    // maks total SKS
+
+    function renderMk() {
+        mkChosen.innerHTML = '';
+        mkHidden.innerHTML = '';
+        let totalSks = 0;
+        arMkList.forEach(function(name) {
+            const sks = MK_SKS[name] || 0;
+            totalSks += sks;
+            const chip = document.createElement('span');
+            chip.className = 'mk-chip';
+            chip.appendChild(document.createTextNode(name + ' '));
+            const s = document.createElement('span');
+            s.className = 'mk-sks';
+            s.textContent = '(' + sks + ' SKS)';
+            chip.appendChild(s);
+            const rm = document.createElement('button');
+            rm.type = 'button';
+            rm.className = 'mk-remove';
+            rm.dataset.mk = name;
+            rm.innerHTML = '&times;';
+            chip.appendChild(rm);
+            mkChosen.appendChild(chip);
+            const hid = document.createElement('input');
+            hid.type = 'hidden';
+            hid.name = 'reward_mk_diajukan[]';
+            hid.value = name;
+            mkHidden.appendChild(hid);
+        });
+        const over = (arMkList.length > arCap) || (totalSks > arSksMax);
+        mkCounter.className = 'mk-counter' + (over ? ' over' : '');
+        mkCounter.textContent = 'Dipilih ' + arMkList.length + '/' + arCap + ' MK • Total ' + totalSks + ' SKS (maks ' + arSksMax + ')';
+    }
+
+    function currentTotalSks() {
+        return arMkList.reduce(function(sum, name) { return sum + (MK_SKS[name] || 0); }, 0);
+    }
+
+    function refreshSubmit() {
+        const totalSks = currentTotalSks();
+        submitBtn.disabled = !(arJatahOk && arMkList.length >= 1 && arMkList.length <= arCap && totalSks <= arSksMax);
+    }
+
+    mkAddBtn.addEventListener('click', function() {
+        const v = mkSelect.value;
+        if (!v) return;
+        if (arMkList.indexOf(v) !== -1) { mkSelect.value = ''; return; }
+        if (arMkList.length >= arCap) return;   // jumlah MK sudah penuh
+        if (currentTotalSks() + (MK_SKS[v] || 0) > arSksMax) return;   // melebihi plafon SKS
+        arMkList.push(v);
+        mkSelect.value = '';
+        renderMk();
+        refreshSubmit();
+    });
+
+    mkChosen.addEventListener('click', function(e) {
+        const btn = e.target.closest('.mk-remove');
+        if (!btn) return;
+        const name = btn.dataset.mk;
+        arMkList = arMkList.filter(function(x) { return x !== name; });
+        renderMk();
+        refreshSubmit();
+    });
+
+    window.openAjukanReward = function(prestasiId, namaPrestasi) {
+        form.action = BASE_URL + '/prestasi/' + prestasiId + '/reward/ajukan';
+        namaEl.textContent = namaPrestasi;
+        penyEl.value = '';
+        capEl.innerHTML = '<option value="">Pilih penyelenggara dulu...</option>';
+        capEl.disabled = true;
+        invWrap.style.display = 'none';
+        invEl.checked = false;
+        previewEl.style.display = 'none';
+        arMkList = [];
+        arJatahOk = false;
+        arCap = 0;
+        arSksMax = 0;
+        mkWrap.style.display = 'none';
+        mkSelect.value = '';
+        renderMk();
+        submitBtn.disabled = true;
+        arModal.show();
+    };
+
+    function rebuildCapaian() {
+        const peny = penyEl.value;
+        capEl.innerHTML = '<option value="">Pilih capaian...</option>';
+        if (!peny || !CAP_BY_PENY[peny]) {
+            capEl.disabled = true;
+        } else {
+            CAP_BY_PENY[peny].forEach(function(code) {
+                const opt = document.createElement('option');
+                opt.value = code;
+                opt.textContent = LABELS[code] || code;
+                capEl.appendChild(opt);
+            });
+            capEl.disabled = false;
+        }
+        invWrap.style.display = (peny === PENY_LAINNYA) ? 'block' : 'none';
+        if (peny !== PENY_LAINNYA) invEl.checked = false;
+    }
+
+    function updatePreview() {
+        const peny = penyEl.value;
+        const cap  = capEl.value;
+        let jatah = null;
+        if (peny && cap) {
+            if (peny === PENY_LAINNYA && invEl.checked) {
+                jatah = JATAH_INV;
+            } else {
+                jatah = (JATAH[peny] && JATAH[peny][cap]) ? JATAH[peny][cap] : null;
+            }
+        }
+        if (jatah) {
+            previewEl.innerHTML = 'Jatah reward: maksimal <strong>' + jatah.jml_mk_max + ' mata kuliah</strong> dengan total <strong>' + jatah.sks_max + ' SKS</strong> (nilai dinaikkan satu tingkat).';
+            previewEl.style.display = 'block';
+            arJatahOk = true;
+            arCap     = jatah.jml_mk_max;
+            arSksMax  = jatah.sks_max;
+            mkMaxEl.textContent = arCap;
+            mkWrap.style.display = 'block';
+            // bila jatah mengecil (ganti kategori), pangkas pilihan yang melebihi
+            if (arMkList.length > arCap) arMkList = arMkList.slice(0, arCap);
+            renderMk();
+        } else {
+            previewEl.style.display = 'none';
+            arJatahOk = false;
+            arCap = 0;
+            arSksMax = 0;
+            mkWrap.style.display = 'none';
+        }
+        refreshSubmit();
+    }
+
+    penyEl.addEventListener('change', function() { rebuildCapaian(); updatePreview(); });
+    capEl.addEventListener('change', updatePreview);
+    invEl.addEventListener('change', updatePreview);
+})();
 
 // =========================================================================
 // Anti Double-Submit — cegah form di-submit lebih dari sekali
