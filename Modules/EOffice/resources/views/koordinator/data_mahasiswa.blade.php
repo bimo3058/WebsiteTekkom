@@ -17,7 +17,8 @@
         </style>
     @endpush
 
-    <div x-data="pageData()">
+    <div x-data="pageData()"
+        @open-edit-modal.window="selectedMahasiswa = $event.detail; detailModal = true; modalTab = 'profil'">
 
         <!-- Toast Notification -->
         <div x-show="toast.show" x-cloak x-transition:enter="transition ease-out duration-300 transform"
@@ -228,134 +229,222 @@
                 <table class="w-full text-left border-collapse table-fixed">
                     <thead class="sticky-header bg-slate-50 shadow-[0_1px_2px_rgba(0,0,0,0.04)]">
                         <tr>
-                            <th class="py-3 px-3 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 whitespace-nowrap"
-                                style="width:22%">
+                            <th class="py-3 px-4 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 whitespace-nowrap"
+                                style="width:25%">
                                 Mahasiswa</th>
-                            <th class="py-3 px-3 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 whitespace-nowrap"
-                                style="width:16%">
-                                Tempat KP</th>
-                            <th class="py-3 px-3 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center whitespace-nowrap"
-                                style="width:10%">
-                                Nilai Lap.</th>
-                            <th class="py-3 px-3 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center whitespace-nowrap"
-                                style="width:10%">
-                                Nilai Sem.</th>
-                            <th class="py-3 px-3 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center whitespace-nowrap"
-                                style="width:10%">
-                                Nilai Lap.</th>
-                            <th class="py-3 px-3 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center whitespace-nowrap"
-                                style="width:10%">
-                                Nilai Akhir</th>
-                            <th class="py-3 px-3 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center whitespace-nowrap"
+                            <th class="py-3 px-4 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 whitespace-nowrap"
+                                style="width:20%">
+                                Periode</th>
+                            <th class="py-3 px-4 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center whitespace-nowrap"
                                 style="width:12%">
+                                Kelas</th>
+                            <th class="py-3 px-4 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center whitespace-nowrap"
+                                style="width:13%">
+                                Nilai Akhir</th>
+                            <th class="py-3 px-4 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center whitespace-nowrap"
+                                style="width:15%">
                                 Status KP</th>
+                            <th class="py-3 px-4 text-xs font-bold tracking-wider text-slate-500 uppercase border-b border-slate-200 bg-slate-50 text-center whitespace-nowrap"
+                                style="width:15%">
+                                Action</th>
                         </tr>
                     </thead>
                     <template x-for="m in filteredMahasiswas" :key="m.id">
                         <tbody x-data="{ expanded: false }" class="border-b border-slate-100">
+                            <!-- Main Row -->
                             <tr @click="expanded = !expanded"
-                                class="hover:bg-slate-50/80 transition-colors cursor-pointer group">
-                                <td class="py-3 px-3 align-middle">
-                                    <div class="flex items-center gap-2">
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
-                                            viewBox="0 0 24 24" :class="expanded ? 'rotate-180' : ''"
-                                            class="transition-transform duration-200 text-[#666D80] shrink-0">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7">
+                                class="hover:bg-slate-50/80 transition-colors cursor-pointer group"
+                                :class="expanded ? 'bg-indigo-50/30' : ''">
+                                <td class="py-3 px-4 align-middle">
+                                    <div class="flex items-center gap-3">
+                                        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
+                                            viewBox="0 0 24 24"
+                                            :class="expanded ? 'rotate-90 text-indigo-500' : 'text-slate-400'"
+                                            class="transition-transform duration-200 shrink-0">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7">
                                             </path>
                                         </svg>
                                         <div class="w-8 h-8 rounded-full bg-indigo-50 border border-indigo-100 flex items-center justify-center text-indigo-700 font-bold text-xs flex-shrink-0"
                                             x-text="m.nama.charAt(0)"></div>
                                         <div class="min-w-0">
-                                            <p class="text-xs font-bold text-slate-900 truncate" x-text="m.nama"></p>
-                                            <p class="text-[10px] text-slate-500 mt-0.5" x-text="m.nim"></p>
+                                            <p class="text-[13px] font-bold text-slate-900 truncate" x-text="m.nama">
+                                            </p>
+                                            <p class="text-[11px] text-slate-500 mt-0.5" x-text="m.nim"></p>
                                         </div>
                                     </div>
                                 </td>
-                                <td class="py-3 px-3 align-middle">
-                                    <p class="text-xs font-semibold text-slate-700 truncate" :title="m.tempat_kp"
-                                        x-text="m.tempat_kp"></p>
+                                <td class="py-3 px-4 align-middle">
+                                    <p class="text-xs font-semibold text-slate-700 truncate" x-text="m.periode_name">
+                                    </p>
                                 </td>
-                                <td class="py-3 px-3 align-middle text-center">
-                                    <span x-show="m.nilai_lapangan !== null && m.nilai_lapangan !== undefined"
-                                        class="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-bold bg-amber-50 text-amber-700 border border-amber-100"
-                                        x-text="m.nilai_lapangan"></span>
-                                    <span x-show="m.nilai_lapangan === null || m.nilai_lapangan === undefined"
-                                        class="text-slate-400 text-xs">-</span>
+                                <td class="py-3 px-4 align-middle text-center">
+                                    <span
+                                        class="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-bold bg-slate-100 text-slate-600 border border-slate-200"
+                                        x-text="m.kelas"></span>
                                 </td>
-                                <td class="py-3 px-3 align-middle text-center">
-                                    <span x-show="m.nilai_seminar !== null"
-                                        class="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-bold bg-emerald-50 text-emerald-700 border border-emerald-100"
-                                        x-text="m.nilai_seminar"></span>
-                                    <span x-show="m.nilai_seminar === null" class="text-slate-400 text-xs">-</span>
-                                </td>
-                                <td class="py-3 px-3 align-middle text-center">
-                                    <span x-show="m.nilai_laporan !== null"
-                                        class="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100"
-                                        x-text="m.nilai_laporan"></span>
-                                    <span x-show="m.nilai_laporan === null" class="text-slate-400 text-xs">-</span>
-                                </td>
-                                <td class="py-3 px-3 align-middle text-center">
+                                <td class="py-3 px-4 align-middle text-center">
                                     <span x-show="m.nilai_akhir !== null"
-                                        class="inline-flex items-center justify-center px-2 py-0.5 rounded text-xs font-bold bg-indigo-50 text-indigo-700"
+                                        class="inline-flex items-center justify-center px-2 py-1 rounded text-[13px] font-black bg-indigo-100 text-indigo-700 shadow-sm"
                                         x-text="m.nilai_akhir"></span>
                                     <span x-show="m.nilai_akhir === null" class="text-slate-400 text-xs">-</span>
                                 </td>
-                                <td class="py-3 px-3 align-middle text-center">
-                                    <span :class="{
-                                        'bg-emerald-100 text-emerald-700 border-emerald-200': m.status_kp === 'Pasca KP',
-                                        'bg-amber-100 text-amber-700 border-amber-200': m.status_kp === 'Saat KP',
-                                        'bg-slate-100 text-slate-600 border-slate-200': m.status_kp === 'Pra KP',
-                                    }" class="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-bold border whitespace-nowrap"
-                                        x-text="m.status_kp"></span>
+                                <td class="py-3 px-4 align-middle text-center">
+                                    <span
+                                        class="inline-flex px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider"
+                                        :class="{
+                                            'bg-amber-50 text-amber-600': m.status_kp === 'Pra KP',
+                                            'bg-blue-50 text-blue-600': m.status_kp === 'Saat KP',
+                                            'bg-emerald-50 text-emerald-600': m.status_kp === 'Pasca KP'
+                                        }" x-text="m.status_kp">
+                                    </span>
+                                </td>
+                                <td class="py-3 px-4 align-middle text-center relative" x-data="{ menuOpen: false }"
+                                    @click.outside="menuOpen = false">
+                                    <div class="flex items-center justify-center pointer-events-auto" @click.stop>
+                                        <button type="button" @click="menuOpen = !menuOpen"
+                                            class="p-1 px-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors focus:outline-none">
+                                            <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z">
+                                                </path>
+                                            </svg>
+                                        </button>
+
+                                        <!-- Dropdown Menu -->
+                                        <div x-show="menuOpen" style="display:none;"
+                                            x-transition:enter="transition ease-out duration-100"
+                                            x-transition:enter-start="transform opacity-0 scale-95"
+                                            x-transition:enter-end="transform opacity-100 scale-100"
+                                            x-transition:leave="transition ease-in duration-75"
+                                            x-transition:leave-start="transform opacity-100 scale-100"
+                                            x-transition:leave-end="transform opacity-0 scale-95"
+                                            class="absolute right-10 top-10 mt-0 w-32 bg-white rounded-lg shadow-lg border border-slate-100 overflow-hidden z-50 text-left">
+
+                                            <button type="button"
+                                                @click="$dispatch('open-edit-modal', m); menuOpen = false"
+                                                class="w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                                                Edit
+                                            </button>
+                                            <form
+                                                :action="`{{ route('eoffice.kp.koordinator.pendaftar.destroy', 'DUMMY_ID') }}`.replace('DUMMY_ID', m.id)"
+                                                method="POST" class="inline w-full m-0 p-0"
+                                                onsubmit="return confirm('Apakah Anda yakin ingin menghapus / mereset data mahasiswa ini?')">
+                                                @csrf
+                                                @method('DELETE')
+                                                <button type="submit"
+                                                    class="w-full text-left px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors">
+                                                    Hapus
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </div>
                                 </td>
                             </tr>
 
-                            <!-- Expandable Details Row -->
-                            <tr x-show="expanded" x-cloak x-transition>
-                                <td colspan="7" class="p-0 border-b border-[#F1F1F3] bg-[#FAFAFC]">
-                                    <div class="flex flex-col md:flex-row gap-4 px-4 py-3" style="padding-left: 56px;">
-                                        <!-- Kiri: Judul KP & Dosen -->
-                                        <div class="flex-[2] flex flex-col gap-3">
+                            <!-- Expandable Detail Row -->
+                            <tr x-show="expanded" x-transition x-cloak
+                                class="bg-indigo-50/10 border-b border-slate-100 overflow-hidden">
+                                <td colspan="6" class="p-0">
+                                    <div class="px-12 py-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
+                                        <!-- Column 1: Info & Profile KP -->
+                                        <div class="space-y-4">
                                             <div>
                                                 <p
-                                                    style="font-size:10px; font-weight:700; color:#A0AABF; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:4px;">
-                                                    Periode</p>
-                                                <p class="text-xs font-semibold text-slate-700" x-text="m.periode_name">
-                                                </p>
-                                            </div>
-                                            <div>
-                                                <p
-                                                    style="font-size:10px; font-weight:700; color:#A0AABF; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:4px;">
+                                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                                                     Judul Kerja Praktik</p>
-                                                <p class="text-xs font-semibold text-slate-800 leading-relaxed"
-                                                    x-text="m.judul_kp || 'Belum diisi'"></p>
+                                                <p class="text-sm font-semibold text-slate-800 leading-snug"
+                                                    x-text="m.judul_kp"></p>
+                                                <p class="text-xs text-indigo-600 font-medium mt-1"
+                                                    x-text="m.tempat_kp"></p>
                                             </div>
-                                            <div>
+                                            <div class="pt-2 border-t border-slate-100">
                                                 <p
-                                                    style="font-size:10px; font-weight:700; color:#A0AABF; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:4px;">
+                                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
                                                     Dosen Pembimbing</p>
-                                                <p class="text-xs font-semibold text-slate-800"
-                                                    x-text="m.dosen_pembimbing || 'Belum diplot'"></p>
+                                                <div class="flex items-center gap-2 mt-1.5">
+                                                    <div
+                                                        class="w-6 h-6 rounded bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500">
+                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor"
+                                                            viewBox="0 0 24 24">
+                                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                                stroke-width="2"
+                                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                                                        </svg>
+                                                    </div>
+                                                    <p class="text-[13px] font-semibold text-slate-700"
+                                                        x-text="m.dosen_pembimbing || 'Belum di-assign'"></p>
+                                                </div>
                                             </div>
                                         </div>
-                                        <!-- Kanan: Status Proses -->
-                                        <div class="flex-1 flex flex-col gap-3">
-                                            <div>
-                                                <p
-                                                    style="font-size:10px; font-weight:700; color:#A0AABF; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:4px;">
-                                                    Status Proses</p>
-                                                <div class="flex gap-1.5 flex-wrap">
-                                                    <span
-                                                        :class="{ 'bg-emerald-50 text-emerald-700': m.status_dokumen === 'Lengkap', 'bg-rose-50 text-rose-700': m.status_dokumen === 'Tidak Lengkap' }"
-                                                        class="px-2 py-0.5 text-[10px] font-bold border rounded"
-                                                        x-text="'Dok: ' + m.status_dokumen"></span>
-                                                    <span :class="{
-                                                           'bg-emerald-50 text-emerald-700 border-emerald-200': m.status_seminar === 'Lulus',
-                                                           'bg-amber-50 text-amber-700 border-amber-200': m.status_seminar === 'Menunggu Jadwal',
-                                                           'bg-slate-50 text-slate-600 border-slate-200': m.status_seminar === 'Belum Daftar'
-                                                      }" class="px-2 py-0.5 text-[10px] font-bold border rounded"
-                                                        x-text="'Seminar: ' + m.status_seminar"></span>
+
+                                        <!-- Column 2: Rincian Nilai -->
+                                        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+                                            <h4
+                                                class="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2 mb-3">
+                                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none"
+                                                    stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round"
+                                                        stroke-width="2"
+                                                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                                </svg>
+                                                Rekapitulasi Nilai
+                                            </h4>
+                                            <div class="space-y-2.5">
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-xs text-slate-600">Nilai Lapangan</span>
+                                                    <span class="text-xs font-bold text-slate-900"
+                                                        x-text="m.nilai_lapangan !== null ? m.nilai_lapangan : '-'"></span>
                                                 </div>
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-xs text-slate-600">Nilai Laporan</span>
+                                                    <span class="text-xs font-bold text-slate-900"
+                                                        x-text="m.nilai_laporan !== null ? m.nilai_laporan : '-'"></span>
+                                                </div>
+                                                <div class="flex items-center justify-between">
+                                                    <span class="text-xs text-slate-600">Nilai Seminar</span>
+                                                    <span class="text-xs font-bold text-slate-900"
+                                                        x-text="m.nilai_seminar !== null ? m.nilai_seminar : '-'"></span>
+                                                </div>
+                                                <div
+                                                    class="pt-2 mt-2 border-t border-slate-100 flex items-center justify-between">
+                                                    <span class="text-[11px] font-bold text-slate-500 uppercase">Nilai
+                                                        Mutu Akhir</span>
+                                                    <span class="text-sm font-black text-indigo-600"
+                                                        x-text="m.nilai_akhir !== null ? m.nilai_akhir : '-'"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Column 3: Riwayat Status -->
+                                        <div>
+                                            <h4
+                                                class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">
+                                                Status Progress</h4>
+                                            <div
+                                                class="space-y-3 relative before:absolute before:inset-0 before:ml-[9px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
+                                                <template x-for="(riwayat, i) in m.riwayat_approval" :key="i">
+                                                    <div
+                                                        class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
+                                                        <!-- Icon indicator -->
+                                                        <div
+                                                            class="flex items-center justify-center w-5 h-5 rounded-full border-2 border-white bg-indigo-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
+                                                            <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
+                                                        </div>
+                                                        <!-- Card -->
+                                                        <div
+                                                            class="w-[calc(100%-2.5rem)] md:w-[calc(50%-1.5rem)] p-2.5 rounded-lg border border-slate-100 bg-white shadow-sm">
+                                                            <div class="flex items-center justify-between">
+                                                                <span class="text-[10px] font-bold text-slate-400"
+                                                                    x-text="riwayat.tanggal"></span>
+                                                            </div>
+                                                            <p class="text-xs font-semibold text-slate-800 mt-0.5"
+                                                                x-text="riwayat.status"></p>
+                                                            <p class="text-[10px] text-slate-500 mt-1 leading-snug"
+                                                                x-text="riwayat.keterangan"></p>
+                                                        </div>
+                                                    </div>
+                                                </template>
                                             </div>
                                         </div>
                                     </div>
@@ -367,7 +456,7 @@
                     <!-- Empty State -->
                     <tbody x-show="filteredMahasiswas.length === 0" x-cloak>
                         <tr>
-                            <td colspan="8" class="py-12 px-6 text-center">
+                            <td colspan="6" class="py-12 px-6 text-center">
                                 <div
                                     class="inline-flex items-center justify-center w-16 h-16 rounded-full bg-slate-50 mb-4">
                                     <svg class="w-8 h-8 text-slate-400" fill="none" stroke="currentColor"
@@ -410,22 +499,238 @@
             </div>
         </div>
 
-
-
     </div>
 
+    <!-- Edit Modal injected here later -->
+    <template x-teleport="body">
+        <div x-show="detailModal" class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto"
+            aria-labelledby="modal-title" role="dialog" aria-modal="true" x-cloak>
+
+            <div x-show="detailModal" x-transition.opacity.duration.300ms
+                class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm" @click="detailModal = false"></div>
+
+            <div x-show="detailModal" x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                class="relative bg-white rounded-2xl shadow-xl w-full max-w-xl mx-4 overflow-hidden transform"
+                @keydown.escape.window="detailModal = false">
+
+                <form
+                    :action="selectedMahasiswa ? `{{ route('eoffice.kp.koordinator.data_mahasiswa.update', 'DUMMY_ID') }}`.replace('DUMMY_ID', selectedMahasiswa.id) : '#'"
+                    method="POST">
+                    @csrf
+                    @method('PUT')
+
+                    <!-- Head -->
+                    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100 bg-slate-50/50">
+                        <div class="flex items-center gap-3">
+                            <div
+                                class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                </svg>
+                            </div>
+                            <div>
+                                <h3 class="text-sm font-bold text-slate-900" id="modal-title">Edit Data Mahasiswa</h3>
+                                <p class="text-xs text-slate-500 mt-0.5">Override konfigurasi Dosen atau Nilai</p>
+                            </div>
+                        </div>
+                        <button type="button" @click="detailModal = false"
+                            class="text-slate-400 hover:text-slate-600 transition-colors hover:bg-slate-100 p-2 rounded-lg">
+                            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                    d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    <!-- Tabs -->
+                    <div class="flex border-b border-slate-100 px-6">
+                        <button type="button" @click="modalTab = 'profil'"
+                            class="px-4 py-3 text-xs font-bold border-b-2 transition-colors relative"
+                            :class="modalTab === 'profil' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'">
+                            Profil & Dosen
+                        </button>
+                        <button type="button" @click="modalTab = 'nilai'"
+                            class="px-4 py-3 text-xs font-bold border-b-2 transition-colors relative"
+                            :class="modalTab === 'nilai' ? 'border-indigo-600 text-indigo-700' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'">
+                            Override Nilai
+                        </button>
+                    </div>
+
+                    <div class="p-6">
+                        <template x-if="selectedMahasiswa">
+                            <div>
+                                <!-- TAB PROFIL -->
+                                <div x-show="modalTab === 'profil'"
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 transform translate-y-2"
+                                    x-transition:enter-end="opacity-100 transform translate-y-0">
+                                    <div class="space-y-4">
+                                        <!-- Readonly Identifier -->
+                                        <div
+                                            class="bg-slate-50 p-3 rounded-lg border border-slate-100 flex items-center justify-between">
+                                            <div>
+                                                <p class="text-[10px] font-bold text-slate-400 uppercase">Nama Mahasiswa
+                                                </p>
+                                                <p class="text-sm font-bold text-slate-800"
+                                                    x-text="selectedMahasiswa.nama"></p>
+                                            </div>
+                                            <div class="text-right">
+                                                <p class="text-[10px] font-bold text-slate-400 uppercase">NIM</p>
+                                                <p class="text-sm font-bold text-slate-800"
+                                                    x-text="selectedMahasiswa.nim"></p>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-semibold text-slate-700 mb-1.5">Judul Kerja
+                                                Praktik <span
+                                                    class="text-slate-400 font-normal ml-1">(Read-only)</span></label>
+                                            <input type="text"
+                                                class="w-full text-sm placeholder-slate-400 border border-slate-200 rounded-lg px-3 py-2 bg-slate-50 text-slate-500 cursor-not-allowed focus:ring-0 focus:outline-none"
+                                                :value="selectedMahasiswa.judul_kp" readonly>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 mb-1.5"
+                                                for="dosen_pembimbing_id">Assign Dosen Pembimbing</label>
+                                            <p class="text-xs text-slate-500 mb-2 leading-relaxed">Pengubahan ini akan
+                                                membuat bypass dari proses balancing secara langsung untuk mahasiswa
+                                                terkait. Harap berhati-hati.</p>
+                                            <select name="dosen_pembimbing_id" id="dosen_pembimbing_id"
+                                                class="w-full text-sm border-slate-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 shadow-sm transition-shadow">
+                                                <option value="">-- Kosongi untuk lepaskan Dosen --</option>
+                                                <template x-for="dosen in dosens" :key="dosen.id">
+                                                    <option :value="dosen.id"
+                                                        :selected="selectedMahasiswa.dosen_pembimbing === dosen.nama_lengkap"
+                                                        x-text="dosen.nama_lengkap + ' (' + dosen.nip + ')'">
+                                                    </option>
+                                                </template>
+                                            </select>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 mb-1.5"
+                                                for="kelas">Alokasi Kelas Mahasiswa</label>
+                                            <select name="kelas" id="kelas"
+                                                class="w-full text-sm border-slate-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 shadow-sm transition-shadow">
+                                                <option value="" :selected="selectedMahasiswa.kelas === '-'">-- Belum
+                                                    Dialokasikan --</option>
+                                                <option value="Reguler"
+                                                    :selected="selectedMahasiswa.kelas === 'Reguler'">Reguler</option>
+                                                <option value="Internasional"
+                                                    :selected="selectedMahasiswa.kelas === 'Internasional'">
+                                                    Internasional</option>
+                                                <option value="Karyawan"
+                                                    :selected="selectedMahasiswa.kelas === 'Karyawan'">Karyawan</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- TAB NILAI -->
+                                <div x-show="modalTab === 'nilai'" style="display:none;"
+                                    x-transition:enter="transition ease-out duration-200"
+                                    x-transition:enter-start="opacity-0 transform translate-y-2"
+                                    x-transition:enter-end="opacity-100 transform translate-y-0">
+                                    <div
+                                        class="bg-amber-50 border border-amber-200 rounded-xl p-4 mb-5 flex items-start gap-3">
+                                        <div class="pt-0.5 text-amber-500">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                            </svg>
+                                        </div>
+                                        <div>
+                                            <h4 class="text-xs font-bold text-amber-800">Peringatan Override</h4>
+                                            <p class="text-[11px] text-amber-700 mt-1 leading-relaxed">Hindari merubah
+                                                nilai jika mahasiswa belum mengunggah dokumen/form penilaian resmi.
+                                                Pastikan Anda memiliki wewenang untuk meniru konversi nilai ini.</p>
+                                        </div>
+                                    </div>
+
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 mb-1.5"
+                                                for="nilai_lapangan">Nilai Lapangan</label>
+                                            <input type="number" step="0.01" min="0" max="100" name="nilai_lapangan"
+                                                id="nilai_lapangan"
+                                                class="w-full text-sm border-slate-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 shadow-sm"
+                                                :value="selectedMahasiswa.nilai_lapangan">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs font-bold text-slate-700 mb-1.5"
+                                                for="nilai_akhir">Nilai Akhir / Mutu</label>
+                                            <input type="text" name="nilai_akhir" id="nilai_akhir"
+                                                class="w-full text-sm border-slate-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 shadow-sm placeholder-slate-400"
+                                                placeholder="A, AB, B, dsb" :value="selectedMahasiswa.nilai_akhir">
+                                        </div>
+                                    </div>
+                                    <p class="text-[10px] text-slate-400 mt-3">*Nilai Laporan dan Seminar adalah
+                                        otoritas penuh Dosen Pembimbing melalui Menu Bimbingan Mahasiswa.</p>
+                                </div>
+                            </div>
+                        </template>
+                    </div>
+
+                    <!-- Footer -->
+                    <div
+                        class="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3 rounded-b-2xl">
+                        <button type="button" @click="detailModal = false"
+                            class="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-200 bg-slate-100 rounded-lg transition-colors">
+                            Batal
+                        </button>
+                        <button type="submit"
+                            class="px-4 py-2 text-xs font-bold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors shadow-sm">
+                            Simpan Perubahan
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </template>
+
     @push('scripts')
-        <script>         function pageData() {
-                return {
-                    sidebarOpen: true, search: '', filterStatus: '', filterPeriode: '', mahasiswas: @json($mahasiswas), periodes: @json($periodes), selectedMahasiswa: null, detailModal: false, toast: { show: false, type: 'success', title: '', message: '' }, get filteredMahasiswas() {
-                        let filtered = this.mahasiswas;
-                        if (this.filterPeriode !== '') { filtered = filtered.filter(m => m.periode_id == this.filterPeriode); }
-                        if (this.filterStatus !== '') { filtered = filtered.filter(m => m.status_kp === this.filterStatus); }
-                        return filtered.filter(m => { let matchSearch = m.nama.toLowerCase().includes(this.search.toLowerCase()) || m.nim.includes(this.search); return matchSearch; });
-                    }, showToast(type, title, message) { this.toast.type = type; this.toast.title = title; this.toast.message = message; this.toast.show = true; setTimeout(() => { this.toast.show = false; }, 3000); }
-                }
-            }
+        <script>
+            document.addEventListener('alpine:init', () => {
+                Alpine.data('pageData', () => ({
+                    search: '',
+                    filterStatus: '',
+                    filterPeriode: '',
+                    selectedMahasiswa: null,
+                    detailModal: false,
+                    modalTab: 'profil',
+                    toast: { show: false, type: 'success', title: '', message: '' },
+                    mahasiswas: @json($mahasiswas),
+                    dosens: @json($dosens),
+
+                    init() {
+                        this.$watch('detailModal', value => {
+                            if (!value) setTimeout(() => { this.selectedMahasiswa = null; this.modalTab = 'profil'; }, 300);
+                        });
+                    },
+
+
+                    get filteredMahasiswas() {
+                        return this.mahasiswas.filter(m => {
+                            const matchSearch = m.nama.toLowerCase().includes(this.search.toLowerCase()) || m.nim.toLowerCase().includes(this.search.toLowerCase());
+                            const matchStatus = this.filterStatus === '' || m.status_kp === this.filterStatus;
+                            const matchPeriode = this.filterPeriode === '' || m.periode_id == this.filterPeriode;
+                            return matchSearch && matchStatus && matchPeriode;
+                        });
+                    },
+
+                    showToast(type, title, message) {
+                        this.toast.type = type; this.toast.title = title; this.toast.message = message; this.toast.show = true;
+                        setTimeout(() => { this.toast.show = false; }, 4000);
+                    }
+                }));
+            });
         </script>
     @endpush
-
 </x-eoffice::layouts.koordinator>

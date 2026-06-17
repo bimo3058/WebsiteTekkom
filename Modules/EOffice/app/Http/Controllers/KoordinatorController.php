@@ -205,21 +205,232 @@ class KoordinatorController extends Controller implements HasMiddleware
     }
 
     /**
-     * Manajemen Template Dokumen
+     * Manajemen Persyaratan Dokumen per Fase
      */
-    public function template()
+    public function persyaratanDokumen(\Illuminate\Http\Request $request)
     {
-        // Try to fetch real templates if table exists, otherwise return empty collection safely
-        try {
-            $templates = \Modules\EOffice\Models\TemplateDokumenKP::orderBy('created_at', 'desc')->get();
-        } catch (\Illuminate\Database\QueryException $e) {
-            $templates = collect(); // Table might not exist yet
-            session()->flash('warning', 'Tabel eo_kp_template belum ada di database. Silakan jalankan migrasi.');
+        $periodes = \Modules\EOffice\Models\KpPeriode::orderBy('created_at', 'desc')->get();
+        $selectedPeriodeId = $request->get('periode_id');
+
+        if (!$selectedPeriodeId && $periodes->isNotEmpty()) {
+            $activePeriode = $periodes->firstWhere('is_active', true) ?? $periodes->first();
+            $selectedPeriodeId = $activePeriode->id;
         }
 
-        return view('eoffice::koordinator.template', compact('templates'));
+        try {
+            $query = \Modules\EOffice\Models\KpTemplate::query();
+
+            // Filter by periode if specific one was selected/active
+            if ($selectedPeriodeId && $selectedPeriodeId !== 'all') {
+                $query->where('periode_id', $selectedPeriodeId);
+            }
+
+            $templates = $query->orderBy('created_at', 'asc')->get();
+
+            // Map the phase codes into standard names for visual
+            $phases = [
+                'pra_kp' => ['key' => 'pra_kp', 'label' => 'Pra KP'],
+                'saat_kp' => ['key' => 'saat_kp', 'label' => 'Saat KP'],
+                'pasca_kp' => ['key' => 'pasca_kp', 'label' => 'Pasca KP']
+            ];
+
+            // Aggregate by phases
+            $groupedTemplates = collect($phases)->map(function ($phase) use ($templates) {
+                $items = $templates->where('phase', $phase['key']);
+                return (object) [
+                    'tahap' => $phase['label'],
+                    'syarat_count' => $items->count(),
+                    'dokumens' => $items->pluck('title')->implode(', ') ?: '-',
+                    'raw_items' => $items
+                ];
+            });
+
+        } catch (\Illuminate\Database\QueryException $e) {
+            $groupedTemplates = collect();
+            session()->flash('warning', 'Tabel eo_kp_template belum siap. Silakan jalankan migrasi.');
+        }
+
+        return view('eoffice::koordinator.persyaratan.index', compact('groupedTemplates', 'periodes', 'selectedPeriodeId'));
     }
 
+    /**
+     * Copy Default Configuration to Active Period
+     */
+    public function applyDefaultPersyaratan(\Illuminate\Http\Request $request)
+    {
+        $periodeId = $request->input('periode_id');
+        if (!$periodeId || $periodeId === 'all') {
+            return redirect()->back()->with('error', 'Pilih periode aktif terlebih dahulu sebelum menggunakan konfigurasi bawaan.');
+        }
+
+        // Cari periode sebelumnya (paling terakhir dibuat, yang punya template dokumen)
+        $previousPeriodeWithTemplates = \Modules\EOffice\Models\KpPeriode::where('id', '!=', $periodeId)
+            ->whereHas('templates')
+            ->orderBy('created_at', 'desc')
+            ->first();
+
+        // Ambil source template dari periode sebelumnya, JIKA tidak ada baru pakai master (periode_id = null)
+        if ($previousPeriodeWithTemplates) {
+            $sourceTemplates = \Modules\EOffice\Models\KpTemplate::where('periode_id', $previousPeriodeWithTemplates->id)->get();
+        } else {
+            $sourceTemplates = \Modules\EOffice\Models\KpTemplate::whereNull('periode_id')->get();
+        }
+
+        if ($sourceTemplates->isEmpty()) {
+            return redirect()->back()->with('error', 'Belum ada riwayat dokumen dari periode mana pun yang bisa disalin.');
+        }
+
+        $copiedCount = 0;
+        foreach ($sourceTemplates as $source) {
+            $exists = \Modules\EOffice\Models\KpTemplate::where('periode_id', $periodeId)
+                ->where('phase', $source->phase)
+                ->where('title', $source->title)
+                ->exists();
+
+            if (!$exists) {
+                \Modules\EOffice\Models\KpTemplate::create([
+                    'periode_id' => $periodeId,
+                    'title' => $source->title,
+                    'description' => $source->description,
+                    'phase' => $source->phase,
+                    'file_name' => $source->file_name,
+                    'file_path' => $source->file_path, // Aman karena file_path merujuk storage yang sama
+                    'file_type' => $source->file_type,
+                    'is_required' => $source->is_required,
+                    'uploaded_by' => auth()->id(),
+                ]);
+                $copiedCount++;
+            }
+        }
+
+        if ($copiedCount > 0) {
+            if ($previousPeriodeWithTemplates) {
+                return redirect()->back()->with('success', "Berhasil menyalin {$copiedCount} dokumen dari periode sebelumnya (Semester {$previousPeriodeWithTemplates->semester} {$previousPeriodeWithTemplates->tahun_ajaran}).");
+            } else {
+                return redirect()->back()->with('success', "Berhasil menyalin {$copiedCount} template dokumen dari master sistem.");
+            }
+        }
+
+        return redirect()->back()->with('warning', 'Konfigurasi dokumen sudah lengkap dan sama dengan sebelumnya.');
+    }
+
+    /**
+     * Edit Persyaratan Dokumen per Fase
+     */
+    public function editPersyaratan(\Illuminate\Http\Request $request, string $phase)
+    {
+        $phaseLabels = [
+            'pra_kp' => 'Pra KP',
+            'saat_kp' => 'Saat KP',
+            'pasca_kp' => 'Pasca KP',
+        ];
+
+        if (!array_key_exists($phase, $phaseLabels))
+            abort(404);
+
+        $periodes = \Modules\EOffice\Models\KpPeriode::orderBy('created_at', 'desc')->get();
+        $selectedPeriodeId = $request->get('periode_id');
+        $activePeriode = $periodes->firstWhere('is_active', true);
+
+        if (!$selectedPeriodeId && $activePeriode) {
+            $selectedPeriodeId = $activePeriode->id;
+        }
+
+        $templates = \Modules\EOffice\Models\KpTemplate::where('phase', $phase)
+            ->when($selectedPeriodeId, fn($q) => $q->where('periode_id', $selectedPeriodeId), fn($q) => $q->whereNull('periode_id'))
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        $phaseLabel = $phaseLabels[$phase];
+
+        return view('eoffice::koordinator.persyaratan.edit', compact('templates', 'phase', 'phaseLabel', 'periodes', 'selectedPeriodeId'));
+    }
+
+    /**
+     * Update (sync) Persyaratan Dokumen per Fase
+     */
+    public function updatePersyaratan(\Illuminate\Http\Request $request, string $phase)
+    {
+        $phaseLabels = ['pra_kp', 'saat_kp', 'pasca_kp'];
+        if (!in_array($phase, $phaseLabels))
+            abort(404);
+
+        $periodeId = $request->input('periode_id');
+        if (!$periodeId)
+            abort(404, 'Periode ID tidak valid.');
+
+        $docs = $request->input('docs', []);
+        $files = $request->file('files', []);
+
+        // Collect existing templates before deletion to preserve files if no new upload
+        $existingTemplates = \Modules\EOffice\Models\KpTemplate::where('phase', $phase)
+            ->where('periode_id', $periodeId)
+            ->get()
+            ->keyBy('id');
+
+        // Delete all existing templates for this phase+periode and re-create
+        \Modules\EOffice\Models\KpTemplate::where('phase', $phase)
+            ->where('periode_id', $periodeId)
+            ->delete();
+
+        foreach ($docs as $index => $doc) {
+            if (empty($doc['title']))
+                continue;
+
+            $fileName = '';
+            $filePath = '';
+            $fileType = 'document';
+
+            // Check if a new file was uploaded for this index
+            if (isset($files[$index]) && $files[$index]->isValid()) {
+                $file = $files[$index];
+                $fileName = $file->getClientOriginalName();
+                $fileType = $file->getClientOriginalExtension();
+                $storedPath = $file->store('kp-templates/' . $phase, 'public');
+                $filePath = $storedPath;
+            } else {
+                // Preserve existing file if doc had one (matched by existing_file hidden field or doc id)
+                if (!empty($doc['existing_path'])) {
+                    $filePath = $doc['existing_path'];
+                    $fileName = $doc['existing_file'] ?? '';
+                }
+            }
+
+            \Modules\EOffice\Models\KpTemplate::create([
+                'periode_id' => $periodeId,
+                'title' => $doc['title'],
+                'description' => $doc['description'] ?? null,
+                'phase' => $phase,
+                'file_name' => $fileName,
+                'file_path' => $filePath,
+                'file_type' => $fileType ?: 'document',
+                'is_required' => true,
+                'uploaded_by' => auth()->id(),
+            ]);
+        }
+
+        return redirect()
+            ->route('eoffice.kp.koordinator.persyaratan_dokumen', ['periode_id' => $periodeId])
+            ->with('success', 'Persyaratan dokumen fase ' . strtoupper(str_replace('_', ' ', $phase)) . ' berhasil diperbarui.');
+    }
+
+    /**
+     * Hapus semua persyaratan dokumen per fase (untuk periode tertentu)
+     */
+    public function destroyPersyaratanPhase(\Illuminate\Http\Request $request, string $phase)
+    {
+        $periodeId = $request->input('periode_id');
+        if (!$periodeId)
+            abort(404, 'Periode ID tidak valid.');
+
+        \Modules\EOffice\Models\KpTemplate::where('phase', $phase)
+            ->where('periode_id', $periodeId)
+            ->delete();
+
+        return redirect()
+            ->route('eoffice.kp.koordinator.persyaratan_dokumen', ['periode_id' => $periodeId])
+            ->with('success', 'Persyaratan dokumen fase ' . strtoupper(str_replace('_', ' ', $phase)) . ' berhasil dihapus.');
+    }
     public function storeTemplate(Request $request)
     {
         $validated = $request->validate([
@@ -356,8 +567,8 @@ class KoordinatorController extends Controller implements HasMiddleware
                 'nim' => $kp->mahasiswa->nim ?? '-',
                 'prodi' => 'Teknik Komputer',
                 'dosen_pembimbing' => $kp->dosenPembimbing->nama_lengkap ?? null,
-                'tempat_kp' => $kp->tempat_fix ?? $kp->instansi_kp ?? '-',
-                'judul_kp' => $kp->judul_fix ?? $kp->judul_kp ?? '-',
+                'tempat_kp' => $kp->instansi_kp ?? '-',
+                'judul_kp' => $kp->judul_kp ?? '-',
                 'durasi_kp' => ($kp->tanggal_mulai ? date('d M Y', strtotime($kp->tanggal_mulai)) : '-') . ' - ' . ($kp->tanggal_selesai ? date('d M Y', strtotime($kp->tanggal_selesai)) : '-'),
                 'status_keseluruhan' => $status_keseluruhan,
                 'tahap_aktif' => $kp->status_kp === 'active' ? 'Saat KP' : ($kp->status_kp === 'Selesai' || $kp->status_kp === 'Pasca KP' ? 'Pasca KP' : 'Pra KP'),
@@ -532,6 +743,7 @@ class KoordinatorController extends Controller implements HasMiddleware
                 'nama' => $kp->nama ?? 'Unknown',
                 'nim' => $kp->nim ?? '-',
                 'prodi' => 'Teknik Komputer',
+                'kelas' => $kp->kelas ?? '-',
                 'tempat_kp' => $kp->instansi_kp ?? 'Belum ditentukan',
                 'judul_kp' => $kp->judul_kp ?? 'Belum ditentukan',
                 'dosen_pembimbing' => $kp->dosen_pembimbing,
@@ -554,8 +766,67 @@ class KoordinatorController extends Controller implements HasMiddleware
 
         // Unique filtered Periodes list for the dropdown
         $periodes = $allPeriodes;
+        $dosens = \Modules\EOffice\Models\KpDosen::with('user')->get();
 
-        return view('eoffice::koordinator.data_mahasiswa', compact('mahasiswas', 'periodes'));
+        return view('eoffice::koordinator.data_mahasiswa', compact('mahasiswas', 'periodes', 'dosens'));
+    }
+
+    /**
+     * Override / Update Data & Nilai Mahasiswa dari Modal Edit
+     */
+    public function updateDataMahasiswa(Request $request, $id)
+    {
+        $kp = \Modules\EOffice\Models\KerjaPraktik::findOrFail($id);
+
+        $request->validate([
+            'dosen_pembimbing_id' => 'nullable|exists:eo_kp_dosen,id',
+            'nilai_lapangan' => 'nullable|numeric|min:0|max:100',
+            'kelas' => 'nullable|string|max:50',
+            // Kita bisa juga override status_kp di sini jika user menyediakan
+        ]);
+
+        if ($request->has('kelas')) {
+            $kp->kelas = $request->kelas;
+        }
+
+        if ($request->has('dosen_pembimbing_id')) {
+            $kp->dosen_pembimbing_id = $request->dosen_pembimbing_id;
+
+            // Juga update status balancing menjadi finalized bila override manual
+            if ($request->dosen_pembimbing_id) {
+                \Modules\EOffice\Models\KpBalancing::updateOrCreate(
+                    ['kp_id' => $kp->id],
+                    [
+                        'mahasiswa_id' => $kp->mahasiswa_id,
+                        'dosen_id' => $request->dosen_pembimbing_id,
+                        'status' => 'finalized',
+                        'assigned_by' => auth()->id(),
+                    ]
+                );
+            }
+        }
+
+        $kp->save();
+
+        if ($request->has('nilai_lapangan') || $request->has('nilai_akhir')) {
+            $penilaianData = [];
+            if ($request->has('nilai_lapangan')) {
+                $penilaianData['nilai_lapangan'] = $request->nilai_lapangan;
+            }
+            if ($request->has('nilai_akhir')) {
+                // Di sistem aslinya, nilai akhir dihitung otomatis. Namun request bilang ada field override Nilai.
+                $penilaianData['nilai_akhir'] = $request->nilai_akhir;
+            }
+
+            if (!empty($penilaianData)) {
+                \Modules\EOffice\Models\KpPenilaian::updateOrCreate(
+                    ['kp_id' => $kp->id],
+                    $penilaianData
+                );
+            }
+        }
+
+        return redirect()->back()->with('success', 'Data Mahasiswa berhasil diperbarui!');
     }
 
     public function nilaiLapangan()

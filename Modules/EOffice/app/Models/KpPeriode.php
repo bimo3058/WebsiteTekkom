@@ -52,8 +52,8 @@ class KpPeriode extends Model
         'kelas_dibuka' => 'array',
     ];
 
-    // protected static function newFactory(): KpPeriodeFactory
-    // {
-    //     // return KpPeriodeFactory::new();
-    // }
+    public function templates()
+    {
+        return $this->hasMany(\Modules\EOffice\Models\KpTemplate::class, 'periode_id', 'id');
+    }
 }

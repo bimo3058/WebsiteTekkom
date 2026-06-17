@@ -62,7 +62,7 @@
 
             {{-- STEPPER SEQUENCE --}}
             @php
-                $step1 = !empty($kp->judul_fix) && !empty($kp->tempat_fix);
+                $step1 = !empty($kp->judul_kp) && !empty($kp->instansi_kp);
                 $step2 = $dokumenByJenis->has('Bukti Terima');
                 $step3 = $dokumenByJenis->has('Laporan') && $dokumenByJenis->has('Makalah');
                 
@@ -134,12 +134,12 @@
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mb-5">
                                 <div>
                                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Tempat Instansi Fix</label>
-                                    <input type="text" name="tempat_fix" value="{{ old('instansi_kp', $kp->tempat_fix) }}" required placeholder="Nama instansi tempat Anda diterima..."
+                                    <input type="text" name="instansi_kp" value="{{ old('instansi_kp', $kp->instansi_kp) }}" required placeholder="Nama instansi tempat Anda diterima..."
                                            class="w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2.5 px-4 border bg-slate-50/50 focus:bg-white transition-all">
                                 </div>
                                 <div>
                                     <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Judul Laporan Fix</label>
-                                    <input type="text" name="judul_fix" value="{{ old('judul_kp', $kp->judul_fix) }}" required placeholder="Judul laporan akhir KP Anda..."
+                                    <input type="text" name="judul_kp" value="{{ old('judul_kp', $kp->judul_kp) }}" required placeholder="Judul laporan akhir KP Anda..."
                                            class="w-full rounded-xl border-slate-200 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm py-2.5 px-4 border bg-slate-50/50 focus:bg-white transition-all">
                                 </div>
                             </div>
