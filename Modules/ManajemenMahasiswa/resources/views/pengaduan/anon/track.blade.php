@@ -4,202 +4,99 @@
 
 @push('styles')
     <style>
-        .pgd-card {
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 32px;
+        /* ── Card ── */
+        .detail-card {
+            background: #ffffff; border-radius: 12px; padding: 32px;
             border: 1px solid #DDE1E8;
+            box-shadow: 0 1px 3px rgba(22,22,43,.06), 0 1px 2px rgba(22,22,43,.04);
         }
-        .pgd-badge {
-            font-size: 12px;
-            font-weight: 700;
-            padding: 5px 14px;
-            border-radius: 20px;
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
+
+        /* ── Page Title ── */
+        .page-title h3 {
+            font-size: 1.5rem; font-weight: 700; color: #1e1b4b;
+            margin: 0 0 4px; letter-spacing: -.02em;
         }
+        .page-title p { font-size: .95rem; color: #6b7280; margin: 0; }
+
+        /* ── Tags ── */
+        .tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+        .tag-label {
+            font-size: 11px; font-weight: 600; padding: 4px 12px;
+            border-radius: 20px; display: inline-flex;
+            align-items: center; gap: 4px; white-space: nowrap;
+        }
+        .tag-kategori { background: #e0e7ff; color: #4f46e5; }
+        .tag-baru { background: #f3f4f6; color: #4b5563; }
+        .tag-dibaca { background: #e0f2fe; color: #0284c7; }
+        .tag-didelegasikan { background: #ffedd5; color: #ea580c; }
+        .tag-selesai { background: #bbf7d0; color: #15803d; }
+        .tag-anonim { background: #111827; color: #fff; }
+
+        /* ── Section Labels ── */
         .section-label {
-            font-size: 11px;
-            font-weight: 700;
-            color: #94a3b8;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-            margin-bottom: 8px;
+            font-size: 11px; font-weight: 700; color: #94a3b8;
+            text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px;
         }
-        .section-value {
-            font-size: 15px;
-            font-weight: 600;
-            color: #111827;
-        }
+        .section-value { font-size: 15px; font-weight: 600; color: #111827; }
+
+        /* ── Kronologi Box ── */
         .chronology-box {
-            background: #f8fafc;
-            border-radius: 12px;
-            padding: 24px;
-            color: #334155;
-            font-size: 14px;
-            line-height: 1.8;
-            white-space: pre-wrap;
+            background: #f8fafc; border-radius: 12px; padding: 24px;
+            color: #334155; font-size: 14px; line-height: 1.8;
+            white-space: pre-wrap; border: 1px solid #e2e8f0;
         }
-        .info-grid {
-            background: #fff;
-            border-radius: 12px;
-            padding: 28px 32px;
-            border: 1px solid #DDE1E8;
-        }
+
+        /* ── Section Divider ── */
         .section-divider { display: flex; align-items: center; gap: 12px; margin: 24px 0 16px; }
         .section-divider span { font-size: 12px; font-weight: 800; color: #374151; text-transform: uppercase; letter-spacing: 0.8px; white-space: nowrap; }
         .section-divider::after { content: ''; flex: 1; height: 1px; background: #DDE1E8; }
-        /* ── Delegasi / Process Info Card ───────────────────── */
-        .process-info-card {
-            background: #fffaf0;
-            border: 1px solid #fde68a;
-            border-top: 3px solid #f59e0b;
-            border-radius: 12px;
-            padding: 24px 28px;
-        }
-        .timeline-container {
-            position: relative;
-            padding-left: 24px;
-        }
-        .timeline-container::before {
-            content: '';
-            position: absolute;
-            left: 7px; top: 0; bottom: 0;
-            width: 2px;
-            background: #e2e8f0;
-        }
-        .timeline-item {
-            position: relative;
-            margin-bottom: 24px;
-        }
-        .timeline-item:last-child { margin-bottom: 0; }
-        .timeline-icon {
-            position: absolute;
-            left: -24px; top: 0;
-            width: 16px; height: 16px;
-            border-radius: 50%;
-            background: #fff;
-            border: 3px solid #293C79;
-            transform: translateX(-50%);
-        }
-        .timeline-content {
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            padding: 12px 16px;
-        }
-        .timeline-date {
-            font-size: 11px;
-            font-weight: 600;
-            color: #94a3b8;
-            margin-bottom: 4px;
-        }
 
-        /* Stepper Styles */
-        .stepper-wrapper {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: nowrap !important;
-            justify-content: space-between;
-            align-items: flex-start;
-            margin-bottom: 40px;
-            position: relative;
-            padding: 0 20px;
-            width: 100%;
+        /* ── Info Grid ── */
+        .info-grid {
+            display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 24px;
         }
-        .stepper-wrapper::before {
-            content: '';
-            position: absolute;
-            top: 15px; left: 40px; right: 40px;
-            height: 2px;
-            background: #DDE1E8;
-            z-index: 1;
+        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+        .info-item-label {
+            font-size: 11px; font-weight: 700; color: #94a3b8;
+            text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px;
         }
-        .step {
-            position: relative;
-            z-index: 2;
-            text-align: center;
-            width: 60px;
+        .info-item-value { font-size: 14px; font-weight: 600; color: #1e293b; }
+
+        /* ── Status Footer ── */
+        .status-footer {
+            display: flex; align-items: center; gap: 10px; padding: 16px 20px;
+            border-radius: 10px; font-weight: 600; font-size: 14px; border-left: 4px solid;
         }
-        .step-icon {
-            width: 32px; height: 32px;
-            border-radius: 50%;
-            background: #fff;
-            border: 2px solid #DDE1E8;
-            margin: 0 auto 8px auto;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 14px;
-            font-weight: 700;
-            color: #9ca3af;
-            transition: all 0.3s;
+        .status-footer-menunggu { background: #fffbeb; color: #92400e; border-color: #fbbf24; }
+        .status-footer-proses { background: #eff6ff; color: #1d4ed8; border-color: #60a5fa; }
+        .status-footer-selesai { background: #ecfdf5; color: #065f46; border-color: #10b981; }
+
+        /* ── Process Info Card ── */
+        .process-info-card {
+            background: #fffaf0; border: 1px solid #fde68a;
+            border-top: 3px solid #f59e0b; border-radius: 12px; padding: 24px 28px;
         }
-        .step.active .step-icon {
-            border-color: #293C79;
-            color: #293C79;
-            box-shadow: 0 0 0 4px rgba(11, 38, 110, 0.1);
-        }
-        .step.completed .step-icon {
-            background: #293C79;
-            border-color: #293C79;
-            color: #fff;
-        }
-        .step-label {
-            font-size: 11px;
-            font-weight: 700;
-            color: #9ca3af;
-            text-transform: uppercase;
-        }
-        .step.active .step-label { color: #111827; }
-        .step.completed .step-label { color: #293C79; }
     </style>
 @endpush
 
 @section('content')
-    <div class="mb-4">
-        <h3 class="fw-bold text-dark mb-1">Status Pengaduan</h3>
-        <p class="text-muted mb-0" style="font-size: 14px;">Pantau progress tindak lanjut aduan konfidensial Anda di sini.</p>
+    <div class="page-title mb-4">
+        <h3>Status Pengaduan</h3>
+        <p>Pantau progress tindak lanjut aduan konfidensial Anda di sini.</p>
     </div>
 
     @php
         $status = strtolower($pengaduan->status);
-        $step = match($status) {
-            'baru', 'dibaca' => 1,
-            'didelegasikan' => 2,
-            'selesai' => 3,
-            default => 1,
-        };
+        $waktuKejadian = data_get($pengaduan, 'data_template.waktu_kejadian')
+            ?? data_get($pengaduan, 'data_template.tanggal_kejadian');
+        $linkBukti = data_get($pengaduan, 'data_template.link_bukti');
     @endphp
 
-    <div class="stepper-wrapper">
-        <div class="step {{ $step >= 1 ? ($step > 1 ? 'completed' : 'active') : '' }}">
-            <div class="step-icon">
-                @if($step > 1) <span class="material-symbols-outlined" style="font-size: 18px;">check</span> @else 1 @endif
-            </div>
-            <div class="step-label">Terkirim</div>
-        </div>
-        <div class="step {{ $step >= 2 ? ($step > 2 ? 'completed' : 'active') : '' }}">
-            <div class="step-icon">
-                @if($step > 2) <span class="material-symbols-outlined" style="font-size: 18px;">check</span> @else 2 @endif
-            </div>
-            <div class="step-label">Diproses</div>
-        </div>
-        <div class="step {{ $step >= 3 ? 'completed active' : '' }}">
-            <div class="step-icon">
-                @if($step >= 3) <span class="material-symbols-outlined" style="font-size: 18px;">check</span> @else 3 @endif
-            </div>
-            <div class="step-label">Selesai</div>
-        </div>
-    </div>
-
     @if (session('success'))
-        <div class="alert alert-success border-0 mb-4" style="background-color: #dcfce7; color: #16a34a; border-radius: 12px; font-weight: 500; font-size: 14px;">
-            <div class="d-flex align-items-center gap-2">
-                <span class="material-symbols-outlined" style="font-size: 18px;">check_circle</span>
-                {{ session('success') }}
-            </div>
+        <div class="alert alert-success alert-dismissible fade show mb-4" role="alert"
+            style="background-color: #dcfce7; color: #16a34a; border-radius: 12px; border: none; font-weight: 600;">
+            {{ session('success') }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
         </div>
     @endif
     @if ($errors->any())
@@ -212,106 +109,143 @@
         </div>
     @endif
 
-    {{-- ── Main Card ─────────────────────────────────────────── --}}
-    <div class="pgd-card mb-4">
-        <h4 class="fw-bold text-dark mb-3" style="font-size: 20px; line-height: 1.4;">
-            {{ data_get($pengaduan, 'data_template.judul', '-') }}
-        </h4>
+    {{-- ── Single Card (same as mahasiswa view in show.blade.php) ── --}}
+    <div class="detail-card mb-4">
 
-        <div class="d-flex flex-wrap gap-2 mb-4">
+        {{-- Tags --}}
+        <div class="tags-row">
             @php
                 $kategoriRaw = (string) $pengaduan->kategori;
                 $kategori = \Modules\ManajemenMahasiswa\Models\Pengaduan::normalizeKategori($kategoriRaw);
-            @endphp
-            <span class="pgd-badge" style="background: #e0e7ff; color: #4f46e5;">
-                {{ ucwords(str_replace('_', ' ', $kategori)) }}
-            </span>
-            @php
-                $statusStyle = match(strtolower($pengaduan->status)) {
-                    'dibaca'  => 'background: #e0f2fe; color: #0284c7;',
-                    'didelegasikan' => 'background: #ffedd5; color: #ea580c;',
-                    'selesai' => 'background: #bbf7d0; color: #15803d;',
-                    default   => 'background: #f3f4f6; color: #4b5563;',
+                $statusStyle = match($status) {
+                    'selesai' => 'tag-selesai',
+                    'dibaca' => 'tag-dibaca',
+                    'didelegasikan' => 'tag-didelegasikan',
+                    default => 'tag-baru',
                 };
             @endphp
-            <span class="pgd-badge" style="{{ $statusStyle }}">
-                {{ ucfirst($pengaduan->status) }}
+            <span class="tag-label tag-kategori">{{ ucwords(str_replace('_', ' ', $kategori)) }}</span>
+            <span class="tag-label {{ $statusStyle }}">{{ ucfirst($pengaduan->status) }}</span>
+            <span class="tag-label tag-anonim">
+                <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
             </span>
-            <span class="pgd-badge" style="background: #111827; color: white;">
-                <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: middle;">lock</span> Konfidensial
-            </span>
-            <span class="pgd-badge" style="background: #f8fafc; color: #6b7280; border: 1px solid #DDE1E8;">
-                🕑 {{ optional($pengaduan->created_at)->translatedFormat('d F Y, H:i') }}
-            </span>
+        </div>
+
+        {{-- Judul --}}
+        <h4 class="fw-bold text-dark mb-2" style="font-size: 20px; line-height: 1.4;">
+            {{ data_get($pengaduan, 'data_template.judul', '-') }}
+        </h4>
+        <div style="font-size: 13px; color: #9ca3af; margin-bottom: 24px;">
+            Diajukan {{ optional($pengaduan->created_at)->translatedFormat('d F Y, H:i') }} WIB
         </div>
 
         <hr style="border-color: #f3f4f6; margin: 0 0 24px 0;">
 
-
-
+        {{-- Hal Aduan --}}
         <div class="mb-4">
             <div class="section-label">Hal Aduan</div>
             <div class="section-value" style="white-space: pre-wrap; line-height: 1.7;">{{ data_get($pengaduan, 'data_template.hal_aduan', '—') ?: '—' }}</div>
         </div>
-        <div>
+
+        {{-- Kronologi --}}
+        <div class="mb-4">
             <div class="section-label">Kronologi / Isi Pengaduan</div>
             <div class="chronology-box">{{ data_get($pengaduan, 'data_template.kronologi', '-') }}</div>
         </div>
-    </div>
 
-
-    {{-- ── Status Proses & Tanggapan Final ──────────────────────── --}}
-    <div class="mb-4">
-
-        {{-- ── Panel Status Proses (Info delegasi untuk pelapor anonim) ── --}}
+        {{-- Info Tambahan --}}
         @php
-            $delegasiInfo = $pengaduan->delegasiAktif ?? $pengaduan->delegasiTerakhir;
+            $infoItems = collect([
+                ['label' => 'Lokasi', 'value' => data_get($pengaduan, 'data_template.lokasi')],
+                ['label' => 'Waktu Kejadian', 'value' => $waktuKejadian ? \Carbon\Carbon::parse($waktuKejadian)->translatedFormat('d F Y, H:i') : null],
+                ['label' => 'Angkatan', 'value' => data_get($pengaduan, 'data_template.angkatan')],
+                ['label' => 'Mata Kuliah', 'value' => data_get($pengaduan, 'data_template.mata_kuliah')],
+                ['label' => 'Nama Dosen', 'value' => data_get($pengaduan, 'data_template.nama_dosen')],
+                ['label' => 'Nama Tendik', 'value' => data_get($pengaduan, 'data_template.nama_tendik')],
+                ['label' => 'Frekuensi', 'value' => data_get($pengaduan, 'data_template.frekuensi')],
+            ])->filter(fn($i) => !empty($i['value']));
         @endphp
 
-            @if($delegasiInfo && in_array($pengaduan->status, [
-                \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_DIDELEGASIKAN
-            ]))
-                <div class="process-info-card mb-4">
-                    <div class="d-flex align-items-start gap-3">
-                        <div style="background: #fef3c7; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            <span class="material-symbols-outlined" style="font-size: 20px; color: #d97706;">hourglass_top</span>
-                        </div>
-                        <div>
-                            @if($pengaduan->status === \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_DIDELEGASIKAN)
-                                <h6 class="fw-bold mb-1" style="color: #92400e; font-size: 15px;">Pengaduan Sedang Ditinjau Pihak Berwenang</h6>
-                                <p class="mb-0 text-muted" style="font-size: 13px; line-height: 1.6;">
-                                    Pengaduan Anda telah diteruskan ke pihak yang berwenang untuk ditindaklanjuti.
-                                    Proses ini membutuhkan waktu.
-                                </p>
-                                <div class="mt-2" style="font-size: 12px; color: #b45309;">
-                                    <span class="material-symbols-outlined" style="font-size: 14px; vertical-align: text-bottom;">schedule</span>
-                                    Didelegasikan sejak: {{ $delegasiInfo->delegated_at->translatedFormat('d F Y, H:i') }} WIB
-                                </div>
-                            @endif
+        @if($infoItems->isNotEmpty() || $linkBukti)
+            <div class="section-divider">
+                <span>Informasi Tambahan</span>
+            </div>
+            <div class="info-grid">
+                @foreach($infoItems as $info)
+                    <div>
+                        <div class="info-item-label">{{ $info['label'] }}</div>
+                        <div class="info-item-value">{{ $info['value'] }}</div>
+                    </div>
+                @endforeach
+                @if($linkBukti)
+                    <div>
+                        <div class="info-item-label">Bukti Dukung</div>
+                        <div class="info-item-value">
+                            <a href="{{ $linkBukti }}" target="_blank" rel="noopener noreferrer"
+                               style="color: #293C79; text-decoration: none;">Lihat Bukti ↗</a>
                         </div>
                     </div>
-                </div>
-            @endif
+                @endif
+            </div>
+        @endif
 
-            {{-- ── Info jika delegasi ditolak dan tiket kembali ke admin ── --}}
-            @if($delegasiInfo && $delegasiInfo->status === 'ditolak' && !in_array($pengaduan->status, [
-                \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_SELESAI,
-            ]))
-                <div class="process-info-card mb-4" style="background: #fefce8; border-color: #fde68a;">
-                    <div class="d-flex align-items-start gap-3">
-                        <div style="background: #e0f2fe; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">
-                            <span class="material-symbols-outlined" style="font-size: 20px; color: #0284c7;">replay</span>
-                        </div>
-                        <div>
-                            <h6 class="fw-bold mb-1" style="color: #92400e; font-size: 15px;">Pengaduan Dikembalikan ke Admin</h6>
-                            <p class="mb-0 text-muted" style="font-size: 13px; line-height: 1.6;">
-                                Pihak yang ditunjuk mengembalikan pengaduan ini ke Admin untuk ditinjau ulang.
-                                Admin akan menindaklanjuti sendiri atau meneruskan ke pihak lain yang lebih tepat.
-                            </p>
-                        </div>
+        {{-- Status Footer --}}
+        <div style="margin-top: 28px;">
+            @php
+                $footerConfig = match($status) {
+                    'selesai' => ['class' => 'status-footer-selesai', 'icon' => 'check-circle', 'text' => 'Pengaduan sudah ditangani'],
+                    'dibaca', 'didelegasikan' => ['class' => 'status-footer-proses', 'icon' => 'clock-02', 'text' => 'Pengaduan sedang diproses'],
+                    default => ['class' => 'status-footer-menunggu', 'icon' => 'clock-02', 'text' => 'Pengaduan sedang menunggu ditinjau'],
+                };
+            @endphp
+            <div class="status-footer {{ $footerConfig['class'] }}">
+                <x-manajemenmahasiswa::ui.icon name="{{ $footerConfig['icon'] }}" size="18" />
+                {{ $footerConfig['text'] }}
+            </div>
+        </div>
+    </div>
+
+    {{-- ── Delegasi Info (simplified for anon) ── --}}
+    @php $delegasiInfo = $pengaduan->delegasiAktif ?? $pengaduan->delegasiTerakhir; @endphp
+
+    @if($delegasiInfo && $pengaduan->status === \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_DIDELEGASIKAN)
+        <div class="process-info-card mb-4">
+            <div class="d-flex align-items-start gap-3">
+                <div style="background: #fef3c7; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #d97706;">
+                    <x-manajemenmahasiswa::ui.icon name="clock-02" size="20" />
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1" style="color: #92400e; font-size: 15px;">Pengaduan Sedang Ditinjau Pihak Berwenang</h6>
+                    <p class="mb-0 text-muted" style="font-size: 13px; line-height: 1.6;">
+                        Pengaduan Anda telah diteruskan ke pihak yang berwenang untuk ditindaklanjuti.
+                        Proses ini membutuhkan waktu.
+                    </p>
+                    <div class="mt-2 d-flex align-items-center gap-1" style="font-size: 12px; color: #b45309;">
+                        <x-manajemenmahasiswa::ui.icon name="clock-02" size="13" />
+                        Didelegasikan sejak: {{ $delegasiInfo->delegated_at->translatedFormat('d F Y, H:i') }} WIB
                     </div>
                 </div>
-            @endif
-    </div>
+            </div>
+        </div>
+    @endif
+
+    @if($delegasiInfo && $delegasiInfo->status === 'ditolak' && !in_array($pengaduan->status, [
+        \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_SELESAI,
+    ]))
+        <div class="process-info-card mb-4" style="background: #fefce8; border-color: #fde68a;">
+            <div class="d-flex align-items-start gap-3">
+                <div style="background: #e0f2fe; width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #0284c7;">
+                    <x-manajemenmahasiswa::ui.icon name="arrow-circle-left" size="20" />
+                </div>
+                <div>
+                    <h6 class="fw-bold mb-1" style="color: #92400e; font-size: 15px;">Pengaduan Dikembalikan ke Admin</h6>
+                    <p class="mb-0 text-muted" style="font-size: 13px; line-height: 1.6;">
+                        Pihak yang ditunjuk mengembalikan pengaduan ini ke Admin untuk ditinjau ulang.
+                        Admin akan menindaklanjuti sendiri atau meneruskan ke pihak lain yang lebih tepat.
+                    </p>
+                </div>
+            </div>
+        </div>
+    @endif
 
 @endsection

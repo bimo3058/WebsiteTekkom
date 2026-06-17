@@ -338,7 +338,34 @@
                             <td style="color: #9ca3af;">{{ ($prestasiData->currentPage() - 1) * $prestasiData->perPage() + $i + 1 }}</td>
                             <td style="font-weight: 600;">{{ $p->kemahasiswaan->nama ?? '-' }}</td>
                             <td style="font-family: monospace; font-size: 13px; color: #4f46e5;">{{ $p->kemahasiswaan->nim ?? '-' }}</td>
-                            <td style="font-weight: 600;">{{ $p->nama_prestasi }}</td>
+                            <td style="font-weight: 600;">{{ $p->nama_prestasi }}
+                                @if($p->nomor_sertifikat)
+                                    <div style="font-size: 11px; color: #4f46e5; margin-top: 4px; display: flex; align-items: center; gap: 4px;">
+                                        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                        <span title="{{ $p->nomor_sertifikat }}">{{ Str::limit($p->nomor_sertifikat, 28) }}</span>
+                                        @if($p->link_verifikasi)
+                                            <a href="{{ $p->link_verifikasi }}" target="_blank" rel="noopener"
+                                               title="Verifikasi online ↗"
+                                               style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;background:#eef2ff;border:1px solid #c7d2fe;color:#4f46e5;text-decoration:none;flex-shrink:0;">
+                                                <svg width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                            </a>
+                                        @endif
+                                    </div>
+                                @elseif($p->link_verifikasi)
+                                    <div style="font-size: 11px; margin-top: 4px;">
+                                        <a href="{{ $p->link_verifikasi }}" target="_blank" rel="noopener"
+                                           style="color:#4f46e5;text-decoration:none;display:inline-flex;align-items:center;gap:3px;">
+                                            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+                                            Verifikasi Online
+                                        </a>
+                                    </div>
+                                @else
+                                    <div style="font-size: 10px; color: #f59e0b; margin-top: 3px; display:flex; align-items:center; gap:3px;" title="Mahasiswa tidak menyertakan nomor sertifikat maupun link verifikasi">
+                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                                        Tanpa nomor/link verifikasi
+                                    </div>
+                                @endif
+                            </td>
                             <td><span class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span></td>
                             <td style="font-size: 13px; color: #6b7280;">
                                 @if($p->tanggal)

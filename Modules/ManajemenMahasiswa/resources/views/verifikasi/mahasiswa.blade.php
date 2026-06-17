@@ -650,6 +650,33 @@
                         <input type="date" name="tanggal" class="form-control form-control-custom" required
                                value="{{ date('Y-m-d') }}">
                     </div>
+
+                    {{-- ── Verifikasi Keaslian Sertifikat (Request Bu Bellia) ── --}}
+                    <div class="mb-3">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <label class="form-label-custom mb-0">
+                                Nomor Sertifikat
+                                <span style="color: #9ca3af; font-weight: 400; font-size: 12px;">(opsional — wajib jika Belmawa/Puspresnas)</span>
+                            </label>
+                            <span class="text-muted" style="font-size: 11px;" id="charCount_nomor_sertifikat">0 / 100 huruf</span>
+                        </div>
+                        <input type="text" name="nomor_sertifikat" class="form-control form-control-custom"
+                               maxlength="100"
+                               placeholder="Contoh: B/1234/PKM/PUSPRESNAS/2026"
+                               oninput="document.getElementById('charCount_nomor_sertifikat').innerText = this.value.length + ' / 100 huruf'">
+                        <small class="text-muted" style="font-size: 11px;">Nomor resmi yang tertera di sertifikat.</small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label-custom">
+                            Link Verifikasi Online
+                            <span style="color: #9ca3af; font-weight: 400; font-size: 12px;">(opsional)</span>
+                        </label>
+                        <input type="url" name="link_verifikasi" class="form-control form-control-custom"
+                               maxlength="500"
+                               placeholder="https://sertifikat.kemdikbud.go.id/verify/...">
+                        <small class="text-muted" style="font-size: 11px;">URL halaman verifikasi resmi penyelenggara (jika tersedia).</small>
+                    </div>
+
                     <div class="mb-3">
                         <label class="form-label-custom">
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg>

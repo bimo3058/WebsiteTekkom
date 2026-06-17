@@ -361,6 +361,8 @@ class VerifikasiController extends Controller
             'nama_prestasi' => 'required|string|max:50',
             'tingkat'       => 'required|in:' . implode(',', Prestasi::TINGKAT_LIST),
             'tanggal'       => 'required|date',
+            'nomor_sertifikat' => 'nullable|string|max:100',
+            'link_verifikasi'  => 'nullable|url|max:500',
             'bukti_images'  => 'nullable|array|max:5',
             'bukti_images.*'=> 'file|mimes:jpg,jpeg,png,gif,webp|max:10240',
             'bukti_docs'    => 'nullable|array|max:5',
@@ -388,6 +390,9 @@ class VerifikasiController extends Controller
             'tahun'               => date('Y', strtotime($request->tanggal)),
             'verification_status' => 'pending',
             'claim_status'        => Prestasi::CLAIM_BELUM_AJUKAN,
+            // Verifikasi keaslian sertifikat (Request Bu Bellia)
+            'nomor_sertifikat'    => $request->nomor_sertifikat ?: null,
+            'link_verifikasi'     => $request->link_verifikasi ?: null,
         ]);
 
         // Upload bukti files ke Supabase

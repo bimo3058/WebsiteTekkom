@@ -155,7 +155,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             });
 
             // Akses pengaduan: mahasiswa, pengurus himpunan, dan staff (dosen/gpm/admin)
-            Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|dosen|dosen_koordinator|dpm|gpm|ketua_departemen|admin|superadmin|admin_kemahasiswaan')->group(function () {
+            Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|dosen|dosen_koordinator|dpm|gpm|kaprodi|ketua_departemen|admin|superadmin|admin_kemahasiswaan')->group(function () {
                 Route::get('/', [PengaduanController::class, 'index'])->name('index');
                 Route::get('/{pengaduan}', [PengaduanController::class, 'show'])
                     ->whereNumber('pengaduan')
@@ -163,7 +163,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             });
 
             // Admin: delegasi, tutup paksa
-            Route::middleware('role:admin|superadmin|admin_kemahasiswaan|gpm|dpm|ketua_departemen')->group(function () {
+            Route::middleware('role:admin|superadmin|admin_kemahasiswaan|gpm|kaprodi|dpm|ketua_departemen')->group(function () {
                 Route::post('/{pengaduan}/delegate', [PengaduanController::class, 'delegate'])
                     ->name('delegate')->whereNumber('pengaduan');
                 Route::post('/{pengaduan}/close-admin', [PengaduanController::class, 'closeByAdmin'])
@@ -174,7 +174,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::delete('/{pengaduan}', [PengaduanController::class, 'destroy'])
                 ->name('destroy')
                 ->whereNumber('pengaduan')
-                ->middleware('role:admin|superadmin|admin_kemahasiswaan|gpm|dpm|ketua_departemen');
+                ->middleware('role:admin|superadmin|admin_kemahasiswaan|gpm|kaprodi|dpm|ketua_departemen');
 
             // ── Delegasi (khusus Dosen) ────────────────────────────────────
             Route::prefix('delegasi')->name('delegasi.')->middleware('role:dosen|dosen_koordinator')->group(function () {
