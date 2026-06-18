@@ -2,6 +2,7 @@
 
 namespace Modules\ManajemenMahasiswa\Services;
 
+use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Modules\ManajemenMahasiswa\Models\DashboardAnalitik;
@@ -15,6 +16,7 @@ use Modules\ManajemenMahasiswa\Models\Pengaduan;
 use Modules\ManajemenMahasiswa\Models\ForumReport;
 use Modules\ManajemenMahasiswa\Models\Thread;
 use Modules\ManajemenMahasiswa\Models\PengumumanApprovalRequest;
+use Modules\ManajemenMahasiswa\Models\PengurusHimaskom;
 
 class DashboardAnalitikService
 {
@@ -91,7 +93,7 @@ class DashboardAnalitikService
     /**
      * Tentukan scope dashboard berdasarkan role user.
      * - gpm  : GPM & Ketua Departemen (fokus evaluasi mutu)
-     * - dpm  : DPM (fokus data mahasiswa akademik)
+     * - dpm  : DPM / Dosen Pembina Mahasiswa (fokus pembinaan himpunan & kegiatan kemahasiswaan)
      * - admin: Superadmin, Admin, Admin Kemahasiswaan (dashboard penuh)
      */
     public function resolveScope(array $roles): string
@@ -113,10 +115,10 @@ class DashboardAnalitikService
         return match ($scope) {
             // GPM & Ketua Departemen — fokus data evaluasi (tanpa action items operasional)
             'gpm' => ['activity', 'evaluasi_mutu', 'mahasiswa', 'calon_do', 'lulusan', 'alumni'],
-            // DPM — fokus mahasiswa akademik saja (tanpa alumni karir / operasional / mutu)
-            'dpm' => ['mahasiswa', 'calon_do', 'lulusan'],
-            // Admin — dashboard penuh tanpa section metrik mutu
-            default => ['action_items', 'activity', 'mahasiswa', 'calon_do', 'lulusan', 'alumni'],
+            // DPM — fokus pembinaan himpunan, proker, pelaksanaan kegiatan, partisipasi, dan prestasi/reward.
+            'dpm' => ['dpm_himpunan', 'dpm_proker', 'dpm_pelaksanaan', 'dpm_partisipasi', 'dpm_prestasi_reward', 'mahasiswa', 'calon_do', 'lulusan'],
+            // Admin — dashboard operasional modul kemahasiswaan
+            default => ['action_items', 'admin_operasional', 'activity', 'mahasiswa', 'calon_do', 'lulusan', 'alumni'],
         };
     }
 
@@ -135,8 +137,14 @@ class DashboardAnalitikService
         ];
 
         if (in_array('action_items', $sections, true))  $data['action_items'] = $this->getActionItems();
+        if (in_array('admin_operasional', $sections, true)) $data['admin_operasional'] = $this->getAdminOperationalStats();
         if (in_array('activity', $sections, true))       $data['activity']     = $this->getActivityStats();
         if (in_array('evaluasi_mutu', $sections, true))  $data['evaluasi']     = $this->getEvaluasiMutu();
+        if (in_array('dpm_himpunan', $sections, true))   $data['dpm_himpunan'] = $this->getDpmHimpunanStats();
+        if (in_array('dpm_proker', $sections, true))     $data['dpm_proker']   = $this->getDpmProkerStats();
+        if (in_array('dpm_pelaksanaan', $sections, true)) $data['dpm_pelaksanaan'] = $this->getDpmPelaksanaanStats();
+        if (in_array('dpm_partisipasi', $sections, true)) $data['dpm_partisipasi'] = $this->getDpmPartisipasiStats();
+        if (in_array('dpm_prestasi_reward', $sections, true)) $data['dpm_prestasi_reward'] = $this->getDpmPrestasiRewardStats();
         if (in_array('mahasiswa', $sections, true))      $data['mahasiswa']    = $this->getMahasiswaStats();
         if (in_array('calon_do', $sections, true))       $data['calon_do']     = $this->getCalonDO();
         if (in_array('lulusan', $sections, true))        $data['lulusan']      = $this->getLulusanPerPeriode();
@@ -157,7 +165,8 @@ class DashboardAnalitikService
                 'pengaduan_baru'      => Pengaduan::where('status', Pengaduan::STATUS_BARU)->count(),
                 'verif_kegiatan'      => RiwayatKegiatan::pending()->count(),
                 'verif_prestasi'      => Prestasi::pending()->count(),
-                'laporan_forum'       => ForumReport::count(),
+                'reward_pending'      => Prestasi::rewardDiajukan()->count(),
+                'laporan_forum'       => ForumReport::where('status', 'pending')->count(),
                 'pengumuman_pending'  => PengumumanApprovalRequest::where('status', PengumumanApprovalRequest::STATUS_PENDING)->count(),
             ];
         });
@@ -207,8 +216,406 @@ class DashboardAnalitikService
     }
 
     /**
-     * TIER 3 — Data Mahasiswa (cache 120 detik).
-     * Berubah saat admin update status mahasiswa atau data baru masuk — biasanya mingguan.
+     * ADMIN — ringkasan operasional modul yang perlu dipantau admin kemahasiswaan.
+     */
+    public function getAdminOperationalStats(): array
+    {
+        return Cache::remember('mk.dashboard.admin.operasional', 120, function () {
+            $slaHari = 7;
+
+            $pengaduanPerStatus = Pengaduan::where('status', '!=', Pengaduan::STATUS_DRAFT)
+                ->selectRaw('status, count(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status')
+                ->toArray();
+
+            $pengaduanPerKategori = Pengaduan::where('status', '!=', Pengaduan::STATUS_DRAFT)
+                ->selectRaw('kategori, count(*) as total')
+                ->groupBy('kategori')
+                ->orderByDesc('total')
+                ->limit(8)
+                ->pluck('total', 'kategori')
+                ->toArray();
+
+            $totalPengaduan = array_sum($pengaduanPerStatus);
+            $pengaduanSlaLewat = Pengaduan::where('status', '!=', Pengaduan::STATUS_DRAFT)
+                ->whereNull('answered_at')
+                ->where('created_at', '<', now()->subDays($slaHari))
+                ->count();
+
+            $kegiatanStatus = Kegiatan::selectRaw('status, count(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status')
+                ->toArray();
+
+            $targetPeserta = (int) Kegiatan::whereNotNull('target_peserta')->sum('target_peserta');
+            $realisasiPeserta = (int) Kegiatan::whereNotNull('realisasi_peserta')->sum('realisasi_peserta');
+            $anggaranRencana = (float) Kegiatan::whereNotNull('anggaran')->sum('anggaran');
+            $anggaranRealisasi = (float) Kegiatan::whereNotNull('realisasi_anggaran')->sum('realisasi_anggaran');
+
+            $alumniUserIds = Alumni::whereNotNull('user_id')->pluck('user_id')->all();
+
+            return [
+                'sla_hari' => $slaHari,
+                'pengaduan_total' => $totalPengaduan,
+                'pengaduan_baru' => $pengaduanPerStatus[Pengaduan::STATUS_BARU] ?? 0,
+                'pengaduan_dibaca' => $pengaduanPerStatus[Pengaduan::STATUS_DIBACA] ?? 0,
+                'pengaduan_didelegasikan' => $pengaduanPerStatus[Pengaduan::STATUS_DIDELEGASIKAN] ?? 0,
+                'pengaduan_selesai' => $pengaduanPerStatus[Pengaduan::STATUS_SELESAI] ?? 0,
+                'pengaduan_belum_dibaca' => Pengaduan::where('status', Pengaduan::STATUS_BARU)->whereNull('read_at')->count(),
+                'pengaduan_sla_lewat' => $pengaduanSlaLewat,
+                'pengaduan_per_kategori' => $pengaduanPerKategori,
+                'responsivitas_pengaduan' => $totalPengaduan > 0
+                    ? round((($pengaduanPerStatus[Pengaduan::STATUS_SELESAI] ?? 0) + ($pengaduanPerStatus[Pengaduan::STATUS_DIDELEGASIKAN] ?? 0)) / $totalPengaduan * 100)
+                    : 0,
+
+                'verif_riwayat_pending' => RiwayatKegiatan::pending()->count(),
+                'verif_prestasi_pending' => Prestasi::pending()->count(),
+                'reward_pending' => Prestasi::rewardDiajukan()->count(),
+                'reward_sks_pending' => (int) Prestasi::where('claim_status', Prestasi::CLAIM_DIAJUKAN)->sum('reward_sks_max'),
+                'reward_mk_pending' => (int) Prestasi::where('claim_status', Prestasi::CLAIM_DIAJUKAN)->sum('reward_jml_mk_max'),
+                'pengumuman_pending' => PengumumanApprovalRequest::where('status', PengumumanApprovalRequest::STATUS_PENDING)->count(),
+                'forum_report_pending' => ForumReport::where('status', 'pending')->count(),
+
+                'kegiatan_draft' => $kegiatanStatus[Kegiatan::STATUS_DRAFT] ?? 0,
+                'kegiatan_pelaksanaan' => $kegiatanStatus[Kegiatan::STATUS_DISETUJUI] ?? 0,
+                'kegiatan_selesai' => $kegiatanStatus[Kegiatan::STATUS_SELESAI] ?? 0,
+                'kegiatan_tanpa_dosen' => Kegiatan::whereNull('dosen_pendamping_id')->count(),
+                'kegiatan_selesai_belum_realisasi' => Kegiatan::where('status', Kegiatan::STATUS_SELESAI)
+                    ->where(function ($q) {
+                        $q->whereNull('realisasi_peserta')
+                            ->orWhereNull('realisasi_anggaran');
+                    })
+                    ->count(),
+                'target_peserta' => $targetPeserta,
+                'realisasi_peserta' => $realisasiPeserta,
+                'persen_realisasi_peserta' => $targetPeserta > 0 ? round($realisasiPeserta / $targetPeserta * 100) : 0,
+                'anggaran_rencana' => $anggaranRencana,
+                'anggaran_realisasi' => $anggaranRealisasi,
+                'persen_realisasi_anggaran' => $anggaranRencana > 0 ? round($anggaranRealisasi / $anggaranRencana * 100) : 0,
+
+                'mahasiswa_tanpa_nim' => Kemahasiswaan::whereNull('nim')->orWhere('nim', '')->count(),
+                'mahasiswa_tanpa_angkatan' => Kemahasiswaan::whereNull('angkatan')->count(),
+                'lulusan_belum_sinkron' => Kemahasiswaan::alumni()
+                    ->whereNotNull('user_id')
+                    ->when(!empty($alumniUserIds), fn ($q) => $q->whereNotIn('user_id', $alumniUserIds))
+                    ->count(),
+                'alumni_belum_terdata' => Alumni::whereNull('status_karir')->count(),
+            ];
+        });
+    }
+
+    /**
+     * DPM - Struktur dan kesehatan kepengurusan himpunan.
+     */
+    public function getDpmHimpunanStats(): array
+    {
+        return Cache::remember('mk.dashboard.dpm.himpunan', 300, function () {
+            $periodeAktif = DB::table('mk_kepengurusan')
+                ->orderByDesc('tahun_periode')
+                ->orderByDesc('id')
+                ->first();
+
+            $pengurusBase = PengurusHimaskom::query()
+                ->when($periodeAktif, fn ($q) => $q->where('kepengurusan_id', $periodeAktif->id));
+
+            $statusCounts = (clone $pengurusBase)
+                ->selectRaw('status_keaktifan, count(*) as total')
+                ->groupBy('status_keaktifan')
+                ->pluck('total', 'status_keaktifan')
+                ->toArray();
+
+            $perDivisi = (clone $pengurusBase)
+                ->selectRaw("COALESCE(divisi, 'Tanpa Divisi') as divisi, count(*) as total")
+                ->groupByRaw("COALESCE(divisi, 'Tanpa Divisi')")
+                ->orderByDesc('total')
+                ->pluck('total', 'divisi')
+                ->toArray();
+
+            $pengurusInti = (clone $pengurusBase)
+                ->with(['student.user'])
+                ->orderByRaw("CASE WHEN LOWER(jabatan) LIKE '%ketua%' THEN 0 WHEN LOWER(jabatan) LIKE '%sekretaris%' THEN 1 WHEN LOWER(jabatan) LIKE '%bendahara%' THEN 2 ELSE 3 END")
+                ->orderBy('jabatan')
+                ->limit(8)
+                ->get()
+                ->map(fn ($pengurus) => [
+                    'nama'   => $pengurus->student?->user?->name ?? $pengurus->student?->name ?? 'Mahasiswa',
+                    'nim'    => $pengurus->student?->student_number ?? '-',
+                    'jabatan'=> $pengurus->jabatan ?? '-',
+                    'status' => $pengurus->status_keaktifan ?? '-',
+                ]);
+
+            if (array_sum($statusCounts) === 0) {
+                return $this->getDpmHimpunanRoleFallback($periodeAktif);
+            }
+
+            return [
+                'source'         => 'kepengurusan',
+                'periode_aktif'  => $periodeAktif?->tahun_periode,
+                'total_periode'  => DB::table('mk_kepengurusan')->count(),
+                'total_pengurus' => array_sum($statusCounts),
+                'total_aktif'    => $statusCounts[PengurusHimaskom::STATUS_AKTIF] ?? 0,
+                'total_nonaktif' => $statusCounts[PengurusHimaskom::STATUS_NONAKTIF] ?? 0,
+                'total_cuti'     => $statusCounts[PengurusHimaskom::STATUS_CUTI] ?? 0,
+                'kpi_3_label'    => 'Pengurus Aktif',
+                'kpi_3_value'    => $statusCounts[PengurusHimaskom::STATUS_AKTIF] ?? 0,
+                'kpi_4_label'    => 'Nonaktif / Cuti',
+                'kpi_4_value'    => ($statusCounts[PengurusHimaskom::STATUS_NONAKTIF] ?? 0) + ($statusCounts[PengurusHimaskom::STATUS_CUTI] ?? 0),
+                'composition_label' => 'Komposisi Pengurus per Divisi',
+                'per_divisi'     => $perDivisi,
+                'pengurus_inti'  => $pengurusInti,
+            ];
+        });
+    }
+
+    private function getDpmHimpunanRoleFallback(?object $periodeAktif): array
+    {
+        $roleLabels = [
+            'ketua_himpunan'       => 'Ketua Himpunan',
+            'wakil_ketua_himpunan' => 'Wakil Ketua Himpunan',
+            'ketua_bidang'         => 'Ketua Bidang',
+            'ketua_unit'           => 'Ketua Unit',
+            'staff_himpunan'       => 'Staff Himpunan',
+        ];
+
+        $roleNames = array_keys($roleLabels);
+        $pengurus = User::role($roleNames)
+            ->with(['student', 'roles'])
+            ->orderBy('name')
+            ->get();
+
+        $perJabatan = [];
+        foreach ($roleLabels as $role => $label) {
+            $perJabatan[$label] = $pengurus->filter(fn ($user) => $user->hasRole($role))->count();
+        }
+        $perJabatan = array_filter($perJabatan, fn ($total) => $total > 0);
+
+        $pengurusIntiRoles = ['ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit'];
+        $pengurusInti = $pengurus
+            ->filter(fn ($user) => $user->hasAnyRole($pengurusIntiRoles))
+            ->take(8)
+            ->map(function ($user) use ($roleLabels, $roleNames) {
+                $jabatan = collect($roleNames)
+                    ->filter(fn ($role) => $user->hasRole($role))
+                    ->map(fn ($role) => $roleLabels[$role])
+                    ->implode(', ');
+
+                return [
+                    'nama'    => $user->name ?? 'Mahasiswa',
+                    'nim'     => $user->student?->student_number ?? '-',
+                    'jabatan' => $jabatan ?: '-',
+                    'status'  => 'Aktif',
+                ];
+            })
+            ->values();
+
+        return [
+            'source'            => 'role',
+            'periode_aktif'     => $periodeAktif?->tahun_periode,
+            'total_periode'     => DB::table('mk_kepengurusan')->count(),
+            'total_pengurus'    => $pengurus->count(),
+            'total_aktif'       => $pengurus->count(),
+            'total_nonaktif'    => 0,
+            'total_cuti'        => 0,
+            'kpi_3_label'       => 'Pengurus Inti',
+            'kpi_3_value'       => $pengurus->filter(fn ($user) => $user->hasAnyRole($pengurusIntiRoles))->count(),
+            'kpi_4_label'       => 'Ketua Unit/Bidang',
+            'kpi_4_value'       => $pengurus->filter(fn ($user) => $user->hasAnyRole(['ketua_unit', 'ketua_bidang']))->count(),
+            'composition_label' => 'Komposisi Pengurus per Jabatan',
+            'per_divisi'        => $perJabatan,
+            'pengurus_inti'     => $pengurusInti,
+        ];
+    }
+
+    /**
+     * DPM - Monitoring program kerja himpunan.
+     */
+    public function getDpmProkerStats(): array
+    {
+        return Cache::remember('mk.dashboard.dpm.proker', 120, function () {
+            $statusCounts = Kegiatan::selectRaw('status, count(*) as total')
+                ->groupBy('status')
+                ->pluck('total', 'status')
+                ->toArray();
+
+            $perBidang = DB::table('mk_kegiatan_bidang as kb')
+                ->join('mk_bidang as b', 'kb.bidang_id', '=', 'b.id')
+                ->selectRaw('b.nama_bidang, count(*) as total')
+                ->groupBy('b.nama_bidang')
+                ->orderByDesc('total')
+                ->pluck('total', 'b.nama_bidang')
+                ->toArray();
+
+            $perKategori = DB::table('mk_kegiatan_kategori as kk')
+                ->join('mk_kategori_kegiatan as kat', 'kk.kategori_kegiatan_id', '=', 'kat.id')
+                ->selectRaw('kat.nama_kategori, count(*) as total')
+                ->groupBy('kat.nama_kategori')
+                ->orderByDesc('total')
+                ->pluck('total', 'kat.nama_kategori')
+                ->toArray();
+
+            return [
+                'total'             => array_sum($statusCounts),
+                'total_draft'       => $statusCounts[Kegiatan::STATUS_DRAFT] ?? 0,
+                'total_pelaksanaan' => $statusCounts[Kegiatan::STATUS_DISETUJUI] ?? 0,
+                'total_selesai'     => $statusCounts[Kegiatan::STATUS_SELESAI] ?? 0,
+                'tahun_ini'         => Kegiatan::whereYear('created_at', now()->year)->count(),
+                'per_bidang'        => $perBidang,
+                'per_kategori'      => $perKategori,
+                'proker_terbaru'    => Kegiatan::perencanaan()
+                                        ->with(['bidangs', 'kategoris', 'ketuaPelaksana.user'])
+                                        ->orderByDesc('created_at')
+                                        ->limit(6)
+                                        ->get(),
+            ];
+        });
+    }
+
+    /**
+     * DPM - Monitoring pelaksanaan kegiatan dan realisasi.
+     */
+    public function getDpmPelaksanaanStats(): array
+    {
+        return Cache::remember('mk.dashboard.dpm.pelaksanaan', 120, function () {
+            $targetPeserta = (int) Kegiatan::whereNotNull('target_peserta')->sum('target_peserta');
+            $realisasiPeserta = (int) Kegiatan::whereNotNull('realisasi_peserta')->sum('realisasi_peserta');
+            $anggaranRencana = (float) Kegiatan::whereNotNull('anggaran')->sum('anggaran');
+            $anggaranRealisasi = (float) Kegiatan::whereNotNull('realisasi_anggaran')->sum('realisasi_anggaran');
+
+            return [
+                'total_pelaksanaan'      => Kegiatan::pelaksanaan()->count(),
+                'total_selesai'          => Kegiatan::selesai()->count(),
+                'bulan_ini'              => Kegiatan::whereYear('tanggal_mulai', now()->year)
+                                                ->whereMonth('tanggal_mulai', now()->month)
+                                                ->count(),
+                'berlangsung_hari_ini'   => Kegiatan::whereNotNull('tanggal_mulai')
+                                                ->where('tanggal_mulai', '<=', now())
+                                                ->where(fn ($q) => $q->whereNull('tanggal_selesai')->orWhere('tanggal_selesai', '>=', now()))
+                                                ->count(),
+                'belum_realisasi'        => Kegiatan::pelaksanaan()
+                                                ->whereNull('realisasi_tanggal_mulai')
+                                                ->whereNull('catatan_pelaksanaan')
+                                                ->count(),
+                'tanpa_dosen_pendamping' => Kegiatan::whereNull('dosen_pendamping_id')->count(),
+                'target_peserta'         => $targetPeserta,
+                'realisasi_peserta'      => $realisasiPeserta,
+                'rate_peserta'           => $targetPeserta > 0 ? round($realisasiPeserta / $targetPeserta * 100) : 0,
+                'anggaran_rencana'       => $anggaranRencana,
+                'anggaran_realisasi'     => $anggaranRealisasi,
+                'rate_anggaran'          => $anggaranRencana > 0 ? round($anggaranRealisasi / $anggaranRencana * 100) : 0,
+                'pelaksanaan_mendatang'  => Kegiatan::pelaksanaan()
+                                                ->with(['bidangs', 'kategoris', 'ketuaPelaksana.user', 'dosenPendamping.user'])
+                                                ->whereNotNull('tanggal_mulai')
+                                                ->whereDate('tanggal_mulai', '>=', now()->toDateString())
+                                                ->orderBy('tanggal_mulai')
+                                                ->limit(6)
+                                                ->get(),
+            ];
+        });
+    }
+
+    /**
+     * DPM - Partisipasi mahasiswa dalam kegiatan dan riwayat terverifikasi.
+     */
+    public function getDpmPartisipasiStats(): array
+    {
+        return Cache::remember('mk.dashboard.dpm.partisipasi', 180, function () {
+            $riwayatStatus = RiwayatKegiatan::selectRaw('verification_status, count(*) as total')
+                ->groupBy('verification_status')
+                ->pluck('total', 'verification_status')
+                ->toArray();
+
+            $studentRiwayatIds = RiwayatKegiatan::whereNotNull('student_id')->pluck('student_id');
+            $studentPanitiaIds = DB::table('mk_kegiatan_panitia')->whereNotNull('student_id')->pluck('student_id');
+            $mahasiswaTerlibat = $studentRiwayatIds->merge($studentPanitiaIds)->unique()->count();
+
+            $perPeranRiwayat = RiwayatKegiatan::selectRaw("COALESCE(peran, peran_manual, 'lainnya') as peran, count(*) as total")
+                ->groupByRaw("COALESCE(peran, peran_manual, 'lainnya')")
+                ->orderByDesc('total')
+                ->pluck('total', 'peran')
+                ->toArray();
+
+            $perPeranPanitia = DB::table('mk_kegiatan_panitia')
+                ->selectRaw("COALESCE(peran, 'panitia') as peran, count(*) as total")
+                ->groupByRaw("COALESCE(peran, 'panitia')")
+                ->orderByDesc('total')
+                ->pluck('total', 'peran')
+                ->toArray();
+
+            $perAngkatan = DB::table('mk_riwayat_kegiatan as rk')
+                ->join('students as s', 'rk.student_id', '=', 's.id')
+                ->selectRaw('s.cohort_year as angkatan, count(*) as total')
+                ->whereNotNull('s.cohort_year')
+                ->groupBy('s.cohort_year')
+                ->orderBy('s.cohort_year')
+                ->pluck('total', 'angkatan')
+                ->toArray();
+
+            return [
+                'total_riwayat'      => array_sum($riwayatStatus),
+                'riwayat_pending'    => $riwayatStatus[RiwayatKegiatan::VERIF_PENDING] ?? 0,
+                'riwayat_approved'   => $riwayatStatus[RiwayatKegiatan::VERIF_APPROVED] ?? 0,
+                'riwayat_rejected'   => $riwayatStatus[RiwayatKegiatan::VERIF_REJECTED] ?? 0,
+                'total_panitia'      => DB::table('mk_kegiatan_panitia')->count(),
+                'mahasiswa_terlibat' => $mahasiswaTerlibat,
+                'per_peran_riwayat'  => $perPeranRiwayat,
+                'per_peran_panitia'  => $perPeranPanitia,
+                'per_angkatan'       => $perAngkatan,
+                'top_mahasiswa'      => RiwayatKegiatan::selectRaw('student_id, count(*) as total')
+                                        ->with('student.user')
+                                        ->whereNotNull('student_id')
+                                        ->groupBy('student_id')
+                                        ->orderByDesc('total')
+                                        ->limit(6)
+                                        ->get(),
+            ];
+        });
+    }
+
+    /**
+     * DPM - Prestasi dan workflow reward.
+     */
+    public function getDpmPrestasiRewardStats(): array
+    {
+        return Cache::remember('mk.dashboard.dpm.prestasi_reward', 180, function () {
+            $verifCounts = Prestasi::selectRaw('verification_status, count(*) as total')
+                ->groupBy('verification_status')
+                ->pluck('total', 'verification_status')
+                ->toArray();
+
+            $rewardCounts = Prestasi::selectRaw('claim_status, count(*) as total')
+                ->groupBy('claim_status')
+                ->pluck('total', 'claim_status')
+                ->toArray();
+
+            return [
+                'total_prestasi'      => array_sum($verifCounts),
+                'prestasi_pending'    => $verifCounts[Prestasi::VERIF_PENDING] ?? 0,
+                'prestasi_approved'   => $verifCounts[Prestasi::VERIF_APPROVED] ?? 0,
+                'prestasi_rejected'   => $verifCounts[Prestasi::VERIF_REJECTED] ?? 0,
+                'reward_belum_ajukan' => $rewardCounts[Prestasi::CLAIM_BELUM_AJUKAN] ?? 0,
+                'reward_diajukan'     => $rewardCounts[Prestasi::CLAIM_DIAJUKAN] ?? 0,
+                'reward_disetujui'    => $rewardCounts[Prestasi::CLAIM_DISETUJUI] ?? 0,
+                'reward_ditolak'      => $rewardCounts[Prestasi::CLAIM_DITOLAK] ?? 0,
+                'reward_sks_diajukan' => (int) Prestasi::where('claim_status', Prestasi::CLAIM_DIAJUKAN)->sum('reward_sks_max'),
+                'reward_mk_diajukan'  => (int) Prestasi::where('claim_status', Prestasi::CLAIM_DIAJUKAN)->sum('reward_jml_mk_max'),
+                'per_tingkat'         => Prestasi::approved()
+                                        ->selectRaw('tingkat, count(*) as total')
+                                        ->groupBy('tingkat')
+                                        ->pluck('total', 'tingkat')
+                                        ->toArray(),
+                'reward_terbaru'      => Prestasi::where('claim_status', Prestasi::CLAIM_DIAJUKAN)
+                                        ->with(['kemahasiswaan.user'])
+                                        ->orderByDesc('claimed_at')
+                                        ->limit(6)
+                                        ->get(),
+            ];
+        });
+    }
+
+    /**
+     * TIER 3 - Data Mahasiswa (cache 120 detik).
+     * Berubah saat admin update status mahasiswa atau data baru masuk, biasanya mingguan.
      */
     public function getMahasiswaStats(): array
     {
@@ -596,10 +1003,16 @@ class DashboardAnalitikService
     {
         Cache::forget('mk.dashboard.snapshot');
         Cache::forget('mk.dashboard.tier1');
+        Cache::forget('mk.dashboard.admin.operasional');
         Cache::forget('mk.dashboard.tier2');
         Cache::forget('mk.dashboard.tier3');
         Cache::forget('mk.dashboard.tier4');
         Cache::forget('mk.dashboard.evaluasi');
+        Cache::forget('mk.dashboard.dpm.himpunan');
+        Cache::forget('mk.dashboard.dpm.proker');
+        Cache::forget('mk.dashboard.dpm.pelaksanaan');
+        Cache::forget('mk.dashboard.dpm.partisipasi');
+        Cache::forget('mk.dashboard.dpm.prestasi_reward');
         Cache::forget('mk.dashboard.calon_do');
         Cache::forget('mk.dashboard.lulusan');
     }

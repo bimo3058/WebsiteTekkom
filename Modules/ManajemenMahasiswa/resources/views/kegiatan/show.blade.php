@@ -620,7 +620,7 @@
 
         @php
             $userRoles = auth()->user()->roles->pluck('name');
-            $canViewRestricted = $userRoles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dosen_koordinator', 'dosen', 'pengurus_himpunan'])->isNotEmpty();
+            $canViewRestricted = $userRoles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'ketua_departemen', 'dosen_koordinator', 'dosen', 'pengurus_himpunan'])->isNotEmpty();
         @endphp
         @if($kegiatan->anggaran && $canViewRestricted)
         <div class="meta-item">

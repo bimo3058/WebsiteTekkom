@@ -32,7 +32,7 @@ class VerifikasiController extends Controller
 
     private function isVerificator(): bool
     {
-        return $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+        return $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'dpm');
     }
 
     private function resolveLayout(): string
@@ -40,7 +40,7 @@ class VerifikasiController extends Controller
         $user  = Auth::user();
         $roles = $user->roles->pluck('name')->toArray();
 
-        if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles)) {
+        if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles) || \in_array('dpm', $roles)) {
             return 'manajemenmahasiswa::layouts.admin';
         }
 
@@ -260,6 +260,7 @@ class VerifikasiController extends Controller
             ->pluck('angkatan');
 
         $rewardAturan = RewardAturan::with('uploadedBy')->latest()->get();
+        $canManageRewardAturan = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
 
         return view('manajemenmahasiswa::verifikasi.reward', compact(
             'rewardData',
@@ -271,6 +272,7 @@ class VerifikasiController extends Controller
             'rewardStats',
             'kuotaMap',
             'rewardAturan',
+            'canManageRewardAturan',
         ))->with('layout', $this->resolveLayout());
     }
 

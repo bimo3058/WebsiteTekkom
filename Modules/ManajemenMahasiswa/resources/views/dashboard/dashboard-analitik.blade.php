@@ -36,7 +36,7 @@
     .section-line { flex:1; height:1px; background:#f3f4f6; }
 
     /* ─── Tier 1: Action Cards ───────────────────────────── */
-    .action-grid { display:grid; grid-template-columns:repeat(5,1fr); gap:12px; margin-bottom:28px; }
+    .action-grid { display:grid; grid-template-columns:repeat(6,1fr); gap:12px; margin-bottom:28px; }
     @media(max-width:1100px){ .action-grid { grid-template-columns:repeat(3,1fr); } }
     @media(max-width:640px) { .action-grid { grid-template-columns:1fr 1fr; } }
 
@@ -59,6 +59,8 @@
     .action-card-purple::before { background:#6F7DA4; }
     .action-card-amber  { border-color:#fde68a; background:#fff; }
     .action-card-amber::before  { background:#f59e0b; }
+    .action-card-green  { border-color:#bbf7d0; background:#fff; }
+    .action-card-green::before  { background:#10b981; }
 
     .action-card-top { display:flex; align-items:center; justify-content:space-between; }
     .action-icon { width:36px; height:36px; border-radius:10px; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
@@ -67,6 +69,7 @@
     .action-icon-blue   { background:#eff6ff; color:#2563eb; }
     .action-icon-purple { background:#E7E8F0; color:#415086; }
     .action-icon-amber  { background:#fffbeb; color:#d97706; }
+    .action-icon-green  { background:#ecfdf5; color:#059669; }
 
     .action-num { font-size:2rem; font-weight:900; line-height:1; }
     .action-num-red    { color:#dc2626; }
@@ -74,6 +77,7 @@
     .action-num-blue   { color:#2563eb; }
     .action-num-purple { color:#415086; }
     .action-num-amber  { color:#d97706; }
+    .action-num-green  { color:#059669; }
 
     .action-label { font-size:.82rem; color:#6b7280; font-weight:500; line-height:1.4; }
     .action-link-hint { font-size:.72rem; color:#9ca3af; font-weight:600; text-transform:uppercase; letter-spacing:.04em; }
@@ -241,11 +245,20 @@
     // Scope GPM/Ketua Departemen — hanya scope ini yang punya metrik evaluasi mutu.
     // Dipakai untuk urutan section (FASE 2A) serta chart/tren khusus GPM (2C/2D).
     $isGpm = in_array('evaluasi_mutu', $sections, true);
+    $isDpm = ($dashboard['scope'] ?? null) === 'dpm';
+    $canAccessVerifikasi = !$isGpm;
+    $useBarDistribusiMahasiswa = $isGpm || $isDpm || $hasSection('admin_operasional');
 
     // Akses data null-safe — sebagian scope (mis. DPM) tidak punya semua section
     $act   = $dashboard['action_items'] ?? [];   // Tier 1
+    $ops   = $dashboard['admin_operasional'] ?? []; // Admin operations
     $acty  = $dashboard['activity']     ?? [];    // Tier 2
     $eval  = $dashboard['evaluasi']     ?? [];    // Metrik Evaluasi Mutu (GPM)
+    $dpmHimpunan    = $dashboard['dpm_himpunan'] ?? [];
+    $dpmProker      = $dashboard['dpm_proker'] ?? [];
+    $dpmPelaksanaan = $dashboard['dpm_pelaksanaan'] ?? [];
+    $dpmPartisipasi = $dashboard['dpm_partisipasi'] ?? [];
+    $dpmReward      = $dashboard['dpm_prestasi_reward'] ?? [];
     $mhs   = $dashboard['mahasiswa']    ?? [];    // Tier 3
     $alm   = $dashboard['alumni']       ?? [];    // Tier 4
     $cdo   = $dashboard['calon_do']     ?? [];    // Calon DO
@@ -282,11 +295,431 @@
      sehingga GPM/Kadep memakai urutan evaluasi, sedangkan admin/dpm tetap urutan semula. --}}
 <div class="da-sections">
 
+{{-- Dashboard DPM - Pembinaan himpunan dan kegiatan mahasiswa --}}
+@if($hasSection('dpm_himpunan'))
+<div class="da-section" style="order:5;">
+<div class="section-header section-gap">
+    <span class="section-label">Ringkasan Pembinaan Himpunan</span>
+    <div class="section-line"></div>
+</div>
+
+<div class="kpi-row">
+    @php
+        $dpmHimpunanKpis = [
+            ['label'=>'Periode Aktif', 'val'=>$dpmHimpunan['periode_aktif'] ?? '-', 'bg'=>'#E7E8F0', 'color'=>'#293C79'],
+            ['label'=>'Total Pengurus', 'val'=>number_format($dpmHimpunan['total_pengurus'] ?? 0), 'bg'=>'#eff6ff', 'color'=>'#2563eb'],
+            ['label'=>$dpmHimpunan['kpi_3_label'] ?? 'Pengurus Aktif', 'val'=>number_format($dpmHimpunan['kpi_3_value'] ?? ($dpmHimpunan['total_aktif'] ?? 0)), 'bg'=>'#ecfdf5', 'color'=>'#059669'],
+            ['label'=>$dpmHimpunan['kpi_4_label'] ?? 'Nonaktif / Cuti', 'val'=>number_format($dpmHimpunan['kpi_4_value'] ?? (($dpmHimpunan['total_nonaktif'] ?? 0) + ($dpmHimpunan['total_cuti'] ?? 0))), 'bg'=>'#fff7ed', 'color'=>'#ea580c'],
+        ];
+    @endphp
+    @foreach($dpmHimpunanKpis as $k)
+        <div class="kpi-mini">
+            <div class="kpi-mini-icon" style="background:{{ $k['bg'] }};color:{{ $k['color'] }};">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            </div>
+            <div>
+                <div class="kpi-mini-val" style="color:{{ $k['color'] }};">{{ $k['val'] }}</div>
+                <div class="kpi-mini-label">{{ $k['label'] }}</div>
+            </div>
+        </div>
+    @endforeach
+</div>
+
+<div class="chart-grid-2">
+    <div class="chart-card">
+        <div class="chart-title">
+            <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/bar-chart-11.svg'))) !!}</span>
+            {{ $dpmHimpunan['composition_label'] ?? 'Komposisi Pengurus per Divisi' }}
+            <span class="chart-title-right">Periode {{ $dpmHimpunan['periode_aktif'] ?? '-' }}</span>
+        </div>
+        @php $maxDivisiDpm = max(1, (int) (collect($dpmHimpunan['per_divisi'] ?? [])->max() ?? 0)); @endphp
+        @if(!empty($dpmHimpunan['per_divisi']))
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                @foreach($dpmHimpunan['per_divisi'] as $divisi => $total)
+                    <div style="display:flex;align-items:center;gap:12px;">
+                        <span style="font-size:.82rem;font-weight:600;color:#374151;width:150px;flex-shrink:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">{{ $divisi }}</span>
+                        <div style="flex:1;height:22px;background:#f3f4f6;border-radius:6px;overflow:hidden;">
+                            <div style="height:100%;width:{{ round($total / $maxDivisiDpm * 100) }}%;background:linear-gradient(90deg,#293C79,#415086);border-radius:6px;min-width:24px;"></div>
+                        </div>
+                        <span style="font-size:.82rem;font-weight:700;color:#1e1b4b;width:32px;text-align:right;flex-shrink:0;">{{ $total }}</span>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div style="text-align:center;padding:24px;color:#9ca3af;font-size:.85rem;">Belum ada data pengurus himpunan</div>
+        @endif
+    </div>
+
+    <div class="chart-card" style="overflow-x:auto;">
+        <div class="chart-title">
+            <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/users-01.svg'))) !!}</span>
+            Pengurus Inti
+        </div>
+        <table class="da-table">
+            <thead><tr><th>Nama</th><th>NIM</th><th>Jabatan</th><th>Status</th></tr></thead>
+            <tbody>
+                @forelse($dpmHimpunan['pengurus_inti'] ?? [] as $pengurus)
+                    @php
+                        $namaPengurus = $pengurus['nama'] ?? 'Mahasiswa';
+                        $statusPengurus = $pengurus['status'] ?? '-';
+                        $statusPengurusKey = strtolower($statusPengurus);
+                    @endphp
+                    <tr>
+                        <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar-sm">{{ strtoupper(substr($namaPengurus,0,2)) }}</div><span style="font-weight:600;color:#1e1b4b;">{{ $namaPengurus }}</span></div></td>
+                        <td style="font-family:monospace;color:#9ca3af;font-size:.82rem;">{{ $pengurus['nim'] ?? '-' }}</td>
+                        <td>{{ $pengurus['jabatan'] ?? '-' }}</td>
+                        <td><span class="badge {{ $statusPengurusKey === 'aktif' ? 'badge-bekerja' : 'badge-belum' }}">{{ ucfirst($statusPengurus) }}</span></td>
+                    </tr>
+                @empty
+                    <tr class="empty-row"><td colspan="4">Belum ada pengurus inti</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+@endif
+
+@if($hasSection('dpm_proker'))
+<div class="da-section" style="order:4;">
+<div class="section-header section-gap">
+    <span class="section-label">Status Program Kerja Himpunan</span>
+    <div class="section-line"></div>
+</div>
+
+<div class="kpi-row">
+    @php
+        $dpmProkerKpis = [
+            ['label'=>'Total Proker', 'val'=>number_format($dpmProker['total'] ?? 0), 'bg'=>'#E7E8F0', 'color'=>'#293C79'],
+            ['label'=>'Draft', 'val'=>number_format($dpmProker['total_draft'] ?? 0), 'bg'=>'#fff7ed', 'color'=>'#ea580c'],
+            ['label'=>'Pelaksanaan', 'val'=>number_format($dpmProker['total_pelaksanaan'] ?? 0), 'bg'=>'#eff6ff', 'color'=>'#2563eb'],
+            ['label'=>'Selesai', 'val'=>number_format($dpmProker['total_selesai'] ?? 0), 'bg'=>'#ecfdf5', 'color'=>'#059669'],
+        ];
+    @endphp
+    @foreach($dpmProkerKpis as $k)
+        <div class="kpi-mini">
+            <div class="kpi-mini-icon" style="background:{{ $k['bg'] }};color:{{ $k['color'] }};">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+            <div>
+                <div class="kpi-mini-val" style="color:{{ $k['color'] }};">{{ $k['val'] }}</div>
+                <div class="kpi-mini-label">{{ $k['label'] }}</div>
+            </div>
+        </div>
+    @endforeach
+</div>
+
+<div class="chart-grid-2">
+    <div class="chart-card">
+        <div class="chart-title">
+            <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/bar-chart-12.svg'))) !!}</span>
+            Sebaran Proker per Bidang
+            <span class="chart-title-right">{{ number_format($dpmProker['tahun_ini'] ?? 0) }} tahun ini</span>
+        </div>
+        @php $maxBidangDpm = max(1, (int) (collect($dpmProker['per_bidang'] ?? [])->max() ?? 0)); @endphp
+        @if(!empty($dpmProker['per_bidang']))
+            <div class="progress-card">
+                @foreach($dpmProker['per_bidang'] as $bidang => $total)
+                    @php $pctBidangDpm = round($total / $maxBidangDpm * 100); @endphp
+                    <div class="progress-item">
+                        <div class="progress-row">
+                            <span class="progress-label">{{ $bidang }}</span>
+                            <span class="progress-count" style="color:#293C79;">{{ $total }}</span>
+                        </div>
+                        <div class="progress-bar-bg">
+                            <div class="progress-bar-fill" style="width:{{ $pctBidangDpm }}%;background:#293C79;"></div>
+                        </div>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div style="text-align:center;padding:24px;color:#9ca3af;font-size:.85rem;">Belum ada bidang proker</div>
+        @endif
+    </div>
+
+    <div class="chart-card" style="overflow-x:auto;">
+        <div class="chart-title">
+            <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/file-01.svg'))) !!}</span>
+            Draft Proker Terbaru
+        </div>
+        <table class="da-table">
+            <thead><tr><th>Kegiatan</th><th>Ketua</th><th>Kategori</th><th>Dibuat</th></tr></thead>
+            <tbody>
+                @forelse($dpmProker['proker_terbaru'] ?? [] as $proker)
+                    @php
+                        $ketuaProker = $proker->ketuaPelaksana?->user?->name ?? $proker->ketuaPelaksana?->name ?? '-';
+                        $kategoriProker = $proker->kategoris?->pluck('nama_kategori')->filter()->take(2)->implode(', ');
+                    @endphp
+                    <tr>
+                        <td style="font-weight:600;color:#1e1b4b;">{{ $proker->nama_kegiatan ?? '-' }}</td>
+                        <td>{{ $ketuaProker }}</td>
+                        <td>{{ $kategoriProker ?: '-' }}</td>
+                        <td style="color:#9ca3af;">{{ optional($proker->created_at)->format('d M Y') ?? '-' }}</td>
+                    </tr>
+                @empty
+                    <tr class="empty-row"><td colspan="4">Tidak ada draft proker</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+@endif
+
 
 {{-- ══════════════════════════════════════════════════════════════════
      🔴 TIER 1 — BUTUH TINDAKAN SEGERA (cache 30 detik)
      Data yang paling sering berubah — admin/GPM harus tangani segera.
 ══════════════════════════════════════════════════════════════════════ --}}
+@if($hasSection('dpm_pelaksanaan'))
+<div class="da-section" style="order:3;">
+<div class="section-header section-gap">
+    <span class="section-label">Pelaksanaan dan Realisasi Kegiatan</span>
+    <div class="section-line"></div>
+</div>
+
+<div class="kpi-row">
+    @php
+        $dpmPelaksanaanKpis = [
+            ['label'=>'Bulan Ini', 'val'=>number_format($dpmPelaksanaan['bulan_ini'] ?? 0), 'bg'=>'#eff6ff', 'color'=>'#2563eb'],
+            ['label'=>'Berlangsung Hari Ini', 'val'=>number_format($dpmPelaksanaan['berlangsung_hari_ini'] ?? 0), 'bg'=>'#ecfdf5', 'color'=>'#059669'],
+            ['label'=>'Belum Realisasi', 'val'=>number_format($dpmPelaksanaan['belum_realisasi'] ?? 0), 'bg'=>'#fff7ed', 'color'=>'#ea580c'],
+            ['label'=>'Tanpa Dosen Pendamping', 'val'=>number_format($dpmPelaksanaan['tanpa_dosen_pendamping'] ?? 0), 'bg'=>'#fef2f2', 'color'=>'#dc2626'],
+        ];
+    @endphp
+    @foreach($dpmPelaksanaanKpis as $k)
+        <div class="kpi-mini">
+            <div class="kpi-mini-icon" style="background:{{ $k['bg'] }};color:{{ $k['color'] }};">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4"/><path d="M8 2v4"/><path d="M3 10h18"/></svg>
+            </div>
+            <div>
+                <div class="kpi-mini-val" style="color:{{ $k['color'] }};">{{ $k['val'] }}</div>
+                <div class="kpi-mini-label">{{ $k['label'] }}</div>
+            </div>
+        </div>
+    @endforeach
+</div>
+
+<div class="chart-grid-2">
+    <div class="chart-card">
+        <div class="chart-title">
+            <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/bar-chart-12.svg'))) !!}</span>
+            Rencana vs Realisasi
+        </div>
+        <div class="progress-card">
+            <div class="progress-item">
+                <div class="progress-row">
+                    <span class="progress-label">Peserta</span>
+                    <span class="progress-count" style="color:#2563eb;">{{ number_format($dpmPelaksanaan['realisasi_peserta'] ?? 0) }} / {{ number_format($dpmPelaksanaan['target_peserta'] ?? 0) }} ({{ $dpmPelaksanaan['rate_peserta'] ?? 0 }}%)</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" style="width:{{ min(100, (int) ($dpmPelaksanaan['rate_peserta'] ?? 0)) }}%;background:#2563eb;"></div>
+                </div>
+            </div>
+            <div class="progress-item">
+                <div class="progress-row">
+                    <span class="progress-label">Anggaran</span>
+                    <span class="progress-count" style="color:#059669;">Rp {{ number_format($dpmPelaksanaan['anggaran_realisasi'] ?? 0, 0, ',', '.') }} / Rp {{ number_format($dpmPelaksanaan['anggaran_rencana'] ?? 0, 0, ',', '.') }}</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" style="width:{{ min(100, (int) ($dpmPelaksanaan['rate_anggaran'] ?? 0)) }}%;background:#059669;"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-card" style="overflow-x:auto;">
+        <div class="chart-title">
+            <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/calendar.svg'))) !!}</span>
+            Jadwal Pelaksanaan Mendatang
+        </div>
+        <table class="da-table">
+            <thead><tr><th>Kegiatan</th><th>Tanggal</th><th>Dosen Pendamping</th></tr></thead>
+            <tbody>
+                @forelse($dpmPelaksanaan['pelaksanaan_mendatang'] ?? [] as $kegiatan)
+                    @php
+                        $tanggalMulaiDpm = $kegiatan->tanggal_mulai ? \Illuminate\Support\Carbon::parse($kegiatan->tanggal_mulai)->format('d M Y') : '-';
+                        $dosenDpm = $kegiatan->dosenPendamping?->user?->name ?? $kegiatan->dosenPendamping?->name ?? '-';
+                    @endphp
+                    <tr>
+                        <td style="font-weight:600;color:#1e1b4b;">{{ $kegiatan->nama_kegiatan ?? '-' }}</td>
+                        <td style="color:#9ca3af;">{{ $tanggalMulaiDpm }}</td>
+                        <td>{{ $dosenDpm }}</td>
+                    </tr>
+                @empty
+                    <tr class="empty-row"><td colspan="3">Tidak ada jadwal pelaksanaan mendatang</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+@endif
+
+@if($hasSection('dpm_partisipasi'))
+<div class="da-section" style="order:6;">
+<div class="section-header section-gap">
+    <span class="section-label">Partisipasi Mahasiswa</span>
+    <div class="section-line"></div>
+</div>
+
+<div class="kpi-row">
+    @php
+        $dpmPartisipasiKpis = [
+            ['label'=>'Mahasiswa Terlibat', 'val'=>number_format($dpmPartisipasi['mahasiswa_terlibat'] ?? 0), 'bg'=>'#E7E8F0', 'color'=>'#293C79'],
+            ['label'=>'Total Riwayat', 'val'=>number_format($dpmPartisipasi['total_riwayat'] ?? 0), 'bg'=>'#eff6ff', 'color'=>'#2563eb'],
+            ['label'=>'Riwayat Disetujui', 'val'=>number_format($dpmPartisipasi['riwayat_approved'] ?? 0), 'bg'=>'#ecfdf5', 'color'=>'#059669'],
+            ['label'=>'Menunggu Verifikasi', 'val'=>number_format($dpmPartisipasi['riwayat_pending'] ?? 0), 'bg'=>'#fff7ed', 'color'=>'#ea580c'],
+        ];
+    @endphp
+    @foreach($dpmPartisipasiKpis as $k)
+        <div class="kpi-mini">
+            <div class="kpi-mini-icon" style="background:{{ $k['bg'] }};color:{{ $k['color'] }};">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 11c1.66 0 3-1.57 3-3.5S17.66 4 16 4s-3 1.57-3 3.5 1.34 3.5 3 3.5Z"/><path d="M8 11c1.66 0 3-1.57 3-3.5S9.66 4 8 4 5 5.57 5 7.5 6.34 11 8 11Z"/><path d="M2 20c.7-3.2 3-5 6-5"/><path d="M22 20c-.7-3.2-3-5-6-5"/><path d="M8 15c1.5 1 6.5 1 8 0"/></svg>
+            </div>
+            <div>
+                <div class="kpi-mini-val" style="color:{{ $k['color'] }};">{{ $k['val'] }}</div>
+                <div class="kpi-mini-label">{{ $k['label'] }}</div>
+            </div>
+        </div>
+    @endforeach
+</div>
+
+<div class="chart-grid-2">
+    <div class="chart-card">
+        <div class="chart-title">
+            <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/bar-chart-11.svg'))) !!}</span>
+            Riwayat Kegiatan per Angkatan
+            <span class="chart-title-right">{{ number_format($dpmPartisipasi['total_panitia'] ?? 0) }} panitia</span>
+        </div>
+        @php $maxAngkatanDpm = max(1, (int) (collect($dpmPartisipasi['per_angkatan'] ?? [])->max() ?? 0)); @endphp
+        @if(!empty($dpmPartisipasi['per_angkatan']))
+            <div style="display:flex;flex-direction:column;gap:8px;">
+                @foreach($dpmPartisipasi['per_angkatan'] as $angkatan => $total)
+                    <div style="display:flex;align-items:center;gap:10px;">
+                        <span style="font-size:.8rem;font-weight:700;color:#374151;width:48px;flex-shrink:0;">{{ $angkatan }}</span>
+                        <div style="flex:1;height:22px;background:#f3f4f6;border-radius:6px;overflow:hidden;">
+                            <div style="height:100%;width:{{ round($total / $maxAngkatanDpm * 100) }}%;background:linear-gradient(90deg,#293C79,#415086);border-radius:6px;min-width:24px;"></div>
+                        </div>
+                        <span style="font-size:.82rem;font-weight:700;color:#1e1b4b;width:36px;text-align:right;flex-shrink:0;">{{ $total }}</span>
+                    </div>
+                @endforeach
+            </div>
+        @else
+            <div style="text-align:center;padding:24px;color:#9ca3af;font-size:.85rem;">Belum ada riwayat kegiatan mahasiswa</div>
+        @endif
+    </div>
+
+    <div class="chart-card" style="overflow-x:auto;">
+        <div class="chart-title">
+            <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/star.svg'))) !!}</span>
+            Mahasiswa Paling Aktif
+        </div>
+        <table class="da-table">
+            <thead><tr><th>Mahasiswa</th><th>NIM</th><th>Riwayat</th></tr></thead>
+            <tbody>
+                @forelse($dpmPartisipasi['top_mahasiswa'] ?? [] as $row)
+                    @php
+                        $student = $row->student;
+                        $namaAktif = $student?->user?->name ?? $student?->name ?? 'Mahasiswa';
+                    @endphp
+                    <tr>
+                        <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar-sm">{{ strtoupper(substr($namaAktif,0,2)) }}</div><span style="font-weight:600;color:#1e1b4b;">{{ $namaAktif }}</span></div></td>
+                        <td style="font-family:monospace;color:#9ca3af;font-size:.82rem;">{{ $student?->student_number ?? '-' }}</td>
+                        <td style="font-weight:700;color:#293C79;">{{ number_format($row->total ?? 0) }}</td>
+                    </tr>
+                @empty
+                    <tr class="empty-row"><td colspan="3">Belum ada partisipasi terdata</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+@endif
+
+@if($hasSection('dpm_prestasi_reward'))
+<div class="da-section" style="order:2;">
+<div class="section-header section-gap">
+    <span class="section-label">Prestasi dan Reward Mahasiswa</span>
+    <div class="section-line"></div>
+</div>
+
+<div class="kpi-row">
+    @php
+        $dpmRewardKpis = [
+            ['label'=>'Prestasi Disetujui', 'val'=>number_format($dpmReward['prestasi_approved'] ?? 0), 'bg'=>'#ecfdf5', 'color'=>'#059669'],
+            ['label'=>'Prestasi Pending', 'val'=>number_format($dpmReward['prestasi_pending'] ?? 0), 'bg'=>'#fff7ed', 'color'=>'#ea580c'],
+            ['label'=>'Reward Diajukan', 'val'=>number_format($dpmReward['reward_diajukan'] ?? 0), 'bg'=>'#eff6ff', 'color'=>'#2563eb'],
+            ['label'=>'Reward Disetujui', 'val'=>number_format($dpmReward['reward_disetujui'] ?? 0), 'bg'=>'#E7E8F0', 'color'=>'#293C79'],
+        ];
+    @endphp
+    @foreach($dpmRewardKpis as $k)
+        <div class="kpi-mini">
+            <div class="kpi-mini-icon" style="background:{{ $k['bg'] }};color:{{ $k['color'] }};">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87L18.18 21 12 17.77 5.82 21 7 14.14l-5-4.87 6.91-1.01L12 2z"/></svg>
+            </div>
+            <div>
+                <div class="kpi-mini-val" style="color:{{ $k['color'] }};">{{ $k['val'] }}</div>
+                <div class="kpi-mini-label">{{ $k['label'] }}</div>
+            </div>
+        </div>
+    @endforeach
+</div>
+
+<div class="chart-grid-2">
+    <div class="chart-card">
+        <div class="chart-title">
+            <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/bar-chart-12.svg'))) !!}</span>
+            Usulan Reward Aktif
+        </div>
+        <div class="kpi-row" style="grid-template-columns:repeat(2,minmax(0,1fr));margin-bottom:0;">
+            <div class="kpi-mini">
+                <div class="kpi-mini-icon" style="background:#eff6ff;color:#2563eb;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+                </div>
+                <div>
+                    <div class="kpi-mini-val" style="color:#2563eb;">{{ number_format($dpmReward['reward_mk_diajukan'] ?? 0) }}</div>
+                    <div class="kpi-mini-label">Mata Kuliah Diajukan</div>
+                </div>
+            </div>
+            <div class="kpi-mini">
+                <div class="kpi-mini-icon" style="background:#ecfdf5;color:#059669;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+                </div>
+                <div>
+                    <div class="kpi-mini-val" style="color:#059669;">{{ number_format($dpmReward['reward_sks_diajukan'] ?? 0) }}</div>
+                    <div class="kpi-mini-label">SKS Diajukan</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="chart-card" style="overflow-x:auto;">
+        <div class="chart-title">
+            <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/star.svg'))) !!}</span>
+            Reward Menunggu Tindak Lanjut
+        </div>
+        <table class="da-table">
+            <thead><tr><th>Mahasiswa</th><th>Prestasi</th><th>Reward</th></tr></thead>
+            <tbody>
+                @forelse($dpmReward['reward_terbaru'] ?? [] as $prestasi)
+                    @php $namaPrestasi = $prestasi->kemahasiswaan?->user?->name ?? $prestasi->kemahasiswaan?->nama ?? 'Mahasiswa'; @endphp
+                    <tr>
+                        <td><div style="display:flex;align-items:center;gap:9px;"><div class="avatar-sm">{{ strtoupper(substr($namaPrestasi,0,2)) }}</div><span style="font-weight:600;color:#1e1b4b;">{{ $namaPrestasi }}</span></div></td>
+                        <td>{{ $prestasi->nama_prestasi ?? '-' }}</td>
+                        <td style="color:#293C79;font-weight:700;">{{ (int) ($prestasi->reward_jml_mk_max ?? 0) }} MK / {{ (int) ($prestasi->reward_sks_max ?? 0) }} SKS</td>
+                    </tr>
+                @empty
+                    <tr class="empty-row"><td colspan="3">Tidak ada reward yang sedang diajukan</td></tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+@endif
+
 @if($hasSection('action_items'))
 <div class="da-section" style="order:1;">
 <div class="section-header section-gap">
@@ -371,6 +804,21 @@
         </div>
     </a>
 
+    {{-- Klaim Reward Pending --}}
+    <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}"
+       class="action-card action-card-green {{ ($act['reward_pending'] ?? 0) === 0 ? 'zero-state' : '' }}">
+        <div class="action-card-top">
+            <div class="action-icon action-icon-green">
+                <span style="display:inline-flex;width:18px;height:18px;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/star.svg'))) !!}</span>
+            </div>
+        </div>
+        <div class="action-num action-num-green">{{ $act['reward_pending'] ?? 0 }}</div>
+        <div>
+            <div class="action-label">Klaim reward menunggu persetujuan</div>
+            <div class="action-link-hint">Review reward â†’</div>
+        </div>
+    </a>
+
 </div>
 </div>
 @endif
@@ -380,8 +828,153 @@
      🟠 TIER 2 — AKTIVITAS TERKINI (cache 60 detik)
      Berubah beberapa kali sehari: kegiatan, pengumuman, forum.
 ══════════════════════════════════════════════════════════════════════ --}}
+@if($hasSection('admin_operasional'))
+<div class="da-section" style="order:2;">
+<div class="section-header section-gap">
+    <span class="section-label">Monitoring Operasional Admin</span>
+    <div class="section-line"></div>
+</div>
+
+<div class="kpi-row">
+    @php
+        $adminKpis = [
+            ['label'=>'Pengaduan Lewat SLA', 'val'=>number_format($ops['pengaduan_sla_lewat'] ?? 0), 'bg'=>'#fef2f2', 'color'=>'#dc2626'],
+            ['label'=>'Reward Pending', 'val'=>number_format($ops['reward_pending'] ?? 0), 'bg'=>'#ecfdf5', 'color'=>'#059669'],
+            ['label'=>'Kegiatan Tanpa Dosen', 'val'=>number_format($ops['kegiatan_tanpa_dosen'] ?? 0), 'bg'=>'#fff7ed', 'color'=>'#ea580c'],
+            ['label'=>'Lulusan Belum Sinkron', 'val'=>number_format($ops['lulusan_belum_sinkron'] ?? 0), 'bg'=>'#eff6ff', 'color'=>'#2563eb'],
+        ];
+    @endphp
+    @foreach($adminKpis as $k)
+    <div class="kpi-mini">
+        <div class="kpi-mini-icon" style="background:{{ $k['bg'] }};color:{{ $k['color'] }};">
+            <span style="display:inline-flex;width:18px;height:18px;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/check-square.svg'))) !!}</span>
+        </div>
+        <div>
+            <div class="kpi-mini-val" style="color:{{ $k['color'] }};">{{ $k['val'] }}</div>
+            <div class="kpi-mini-label">{{ $k['label'] }}</div>
+        </div>
+    </div>
+    @endforeach
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:18px;">
+    <div class="chart-card">
+        <div class="chart-title">
+            <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/headphone-01.svg'))) !!}</span>
+            Layanan Pengaduan
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:16px;">
+            @foreach([
+                ['label'=>'Baru', 'val'=>$ops['pengaduan_baru'] ?? 0, 'color'=>'#dc2626'],
+                ['label'=>'Dibaca', 'val'=>$ops['pengaduan_dibaca'] ?? 0, 'color'=>'#2563eb'],
+                ['label'=>'Didelegasikan', 'val'=>$ops['pengaduan_didelegasikan'] ?? 0, 'color'=>'#d97706'],
+                ['label'=>'Selesai', 'val'=>$ops['pengaduan_selesai'] ?? 0, 'color'=>'#059669'],
+            ] as $row)
+            <div style="padding:12px;border:1px solid #eef2f7;border-radius:12px;background:#fff;">
+                <div style="font-size:1.25rem;font-weight:800;color:{{ $row['color'] }};">{{ number_format($row['val']) }}</div>
+                <div style="font-size:.75rem;color:#6b7280;font-weight:600;">{{ $row['label'] }}</div>
+            </div>
+            @endforeach
+        </div>
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;font-size:.82rem;">
+            <span style="font-weight:700;color:#1e1b4b;">Responsivitas Pengaduan</span>
+            <span style="font-weight:800;color:#059669;">{{ $ops['responsivitas_pengaduan'] ?? 0 }}%</span>
+        </div>
+        <div style="height:7px;background:#f3f4f6;border-radius:999px;overflow:hidden;">
+            <div style="width:{{ min(100, $ops['responsivitas_pengaduan'] ?? 0) }}%;height:100%;background:#059669;border-radius:999px;"></div>
+        </div>
+        <div style="margin-top:10px;font-size:.72rem;color:#9ca3af;">
+            SLA {{ $ops['sla_hari'] ?? 7 }} hari, {{ number_format($ops['pengaduan_belum_dibaca'] ?? 0) }} pengaduan belum dibaca.
+        </div>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-title">
+            <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/check-square.svg'))) !!}</span>
+            Verifikasi & Approval
+        </div>
+        <table class="da-table">
+            <thead><tr><th>Jenis</th><th style="text-align:right;">Pending</th></tr></thead>
+            <tbody>
+                @foreach([
+                    'Riwayat Kegiatan' => $ops['verif_riwayat_pending'] ?? 0,
+                    'Prestasi' => $ops['verif_prestasi_pending'] ?? 0,
+                    'Reward Prestasi' => $ops['reward_pending'] ?? 0,
+                    'Pengumuman' => $ops['pengumuman_pending'] ?? 0,
+                    'Laporan Forum' => $ops['forum_report_pending'] ?? 0,
+                ] as $label => $val)
+                <tr>
+                    <td style="font-weight:600;color:#1e1b4b;">{{ $label }}</td>
+                    <td style="text-align:right;font-weight:800;color:{{ $val > 0 ? '#dc2626' : '#059669' }};">{{ number_format($val) }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+        <div style="margin-top:10px;font-size:.72rem;color:#9ca3af;">
+            Potensi reward pending: {{ number_format($ops['reward_mk_pending'] ?? 0) }} MK / {{ number_format($ops['reward_sks_pending'] ?? 0) }} SKS.
+        </div>
+    </div>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:18px;">
+    <div class="chart-card">
+        <div class="chart-title">
+            <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/calendar.svg'))) !!}</span>
+            Realisasi Kegiatan
+        </div>
+        @php
+            $pesertaPct = min(100, $ops['persen_realisasi_peserta'] ?? 0);
+            $anggaranPct = min(100, $ops['persen_realisasi_anggaran'] ?? 0);
+        @endphp
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:10px;margin-bottom:16px;">
+            @foreach([
+                ['label'=>'Draft', 'val'=>$ops['kegiatan_draft'] ?? 0],
+                ['label'=>'Pelaksanaan', 'val'=>$ops['kegiatan_pelaksanaan'] ?? 0],
+                ['label'=>'Selesai', 'val'=>$ops['kegiatan_selesai'] ?? 0],
+            ] as $row)
+            <div style="padding:12px;border:1px solid #eef2f7;border-radius:12px;background:#fff;">
+                <div style="font-size:1.25rem;font-weight:800;color:#293C79;">{{ number_format($row['val']) }}</div>
+                <div style="font-size:.75rem;color:#6b7280;font-weight:600;">{{ $row['label'] }}</div>
+            </div>
+            @endforeach
+        </div>
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.82rem;margin-bottom:6px;"><strong>Peserta</strong><span>{{ number_format($ops['realisasi_peserta'] ?? 0) }} / {{ number_format($ops['target_peserta'] ?? 0) }} ({{ $ops['persen_realisasi_peserta'] ?? 0 }}%)</span></div>
+        <div style="height:7px;background:#f3f4f6;border-radius:999px;overflow:hidden;margin-bottom:12px;"><div style="width:{{ $pesertaPct }}%;height:100%;background:#2563eb;border-radius:999px;"></div></div>
+        <div style="display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:.82rem;margin-bottom:6px;"><strong>Anggaran</strong><span>Rp {{ number_format($ops['anggaran_realisasi'] ?? 0, 0, ',', '.') }} / Rp {{ number_format($ops['anggaran_rencana'] ?? 0, 0, ',', '.') }}</span></div>
+        <div style="height:7px;background:#f3f4f6;border-radius:999px;overflow:hidden;"><div style="width:{{ $anggaranPct }}%;height:100%;background:#059669;border-radius:999px;"></div></div>
+        <div style="margin-top:10px;font-size:.72rem;color:#9ca3af;">
+            {{ number_format($ops['kegiatan_selesai_belum_realisasi'] ?? 0) }} kegiatan selesai belum lengkap realisasinya.
+        </div>
+    </div>
+
+    <div class="chart-card">
+        <div class="chart-title">
+            <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/bar-chart-11.svg'))) !!}</span>
+            Kelengkapan Data Modul
+        </div>
+        <table class="da-table">
+            <thead><tr><th>Data</th><th style="text-align:right;">Perlu Dilengkapi</th></tr></thead>
+            <tbody>
+                @foreach([
+                    'Mahasiswa tanpa NIM' => $ops['mahasiswa_tanpa_nim'] ?? 0,
+                    'Mahasiswa tanpa angkatan' => $ops['mahasiswa_tanpa_angkatan'] ?? 0,
+                    'Lulusan belum sinkron alumni' => $ops['lulusan_belum_sinkron'] ?? 0,
+                    'Alumni belum mengisi status karir' => $ops['alumni_belum_terdata'] ?? 0,
+                ] as $label => $val)
+                <tr>
+                    <td style="font-weight:600;color:#1e1b4b;">{{ $label }}</td>
+                    <td style="text-align:right;font-weight:800;color:{{ $val > 0 ? '#d97706' : '#059669' }};">{{ number_format($val) }}</td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+@endif
+
 @if($hasSection('activity'))
-<div class="da-section" style="order:{{ $isGpm ? 6 : 2 }};">
+<div class="da-section" style="order:{{ $isGpm ? 6 : ($hasSection('admin_operasional') ? 3 : 2) }};">
 <div class="section-header section-gap">
     <span class="section-label">Aktivitas Terkini</span>
     <div class="section-line"></div>
@@ -717,7 +1310,7 @@
      Berubah saat admin update status — biasanya mingguan/bulanan.
 ══════════════════════════════════════════════════════════════════════ --}}
 @if($hasSection('mahasiswa'))
-<div class="da-section" style="order:{{ $isGpm ? 4 : 3 }};">
+<div class="da-section" style="order:{{ $isGpm ? 4 : ($isDpm ? 7 : ($hasSection('admin_operasional') ? 4 : 3)) }};">
 <div class="section-header section-gap">
     <span class="section-label">Mahasiswa Aktif</span>
     <div class="section-line"></div>
@@ -838,7 +1431,9 @@
         <div class="chart-title" style="margin-bottom:0;">
             <span style="display:inline-flex;width:15px;height:15px;color:#293C79;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/star.svg'))) !!}</span>
             Prestasi Mahasiswa
+            @if($canAccessVerifikasi)
             <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}" class="table-link" style="margin-left:auto;">Verifikasi →</a>
+            @endif
         </div>
 
         {{-- KPI Mini Row --}}
@@ -932,7 +1527,7 @@
                     <div style="font-size:.9rem;font-weight:600;color:#374151;margin-bottom:3px;">Belum ada prestasi terverifikasi</div>
                     <div style="font-size:.8rem;color:#9ca3af;">Prestasi mahasiswa yang disetujui akan tampil di sini</div>
                 </div>
-                @if($pendingPrestasi > 0)
+                @if($pendingPrestasi > 0 && $canAccessVerifikasi)
                     <a href="{{ route('manajemenmahasiswa.verifikasi.index') }}"
                         style="display:inline-flex;align-items:center;gap:5px;padding:7px 16px;background:#E7E8F0;color:#293C79;border-radius:8px;font-size:.82rem;font-weight:600;text-decoration:none;border:1px solid #CED4E0;">
                         <span style="display:inline-flex;width:13px;height:13px;">{!! str_replace(['#0D0D12','black','width="24"','height="24"'], ['currentColor','currentColor','width="100%"','height="100%"'], file_get_contents(public_path('images/icons/check.svg'))) !!}</span>
@@ -977,7 +1572,7 @@
      ⚠️ EVALUASI CALON DO & LULUSAN PER PERIODE
 ══════════════════════════════════════════════════════════════════════ --}}
 @if($hasSection('calon_do') || $hasSection('lulusan'))
-<div class="da-section" style="order:{{ $isGpm ? 2 : 4 }};">
+<div class="da-section" style="order:{{ $isGpm ? 2 : ($isDpm ? 1 : ($hasSection('admin_operasional') ? 5 : 4)) }};">
 <div class="section-header section-gap">
     <span class="section-label">Pemantauan Akademik</span>
     <div class="section-line"></div>
@@ -1094,7 +1689,7 @@
      Paling jarang berubah — alumni update profil karir setiap beberapa bulan.
 ══════════════════════════════════════════════════════════════════════ --}}
 @if($hasSection('alumni') && !empty($alm))
-<div class="da-section" style="order:5;">
+<div class="da-section" style="order:{{ $hasSection('admin_operasional') ? 6 : 5 }};">
 <div class="section-header section-gap">
     <span class="section-label">Alumni</span>
     <div class="section-line"></div>
@@ -1367,10 +1962,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 label: '{{ $ds['label'] }}',
                 data: {!! json_encode($angkatanByStatus[$ds['status']] ?? array_fill(0, count($angkatanLabels), 0)) !!},
                 borderColor: 'rgb({{ $ds['color'] }})',
-                backgroundColor: '{{ $isGpm ? "rgb(".$ds["color"].")" : "rgba(".$ds["color"].", 0.08)" }}',
+                backgroundColor: '{{ $useBarDistribusiMahasiswa ? "rgb(".$ds["color"].")" : "rgba(".$ds["color"].", 0.08)" }}',
                 fill: true,
                 tension: 0.35,
-                borderWidth: {{ $isGpm ? '1' : '2.5' }},
+                borderWidth: {{ $useBarDistribusiMahasiswa ? '1' : '2.5' }},
                 stack: 'mhs',
                 pointRadius: 4,
                 pointHoverRadius: 6,
@@ -1386,16 +1981,16 @@ document.addEventListener('DOMContentLoaded', () => {
     // FIX: assign ke variabel global (dideklarasikan di luar DOMContentLoaded)
     // sehingga toggleAngkatanLine() bisa mengaksesnya dari scope global
     _angkatanChart = new Chart(document.getElementById('chartAngkatan'), {
-        type: '{{ $isGpm ? "bar" : "line" }}',
+        type: '{{ $useBarDistribusiMahasiswa ? "bar" : "line" }}',
         data: angkatanChartData,
         options: {
             responsive: true,
             maintainAspectRatio: false,
             interaction: { mode: 'index', intersect: false },
             scales: {
-                x: { stacked: {{ $isGpm ? 'true' : 'false' }}, grid: { display: false }, ticks: { font: { size: 11 } } },
+                x: { stacked: {{ $useBarDistribusiMahasiswa ? 'true' : 'false' }}, grid: { display: false }, ticks: { font: { size: 11 } } },
                 y: {
-                    stacked: {{ $isGpm ? 'true' : 'false' }},
+                    stacked: {{ $useBarDistribusiMahasiswa ? 'true' : 'false' }},
                     grid: { color: '#f3f4f6' },
                     ticks: { font: { size: 11 }, stepSize: 1, precision: 0 },
                     beginAtZero: true,
