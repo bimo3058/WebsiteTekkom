@@ -704,10 +704,11 @@ class KoordinatorController extends Controller implements HasMiddleware
             ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
             ->leftJoin('eo_kp_dosen as d', 'eo_kerja_praktik.dosen_pembimbing_id', '=', 'd.id')
             ->leftJoin('eo_kp_penilaian as p', 'eo_kerja_praktik.id', '=', 'p.kp_id')
+            ->with(['nilaiDetail'])
             ->orderBy('eo_kerja_praktik.created_at', 'desc')
             ->get();
 
-        $allPeriodes = \Modules\EOffice\Models\KpPeriode::orderBy('created_at', 'desc')->get();
+        $allPeriodes = \Modules\EOffice\Models\KpPeriode::with('komponenNilai')->orderBy('created_at', 'desc')->get();
 
         $mahasiswas = $kps->map(function ($kp) use ($allPeriodes) {
             $statusStr = 'Pra KP';
@@ -738,6 +739,33 @@ class KoordinatorController extends Controller implements HasMiddleware
             $periodeName = $matchedPeriode ? "Semester {$matchedPeriode->semester} {$matchedPeriode->tahun_ajaran}" : 'Unknown';
             $periodeId = $matchedPeriode ? (string) $matchedPeriode->id : 'unknown';
 
+            $komponenKoor = [];
+            $semuaNilai = [];
+            if ($matchedPeriode && $matchedPeriode->komponenNilai) {
+                foreach ($matchedPeriode->komponenNilai as $komp) {
+                    $val = '-';
+                    if ($kp->nilaiDetail) {
+                        $det = $kp->nilaiDetail->where('komponen_id', $komp->id)->first();
+                        if ($det && $det->nilai_angka !== null) {
+                            $val = $det->nilai_angka;
+                        }
+                    }
+                    $semuaNilai[] = [
+                        'nama' => $komp->nama_komponen,
+                        'nilai' => $val
+                    ];
+
+                    if ($komp->role_penilai === 'koordinator') {
+                        $komponenKoor[] = [
+                            'id' => $komp->id,
+                            'nama_komponen' => $komp->nama_komponen,
+                            'bobot' => $komp->bobot,
+                            'nilai_angka' => $val !== '-' ? $val : ''
+                        ];
+                    }
+                }
+            }
+
             return (object) [
                 'id' => $kp->id,
                 'nama' => $kp->nama ?? 'Unknown',
@@ -761,6 +789,8 @@ class KoordinatorController extends Controller implements HasMiddleware
                 'status_seminar' => '-',
                 'periode_id' => $periodeId,
                 'periode_name' => $periodeName,
+                'komponen_koordinator' => $komponenKoor,
+                'semua_nilai' => $semuaNilai,
             ];
         });
 
@@ -808,21 +838,65 @@ class KoordinatorController extends Controller implements HasMiddleware
 
         $kp->save();
 
-        if ($request->has('nilai_lapangan') || $request->has('nilai_akhir')) {
-            $penilaianData = [];
-            if ($request->has('nilai_lapangan')) {
-                $penilaianData['nilai_lapangan'] = $request->nilai_lapangan;
-            }
-            if ($request->has('nilai_akhir')) {
-                // Di sistem aslinya, nilai akhir dihitung otomatis. Namun request bilang ada field override Nilai.
-                $penilaianData['nilai_akhir'] = $request->nilai_akhir;
+        // Check if period has components for koordinator
+        $komponenKoor = null;
+        if ($kp->periode && $kp->periode->komponenNilai) {
+            $komponenKoor = $kp->periode->komponenNilai->where('role_penilai', 'koordinator');
+        }
+
+        if ($komponenKoor && $komponenKoor->isNotEmpty()) {
+            $rules = [];
+            foreach ($komponenKoor as $komp) {
+                $rules['nilai_' . $komp->id] = 'nullable|numeric|min:0|max:100';
             }
 
-            if (!empty($penilaianData)) {
+            $validatedKomp = $request->validate($rules);
+            $totalInput = 0;
+            $countInput = 0;
+
+            foreach ($komponenKoor as $komp) {
+                if ($request->has('nilai_' . $komp->id) && $request->input('nilai_' . $komp->id) !== null) {
+                    \Modules\EOffice\Models\KpNilaiDetail::updateOrCreate(
+                        ['kp_id' => $kp->id, 'komponen_id' => $komp->id],
+                        ['nilai_angka' => $validatedKomp['nilai_' . $komp->id]]
+                    );
+                    $totalInput += $validatedKomp['nilai_' . $komp->id];
+                    $countInput++;
+                }
+            }
+
+            // Maintain fallback average for legacy interfaces
+            if ($countInput > 0) {
                 \Modules\EOffice\Models\KpPenilaian::updateOrCreate(
                     ['kp_id' => $kp->id],
-                    $penilaianData
+                    ['nilai_lapangan' => ($totalInput / $countInput)]
                 );
+            }
+
+            if ($request->has('nilai_akhir')) {
+                \Modules\EOffice\Models\KpPenilaian::updateOrCreate(
+                    ['kp_id' => $kp->id],
+                    ['nilai_akhir' => $request->nilai_akhir]
+                );
+            }
+
+        } else {
+            if ($request->has('nilai_lapangan') || $request->has('nilai_akhir')) {
+                $penilaianData = [];
+                if ($request->has('nilai_lapangan')) {
+                    $penilaianData['nilai_lapangan'] = $request->nilai_lapangan;
+                }
+                if ($request->has('nilai_akhir')) {
+                    // Di sistem aslinya, nilai akhir dihitung otomatis. Namun request bilang ada field override Nilai.
+                    $penilaianData['nilai_akhir'] = $request->nilai_akhir;
+                }
+
+                if (!empty($penilaianData)) {
+                    \Modules\EOffice\Models\KpPenilaian::updateOrCreate(
+                        ['kp_id' => $kp->id],
+                        $penilaianData
+                    );
+                }
             }
         }
 
@@ -839,6 +913,8 @@ class KoordinatorController extends Controller implements HasMiddleware
             ->leftJoin('eo_kp_mahasiswa as m', 'eo_kerja_praktik.mahasiswa_id', '=', 'm.id')
             ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
             ->with([
+                'periode.komponenNilai',
+                'nilaiDetail',
                 'dokumen' => function ($query) {
                     $query->whereIn('jenis_dokumen', ['Nilai Lapangan', 'Form Penilaian Pembimbing', 'Form Penilaian']);
                 }
@@ -860,6 +936,25 @@ class KoordinatorController extends Controller implements HasMiddleware
                 }
             }
 
+            $komponen = [];
+            if ($kp->periode && $kp->periode->komponenNilai) {
+                foreach ($kp->periode->komponenNilai->where('role_penilai', 'koordinator') as $komp) {
+                    $existingVal = '';
+                    if ($kp->nilaiDetail) {
+                        $det = $kp->nilaiDetail->where('komponen_id', $komp->id)->first();
+                        if ($det)
+                            $existingVal = $det->nilai_angka;
+                    }
+
+                    $komponen[] = [
+                        'id' => $komp->id,
+                        'nama_komponen' => $komp->nama_komponen,
+                        'bobot' => $komp->bobot,
+                        'nilai_angka' => $existingVal
+                    ];
+                }
+            }
+
             return (object) [
                 'id' => $kp->id,
                 'dokumen_id' => $dokumen_nilai ? $dokumen_nilai->id : null,
@@ -870,6 +965,7 @@ class KoordinatorController extends Controller implements HasMiddleware
                 'nilai_input_mahasiswa' => $dokumen_nilai ? $dokumen_nilai->nilai_input_mahasiswa : null,
                 'nilai_validasi_koordinator' => $dokumen_nilai ? $dokumen_nilai->nilai_validasi_koordinator : null,
                 'status_nilai' => $status_nilai,
+                'komponen_koordinator' => $komponen
             ];
         });
 
@@ -878,26 +974,60 @@ class KoordinatorController extends Controller implements HasMiddleware
 
     public function updateNilaiLapangan(Request $request, $id)
     {
-        $request->validate([
-            'nilai_validasi_koordinator' => 'required|numeric|min:0|max:100',
-            'nilai_status' => 'required|in:valid,rejected,pending'
-        ]);
+        $dokumen = \Modules\EOffice\Models\KpDokumen::with('kerjaPraktik.periode.komponenNilai')->findOrFail($id);
+        $kp = $dokumen->kerjaPraktik;
 
-        $dokumen = \Modules\EOffice\Models\KpDokumen::findOrFail($id);
-        $dokumen->update([
-            'nilai_validasi_koordinator' => $request->nilai_validasi_koordinator,
-            'nilai_status' => $request->nilai_status
-        ]);
-
-        // Jika valid, update di eo_kp_penilaian juga jika ada (buat kalau belum ada)
-        if ($request->nilai_status === 'valid') {
-            \Modules\EOffice\Models\KpPenilaian::updateOrCreate(
-                ['kp_id' => $dokumen->kp_id],
-                ['nilai_lapangan' => $request->nilai_validasi_koordinator]
-            );
+        $komponenKoor = null;
+        if ($kp && $kp->periode && $kp->periode->komponenNilai) {
+            $komponenKoor = $kp->periode->komponenNilai->where('role_penilai', 'koordinator');
         }
 
-        return redirect()->back()->with('success', 'Nilai lapangan berhasil diperbarui.');
+        if ($komponenKoor && $komponenKoor->isNotEmpty()) {
+            $rules = [
+                'nilai_status' => 'required|in:valid,rejected,pending'
+            ];
+            foreach ($komponenKoor as $komp) {
+                $rules['nilai_' . $komp->id] = 'required|numeric|min:0|max:100';
+            }
+            $validated = $request->validate($rules);
+
+            // Still update the doc status and fallback fields
+            $dokumen->update([
+                'nilai_status' => $validated['nilai_status'],
+                'nilai_validasi_koordinator' => collect($komponenKoor)->map(function ($k) use ($validated) {
+                    return $validated['nilai_' . $k->id];
+                })->avg() // simple avg fallback for legacy tables
+            ]);
+
+            if ($validated['nilai_status'] === 'valid') {
+                foreach ($komponenKoor as $komp) {
+                    \Modules\EOffice\Models\KpNilaiDetail::updateOrCreate(
+                        ['kp_id' => $kp->id, 'komponen_id' => $komp->id],
+                        ['nilai_angka' => $validated['nilai_' . $komp->id]]
+                    );
+                }
+            }
+
+        } else {
+            $request->validate([
+                'nilai_validasi_koordinator' => 'required|numeric|min:0|max:100',
+                'nilai_status' => 'required|in:valid,rejected,pending'
+            ]);
+
+            $dokumen->update([
+                'nilai_validasi_koordinator' => $request->nilai_validasi_koordinator,
+                'nilai_status' => $request->nilai_status
+            ]);
+
+            if ($request->nilai_status === 'valid') {
+                \Modules\EOffice\Models\KpPenilaian::updateOrCreate(
+                    ['kp_id' => $dokumen->kp_id],
+                    ['nilai_lapangan' => $request->nilai_validasi_koordinator]
+                );
+            }
+        }
+
+        return redirect()->back()->with('success', 'Nilai Evaluasi berhasil diperbarui.');
     }
 
     public function balancingDosen()
@@ -1132,15 +1262,28 @@ class KoordinatorController extends Controller implements HasMiddleware
         }
 
         // Note: The unique constraint on ('tahun_ajaran', 'semester') might fail if duplicate
-        \Modules\EOffice\Models\KpPeriode::create($validated);
+        $periode = \Modules\EOffice\Models\KpPeriode::create($validated);
+
+        if ($request->has('komponen_penilaian') && is_array($request->komponen_penilaian)) {
+            foreach ($request->komponen_penilaian as $comp) {
+                \Modules\EOffice\Models\KpKomponenNilai::create([
+                    'periode_id' => $periode->id,
+                    'nama_komponen' => $comp['nama_komponen'],
+                    'bobot' => $comp['bobot'],
+                    'role_penilai' => $comp['role_penilai']
+                ]);
+            }
+        }
 
         return redirect()->route('eoffice.kp.koordinator.periode')->with('success', 'Periode baru berhasil ditambahkan.');
     }
 
     public function editPeriode($id)
     {
-        $periode = \Modules\EOffice\Models\KpPeriode::findOrFail($id);
-        return view('eoffice::koordinator.periode.edit', compact('periode'));
+        // Eager load the grading components for this period natively
+        $periode = \Modules\EOffice\Models\KpPeriode::with('komponenNilai')->findOrFail($id);
+        $allPeriodes = \Modules\EOffice\Models\KpPeriode::with('komponenNilai')->where('id', '!=', $id)->orderBy('created_at', 'desc')->get();
+        return view('eoffice::koordinator.periode.edit', compact('periode', 'allPeriodes'));
     }
 
     public function updatePeriode(Request $request, $id)
@@ -1174,6 +1317,39 @@ class KoordinatorController extends Controller implements HasMiddleware
         }
 
         $periode->update($validated);
+
+        // Sync Rubrik Penilaian
+        if ($request->has('komponen_penilaian') && is_array($request->komponen_penilaian)) {
+            $submittedIds = [];
+            foreach ($request->komponen_penilaian as $comp) {
+                if (!empty($comp['id'])) {
+                    $existing = \Modules\EOffice\Models\KpKomponenNilai::find($comp['id']);
+                    if ($existing && $existing->periode_id == $periode->id) {
+                        $existing->update([
+                            'nama_komponen' => $comp['nama_komponen'],
+                            'bobot' => $comp['bobot'],
+                            'role_penilai' => $comp['role_penilai']
+                        ]);
+                        $submittedIds[] = $existing->id;
+                    }
+                } else {
+                    $newComp = \Modules\EOffice\Models\KpKomponenNilai::create([
+                        'periode_id' => $periode->id,
+                        'nama_komponen' => $comp['nama_komponen'],
+                        'bobot' => $comp['bobot'],
+                        'role_penilai' => $comp['role_penilai']
+                    ]);
+                    $submittedIds[] = $newComp->id;
+                }
+            }
+            // Delete components that were removed by Koordinator
+            \Modules\EOffice\Models\KpKomponenNilai::where('periode_id', $periode->id)
+                ->whereNotIn('id', $submittedIds)
+                ->delete();
+        } else {
+            // If the array is completely empty, it means all rubrics were removed
+            \Modules\EOffice\Models\KpKomponenNilai::where('periode_id', $periode->id)->delete();
+        }
 
         return redirect()->route('eoffice.kp.koordinator.periode')->with('success', 'Periode berhasil diperbarui.');
     }

@@ -38,11 +38,11 @@
 
             {{-- Submit/Next Button top right (optional, keep at bottom if preferred, but image has Lanjut at top right)
             --}}
-            <button type="button" x-show="step < 3" @click="nextStep()"
+            <button type="button" x-show="step < 4" @click="nextStep()"
                 class="flex items-center justify-center px-4 py-2 bg-slate-900 border border-transparent text-white rounded-xl hover:bg-slate-800 transition-colors shadow-sm text-sm font-semibold">
                 Lanjut
             </button>
-            <button type="button" x-show="step === 3" @click="$refs.form.submit()"
+            <button type="button" x-show="step === 4" @click="$refs.form.submit()"
                 class="flex items-center justify-center px-4 py-2 bg-emerald-600 border border-transparent text-white rounded-xl hover:bg-emerald-700 transition-colors shadow-sm text-sm font-semibold">
                 Simpan
             </button>
@@ -82,20 +82,10 @@
                         style="
                         display:flex; align-items:center; gap:8px;
                         padding:8px 12px;
-                        border-radius:10px; border-width:1px;
-                        font-size:13px; font-weight:600;
+                        border-radius:12px; font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600;
                         transition:all 0.2s;
-                        whitespace:nowrap;
-                    ">
-                        {{-- Determine Icon --}}
-                        <template x-if="tab === 'Informasi Dasar'">
-                            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
-                                viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round"
-                                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                            </svg>
-                        </template>
-                        <template x-if="tab === 'Tanggal Fase'">
+                        ">
+                        <template x-if="tab !== 'Review'">
                             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"
                                 viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round"
@@ -350,101 +340,215 @@
 
                 </div>
 
-                {{-- STEP 3: REVIEW --}}
-                <div x-show="step === 3" style="display:none;" x-transition>
-                    <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
-                        <div class="md:col-span-4">
-                            <h2
-                                style="font-family:'Inter Tight',sans-serif; font-size:18px; font-weight:700; color:#0D0D12; margin-bottom:8px;">
-                                Review</h2>
-                            <p
-                                style="font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:500; color:#666D80;">
-                                Tinjau konfigurasi Anda sebelum menyimpan.</p>
-                        </div>
-                        <div class="md:col-span-8 flex flex-col gap-8">
+            </div>
 
-                            {{-- Review List --}}
-                            <div>
-                                <h3
-                                    class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">
-                                    Konfigurasi Periode Baru</h3>
-                                <ul class="space-y-4 font-medium text-sm text-[#0D0D12]"
-                                    style="font-family:'Inter Tight',sans-serif;">
-                                    <li class="flex justify-between items-center">
-                                        <span class="text-[#666D80]">Nama Periode</span>
-                                        <span
-                                            x-text="'Semester ' + formData.semester + ' ' + (formData.tahun_ajaran || '-')"></span>
-                                    </li>
-                                    <li class="flex justify-between items-center">
-                                        <span class="text-[#666D80]">Durasi Pendaftaran</span>
-                                        <span
-                                            x-text="(formatDate(formData.tanggal_buka)) + ' - ' + (formatDate(formData.tanggal_tutup))"></span>
-                                    </li>
-                                    <li class="flex justify-between items-center">
-                                        <span class="text-[#666D80]">Status</span>
-                                        <span x-show="formData.is_active"
-                                            class="px-3 py-1 bg-green-50 text-green-700 text-xs rounded-full border border-green-200">Aktif</span>
-                                        <span x-show="!formData.is_active"
-                                            class="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full border border-gray-200">Nonaktif</span>
-                                    </li>
-                                </ul>
-                            </div>
-
-                            <div>
-                                <h3
-                                    class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">
-                                    Tanggal Fase</h3>
-                                <div class="grid grid-cols-1 gap-4 font-medium text-sm text-[#0D0D12]"
-                                    style="font-family:'Inter Tight',sans-serif;">
-
-                                    <div
-                                        class="flex flex-col sm:flex-row justify-between gap-1 p-3 bg-gray-50 rounded-xl">
-                                        <span class="text-[#666D80] font-semibold w-1/3">Pra KP</span>
-                                        <div class="w-full text-right flex flex-col gap-1">
-                                            <span>Mulai: <span x-text="formatDate(formData.pra_kp_mulai)"></span></span>
-                                            <span>Berakhir: <span
-                                                    x-text="formatDate(formData.pra_kp_akhir)"></span></span>
-                                            <span>Pengingat: <span class="text-orange-500"
-                                                    x-text="formatDate(formData.pra_kp_pengingat)"></span></span>
-                                        </div>
-                                    </div>
-
-                                    <div
-                                        class="flex flex-col sm:flex-row justify-between gap-1 p-3 bg-gray-50 rounded-xl">
-                                        <span class="text-[#666D80] font-semibold w-1/3">Saat KP</span>
-                                        <div class="w-full text-right flex flex-col gap-1">
-                                            <span>Mulai: <span
-                                                    x-text="formatDate(formData.saat_kp_mulai)"></span></span>
-                                            <span>Berakhir: <span
-                                                    x-text="formatDate(formData.saat_kp_akhir)"></span></span>
-                                            <span>Pengingat: <span class="text-orange-500"
-                                                    x-text="formatDate(formData.saat_kp_pengingat)"></span></span>
-                                        </div>
-                                    </div>
-
-                                    <div
-                                        class="flex flex-col sm:flex-row justify-between gap-1 p-3 bg-gray-50 rounded-xl">
-                                        <span class="text-[#666D80] font-semibold w-1/3">Pasca KP</span>
-                                        <div class="w-full text-right flex flex-col gap-1">
-                                            <span>Mulai: <span
-                                                    x-text="formatDate(formData.pasca_kp_mulai)"></span></span>
-                                            <span>Berakhir: <span
-                                                    x-text="formatDate(formData.pasca_kp_akhir)"></span></span>
-                                            <span>Pengingat: <span class="text-orange-500"
-                                                    x-text="formatDate(formData.pasca_kp_pengingat)"></span></span>
-                                        </div>
-                                    </div>
-
+            {{-- STEP 3: RUBRIK PENILAIAN --}}
+            <div x-show="step === 3" style="display:none;" x-transition>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+                    <div class="md:col-span-4">
+                        <h2
+                            style="font-family:'Inter Tight',sans-serif; font-size:18px; font-weight:700; color:#0D0D12; margin-bottom:8px;">
+                            Rubrik Penilaian
+                        </h2>
+                        <p
+                            style="font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:500; color:#666D80;">
+                            Atur komponen penilaian apa saja yang dinilai selama masa KP beserta persentase bobotnya.
+                        </p>
+                    </div>
+                    <div class="md:col-span-8">
+                        {{-- Fitur Salin Penilaian --}}
+                        <div class="mb-6 bg-white border border-gray-200 rounded-xl p-5 shadow-sm">
+                            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                                <div>
+                                    <h3 class="text-sm font-bold text-gray-800">Salin Penilaian</h3>
+                                    <p class="text-xs text-gray-500 mt-1">Salin seluruh konfigurasi penilaian dari periode lain.</p>
+                                </div>
+                                <div class="w-full md:w-1/2">
+                                    <select @change="copyFromPeriode($event.target.value)"
+                                        class="w-full text-sm border-gray-300 rounded-lg px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1 bg-gray-50 font-medium text-gray-700">
+                                        <option value="">Pilih sumber periode</option>
+                                        <template x-for="p in allPeriodes" :key="p.id">
+                                            <option :value="p.id" x-text="`Semester ${p.semester} ${p.tahun_ajaran}`"></option>
+                                        </template>
+                                    </select>
                                 </div>
                             </div>
+                        </div>
 
+                        <div class="bg-gray-50 border border-gray-200 rounded-xl p-6">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-sm font-bold text-gray-800">Daftar Komponen</h3>
+                                <button type="button" @click="addComponent"
+                                    class="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-white bg-[#0B266E] rounded-lg hover:bg-slate-800 transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                            d="M12 4v16m8-8H4"></path>
+                                    </svg>
+                                    Tambah
+                                </button>
+                            </div>
+
+                            <div class="space-y-4">
+                                <template x-for="(comp, index) in formData.komponen_penilaian" :key="index">
+                                    <div
+                                        class="flex flex-col sm:flex-row gap-3 items-start sm:items-center bg-white p-4 rounded-lg border border-gray-200 shadow-sm relative group">
+                                        <input type="hidden" :name="`komponen_penilaian[${index}][id]`"
+                                            :value="comp.id">
+
+                                        <div class="w-full sm:w-1/3">
+                                            <label
+                                                class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Nama
+                                                Komponen</label>
+                                            <input type="text" :name="`komponen_penilaian[${index}][nama_komponen]`"
+                                                x-model="comp.nama_komponen" placeholder="Contoh: Laporan KP"
+                                                class="w-full text-sm border-gray-200 rounded-md px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1">
+                                        </div>
+
+                                        <div class="w-full sm:w-1/4">
+                                            <label
+                                                class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Bobot
+                                                (%)</label>
+                                            <div class="relative">
+                                                <input type="number" :name="`komponen_penilaian[${index}][bobot]`"
+                                                    x-model.number="comp.bobot" min="0" max="100"
+                                                    class="w-full text-sm border-gray-200 rounded-md px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1 pr-6">
+                                                <span class="absolute right-2 top-2 text-gray-400 text-sm">%</span>
+                                            </div>
+                                        </div>
+
+                                        <div class="w-full sm:w-1/3">
+                                            <label
+                                                class="block text-[11px] font-semibold text-gray-500 uppercase tracking-wider mb-1">Role
+                                                Penilai</label>
+                                            <select :name="`komponen_penilaian[${index}][role_penilai]`"
+                                                x-model="comp.role_penilai"
+                                                class="w-full text-sm border-gray-200 rounded-md px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1 text-slate-700">
+                                                <option value="dosen_pembimbing">Dosen Pembimbing</option>
+                                                <option value="koordinator">Koordinator KP</option>
+                                            </select>
+                                        </div>
+
+                                        <button type="button" @click="removeComponent(index)"
+                                            class="sm:absolute sm:-right-3 sm:-top-3 sm:hidden group-hover:flex mt-2 sm:mt-0 p-1.5 bg-red-100 text-red-600 rounded-full hover:bg-red-200 shadow-sm border border-red-200 transition-colors"
+                                            title="Hapus Komponen">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M6 18L18 6M6 6l12 12"></path>
+                                            </svg>
+                                        </button>
+                                    </div>
+                                </template>
+
+                                <template x-if="formData.komponen_penilaian.length === 0">
+                                    <div
+                                        class="text-center py-6 text-gray-400 text-sm border-2 border-dashed border-gray-200 rounded-lg">
+                                        Belum ada rubrik komponen penilaian yang ditambahkan.
+                                    </div>
+                                </template>
+                            </div>
+
+                            <div class="mt-4 pt-4 border-t border-gray-200 flex justify-between items-center text-sm">
+                                <span class="font-semibold text-gray-600">Total Bobot:</span>
+                                <span class="font-bold px-3 py-1 rounded-lg"
+                                    :class="totalBobot() === 100 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'"
+                                    x-text="totalBobot() + '%'"></span>
+                            </div>
+                            <p x-show="totalBobot() !== 100" class="text-xs text-red-500 mt-2 font-medium">Peringatan:
+                                Total
+                                bobot harus tepat 100% sebelum disimpan.</p>
                         </div>
                     </div>
                 </div>
-
             </div>
 
-        </form>
+            {{-- STEP 4: REVIEW --}}
+            <div x-show="step === 4" style="display:none;" x-transition>
+                <div class="grid grid-cols-1 md:grid-cols-12 gap-8">
+                    <div class="md:col-span-4">
+                        <h2
+                            style="font-family:'Inter Tight',sans-serif; font-size:18px; font-weight:700; color:#0D0D12; margin-bottom:8px;">
+                            Review</h2>
+                        <p
+                            style="font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:500; color:#666D80;">
+                            Tinjau konfigurasi Anda sebelum menyimpan.</p>
+                    </div>
+                    <div class="md:col-span-8 flex flex-col gap-8">
+
+                        {{-- Review List --}}
+                        <div>
+                            <h3
+                                class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">
+                                Konfigurasi Periode Baru</h3>
+                            <ul class="space-y-4 font-medium text-sm text-[#0D0D12]"
+                                style="font-family:'Inter Tight',sans-serif;">
+                                <li class="flex justify-between items-center">
+                                    <span class="text-[#666D80]">Nama Periode</span>
+                                    <span
+                                        x-text="'Semester ' + formData.semester + ' ' + (formData.tahun_ajaran || '-')"></span>
+                                </li>
+                                <li class="flex justify-between items-center">
+                                    <span class="text-[#666D80]">Durasi Pendaftaran</span>
+                                    <span
+                                        x-text="(formatDate(formData.tanggal_buka)) + ' - ' + (formatDate(formData.tanggal_tutup))"></span>
+                                </li>
+                                <li class="flex justify-between items-center">
+                                    <span class="text-[#666D80]">Status</span>
+                                    <span x-show="formData.is_active"
+                                        class="px-3 py-1 bg-green-50 text-green-700 text-xs rounded-full border border-green-200">Aktif</span>
+                                    <span x-show="!formData.is_active"
+                                        class="px-3 py-1 bg-gray-100 text-gray-600 text-xs rounded-full border border-gray-200">Nonaktif</span>
+                                </li>
+                            </ul>
+                        </div>
+
+                        <div>
+                            <h3
+                                class="text-xs font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">
+                                Tanggal Fase</h3>
+                            <div class="grid grid-cols-1 gap-4 font-medium text-sm text-[#0D0D12]"
+                                style="font-family:'Inter Tight',sans-serif;">
+
+                                <div class="flex flex-col sm:flex-row justify-between gap-1 p-3 bg-gray-50 rounded-xl">
+                                    <span class="text-[#666D80] font-semibold w-1/3">Pra KP</span>
+                                    <div class="w-full text-right flex flex-col gap-1">
+                                        <span>Mulai: <span x-text="formatDate(formData.pra_kp_mulai)"></span></span>
+                                        <span>Berakhir: <span x-text="formatDate(formData.pra_kp_akhir)"></span></span>
+                                        <span>Pengingat: <span class="text-orange-500"
+                                                x-text="formatDate(formData.pra_kp_pengingat)"></span></span>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row justify-between gap-1 p-3 bg-gray-50 rounded-xl">
+                                    <span class="text-[#666D80] font-semibold w-1/3">Saat KP</span>
+                                    <div class="w-full text-right flex flex-col gap-1">
+                                        <span>Mulai: <span x-text="formatDate(formData.saat_kp_mulai)"></span></span>
+                                        <span>Berakhir: <span x-text="formatDate(formData.saat_kp_akhir)"></span></span>
+                                        <span>Pengingat: <span class="text-orange-500"
+                                                x-text="formatDate(formData.saat_kp_pengingat)"></span></span>
+                                    </div>
+                                </div>
+
+                                <div class="flex flex-col sm:flex-row justify-between gap-1 p-3 bg-gray-50 rounded-xl">
+                                    <span class="text-[#666D80] font-semibold w-1/3">Pasca KP</span>
+                                    <div class="w-full text-right flex flex-col gap-1">
+                                        <span>Mulai: <span x-text="formatDate(formData.pasca_kp_mulai)"></span></span>
+                                        <span>Berakhir: <span
+                                                x-text="formatDate(formData.pasca_kp_akhir)"></span></span>
+                                        <span>Pengingat: <span class="text-orange-500"
+                                                x-text="formatDate(formData.pasca_kp_pengingat)"></span></span>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+
+    </div>
+
+    </form>
 
     </div>
 
@@ -452,7 +556,7 @@
         function periodeWizard() {
             return {
                 step: 1,
-                tabs: ['Informasi Dasar', 'Tanggal Fase', 'Review'],
+                tabs: ['Informasi Dasar', 'Tanggal Fase', 'Rubrik Penilaian', 'Review'],
                 formData: {
                     semester: '{{ old('semester', $periode->semester) }}',
                     tahun_ajaran: '{{ old('tahun_ajaran', $periode->tahun_ajaran) }}',
@@ -469,6 +573,30 @@
                     pasca_kp_mulai: '{{ old('pasca_kp_mulai', $periode->pasca_kp_mulai?->format('Y-m-d')) }}',
                     pasca_kp_akhir: '{{ old('pasca_kp_akhir', $periode->pasca_kp_akhir?->format('Y-m-d')) }}',
                     pasca_kp_pengingat: '{{ old('pasca_kp_pengingat', $periode->pasca_kp_pengingat?->format('Y-m-d')) }}',
+                    komponen_penilaian: {!! json_encode(old('komponen_penilaian', $periode->komponenNilai->map(function ($k) {
+    return clone $k; }))) !!} || []
+                },
+                allPeriodes: {!! json_encode($allPeriodes->map(function($p) {
+                    return [
+                        'id' => $p->id,
+                        'semester' => $p->semester,
+                        'tahun_ajaran' => $p->tahun_ajaran,
+                        'komponen' => $p->komponenNilai->map(function($k) {
+                            return [
+                                'nama_komponen' => $k->nama_komponen,
+                                'bobot' => $k->bobot,
+                                'role_penilai' => $k->role_penilai
+                            ];
+                        })
+                    ];
+                })) !!},
+                copyFromPeriode(periodeId) {
+                    if (!periodeId) return;
+                    const source = this.allPeriodes.find(p => p.id == periodeId);
+                    if (source) {
+                        // Deep clone so they get inserted as fresh new components without old IDs
+                        this.formData.komponen_penilaian = JSON.parse(JSON.stringify(source.komponen));
+                    }
                 },
                 initDates() {
                     // Initialize if needed
@@ -487,9 +615,23 @@
                             return;
                         }
                     }
-                    if (targetStep >= 1 && targetStep <= 3) {
+                    if (targetStep >= 1 && targetStep <= 4) {
                         this.step = targetStep;
                     }
+                },
+                addComponent() {
+                    this.formData.komponen_penilaian.push({
+                        id: null,
+                        nama_komponen: '',
+                        bobot: 0,
+                        role_penilai: 'dosen_pembimbing'
+                    });
+                },
+                removeComponent(index) {
+                    this.formData.komponen_penilaian.splice(index, 1);
+                },
+                totalBobot() {
+                    return this.formData.komponen_penilaian.reduce((sum, item) => sum + (parseInt(item.bobot) || 0), 0);
                 },
                 formatDate(dateStr) {
                     if (!dateStr) return '-';
