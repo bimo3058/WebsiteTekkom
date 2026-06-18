@@ -11,7 +11,7 @@
 
     /* ── Page Header ── */
     .page-header-alumni {
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        background: linear-gradient(135deg, #0B266E 0%, #091958 100%);
         border-radius: 16px;
         padding: 28px 32px;
         margin-bottom: 20px;
@@ -58,7 +58,7 @@
         display: flex;
         align-items: center;
         gap: 14px;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #DFE1E7;
         transition: box-shadow 0.2s;
     }
     .stat-card:hover {
@@ -76,12 +76,12 @@
     .stat-value {
         font-size: 22px;
         font-weight: 800;
-        color: #1f2937;
+        color: #0D0D12;
         line-height: 1;
     }
     .stat-label {
         font-size: 12px;
-        color: #9ca3af;
+        color: #666D80;
         font-weight: 500;
         margin-top: 2px;
     }
@@ -90,7 +90,7 @@
     .filter-bar {
         background: #fff;
         border-radius: 12px;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #DFE1E7;
         padding: 16px 20px;
         margin-bottom: 16px;
         display: flex;
@@ -108,27 +108,29 @@
         left: 12px;
         top: 50%;
         transform: translateY(-50%);
-        color: #9ca3af;
+        color: #666D80;
     }
     .search-input {
-        background-color: #f3f4f6;
-        border: none;
+        background-color: #ffffff;
+        border: 1px solid #DFE1E7;
         border-radius: 8px;
         height: 40px;
         padding-left: 36px;
         font-size: 13px;
         font-weight: 500;
         width: 100%;
+        color: #374151;
     }
     .search-input:focus {
         background-color: #ffffff;
-        box-shadow: 0 0 0 2px #e0e7ff;
+        border-color: #0B266E;
+        box-shadow: 0 0 0 3px rgba(11,38,110,0.1);
         outline: none;
     }
     .filter-select {
         padding: 8px 14px;
         border-radius: 8px;
-        border: 1.5px solid #e5e7eb;
+        border: 1px solid #DFE1E7;
         background: #fff;
         color: #374151;
         font-size: 13px;
@@ -139,15 +141,15 @@
         min-width: 150px;
     }
     .filter-select:focus {
-        border-color: #818cf8;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        border-color: #0B266E;
+        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
     }
 
     /* ── Table ── */
     .table-card {
         background: #fff;
         border-radius: 12px;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #DFE1E7;
         overflow: hidden;
     }
     .alumni-table {
@@ -156,21 +158,21 @@
         border-spacing: 0;
     }
     .alumni-table thead th {
-        background: #f8fafc;
+        background: #FAFAFA;
         padding: 12px 16px;
         font-size: 11px;
         font-weight: 700;
-        color: #64748b;
+        color: #666D80;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        border-bottom: 2px solid #e5e7eb;
+        border-bottom: 2px solid #DFE1E7;
         white-space: nowrap;
     }
     .alumni-table tbody tr {
         transition: background 0.15s;
     }
     .alumni-table tbody tr:hover {
-        background: #f8fafc;
+        background: #FAFAFA;
     }
     .alumni-table tbody td {
         padding: 13px 16px;
@@ -183,16 +185,16 @@
         width: 36px;
         height: 36px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+        background: linear-gradient(135deg, #eef2ff, #dbe4f5);
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        color: #4f46e5;
+        color: #0B266E;
         font-size: 13px;
         flex-shrink: 0;
         overflow: hidden;
-        border: 2px solid #e0e7ff;
+        border: 2px solid #eef2ff;
     }
     .alumni-avatar img {
         width: 100%;
@@ -208,11 +210,11 @@
         display: inline-block;
         white-space: nowrap;
     }
-    .status-badge.bekerja { background: #dcfce7; color: #166534; }
-    .status-badge.wirausaha { background: #fef3c7; color: #92400e; }
+    .status-badge.bekerja { background: #ECFDF5; color: #059669; }
+    .status-badge.wirausaha { background: #FFFBEB; color: #92400e; }
     .status-badge.studi_lanjut { background: #dbeafe; color: #1e40af; }
     .status-badge.belum_bekerja { background: #fef2f2; color: #991b1b; }
-    .status-badge.belum_terdata { background: #f3f4f6; color: #4b5563; }
+    .status-badge.belum_terdata { background: #f3f4f6; color: #353849; }
 
     .btn-action {
         padding: 5px 12px;
@@ -227,9 +229,9 @@
         align-items: center;
         gap: 4px;
     }
-    .btn-action-view { background: #eef2ff; color: #4f46e5; }
-    .btn-action-view:hover { background: #e0e7ff; color: #4338ca; }
-    .btn-action-edit { background: #fef3c7; color: #92400e; }
+    .btn-action-view { background: #eef2ff; color: #0B266E; }
+    .btn-action-view:hover { background: #eef2ff; color: #091958; }
+    .btn-action-edit { background: #FFFBEB; color: #92400e; }
     .btn-action-edit:hover { background: #fde68a; color: #78350f; }
 
     /* ── Empty State ── */
@@ -254,7 +256,7 @@
         margin-bottom: 6px;
     }
     .empty-state p {
-        color: #9ca3af;
+        color: #666D80;
         font-size: 14px;
         margin: 0;
     }
@@ -272,7 +274,7 @@
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #dcfce7; color: #166534; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -289,7 +291,7 @@
 <div class="stat-strip">
     <div class="stat-card">
         <div class="stat-icon" style="background: #eef2ff;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                 <circle cx="9" cy="7" r="4"></circle>
                 <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -302,7 +304,7 @@
         </div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon" style="background: #dcfce7;">
+        <div class="stat-icon" style="background: #ECFDF5;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
                 <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
@@ -326,7 +328,7 @@
         </div>
     </div>
     <div class="stat-card">
-        <div class="stat-icon" style="background: #fef3c7;">
+        <div class="stat-icon" style="background: #FFFBEB;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <circle cx="12" cy="12" r="10"></circle>
                 <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -389,7 +391,7 @@
             <tbody>
                 @foreach($alumni as $index => $alm)
                     <tr>
-                        <td style="color: #9ca3af; font-weight: 500;">{{ $alumni->firstItem() + $index }}</td>
+                        <td style="color: #666D80; font-weight: 500;">{{ $alumni->firstItem() + $index }}</td>
                         <td>
                             <div class="d-flex align-items-center gap-3">
                                 <div class="alumni-avatar">
@@ -400,26 +402,26 @@
                                     @endif
                                 </div>
                                 <div>
-                                    <div style="font-weight: 600; color: #1f2937; font-size: 13.5px;">{{ $alm->user->name ?? 'Tanpa Nama' }}</div>
+                                    <div style="font-weight: 600; color: #0D0D12; font-size: 13.5px;">{{ $alm->user->name ?? 'Tanpa Nama' }}</div>
                                     @if($alm->user && $alm->user->email)
-                                        <div style="font-size: 11.5px; color: #9ca3af;">{{ $alm->user->email }}</div>
+                                        <div style="font-size: 11.5px; color: #666D80;">{{ $alm->user->email }}</div>
                                     @endif
                                 </div>
                             </div>
                         </td>
-                        <td style="font-weight: 600; font-family: monospace; color: #4f46e5; font-size: 13px;">{{ $alm->nim }}</td>
+                        <td style="font-weight: 600; font-family: monospace; color: #0B266E; font-size: 13px;">{{ $alm->nim }}</td>
                         <td>
                             <span style="font-weight: 600;">{{ $alm->tahun_lulus }}</span>
-                            <div style="font-size: 11px; color: #9ca3af;">Angk. {{ $alm->angkatan }}</div>
+                            <div style="font-size: 11px; color: #666D80;">Angk. {{ $alm->angkatan }}</div>
                         </td>
                         <td>
                             @if($alm->perusahaan)
                                 <div style="font-weight: 600; color: #374151; font-size: 13px;">{{ Str::limit($alm->perusahaan, 28) }}</div>
                                 @if($alm->jabatan)
-                                    <div style="font-size: 11.5px; color: #6b7280;">{{ Str::limit($alm->jabatan, 28) }}</div>
+                                    <div style="font-size: 11.5px; color: #666D80;">{{ Str::limit($alm->jabatan, 28) }}</div>
                                 @endif
                             @else
-                                <span style="color: #cbd5e1; font-style: italic; font-size: 13px;">—</span>
+                                <span style="color: #C1C7CF; font-style: italic; font-size: 13px;">—</span>
                             @endif
                         </td>
                         <td>
@@ -459,7 +461,7 @@
     <div class="table-card">
         <div class="empty-state">
             <div class="empty-state-icon">
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                     <circle cx="9" cy="7" r="4"></circle>
                     <line x1="17" y1="11" x2="23" y2="11"></line>

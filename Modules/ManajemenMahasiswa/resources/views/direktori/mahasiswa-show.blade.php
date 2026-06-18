@@ -2,7 +2,7 @@
 
 <style>
     .profile-header {
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        background: linear-gradient(135deg, #0B266E 0%, #091958 100%);
         border-radius: 16px;
         padding: 32px;
         color: white;
@@ -55,7 +55,7 @@
         padding: 1px 5px;
         border-radius: 4px;
         background: #eef2ff;
-        color: #4f46e5;
+        color: #0B266E;
         letter-spacing: 0.03em;
         margin-left: 6px;
         vertical-align: middle;
@@ -70,7 +70,7 @@
     .section-title {
         font-size: 16px;
         font-weight: 700;
-        color: #1f2937;
+        color: #0D0D12;
         margin-bottom: 16px;
         display: flex;
         align-items: center;
@@ -83,7 +83,7 @@
     }
     .info-item-label {
         font-size: 12px;
-        color: #9ca3af;
+        color: #666D80;
         font-weight: 600;
         text-transform: uppercase;
         letter-spacing: 0.05em;
@@ -91,7 +91,7 @@
     }
     .info-item-value {
         font-size: 15px;
-        color: #1f2937;
+        color: #0D0D12;
         font-weight: 600;
     }
     .status-badge {
@@ -101,9 +101,9 @@
         border-radius: 20px;
         display: inline-block;
     }
-    .status-badge.aktif { background: #dcfce7; color: #166534; }
+    .status-badge.aktif { background: #ECFDF5; color: #059669; }
     .status-badge.alumni { background: #dbeafe; color: #1e40af; }
-    .status-badge.cuti { background: #fef3c7; color: #92400e; }
+    .status-badge.cuti { background: #FFFBEB; color: #92400e; }
     .status-badge.drop_out { background: #fef2f2; color: #991b1b; }
     .status-badge.pindah_studi { background: #f3f4f6; color: #374151; }
 
@@ -113,14 +113,14 @@
         border-spacing: 0;
     }
     .riwayat-table thead th {
-        background: #f8fafc;
+        background: #FAFAFA;
         padding: 10px 14px;
         font-size: 12px;
         font-weight: 700;
-        color: #64748b;
+        color: #666D80;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        border-bottom: 2px solid #e5e7eb;
+        border-bottom: 2px solid #DFE1E7;
     }
     .riwayat-table tbody td {
         padding: 12px 14px;
@@ -130,7 +130,7 @@
         vertical-align: middle;
     }
     .riwayat-table tbody tr:hover {
-        background: #f8fafc;
+        background: #FAFAFA;
     }
     .peran-badge {
         font-size: 11px;
@@ -139,13 +139,13 @@
         border-radius: 20px;
         display: inline-block;
     }
-    .peran-badge.ketua { background: #fef3c7; color: #92400e; }
-    .peran-badge.anggota { background: #eef2ff; color: #4f46e5; }
+    .peran-badge.ketua { background: #FFFBEB; color: #92400e; }
+    .peran-badge.anggota { background: #eef2ff; color: #0B266E; }
     .peran-badge.panitia { background: #f3e8ff; color: #7c3aed; }
-    .peran-badge.peserta { background: #dcfce7; color: #166534; }
+    .peran-badge.peserta { background: #ECFDF5; color: #059669; }
 
     .btn-primary-custom {
-        background: #4f46e5;
+        background: #0B266E;
         color: #fff;
         border: none;
         padding: 8px 18px;
@@ -160,13 +160,13 @@
         text-decoration: none !important;
     }
     .btn-primary-custom:hover {
-        background: #4338ca;
+        background: #091958;
         color: #fff;
     }
     .btn-outline-custom {
         background: transparent;
-        color: #4f46e5;
-        border: 1.5px solid #c7d2fe;
+        color: #0B266E;
+        border: 1.5px solid #5C78B8;
         padding: 8px 18px;
         border-radius: 10px;
         font-size: 13px;
@@ -180,8 +180,8 @@
     }
     .btn-outline-custom:hover {
         background: #eef2ff;
-        border-color: #818cf8;
-        color: #4338ca;
+        border-color: #0B266E;
+        color: #091958;
     }
     .btn-danger-sm {
         background: #fef2f2;
@@ -198,8 +198,8 @@
         background: #fee2e2;
     }
     .prestasi-item {
-        background: #f8fafc;
-        border: 1px solid #e5e7eb;
+        background: #FAFAFA;
+        border: 1px solid #DFE1E7;
         border-radius: 10px;
         padding: 14px 18px;
         display: flex;
@@ -213,11 +213,11 @@
         border-radius: 12px;
         text-transform: uppercase;
     }
-    .tingkat-badge.internasional { background: #fef3c7; color: #92400e; }
+    .tingkat-badge.internasional { background: #FFFBEB; color: #92400e; }
     .tingkat-badge.nasional { background: #dbeafe; color: #1e40af; }
     .tingkat-badge.regional { background: #f3e8ff; color: #7c3aed; }
-    .tingkat-badge.universitas { background: #dcfce7; color: #166534; }
-    .tingkat-badge.prodi { background: #eef2ff; color: #4f46e5; }
+    .tingkat-badge.universitas { background: #ECFDF5; color: #059669; }
+    .tingkat-badge.prodi { background: #eef2ff; color: #0B266E; }
 
     /* Modal */
     .modal-content { border-radius: 16px; border: none; }
@@ -229,7 +229,7 @@
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #dcfce7; color: #166534; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -258,14 +258,15 @@
             <h2 style="font-weight: 800; margin-bottom: 4px; font-size: 24px;">{{ $mhs->nama }}</h2>
             <p style="margin: 0; opacity: 0.85; font-size: 15px;">{{ $mhs->nim }} · Angkatan {{ $mhs->angkatan }}</p>
             <div class="mt-2 d-flex gap-2">
-                <span class="status-badge {{ $mhs->status }}" style="background: rgba(255,255,255,0.2); color: white;">
+                <span class="status-badge {{ $mhs->status }}" style="background: rgba(255,255,255,0.2); color: white; display: inline-flex; align-items: center; gap: 6px;">
+                    <span style="width:6px;height:6px;border-radius:50%;background:currentColor;display:inline-block;flex-shrink:0;"></span>
                     @switch($mhs->status)
-                        @case('aktif') ● Aktif @break
-                        @case('alumni') ● Lulus @break
-                        @case('cuti') ● Cuti @break
-                        @case('drop_out') ● Drop Out @break
-                        @case('pindah_studi') ● Pindah Studi @break
-                        @default ● {{ ucfirst($mhs->status) }}
+                        @case('aktif') Aktif @break
+                        @case('alumni') Lulus @break
+                        @case('cuti') Cuti @break
+                        @case('drop_out') Drop Out @break
+                        @case('pindah_studi') Pindah Studi @break
+                        @default {{ ucfirst($mhs->status) }}
                     @endswitch
                 </span>
             </div>
@@ -290,7 +291,7 @@
 <!-- Biodata -->
 <div class="section-card">
     <div class="section-title">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
         Biodata
     </div>
     <div class="info-grid">
@@ -300,7 +301,7 @@
         </div>
         <div>
             <div class="info-item-label">NIM <span class="sso-tag">SSO</span></div>
-            <div class="info-item-value" style="font-family: monospace; color: #4f46e5;">{{ $mhs->nim }}</div>
+            <div class="info-item-value" style="font-family: monospace; color: #0B266E;">{{ $mhs->nim }}</div>
         </div>
 
         @if($mhs->user && $mhs->user->email)
@@ -336,7 +337,7 @@
 <!-- Riwayat Akademik -->
 <div class="section-card">
     <div class="section-title">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z" /><path d="M6 12v5c3 3 9 3 12 0v-5" /></svg>
         Riwayat Akademik
     </div>
     <div class="info-grid">
@@ -363,7 +364,7 @@
 <!-- Prestasi -->
 <div class="section-card">
     <div class="section-title">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
         Prestasi / Lomba
     </div>
     @if($mhs->prestasi->count() > 0)
@@ -371,8 +372,8 @@
             @foreach($mhs->prestasi as $p)
                 <div class="prestasi-item">
                     <div>
-                        <div style="font-weight: 600; font-size: 14px; color: #1f2937;">{{ $p->nama_prestasi }}</div>
-                        <div style="font-size: 12px; color: #9ca3af;">
+                        <div style="font-weight: 600; font-size: 14px; color: #0D0D12;">{{ $p->nama_prestasi }}</div>
+                        <div style="font-size: 12px; color: #666D80;">
                             {{ $p->tanggal ? \Carbon\Carbon::parse($p->tanggal)->translatedFormat('d M Y') : '' }}
                         </div>
                     </div>
@@ -383,7 +384,7 @@
             @endforeach
         </div>
     @else
-        <p style="color: #9ca3af; font-size: 14px; text-align: center; padding: 20px 0;">Belum ada data prestasi.</p>
+        <p style="color: #666D80; font-size: 14px; text-align: center; padding: 20px 0;">Belum ada data prestasi.</p>
     @endif
 </div>
 
@@ -392,7 +393,7 @@
 <div class="section-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="section-title mb-0">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
             Riwayat Keikutsertaan Kegiatan
         </div>
 
@@ -428,25 +429,25 @@
                             }
                         @endphp
                         <tr>
-                            <td style="color: #9ca3af;">{{ $i + 1 }}</td>
+                            <td style="color: #666D80;">{{ $i + 1 }}</td>
                             <td>
                                 @if($hasKegiatan)
                                     <a href="{{ route('manajemenmahasiswa.kegiatan.show', $rw->kegiatan->id) }}"
-                                       style="color: #4f46e5; font-weight: 600; text-decoration: none;">
+                                       style="color: #0B266E; font-weight: 600; text-decoration: none;">
                                         {{ $rw->kegiatan->judul }}
                                     </a>
                                 @elseif($namaManual)
-                                    <span style="font-weight: 600; color: #1f2937;">{{ $namaManual }}</span>
-                                    <span style="font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 6px; background: #fef3c7; color: #d97706; margin-left: 6px; vertical-align: 1px;">Eksternal</span>
+                                    <span style="font-weight: 600; color: #0D0D12;">{{ $namaManual }}</span>
+                                    <span style="font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 6px; background: #FFFBEB; color: #d97706; margin-left: 6px; vertical-align: 1px;">Eksternal</span>
                                 @else
-                                    <span style="color: #9ca3af;">Kegiatan tidak ditemukan</span>
+                                    <span style="color: #666D80;">Kegiatan tidak ditemukan</span>
                                 @endif
                             </td>
                             <td>
                                 <span class="peran-badge {{ $rw->peran ?? '' }}">{{ $peranValue }}</span>
                             </td>
 
-                            <td style="font-size: 13px; color: #6b7280;">
+                            <td style="font-size: 13px; color: #666D80;">
                                 @if($tanggalDisplay)
                                     {{ \Carbon\Carbon::parse($tanggalDisplay)->translatedFormat('d M Y') }}
                                 @else
@@ -460,7 +461,7 @@
             </table>
         </div>
     @else
-        <p style="color: #9ca3af; font-size: 14px; text-align: center; padding: 20px 0;">Belum ada riwayat kegiatan.</p>
+        <p style="color: #666D80; font-size: 14px; text-align: center; padding: 20px 0;">Belum ada riwayat kegiatan.</p>
     @endif
 </div>
 
