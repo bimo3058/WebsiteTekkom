@@ -243,6 +243,13 @@ class VerifikasiController extends Controller
 
         $pendingPrestasiReward = Prestasi::rewardDiajukan()->count();
 
+        // Hitungan status klaim untuk kartu statistik (selaras dgn Verifikasi Prestasi)
+        $rewardStats = [
+            'menunggu'  => $pendingPrestasiReward,
+            'disetujui' => Prestasi::rewardDisetujui()->count(),
+            'ditolak'   => Prestasi::rewardDitolak()->count(),
+        ];
+
         $kuotaMap = $this->rewardKuotaMap(
             $rewardData->pluck('kemahasiswaan_id')->filter()->unique()->all()
         );
@@ -261,6 +268,7 @@ class VerifikasiController extends Controller
             'angkatan',
             'angkatanList',
             'pendingPrestasiReward',
+            'rewardStats',
             'kuotaMap',
             'rewardAturan',
         ))->with('layout', $this->resolveLayout());
@@ -336,11 +344,9 @@ class VerifikasiController extends Controller
             'nama_kegiatan_manual' => 'required|string|max:50',
             'peran_manual'         => 'required|string|max:50',
             'tanggal_kegiatan'     => 'required|date',
-            'bukti_images'         => 'nullable|array|max:5',
-            'bukti_images.*'       => 'file|mimes:jpg,jpeg,png,gif,webp|max:10240',
-            'bukti_docs'           => 'nullable|array|max:5',
-            'bukti_docs.*'         => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
-        ]);
+            'bukti_docs'           => 'required|array|size:1',
+            'bukti_docs.*'         => 'file|mimes:pdf|max:10240',
+        ], [], ['bukti_docs' => 'bukti kegiatan']);
 
         $user    = Auth::user();
         $student = $this->ensureStudentRecord($user);
@@ -377,13 +383,9 @@ class VerifikasiController extends Controller
             'nama_prestasi' => 'required|string|max:50',
             'tingkat'       => 'required|in:' . implode(',', Prestasi::TINGKAT_LIST),
             'tanggal'       => 'required|date',
-            'nomor_sertifikat' => 'nullable|string|max:100',
-            'link_verifikasi'  => 'nullable|url|max:500',
-            'bukti_images'  => 'nullable|array|max:5',
-            'bukti_images.*'=> 'file|mimes:jpg,jpeg,png,gif,webp|max:10240',
-            'bukti_docs'    => 'nullable|array|max:5',
-            'bukti_docs.*'  => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
-        ]);
+            'bukti_docs'    => 'required|array|size:1',
+            'bukti_docs.*'  => 'file|mimes:pdf|max:10240',
+        ], [], ['bukti_docs' => 'bukti kegiatan']);
 
         $user = Auth::user();
 
@@ -406,9 +408,6 @@ class VerifikasiController extends Controller
             'tahun'               => date('Y', strtotime($request->tanggal)),
             'verification_status' => 'pending',
             'claim_status'        => Prestasi::CLAIM_BELUM_AJUKAN,
-            // Verifikasi keaslian sertifikat (Request Bu Bellia)
-            'nomor_sertifikat'    => $request->nomor_sertifikat ?: null,
-            'link_verifikasi'     => $request->link_verifikasi ?: null,
         ]);
 
         // Upload bukti files ke Supabase

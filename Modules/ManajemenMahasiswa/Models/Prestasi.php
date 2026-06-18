@@ -23,9 +23,6 @@ class Prestasi extends Model
         'verified_by',
         'verified_at',
         'verification_note',
-        // Bidang verifikasi keaslian sertifikat (Request Bu Bellia)
-        'nomor_sertifikat',
-        'link_verifikasi',
         // Workflow reward prestasi (B.3 claim + B.2 reward / SK FT 774)
         'claim_status',
         'claimed_at',
@@ -401,6 +398,11 @@ class Prestasi extends Model
     public function scopeRewardDisetujui(Builder $query): Builder
     {
         return $query->where('claim_status', self::CLAIM_DISETUJUI);
+    }
+
+    public function scopeRewardDitolak(Builder $query): Builder
+    {
+        return $query->where('claim_status', self::CLAIM_DITOLAK);
     }
 
     // -------------------------------------------------------------------------

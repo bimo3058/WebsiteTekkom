@@ -27,12 +27,12 @@
     }
     .btn-back {
         background: #fff;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #DFE1E7;
         color: #374151;
     }
-    .btn-back:hover { background: #f9fafb; color: #111827; }
+    .btn-back:hover { background: #f9fafb; color: #0D0D12; }
     .btn-edit-top {
-        background: #fef3c7;
+        background: #FFFBEB;
         border: 1px solid #fde68a;
         color: #78350f;
     }
@@ -42,11 +42,11 @@
     .profile-card {
         background: #fff;
         border-radius: 16px;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #DFE1E7;
         overflow: hidden;
     }
     .profile-banner {
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 50%, #6366f1 100%);
+        background: linear-gradient(135deg, #0B266E 0%, #091958 100%);
         height: 120px;
         position: relative;
     }
@@ -81,11 +81,11 @@
     .btn-banner-cv {
         background: white;
         border: 1px solid white;
-        color: #4f46e5;
+        color: #0B266E;
     }
     .btn-banner-cv:hover {
-        background: #f8fafc;
-        color: #4338ca;
+        background: #FAFAFA;
+        color: #091958;
     }
     .profile-avatar-wrap {
         position: absolute;
@@ -104,7 +104,7 @@
         justify-content: center;
         font-size: 32px;
         font-weight: bold;
-        color: #4f46e5;
+        color: #0B266E;
         overflow: hidden;
     }
     .profile-avatar img {
@@ -118,7 +118,7 @@
     .profile-name {
         font-size: 20px;
         font-weight: 700;
-        color: #111827;
+        color: #0D0D12;
         margin-bottom: 4px;
     }
     .profile-meta {
@@ -126,18 +126,18 @@
         align-items: center;
         gap: 10px;
         font-size: 13px;
-        color: #6b7280;
+        color: #666D80;
         font-weight: 500;
         margin-bottom: 20px;
         flex-wrap: wrap;
     }
     .profile-meta .nim {
         font-family: monospace;
-        color: #4f46e5;
+        color: #0B266E;
         font-weight: 700;
     }
     .profile-meta .dot {
-        color: #d1d5db;
+        color: #C1C7CF;
     }
 
     .status-badge-lg {
@@ -149,11 +149,11 @@
         align-items: center;
         gap: 6px;
     }
-    .status-badge-lg.bekerja { background: #dcfce7; color: #166534; }
-    .status-badge-lg.wirausaha { background: #fef3c7; color: #92400e; }
+    .status-badge-lg.bekerja { background: #ECFDF5; color: #059669; }
+    .status-badge-lg.wirausaha { background: #FFFBEB; color: #92400e; }
     .status-badge-lg.studi_lanjut { background: #dbeafe; color: #1e40af; }
     .status-badge-lg.belum_bekerja { background: #fef2f2; color: #991b1b; }
-    .status-badge-lg.belum_terdata { background: #f3f4f6; color: #4b5563; }
+    .status-badge-lg.belum_terdata { background: #f3f4f6; color: #353849; }
 
     /* ── Info Section ── */
     .section-title {
@@ -163,7 +163,7 @@
         text-transform: uppercase;
         letter-spacing: 0.04em;
         padding-bottom: 10px;
-        border-bottom: 2px solid #f1f5f9;
+        border-bottom: 2px solid #F6F8FA;
         margin-bottom: 16px;
         margin-top: 24px;
     }
@@ -175,26 +175,26 @@
     @media (max-width: 768px) { .info-grid { grid-template-columns: 1fr; } }
 
     .info-item {
-        background: #f8fafc;
+        background: #FAFAFA;
         padding: 14px 18px;
         border-radius: 10px;
-        border: 1px solid #f1f5f9;
+        border: 1px solid #F6F8FA;
     }
     .info-label {
         font-size: 11px;
         text-transform: uppercase;
-        color: #94a3b8;
+        color: #808897;
         font-weight: 700;
         letter-spacing: 0.5px;
         margin-bottom: 5px;
     }
     .info-value {
         font-size: 14px;
-        color: #1e293b;
+        color: #0D0D12;
         font-weight: 600;
     }
     .info-value.empty {
-        color: #cbd5e1;
+        color: #C1C7CF;
         font-style: italic;
         font-weight: 400;
     }
@@ -304,7 +304,7 @@
                 <div class="info-value {{ !$alumni->tahun_mulai_bekerja ? 'empty' : '' }}">
                     {{ $alumni->tahun_mulai_bekerja ?: 'Belum diisi' }}
                     @if($alumni->waktu_tunggu !== null)
-                        <span style="font-size: 11px; color: #6b7280; font-weight: 400;">({{ $alumni->waktu_tunggu }} tahun setelah lulus)</span>
+                        <span style="font-size: 11px; color: #666D80; font-weight: 400;">({{ $alumni->waktu_tunggu }} tahun setelah lulus)</span>
                     @endif
                 </div>
             </div>
@@ -334,7 +334,7 @@
 <style>
     .history-section {
         background: #fff;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #DFE1E7;
         border-radius: 16px;
         padding: 24px;
         margin-top: 20px;
@@ -346,7 +346,7 @@
         text-transform: uppercase;
         letter-spacing: 0.04em;
         padding-bottom: 10px;
-        border-bottom: 2px solid #f1f5f9;
+        border-bottom: 2px solid #F6F8FA;
         margin-bottom: 16px;
         display: flex;
         align-items: center;
@@ -354,8 +354,8 @@
     }
     .history-section-title span { display: flex; align-items: center; gap: 8px; }
     .prestasi-item {
-        background: #f8fafc;
-        border: 1px solid #e5e7eb;
+        background: #FAFAFA;
+        border: 1px solid #DFE1E7;
         border-radius: 10px;
         padding: 14px 18px;
         display: flex;
@@ -368,40 +368,40 @@
         padding: 2px 8px; border-radius: 12px;
         text-transform: uppercase;
     }
-    .tingkat-badge.internasional { background: #fef3c7; color: #92400e; }
+    .tingkat-badge.internasional { background: #FFFBEB; color: #92400e; }
     .tingkat-badge.nasional      { background: #dbeafe; color: #1e40af; }
     .tingkat-badge.regional      { background: #f3e8ff; color: #7c3aed; }
-    .tingkat-badge.universitas   { background: #dcfce7; color: #166534; }
-    .tingkat-badge.prodi         { background: #eef2ff; color: #4f46e5; }
+    .tingkat-badge.universitas   { background: #ECFDF5; color: #059669; }
+    .tingkat-badge.prodi         { background: #eef2ff; color: #0B266E; }
 
     .riwayat-table { width: 100%; border-collapse: separate; border-spacing: 0; }
     .riwayat-table thead th {
-        background: #f8fafc; padding: 10px 14px;
-        font-size: 12px; font-weight: 700; color: #64748b;
+        background: #FAFAFA; padding: 10px 14px;
+        font-size: 12px; font-weight: 700; color: #666D80;
         text-transform: uppercase; letter-spacing: 0.05em;
-        border-bottom: 2px solid #e5e7eb;
+        border-bottom: 2px solid #DFE1E7;
     }
     .riwayat-table tbody td {
         padding: 12px 14px; font-size: 14px; color: #374151;
         border-bottom: 1px solid #f3f4f6; vertical-align: middle;
     }
-    .riwayat-table tbody tr:hover { background: #f8fafc; }
+    .riwayat-table tbody tr:hover { background: #FAFAFA; }
     .peran-badge {
         font-size: 11px; font-weight: 700;
         padding: 3px 10px; border-radius: 20px; display: inline-block;
     }
-    .peran-badge.ketua   { background: #fef3c7; color: #92400e; }
-    .peran-badge.anggota { background: #eef2ff; color: #4f46e5; }
+    .peran-badge.ketua   { background: #FFFBEB; color: #92400e; }
+    .peran-badge.anggota { background: #eef2ff; color: #0B266E; }
     .peran-badge.panitia { background: #f3e8ff; color: #7c3aed; }
-    .peran-badge.peserta { background: #dcfce7; color: #166534; }
+    .peran-badge.peserta { background: #ECFDF5; color: #059669; }
     .btn-add-riwayat {
-        background: #4f46e5; color: #fff;
+        background: #0B266E; color: #fff;
         border: none; padding: 6px 14px; border-radius: 8px;
         font-size: 12px; font-weight: 600; cursor: pointer;
         display: inline-flex; align-items: center; gap: 5px;
         transition: background 0.2s;
     }
-    .btn-add-riwayat:hover { background: #4338ca; color: #fff; }
+    .btn-add-riwayat:hover { background: #091958; color: #fff; }
     .btn-del-sm {
         background: #fef2f2; color: #dc2626;
         border: 1px solid #fecaca; padding: 3px 9px;
@@ -409,7 +409,7 @@
         transition: background 0.2s;
     }
     .btn-del-sm:hover { background: #fee2e2; }
-    .empty-state { color: #9ca3af; font-size: 14px; text-align: center; padding: 20px 0; }
+    .empty-state { color: #666D80; font-size: 14px; text-align: center; padding: 20px 0; }
 </style>
 @endpush
 
@@ -417,7 +417,7 @@
 <div class="history-section">
     <div class="history-section-title">
         <span>
-            <span class="material-symbols-outlined" style="font-size:18px;color:#4f46e5;">emoji_events</span>
+            <span class="material-symbols-outlined" style="font-size:18px;color:#0B266E;">emoji_events</span>
             Prestasi / Lomba
         </span>
         @if($canManageHistory)
@@ -435,8 +435,8 @@
         @foreach($prestasi as $p)
             <div class="prestasi-item">
                 <div>
-                    <div style="font-weight:600;font-size:14px;color:#1f2937;">{{ $p->nama_prestasi }}</div>
-                    <div style="font-size:12px;color:#9ca3af;">
+                    <div style="font-weight:600;font-size:14px;color:#0D0D12;">{{ $p->nama_prestasi }}</div>
+                    <div style="font-size:12px;color:#666D80;">
                         {{ $p->tanggal ? \Carbon\Carbon::parse($p->tanggal)->translatedFormat('d M Y') : '—' }}
                     </div>
                 </div>
@@ -512,7 +512,7 @@
 <div class="history-section">
     <div class="history-section-title">
         <span>
-            <span class="material-symbols-outlined" style="font-size:18px;color:#4f46e5;">calendar_month</span>
+            <span class="material-symbols-outlined" style="font-size:18px;color:#0B266E;">calendar_month</span>
             Riwayat Keikutsertaan Kegiatan
         </span>
         @if($canManageHistory)
@@ -552,22 +552,22 @@
                             }
                         @endphp
                         <tr>
-                            <td style="color:#9ca3af;">{{ $i + 1 }}</td>
+                            <td style="color:#666D80;">{{ $i + 1 }}</td>
                             <td>
                                 @if($hasKegiatan)
                                     <a href="{{ route('manajemenmahasiswa.kegiatan.show', $rw->kegiatan->id) }}"
-                                       style="color:#4f46e5;font-weight:600;text-decoration:none;">
+                                       style="color:#0B266E;font-weight:600;text-decoration:none;">
                                         {{ $rw->kegiatan->judul }}
                                     </a>
                                 @elseif($namaManual)
-                                    <span style="font-weight:600;color:#1f2937;">{{ $namaManual }}</span>
-                                    <span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;background:#fef3c7;color:#d97706;margin-left:6px;">Eksternal</span>
+                                    <span style="font-weight:600;color:#0D0D12;">{{ $namaManual }}</span>
+                                    <span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;background:#FFFBEB;color:#d97706;margin-left:6px;">Eksternal</span>
                                 @else
-                                    <span style="color:#9ca3af;">Kegiatan tidak ditemukan</span>
+                                    <span style="color:#666D80;">Kegiatan tidak ditemukan</span>
                                 @endif
                             </td>
                             <td><span class="peran-badge {{ $rw->peran ?? '' }}">{{ $peranValue }}</span></td>
-                            <td style="font-size:13px;color:#6b7280;">
+                            <td style="font-size:13px;color:#666D80;">
                                 {{ $tanggalDisplay ? \Carbon\Carbon::parse($tanggalDisplay)->translatedFormat('d M Y') : '—' }}
                             </td>
                             @if($canManageHistory)
@@ -580,7 +580,7 @@
                                         <button type="submit" class="btn-del-sm">Hapus</button>
                                     </form>
                                 @else
-                                    <span style="font-size:11px;color:#d1d5db;">Auto</span>
+                                    <span style="font-size:11px;color:#C1C7CF;">Auto</span>
                                 @endif
                             </td>
                             @endif
@@ -615,12 +615,12 @@
                     <div style="display:flex;gap:8px;margin-bottom:20px;">
                         <button type="button" id="btn-mode-dropdown-alumni"
                                 onclick="setModeAlumni('dropdown')"
-                                style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #4f46e5;background:#4f46e5;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">
+                                style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #0B266E;background:#0B266E;color:#fff;font-size:13px;font-weight:600;cursor:pointer;">
                             Pilih dari Daftar
                         </button>
                         <button type="button" id="btn-mode-manual-alumni"
                                 onclick="setModeAlumni('manual')"
-                                style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #e5e7eb;background:#fff;color:#6b7280;font-size:13px;font-weight:600;cursor:pointer;">
+                                style="flex:1;padding:8px;border-radius:8px;border:1.5px solid #DFE1E7;background:#fff;color:#666D80;font-size:13px;font-weight:600;cursor:pointer;">
                             Input Manual
                         </button>
                     </div>
@@ -685,12 +685,12 @@ function setModeAlumni(mode) {
     const isDropdown = mode === 'dropdown';
     document.getElementById('section-dropdown-alumni').style.display = isDropdown ? '' : 'none';
     document.getElementById('section-manual-alumni').style.display   = isDropdown ? 'none' : '';
-    document.getElementById('btn-mode-dropdown-alumni').style.background  = isDropdown ? '#4f46e5' : '#fff';
-    document.getElementById('btn-mode-dropdown-alumni').style.color       = isDropdown ? '#fff'    : '#6b7280';
-    document.getElementById('btn-mode-dropdown-alumni').style.borderColor = isDropdown ? '#4f46e5' : '#e5e7eb';
-    document.getElementById('btn-mode-manual-alumni').style.background    = isDropdown ? '#fff'    : '#4f46e5';
-    document.getElementById('btn-mode-manual-alumni').style.color         = isDropdown ? '#6b7280' : '#fff';
-    document.getElementById('btn-mode-manual-alumni').style.borderColor   = isDropdown ? '#e5e7eb' : '#4f46e5';
+    document.getElementById('btn-mode-dropdown-alumni').style.background  = isDropdown ? '#0B266E' : '#fff';
+    document.getElementById('btn-mode-dropdown-alumni').style.color       = isDropdown ? '#fff'    : '#666D80';
+    document.getElementById('btn-mode-dropdown-alumni').style.borderColor = isDropdown ? '#0B266E' : '#DFE1E7';
+    document.getElementById('btn-mode-manual-alumni').style.background    = isDropdown ? '#fff'    : '#0B266E';
+    document.getElementById('btn-mode-manual-alumni').style.color         = isDropdown ? '#666D80' : '#fff';
+    document.getElementById('btn-mode-manual-alumni').style.borderColor   = isDropdown ? '#DFE1E7' : '#0B266E';
 }
 </script>
 @endif

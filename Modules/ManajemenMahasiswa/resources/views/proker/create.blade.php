@@ -2,40 +2,40 @@
 
 <style>
     .form-card { background:#fff; border-radius:14px; padding:28px; box-shadow:0 4px 16px -2px rgba(0,0,0,0.07); margin-bottom:24px; }
-    .form-card-title { font-weight:700; font-size:15px; color:#1f2937; margin-bottom:20px; display:flex; align-items:center; gap:9px; padding-bottom:14px; border-bottom:1px solid #f3f4f6; }
+    .form-card-title { font-weight:700; font-size:15px; color:#0D0D12; margin-bottom:20px; display:flex; align-items:center; gap:9px; padding-bottom:14px; border-bottom:1px solid #f3f4f6; }
     .form-label-custom { font-weight:600; font-size:13px; color:#374151; margin-bottom:7px; display:block; }
     .form-label-custom .required { color:#dc2626; }
-    .form-control-custom { border:1.5px solid #e5e7eb; border-radius:10px; padding:11px 14px; font-size:14px; font-weight:500; color:#1f2937; transition:all 0.2s; background:#fff; width:100%; }
-    .form-control-custom:focus { border-color:#818cf8; box-shadow:0 0 0 3px rgba(99,102,241,0.1); outline:none; }
+    .form-control-custom { border:1.5px solid #DFE1E7; border-radius:10px; padding:11px 14px; font-size:14px; font-weight:500; color:#0D0D12; transition:all 0.2s; background:#fff; width:100%; }
+    .form-control-custom:focus { border-color:#0B266E; box-shadow:0 0 0 3px rgba(11,38,110,0.1); outline:none; }
     textarea.form-control-custom { min-height:150px; resize:vertical; line-height:1.7; }
-    .btn-back { width:40px; height:40px; border-radius:50%; background:#fff; border:1px solid #e5e7eb; display:flex; align-items:center; justify-content:center; text-decoration:none; color:#374151; font-size:18px; box-shadow:0 1px 3px rgba(0,0,0,0.06); transition:all 0.2s; flex-shrink:0; }
+    .btn-back { width:40px; height:40px; border-radius:50%; background:#fff; border:1px solid #DFE1E7; display:flex; align-items:center; justify-content:center; text-decoration:none; color:#374151; font-size:18px; box-shadow:0 1px 3px rgba(0,0,0,0.06); transition:all 0.2s; flex-shrink:0; }
     .btn-back:hover { background:#f3f4f6; }
     /* Draft button */
-    .btn-draft { background:#f3f4f6; color:#374151; font-weight:600; font-size:14px; padding:11px 26px; border-radius:10px; border:1.5px solid #d1d5db; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:7px; }
-    .btn-draft:hover { background:#e5e7eb; border-color:#9ca3af; }
-    .btn-submit { background:linear-gradient(135deg,#4f46e5,#7c3aed); color:#fff; font-weight:600; font-size:14px; padding:11px 28px; border-radius:10px; border:none; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:7px; box-shadow:0 4px 12px rgba(79,70,229,0.3); }
-    .btn-submit:hover { background:linear-gradient(135deg,#4338ca,#6d28d9); transform:translateY(-1px); box-shadow:0 6px 16px rgba(79,70,229,0.35); }
-    .btn-cancel { background:#fff; color:#6b7280; font-weight:600; font-size:14px; padding:11px 22px; border-radius:10px; border:1.5px solid #e5e7eb; cursor:pointer; text-decoration:none; transition:all 0.2s; display:inline-flex; align-items:center; }
+    .btn-draft { background:#f3f4f6; color:#374151; font-weight:600; font-size:14px; padding:11px 26px; border-radius:10px; border:1.5px solid #C1C7CF; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:7px; }
+    .btn-draft:hover { background:#DFE1E7; border-color:#666D80; }
+    .btn-submit { background:linear-gradient(135deg,#0B266E,#0B266E); color:#fff; font-weight:600; font-size:14px; padding:11px 28px; border-radius:10px; border:none; cursor:pointer; transition:all 0.2s; display:inline-flex; align-items:center; gap:7px; box-shadow:0 4px 12px rgba(11,38,110,0.3); }
+    .btn-submit:hover { background:linear-gradient(135deg,#091958,#091958); transform:translateY(-1px); box-shadow:0 6px 16px rgba(11,38,110,0.35); }
+    .btn-cancel { background:#fff; color:#666D80; font-weight:600; font-size:14px; padding:11px 22px; border-radius:10px; border:1.5px solid #DFE1E7; cursor:pointer; text-decoration:none; transition:all 0.2s; display:inline-flex; align-items:center; }
     .btn-cancel:hover { background:#f9fafb; color:#374151; }
     /* Banner upload */
-    .banner-upload-area { border:2px dashed #d1d5db; border-radius:14px; padding:36px 20px; text-align:center; cursor:pointer; transition:all 0.25s; background:#fafafa; position:relative; overflow:hidden; }
-    .banner-upload-area:hover, .banner-upload-area.drag-over { border-color:#818cf8; background:#f5f3ff; }
+    .banner-upload-area { border:2px dashed #C1C7CF; border-radius:14px; padding:36px 20px; text-align:center; cursor:pointer; transition:all 0.25s; background:#fafafa; position:relative; overflow:hidden; }
+    .banner-upload-area:hover, .banner-upload-area.drag-over { border-color:#0B266E; background:#eef2ff; }
     .banner-upload-area input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
-    .banner-upload-icon { width:52px; height:52px; border-radius:14px; background:linear-gradient(135deg,#eef2ff,#e0e7ff); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; }
+    .banner-upload-icon { width:52px; height:52px; border-radius:14px; background:linear-gradient(135deg,#eef2ff,#eef2ff); display:flex; align-items:center; justify-content:center; margin:0 auto 14px; }
     .banner-upload-title { font-weight:600; font-size:14px; color:#374151; margin-bottom:4px; }
-    .banner-upload-hint { font-size:12px; color:#9ca3af; font-weight:400; }
+    .banner-upload-hint { font-size:12px; color:#666D80; font-weight:400; }
     .banner-preview-box { display:none; border-radius:14px; overflow:hidden; position:relative; }
     .banner-preview-img { width:100%; max-height:260px; object-fit:cover; display:block; border-radius:14px; }
     .banner-preview-overlay { position:absolute; top:10px; right:10px; display:flex; gap:8px; }
     .banner-preview-overlay button { background:rgba(0,0,0,0.55); color:#fff; border:none; border-radius:8px; padding:6px 12px; font-size:12px; font-weight:600; cursor:pointer; backdrop-filter:blur(4px); transition:all 0.15s; }
     .banner-preview-overlay button:hover { background:rgba(0,0,0,0.75); }
     /* Char counter */
-    .char-counter { font-size:11px; color:#9ca3af; text-align:right; margin-top:4px; font-weight:500; }
+    .char-counter { font-size:11px; color:#666D80; text-align:right; margin-top:4px; font-weight:500; }
     /* Action bar */
     .action-bar { background:#fff; border-radius:14px; padding:18px 24px; box-shadow:0 4px 16px -2px rgba(0,0,0,0.07); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
     .action-bar-left { display:flex; align-items:center; gap:10px; }
     .action-bar-right { display:flex; align-items:center; gap:10px; }
-    .draft-badge { background:#fef3c7; color:#92400e; border:1.5px solid #fde68a; border-radius:20px; padding:4px 14px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:5px; }
+    .draft-badge { background:#FFFBEB; color:#92400e; border:1.5px solid #fde68a; border-radius:20px; padding:4px 14px; font-size:12px; font-weight:700; display:inline-flex; align-items:center; gap:5px; }
     /* ── Lightbox Modal ── */
     .lightbox-modal { display: none; position: fixed; inset: 0; z-index: 10000; background: rgba(0, 0, 0, 0.92); align-items: center; justify-content: center; animation: lightboxFadeIn 0.25s ease; }
     .lightbox-modal.active { display: flex; }
@@ -52,8 +52,8 @@
 <div class="d-flex align-items-center gap-3 mb-4">
     <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="btn-back">&larr;</a>
     <div>
-        <h3 class="fw-bold mb-0 text-dark">Buat Rencana Proker</h3>
-        <p class="text-muted mb-0" style="font-size:14px;font-weight:500;">Isi informasi umum program kerja — simpan sebagai draft atau langsung ajukan</p>
+        <h3 class="fw-bold mb-0" style="font-size:1.45rem;color:#0D0D12;letter-spacing:-.02em;">Buat Rencana Proker</h3>
+        <p class="mb-0" style="font-size:.82rem;color:#666D80;font-weight:500;">Isi informasi umum program kerja — simpan sebagai draft atau langsung ajukan</p>
     </div>
 </div>
 
@@ -106,32 +106,32 @@
                 <label class="form-label-custom">Kategori <span class="required">*</span></label>
                 <div style="display:flex;flex-wrap:wrap;gap:9px;" id="kategoriGroup">
                     @foreach($kategoriList as $kategori)
-                        <label style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1.5px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;transition:all 0.2s;font-size:13px;font-weight:500;color:#374151;user-select:none;"
+                        <label style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1.5px solid #DFE1E7;border-radius:10px;background:#fff;cursor:pointer;transition:all 0.2s;font-size:13px;font-weight:500;color:#374151;user-select:none;"
                                id="kategoriCard{{ $kategori->id }}">
                             <input type="checkbox" name="kategori_kegiatan_id[]" value="{{ $kategori->id }}"
-                                   style="width:15px;height:15px;accent-color:#4f46e5;"
+                                   style="width:15px;height:15px;accent-color:#0B266E;"
                                    onchange="handleKategoriChange()"
                                    {{ is_array(old('kategori_kegiatan_id')) && in_array($kategori->id, old('kategori_kegiatan_id')) ? 'checked' : '' }}>
                             {{ $kategori->nama_kategori }}
                         </label>
                     @endforeach
                 </div>
-                <div style="font-size:11px;color:#9ca3af;margin-top:6px;">Pilih maksimal 2 kategori</div>
+                <div style="font-size:11px;color:#666D80;margin-top:6px;">Pilih maksimal 2 kategori</div>
             </div>
             <div class="col-md-6" id="bidangFieldWrapper">
                 <label class="form-label-custom">Bidang <span class="required">*</span></label>
                 <div style="display:flex;flex-wrap:wrap;gap:9px;" id="bidangGroup">
                     @foreach($bidangList as $bidang)
-                        <label style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1.5px solid #e5e7eb;border-radius:10px;background:#fff;cursor:pointer;transition:all 0.2s;font-size:13px;font-weight:500;color:#374151;user-select:none;"
+                        <label style="display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border:1.5px solid #DFE1E7;border-radius:10px;background:#fff;cursor:pointer;transition:all 0.2s;font-size:13px;font-weight:500;color:#374151;user-select:none;"
                                id="bidangCard{{ $bidang->id }}">
                             <input type="checkbox" name="bidang_id[]" value="{{ $bidang->id }}"
-                                   style="width:15px;height:15px;accent-color:#4f46e5;"
+                                   style="width:15px;height:15px;accent-color:#0B266E;"
                                    {{ is_array(old('bidang_id')) && in_array($bidang->id, old('bidang_id')) ? 'checked' : '' }}>
                             {{ $bidang->nama_bidang }}
                         </label>
                     @endforeach
                 </div>
-                <div style="font-size:11px;color:#9ca3af;margin-top:6px;">Pilih satu atau lebih bidang</div>
+                <div style="font-size:11px;color:#666D80;margin-top:6px;">Pilih satu atau lebih bidang</div>
             </div>
         </div>
     </div>
@@ -141,15 +141,15 @@
         <div class="form-card-title">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             Banner Proker
-            <span style="font-size:12px;font-weight:400;color:#9ca3af;margin-left:4px;">(opsional)</span>
+            <span style="font-size:12px;font-weight:400;color:#666D80;margin-left:4px;">(opsional)</span>
         </div>
 
         {{-- Preview Box (shown after upload) --}}
         <div class="banner-preview-box" id="bannerPreviewBox" style="cursor:pointer;" onclick="openLightbox()">
             <img id="bannerPreviewImg" src="" alt="Preview banner" class="banner-preview-img">
             <div class="banner-preview-overlay">
-                <button type="button" onclick="event.stopPropagation(); changeBanner()">&#128247; Ganti</button>
-                <button type="button" onclick="event.stopPropagation(); clearBanner()" style="background:rgba(220,38,38,0.75);">&#10005; Hapus</button>
+                <button type="button" onclick="event.stopPropagation(); changeBanner()"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>Ganti</button>
+                <button type="button" onclick="event.stopPropagation(); clearBanner()" style="background:rgba(220,38,38,0.75);"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:4px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>Hapus</button>
             </div>
         </div>
 
@@ -160,7 +160,7 @@
              ondrop="handleBannerDrop(event)">
             <input type="file" name="banner" id="bannerInput" accept="image/*" onchange="previewBanner(this)">
             <div class="banner-upload-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             </div>
             <div class="banner-upload-title">Klik atau drag & drop gambar banner</div>
             <div class="banner-upload-hint">PNG, JPG, WEBP — Maks. 2 MB · Rasio ideal 16:9 (1280×720px)</div>
@@ -215,7 +215,7 @@ function updateCharCount(inputId, countId, max) {
     const len = document.getElementById(inputId).value.length;
     const el  = document.getElementById(countId);
     el.textContent = len;
-    el.style.color = len > max * 0.9 ? '#f59e0b' : (len >= max ? '#dc2626' : '#9ca3af');
+    el.style.color = len > max * 0.9 ? '#f59e0b' : (len >= max ? '#dc2626' : '#666D80');
 }
 // Init counters on load
 document.addEventListener('DOMContentLoaded', () => {
@@ -275,9 +275,9 @@ function handleKategoriChange() {
             if (isChecked) otherChecked = true;
         }
 
-        card.style.borderColor    = isChecked ? '#4f46e5' : '#e5e7eb';
+        card.style.borderColor    = isChecked ? '#0B266E' : '#DFE1E7';
         card.style.background     = isChecked ? '#eef2ff' : '#fff';
-        card.style.color          = isChecked ? '#4338ca' : '#374151';
+        card.style.color          = isChecked ? '#091958' : '#374151';
         card.style.fontWeight     = isChecked ? '600' : '500';
         if (checked.length >= 2 && !isChecked) { card.style.opacity='0.4'; card.style.pointerEvents='none'; }
         else { card.style.opacity=''; card.style.pointerEvents=''; }
@@ -302,9 +302,9 @@ function handleKategoriChange() {
 document.querySelectorAll('#bidangGroup input').forEach(inp => {
     inp.addEventListener('change', () => {
         const card = inp.closest('label');
-        card.style.borderColor = inp.checked ? '#4f46e5' : '#e5e7eb';
+        card.style.borderColor = inp.checked ? '#0B266E' : '#DFE1E7';
         card.style.background  = inp.checked ? '#eef2ff' : '#fff';
-        card.style.color       = inp.checked ? '#4338ca' : '#374151';
+        card.style.color       = inp.checked ? '#091958' : '#374151';
         card.style.fontWeight  = inp.checked ? '600' : '500';
     });
 });
