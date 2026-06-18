@@ -46,8 +46,8 @@ class BagiModulController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'asprak_id' => 'required|exists:eo_asprak_praktikum,id',
-            'modul_id'  => 'required|exists:eo_modul,id',
+            'asprak_id' => 'required|exists:asprak_praktikum,id',
+            'modul_id'  => 'required|exists:modul_praktikum,id',
         ]);
 
         ModulAsprak::firstOrCreate([

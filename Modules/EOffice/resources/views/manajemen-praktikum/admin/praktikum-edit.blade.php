@@ -106,18 +106,32 @@
             </div>
 
             {{-- Dosen Pengampu --}}
-            <div style="grid-column:1/-1;">
-                <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:5px;">Dosen Pengampu</label>
-                <select name="dosen_id" class="mp-input mp-select" style="width:100%;">
-                    <option value="">— Pilih Dosen —</option>
-                    @foreach($dosenList ?? [] as $d)
-                    <option value="{{ $d->id }}"
-                        {{ old('dosen_id', $praktikum->dosen_id) == $d->id ? 'selected' : '' }}>
-                        {{ $d->name }}
-                    </option>
-                    @endforeach
-                </select>
-                <div style="font-size:11px;color:#A4ABB8;margin-top:4px;">Hanya user dengan role dosen yang tersedia.</div>
+            @php
+                $dosenIds = old('dosen_ids', $praktikum->dosens->pluck('id')->toArray());
+                if (empty($dosenIds)) $dosenIds = [''];
+            @endphp
+            <div style="grid-column:1/-1;" x-data="{ dosens: {{ json_encode($dosenIds) }} }">
+                <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:5px;">
+                    Dosen Pengampu <span style="color:#EF4444;">*</span>
+                </label>
+                
+                <template x-for="(dosen, index) in dosens" :key="index">
+                    <div style="display:flex;gap:8px;margin-bottom:8px;">
+                        <select :name="'dosen_ids[' + index + ']'" x-model="dosens[index]" required class="mp-input mp-select" style="width:100%;">
+                            <option value="">— Pilih Dosen —</option>
+                            @foreach($dosenList ?? [] as $d)
+                            <option value="{{ $d->id }}">{{ $d->name }}</option>
+                            @endforeach
+                        </select>
+                        <button type="button" x-show="dosens.length > 1" @click="dosens.splice(index, 1)" class="mp-btn destructive sm" style="padding:0 12px;flex-shrink:0;">✕</button>
+                    </div>
+                </template>
+                
+                <button type="button" x-show="dosens.length < 3" @click="dosens.push('')" class="mp-btn secondary sm" style="width:100%;border:1px dashed #A4ABB8;margin-top:4px;">+ Tambah Dosen Pengampu</button>
+                <div style="font-size:11px;color:#A4ABB8;margin-top:4px;display:flex;justify-content:space-between;">
+                    <span>Hanya user dengan role dosen yang tersedia.</span>
+                    <span>Maks. 3 Dosen</span>
+                </div>
             </div>
 
             {{-- Status --}}

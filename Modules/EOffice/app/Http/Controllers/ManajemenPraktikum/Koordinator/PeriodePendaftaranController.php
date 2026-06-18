@@ -33,7 +33,7 @@ class PeriodePendaftaranController extends Controller
         $user = auth()->user();
 
         // Ambil praktikum yang di-assign ke koor ini
-        $praktikumList = Praktikum::with(['matkul', 'dosen'])
+        $praktikumList = Praktikum::with(['matkul', 'dosens'])
             ->where('koor_id', $user->id)
             ->where('status', 'aktif')
             ->orderByDesc('created_at')

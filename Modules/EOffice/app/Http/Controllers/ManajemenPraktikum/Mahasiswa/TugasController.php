@@ -55,6 +55,7 @@ class TugasController extends Controller
             ->map(function ($tugas) use ($daftarPraktikan) {
                 $pengumpulan = PengumpulanTugas::where('tugas_id', $tugas->id)
                     ->where('daftar_praktikan_id', $daftarPraktikan->id)
+                    ->with('riwayat')
                     ->first();
 
                 $tugas->pengumpulan  = $pengumpulan;
@@ -84,8 +85,10 @@ class TugasController extends Controller
             ->where('praktikum_id', $tugas->modul->praktikum_id)
             ->firstOrFail();
 
-        if ($tugas->deadline && now()->gt($tugas->deadline)) {
-            return back()->with('error', 'Deadline sudah lewat, pengumpulan tidak dapat diterima.');
+        // BATAS MUTLAK: deadline_acc jika ada, jika tidak ada fallback ke deadline AC
+        $tenggatMutlak = $tugas->deadline_acc ?? $tugas->deadline;
+        if ($tenggatMutlak && now()->gt($tenggatMutlak)) {
+            return back()->with('error', 'Tenggat waktu pengumpulan (Deadline ACC) sudah lewat.');
         }
 
         $existing = PengumpulanTugas::where('tugas_id', $tugas->id)
@@ -102,7 +105,7 @@ class TugasController extends Controller
             'eoffice'
         );
 
-        PengumpulanTugas::updateOrCreate(
+        $pengumpulan = PengumpulanTugas::updateOrCreate(
             [
                 'tugas_id'            => $tugas->id,
                 'daftar_praktikan_id' => $daftarPraktikan->id,
@@ -116,6 +119,13 @@ class TugasController extends Controller
                 'status_pengumpulan' => PengumpulanTugas::STATUS_BELUM_DICEK,
             ]
         );
+
+        // Catat ke RiwayatPengumpulan
+        $pengumpulan->riwayat()->create([
+            'file_path'   => $path,
+            'catatan'     => $request->catatan,
+            'is_revision' => false,
+        ]);
 
         return back()->with('success', 'Tugas berhasil dikumpulkan!');
     }
@@ -134,10 +144,17 @@ class TugasController extends Controller
             ->where('praktikum_id', $tugas->modul->praktikum_id)
             ->firstOrFail();
 
+        // BATAS MUTLAK: deadline_acc jika ada, jika tidak ada fallback ke deadline AC
+        $tenggatMutlak = $tugas->deadline_acc ?? $tugas->deadline;
+        if ($tenggatMutlak && now()->gt($tenggatMutlak)) {
+            return back()->with('error', 'Tenggat waktu pengumpulan (Deadline ACC) sudah lewat.');
+        }
+
         $pengumpulan = PengumpulanTugas::where('tugas_id', $tugasId)
             ->where('daftar_praktikan_id', $daftarPraktikan->id)
             ->where('status_pengumpulan', PengumpulanTugas::STATUS_REVISI)
             ->firstOrFail();
+            
         $path  = $this->supabase->upload(
             $request->file('file'),
             'tugas/' . $tugas->modul->praktikum_id . '/' . $tugas->id,
@@ -150,6 +167,13 @@ class TugasController extends Controller
             'catatan_revisi'     => null,
             'is_revision'        => true,
             'status_pengumpulan' => PengumpulanTugas::STATUS_BELUM_DICEK,
+        ]);
+
+        // Catat ke RiwayatPengumpulan
+        $pengumpulan->riwayat()->create([
+            'file_path'   => $path,
+            'catatan'     => $request->catatan,
+            'is_revision' => true,
         ]);
 
         return back()->with('success', 'Tugas revisi berhasil dikirim ulang.');

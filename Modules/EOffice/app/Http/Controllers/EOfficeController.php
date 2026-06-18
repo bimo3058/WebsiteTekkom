@@ -36,7 +36,7 @@ class EOfficeController extends Controller
     {
         // $this->authorize('eoffice.view'); // Bypassed for email logic
 
-        $praktikums = Praktikum::with(['dosen', 'koordinator'])
+        $praktikums = Praktikum::with(['dosens', 'koordinator'])
             ->where('status', 'aktif')
             ->latest()
             ->take(8)
@@ -106,7 +106,7 @@ class EOfficeController extends Controller
 
         // Praktikum yang diampu dosen ini
         $praktikumList = Praktikum::with(['koordinator'])
-            ->where('dosen_id', $user->id)
+            ->whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
             ->withCount('daftarPraktikan')
             ->orderByDesc('created_at')
             ->get();
@@ -133,7 +133,7 @@ class EOfficeController extends Controller
         $user = auth()->user();
 
         // Praktikum aktif yang diikuti mahasiswa
-        $daftarPraktikan = DaftarPraktikan::with(['praktikum.dosen'])
+        $daftarPraktikan = DaftarPraktikan::with(['praktikum.dosens'])
             ->where('user_id', $user->id)
             ->whereHas('praktikum', fn($q) => $q->where('status', 'aktif'))
             ->first();

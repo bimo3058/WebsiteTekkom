@@ -79,7 +79,11 @@
                         <div style="font-size:11px; color:var(--c-fg-muted, #666D80);">{{ $p->tahun_ajaran }} / Sem. {{ $p->semester }}</div>
                     </td>
                     <td style="padding:14px 16px; font-size:13px; color:var(--c-fg-muted, #666D80);" class="truncate">
-                        {{ $p->dosen?->name ?? '—' }}
+                        @forelse($p->dosens as $dosen)
+                            <div style="margin-bottom:2px;">{{ $dosen->name }}</div>
+                        @empty
+                            —
+                        @endforelse
                     </td>
                     <td style="padding:14px 16px; font-size:13px; color:var(--c-fg-muted, #666D80);" class="truncate">
                         @if($p->koordinator)
@@ -177,14 +181,27 @@
                         </select>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Dosen Pengampu</label>
-                    <select name="dosen_id" class="mp-input mp-select w-full">
-                        <option value="">— Pilih Dosen —</option>
-                        @foreach($dosenList ?? [] as $d)
-                        <option value="{{ $d->id }}" {{ old('dosen_id') == $d->id ? 'selected' : '' }}>{{ $d->name }}</option>
-                        @endforeach
-                    </select>
+                @php
+                    $oldDosenIds = old('dosen_ids', ['']);
+                    if (!is_array($oldDosenIds) || empty($oldDosenIds)) {
+                        $oldDosenIds = [''];
+                    }
+                @endphp
+                <div x-data="{ dosens: {{ json_encode($oldDosenIds) }} }">
+                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Dosen Pengampu <span class="text-red-500">*</span></label>
+                    <template x-for="(dosen, index) in dosens" :key="index">
+                        <div class="flex gap-2 mb-2">
+                            <select :name="'dosen_ids[' + index + ']'" x-model="dosens[index]" required class="mp-input mp-select w-full">
+                                <option value="">— Pilih Dosen —</option>
+                                @foreach($dosenList ?? [] as $d)
+                                <option value="{{ $d->id }}">{{ $d->name }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" x-show="dosens.length > 1" @click="dosens.splice(index, 1)" class="mp-btn destructive sm px-3" style="padding:0 12px;">✕</button>
+                        </div>
+                    </template>
+                    <button type="button" x-show="dosens.length < 3" @click="dosens.push('')" class="mp-btn secondary sm w-full mt-1" style="border:1px dashed #A4ABB8;">+ Tambah Dosen Pengampu</button>
+                    <p class="text-[11px] text-[#666D80] mt-1 text-right">Maks. 3 Dosen</p>
                 </div>
                 <div>
                     <label class="block text-[12px] font-semibold text-[#353849] mb-1">Deskripsi</label>

@@ -57,7 +57,7 @@
             <div style="width:180px;font-size:12px;color:#666D80;" class="truncate">{{ $user?->email ?? '—' }}</div>
             <div style="width:140px;font-size:12px;font-family:monospace;color:#353849;">{{ $lecturer->employee_number }}</div>
             <div style="width:110px;text-align:center;">
-                @php $jumlah = \Modules\EOffice\Models\Praktikum::where('dosen_id', $lecturer->user_id)->count(); @endphp
+                @php $jumlah = \Modules\EOffice\Models\Praktikum::whereHas('dosens', fn($q) => $q->where('users.id', $lecturer->user_id))->count(); @endphp
                 <span class="mp-badge primary sm">{{ $jumlah }} praktikum</span>
             </div>
             <div style="width:80px;font-size:11px;color:#666D80;">

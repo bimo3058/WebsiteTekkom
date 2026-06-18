@@ -35,14 +35,14 @@ class PeriodePendaftaranController extends Controller
         // Praktikum yg cocok matkul_id-nya (sudah di-link)
         // Jika matkul dipilih tapi belum ada yg di-link → tampilkan semua aktif agar bisa di-assign
         if ($matkulDipilih) {
-            $praktikumLinked = Praktikum::with(['dosen', 'koordinator'])
+            $praktikumLinked = Praktikum::with(['dosens', 'koordinator'])
                 ->where('matkul_id', $matkulId)
                 ->where('status', 'aktif')
                 ->orderByDesc('created_at')
                 ->get();
 
             // Semua praktikum aktif (untuk dropdown assign jika belum ada yang terhubung)
-            $praktikumSemua = Praktikum::with(['dosen', 'matkul'])
+            $praktikumSemua = Praktikum::with(['dosens', 'matkul'])
                 ->where('status', 'aktif')
                 ->orderByDesc('created_at')
                 ->get();
@@ -102,9 +102,9 @@ class PeriodePendaftaranController extends Controller
     {
         $this->periodeService->tutupKadaluarsa();
 
-        $periode = PeriodePendaftaran::with(['praktikum.matkul', 'praktikum.dosen', 'dibukaOleh'])
+        $periode = PeriodePendaftaran::with(['praktikum.matkul', 'praktikum.dosens', 'dibukaOleh'])
             ->findOrFail($id);
-        $praktikumList = Praktikum::with(['matkul', 'dosen'])
+        $praktikumList = Praktikum::with(['matkul', 'dosens'])
             ->where('status', 'aktif')
             ->orderByDesc('created_at')
             ->get();

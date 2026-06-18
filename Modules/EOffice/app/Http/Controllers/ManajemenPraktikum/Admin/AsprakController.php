@@ -15,7 +15,7 @@ class AsprakController extends Controller
 {
     public function index(Request $request)
     {
-        $praktikumList = Praktikum::with(['dosen', 'koordinator'])
+        $praktikumList = Praktikum::with(['dosens', 'koordinator'])
             ->orderByDesc('created_at')
             ->get();
 
