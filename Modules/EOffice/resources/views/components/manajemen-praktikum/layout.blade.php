@@ -85,7 +85,7 @@
 
 /* Table / Card containers */
 .mp-card { background:#fff; border:1px solid var(--c-border); border-radius:14px; overflow:hidden;
-           box-shadow:var(--shadow-card); display:flex; flex-direction:column; }
+           box-shadow:var(--shadow-card); display:flex; flex-direction:column; width:100%; min-width:0; }
 .mp-card-header { padding:14px 18px; background:#fff; border-bottom:1px solid var(--c-border);
                   display:flex; align-items:center; gap:10px; flex-shrink:0; }
 .mp-card-title { font-size:15px; font-weight:700; color:var(--c-fg); }
@@ -289,7 +289,7 @@
                     ['href' => route('eoffice.manprak.asprak.daftar-praktikan.index'),   'label' => 'Daftar Praktikan', 'match' => 'asprak.daftar-praktikan', 'icon' => $iUser],
                 ],
                 'Aktivitas' => [
-                    ['href' => route('eoffice.manprak.asprak.absensi.index'),      'label' => 'Absensi',     'match' => 'asprak.absensi',     'icon' => $iCheck],
+                    ['href' => route('eoffice.manprak.asprak.absensi.index'),      'label' => 'Absensi & Nilai', 'match' => 'asprak.absensi',     'icon' => $iCheck],
                     ['href' => route('eoffice.manprak.asprak.tugas.index'),        'label' => 'Tugas',       'match' => 'asprak.tugas',       'icon' => $iEdit],
                     ['href' => route('eoffice.manprak.asprak.materi.index'),       'label' => 'Materi',      'match' => 'asprak.materi',      'icon' => $iBook],
                     ['href' => route('eoffice.manprak.asprak.pengumuman.index'),   'label' => 'Pengumuman',  'match' => 'asprak.pengumuman',  'icon' => $iBell],

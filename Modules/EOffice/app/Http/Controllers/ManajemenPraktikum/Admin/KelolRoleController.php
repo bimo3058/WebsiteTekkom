@@ -14,7 +14,7 @@ class KelolRoleController extends Controller
 {
     public function index(Request $request)
     {
-        $praktikumList = Praktikum::with(['dosen', 'koordinator'])
+        $praktikumList = Praktikum::with(['dosens', 'koordinator'])
             ->orderBy('nama')
             ->get();
 

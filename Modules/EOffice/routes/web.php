@@ -218,6 +218,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('nilai.index');
                 Route::post('nilai/{praktikumId}/approve', [DosenNilaiController::class, 'approve'])
                     ->name('nilai.approve');
+                Route::get('nilai/{praktikumId}/export-csv', [DosenNilaiController::class, 'exportCsv'])
+                    ->name('nilai.export-csv');
 
                 Route::get('periode-pendaftaran', [DosenPeriodePendaftaranController::class, 'index'])
                     ->name('periode-pendaftaran.index');
@@ -243,9 +245,13 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::post('/praktikum/generate-kode', [KoorManprakDashboard::class, 'generateKodePraktikum'])
                     ->name('praktikum.generate-kode');
 
-                // Daftar Praktikan (lihat + import)
+                // Daftar Praktikan (lihat + export + import kelompok/shift)
                 Route::get('praktikan', [KoorManprakDashboard::class, 'praktikan'])
                     ->name('praktikan.index');
+                Route::get('praktikan/export', [KoorManprakDashboard::class, 'exportPraktikan'])
+                    ->name('praktikan.export');
+                Route::get('praktikan/template', [KoorManprakDashboard::class, 'downloadTemplatePraktikan'])
+                    ->name('praktikan.template');
                 Route::post('praktikan/import', [KoorManprakDashboard::class, 'importPraktikan'])
                     ->name('praktikan.import');
 
@@ -312,6 +318,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('nilai.index');
                 Route::post('nilai/approve', [KoorNilaiController::class, 'approve'])
                     ->name('nilai.approve');
+                Route::get('nilai/export-csv', [KoorNilaiController::class, 'exportCsv'])
+                    ->name('nilai.export-csv');
             });
 
         // ── KOORDINATOR — Periode Pendaftaran ────────────────────────────────
@@ -338,13 +346,15 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::get('/dashboard', [AsprakManprakDashboard::class, 'index'])
                     ->name('dashboard');
 
-                // Absensi (CRUD)
+                // Absensi & Nilai (CRUD)
                 Route::get('absensi', [AbsensiController::class, 'index'])
                     ->name('absensi.index');
                 Route::get('absensi/{modulId}', [AbsensiController::class, 'show'])
                     ->name('absensi.show');
                 Route::post('absensi/{modulId}', [AbsensiController::class, 'store'])
                     ->name('absensi.store');
+                Route::post('absensi/{modulId}/nilai', [AbsensiController::class, 'saveNilai'])
+                    ->name('absensi.nilai');
                 Route::put('absensi/{id}', [AbsensiController::class, 'update'])
                     ->name('absensi.update');
                 Route::delete('absensi/{id}', [AbsensiController::class, 'destroy'])
@@ -357,7 +367,9 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('tugas.create');
                 Route::post('tugas', [AsprakTugasController::class, 'store'])
                     ->name('tugas.store');
-                Route::put('tugas/{id}', [AsprakTugasController::class, 'update'])
+                Route::get('tugas/{id}/edit', [AsprakTugasController::class, 'edit'])
+                    ->name('tugas.edit');
+                Route::post('tugas/{id}', [AsprakTugasController::class, 'update'])
                     ->name('tugas.update');
                 Route::delete('tugas/{id}', [AsprakTugasController::class, 'destroy'])
                     ->name('tugas.destroy');
@@ -365,6 +377,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('tugas.pengumpulan');
                 Route::post('tugas/{id}/nilai', [AsprakTugasController::class, 'beriNilai'])
                     ->name('tugas.nilai');
+                Route::post('tugas/{id}/nilai-jenis', [AsprakTugasController::class, 'updateNilaiJenis'])
+                    ->name('tugas.nilai-jenis');
                 Route::post('tugas/{id}/revisi', [AsprakTugasController::class, 'beriRevisi'])
                     ->name('tugas.revisi');
 

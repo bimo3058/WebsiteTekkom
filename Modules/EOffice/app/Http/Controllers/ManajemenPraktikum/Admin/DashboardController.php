@@ -43,7 +43,7 @@ class DashboardController extends Controller
 
         // ── Daftar praktikum terbaru ────────────────────────────────────────────
 
-        $praktikums = Praktikum::with(['dosen', 'koordinator'])
+        $praktikums = Praktikum::with(['dosens', 'koordinator'])
             ->withCount('daftarPraktikan')
             ->orderByDesc('created_at')
             ->limit(5)
@@ -59,7 +59,7 @@ class DashboardController extends Controller
                 'name'            => $l->user?->name ?? '—',
                 'email'           => $l->user?->email ?? '—',
                 'employee_number' => $l->employee_number,
-                'jumlah_praktikum'=> Praktikum::where('dosen_id', $l->user_id)->count(),
+                'jumlah_praktikum'=> Praktikum::whereHas('dosens', fn($q) => $q->where('users.id', $l->user_id))->count(),
             ]);
 
         // ── Daftar mahasiswa terbaru ─────────────────────────────────────────────

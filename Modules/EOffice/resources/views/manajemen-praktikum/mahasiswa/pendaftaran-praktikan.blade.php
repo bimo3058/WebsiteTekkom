@@ -126,7 +126,150 @@
 </div>
 @endif
 
-<div style="text-align:center;" class="flex-shrink-0">
+@if($activePraktikum)
+<div class="sec-head" style="margin-top:24px;">
+    <span class="sec-bar"></span>
+    <span class="sec-title">Daftar Praktikan — {{ $activePraktikum->nama }}</span>
+    <span class="sec-rule"></span>
+    <span class="mp-badge neutral sm">{{ $classmates->count() }} praktikan</span>
+</div>
+
+<div class="mp-card flex-shrink-0" style="margin-top:10px; margin-bottom:20px;">
+    <div class="mp-card-header">
+        <span class="mp-card-title">Teman Sekelas</span>
+    </div>
+    <div class="overflow-x-auto">
+        @php
+            $shiftRowspan = [];
+            $kelompokRowspan = [];
+            
+            $items = $classmates->all();
+            $totalItems = count($items);
+
+            // Calculate rowspan for shift
+            $i = 0;
+            while ($i < $totalItems) {
+                $val = $items[$i]->shift;
+                if (empty($val)) {
+                    $shiftRowspan[$i] = 1;
+                    $i++;
+                    continue;
+                }
+                $count = 1;
+                while ($i + $count < $totalItems && $items[$i + $count]->shift === $val) {
+                    $count++;
+                }
+                $shiftRowspan[$i] = $count;
+                for ($j = 1; $j < $count; $j++) {
+                    $shiftRowspan[$i + $j] = 0;
+                }
+                $i += $count;
+            }
+
+            // Calculate rowspan for kelompok (must match same kelompok AND same shift)
+            $i = 0;
+            while ($i < $totalItems) {
+                $valK = $items[$i]->kelompok;
+                $valS = $items[$i]->shift;
+                if (empty($valK)) {
+                    $kelompokRowspan[$i] = 1;
+                    $i++;
+                    continue;
+                }
+                $count = 1;
+                while (
+                    $i + $count < $totalItems && 
+                    $items[$i + $count]->kelompok === $valK && 
+                    $items[$i + $count]->shift === $valS
+                ) {
+                    $count++;
+                }
+                $kelompokRowspan[$i] = $count;
+                for ($j = 1; $j < $count; $j++) {
+                    $kelompokRowspan[$i + $j] = 0;
+                }
+                $i += $count;
+            }
+        @endphp
+
+        <table class="mp-table" style="min-width:700px;">
+            <thead>
+                <tr style="background:#F9FAFB;">
+                    <th class="mp-th text-left" style="padding:10px 20px;width:40px;">#</th>
+                    <th class="mp-th text-left" style="padding:10px 16px;">Mahasiswa</th>
+                    <th class="mp-th text-left" style="padding:10px 16px;width:140px;">NIM</th>
+                    <th class="mp-th text-center" style="padding:10px 16px;width:120px;border-left:1px solid #DFE1E7;border-right:1px solid #DFE1E7;">Kelompok</th>
+                    <th class="mp-th text-center" style="padding:10px 16px;width:120px;border-right:1px solid #DFE1E7;">Shift</th>
+                    <th class="mp-th text-left" style="padding:10px 16px;width:100px;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($classmates as $idx => $p)
+                @php
+                    $nameParts = explode(' ', $p->user?->name ?? 'PR');
+                    $initials  = strtoupper(substr($nameParts[0] ?? 'P', 0, 1) . substr($nameParts[1] ?? $nameParts[0] ?? 'R', 0, 1));
+                    $avColors  = ['sky','navy','green','yellow','violet'];
+                    $avColor   = $avColors[crc32($p->user?->email ?? '') % count($avColors)];
+                    $isSelf    = $p->user_id === auth()->id();
+                @endphp
+                <tr class="mp-tr" style="border-bottom:1px solid #DFE1E7; @if($isSelf) background: #F8FAFC; @endif">
+                    <td style="padding:12px 20px;color:#808897;font-size:12px;">{{ $idx + 1 }}</td>
+                    <td style="padding:12px 16px;">
+                        <div class="flex items-center gap-3">
+                            <div class="mp-av {{ $avColor }}">{{ $initials }}</div>
+                            <div>
+                                <div style="font-weight:600;color:#0D0D12; display:flex; align-items:center; gap:6px;">
+                                    {{ $p->user?->name ?? '—' }}
+                                    @if($isSelf) <span class="mp-badge primary sm">Anda</span> @endif
+                                </div>
+                                <div style="font-size:11px;color:#666D80;">{{ $p->user?->email }}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td style="padding:12px 16px;font-size:12px;font-family:monospace;font-weight:600;color:#353849;letter-spacing:.03em;">
+                        {{ $p->user?->student?->student_number ?? '-' }}
+                    </td>
+
+                    {{-- KELOMPOK COLUMN with Dynamic Rowspan --}}
+                    @if($kelompokRowspan[$idx] > 0)
+                        <td rowspan="{{ $kelompokRowspan[$idx] }}" style="padding:16px;text-align:center;vertical-align:middle;border-left:1px solid #DFE1E7;border-right:1px solid #DFE1E7;background:#FFF;font-size:18px;font-weight:700;color:#0D0D12;">
+                            @if($p->kelompok)
+                                {{ $p->kelompok }}
+                            @else
+                                <span style="font-size:11px;color:#A4ABB8;font-weight:normal;">—</span>
+                            @endif
+                        </td>
+                    @endif
+                    
+                    {{-- SHIFT COLUMN with Dynamic Rowspan --}}
+                    @if($shiftRowspan[$idx] > 0)
+                        <td rowspan="{{ $shiftRowspan[$idx] }}" style="padding:16px;text-align:center;vertical-align:middle;border-right:1px solid #DFE1E7;background:#FFF;font-size:18px;font-weight:700;color:#0D0D12;">
+                            @if($p->shift)
+                                {{ $p->shift }}
+                            @else
+                                <span style="font-size:11px;color:#A4ABB8;font-weight:normal;">—</span>
+                            @endif
+                        </td>
+                    @endif
+
+                    <td style="padding:12px 16px;">
+                        <span class="mp-badge success sm"><span class="dot"></span>Terdaftar</span>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="6" style="padding:48px;text-align:center;">
+                        <div style="font-size:13px;color:#666D80;">Belum ada praktikan terdaftar pada praktikum ini.</div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
+    </div>
+</div>
+@endif
+
+<div style="text-align:center; margin-top:20px;" class="flex-shrink-0">
     <a href="{{ route('eoffice.manprak.mahasiswa.dashboard') }}"
        class="mp-btn ghost sm" style="text-decoration:none;">← Kembali ke dashboard</a>
 </div>

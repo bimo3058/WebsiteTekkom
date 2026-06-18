@@ -23,7 +23,7 @@ class PendaftaranKoorController extends Controller
         $user = auth()->user();
 
         // Praktikum yang diampu dosen ini (ambil sebagai array string UUID)
-        $praktikumIds = Praktikum::where('dosen_id', $user->id)
+        $praktikumIds = Praktikum::whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
             ->pluck('id')
             ->map(fn($id) => (string) $id)
             ->toArray();
@@ -59,7 +59,7 @@ class PendaftaranKoorController extends Controller
         $user        = auth()->user();
         $pendaftaran = PendaftaranKoordinator::with(['user', 'praktikum'])->findOrFail($id);
 
-        if ((string) $pendaftaran->praktikum?->dosen_id !== (string) $user->id) {
+        if (!$pendaftaran->praktikum?->dosens->contains('id', $user->id)) {
             return back()->with('error', 'Anda tidak berhak mengelola pendaftaran ini.');
         }
         if ($pendaftaran->status_dosen !== 'menunggu') {
@@ -103,7 +103,7 @@ class PendaftaranKoorController extends Controller
         $user        = auth()->user();
         $pendaftaran = PendaftaranKoordinator::with(['user', 'praktikum'])->findOrFail($id);
 
-        if ((string) $pendaftaran->praktikum?->dosen_id !== (string) $user->id) {
+        if (!$pendaftaran->praktikum?->dosens->contains('id', $user->id)) {
             return back()->with('error', 'Anda tidak berhak mengelola pendaftaran ini.');
         }
         if ($pendaftaran->status_dosen !== 'menunggu') {
@@ -134,7 +134,7 @@ class PendaftaranKoorController extends Controller
         $user        = auth()->user();
         $pendaftaran = PendaftaranKoordinator::with('praktikum')->findOrFail($id);
 
-        if ((string) $pendaftaran->praktikum?->dosen_id !== (string) $user->id) {
+        if (!$pendaftaran->praktikum?->dosens->contains('id', $user->id)) {
             return back()->with('error', 'Anda tidak berhak menghapus pendaftaran ini.');
         }
 

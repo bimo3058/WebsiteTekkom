@@ -18,8 +18,9 @@ class StorePraktikumRequest extends FormRequest
             'kode'         => ['nullable', 'string', 'max:50'],
             'matkul_id'    => ['nullable', 'integer', 'exists:eo_matkul_praktikum,id'],
             'deskripsi'    => ['nullable', 'string'],
-            // dosen_id & koor_id mengacu ke users.id yang bertipe bigint
-            'dosen_id'     => ['nullable', 'integer', 'exists:users,id'],
+            // dosen_ids & koor_id mengacu ke users.id yang bertipe bigint
+            'dosen_ids'    => ['required', 'array', 'min:1', 'max:3'],
+            'dosen_ids.*'  => ['required', 'integer', 'exists:users,id'],
             'koor_id'      => ['nullable', 'integer', 'exists:users,id'],
             'tahun_ajaran' => ['required', 'integer', 'min:2000'],
             // Form kirim "Ganjil"/"Genap" (kapital), terima keduanya

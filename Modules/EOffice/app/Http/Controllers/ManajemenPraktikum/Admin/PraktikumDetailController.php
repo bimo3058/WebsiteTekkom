@@ -18,7 +18,7 @@ class PraktikumDetailController extends Controller
 {
     public function show(Request $request, string $id)
     {
-        $praktikum = Praktikum::with(['dosen', 'koordinator', 'matkul'])
+        $praktikum = Praktikum::with(['dosens', 'koordinator', 'matkul'])
             ->findOrFail($id);
 
         // ── Daftar Praktikan (paginated + searchable) ──────────────────────

@@ -22,7 +22,7 @@ class TugasController extends Controller
     {
         $user = auth()->user();
 
-        $praktikumList = Praktikum::where('dosen_id', $user->id)
+        $praktikumList = Praktikum::whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
             ->orderByDesc('created_at')
             ->get();
 
@@ -56,7 +56,7 @@ class TugasController extends Controller
         $tugas = Tugas::with(['modul.praktikum'])->findOrFail($tugasId);
 
         // Verifikasi tugas milik praktikum yang diampu dosen ini
-        if ($tugas->modul?->praktikum?->dosen_id !== $user->id) {
+        if (!$tugas->modul?->praktikum?->dosens->contains('id', $user->id)) {
             abort(403, 'Anda tidak berhak melihat tugas ini.');
         }
 
