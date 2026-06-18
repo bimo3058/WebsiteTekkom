@@ -168,6 +168,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->name('delegate')->whereNumber('pengaduan');
                 Route::post('/{pengaduan}/close-admin', [PengaduanController::class, 'closeByAdmin'])
                     ->name('close.admin')->whereNumber('pengaduan');
+                Route::post('/{pengaduan}/mark-proses', [PengaduanController::class, 'markProses'])
+                    ->name('mark.proses')->whereNumber('pengaduan');
             });
 
             // Hapus pengaduan — hanya Admin & GPM

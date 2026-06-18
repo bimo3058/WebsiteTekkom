@@ -59,14 +59,7 @@
         }
         .info-item-value { font-size: 14px; font-weight: 600; color: #1e293b; }
 
-        /* ── Status Footer ── */
-        .status-footer {
-            display: flex; align-items: center; gap: 10px; padding: 16px 20px;
-            border-radius: 10px; font-weight: 600; font-size: 14px; border-left: 4px solid;
-        }
-        .status-footer-menunggu { background: #fffbeb; color: #92400e; border-color: #fbbf24; }
-        .status-footer-proses { background: #eff6ff; color: #1d4ed8; border-color: #60a5fa; }
-        .status-footer-selesai { background: #ecfdf5; color: #065f46; border-color: #10b981; }
+
 
         /* ── Process Info Card ── */
         .process-info-card {
@@ -122,7 +115,7 @@
                 };
             @endphp
             <span class="tag-label tag-kategori">{{ ucwords(str_replace('_', ' ', $kategori)) }}</span>
-            <span class="tag-label {{ $statusStyle }}">{{ ucfirst($pengaduan->status) }}</span>
+            <span class="tag-label {{ $statusStyle }}">{{ $status === 'dibaca' ? 'Diproses' : ucfirst($pengaduan->status) }}</span>
             <span class="tag-label tag-anonim">
                 <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
             </span>
@@ -188,20 +181,7 @@
             </div>
         </div>
 
-        {{-- Status Footer --}}
-        <div style="margin-top: 28px;">
-            @php
-                $footerConfig = match($status) {
-                    'selesai' => ['class' => 'status-footer-selesai', 'icon' => 'check-circle', 'text' => 'Pengaduan sudah ditangani'],
-                    'dibaca', 'didelegasikan' => ['class' => 'status-footer-proses', 'icon' => 'clock-02', 'text' => 'Pengaduan sedang diproses'],
-                    default => ['class' => 'status-footer-menunggu', 'icon' => 'clock-02', 'text' => 'Pengaduan sedang menunggu ditinjau'],
-                };
-            @endphp
-            <div class="status-footer {{ $footerConfig['class'] }}">
-                <x-manajemenmahasiswa::ui.icon name="{{ $footerConfig['icon'] }}" size="18" />
-                {{ $footerConfig['text'] }}
-            </div>
-        </div>
+
     </div>
 
     {{-- ── Delegasi Info (simplified for anon) ── --}}

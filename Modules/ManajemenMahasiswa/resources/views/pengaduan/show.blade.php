@@ -67,15 +67,6 @@
             }
             .info-item-value { font-size: 14px; font-weight: 600; color: #1e293b; }
 
-            /* ── Status Footer (Mahasiswa) ─────────────────────────── */
-            .status-footer {
-                display: flex; align-items: center; gap: 10px; padding: 16px 20px;
-                border-radius: 10px; font-weight: 600; font-size: 14px;
-                border-left: 4px solid;
-            }
-            .status-footer-menunggu { background: #fffbeb; color: #92400e; border-color: #fbbf24; }
-            .status-footer-proses { background: #eff6ff; color: #1d4ed8; border-color: #60a5fa; }
-            .status-footer-selesai { background: #ecfdf5; color: #065f46; border-color: #10b981; }
 
             /* ── Status Banner (Admin) ─────────────────────────────── */
             .status-banner {
@@ -237,7 +228,7 @@
         </div>
 
         {{-- ── Single Card ────────────────────────────────── --}}
-        <div class="detail-card">
+        <div class="detail-card mb-4">
 
             {{-- Tags --}}
             <div class="tags-row">
@@ -250,7 +241,7 @@
                         default => 'tag-baru',
                     };
                 @endphp
-                <span class="tag-label {{ $statusStyle }}">{{ ucfirst($pengaduan->status) }}</span>
+                <span class="tag-label {{ $statusStyle }}">{{ strtolower($pengaduan->status) === 'dibaca' ? 'Diproses' : ucfirst(str_replace('_', ' ', $pengaduan->status)) }}</span>
                 @if($pengaduan->is_anonim)
                     <span class="tag-label tag-anonim">
                         <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
@@ -314,20 +305,7 @@
                 </div>
             </div>
 
-            {{-- Status Footer --}}
-            <div style="margin-top: 20px;">
-                @php
-                    $footerConfig = match($statusLower) {
-                        'selesai' => ['class' => 'status-footer-selesai', 'icon' => 'check-circle', 'text' => 'Pengaduan sudah ditangani'],
-                        'dibaca', 'didelegasikan' => ['class' => 'status-footer-proses', 'icon' => 'clock-02', 'text' => 'Pengaduan sedang diproses'],
-                        default => ['class' => 'status-footer-menunggu', 'icon' => 'clock-02', 'text' => 'Pengaduan sedang menunggu ditinjau'],
-                    };
-                @endphp
-                <div class="status-footer {{ $footerConfig['class'] }}">
-                    <x-manajemenmahasiswa::ui.icon name="{{ $footerConfig['icon'] }}" size="18" />
-                    {{ $footerConfig['text'] }}
-                </div>
-            </div>
+
         </div>
 
     @else
@@ -348,6 +326,14 @@
             </div>
             <div class="ticket-actions">
                 @if($canReply && !$pengaduan->isSelesai())
+                    @if($pengaduan->status === \Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_BARU)
+                        <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.mark.proses', $pengaduan->id) }}" class="d-inline mb-0">
+                            @csrf
+                            <button type="submit" class="btn px-3 py-2 fw-bold" style="font-size: 13px; background: #ecfdf5; color: #059669; border: 1.5px solid #a7f3d0; border-radius: 8px;">
+                                <x-manajemenmahasiswa::ui.icon name="check-circle" size="15" /> Mulai Proses
+                            </button>
+                        </form>
+                    @endif
                     @if(in_array($pengaduan->status, [\Modules\ManajemenMahasiswa\Models\Pengaduan::STATUS_DIDELEGASIKAN]))
                         <button type="button" class="btn px-3 py-2 fw-bold" style="font-size: 13px; background: #fff7ed; color: #c2410c; border: 1.5px solid #fed7aa; border-radius: 8px;" data-bs-toggle="modal" data-bs-target="#delegateModal">
                             <x-manajemenmahasiswa::ui.icon name="arrow-circle-right" size="15" /> Delegasi Ulang?
@@ -423,7 +409,7 @@
                         default   => 'tag-baru',
                     };
                 @endphp
-                <span class="tag-label {{ $statusStyle }}">{{ ucfirst($pengaduan->status) }}</span>
+                <span class="tag-label {{ $statusStyle }}">{{ strtolower($pengaduan->status) === 'dibaca' ? 'Diproses' : ucfirst(str_replace('_', ' ', $pengaduan->status)) }}</span>
                 @if($pengaduan->is_anonim)
                     <span class="tag-label tag-anonim">
                         <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
@@ -672,6 +658,7 @@
                     $actionLabels = [
                         'dibuat'             => 'Tiket Dibuat',
                         'dibaca'             => 'Dibaca Admin',
+                        'diproses'           => 'Mulai Diproses Admin',
                         'didelegasikan'      => 'Didelegasikan ke Dosen',
                         'ditanggapi_dosen'   => 'Ditanggapi Dosen',
                         'ditolak_dosen'      => 'Ditolak Dosen',

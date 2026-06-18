@@ -406,12 +406,13 @@
         <a href="{{ $detailUrl }}" class="forum-card">
             <div class="tags-row">
                 <span class="tag-label tag-kategori">{{ $kategoriLabel }}</span>
-                <span class="tag-label tag-{{ $status }}">{{ ucfirst(str_replace('_', ' ', $status)) }}</span>
+                <span class="tag-label tag-{{ $status }}">{{ $status === 'dibaca' ? 'Diproses' : ucfirst(str_replace('_', ' ', $status)) }}</span>
                 @if($item->is_anonim)
                     <span class="tag-label tag-anonim">
-                        <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Anonim
+                        <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
                     </span>
                 @endif
+                <span style="font-family: monospace; font-size: 12px; color: #9ca3af; font-weight: 700; margin-left: auto;">#{{ $item->id }}</span>
             </div>
             <div class="ticket-title">{{ Str::limit($judul, 90) }}</div>
             <div class="ticket-excerpt">{{ Str::limit(strip_tags($kronologi), 140) }}</div>

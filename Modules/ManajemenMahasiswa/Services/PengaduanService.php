@@ -59,7 +59,6 @@ class PengaduanService
         }
 
         $pengaduan->forceFill([
-            'status'  => Pengaduan::STATUS_DIBACA,
             'read_at' => now(),
             'read_by' => $readerUserId,
         ])->save();
@@ -67,6 +66,14 @@ class PengaduanService
         $this->logAction($pengaduan, $readerUserId, PengaduanLog::ACTION_DIBACA);
     }
 
+    public function markProses(Pengaduan $pengaduan, int $adminId): void
+    {
+        $pengaduan->forceFill([
+            'status' => Pengaduan::STATUS_DIBACA,
+        ])->save();
+
+        $this->logAction($pengaduan, $adminId, 'diproses');
+    }
 
 
     /**

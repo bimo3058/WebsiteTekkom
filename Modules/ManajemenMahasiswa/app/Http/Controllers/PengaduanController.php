@@ -176,7 +176,7 @@ class PengaduanController extends Controller
         $kategoriOptions = $this->kategoriMetaNew();
         $statusOptions = [
             Pengaduan::STATUS_BARU => 'Baru',
-            Pengaduan::STATUS_DIBACA => 'Dibaca',
+            Pengaduan::STATUS_DIBACA => 'Diproses',
             Pengaduan::STATUS_DIDELEGASIKAN => 'Didelegasikan',
             Pengaduan::STATUS_SELESAI => 'Selesai',
         ];
@@ -397,6 +397,23 @@ class PengaduanController extends Controller
         $this->pengaduanService->closeByAdmin($pengaduan, $user->id);
 
         return back()->with('success', 'Tiket berhasil ditutup.');
+    }
+
+    public function markProses(Request $request, Pengaduan $pengaduan)
+    {
+        $user = $request->user();
+        $this->ensureViewer($user);
+        if (!$this->canReply($user)) {
+            abort(403);
+        }
+
+        if ($pengaduan->status !== Pengaduan::STATUS_BARU) {
+            return back()->with('info', 'Status tiket tidak valid untuk diproses.');
+        }
+
+        $this->pengaduanService->markProses($pengaduan, $user->id);
+
+        return back()->with('success', 'Status tiket berhasil diubah menjadi Diproses.');
     }
 
 
