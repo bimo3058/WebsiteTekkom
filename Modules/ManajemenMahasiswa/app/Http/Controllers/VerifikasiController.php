@@ -109,7 +109,7 @@ class VerifikasiController extends Controller
     private function adminIndex(Request $request)
     {
         $tab    = $request->get('tab', 'prestasi');
-        $status = $request->get('status', 'pending');
+        $status = $request->get('status', 'semua');
         $search = $request->get('search');
         $angkatan = $request->get('angkatan');
 
