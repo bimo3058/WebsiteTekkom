@@ -112,7 +112,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 ->name('riwayat.verifikasi');
 
             // Verifikasi Dashboard — ketua himpunan + admin kemahasiswaan
-            Route::middleware('role:ketua_unit|ketua_bidang|ketua_himpunan|wakil_ketua_himpunan|admin|admin_kemahasiswaan|superadmin')
+            Route::middleware('role:ketua_unit|ketua_bidang|ketua_himpunan|wakil_ketua_himpunan|admin|admin_kemahasiswaan|superadmin|dpm')
                 ->group(function () {
                 Route::get('/verifikasi', [PengumumanController::class, 'verifikasiIndex'])
                     ->name('verifikasi.index');
@@ -122,11 +122,11 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->name('verifikasi.reject')->whereNumber('requestId');
             });
 
-            // Pin Global — hanya admin, superadmin, admin_kemahasiswaan, gpm
+            // Pin Global — hanya admin, superadmin, admin_kemahasiswaan
             Route::patch('/{pengumuman}/pin', [PengumumanController::class, 'pin'])
                 ->name('pin')
                 ->whereNumber('pengumuman')
-                ->middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm|ketua_departemen');
+                ->middleware('role:superadmin|admin|admin_kemahasiswaan');
 
             // Pin Pribadi — semua user terautentikasi (dilindungi auth di level parent)
             Route::post('/{pengumuman}/personal-pin', [PengumumanController::class, 'personalPin'])
@@ -339,7 +339,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 });
 
                 // Daftar semua mahasiswa — semua role boleh lihat index dan profil
-                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|pengurus_himpunan|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|dosen|dosen_koordinator|dpm|mahasiswa|alumni')
+                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|ketua_departemen|pengurus_himpunan|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|dosen|dosen_koordinator|dpm|mahasiswa|alumni')
                     ->group(function () {
                     Route::get('/', [DirektoriMahasiswaController::class, 'index'])
                         ->name('index');
@@ -367,7 +367,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 });
 
                 // Generate CV — admin group, GPM, DPM, dan Dosen
-                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm|dosen|dosen_koordinator')
+                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|ketua_departemen|dpm|dosen|dosen_koordinator')
                     ->group(function () {
                     Route::get('/{id}/cv', [DirektoriMahasiswaController::class, 'generateCv'])
                         ->name('cv')->where('id', '[0-9]+');
@@ -387,7 +387,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 });
 
                 // Daftar semua alumni — admin, gpm, pengurus, dosen, mahasiswa, alumni
-                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dosen|dosen_koordinator|dpm|pengurus_himpunan|mahasiswa|alumni')
+                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|ketua_departemen|dosen|dosen_koordinator|dpm|pengurus_himpunan|mahasiswa|alumni')
                     ->group(function () {
                     Route::get('/', [\Modules\ManajemenMahasiswa\Http\Controllers\DirektoriAlumniController::class, 'index'])
                         ->name('index');
@@ -428,7 +428,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
         Route::prefix('verifikasi')->name('verifikasi.')->group(function () {
 
             // Index — mahasiswa, alumni (read-only), pengurus himpunan, dan admin
-            Route::middleware('role:mahasiswa|alumni|pengurus_himpunan|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin|admin_kemahasiswaan')
+            Route::middleware('role:mahasiswa|alumni|pengurus_himpunan|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin|admin_kemahasiswaan|dpm')
                 ->get('/', [VerifikasiController::class, 'index'])->name('index');
 
             // Submit pengajuan — mahasiswa, semua pengurus himpunan, admin (alumni TIDAK diizinkan)
@@ -445,18 +445,13 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             });
 
             // Approve/Reject — admin only
-            Route::middleware('role:superadmin|admin|admin_kemahasiswaan')
+            Route::middleware('role:superadmin|admin|admin_kemahasiswaan|dpm')
                 ->group(function () {
                 // Halaman khusus daftar klaim reward prestasi (Request Bu Bellia / B.2)
                 Route::get('/klaim-reward', [VerifikasiController::class, 'rewardIndex'])
                     ->name('reward.index');
 
                 // Dokumen aturan reward (SK FT 774 / aturan terbaru) — admin kelola
-                Route::post('/aturan', [VerifikasiController::class, 'aturanStore'])
-                    ->name('aturan.store');
-                Route::delete('/aturan/{id}', [VerifikasiController::class, 'aturanDestroy'])
-                    ->name('aturan.destroy')->where('id', '[0-9]+');
-
                 Route::patch('/riwayat/{id}/approve', [VerifikasiController::class, 'approveRiwayat'])
                     ->name('riwayat.approve')->where('id', '[0-9]+');
                 Route::patch('/riwayat/{id}/reject', [VerifikasiController::class, 'rejectRiwayat'])
@@ -473,6 +468,15 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->name('prestasi.reward.tolak')->where('id', '[0-9]+');
                 Route::patch('/prestasi/{id}/reward/batalkan-persetujuan', [VerifikasiController::class, 'batalkanPersetujuanReward'])
                     ->name('prestasi.reward.batalkan')->where('id', '[0-9]+');
+            });
+
+            // Dokumen aturan reward (SK FT 774 / aturan terbaru) â€” admin kelola
+            Route::middleware('role:superadmin|admin|admin_kemahasiswaan')
+                ->group(function () {
+                Route::post('/aturan', [VerifikasiController::class, 'aturanStore'])
+                    ->name('aturan.store');
+                Route::delete('/aturan/{id}', [VerifikasiController::class, 'aturanDestroy'])
+                    ->name('aturan.destroy')->where('id', '[0-9]+');
             });
         });
 

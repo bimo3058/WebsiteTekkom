@@ -19,7 +19,7 @@
             --error-0:#fff1f2;--error-50:#ffe4e6;--error-200:#f87171;--error-300:#dc2626;
             --sky-500:#0ea5e9;
         }
-        .sikape-card { background:#fff; border:1px solid var(--grey-200); border-radius:12px; }
+        .sikape-card { background:#fff; border:1px solid #DFE1E7; border-radius:12px; }
     </style>
 </head>
 <body style="background:#f9fafb;" x-data="{ sidebarOpen: false }">
@@ -28,9 +28,13 @@
     @include('eoffice::kp.mahasiswa.partials.sidebar')
 
     <div class="flex-1 flex flex-col min-h-0 overflow-hidden">
-        @include('eoffice::kp.mahasiswa.partials.topbar', ['breadcrumb' => 'Dashboard'])
 
-        <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        {{-- Outer content container with border --}}
+        <div class="flex-1 flex flex-col min-h-0 overflow-hidden rounded-lg" style="margin:8px; border:1px solid #DFE1E7; background:#fff;">
+
+            @include('eoffice::kp.mahasiswa.partials.topbar', ['breadcrumb' => 'Dashboard'])
+
+            <main class="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
 
             {{-- Flash Messages --}}
             @if(session('success'))
@@ -69,13 +73,22 @@
                 <div class="flex items-start gap-0">
                     @foreach($steps as $i => $step)
                     <div class="flex-1 flex flex-col items-center relative">
-                        {{-- Connector line --}}
-                        @if($i < count($steps)-1)
-                        <div class="absolute top-5 left-1/2 w-full h-0.5 z-0" style="background:{{ $i < $cur ? '#4f46e5' : 'var(--grey-200)' }};"></div>
+
+                        {{-- Left half-line: from left edge → center of this circle --}}
+                        @if($i > 0)
+                        <div class="absolute h-0.5 z-0"
+                             style="top:20px; left:0; right:50%; background:{{ $i <= $cur ? '#4f46e5' : 'var(--grey-200)' }};"></div>
                         @endif
+
+                        {{-- Right half-line: from center of this circle → right edge --}}
+                        @if($i < count($steps) - 1)
+                        <div class="absolute h-0.5 z-0"
+                             style="top:20px; left:50%; right:0; background:{{ $i < $cur ? '#4f46e5' : 'var(--grey-200)' }};"></div>
+                        @endif
+
                         {{-- Circle --}}
                         <div class="w-10 h-10 rounded-full flex items-center justify-center z-10 relative transition-all duration-300 flex-shrink-0"
-                             style="background:{{ $i < $cur ? '#4f46e5' : ($i === $cur ? '#4f46e5' : 'var(--grey-100)') }};
+                             style="background:{{ $i <= $cur ? '#4f46e5' : 'var(--grey-100)' }};
                                     {{ $i === $cur ? 'box-shadow:0 0 0 4px #e0e7ff;' : '' }}">
                             @if($i < $cur)
                             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
@@ -83,9 +96,11 @@
                             <svg class="w-5 h-5" style="color:{{ $i <= $cur ? 'white' : 'var(--grey-400)' }};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="{{ $step['icon'] }}"/></svg>
                             @endif
                         </div>
+
                         {{-- Label --}}
                         <p class="text-xs font-semibold mt-2 text-center" style="color:{{ $i <= $cur ? 'var(--grey-800)' : 'var(--grey-400)' }};">{{ $step['label'] }}</p>
                         <p class="text-[10px] text-center" style="color:{{ $i <= $cur ? 'var(--grey-500)' : 'var(--grey-300)' }};">{{ $step['desc'] }}</p>
+
                     </div>
                     @endforeach
                 </div>
@@ -330,7 +345,8 @@
 
             </div>
 
-        </main>
+            </main>
+        </div>{{-- end outer content container --}}
     </div>
 </div>
 </body>

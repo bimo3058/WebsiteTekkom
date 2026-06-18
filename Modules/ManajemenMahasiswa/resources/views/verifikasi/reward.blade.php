@@ -1,5 +1,8 @@
 <x-dynamic-component :component="$layout">
-@php $P = \Modules\ManajemenMahasiswa\Models\Prestasi::class; @endphp
+@php
+    $P = \Modules\ManajemenMahasiswa\Models\Prestasi::class;
+    $canManageRewardAturan = $canManageRewardAturan ?? false;
+@endphp
 
 <style>
     /* ── Dashboard Analitik Style ── */
@@ -166,11 +169,14 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
             Dokumen Aturan Reward (SK FT 774)
         </div>
-        <button type="button" class="btn-aturan-add" onclick="document.getElementById('aturanUploadWrap').classList.toggle('show')">+ Tambah Dokumen</button>
+        @if($canManageRewardAturan)
+            <button type="button" class="btn-aturan-add" onclick="document.getElementById('aturanUploadWrap').classList.toggle('show')">+ Tambah Dokumen</button>
+        @endif
     </div>
     <p class="aturan-sub">Unggah PDF/gambar aturan reward agar mahasiswa &amp; admin bisa membaca sumbernya saat mengajukan / meninjau reward.</p>
 
     <!-- Form upload (toggle) -->
+    @if($canManageRewardAturan)
     <div id="aturanUploadWrap" class="aturan-upload">
         <form method="POST" action="{{ route('manajemenmahasiswa.verifikasi.aturan.store') }}" enctype="multipart/form-data" class="aturan-form">
             @csrf
@@ -180,6 +186,7 @@
         </form>
         <small style="font-size:11px; color:#666D80;">Format: PDF, JPG, PNG, WEBP. Maks 10MB.</small>
     </div>
+    @endif
 
     <!-- Daftar dokumen -->
     @if($rewardAturan->count())
@@ -192,10 +199,12 @@
                         <span class="aturan-row-file">{{ $a->nama_file }}@if($a->uploadedBy) • oleh {{ $a->uploadedBy->name }}@endif</span>
                     </div>
                     <a href="{{ $a->public_url }}" target="_blank" rel="noopener" class="aturan-act lihat">Lihat ↗</a>
-                    <form method="POST" action="{{ route('manajemenmahasiswa.verifikasi.aturan.destroy', $a->id) }}" onsubmit="return confirm('Hapus dokumen aturan ini?');" style="margin:0;">
-                        @csrf @method('DELETE')
-                        <button type="submit" class="aturan-act hapus">Hapus</button>
-                    </form>
+                    @if($canManageRewardAturan)
+                        <form method="POST" action="{{ route('manajemenmahasiswa.verifikasi.aturan.destroy', $a->id) }}" onsubmit="return confirm('Hapus dokumen aturan ini?');" style="margin:0;">
+                            @csrf @method('DELETE')
+                            <button type="submit" class="aturan-act hapus">Hapus</button>
+                        </form>
+                    @endif
                 </div>
             @endforeach
         </div>

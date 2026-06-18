@@ -2,7 +2,7 @@
     @php
         $sidebarRoles = auth()->user()->roles->pluck('name')->toArray();
         $showDashboardAnalitik = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen'])) > 0;
-        $showManajemenPengguna = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'dpm'])) > 0;
+        $showManajemenPengguna = count(array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit'])) > 0;
 
         $mainDashboardUrl = in_array('superadmin', $sidebarRoles) ? route('superadmin.dashboard') : route('dashboard');
         $currentRoute = request()->route()->getName();
@@ -385,7 +385,7 @@
             </div>
         </div>
 
-        @if(!array_intersect($sidebarRoles, ['dosen', 'dosen_koordinator']))
+        @if(!array_intersect($sidebarRoles, ['dosen', 'dosen_koordinator', 'ketua_departemen', 'gpm']))
             @php
                 $verifActive = request()->routeIs('manajemenmahasiswa.verifikasi.*');
                 $verifTab    = request('tab', 'prestasi');

@@ -17,34 +17,42 @@ class PengaduanController extends Controller
         'dosen',
         'gpm',
         'kaprodi',
+        'dpm',
         'admin',
         'superadmin',
         'admin_kemahasiswaan',
+        'ketua_departemen',
     ];
 
     private const STAFF_VIEW_ROLES = [
         'dosen',
         'gpm',
         'kaprodi',
+        'dpm',
         'admin',
         'superadmin',
         'admin_kemahasiswaan',
+        'ketua_departemen',
     ];
 
     private const REPLY_ROLES = [
         'gpm',
         'kaprodi',
+        'dpm',
         'admin',
         'superadmin',
         'admin_kemahasiswaan',
+        'ketua_departemen',
     ];
 
     private const DELETE_ROLES = [
         'gpm',
         'kaprodi',
+        'dpm',
         'admin',
         'superadmin',
         'admin_kemahasiswaan',
+        'ketua_departemen',
     ];
 
     public function __construct(private PengaduanService $pengaduanService)
@@ -76,7 +84,7 @@ class PengaduanController extends Controller
             Pengaduan::STATUS_SELESAI,
         ];
 
-        $isDosenOnly = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['dosen', 'dosen_koordinator']) && !$user->hasAnyRole(['admin', 'superadmin', 'admin_kemahasiswaan', 'gpm', 'kaprodi']);
+        $isDosenOnly = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['dosen', 'dosen_koordinator']) && !$user->hasAnyRole(['admin', 'superadmin', 'admin_kemahasiswaan', 'gpm', 'kaprodi', 'dpm', 'ketua_departemen']);
 
         $query = Pengaduan::query();
         if ($isStaff) {
@@ -300,7 +308,7 @@ class PengaduanController extends Controller
             abort(403, 'Anda tidak memiliki akses ke pengaduan ini.');
         }
 
-        $isDosenOnly = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['dosen', 'dosen_koordinator']) && !$user->hasAnyRole(['admin', 'superadmin', 'admin_kemahasiswaan', 'gpm', 'kaprodi']);
+        $isDosenOnly = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['dosen', 'dosen_koordinator']) && !$user->hasAnyRole(['admin', 'superadmin', 'admin_kemahasiswaan', 'gpm', 'kaprodi', 'dpm', 'ketua_departemen']);
         if ($isDosenOnly) {
             $hasDelegation = $pengaduan->delegasi()->where('delegated_to', $user->id)->exists();
             if (!$hasDelegation) {
