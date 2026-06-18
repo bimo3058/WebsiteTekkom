@@ -131,7 +131,7 @@ class PengaduanService
         $this->logAction(
             $delegasi->pengaduan,
             $delegasi->delegated_to,
-            PengaduanLog::ACTION_DITUTUP_ADMIN,
+            PengaduanLog::ACTION_DITANGGAPI_DOSEN,
             $notesBalik
         );
     }

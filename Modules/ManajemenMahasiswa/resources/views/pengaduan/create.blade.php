@@ -12,7 +12,7 @@
             }
 
             /* ── Page Title ── */
-            .page-title h3 {
+            .page-title h4 {
                 font-size: 1.5rem; font-weight: 700; color: #1e1b4b;
                 margin: 0 0 4px; letter-spacing: -.02em;
             }
@@ -86,7 +86,7 @@
     {{-- ── Header ── --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="page-title">
-            <h3>Buat Pengaduan</h3>
+            <h4>Buat Pengaduan</h4>
             <p>Isi form di bawah ini dengan detail yang jelas dan valid.</p>
         </div>
         <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-back">

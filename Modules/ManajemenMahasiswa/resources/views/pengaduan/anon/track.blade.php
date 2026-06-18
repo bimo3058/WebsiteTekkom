@@ -39,12 +39,7 @@
         }
         .section-value { font-size: 15px; font-weight: 600; color: #111827; }
 
-        /* ── Kronologi Box ── */
-        .chronology-box {
-            background: #f8fafc; border-radius: 12px; padding: 24px;
-            color: #334155; font-size: 14px; line-height: 1.8;
-            white-space: pre-wrap; border: 1px solid #e2e8f0;
-        }
+
 
         /* ── Section Divider ── */
         .section-divider { display: flex; align-items: center; gap: 12px; margin: 24px 0 16px; }
@@ -53,9 +48,11 @@
 
         /* ── Info Grid ── */
         .info-grid {
-            display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px 24px;
+            display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 20px;
         }
-        @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+        @media (max-width: 992px) { .info-grid { grid-template-columns: repeat(3, 1fr); } }
+        @media (max-width: 768px) { .info-grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 480px) { .info-grid { grid-template-columns: 1fr; } }
         .info-item-label {
             font-size: 11px; font-weight: 700; color: #94a3b8;
             text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px;
@@ -139,7 +136,9 @@
             Diajukan {{ optional($pengaduan->created_at)->translatedFormat('d F Y, H:i') }} WIB
         </div>
 
-        <hr style="border-color: #f3f4f6; margin: 0 0 24px 0;">
+        <div class="section-divider" style="margin-top: 0;">
+            <span>Detail Pengaduan</span>
+        </div>
 
         {{-- Hal Aduan --}}
         <div class="mb-4">
@@ -150,7 +149,7 @@
         {{-- Kronologi --}}
         <div class="mb-4">
             <div class="section-label">Kronologi / Isi Pengaduan</div>
-            <div class="chronology-box">{{ data_get($pengaduan, 'data_template.kronologi', '-') }}</div>
+            <div class="section-value" style="white-space: pre-wrap; line-height: 1.7;">{{ data_get($pengaduan, 'data_template.kronologi', '-') }}</div>
         </div>
 
         {{-- Info Tambahan --}}
@@ -160,34 +159,34 @@
                 ['label' => 'Waktu Kejadian', 'value' => $waktuKejadian ? \Carbon\Carbon::parse($waktuKejadian)->translatedFormat('d F Y, H:i') : null],
                 ['label' => 'Angkatan', 'value' => data_get($pengaduan, 'data_template.angkatan')],
                 ['label' => 'Mata Kuliah', 'value' => data_get($pengaduan, 'data_template.mata_kuliah')],
-                ['label' => 'Nama Dosen', 'value' => data_get($pengaduan, 'data_template.nama_dosen')],
-                ['label' => 'Nama Tendik', 'value' => data_get($pengaduan, 'data_template.nama_tendik')],
+                ['label' => 'Dosen', 'value' => data_get($pengaduan, 'data_template.nama_dosen')],
+                ['label' => 'Tendik', 'value' => data_get($pengaduan, 'data_template.nama_tendik')],
                 ['label' => 'Frekuensi', 'value' => data_get($pengaduan, 'data_template.frekuensi')],
-            ])->filter(fn($i) => !empty($i['value']));
+            ]);
         @endphp
 
-        @if($infoItems->isNotEmpty() || $linkBukti)
-            <div class="section-divider">
-                <span>Informasi Tambahan</span>
+        <div class="section-divider">
+            <span>Informasi Tambahan</span>
+        </div>
+        <div class="info-grid">
+            @foreach($infoItems as $info)
+                <div>
+                    <div class="info-item-label">{{ $info['label'] }}</div>
+                    <div class="info-item-value" style="{{ empty($info['value']) ? 'color: #cbd5e1;' : '' }}">{{ $info['value'] ?: '—' }}</div>
+                </div>
+            @endforeach
+            <div>
+                <div class="info-item-label">Bukti Dukung</div>
+                <div class="info-item-value">
+                    @if($linkBukti)
+                        <a href="{{ $linkBukti }}" target="_blank" rel="noopener noreferrer"
+                           style="color: #293C79; text-decoration: none;">Lihat Bukti ↗</a>
+                    @else
+                        <span style="color: #cbd5e1;">—</span>
+                    @endif
+                </div>
             </div>
-            <div class="info-grid">
-                @foreach($infoItems as $info)
-                    <div>
-                        <div class="info-item-label">{{ $info['label'] }}</div>
-                        <div class="info-item-value">{{ $info['value'] }}</div>
-                    </div>
-                @endforeach
-                @if($linkBukti)
-                    <div>
-                        <div class="info-item-label">Bukti Dukung</div>
-                        <div class="info-item-value">
-                            <a href="{{ $linkBukti }}" target="_blank" rel="noopener noreferrer"
-                               style="color: #293C79; text-decoration: none;">Lihat Bukti ↗</a>
-                        </div>
-                    </div>
-                @endif
-            </div>
-        @endif
+        </div>
 
         {{-- Status Footer --}}
         <div style="margin-top: 28px;">

@@ -146,7 +146,7 @@ class Pengaduan extends Model
 
     public function logs(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(PengaduanLog::class, 'pengaduan_id')->orderBy('created_at');
+        return $this->hasMany(PengaduanLog::class, 'pengaduan_id')->orderByDesc('created_at');
     }
 
     public function isSelesai(): bool

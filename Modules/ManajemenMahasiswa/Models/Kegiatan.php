@@ -45,6 +45,7 @@ class Kegiatan extends Model
         'catatan_penolakan',
         'disetujui_oleh',
         'disetujui_at',
+        'is_pelaksanaan_updated',
     ];
 
     protected $casts = [
@@ -55,6 +56,7 @@ class Kegiatan extends Model
         'anggaran'                  => 'decimal:2',
         'realisasi_anggaran'        => 'decimal:2',
         'disetujui_at'              => 'datetime',
+        'is_pelaksanaan_updated'    => 'boolean',
     ];
 
     // -------------------------------------------------------------------------

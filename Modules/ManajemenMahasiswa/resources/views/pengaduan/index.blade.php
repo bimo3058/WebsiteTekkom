@@ -298,39 +298,46 @@
         @if(!empty($summaryStats['kategoriDistribusi']) && $summaryStats['kategoriDistribusi']->count() > 0)
             @php $maxKat = $summaryStats['kategoriDistribusi']->max() ?: 1; @endphp
             <div class="chart-card">
-                <div class="chart-title">
-                    <x-manajemenmahasiswa::ui.icon name="bar-chart-11" size="15" />
-                    Distribusi Kategori
-                    <span class="chart-title-right">Total: {{ $summaryStats['totalNonDraft'] ?? 0 }}</span>
-                </div>
-                @foreach($summaryStats['kategoriDistribusi'] as $kat => $total)
-                    @php
-                        $katNorm = \Modules\ManajemenMahasiswa\Models\Pengaduan::normalizeKategori($kat);
-                        $katLabel = data_get($kategoriOptions, $katNorm . '.label') ?? ucwords(str_replace('_', ' ', $katNorm));
-                        $pct = round($total / ($summaryStats['totalNonDraft'] ?: 1) * 100);
-                    @endphp
-                    <div class="kategori-bar">
-                        <div class="kategori-label">{{ $katLabel }}</div>
-                        <div class="kategori-track">
-                            <div class="kategori-fill" style="width: {{ round($total / $maxKat * 100) }}%"></div>
+                <details style="cursor: pointer;">
+                    <summary style="list-style: none; display: flex; align-items: center; gap: 8px;">
+                        <div class="chart-title" style="margin-bottom: 0; flex: 1;">
+                            <x-manajemenmahasiswa::ui.icon name="bar-chart-11" size="15" />
+                            Distribusi Kategori
+                            <span class="chart-title-right">Total: {{ $summaryStats['totalNonDraft'] ?? 0 }}</span>
                         </div>
-                        <div class="kategori-count">{{ $total }} ({{ $pct }}%)</div>
+                        <x-manajemenmahasiswa::ui.icon name="chevron-down" size="14" style="color: #94a3b8; flex-shrink: 0;" />
+                    </summary>
+                    <div class="mt-4">
+                        @foreach($summaryStats['kategoriDistribusi'] as $kat => $total)
+                            @php
+                                $katNorm = \Modules\ManajemenMahasiswa\Models\Pengaduan::normalizeKategori($kat);
+                                $katLabel = data_get($kategoriOptions, $katNorm . '.label') ?? ucwords(str_replace('_', ' ', $katNorm));
+                                $pct = round($total / ($summaryStats['totalNonDraft'] ?: 1) * 100);
+                            @endphp
+                            <div class="kategori-bar">
+                                <div class="kategori-label">{{ $katLabel }}</div>
+                                <div class="kategori-track">
+                                    <div class="kategori-fill" style="width: {{ round($total / $maxKat * 100) }}%"></div>
+                                </div>
+                                <div class="kategori-count">{{ $total }} ({{ $pct }}%)</div>
+                            </div>
+                        @endforeach
+                        <div class="stat-row">
+                            <div class="stat-mini">
+                                <div class="stat-mini-val">{{ $summaryStats['totalNonDraft'] ?? 0 }}</div>
+                                <div class="stat-mini-label">Total</div>
+                            </div>
+                            <div class="stat-mini">
+                                <div class="stat-mini-val">{{ $belumDijawabCount }}</div>
+                                <div class="stat-mini-label">Pending</div>
+                            </div>
+                            <div class="stat-mini">
+                                <div class="stat-mini-val">{{ $selesaiCount }}</div>
+                                <div class="stat-mini-label">Selesai</div>
+                            </div>
+                        </div>
                     </div>
-                @endforeach
-                <div class="stat-row">
-                    <div class="stat-mini">
-                        <div class="stat-mini-val">{{ $summaryStats['totalNonDraft'] ?? 0 }}</div>
-                        <div class="stat-mini-label">Total</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="stat-mini-val">{{ $belumDijawabCount }}</div>
-                        <div class="stat-mini-label">Pending</div>
-                    </div>
-                    <div class="stat-mini">
-                        <div class="stat-mini-val">{{ $selesaiCount }}</div>
-                        <div class="stat-mini-label">Selesai</div>
-                    </div>
-                </div>
+                </details>
             </div>
         @endif
 
@@ -409,16 +416,18 @@
             <div class="ticket-title">{{ Str::limit($judul, 90) }}</div>
             <div class="ticket-excerpt">{{ Str::limit(strip_tags($kronologi), 140) }}</div>
             <div class="ticket-footer">
-                <div class="ticket-meta">
-                    <x-manajemenmahasiswa::ui.icon name="user-01" size="14" />
-                    {{ $pelaporLabel }}
-                    @if($isStaff && in_array($status, ['didelegasikan']) && optional($item->delegasiAktif)->delegatedTo)
-                        <span style="color: #ea580c;">→ {{ $item->delegasiAktif->delegatedTo->name }}</span>
-                    @endif
-                </div>
-                <div class="ticket-meta">
-                    <x-manajemenmahasiswa::ui.icon name="clock-02" size="14" />
-                    {{ optional($item->created_at)->translatedFormat('j M Y, H:i') }}
+                <div class="d-flex align-items-center gap-3 flex-wrap">
+                    <div class="ticket-meta">
+                        <x-manajemenmahasiswa::ui.icon name="user-01" size="14" />
+                        {{ $pelaporLabel }}
+                        @if($isStaff && in_array($status, ['didelegasikan']) && optional($item->delegasiAktif)->delegatedTo)
+                            <span style="color: #ea580c;">→ {{ $item->delegasiAktif->delegatedTo->name }}</span>
+                        @endif
+                    </div>
+                    <div class="ticket-meta">
+                        <x-manajemenmahasiswa::ui.icon name="clock-02" size="14" />
+                        {{ optional($item->created_at)->translatedFormat('d M Y, H:i') }}
+                    </div>
                 </div>
                 @if($canDelete)
                     <button type="button" class="delete-btn"

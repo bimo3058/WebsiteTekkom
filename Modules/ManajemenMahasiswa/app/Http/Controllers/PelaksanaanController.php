@@ -232,6 +232,7 @@ class PelaksanaanController extends Controller
             'anggaran'           => $validated['anggaran'] ?? null,
             'ketua_pelaksana_id' => $validated['ketua_pelaksana_id'] ?? null,
             'dosen_pendamping_id'=> $validated['dosen_pendamping_id'] ?? null,
+            'is_pelaksanaan_updated' => true,
         ]);
 
         // Set penanggung_jawab from ketua pelaksana name for backward compatibility
@@ -309,6 +310,12 @@ class PelaksanaanController extends Controller
         }
 
         $proker = Kegiatan::where('status', Kegiatan::STATUS_DISETUJUI)->findOrFail($id);
+
+        if (!$proker->is_pelaksanaan_updated) {
+            return redirect()
+                ->back()
+                ->with('error', 'Silakan edit/update data pelaksanaan kegiatan terlebih dahulu sebelum mengunggah ke arsip.');
+        }
 
         $proker->update(['status' => Kegiatan::STATUS_SELESAI]);
 

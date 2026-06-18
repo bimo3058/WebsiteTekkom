@@ -1,18 +1,18 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
 <style>
 .detail-header { display: flex; align-items: center; gap: 14px; margin-bottom: 24px; }
-.btn-back{width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid #e5e7eb;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#374151;font-size:18px;transition:all 0.2s;flex-shrink:0}
-.btn-back:hover{background:#f3f4f6;border-color:#d1d5db;color:#1f2937}
+.btn-back{width:40px;height:40px;border-radius:50%;background:#fff;border:1px solid #DFE1E7;display:flex;align-items:center;justify-content:center;text-decoration:none;color:#374151;font-size:18px;transition:all 0.2s;flex-shrink:0}
+.btn-back:hover{background:#f3f4f6;border-color:#C1C7CF;color:#0D0D12}
 .detail-card{background:#fff;border-radius:12px;padding:24px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);margin-bottom:20px}
-.detail-card-title{font-weight:700;font-size:16px;color:#1f2937;margin-bottom:16px;display:flex;align-items:center;gap:8px}
-.badge-bidang{font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;background:#eef2ff;color:#4f46e5}
+.detail-card-title{font-weight:700;font-size:16px;color:#0D0D12;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.badge-bidang{font-size:11px;font-weight:700;padding:4px 12px;border-radius:20px;background:#eef2ff;color:#0B266E}
 .status-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700}
-.status-draft{background:#f3f4f6;color:#6b7280}
-.status-diajukan{background:#fef3c7;color:#92400e}
+.status-draft{background:#f3f4f6;color:#666D80}
+.status-diajukan{background:#FFFBEB;color:#92400e}
 .status-ditolak{background:#fee2e2;color:#dc2626}
 /* Buttons */
-.btn-ajukan{background:linear-gradient(135deg,#4f46e5,#7c3aed);color:#fff;font-weight:600;padding:10px 24px;border-radius:10px;border:none;cursor:pointer;font-size:14px;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px;}
-.btn-ajukan:hover{background:linear-gradient(135deg,#4338ca,#6d28d9);transform:translateY(-1px)}
+.btn-ajukan{background:linear-gradient(135deg,#0B266E,#0B266E);color:#fff;font-weight:600;padding:10px 24px;border-radius:10px;border:none;cursor:pointer;font-size:14px;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px;}
+.btn-ajukan:hover{background:linear-gradient(135deg,#091958,#091958);transform:translateY(-1px)}
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9999;align-items:center;justify-content:center}
 .modal-box{background:#fff;border-radius:16px;padding:32px;max-width:440px;width:90%;text-align:center;box-shadow:0 25px 60px rgba(0,0,0,0.15)}
 
@@ -30,7 +30,7 @@
 </style>
 
 @if(session('success'))
-<div class="alert alert-success alert-dismissible fade show" style="border-radius:10px;border:none;background:#dcfce7;color:#166534;font-weight:500;font-size:14px;">
+<div class="alert alert-success alert-dismissible fade show" style="border-radius:10px;border:none;background:#ECFDF5;color:#059669;font-weight:500;font-size:14px;">
     {{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
 </div>
 @endif
@@ -45,15 +45,15 @@
     <div class="detail-header">
         <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="btn-back">&larr;</a>
         <div>
-            <h3 class="fw-bold mb-0 text-dark">Detail Rencana Proker</h3>
-            <p class="text-muted mb-0" style="font-size:14px;font-weight:500;">{{ $proker->judul }}</p>
+            <h3 class="fw-bold mb-0" style="font-size:1.45rem;color:#0D0D12;letter-spacing:-.02em;">Detail Rencana Proker</h3>
+            <p class="mb-0" style="font-size:.82rem;color:#666D80;font-weight:500;">{{ $proker->judul }}</p>
         </div>
     </div>
     <div class="d-flex gap-2 flex-wrap align-items-start">
         @if($canEdit && $proker->status === 'draft')
             <a href="{{ route('manajemenmahasiswa.proker.edit', $proker->id) }}"
                class="btn d-flex align-items-center gap-2"
-               style="background: #4f46e5; color: #fff; font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: 10px;">
+               style="background: #0B266E; color: #fff; font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: 10px;">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -84,7 +84,7 @@
             @else
                 <button type="button" disabled
                     title="Hanya Ketua / Wakil Ketua / Ketua Bidang / Ketua Unit yang dapat mengajukan proker"
-                    style="height:38px;padding:0 20px;font-size:13px;font-weight:600;border-radius:10px;border:none;display:inline-flex;align-items:center;gap:8px;background:#e5e7eb;color:#9ca3af;cursor:not-allowed;">
+                    style="height:38px;padding:0 20px;font-size:13px;font-weight:600;border-radius:10px;border:none;display:inline-flex;align-items:center;gap:8px;background:#DFE1E7;color:#666D80;cursor:not-allowed;">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9 22 2z"/></svg>
                     Ajukan Proker
                 </button>
@@ -102,7 +102,7 @@
     <img src="{{ $proker->banner_url }}" alt="{{ $proker->judul }}" style="width:100%;height:340px;object-fit:cover;display:block;">
     <div style="position:absolute;bottom:24px;left:28px;z-index:2;display:flex;align-items:center;gap:12px;">
         <span style="background:rgba(255,255,255,0.25);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);color:#fff;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:700;letter-spacing:0.5px;border:1px solid rgba(255,255,255,0.4);text-shadow:0 1px 2px rgba(0,0,0,0.2);">
-            &#128247; Banner Proker &bull; Klik untuk memperbesar
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"/><circle cx="9" cy="9" r="2"/><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"/></svg>Banner Proker &bull; Klik untuk memperbesar
         </span>
     </div>
 </div>
@@ -118,14 +118,14 @@
                         <span class="badge-bidang">{{ $b->nama_bidang }}</span>
                     @endforeach
                 @else
-                    <span class="badge-bidang" style="background:#f3e8ff;color:#7c3aed;">Prodi</span>
+                    <span class="badge-bidang" style="background:#eef2ff;color:#0B266E;">Prodi</span>
                 @endif
                 @foreach(($proker->kategoris ?? collect()) as $kat)
-                    <span class="badge-bidang" style="background:#fef3c7;color:#92400e;">{{ $kat->nama_kategori }}</span>
+                    <span class="badge-bidang" style="background:#FFFBEB;color:#92400e;">{{ $kat->nama_kategori }}</span>
                 @endforeach
             </div>
-            <h4 class="fw-bold text-dark mb-1">{{ $proker->judul }}</h4>
-            <div style="font-size:13px;color:#6b7280;font-weight:500;">
+            <h4 class="fw-bold mb-1" style="color:#0D0D12;">{{ $proker->judul }}</h4>
+            <div style="font-size:13px;color:#666D80;font-weight:500;">
                 Dibuat oleh: <span style="color:#374151;font-weight:600;">{{ $proker->creator?->name ?? '-' }}</span> &bull; 
                 {{ $proker->created_at->translatedFormat('d M Y') }}
             </div>
@@ -147,14 +147,14 @@
 
 {{-- Link ke Pelaksanaan / Arsip --}}
 @if($proker->status === 'disetujui')
-<div class="detail-card" style="background:linear-gradient(135deg,#eef2ff,#e0e7ff);border:1.5px solid #c7d2fe;">
+<div class="detail-card" style="background:rgba(11,38,110,0.05);border:1px solid rgba(11,38,110,0.18);">
     <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
         <div>
-            <div style="font-weight:700;color:#4338ca;margin-bottom:4px;">&#128640; Proker Diajukan!</div>
-            <div style="font-size:14px;color:#4f46e5;font-weight:500;">Input data realisasi di halaman Pelaksanaan Kegiatan.</div>
+            <div style="font-weight:700;color:#091958;margin-bottom:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9 22 2z"/></svg>Proker Diajukan!</div>
+            <div style="font-size:14px;color:#0B266E;font-weight:500;">Input data realisasi di halaman Pelaksanaan Kegiatan.</div>
         </div>
         <a href="{{ route('manajemenmahasiswa.pelaksanaan.show', $proker->id) }}"
-           class="btn" style="background:#4f46e5;color:#fff;font-weight:600;padding:10px 22px;border-radius:10px;font-size:14px;white-space:nowrap;">
+           class="btn" style="background:#0B266E;color:#fff;font-weight:600;padding:10px 22px;border-radius:8px;font-size:14px;white-space:nowrap;">
             Lihat di Pelaksanaan &rarr;
         </a>
     </div>
@@ -167,7 +167,7 @@
     <div class="modal-box">
         <div style="width:56px;height:56px;border-radius:50%;background:#fee2e2;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:28px;">&#128465;</div>
         <h5 class="fw-bold mb-2">Hapus Proker?</h5>
-        <p style="color:#6b7280;font-size:14px;">Data proker "<strong>{{ $proker->judul }}</strong>" akan dihapus permanen.</p>
+        <p style="color:#666D80;font-size:14px;">Data proker "<strong>{{ $proker->judul }}</strong>" akan dihapus permanen.</p>
         <div class="d-flex gap-2 justify-content-center mt-3">
             <button class="btn" style="background:#f3f4f6;color:#374151;font-weight:600;border-radius:10px;" onclick="document.getElementById('deleteModal').style.display='none'">Batal</button>
             <form action="{{ route('manajemenmahasiswa.proker.destroy', $proker->id) }}" method="POST">

@@ -10,43 +10,43 @@
         align-items: center;
     }
     .filter-chip {
-        padding: 7px 18px;
-        border-radius: 20px;
-        border: 1.5px solid #e5e7eb;
+        padding: 7px 16px;
+        border-radius: 8px;
+        border: 1px solid #DFE1E7;
         background: #ffffff;
-        color: #374151;
+        color: #666D80;
         font-size: 13px;
         font-weight: 600;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.15s;
         text-decoration: none !important;
         display: inline-block;
     }
     .filter-chip:hover {
-        border-color: #818cf8;
-        color: #4f46e5;
-        background: #eef2ff;
+        border-color: #0B266E;
+        color: #0B266E;
+        background: rgba(11,38,110,0.06);
     }
     .filter-chip.active {
-        background: #4f46e5;
+        background: #0B266E;
         color: #ffffff !important;
-        border-color: #4f46e5;
+        border-color: #0B266E;
     }
     .filter-select-custom {
-        padding: 7px 16px;
-        border-radius: 20px;
-        border: 1.5px solid #e5e7eb;
+        padding: 0 14px;
+        border-radius: 8px;
+        border: 1px solid #DFE1E7;
         background: #ffffff;
         color: #374151;
         font-size: 13px;
         font-weight: 600;
         outline: none;
-        transition: all 0.2s;
+        transition: all 0.15s;
         height: 38px;
     }
     .filter-select-custom:focus {
-        border-color: #818cf8;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        border-color: #0B266E;
+        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
     }
 
     /* ── Search Bar (matching forum) ── */
@@ -59,22 +59,24 @@
         left: 12px;
         top: 50%;
         transform: translateY(-50%);
-        color: #9ca3af;
+        color: #666D80;
         font-size: 14px;
     }
     .search-input {
-        background-color: #f3f4f6;
-        border: none;
+        background-color: #ffffff;
+        border: 1px solid #DFE1E7;
         border-radius: 8px;
-        height: 42px;
+        height: 38px;
         padding-left: 36px;
         font-size: 13px;
         font-weight: 500;
         width: 100%;
+        color: #374151;
     }
     .search-input:focus {
         background-color: #ffffff;
-        box-shadow: 0 0 0 2px #e0e7ff;
+        border-color: #0B266E;
+        box-shadow: 0 0 0 3px rgba(11,38,110,0.1);
         outline: none;
     }
 
@@ -83,22 +85,22 @@
         background: #ffffff;
         border-radius: 12px;
         overflow: hidden;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-        transition: all 0.25s ease;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+        transition: all 0.2s ease;
         text-decoration: none !important;
         display: flex;
         flex-direction: column;
-        border: 1px solid #f3f4f6;
+        border: 1px solid #DFE1E7;
     }
     .kegiatan-card:hover {
         transform: translateY(-3px);
-        box-shadow: 0 12px 24px -4px rgba(79, 70, 229, 0.12), 0 4px 8px -2px rgba(0, 0, 0, 0.06);
-        border-color: #c7d2fe;
+        box-shadow: 0 12px 24px -4px rgba(11, 38, 110, 0.12);
+        border-color: rgba(11,38,110,0.25);
     }
     .kegiatan-card-image {
         width: 100%;
         aspect-ratio: 16 / 9;
-        background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+        background: linear-gradient(135deg, rgba(11,38,110,0.06) 0%, rgba(11,38,110,0.12) 100%);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -131,13 +133,13 @@
         padding: 3px 10px;
         border-radius: 20px;
         background: #eef2ff;
-        color: #4f46e5;
+        color: #0B266E;
     }
 
     .kegiatan-card-title {
         font-weight: 700;
         font-size: 15px;
-        color: #1f2937;
+        color: #0D0D12;
         margin-bottom: 6px;
         line-height: 1.4;
         display: -webkit-box;
@@ -147,7 +149,7 @@
     }
     .kegiatan-card-desc {
         font-size: 13px;
-        color: #6b7280;
+        color: #666D80;
         line-height: 1.5;
         margin-bottom: 12px;
         display: -webkit-box;
@@ -161,7 +163,7 @@
         flex-wrap: wrap;
         gap: 12px;
         font-size: 12px;
-        color: #9ca3af;
+        color: #666D80;
         font-weight: 500;
         padding-top: 10px;
         border-top: 1px solid #f3f4f6;
@@ -176,7 +178,7 @@
     .empty-state {
         text-align: center;
         padding: 50px 20px;
-        color: #9ca3af;
+        color: #666D80;
     }
     .empty-state .empty-icon {
         font-size: 48px;
@@ -184,20 +186,20 @@
         opacity: 0.5;
     }
     .empty-state h5 {
-        color: #6b7280;
+        color: #666D80;
         font-weight: 600;
         margin-bottom: 4px;
     }
     .empty-state p {
         font-size: 14px;
-        color: #9ca3af;
+        color: #666D80;
     }
 </style>
 
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #dcfce7; color: #166534; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg> {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
@@ -206,8 +208,8 @@
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-start mb-4">
     <div>
-        <h3 class="fw-bold mb-1 text-dark">Manajemen Kegiatan</h3>
-        <p class="text-dark fw-bold mb-0" style="font-size: 14px;">Daftar kegiatan terbaru dari berbagai bidang kepengurusan</p>
+        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:#0D0D12;letter-spacing:-.02em;">Manajemen Kegiatan</h3>
+        <p class="mb-0" style="font-size:.82rem;color:#666D80;font-weight:500;">Daftar kegiatan terbaru dari berbagai bidang kepengurusan</p>
     </div>
 
 </div>
@@ -242,7 +244,7 @@
         </a>
         <a href="{{ route('manajemenmahasiswa.kegiatan.index', array_merge(request()->except('page'), ['bidang' => 'prodi'])) }}"
            class="filter-chip {{ request('bidang') == 'prodi' ? 'active' : '' }}"
-           style="{{ request('bidang') == 'prodi' ? 'background: #7c3aed; border-color: #7c3aed;' : '' }}">
+           style="{{ request('bidang') == 'prodi' ? 'background: #0B266E; border-color: #0B266E;' : '' }}">
             Prodi
         </a>
         @foreach($bidangList as $bidang)
@@ -280,11 +282,11 @@
                             @elseif($item->bidang)
                                 <span class="badge-bidang">{{ $item->bidang->nama_bidang }}</span>
                             @else
-                                <span class="badge-bidang" style="background: #f3e8ff; color: #7c3aed;">Prodi</span>
+                                <span class="badge-bidang" style="background: #eef2ff; color: #0B266E;">Prodi</span>
                             @endif
                             @if($item->kategoris && $item->kategoris->count() > 0)
                                 @foreach($item->kategoris as $kat)
-                                    <span class="badge-bidang" style="background: #fef3c7; color: #92400e;">{{ $kat->nama_kategori }}</span>
+                                    <span class="badge-bidang" style="background: #FFFBEB; color: #92400e;">{{ $kat->nama_kategori }}</span>
                                 @endforeach
                             @endif
                         </div>
@@ -321,7 +323,7 @@
     @endif
 @else
     <div class="empty-state">
-        <div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V21H3V8"></path><path d="M23 3H1v5h22V3z"></path><path d="M10 12h4"></path></svg></div>
+        <div class="empty-icon"><svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 8V21H3V8"></path><path d="M23 3H1v5h22V3z"></path><path d="M10 12h4"></path></svg></div>
         <h5>Belum ada kegiatan</h5>
         <p>Kegiatan yang tersedia akan muncul di sini</p>
     </div>

@@ -9,7 +9,7 @@
             box-shadow: 0 1px 3px rgba(22,22,43,.06), 0 1px 2px rgba(22,22,43,.04);
             border: 1px solid #DDE1E8; margin-bottom: 24px;
         }
-        .page-title h3 {
+        .page-title h4 {
             font-size: 1.5rem; font-weight: 700; color: #1e1b4b;
             margin: 0 0 4px; letter-spacing: -.02em;
         }
@@ -71,7 +71,7 @@
 @section('content')
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div class="page-title">
-            <h3>Form Pengaduan Konfidensial</h3>
+            <h4>Form Pengaduan Konfidensial</h4>
             <p>Identitas Anda tidak akan ditampilkan kepada publik maupun admin.</p>
         </div>
         <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-back">
@@ -218,7 +218,7 @@
 
         <div class="d-flex justify-content-end gap-3 mt-5 pt-4" style="border-top: 1px solid #f3f4f6;">
             <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-back">Batal</a>
-            <button type="submit" class="btn-post" style="width: auto;">Kirim Pengaduan</button>
+            <button type="submit" class="btn-post" style="width: auto;">Lanjut Konfirmasi</button>
         </div>
     </form>
 @endsection

@@ -150,12 +150,11 @@ class PengaduanController extends Controller
                 ->count();
             $responsivitas = $totalNonDraft > 0 ? round($ditanganiCount / $totalNonDraft * 100) : 0;
 
-            // Distribusi per kategori (top 5)
+            // Distribusi per kategori (Semua kategori)
             $kategoriDistribusi = (clone $baseQuery)
                 ->selectRaw("kategori, COUNT(*) as total")
                 ->groupBy('kategori')
                 ->orderByDesc('total')
-                ->limit(5)
                 ->pluck('total', 'kategori');
 
             $summaryStats = compact(
@@ -171,7 +170,7 @@ class PengaduanController extends Controller
 
         $pengaduan = $query
             ->orderByDesc('created_at')
-            ->paginate($isStaff ? 20 : 15)
+            ->paginate(15)
             ->withQueryString();
 
         $kategoriOptions = $this->kategoriMetaNew();
