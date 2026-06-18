@@ -2,111 +2,120 @@
 @php $P = \Modules\ManajemenMahasiswa\Models\Prestasi::class; @endphp
 
 <style>
-    .filter-section { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 20px; align-items: center; }
+    /* ── Dashboard Analitik Style ── */
+    .filter-section { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; align-items: center; }
     .filter-chip {
-        padding: 7px 18px; border-radius: 20px; border: 1.5px solid #e5e7eb;
-        background: #ffffff; color: #374151; font-size: 13px; font-weight: 600;
-        cursor: pointer; transition: all 0.2s; text-decoration: none !important;
+        padding: 5px 14px; border-radius: 50px; border: 1.5px solid #e5e7eb;
+        background: #fff; color: #6b7280; font-size: .82rem; font-weight: 600;
+        cursor: pointer; transition: all .15s; text-decoration: none !important;
         display: inline-flex; align-items: center; gap: 8px;
     }
-    .filter-chip:hover { border-color: #818cf8; color: #4f46e5; background: #eef2ff; }
-    .filter-chip.active { background: #4f46e5; color: #ffffff !important; border-color: #4f46e5; }
-    .tab-badge { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 20px; background: #fef3c7; color: #d97706; min-width: 20px; text-align: center; }
-    .filter-chip.active .tab-badge { background: #fff; color: #4f46e5; }
+    .filter-chip:hover { border-color: #293C79; color: #293C79; background: #E7E8F0; }
+    .filter-chip.active { background: #293C79; color: #fff !important; border-color: #293C79; }
+    .tab-badge { font-size: .72rem; font-weight: 700; padding: 2px 8px; border-radius: 50px; background: #fef3c7; color: #d97706; min-width: 20px; text-align: center; }
+    .filter-chip.active .tab-badge { background: #fff; color: #293C79; }
     .tab-badge.zero { background: #f3f4f6; color: #9ca3af; }
 
-    .filter-select-custom { padding: 7px 16px; border-radius: 20px; border: 1.5px solid #e5e7eb; background: #fff; color: #374151; font-size: 13px; font-weight: 600; outline: none; height: 38px; }
+    .filter-select-custom { padding: 7px 16px; border-radius: 50px; border: 1.5px solid #e5e7eb; background: #fff; color: #374151; font-size: .82rem; font-weight: 600; outline: none; height: 38px; transition: all .2s; }
+    .filter-select-custom:focus { border-color: #293C79; box-shadow: 0 0 0 3px rgba(41,60,121,.1); }
     .search-wrapper { position: relative; flex-grow: 1; }
     .search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #9ca3af; }
-    .search-input { background-color: #f3f4f6; border: none; border-radius: 8px; height: 42px; padding-left: 36px; font-size: 13px; font-weight: 500; width: 100%; }
-    .search-input:focus { background-color: #fff; box-shadow: 0 0 0 2px #e0e7ff; outline: none; }
+    .search-input { background-color: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; height: 42px; padding-left: 36px; font-size: .85rem; font-weight: 500; width: 100%; color: #374151; }
+    .search-input:focus { background-color: #fff; border-color: #293C79; box-shadow: 0 0 0 3px rgba(41,60,121,.1); outline: none; }
 
-    .form-card { background: #fff; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,.05), 0 2px 4px -1px rgba(0,0,0,.03); margin-bottom: 20px; border: 1px solid #f3f4f6; }
+    .form-card { background: #fff; border-radius: 16px; padding: 22px 24px; border: 1px solid #e5e7eb; margin-bottom: 18px; }
 
-    .verif-table { width: 100%; border-collapse: separate; border-spacing: 0; }
-    .verif-table thead th { background: #f8fafc; padding: 10px 14px; font-size: 12px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: .05em; border-bottom: 2px solid #e5e7eb; border-top: 1px solid #e5e7eb; }
-    .verif-table thead th:first-child { border-top-left-radius: 8px; border-left: 1px solid #e5e7eb; }
-    .verif-table thead th:last-child { border-top-right-radius: 8px; border-right: 1px solid #e5e7eb; }
-    .verif-table tbody td { padding: 12px 14px; font-size: 14px; color: #374151; border-bottom: 1px solid #e5e7eb; vertical-align: middle; }
-    .verif-table tbody td:first-child { border-left: 1px solid #e5e7eb; }
-    .verif-table tbody td:last-child { border-right: 1px solid #e5e7eb; }
-    .verif-table tbody tr:hover td { background: #f8fafc; }
+    .verif-table { width: 100%; border-collapse: collapse; }
+    .verif-table thead th { font-size: .73rem; font-weight: 700; color: #9ca3af; text-transform: uppercase; letter-spacing: .06em; padding: 9px 12px; text-align: left; border-bottom: 1px solid #f3f4f6; white-space: nowrap; }
+    .verif-table tbody td { padding: 11px 12px; font-size: .87rem; color: #374151; border-bottom: 1px solid #f9fafb; vertical-align: middle; }
+    .verif-table tbody tr:last-child td { border-bottom: none; }
+    .verif-table tbody tr:hover td { background: #fafafa; }
 
-    .tingkat-badge { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 12px; text-transform: uppercase; }
+    .tingkat-badge { display: inline-flex; align-items: center; padding: 2px 8px; border-radius: 50px; font-size: .73rem; font-weight: 600; text-transform: uppercase; }
     .tingkat-badge.internasional { background: #fef3c7; color: #92400e; }
     .tingkat-badge.nasional { background: #dbeafe; color: #1e40af; }
     .tingkat-badge.regional { background: #f3e8ff; color: #7c3aed; }
     .tingkat-badge.universitas { background: #dcfce7; color: #166534; }
     .tingkat-badge.prodi { background: #eef2ff; color: #4f46e5; }
 
-    .claim-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; display: inline-block; }
+    .claim-badge { font-size: .73rem; font-weight: 600; padding: 3px 9px; border-radius: 50px; display: inline-flex; align-items: center; }
     .claim-badge.belum { background: #f3f4f6; color: #6b7280; }
     .claim-badge.diajukan { background: #dbeafe; color: #1e40af; }
-    .claim-badge.disetujui { background: #dcfce7; color: #166534; }
+    .claim-badge.disetujui { background: #dcfce7; color: #15803d; }
     .claim-badge.ditolak { background: #fef2f2; color: #dc2626; }
-    .reward-mini { font-size: 11px; color: #6b7280; margin-top: 4px; max-width: 220px; line-height: 1.4; }
+    .reward-mini { font-size: .72rem; color: #9ca3af; margin-top: 4px; max-width: 220px; line-height: 1.4; }
 
-    .btn-tinjau { background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s; }
-    .btn-tinjau:hover { background: #e0e7ff; }
-    .btn-batal-reward { margin-top: 6px; background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s; }
-    .btn-batal-reward:hover { background: #fee2e2; }
+    .btn-tinjau { background: #E7E8F0; color: #293C79; border: 1px solid #CED4E0; padding: 5px 14px; border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 4px; }
+    .btn-tinjau:hover { background: #D5D8E4; border-color: #9FA6C1; }
+    .btn-batal-reward { background: #fef2f2; color: #dc2626; border: 1px solid #fecaca; padding: 5px 14px; border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .btn-batal-reward:hover { background: #fee2e2; border-color: #fca5a5; }
+    .btn-detail { background: #f3f4f6; color: #374151; border: 1px solid #e5e7eb; padding: 5px 14px; border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .15s; display: inline-flex; align-items: center; gap: 4px; }
+    .btn-detail:hover { background: #e5e7eb; color: #1e1b4b; }
+    .detail-info-grid { display: grid; grid-template-columns: 130px 1fr; gap: 8px 12px; font-size: .87rem; }
+    .detail-info-grid .dlbl { color: #9ca3af; font-weight: 500; }
+    .detail-info-grid .dval { color: #1e1b4b; font-weight: 600; }
+    .detail-divider { border: none; border-top: 1px solid #f3f4f6; margin: 14px 0; }
+    .detail-status-pill { display: inline-flex; align-items: center; gap: 4px; font-size: .73rem; font-weight: 600; padding: 3px 12px; border-radius: 50px; }
+    .detail-status-pill.disetujui { background: #dcfce7; color: #15803d; }
+    .detail-status-pill.ditolak { background: #fef2f2; color: #dc2626; }
 
-    .tinjau-info { font-size: 13px; color: #1f2937; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; line-height: 1.7; }
-    .tinjau-info .lbl { color: #6b7280; }
+    .tinjau-info { font-size: .87rem; color: #374151; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; line-height: 1.7; }
+    .tinjau-info .lbl { color: #9ca3af; }
 
     /* MK pilihan mahasiswa (read-only) */
-    .mk-by-mhs { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #4f46e5; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 12px; padding: 2px 8px; margin-left: 4px; }
-    .mk-readonly { display: flex; flex-wrap: wrap; gap: 6px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; min-height: 42px; }
-    .mk-tag { display: inline-flex; align-items: center; font-size: 12px; font-weight: 600; color: #3730a3; background: #eef2ff; border: 1px solid #c7d2fe; border-radius: 20px; padding: 4px 12px; }
+    .mk-by-mhs { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #293C79; background: #E7E8F0; border: 1px solid #CED4E0; border-radius: 50px; padding: 2px 8px; margin-left: 4px; }
+    .mk-readonly { display: flex; flex-wrap: wrap; gap: 6px; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; padding: 10px 12px; min-height: 42px; }
+    .mk-tag { display: inline-flex; align-items: center; font-size: .8rem; font-weight: 600; color: #293C79; background: #E7E8F0; border: 1px solid #CED4E0; border-radius: 50px; padding: 4px 12px; }
 
     /* Bukti prestasi di modal tinjau */
     .tr-bukti { display: flex; flex-wrap: wrap; gap: 8px; }
-    .tr-bukti-item { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 8px; border: 1px solid #e5e7eb; overflow: hidden; background: #f8fafc; text-decoration: none; font-size: 24px; transition: border-color .2s; }
+    .tr-bukti-item { display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; border-radius: 10px; border: 1px solid #e5e7eb; overflow: hidden; background: #fafafa; text-decoration: none; font-size: 24px; transition: border-color .15s; }
     .tr-bukti-item img { width: 100%; height: 100%; object-fit: cover; }
-    .tr-bukti-item:hover { border-color: #818cf8; }
-    .kuota-pill { display: inline-block; margin-top: 10px; font-size: 12px; font-weight: 600; padding: 5px 12px; border-radius: 20px; background: #eef2ff; color: #4f46e5; }
+    .tr-bukti-item:hover { border-color: #293C79; }
+    .kuota-pill { display: inline-block; margin-top: 10px; font-size: .8rem; font-weight: 600; padding: 5px 12px; border-radius: 50px; background: #E7E8F0; color: #293C79; }
     .kuota-pill.penuh { background: #fef2f2; color: #dc2626; }
 
     .empty-state { text-align: center; padding: 50px 20px; color: #9ca3af; }
     .empty-state-icon { font-size: 48px; margin-bottom: 12px; opacity: .5; }
 
-    .modal-content { border-radius: 16px; border: none; }
-    .modal-header { border-bottom: 1px solid #f3f4f6; padding: 20px 24px; }
-    .modal-body { padding: 24px; }
-    .modal-footer { border-top: 1px solid #f3f4f6; padding: 16px 24px; }
+    .modal-content { border-radius: 18px; border: none; box-shadow: 0 24px 60px rgba(0,0,0,.18); }
+    .modal-header { border-bottom: 1px solid #f3f4f6; padding: 18px 22px; }
+    .modal-header .modal-title { font-size: 1rem; font-weight: 700; color: #1e1b4b; }
+    .modal-body { padding: 22px; }
+    .modal-footer { border-top: 1px solid #f3f4f6; padding: 14px 22px; }
 
-    .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: #6b7280; text-decoration: none; margin-bottom: 10px; }
-    .back-link:hover { color: #4f46e5; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: .82rem; font-weight: 600; color: #9ca3af; text-decoration: none; margin-bottom: 10px; transition: color .15s; }
+    .back-link:hover { color: #293C79; }
 
     /* Kartu kelola dokumen aturan reward */
-    .aturan-card { background: #fff; border: 1px solid #eef2ff; border-radius: 12px; padding: 16px 18px; margin-bottom: 20px; box-shadow: 0 1px 2px rgba(0,0,0,.03); }
+    .aturan-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 16px; padding: 16px 18px; margin-bottom: 20px; }
     .aturan-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-    .aturan-title { display: flex; align-items: center; gap: 8px; font-size: 15px; font-weight: 700; color: #1f2937; }
-    .aturan-sub { font-size: 12px; color: #9ca3af; margin: 4px 0 0; }
-    .btn-aturan-add { background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; padding: 6px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; }
-    .btn-aturan-add:hover { background: #e0e7ff; }
-    .aturan-upload { display: none; margin-top: 14px; padding: 14px; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; }
+    .aturan-title { display: flex; align-items: center; gap: 8px; font-size: .9rem; font-weight: 700; color: #1e1b4b; }
+    .aturan-sub { font-size: .78rem; color: #9ca3af; margin: 4px 0 0; }
+    .btn-aturan-add { background: #E7E8F0; color: #293C79; border: 1px solid #CED4E0; padding: 6px 14px; border-radius: 8px; font-size: .82rem; font-weight: 600; cursor: pointer; white-space: nowrap; transition: all .15s; }
+    .btn-aturan-add:hover { background: #D5D8E4; border-color: #9FA6C1; }
+    .aturan-upload { display: none; margin-top: 14px; padding: 14px; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; }
     .aturan-upload.show { display: block; }
     .aturan-form { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-    .aturan-input { flex: 1; min-width: 220px; border: 1.5px solid #e5e7eb; border-radius: 8px; padding: 8px 12px; font-size: 13px; }
-    .aturan-input:focus { border-color: #818cf8; outline: none; box-shadow: 0 0 0 3px rgba(99,102,241,.1); }
-    .aturan-file-input { font-size: 12px; color: #374151; max-width: 260px; }
-    .btn-aturan-upload { background: #4f46e5; color: #fff; border: none; padding: 8px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; }
-    .btn-aturan-upload:hover { background: #4338ca; }
+    .aturan-input { flex: 1; min-width: 220px; border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 8px 12px; font-size: .85rem; color: #374151; }
+    .aturan-input:focus { border-color: #293C79; outline: none; box-shadow: 0 0 0 3px rgba(41,60,121,.1); }
+    .aturan-file-input { font-size: .8rem; color: #374151; max-width: 260px; }
+    .btn-aturan-upload { background: #293C79; color: #fff; border: none; padding: 8px 18px; border-radius: 10px; font-size: .85rem; font-weight: 600; cursor: pointer; transition: all .15s; }
+    .btn-aturan-upload:hover { background: #1e2d5e; }
     .aturan-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
     .aturan-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; }
-    .aturan-ico { width: 38px; height: 38px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-size: 11px; font-weight: 800; color: #fff; }
+    .aturan-ico { width: 38px; height: 38px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; border-radius: 8px; font-size: .72rem; font-weight: 800; color: #fff; }
     .aturan-ico.pdf { background: #dc2626; }
     .aturan-ico.img { background: #0ea5e9; }
     .aturan-row-meta { flex: 1; min-width: 0; }
-    .aturan-row-judul { display: block; font-size: 13px; font-weight: 700; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .aturan-row-file { display: block; font-size: 11px; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .aturan-act { flex-shrink: 0; font-size: 12px; font-weight: 600; border-radius: 8px; padding: 6px 12px; cursor: pointer; text-decoration: none; border: 1px solid transparent; }
-    .aturan-act.lihat { color: #4f46e5; background: #eef2ff; border-color: #c7d2fe; }
-    .aturan-act.lihat:hover { background: #e0e7ff; }
+    .aturan-row-judul { display: block; font-size: .87rem; font-weight: 700; color: #1e1b4b; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .aturan-row-file { display: block; font-size: .72rem; color: #9ca3af; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .aturan-act { flex-shrink: 0; font-size: .8rem; font-weight: 600; border-radius: 8px; padding: 6px 12px; cursor: pointer; text-decoration: none; border: 1px solid transparent; transition: all .15s; }
+    .aturan-act.lihat { color: #293C79; background: #E7E8F0; border-color: #CED4E0; }
+    .aturan-act.lihat:hover { background: #D5D8E4; }
     .aturan-act.hapus { color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; }
     .aturan-act.hapus:hover { background: #fee2e2; }
-    .aturan-empty { font-size: 13px; color: #9ca3af; margin-top: 12px; }
+    .aturan-empty { font-size: .85rem; color: #9ca3af; margin-top: 12px; }
 </style>
 
 <!-- Flash Messages -->
@@ -126,13 +135,13 @@
 @endif
 
 <!-- Page Header -->
-<div class="mb-4">
+<div style="margin-bottom:24px;">
     <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi']) }}" class="back-link">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
         Kembali ke Verifikasi Prestasi
     </a>
-    <h3 class="fw-bold mb-1 text-dark">Klaim Reward Prestasi</h3>
-    <p class="text-dark fw-bold mb-0" style="font-size: 14px;">Tinjau &amp; setujui pengajuan reward prestasi mahasiswa (konversi nilai mata kuliah, SK FT 774). Keputusan final ada di Bidang Akademik Fakultas.</p>
+    <h4 style="font-size:1.45rem; font-weight:800; color:#1e1b4b; margin-bottom:2px; letter-spacing:-.02em;">Klaim Reward Prestasi</h4>
+    <p style="font-size:.82rem; color:#9ca3af; margin:0;">Tinjau & setujui pengajuan reward prestasi mahasiswa (konversi nilai mata kuliah, SK FT 774). Keputusan final ada di Bidang Akademik Fakultas.</p>
 </div>
 
 <!-- Dokumen Aturan Reward (SK FT 774) -->
@@ -221,13 +230,8 @@
                     <th>NIM</th>
                     <th>Nama Prestasi</th>
                     <th>Tingkat</th>
-                    <th>Bukti</th>
-                    <th>Penyelenggara</th>
-                    <th>Capaian</th>
-                    <th>Maks. Konversi</th>
-                    <th>Kuota</th>
                     <th>Status</th>
-                    <th style="width: 120px;">Aksi</th>
+                    <th style="width: 160px;">Aksi</th>
                 </tr>
             </thead>
             <tbody>
@@ -244,37 +248,15 @@
                         <td style="font-weight: 600;">{{ $p->nama_prestasi }}</td>
                         <td><span class="tingkat-badge {{ $p->tingkat }}">{{ ucfirst($p->tingkat) }}</span></td>
                         <td>
-                            @if($p->buktiFiles && $p->buktiFiles->count() > 0)
-                                <div class="d-flex gap-1 flex-wrap">
-                                    @foreach($p->buktiFiles as $bukti)
-                                        <a href="{{ $bukti->public_url }}" target="_blank" title="{{ $bukti->nama_file }}" style="text-decoration: none;">
-                                            @if($bukti->isImage())
-                                                <img src="{{ $bukti->public_url }}" style="width: 32px; height: 32px; border-radius: 6px; object-fit: cover; border: 1px solid #e5e7eb;">
-                                            @else
-                                                <span style="display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 32px; border-radius: 6px; background: #eef2ff; border: 1px solid #e5e7eb; font-size: 14px;">📄</span>
-                                            @endif
-                                        </a>
-                                    @endforeach
-                                </div>
-                            @else
-                                <span style="font-size: 11px; color: #9ca3af;">—</span>
-                            @endif
-                        </td>
-                        <td style="font-size: 13px;">{{ $p->reward_penyelenggara_label ?? '-' }}</td>
-                        <td style="font-size: 13px;">{{ $p->reward_capaian_label ?? '-' }}@if($p->reward_is_invention)<div class="reward-mini">(invention/expo/fair)</div>@endif</td>
-                        <td style="font-size: 13px; white-space: nowrap;">{{ $p->reward_jml_mk_max }} mata kuliah<br><span style="color: #6b7280;">setara {{ $p->reward_sks_max }} SKS</span></td>
-                        <td style="font-size: 13px; white-space: nowrap;">{{ $kuotaTerpakai }}/{{ $kuotaMaks }}<div class="reward-mini">{{ $grup }}</div></td>
-                        <td>
                             @if($p->reward_status === $P::CLAIM_DISETUJUI)
-                                <span class="claim-badge disetujui">✓ Disetujui</span>
-                                <div class="reward-mini" title="{{ $p->reward_mk_disetujui }}">MK: {{ Str::limit($p->reward_mk_disetujui, 40) }}</div>
-                                @if($p->reward_note)<div class="reward-mini" title="{{ $p->reward_note }}">Catatan: {{ Str::limit($p->reward_note, 40) }}</div>@endif
+                                <span class="claim-badge disetujui">Disetujui</span>
+                                @if($p->reward_reviewed_at)<div class="reward-mini">{{ $p->reward_reviewed_at->translatedFormat('d M Y') }}</div>@endif
                             @elseif($p->reward_status === $P::CLAIM_DIAJUKAN)
-                                <span class="claim-badge diajukan">● Menunggu</span>
+                                <span class="claim-badge diajukan">Menunggu</span>
                                 @if($p->claimed_at)<div class="reward-mini">{{ $p->claimed_at->translatedFormat('d M Y') }}</div>@endif
                             @elseif($p->reward_status === $P::CLAIM_DITOLAK)
-                                <span class="claim-badge ditolak">✗ Ditolak</span>
-                                @if($p->reward_note)<div class="reward-mini" title="{{ $p->reward_note }}">"{{ Str::limit($p->reward_note, 40) }}"</div>@endif
+                                <span class="claim-badge ditolak">Ditolak</span>
+                                @if($p->reward_reviewed_at)<div class="reward-mini">{{ $p->reward_reviewed_at->translatedFormat('d M Y') }}</div>@endif
                             @endif
                         </td>
                         <td>
@@ -283,6 +265,7 @@
                                     "id"             => $p->id,
                                     "nama"           => $p->nama_prestasi,
                                     "mahasiswa"      => $p->kemahasiswaan->nama ?? "-",
+                                    "nim"            => $p->kemahasiswaan->nim ?? "-",
                                     "penyelenggara"  => $p->reward_penyelenggara_label,
                                     "capaian"        => $p->reward_capaian_label,
                                     "invention"      => (bool) $p->reward_is_invention,
@@ -297,16 +280,44 @@
                                         "nama"     => $b->nama_file,
                                         "is_image" => $b->isImage(),
                                     ])->values()->all(),
-                                ]))">Tinjau</button>
+                                ]))">
+                                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 2px;"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
+                                    Tinjau
+                                </button>
                             @else
-                                <span style="font-size: 11px; color: #9ca3af;">
-                                    @if($p->reviewedBy) {{ $p->reviewedBy->name }} @endif
-                                    @if($p->reward_reviewed_at)<div>{{ $p->reward_reviewed_at->translatedFormat('d M Y') }}</div>@endif
-                                </span>
-                                @if($p->reward_status === $P::CLAIM_DISETUJUI)
-                                    <button type="button" class="btn-batal-reward"
-                                            onclick="openBatalReward(@js($p->id), @js($p->nama_prestasi), @js($p->kemahasiswaan->nama ?? '-'))">Batalkan</button>
-                                @endif
+                                <div class="d-flex gap-1 flex-wrap">
+                                    <button type="button" class="btn-detail" onclick="openDetailReward(@js([
+                                        "nama"           => $p->nama_prestasi,
+                                        "mahasiswa"      => $p->kemahasiswaan->nama ?? "-",
+                                        "nim"            => $p->kemahasiswaan->nim ?? "-",
+                                        "penyelenggara"  => $p->reward_penyelenggara_label,
+                                        "capaian"        => $p->reward_capaian_label,
+                                        "invention"      => (bool) $p->reward_is_invention,
+                                        "jml_mk_max"     => $p->reward_jml_mk_max,
+                                        "sks_max"        => $p->reward_sks_max,
+                                        "mk_diajukan"    => $p->reward_mk_diajukan ?? [],
+                                        "mk_disetujui"   => $p->reward_mk_disetujui,
+                                        "kuota_terpakai" => $kuotaTerpakai,
+                                        "kuota_maks"     => $kuotaMaks,
+                                        "grup"           => $grup,
+                                        "status"         => $p->reward_status,
+                                        "note"           => $p->reward_note,
+                                        "reviewer"       => $p->reviewedBy->name ?? null,
+                                        "reviewed_at"    => $p->reward_reviewed_at ? $p->reward_reviewed_at->translatedFormat('d M Y') : null,
+                                        "bukti"          => $p->buktiFiles->map(fn ($b) => [
+                                            "url"      => $b->public_url,
+                                            "nama"     => $b->nama_file,
+                                            "is_image" => $b->isImage(),
+                                        ])->values()->all(),
+                                    ]))">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 2px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                                        Detail
+                                    </button>
+                                    @if($p->reward_status === $P::CLAIM_DISETUJUI)
+                                        <button type="button" class="btn-batal-reward"
+                                                onclick="openBatalReward(@js($p->id), @js($p->nama_prestasi), @js($p->kemahasiswaan->nama ?? '-'))">Batalkan</button>
+                                    @endif
+                                </div>
                             @endif
                         </td>
                     </tr>
@@ -330,7 +341,7 @@
             <form id="tinjauRewardForm" method="POST">
                 @csrf @method('PATCH')
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold" style="color: #4f46e5;">
+                    <h5 class="modal-title fw-bold" style="color: #1e1b4b;">
                         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px;"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
                         Tinjau Pengajuan Reward
                     </h5>
@@ -383,7 +394,7 @@
             <form id="batalRewardForm" method="POST">
                 @csrf @method('PATCH')
                 <div class="modal-header">
-                    <h5 class="modal-title fw-bold" style="color: #dc2626;">Batalkan Persetujuan Reward</h5>
+                    <h5 class="modal-title fw-bold" style="color: #1e1b4b;">Batalkan Persetujuan Reward</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
@@ -401,6 +412,41 @@
                     <button type="button" id="brConfirmBtn" style="padding: 8px 18px; border-radius: 10px; border: none; background: #dc2626; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer;">Ya, Batalkan Persetujuan</button>
                 </div>
             </form>
+        </div>
+    </div>
+</div>
+
+<!-- Detail Reward Modal (read-only) -->
+<div class="modal fade" id="detailRewardModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" style="color: #374151;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -3px;">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
+                    </svg>
+                    Detail Klaim Reward
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div id="drStatusArea" style="margin-bottom: 14px;"></div>
+                <div class="tinjau-info" id="drInfo"></div>
+                <div id="drKuotaWarn" style="margin-top: 10px;"></div>
+                <hr class="detail-divider">
+                <div class="mb-3">
+                    <label class="form-label fw-bold mb-1" style="font-size: 13px;">Mata Kuliah yang Diajukan</label>
+                    <div id="drMkView" class="mk-readonly"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold mb-1" style="font-size: 13px;">Bukti Prestasi</label>
+                    <div id="drBukti" class="tr-bukti"></div>
+                </div>
+                <div id="drReviewArea"></div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal" style="border-radius: 10px;">Tutup</button>
+            </div>
         </div>
     </div>
 </div>
@@ -519,5 +565,83 @@ function openBatalReward(id, nama, mahasiswa) {
         form.submit();
     });
 })();
+
+// Detail Reward Modal (read-only, untuk reward yang sudah disetujui/ditolak)
+function openDetailReward(data) {
+    const inv = data.invention ? ' (invention/expo/fair)' : '';
+    const statusMap = { 'disetujui': ['disetujui', '✓ Disetujui'], 'ditolak': ['ditolak', '✗ Ditolak'] };
+    const st = statusMap[data.status] || ['', data.status];
+
+    // Status area
+    document.getElementById('drStatusArea').innerHTML =
+        '<span class="detail-status-pill ' + st[0] + '">' + st[1] + '</span>' +
+        (data.reviewer ? ' <span style="font-size:12px; color:#6b7280;">oleh ' + data.reviewer + '</span>' : '') +
+        (data.reviewed_at ? ' <span style="font-size:12px; color:#9ca3af;">• ' + data.reviewed_at + '</span>' : '');
+
+    // Info grid
+    document.getElementById('drInfo').innerHTML =
+        '<div class="detail-info-grid">' +
+        '<span class="dlbl">Mahasiswa</span><span class="dval">' + data.mahasiswa + ' (' + data.nim + ')</span>' +
+        '<span class="dlbl">Prestasi</span><span class="dval">' + data.nama + '</span>' +
+        '<span class="dlbl">Penyelenggara</span><span class="dval">' + (data.penyelenggara || '-') + '</span>' +
+        '<span class="dlbl">Capaian</span><span class="dval">' + (data.capaian || '-') + inv + '</span>' +
+        '<span class="dlbl">Maks. Konversi</span><span class="dval">' + data.jml_mk_max + ' mata kuliah (setara ' + data.sks_max + ' SKS)</span>' +
+        '</div>';
+
+    // Kuota
+    var penuh = data.kuota_terpakai >= data.kuota_maks;
+    document.getElementById('drKuotaWarn').innerHTML =
+        '<span class="kuota-pill' + (penuh ? ' penuh' : '') + '">Kuota ' + data.grup + ': ' + data.kuota_terpakai + '/' + data.kuota_maks + '</span>';
+
+    // MK
+    var mkView = document.getElementById('drMkView');
+    mkView.innerHTML = '';
+    var mks = data.mk_diajukan || [];
+    if (mks.length) {
+        mks.forEach(function(nama) {
+            var tag = document.createElement('span');
+            tag.className = 'mk-tag';
+            tag.textContent = nama;
+            mkView.appendChild(tag);
+        });
+    } else {
+        mkView.innerHTML = '<span style="font-size:12px; color:#6b7280;">Tidak ada MK diajukan.</span>';
+    }
+
+    // Bukti
+    var buktiEl = document.getElementById('drBukti');
+    buktiEl.innerHTML = '';
+    var bukti = data.bukti || [];
+    if (bukti.length) {
+        bukti.forEach(function(b) {
+            var a = document.createElement('a');
+            a.href = b.url; a.target = '_blank'; a.rel = 'noopener';
+            a.title = b.nama || 'Bukti'; a.className = 'tr-bukti-item';
+            if (b.is_image) {
+                var img = document.createElement('img');
+                img.src = b.url; img.alt = b.nama || 'Bukti';
+                a.appendChild(img);
+            } else {
+                a.textContent = '📄';
+            }
+            buktiEl.appendChild(a);
+        });
+    } else {
+        buktiEl.innerHTML = '<span style="font-size:12px; color:#6b7280;">Tidak ada bukti terlampir.</span>';
+    }
+
+    // Review area (catatan, MK disetujui)
+    var reviewHtml = '';
+    if (data.mk_disetujui) {
+        reviewHtml += '<div style="margin-bottom:10px;"><span class="dlbl" style="font-size:13px; font-weight:600;">MK Disetujui:</span> <span style="font-size:13px; font-weight:600; color:#166534;">' + data.mk_disetujui + '</span></div>';
+    }
+    if (data.note) {
+        var noteColor = data.status === 'ditolak' ? '#dc2626' : '#166534';
+        reviewHtml += '<div style="font-size:13px; padding:10px 14px; background:#f8fafc; border:1px solid #e5e7eb; border-radius:10px;"><span style="color:#6b7280;">Catatan:</span> <span style="color:' + noteColor + '; font-weight:600;">' + data.note + '</span></div>';
+    }
+    document.getElementById('drReviewArea').innerHTML = reviewHtml;
+
+    new bootstrap.Modal(document.getElementById('detailRewardModal')).show();
+}
 </script>
 </x-dynamic-component>

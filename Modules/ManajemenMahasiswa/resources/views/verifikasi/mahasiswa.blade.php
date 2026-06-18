@@ -1,82 +1,69 @@
 <x-dynamic-component :component="$layout">
 
 <style>
+    /* ── Dashboard Analitik Style ── */
     .verif-header { margin-bottom: 24px; }
-    .verif-header h3 { font-weight: 800; color: #1f2937; margin-bottom: 4px; }
-    .verif-header p { color: #6b7280; font-size: 14px; }
-
-    .stat-cards { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 28px; }
-    .stat-card {
-        background: #fff; border: 1px solid #f3f4f6; border-radius: 12px;
-        padding: 18px 20px; text-align: center;
-    }
-    .stat-card .stat-number { font-size: 28px; font-weight: 800; line-height: 1.2; }
-    .stat-card .stat-label { font-size: 12px; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 0.05em; }
-    .stat-card.pending .stat-number { color: #d97706; }
-    .stat-card.approved .stat-number { color: #166534; }
-    .stat-card.rejected .stat-number { color: #dc2626; }
+    .verif-header h4 { font-size: 1.45rem; font-weight: 800; color: #1e1b4b; margin-bottom: 2px; letter-spacing: -.02em; }
+    .verif-header p { color: #9ca3af; font-size: .82rem; }
 
     .form-card {
-        background: #ffffff; border-radius: 12px; padding: 24px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
-        margin-bottom: 20px; border: 1px solid #f3f4f6;
+        background: #fff; border-radius: 16px; padding: 22px 24px;
+        border: 1px solid #e5e7eb; margin-bottom: 18px;
     }
     .form-card-title {
-        font-weight: 700; font-size: 16px; color: #1f2937; margin-bottom: 20px;
+        font-weight: 700; font-size: .9rem; color: #1e1b4b; margin-bottom: 20px;
         display: flex; align-items: center; gap: 8px; padding-bottom: 14px;
         border-bottom: 1px solid #f3f4f6;
     }
 
-    .verif-table { width: 100%; border-collapse: separate; border-spacing: 0; }
+    .verif-table { width: 100%; border-collapse: collapse; }
     .verif-table thead th {
-        background: #f8fafc; padding: 10px 14px; font-size: 12px; font-weight: 700;
-        color: #64748b; text-transform: uppercase; letter-spacing: 0.05em;
-        border-bottom: 2px solid #e5e7eb; border-top: 1px solid #e5e7eb;
+        font-size: .73rem; font-weight: 700; color: #9ca3af; text-transform: uppercase;
+        letter-spacing: .06em; padding: 9px 12px; text-align: left;
+        border-bottom: 1px solid #f3f4f6; white-space: nowrap;
     }
-    .verif-table thead th:first-child { border-top-left-radius: 8px; border-left: 1px solid #e5e7eb; }
-    .verif-table thead th:last-child { border-top-right-radius: 8px; border-right: 1px solid #e5e7eb; }
-    
     .verif-table tbody td {
-        padding: 12px 14px; font-size: 14px; color: #374151;
-        border-bottom: 1px solid #e5e7eb; vertical-align: middle;
+        padding: 11px 12px; font-size: .87rem; color: #374151;
+        border-bottom: 1px solid #f9fafb; vertical-align: middle;
     }
-    .verif-table tbody td:first-child { border-left: 1px solid #e5e7eb; }
-    .verif-table tbody td:last-child { border-right: 1px solid #e5e7eb; }
-    .verif-table tbody tr:hover td { background: #f8fafc; }
-    .verif-table tbody tr:last-child td:first-child { border-bottom-left-radius: 8px; }
-    .verif-table tbody tr:last-child td:last-child { border-bottom-right-radius: 8px; }
+    .verif-table tbody tr:last-child td { border-bottom: none; }
+    .verif-table tbody tr:hover td { background: #fafafa; }
 
-    .status-verif { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; display: inline-block; }
+    .status-verif {
+        display: inline-flex; align-items: center; padding: 3px 9px;
+        border-radius: 50px; font-size: .73rem; font-weight: 600;
+    }
     .status-verif.pending { background: #fef3c7; color: #d97706; }
-    .status-verif.approved { background: #dcfce7; color: #166534; }
+    .status-verif.approved { background: #dcfce7; color: #15803d; }
     .status-verif.rejected { background: #fef2f2; color: #dc2626; }
 
     .btn-submit {
-        background: #4f46e5; color: #ffffff; font-weight: 600; font-size: 14px;
-        padding: 10px 20px; border-radius: 10px; border: none; cursor: pointer;
-        transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+        background: #293C79; color: #fff; font-weight: 600; font-size: .85rem;
+        padding: 9px 18px; border-radius: 10px; border: none; cursor: pointer;
+        transition: all .15s; display: inline-flex; align-items: center; gap: 6px;
         text-decoration: none !important;
     }
-    .btn-submit:hover { background: #4338ca; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3); color: #fff; }
+    .btn-submit:hover { background: #1e2d5e; color: #fff; }
 
     /* ── Empty State ── */
     .empty-state { text-align: center; padding: 50px 20px; color: #9ca3af; }
     .empty-state .empty-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.5; }
     .empty-state h5 { color: #6b7280; font-weight: 600; margin-bottom: 4px; }
-    .empty-state p { font-size: 14px; color: #9ca3af; }
+    .empty-state p { font-size: .87rem; color: #9ca3af; }
 
-    /* ── Form Controls (Manajemen Kegiatan Style) ── */
-    .form-label-custom { font-weight: 600; font-size: 13px; color: #374151; margin-bottom: 6px; }
+    /* ── Form Controls (Dashboard Analitik Style) ── */
+    .form-label-custom { font-weight: 600; font-size: .87rem; color: #374151; margin-bottom: 6px; }
     .form-control-custom, .form-select-custom {
         border: 1.5px solid #e5e7eb; border-radius: 10px; padding: 10px 14px;
-        font-size: 14px; font-weight: 500; color: #1f2937; transition: all 0.2s; background: #fff;
+        font-size: .87rem; font-weight: 500; color: #374151; transition: all .2s; background: #fff;
     }
     .form-control-custom:focus, .form-select-custom:focus {
-        border-color: #818cf8; box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1); outline: none;
+        border-color: #293C79; box-shadow: 0 0 0 3px rgba(41, 60, 121, 0.1); outline: none;
     }
 
     .tingkat-badge {
-        font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 12px; text-transform: uppercase;
+        display: inline-flex; align-items: center; padding: 2px 8px;
+        border-radius: 50px; font-size: .73rem; font-weight: 600; text-transform: uppercase;
     }
     .tingkat-badge.internasional { background: #fef3c7; color: #92400e; }
     .tingkat-badge.nasional { background: #dbeafe; color: #1e40af; }
@@ -84,96 +71,97 @@
     .tingkat-badge.universitas { background: #dcfce7; color: #166534; }
     .tingkat-badge.prodi { background: #eef2ff; color: #4f46e5; }
 
-    /* ── Reward Badge & Button (Request Bu Bellia / B.2 — SK FT 774) ── */
-    .claim-badge { font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; display: inline-block; }
+    /* ── Reward Badge & Button ── */
+    .claim-badge { font-size: .73rem; font-weight: 600; padding: 3px 9px; border-radius: 50px; display: inline-flex; align-items: center; }
     .claim-badge.belum     { background: #f3f4f6; color: #6b7280; }
     .claim-badge.diajukan  { background: #dbeafe; color: #1e40af; }
-    .claim-badge.disetujui { background: #dcfce7; color: #166534; }
+    .claim-badge.disetujui { background: #dcfce7; color: #15803d; }
     .claim-badge.ditolak   { background: #fef2f2; color: #dc2626; }
 
     .btn-claim {
-        background: #eef2ff; color: #4f46e5; border: 1px solid #c7d2fe; padding: 5px 12px;
-        border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        background: #E7E8F0; color: #293C79; border: 1px solid #CED4E0; padding: 5px 14px;
+        border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .15s;
     }
-    .btn-claim:hover { background: #e0e7ff; }
+    .btn-claim:hover { background: #D5D8E4; border-color: #9FA6C1; }
     .btn-unclaim {
-        background: #f9fafb; color: #6b7280; border: 1px solid #e5e7eb; padding: 5px 12px;
-        border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        background: #f3f4f6; color: #6b7280; border: 1px solid #e5e7eb; padding: 5px 14px;
+        border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .15s;
     }
-    .btn-unclaim:hover { background: #f3f4f6; }
+    .btn-unclaim:hover { background: #e5e7eb; }
 
     /* Kotak detail & preview jatah reward */
     .reward-detail {
-        font-size: 11px; color: #374151; margin-top: 6px; padding: 6px 10px;
-        background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 6px;
+        font-size: .72rem; color: #374151; margin-top: 6px; padding: 6px 10px;
+        background: #fafafa; border: 1px solid #e5e7eb; border-radius: 8px;
         line-height: 1.5; max-width: 100%;
     }
-    .reward-detail .lbl { color: #6b7280; }
+    .reward-detail .lbl { color: #9ca3af; }
     .reward-detail.ditolak { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
 
-    /* Kolom reward: badge + tombol (detail dipindah ke modal Tinjau) */
+    /* Kolom reward: badge + tombol */
     .reward-stack { display: flex; flex-direction: column; gap: 8px; align-items: flex-start; }
     .reward-actions { display: flex; flex-wrap: wrap; gap: 6px; }
     .btn-tinjau {
-        background: #ffffff; color: #4f46e5; border: 1px solid #c7d2fe; padding: 5px 12px;
-        border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer; transition: all 0.2s;
+        background: #E7E8F0; color: #293C79; border: 1px solid #CED4E0; padding: 5px 14px;
+        border-radius: 8px; font-size: .8rem; font-weight: 600; cursor: pointer; transition: all .15s;
     }
-    .btn-tinjau:hover { background: #eef2ff; }
+    .btn-tinjau:hover { background: #D5D8E4; border-color: #9FA6C1; }
 
-    /* Isi modal detail reward (selaras dgn kotak tinjau sisi admin) */
-    .rd-info { font-size: 13px; color: #374151; background: #f8fafc; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
-    .rc-line { font-size: 13px; color: #374151; line-height: 1.4; }
-    .rc-line .rc-inv { font-size: 11px; color: #9ca3af; }
+    /* Isi modal detail reward */
+    .rd-info { font-size: .87rem; color: #374151; background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; padding: 12px 14px; display: flex; flex-direction: column; gap: 8px; }
+    .rc-line { font-size: .87rem; color: #374151; line-height: 1.4; }
+    .rc-line .rc-inv { font-size: .72rem; color: #9ca3af; }
     .rc-row { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
-    .rc-lbl { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; min-width: 42px; }
-    .rc-pill { font-size: 12px; font-weight: 600; color: #4f46e5; background: #eef2ff; border-radius: 10px; padding: 2px 10px; }
+    .rc-lbl { font-size: .68rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: #9ca3af; min-width: 42px; }
+    .rc-pill { font-size: .8rem; font-weight: 600; color: #293C79; background: #E7E8F0; border-radius: 50px; padding: 2px 10px; }
     .rc-chips { display: flex; flex-wrap: wrap; gap: 4px; }
-    .rc-chip { font-size: 12px; color: #3730a3; background: #fff; border: 1px solid #c7d2fe; border-radius: 10px; padding: 2px 10px; }
-    .rc-note { font-size: 12px; color: #374151; line-height: 1.4; overflow-wrap: anywhere; }
+    .rc-chip { font-size: .8rem; color: #293C79; background: #fff; border: 1px solid #CED4E0; border-radius: 50px; padding: 2px 10px; }
+    .rc-note { font-size: .8rem; color: #374151; line-height: 1.4; overflow-wrap: anywhere; }
     .rc-note.ditolak { color: #b91c1c; }
 
-    /* Catatan verifikasi ringkas (clamp + tooltip), selaras dgn sisi admin */
+    /* Catatan verifikasi ringkas */
     .verif-note {
-        font-size: 11px; margin-top: 5px; max-width: 210px; line-height: 1.4;
+        font-size: .72rem; margin-top: 5px; max-width: 210px; line-height: 1.4;
         overflow-wrap: anywhere;
     }
     .verif-note.approved { color: #15803d; }
     .verif-note.rejected { color: #b91c1c; }
     .jatah-preview {
-        margin-top: 10px; padding: 10px 12px; border-radius: 8px;
-        background: #eef2ff; border: 1px solid #c7d2fe; font-size: 13px; color: #3730a3;
+        margin-top: 10px; padding: 10px 12px; border-radius: 10px;
+        background: #E7E8F0; border: 1px solid #CED4E0; font-size: .87rem; color: #293C79;
     }
     .jatah-preview strong { font-weight: 700; }
     .kuota-info {
-        font-size: 12px; color: #6b7280; background: #f8fafc; border: 1px solid #f3f4f6;
-        border-radius: 8px; padding: 8px 12px; margin-bottom: 12px;
+        font-size: .8rem; color: #6b7280; background: #fafafa; border: 1px solid #e5e7eb;
+        border-radius: 10px; padding: 8px 12px; margin-bottom: 12px;
     }
-    .kuota-info b { color: #4f46e5; }
+    .kuota-info b { color: #293C79; }
 
-    .aturan-box { background: #fff; border: 1px solid #eef2ff; border-radius: 10px; padding: 12px 14px; margin-bottom: 14px; }
-    .aturan-box-title { display: flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #1f2937; margin-bottom: 10px; }
+    .aturan-box { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; }
+    .aturan-box-title { display: flex; align-items: center; gap: 6px; font-size: .87rem; font-weight: 700; color: #1e1b4b; margin-bottom: 10px; }
 
     /* Picker usulan mata kuliah (reward) */
     .mk-chosen { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
     .mk-chip {
-        display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600;
-        color: #3730a3; background: #eef2ff; border: 1px solid #c7d2fe;
-        border-radius: 20px; padding: 4px 6px 4px 12px;
+        display: inline-flex; align-items: center; gap: 6px; font-size: .8rem; font-weight: 600;
+        color: #293C79; background: #E7E8F0; border: 1px solid #CED4E0;
+        border-radius: 50px; padding: 4px 6px 4px 12px;
     }
-    .mk-chip .mk-sks { font-weight: 500; color: #6366f1; }
+    .mk-chip .mk-sks { font-weight: 500; color: #415086; }
     .mk-chip .mk-remove {
-        width: 18px; height: 18px; border-radius: 50%; background: #c7d2fe; color: #3730a3;
-        border: none; font-size: 12px; font-weight: 700; cursor: pointer; line-height: 1;
+        width: 18px; height: 18px; border-radius: 50%; background: #CED4E0; color: #293C79;
+        border: none; font-size: .8rem; font-weight: 700; cursor: pointer; line-height: 1;
         display: inline-flex; align-items: center; justify-content: center;
     }
-    .mk-chip .mk-remove:hover { background: #a5b4fc; }
-    .mk-counter { font-size: 12px; font-weight: 600; color: #6b7280; margin-top: 8px; }
+    .mk-chip .mk-remove:hover { background: #9FA6C1; }
+    .mk-counter { font-size: .8rem; font-weight: 600; color: #6b7280; margin-top: 8px; }
     .mk-counter.over { color: #dc2626; }
 
-    .modal-content { border-radius: 16px; border: none; }
-    .modal-header { border-bottom: 1px solid #f3f4f6; padding: 20px 24px; }
-    .modal-body { padding: 24px; }
-    .modal-footer { border-top: 1px solid #f3f4f6; padding: 16px 24px; }
+    .modal-content { border-radius: 18px; border: none; box-shadow: 0 24px 60px rgba(0,0,0,.18); }
+    .modal-header { border-bottom: 1px solid #f3f4f6; padding: 18px 22px; }
+    .modal-header .modal-title { font-size: 1rem; font-weight: 700; color: #1e1b4b; }
+    .modal-body { padding: 22px; }
+    .modal-footer { border-top: 1px solid #f3f4f6; padding: 14px 22px; }
 
     /* Preview styles */
     .preview-grid { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 10px; }
@@ -181,18 +169,18 @@
         position: relative; width: 100px; text-align: center;
     }
     .preview-item img {
-        width: 100px; height: 80px; object-fit: cover; border-radius: 8px;
-        border: 1px solid #e5e7eb; cursor: pointer; transition: opacity 0.2s;
+        width: 100px; height: 80px; object-fit: cover; border-radius: 10px;
+        border: 1px solid #e5e7eb; cursor: pointer; transition: opacity .15s;
     }
     .preview-item img:hover { opacity: 0.8; }
     .preview-item .preview-name {
-        font-size: 10px; color: #6b7280; margin-top: 4px;
+        font-size: .68rem; color: #9ca3af; margin-top: 4px;
         overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .preview-item .preview-remove {
         position: absolute; top: -6px; right: -6px; width: 20px; height: 20px;
         border-radius: 50%; background: #dc2626; color: #fff; border: 2px solid #fff;
-        font-size: 11px; font-weight: 700; cursor: pointer; display: flex;
+        font-size: .72rem; font-weight: 700; cursor: pointer; display: flex;
         align-items: center; justify-content: center; line-height: 1; z-index: 2;
     }
     .preview-item .preview-remove:hover { background: #b91c1c; }
@@ -200,11 +188,11 @@
     .doc-preview-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
     .doc-preview-item {
         display: flex; align-items: center; gap: 8px; padding: 8px 12px;
-        background: #f8fafc; border: 1px solid #f3f4f6; border-radius: 8px; font-size: 13px;
+        background: #fafafa; border: 1px solid #e5e7eb; border-radius: 10px; font-size: .87rem;
     }
     .doc-preview-item .doc-icon {
-        width: 32px; height: 32px; border-radius: 6px; display: flex;
-        align-items: center; justify-content: center; font-weight: 800; font-size: 10px;
+        width: 32px; height: 32px; border-radius: 8px; display: flex;
+        align-items: center; justify-content: center; font-weight: 800; font-size: .68rem;
         color: #fff; flex-shrink: 0;
     }
     .doc-preview-item .doc-icon.pdf { background: #dc2626; }
@@ -217,7 +205,7 @@
     }
     .doc-preview-item .doc-remove {
         width: 20px; height: 20px; border-radius: 50%; background: #fef2f2; color: #dc2626;
-        border: 1px solid #fecaca; font-size: 12px; font-weight: 700; cursor: pointer;
+        border: 1px solid #fecaca; font-size: .8rem; font-weight: 700; cursor: pointer;
         display: flex; align-items: center; justify-content: center; flex-shrink: 0;
     }
     .doc-preview-item .doc-remove:hover { background: #fee2e2; }
@@ -230,7 +218,7 @@
     }
     .lightbox-overlay.active { display: flex; }
     .lightbox-overlay img {
-        max-width: 90%; max-height: 90%; border-radius: 12px;
+        max-width: 90%; max-height: 90%; border-radius: 14px;
         box-shadow: 0 25px 50px rgba(0,0,0,0.5); cursor: default;
     }
     .lightbox-close {
@@ -259,34 +247,17 @@
 @endif
 
 <!-- Page Header -->
-<div class="d-flex justify-content-between align-items-start mb-4">
+<div style="display:flex; align-items:flex-start; justify-content:space-between; flex-wrap:wrap; gap:12px; margin-bottom:24px;">
     <div>
         @if($tab === 'prestasi')
-            <h3 class="fw-bold mb-1 text-dark">Prestasi Saya</h3>
-            <p class="text-dark fw-bold mb-0" style="font-size: 14px;">Ajukan prestasi lomba untuk diverifikasi admin. Prestasi yang sudah disetujui bisa Anda ajukan rewardnya (konversi nilai mata kuliah, SK FT 774).</p>
+            <h4 style="font-size:1.45rem; font-weight:800; color:#1e1b4b; margin-bottom:2px; letter-spacing:-.02em;">Prestasi Saya</h4>
+            <p style="font-size:.82rem; color:#9ca3af; margin:0;">Ajukan prestasi lomba untuk diverifikasi admin. Prestasi yang sudah disetujui bisa Anda ajukan rewardnya (konversi nilai mata kuliah, SK FT 774).</p>
         @else
-            <h3 class="fw-bold mb-1 text-dark">Riwayat Kegiatan Saya</h3>
-            <p class="text-dark fw-bold mb-0" style="font-size: 14px;">Ajukan riwayat keikutsertaan kegiatan untuk diverifikasi admin.</p>
+            <h4 style="font-size:1.45rem; font-weight:800; color:#1e1b4b; margin-bottom:2px; letter-spacing:-.02em;">Riwayat Kegiatan Saya</h4>
+            <p style="font-size:.82rem; color:#9ca3af; margin:0;">Ajukan riwayat keikutsertaan kegiatan untuk diverifikasi admin.</p>
         @endif
     </div>
 </div>
-
-<!-- Stat Cards -->
-<div class="stat-cards">
-    <div class="stat-card pending">
-        <div class="stat-number">{{ $stats['pending'] }}</div>
-        <div class="stat-label">● Menunggu Verifikasi</div>
-    </div>
-    <div class="stat-card approved">
-        <div class="stat-number">{{ $stats['approved'] }}</div>
-        <div class="stat-label">✓ Disetujui</div>
-    </div>
-    <div class="stat-card rejected">
-        <div class="stat-number">{{ $stats['rejected'] }}</div>
-        <div class="stat-label">✗ Ditolak</div>
-    </div>
-</div>
-
 @php
     $canSubmit = auth()->user()->hasAnyRole([
         'mahasiswa','pengurus_himpunan',
@@ -300,7 +271,7 @@
 <div class="form-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="form-card-title mb-0 border-0 pb-0">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#293C79" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
             Riwayat Kegiatan
         </div>
         @if($canSubmit)
@@ -356,9 +327,9 @@
                             </td>
                             <td>
                                 <span class="status-verif {{ $rw->verification_status }}">
-                                    @if($rw->verification_status === 'pending') ● Pending
-                                    @elseif($rw->verification_status === 'approved') ✓ Disetujui
-                                    @else ✗ Ditolak
+                                    @if($rw->verification_status === 'pending') Pending
+                                    @elseif($rw->verification_status === 'approved') Disetujui
+                                    @else Ditolak
                                     @endif
                                 </span>
                                 @if($rw->verification_status === 'rejected' && $rw->verification_note)
@@ -392,7 +363,7 @@
 <div class="form-card">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="form-card-title mb-0 border-0 pb-0">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#293C79" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="7"></circle><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"></polyline></svg>
             Prestasi Lomba
         </div>
         @if($canSubmit)
@@ -411,7 +382,7 @@
     @if($rewardAturan->count())
         <div class="aturan-box">
             <div class="aturan-box-title">
-                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#293C79" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
                 Aturan Reward (SK FT 774)
             </div>
             @include('manajemenmahasiswa::verifikasi._aturan_links', ['items' => $rewardAturan])
@@ -464,9 +435,9 @@
                             </td>
                             <td>
                                 <span class="status-verif {{ $p->verification_status }}">
-                                    @if($p->verification_status === 'pending') ● Pending
-                                    @elseif($p->verification_status === 'approved') ✓ Disetujui
-                                    @else ✗ Ditolak
+                                    @if($p->verification_status === 'pending') Pending
+                                    @elseif($p->verification_status === 'approved') Disetujui
+                                    @else Ditolak
                                     @endif
                                 </span>
                                 @if($p->verification_status === 'rejected' && $p->verification_note)
@@ -498,7 +469,7 @@
                                     @endphp
                                     @if($p->reward_status === \Modules\ManajemenMahasiswa\Models\Prestasi::CLAIM_DIAJUKAN)
                                         <div class="reward-stack">
-                                            <span class="claim-badge diajukan">● Menunggu persetujuan</span>
+                                            <span class="claim-badge diajukan">Menunggu persetujuan</span>
                                             <div class="reward-actions">
                                                 <button type="button" class="btn-tinjau" onclick="openRewardDetail(@js($rdData))">Tinjau</button>
                                                 <form method="POST" id="batalRewardForm{{ $p->id }}" action="{{ route('manajemenmahasiswa.verifikasi.prestasi.reward.batal', $p->id) }}" style="margin:0;">
@@ -510,14 +481,14 @@
                                         </div>
                                     @elseif($p->reward_status === \Modules\ManajemenMahasiswa\Models\Prestasi::CLAIM_DISETUJUI)
                                         <div class="reward-stack">
-                                            <span class="claim-badge disetujui">✓ Reward disetujui</span>
+                                            <span class="claim-badge disetujui">Reward disetujui</span>
                                             <div class="reward-actions">
                                                 <button type="button" class="btn-tinjau" onclick="openRewardDetail(@js($rdData))">Tinjau</button>
                                             </div>
                                         </div>
                                     @elseif($p->reward_status === \Modules\ManajemenMahasiswa\Models\Prestasi::CLAIM_DITOLAK)
                                         <div class="reward-stack">
-                                            <span class="claim-badge ditolak">✗ Reward ditolak</span>
+                                            <span class="claim-badge ditolak">Reward ditolak</span>
                                             <div class="reward-actions">
                                                 <button type="button" class="btn-tinjau" onclick="openRewardDetail(@js($rdData))">Tinjau</button>
                                                 <button type="button" class="btn-claim"
@@ -526,7 +497,7 @@
                                         </div>
                                     @else
                                         <div class="reward-stack">
-                                            <span class="claim-badge belum">● Belum diajukan</span>
+                                            <span class="claim-badge belum">Belum diajukan</span>
                                             <button type="button" class="btn-claim"
                                                     onclick="openAjukanReward({{ $p->id }}, @js($p->nama_prestasi))">Ajukan Reward</button>
                                         </div>

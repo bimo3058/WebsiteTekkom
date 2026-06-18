@@ -168,6 +168,21 @@ class VerifikasiController extends Controller
         $pendingPrestasi = Prestasi::pending()->count();
         $pendingPrestasiReward = Prestasi::rewardDiajukan()->count(); // utk badge tombol "Klaim Reward"
 
+        // ── Stat cards — global counts per tab (tidak terpengaruh filter search/angkatan) ──
+        if ($tab === 'riwayat') {
+            $adminStats = [
+                'pending'  => RiwayatKegiatan::manualOnly()->pending()->count(),
+                'approved' => RiwayatKegiatan::manualOnly()->where('verification_status', 'approved')->count(),
+                'rejected' => RiwayatKegiatan::manualOnly()->where('verification_status', 'rejected')->count(),
+            ];
+        } else {
+            $adminStats = [
+                'pending'  => Prestasi::pending()->count(),
+                'approved' => Prestasi::where('verification_status', 'approved')->count(),
+                'rejected' => Prestasi::where('verification_status', 'rejected')->count(),
+            ];
+        }
+
         // Angkatan list for filter
         $angkatanList = Kemahasiswaan::select('angkatan')
             ->distinct()
@@ -185,6 +200,7 @@ class VerifikasiController extends Controller
             'angkatan',
             'angkatanList',
             'pendingPrestasiReward',
+            'adminStats',
         ))->with('layout', $this->resolveLayout());
     }
 
