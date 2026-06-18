@@ -9,8 +9,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter+Tight:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
-    <!-- Material Symbols -->
-    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet" />
 
     <style>
         body {
@@ -69,7 +67,7 @@
 
     <div class="anon-header">
         <div class="anon-header-logo">
-            <span class="material-symbols-outlined" style="font-size: 20px;">shield_lock</span>
+            <x-manajemenmahasiswa::ui.icon name="shield-02" size="20" />
         </div>
         <div class="anon-header-title">Portal Pengaduan Konfidensial</div>
     </div>

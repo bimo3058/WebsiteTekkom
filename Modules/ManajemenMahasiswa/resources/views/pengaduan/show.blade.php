@@ -20,13 +20,13 @@
 
             /* ── Base Card ────────────────────────────────────────── */
             .detail-card {
-                background: #ffffff; border-radius: 12px; padding: 32px;
+                background: #ffffff; border-radius: 12px; padding: 24px 28px;
                 border: 1px solid #DDE1E8;
                 box-shadow: 0 1px 3px rgba(22,22,43,.06), 0 1px 2px rgba(22,22,43,.04);
             }
 
             /* ── Tags (Forum pattern) ─────────────────────────────── */
-            .tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+            .tags-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
             .tag-label {
                 font-size: 11px; font-weight: 600; padding: 4px 12px;
                 border-radius: 20px; display: inline-flex;
@@ -45,25 +45,22 @@
             /* ── Section Labels ────────────────────────────────────── */
             .section-label {
                 font-size: 11px; font-weight: 700; color: #94a3b8;
-                text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 8px;
+                text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 4px;
             }
             .section-value {
                 font-size: 15px; font-weight: 600; color: #111827;
             }
 
-            /* ── Kronologi Box ─────────────────────────────────────── */
-            .chronology-box {
-                background: #f8fafc; border-radius: 12px; padding: 24px;
-                color: #334155; font-size: 14px; line-height: 1.8;
-                white-space: pre-wrap; border: 1px solid #e2e8f0;
-            }
 
-            /* ── Info Grid (Mahasiswa inline info) ─────────────────── */
+
+            /* ── Info Grid ─────────────────────────────────────── */
             .info-grid {
-                display: grid; grid-template-columns: repeat(2, 1fr);
-                gap: 12px 24px;
+                display: grid; grid-template-columns: repeat(4, 1fr);
+                gap: 10px 20px;
             }
-            @media (max-width: 600px) { .info-grid { grid-template-columns: 1fr; } }
+            @media (max-width: 992px) { .info-grid { grid-template-columns: repeat(3, 1fr); } }
+            @media (max-width: 768px) { .info-grid { grid-template-columns: repeat(2, 1fr); } }
+            @media (max-width: 480px) { .info-grid { grid-template-columns: 1fr; } }
             .info-item-label {
                 font-size: 11px; font-weight: 700; color: #94a3b8;
                 text-transform: uppercase; letter-spacing: .04em; margin-bottom: 2px;
@@ -102,30 +99,11 @@
             }
             .ticket-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 
-            /* ── Sidebar Card ─────────────────────────────────────── */
-            .sidebar-card {
-                background: #fff; border-radius: 12px; border: 1px solid #DDE1E8;
-                padding: 20px; margin-bottom: 16px;
-                box-shadow: 0 1px 3px rgba(22,22,43,.06), 0 1px 2px rgba(22,22,43,.04);
-            }
-            .sidebar-card-title {
-                font-size: 12px; font-weight: 800; color: #94a3b8;
-                text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px;
-            }
-            .sidebar-info-item {
-                display: flex; justify-content: space-between; align-items: flex-start;
-                gap: 8px; padding: 8px 0; border-bottom: 1px solid #f3f4f6;
-            }
-            .sidebar-info-item:last-child { border-bottom: none; padding-bottom: 0; }
-            .sidebar-info-label { font-size: 12px; color: #94a3b8; font-weight: 600; flex-shrink: 0; }
-            .sidebar-info-value {
-                font-size: 13px; color: #1e293b; font-weight: 700;
-                text-align: right; word-break: break-word;
-            }
+
 
             /* ── Section Divider ──────────────────────────────────── */
             .section-divider {
-                display: flex; align-items: center; gap: 12px; margin: 24px 0 16px;
+                display: flex; align-items: center; gap: 12px; margin: 16px 0 12px;
             }
             .section-divider span {
                 font-size: 12px; font-weight: 800; color: #374151;
@@ -133,17 +111,23 @@
             }
             .section-divider::after { content: ''; flex: 1; height: 1px; background: #DDE1E8; }
 
-            /* ── Delegasi Card (Admin) ─────────────────────────────── */
+            /* ── Delegasi Card (Admin) — white card + border-left accent ─ */
             .delegasi-card {
-                background: #fffaf0; border: 1px solid #fde68a;
-                border-top: 3px solid #f59e0b; border-radius: 12px;
-                padding: 24px 32px;
+                background: #ffffff; border: 1px solid #DDE1E8;
+                border-radius: 12px; padding: 24px 32px;
+                border-left: 4px solid;
+                box-shadow: 0 1px 3px rgba(22,22,43,.06), 0 1px 2px rgba(22,22,43,.04);
             }
+            .delegasi-card.delegasi-aktif   { border-left-color: #f59e0b; }
+            .delegasi-card.delegasi-ditanggapi { border-left-color: #22c55e; }
+            .delegasi-card.delegasi-ditolak { border-left-color: #ef4444; }
+            .delegasi-card.delegasi-default { border-left-color: #9ca3af; }
 
             /* ── Dosen Action Prompt ──────────────────────────────── */
             .dosen-action-prompt {
-                background: #f0fdf4; border: 1px solid #bbf7d0;
-                border-radius: 12px; padding: 24px; border-top: 3px solid #22c55e;
+                background: #ffffff; border: 1px solid #DDE1E8;
+                border-radius: 12px; padding: 24px;
+                border-left: 4px solid #22c55e;
                 box-shadow: 0 1px 3px rgba(22,22,43,.06), 0 1px 2px rgba(22,22,43,.04);
             }
             .dosen-prompt-header {
@@ -164,28 +148,31 @@
 
             /* ── Timeline Log ─────────────────────────────────────── */
             .timeline-container {
-                position: relative; padding-left: 24px;
+                position: relative; padding-left: 32px;
                 max-height: 420px; overflow-y: auto; padding-right: 8px;
-            }
-            .timeline-container::before {
-                content: ''; position: absolute;
-                left: 7px; top: 0; bottom: 0;
-                width: 2px; background: #e2e8f0;
             }
             .timeline-container::-webkit-scrollbar { width: 5px; }
             .timeline-container::-webkit-scrollbar-track { background: transparent; }
             .timeline-container::-webkit-scrollbar-thumb { background-color: #cbd5e1; border-radius: 10px; }
             .timeline-item { position: relative; margin-bottom: 24px; }
             .timeline-item:last-child { margin-bottom: 0; }
+            /* Per-item connector line — only between items, never extends beyond dots */
+            .timeline-item:not(:last-child)::before {
+                content: ''; position: absolute;
+                left: -21px;
+                top: 23px;    /* dot top — line starts here, dot covers overlap via z-index */
+                bottom: -47px; /* reaches next dot top: -(margin:24 + nextDotTop:23) */
+                width: 2px; background: #e2e8f0; border-radius: 1px;
+            }
             .timeline-icon {
-                position: absolute; left: -24px; top: 0;
-                width: 16px; height: 16px; border-radius: 50%;
+                position: absolute; left: -28px; top: 23px;
+                width: 14px; height: 14px; border-radius: 50%;
                 background: #fff; border: 3px solid #293C79;
-                transform: translateX(-50%);
+                z-index: 1;
             }
             .timeline-content {
-                background: #f8fafc; border: 1px solid #DDE1E8;
-                border-radius: 10px; padding: 12px 16px;
+                background: #ffffff; border: 1px solid #DDE1E8;
+                border-radius: 12px; padding: 12px 16px;
             }
             .timeline-date {
                 font-size: 11px; font-weight: 600;
@@ -197,6 +184,29 @@
                 border-radius: 18px; border: none;
                 box-shadow: 0 24px 60px rgba(0,0,0,.18);
             }
+
+            /* ── Pelapor Info ─────────────────────────────────────── */
+            .pelapor-info { display: flex; align-items: center; gap: 12px; }
+            .pelapor-avatar {
+                width: 36px; height: 36px; border-radius: 50%;
+                background: linear-gradient(135deg, #293C79, #415086);
+                display: flex; align-items: center; justify-content: center;
+                flex-shrink: 0; color: #fff;
+            }
+            .pelapor-name { font-size: 14px; font-weight: 700; color: #1e293b; }
+            .pelapor-sub { font-size: 12px; color: #64748b; }
+
+            /* ── Delegasi Panel ────────────────────────────────────── */
+            .delegasi-status-badge {
+                font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+            }
+            .delegasi-info-grid { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+            .delegasi-info-col { flex: 1; min-width: 150px; }
+            .delegasi-info-label {
+                font-size: 11px; font-weight: 700; text-transform: uppercase;
+                letter-spacing: 0.5px; margin-bottom: 3px; color: #6b7280;
+            }
+            .delegasi-info-val { font-size: 14px; font-weight: 700; color: #111827; }
         </style>
     @endpush
 
@@ -252,25 +262,27 @@
             <h4 class="fw-bold text-dark mb-2" style="font-size: 20px; line-height: 1.4;">
                 {{ data_get($pengaduan, 'data_template.judul', '-') }}
             </h4>
-            <div style="font-size: 13px; color: #9ca3af; margin-bottom: 24px;">
+            <div style="font-size: 13px; color: #9ca3af; margin-bottom: 16px;">
                 Diajukan {{ optional($pengaduan->created_at)->translatedFormat('d F Y, H:i') }} WIB
             </div>
 
-            <hr style="border-color: #f3f4f6; margin: 0 0 24px 0;">
+            <div class="section-divider" style="margin-top: 0;">
+                <span>Detail Pengaduan</span>
+            </div>
 
             {{-- Hal Aduan --}}
-            <div class="mb-4">
+            <div class="mb-3">
                 <div class="section-label">Hal Aduan</div>
                 <div class="section-value" style="white-space: pre-wrap; line-height: 1.7;">{{ data_get($pengaduan, 'data_template.hal_aduan', '—') ?: '—' }}</div>
             </div>
 
             {{-- Kronologi --}}
-            <div class="mb-4">
+            <div class="mb-3">
                 <div class="section-label">Kronologi / Isi Pengaduan</div>
-                <div class="chronology-box">{{ data_get($pengaduan, 'data_template.kronologi', '-') }}</div>
+                <div class="section-value" style="white-space: pre-wrap; line-height: 1.7;">{{ data_get($pengaduan, 'data_template.kronologi', '-') }}</div>
             </div>
 
-            {{-- Info Tambahan (inline, no sidebar) --}}
+            {{-- Info Tambahan --}}
             @php
                 $infoItems = collect([
                     ['label' => 'Lokasi', 'value' => data_get($pengaduan, 'data_template.lokasi')],
@@ -280,34 +292,30 @@
                     ['label' => 'Nama Dosen', 'value' => data_get($pengaduan, 'data_template.nama_dosen')],
                     ['label' => 'Nama Tendik', 'value' => data_get($pengaduan, 'data_template.nama_tendik')],
                     ['label' => 'Frekuensi', 'value' => data_get($pengaduan, 'data_template.frekuensi')],
-                ])->filter(fn($i) => !empty($i['value']));
+                ]);
             @endphp
-
-            @if($infoItems->isNotEmpty() || $linkBukti)
-                <div class="section-divider">
-                    <span>Informasi Tambahan</span>
+            <div class="section-divider"><span>Informasi Tambahan</span></div>
+            <div class="info-grid">
+                @foreach($infoItems as $info)
+                    <div>
+                        <div class="info-item-label">{{ $info['label'] }}</div>
+                        <div class="info-item-value" style="{{ empty($info['value']) ? 'color: #cbd5e1;' : '' }}">{{ $info['value'] ?: '—' }}</div>
+                    </div>
+                @endforeach
+                <div>
+                    <div class="info-item-label">Bukti Dukung</div>
+                    <div class="info-item-value">
+                        @if($linkBukti)
+                            <a href="{{ $linkBukti }}" target="_blank" rel="noopener noreferrer" style="color: #293C79; text-decoration: none;">Lihat Bukti ↗</a>
+                        @else
+                            <span style="color: #cbd5e1;">—</span>
+                        @endif
+                    </div>
                 </div>
-                <div class="info-grid">
-                    @foreach($infoItems as $info)
-                        <div>
-                            <div class="info-item-label">{{ $info['label'] }}</div>
-                            <div class="info-item-value">{{ $info['value'] }}</div>
-                        </div>
-                    @endforeach
-                    @if($linkBukti)
-                        <div>
-                            <div class="info-item-label">Bukti Dukung</div>
-                            <div class="info-item-value">
-                                <a href="{{ $linkBukti }}" target="_blank" rel="noopener noreferrer"
-                                   style="color: #293C79; text-decoration: none;">Lihat Bukti ↗</a>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            @endif
+            </div>
 
             {{-- Status Footer --}}
-            <div style="margin-top: 28px;">
+            <div style="margin-top: 20px;">
                 @php
                     $footerConfig = match($statusLower) {
                         'selesai' => ['class' => 'status-footer-selesai', 'icon' => 'check-circle', 'text' => 'Pengaduan sudah ditangani'],
@@ -403,51 +411,116 @@
             @if($banner['sub'])<span class="status-banner-sub">{{ $banner['sub'] }}</span>@endif
         </div>
 
-        <div class="row g-4">
-            <div class="col-lg-8">
-                {{-- ── Main Card ──────────────────────────────── --}}
-                <div class="detail-card mb-4">
-                    <h4 class="fw-bold text-dark mb-3" style="font-size: 20px; line-height: 1.4;">
-                        {{ data_get($pengaduan, 'data_template.judul', '-') }}
-                    </h4>
+        {{-- ── Main Card (Single Column) ──────────────────── --}}
+        <div class="detail-card mb-4">
+            <div class="tags-row">
+                <span class="tag-label tag-kategori">{{ $kategoriLabel }}</span>
+                @php
+                    $statusStyle = match($statusLower) {
+                        'dibaca'  => 'tag-dibaca',
+                        'didelegasikan' => 'tag-didelegasikan',
+                        'selesai' => 'tag-selesai',
+                        default   => 'tag-baru',
+                    };
+                @endphp
+                <span class="tag-label {{ $statusStyle }}">{{ ucfirst($pengaduan->status) }}</span>
+                @if($pengaduan->is_anonim)
+                    <span class="tag-label tag-anonim">
+                        <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
+                    </span>
+                @endif
+            </div>
 
-                    <div class="tags-row mb-4">
-                        <span class="tag-label tag-kategori">{{ $kategoriLabel }}</span>
-                        @php
-                            $statusStyle = match($statusLower) {
-                                'dibaca'  => 'tag-dibaca',
-                                'didelegasikan' => 'tag-didelegasikan',
-                                'selesai' => 'tag-selesai',
-                                default   => 'tag-baru',
-                            };
-                        @endphp
-                        <span class="tag-label {{ $statusStyle }}">{{ ucfirst($pengaduan->status) }}</span>
-                        @if($pengaduan->is_anonim)
-                            <span class="tag-label tag-anonim">
-                                <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
-                            </span>
-                        @endif
-                        <span class="tag-label" style="background: #f8fafc; color: #6b7280; border: 1px solid #DDE1E8;">
-                            {{ optional($pengaduan->created_at)->translatedFormat('d F Y, H:i') }} WIB
-                        </span>
-                    </div>
+            <h4 class="fw-bold text-dark mb-1" style="font-size: 20px; line-height: 1.4;">
+                {{ data_get($pengaduan, 'data_template.judul', '-') }}
+            </h4>
+            <div style="font-size: 13px; color: #9ca3af; margin-bottom: 16px;">
+                Diajukan {{ optional($pengaduan->created_at)->translatedFormat('d F Y, H:i') }} WIB
+            </div>
 
-                    <hr style="border-color: #f3f4f6; margin: 0 0 24px 0;">
+            <div class="section-divider" style="margin-top: 0;">
+                <span>Detail Pengaduan</span>
+            </div>
 
-                    <div class="mb-4">
-                        <div class="section-label">Hal Aduan</div>
-                        <div class="section-value" style="white-space: pre-wrap; line-height: 1.7;">{{ data_get($pengaduan, 'data_template.hal_aduan', '—') ?: '—' }}</div>
-                    </div>
+            <div class="mb-3">
+                <div class="section-label">Hal Aduan</div>
+                <div class="section-value" style="white-space: pre-wrap; line-height: 1.7;">{{ data_get($pengaduan, 'data_template.hal_aduan', '—') ?: '—' }}</div>
+            </div>
+            <div class="mb-3">
+                <div class="section-label">Kronologi / Isi Pengaduan</div>
+                <div class="section-value" style="white-space: pre-wrap; line-height: 1.7;">{{ data_get($pengaduan, 'data_template.kronologi', '-') }}</div>
+            </div>
+
+            {{-- Info Tambahan --}}
+            @php
+                $adminInfoItems = collect([
+                    ['label' => 'Lokasi', 'value' => data_get($pengaduan, 'data_template.lokasi')],
+                    ['label' => 'Waktu Kejadian', 'value' => $waktuKejadian ? \Carbon\Carbon::parse($waktuKejadian)->translatedFormat('d F Y, H:i') : null],
+                    ['label' => 'Angkatan', 'value' => data_get($pengaduan, 'data_template.angkatan')],
+                    ['label' => 'Mata Kuliah', 'value' => data_get($pengaduan, 'data_template.mata_kuliah')],
+                    ['label' => 'Dosen', 'value' => data_get($pengaduan, 'data_template.nama_dosen')],
+                    ['label' => 'Tendik', 'value' => data_get($pengaduan, 'data_template.nama_tendik')],
+                    ['label' => 'Frekuensi', 'value' => data_get($pengaduan, 'data_template.frekuensi')],
+                ]);
+            @endphp
+            <div class="section-divider"><span>Informasi Tambahan</span></div>
+            <div class="info-grid">
+                @foreach($adminInfoItems as $info)
                     <div>
-                        <div class="section-label">Kronologi / Isi Pengaduan</div>
-                        <div class="chronology-box">{{ data_get($pengaduan, 'data_template.kronologi', '-') }}</div>
+                        <div class="info-item-label">{{ $info['label'] }}</div>
+                        <div class="info-item-value" style="{{ empty($info['value']) ? 'color: #cbd5e1;' : '' }}">{{ $info['value'] ?: '—' }}</div>
+                    </div>
+                @endforeach
+                <div>
+                    <div class="info-item-label">Bukti Dukung</div>
+                    <div class="info-item-value">
+                        @if($linkBukti)
+                            <a href="{{ $linkBukti }}" target="_blank" rel="noopener noreferrer" style="color: #293C79; text-decoration: none;">Lihat Bukti ↗</a>
+                        @else
+                            <span style="color: #cbd5e1;">—</span>
+                        @endif
                     </div>
                 </div>
+            </div>
 
-                {{-- ── Panel Delegasi (tampil selama ada riwayat delegasi) ── --}}
-                @if($delegasiPanel)
-                    <div class="delegasi-card mb-4">
-                        <h5 class="fw-bold mb-3 d-flex align-items-center gap-2" style="font-size: 15px; color: #b45309;">
+            {{-- Pelapor (moved from sidebar) --}}
+            <div class="section-divider"><span>Pelapor</span></div>
+            <div class="pelapor-info">
+                <div class="pelapor-avatar">
+                    <x-manajemenmahasiswa::ui.icon name="user-01" size="16" />
+                </div>
+                <div>
+                    @if($pengaduan->is_anonim)
+                        <div class="pelapor-name">Konfidensial</div>
+                        <div class="pelapor-sub">Identitas dilindungi sistem</div>
+                    @else
+                        <div class="pelapor-name">{{ optional($pengaduan->pelapor)->name ?? '—' }}</div>
+                        @if(data_get($pengaduan, 'data_template.angkatan'))
+                            <div class="pelapor-sub">Angkatan {{ data_get($pengaduan, 'data_template.angkatan') }}</div>
+                        @endif
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        {{-- ── Panel Delegasi (tampil selama ada riwayat delegasi) ── --}}
+        @if($delegasiPanel)
+            @php
+                $delegasiCardClass = match($delegasiPanel->status) {
+                    'aktif'      => 'delegasi-aktif',
+                    'ditanggapi' => 'delegasi-ditanggapi',
+                    'ditolak'    => 'delegasi-ditolak',
+                    default      => 'delegasi-default',
+                };
+                $delegasiHeaderColor = match($delegasiPanel->status) {
+                    'aktif'      => '#b45309',
+                    'ditanggapi' => '#15803d',
+                    'ditolak'    => '#b91c1c',
+                    default      => '#6b7280',
+                };
+            @endphp
+            <div class="delegasi-card {{ $delegasiCardClass }} mb-3">
+                <h5 class="fw-bold mb-3 d-flex align-items-center gap-2" style="font-size: 15px; color: {{ $delegasiHeaderColor }};">
                             <x-manajemenmahasiswa::ui.icon name="arrow-circle-right" size="18" />
                             Status Delegasi
                             @php
@@ -458,31 +531,31 @@
                                     default      => ['label' => ucfirst($delegasiPanel->status), 'bg' => '#f3f4f6', 'color' => '#6b7280'],
                                 };
                             @endphp
-                            <span style="font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px; background: {{ $delegasiStatusBadge['bg'] }}; color: {{ $delegasiStatusBadge['color'] }};">
+                            <span class="delegasi-status-badge" style="background: {{ $delegasiStatusBadge['bg'] }}; color: {{ $delegasiStatusBadge['color'] }};">
                                 {{ $delegasiStatusBadge['label'] }}
                             </span>
                         </h5>
 
-                        <div class="d-flex flex-wrap align-items-start gap-3 mb-3">
-                            <div style="flex: 1; min-width: 150px;">
-                                <div class="text-muted" style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">Didelegasikan Kepada</div>
-                                <div class="fw-bold text-dark d-flex align-items-center gap-2" style="font-size: 14px;">
+                        <div class="delegasi-info-grid">
+                            <div class="delegasi-info-col">
+                                <div class="delegasi-info-label">Didelegasikan Kepada</div>
+                                <div class="delegasi-info-val d-flex align-items-center gap-2">
                                     <x-manajemenmahasiswa::ui.icon name="user-01" size="15" />
                                     {{ optional($delegasiPanel->delegatedTo)->name ?? '—' }}
                                 </div>
                             </div>
-                            <div style="flex: 1; min-width: 150px;">
-                                <div class="text-muted" style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">Waktu Delegasi</div>
-                                <div class="fw-bold text-dark" style="font-size: 14px;">{{ $delegasiPanel->delegated_at->translatedFormat('d M Y, H:i') }}</div>
+                            <div class="delegasi-info-col">
+                                <div class="delegasi-info-label">Waktu Delegasi</div>
+                                <div class="delegasi-info-val">{{ $delegasiPanel->delegated_at->translatedFormat('d M Y, H:i') }}</div>
                             </div>
-                            <div style="flex: 1; min-width: 150px;">
-                                <div class="text-muted" style="font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px;">Didelegasikan Oleh</div>
-                                <div class="fw-bold text-dark" style="font-size: 14px;">{{ optional($delegasiPanel->delegatedBy)->name ?? '—' }}</div>
+                            <div class="delegasi-info-col">
+                                <div class="delegasi-info-label">Didelegasikan Oleh</div>
+                                <div class="delegasi-info-val">{{ optional($delegasiPanel->delegatedBy)->name ?? '—' }}</div>
                             </div>
                         </div>
 
                         <details class="mb-3">
-                            <summary style="cursor: pointer; font-size: 13px; font-weight: 600; color: #b45309;">Lihat Catatan Admin</summary>
+                            <summary style="cursor: pointer; font-size: 13px; font-weight: 600; color: {{ $delegasiHeaderColor }};">Lihat Catatan Admin</summary>
                             <div class="p-3 rounded mt-2" style="background: #fefce8; border: 1px dashed #fde68a; font-size: 13px;">
                                 {{ $delegasiPanel->notes_admin }}
                             </div>
@@ -498,199 +571,139 @@
                         @endif
 
                         @if($delegasiPanel->notes_balik)
-                            <hr style="border-color: #fde68a; margin: 16px 0;">
+                            <hr style="border-color: #DDE1E8; margin: 16px 0;">
                             <div class="p-3 bg-white rounded border" style="border-color: #e0e7ff !important;">
                                 <div class="fw-bold mb-1" style="font-size: 14px; color: #4338ca;">Catatan Internal dari Dosen:</div>
                                 <div style="font-size: 14px; line-height: 1.6; color: #374151; white-space: pre-wrap;">{{ $delegasiPanel->notes_balik }}</div>
                             </div>
                         @endif
                     </div>
-                @endif
+            @endif
 
-                {{-- ── Form Respons Dosen ─────────────────────── --}}
-                @if($isDelegatedToMe)
-                    <div class="dosen-action-prompt mb-4">
-                        <div class="dosen-prompt-header">
-                            <x-manajemenmahasiswa::ui.icon name="check-square" size="18" />
-                            Selesaikan Penugasan
-                        </div>
-                        <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.delegasi.respond', $pengaduan->delegasiAktif->id) }}">
-                            @csrf
-                            <div class="mb-3">
-                                <label class="form-label fw-bold text-muted" style="font-size: 12px;">Catatan Internal (Opsional)</label>
-                                <textarea class="form-control form-control-custom w-100" name="notes_balik" rows="3"
-                                    placeholder="Pesan untuk Admin atau keterangan penyelesaian..."></textarea>
-                            </div>
-                            <div class="d-flex justify-content-between align-items-center mt-3 pt-3">
-                                <button type="button" class="btn btn-outline-danger fw-bold px-3 py-2" data-bs-toggle="modal" data-bs-target="#rejectModal" style="border-radius: 8px; font-size: 13px;">
-                                    Tolak Delegasi
-                                </button>
-                                <button type="submit" class="btn fw-bold px-4 py-2" style="border-radius: 8px; font-size: 13px; background: #293C79; color: #fff;">
-                                    Selesaikan Penugasan & Tutup Tiket
-                                </button>
-                            </div>
-                        </form>
+        {{-- ── Form Respons Dosen ─────────────────────── --}}
+        @if($isDelegatedToMe)
+            <div class="dosen-action-prompt mb-3">
+                <div class="dosen-prompt-header">
+                    <x-manajemenmahasiswa::ui.icon name="check-square" size="18" />
+                    Selesaikan Penugasan
+                </div>
+                <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.delegasi.respond', $pengaduan->delegasiAktif->id) }}">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted" style="font-size: 12px;">Catatan Internal (Opsional)</label>
+                        <textarea class="form-control form-control-custom w-100" name="notes_balik" rows="3"
+                            placeholder="Pesan untuk Admin atau keterangan penyelesaian..."></textarea>
                     </div>
-                @endif
-
+                    <div class="d-flex justify-content-between align-items-center mt-3 pt-3">
+                        <button type="button" class="btn btn-outline-danger fw-bold px-3 py-2" data-bs-toggle="modal" data-bs-target="#rejectModal" style="border-radius: 8px; font-size: 13px;">
+                            Tolak Delegasi
+                        </button>
+                        <button type="submit" class="btn fw-bold px-4 py-2" style="border-radius: 8px; font-size: 13px; background: #293C79; color: #fff;">
+                            Selesaikan Penugasan & Tutup Tiket
+                        </button>
+                    </div>
+                </form>
             </div>
+        @endif
 
-            {{-- ── SIDEBAR ─────────────────────────────────── --}}
-            <div class="col-lg-4">
-                <div class="sidebar-card">
-                    <div class="sidebar-card-title">Informasi Lanjut</div>
-
-                    @if(data_get($pengaduan, 'data_template.lokasi'))
-                    <div class="sidebar-info-item">
-                        <div class="sidebar-info-label">Lokasi</div>
-                        <div class="sidebar-info-value">{{ data_get($pengaduan, 'data_template.lokasi') }}</div>
-                    </div>
-                    @endif
-
-                    @if($waktuKejadian)
-                    <div class="sidebar-info-item">
-                        <div class="sidebar-info-label">Waktu</div>
-                        <div class="sidebar-info-value">{{ \Carbon\Carbon::parse($waktuKejadian)->translatedFormat('d F Y, H:i') }}</div>
-                    </div>
-                    @endif
-
-                    @if(data_get($pengaduan, 'data_template.angkatan'))
-                    <div class="sidebar-info-item">
-                        <div class="sidebar-info-label">Angkatan</div>
-                        <div class="sidebar-info-value">{{ data_get($pengaduan, 'data_template.angkatan') }}</div>
-                    </div>
-                    @endif
-
-                    @if(data_get($pengaduan, 'data_template.mata_kuliah'))
-                    <div class="sidebar-info-item">
-                        <div class="sidebar-info-label">Mata Kuliah</div>
-                        <div class="sidebar-info-value">{{ data_get($pengaduan, 'data_template.mata_kuliah') }}</div>
-                    </div>
-                    @endif
-
-                    @if(data_get($pengaduan, 'data_template.nama_dosen'))
-                    <div class="sidebar-info-item">
-                        <div class="sidebar-info-label">Dosen</div>
-                        <div class="sidebar-info-value">{{ data_get($pengaduan, 'data_template.nama_dosen') }}</div>
-                    </div>
-                    @endif
-
-                    @if(data_get($pengaduan, 'data_template.nama_tendik'))
-                    <div class="sidebar-info-item">
-                        <div class="sidebar-info-label">Tendik</div>
-                        <div class="sidebar-info-value">{{ data_get($pengaduan, 'data_template.nama_tendik') }}</div>
-                    </div>
-                    @endif
-
-                    @if(data_get($pengaduan, 'data_template.frekuensi'))
-                    <div class="sidebar-info-item">
-                        <div class="sidebar-info-label">Frekuensi</div>
-                        <div class="sidebar-info-value">{{ data_get($pengaduan, 'data_template.frekuensi') }}</div>
-                    </div>
-                    @endif
-
-                    @if($linkBukti)
-                    <div class="sidebar-info-item">
-                        <div class="sidebar-info-label">Bukti Dukung</div>
-                        <div class="sidebar-info-value">
-                            <a href="{{ $linkBukti }}" target="_blank" rel="noopener noreferrer" style="color: #293C79; text-decoration: none;">Lihat Bukti ↗</a>
-                        </div>
-                    </div>
-                    @endif
-                </div>
-
-                <div class="sidebar-card">
-                    <div class="sidebar-card-title">Pelapor</div>
-                    <div style="display: flex; align-items: center; gap: 12px;">
-                        <div style="width: 40px; height: 40px; border-radius: 50%; background: linear-gradient(135deg, #293C79, #415086); display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #fff;">
-                            <x-manajemenmahasiswa::ui.icon name="user-01" size="18" />
-                        </div>
-                        <div>
-                            @if($pengaduan->is_anonim)
-                                <div style="font-size: 14px; font-weight: 700; color: #1e293b;">Konfidensial</div>
-                                <div style="font-size: 12px; color: #64748b;">Identitas dilindungi sistem</div>
-                            @else
-                                <div style="font-size: 14px; font-weight: 700; color: #1e293b;">{{ optional($pengaduan->pelapor)->name ?? '—' }}</div>
-                                @if(data_get($pengaduan, 'data_template.angkatan'))
-                                    <div style="font-size: 12px; color: #64748b;">Angkatan {{ data_get($pengaduan, 'data_template.angkatan') }}</div>
-                                @endif
-                            @endif
-                        </div>
-                    </div>
-                </div>
-
-                @if($pengaduan->delegasi->count() > 1)
-                <div class="sidebar-card">
-                    <details style="cursor: pointer;">
-                        <summary class="fw-bold text-muted" style="font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; list-style: none; display: flex; align-items: center; gap: 6px; margin-bottom: 0;">
+        {{-- ── Riwayat Delegasi (collapsible — timeline pattern) ── --}}
+        @if($pengaduan->delegasi->count() > 1)
+            <div class="detail-card mb-3">
+                <details style="cursor: pointer;">
+                    <summary style="list-style: none; display: flex; align-items: center; justify-content: space-between;">
+                        <span style="font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">
                             <x-manajemenmahasiswa::ui.icon name="clock-03" size="14" />
                             Riwayat Delegasi ({{ $pengaduan->delegasi->count() }})
-                        </summary>
-                        <div class="mt-3">
-                            @foreach($pengaduan->delegasi as $d)
-                                @php
-                                    $dBadge = match($d->status) {
-                                        'aktif'      => ['bg' => '#fff7ed', 'color' => '#c2410c', 'label' => 'Aktif'],
-                                        'ditanggapi' => ['bg' => '#ecfdf5', 'color' => '#16a34a', 'label' => 'Ditanggapi'],
-                                        'ditolak'    => ['bg' => '#fef2f2', 'color' => '#dc2626', 'label' => 'Ditolak'],
-                                        default      => ['bg' => '#f3f4f6', 'color' => '#6b7280', 'label' => ucfirst($d->status)],
-                                    };
-                                @endphp
-                                <div class="p-3 rounded mb-2" style="background: #fff; border: 1px solid #e2e8f0; font-size: 13px;">
-                                    <div class="d-flex justify-content-between align-items-start mb-1">
-                                        <div>
-                                            <strong>{{ optional($d->delegatedTo)->name ?? '—' }}</strong>
-                                            <span class="text-muted ms-2" style="font-size: 11px;">via {{ optional($d->delegatedBy)->name ?? '—' }}</span>
-                                        </div>
-                                        <span style="font-size: 11px; padding: 2px 8px; border-radius: 20px; background: {{ $dBadge['bg'] }}; color: {{ $dBadge['color'] }}; font-weight: 700;">{{ $dBadge['label'] }}</span>
-                                    </div>
-                                    <div class="text-muted" style="font-size: 11px;">{{ $d->delegated_at->translatedFormat('d M Y, H:i') }}</div>
-                                    @if($d->alasan_tolak)
-                                        <div class="mt-1" style="color: #dc2626;">Ditolak: {{ $d->alasan_tolak }}</div>
-                                    @endif
-                                    @if($d->tanggapan)
-                                        <div class="mt-1" style="color: #374151;">Tanggapan: {{ Str::limit($d->tanggapan, 100) }}</div>
-                                    @endif
-                                </div>
-                            @endforeach
-                        </div>
-                    </details>
-                </div>
-                @endif
-
-                <div class="sidebar-card">
-                    <div class="sidebar-card-title">Riwayat Tiket</div>
-                    <div class="timeline-container">
-                        @php
-                        $actionLabels = [
-                            'dibuat'        => 'Tiket Dibuat',
-                            'dibaca'        => 'Dibaca Admin',
-                            'didelegasikan' => 'Didelegasikan ke Dosen',
-                            'selesai'       => 'Tiket Selesai',
-                        ];
-                        @endphp
-                        @foreach($pengaduan->logs as $log)
+                        </span>
+                        <x-manajemenmahasiswa::ui.icon name="chevron-down" size="14" />
+                    </summary>
+                    <div class="timeline-container mt-3">
+                        @foreach($pengaduan->delegasi as $d)
+                            @php
+                                $dBadge = match($d->status) {
+                                    'aktif'      => ['bg' => '#fff7ed', 'color' => '#c2410c', 'label' => 'Aktif'],
+                                    'ditanggapi' => ['bg' => '#ecfdf5', 'color' => '#16a34a', 'label' => 'Ditanggapi'],
+                                    'ditolak'    => ['bg' => '#fef2f2', 'color' => '#dc2626', 'label' => 'Ditolak'],
+                                    default      => ['bg' => '#f3f4f6', 'color' => '#6b7280', 'label' => ucfirst($d->status)],
+                                };
+                            @endphp
                             <div class="timeline-item">
                                 <div class="timeline-icon"></div>
                                 <div class="timeline-content">
-                                    <div class="timeline-date">{{ $log->created_at->translatedFormat('d M Y, H:i') }} WIB</div>
-                                    <div class="fw-bold text-dark" style="font-size: 13px;">
-                                        {{ $actionLabels[$log->action] ?? ucwords(str_replace('_', ' ', $log->action)) }}
+                                    <div class="timeline-date">{{ $d->delegated_at->translatedFormat('d M Y, H:i') }}</div>
+                                    <div class="d-flex justify-content-between align-items-start">
+                                        <div>
+                                            <div class="fw-bold text-dark" style="font-size: 13px;">
+                                                {{ optional($d->delegatedTo)->name ?? '—' }}
+                                            </div>
+                                            <div class="text-muted" style="font-size: 12px;">via {{ optional($d->delegatedBy)->name ?? '—' }}</div>
+                                        </div>
+                                        <span style="font-size: 11px; padding: 2px 8px; border-radius: 20px; background: {{ $dBadge['bg'] }}; color: {{ $dBadge['color'] }}; font-weight: 700;">{{ $dBadge['label'] }}</span>
                                     </div>
-                                    @if($log->actor)
-                                        <div class="text-muted mt-1" style="font-size: 12px;">Oleh: {{ $log->actor->name }}</div>
+                                    @if($d->alasan_tolak)
+                                        <div class="mt-2 text-muted" style="font-size: 12px; font-style: italic; background: #fff; padding: 6px 10px; border-radius: 6px; border: 1px dashed #fecaca; color: #dc2626;">
+                                            "{{ $d->alasan_tolak }}"
+                                        </div>
                                     @endif
-                                    @if($log->notes)
+                                    @if($d->tanggapan)
                                         <div class="mt-2 text-muted" style="font-size: 12px; font-style: italic; background: #fff; padding: 6px 10px; border-radius: 6px; border: 1px dashed #cbd5e1;">
-                                            "{{ Str::limit($log->notes, 100) }}"
+                                            "{{ Str::limit($d->tanggapan, 100) }}"
                                         </div>
                                     @endif
                                 </div>
                             </div>
                         @endforeach
                     </div>
-                </div>
+                </details>
             </div>
+        @endif
+
+        {{-- ── Riwayat Tiket (collapsible) ── --}}
+        <div class="detail-card">
+            <details style="cursor: pointer;">
+                <summary style="list-style: none; display: flex; align-items: center; justify-content: space-between;">
+                    <span style="font-size: 12px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px;">
+                        Riwayat Tiket ({{ $pengaduan->logs->count() }})
+                    </span>
+                    <x-manajemenmahasiswa::ui.icon name="chevron-down" size="14" />
+                </summary>
+                <div class="timeline-container mt-3">
+                    @php
+                    $actionLabels = [
+                        'dibuat'             => 'Tiket Dibuat',
+                        'dibaca'             => 'Dibaca Admin',
+                        'didelegasikan'      => 'Didelegasikan ke Dosen',
+                        'ditanggapi_dosen'   => 'Ditanggapi Dosen',
+                        'ditolak_dosen'      => 'Ditolak Dosen',
+                        'dijawab'            => 'Dijawab',
+                        'ditutup_admin'      => 'Ditutup Admin',
+                        'ditutup_mahasiswa'  => 'Ditutup Mahasiswa',
+                        'ditutup_otomatis'   => 'Ditutup Otomatis',
+                        'diajukan_ulang'     => 'Diajukan Ulang',
+                        'selesai'            => 'Tiket Selesai',
+                    ];
+                    @endphp
+                    @foreach($pengaduan->logs as $log)
+                        <div class="timeline-item">
+                            <div class="timeline-icon"></div>
+                            <div class="timeline-content">
+                                <div class="timeline-date">{{ $log->created_at->translatedFormat('d M Y, H:i') }}</div>
+                                <div class="fw-bold text-dark" style="font-size: 13px;">
+                                    {{ $actionLabels[$log->action] ?? ucwords(str_replace('_', ' ', $log->action)) }}
+                                </div>
+                                @if($log->actor)
+                                    <div class="text-muted mt-1" style="font-size: 12px;">Oleh: {{ $log->actor->name }}</div>
+                                @endif
+                                @if($log->notes)
+                                    <div class="mt-2 text-muted" style="font-size: 12px; font-style: italic; background: #fff; padding: 6px 10px; border-radius: 6px; border: 1px dashed #cbd5e1;">
+                                        "{{ Str::limit($log->notes, 100) }}"
+                                    </div>
+                                @endif
+                            </div>
+                        </div>
+                    @endforeach
+                </div>
+            </details>
         </div>
 
     @endif
