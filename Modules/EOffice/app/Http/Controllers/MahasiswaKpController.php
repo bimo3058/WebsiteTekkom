@@ -48,17 +48,17 @@ class MahasiswaKpController extends Controller
 
         // Hitung jumlah dokumen per status
         $dokumenStats = [
-            'total'     => 0,
-            'menunggu'  => 0,
+            'total' => 0,
+            'menunggu' => 0,
             'disetujui' => 0,
-            'ditolak'   => 0,
+            'ditolak' => 0,
         ];
 
         if ($kp) {
-            $dokumenStats['total']     = $kp->dokumen->count();
-            $dokumenStats['menunggu']  = $kp->dokumen->where('status_validasi', 'menunggu')->count();
+            $dokumenStats['total'] = $kp->dokumen->count();
+            $dokumenStats['menunggu'] = $kp->dokumen->where('status_validasi', 'menunggu')->count();
             $dokumenStats['disetujui'] = $kp->dokumen->where('status_validasi', 'disetujui')->count();
-            $dokumenStats['ditolak']   = $kp->dokumen->where('status_validasi', 'ditolak')->count();
+            $dokumenStats['ditolak'] = $kp->dokumen->where('status_validasi', 'ditolak')->count();
         }
 
         $activePhase = 'pra_kp';
@@ -80,7 +80,13 @@ class MahasiswaKpController extends Controller
         }
 
         return view('eoffice::kp.mahasiswa.dashboard', compact(
-            'mahasiswa', 'kp', 'pengumuman', 'timeline', 'dokumenStats', 'templates', 'activePhase'
+            'mahasiswa',
+            'kp',
+            'pengumuman',
+            'timeline',
+            'dokumenStats',
+            'templates',
+            'activePhase'
         ));
     }
 
@@ -107,30 +113,23 @@ class MahasiswaKpController extends Controller
     // =========================================================================
 
     /**
-     * Halaman informasi persuratan & keperluan perusahaan.
-     * Juga berfungsi sebagai tempat membuat proposal KP sederhana.
+     * Halaman pembuatan dan riwayat Proposal KP Mahasiswa.
      */
-    public function informasi()
+    public function proposal()
     {
         $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
         $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)->latest()->first();
 
-        // Ambil pengumuman bertipe 'pengumuman' atau 'timeline'
-        $infoPersuratan = KpPengumuman::with('pembuat')
-            ->where('is_active', true)
-            ->whereIn('tipe', ['pengumuman', 'timeline'])
-            ->orderByDesc('updated_at')
-            ->get();
+        return view('eoffice::kp.mahasiswa.proposal', compact('mahasiswa', 'kp'));
+    }
 
-        $templateContent = Storage::disk('public')->exists('templates/proposal_kp.html') 
-            ? Storage::disk('public')->get('templates/proposal_kp.html') 
-            : '<h2>1. Latar Belakang</h2><p><br></p>
-            <h2>2. Rumusan Masalah</h2><p><br></p>
-            <h2>3. Batasan Masalah</h2><p><br></p>
-            <h2>4. Tujuan Kerja Praktek</h2><p><br></p>
-            <h2>5. Bentuk Kegiatan</h2><p><br></p>
-            <h2>6. Tempat dan Waktu Pelaksanaan</h2><p><br></p>
-            <h2>7. Penutup</h2><p><br></p>';
+    /**
+     * Halaman pengajuan Surat Pengantar dan unduh template.
+     */
+    public function surat()
+    {
+        $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
+        $kp = KerjaPraktik::where('mahasiswa_id', $mahasiswa->id)->latest()->first();
 
         $templatesKeperluan = collect();
         try {
@@ -139,9 +138,7 @@ class MahasiswaKpController extends Controller
             // Ignore if table doesn't exist
         }
 
-        return view('eoffice::kp.mahasiswa.informasi', compact(
-            'mahasiswa', 'kp', 'infoPersuratan', 'templateContent', 'templatesKeperluan'
-        ));
+        return view('eoffice::kp.mahasiswa.surat', compact('mahasiswa', 'kp', 'templatesKeperluan'));
     }
 
 
@@ -211,7 +208,7 @@ class MahasiswaKpController extends Controller
 
         // 1. Ambil path template dari storage
         $templatePath = storage_path('app/templates/form_a2.docx');
-        
+
         if (!file_exists($templatePath)) {
             return redirect()->back()->with('error', 'Template A2 belum diunggah oleh Koordinator.');
         }
@@ -222,8 +219,7 @@ class MahasiswaKpController extends Controller
         // 3. Replace variabel-variabel di dalam template Word
         $templateProcessor->setValue('nama', $mahasiswa->user->name ?? '-');
         $templateProcessor->setValue('nip', $mahasiswa->nim ?? '-');
-        $templateProcessor->setValue('topik', $kp->rencana_judul ?? ($kp->judul_fix ?? '-'));
-        
+        $templateProcessor->setValue('topik', $kp->judul_kp ?? '-');
         $templateProcessor->setValue('nama_pembimbing', $validated['nama_pembimbing']);
         $templateProcessor->setValue('nip_pembimbing', $validated['nip_pembimbing']);
         $templateProcessor->setValue('jabatan_pembimbing', $validated['jabatan_pembimbing']);
@@ -277,10 +273,6 @@ class MahasiswaKpController extends Controller
     // PENDAFTARAN KP (PRA KP)
     // =========================================================================
 
-    /**
-     * Menampilkan form pendaftaran KP.
-     * Jika mahasiswa sudah punya KP aktif, redirect ke dashboard.
-     */
     public function pendaftaran()
     {
         $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
@@ -290,26 +282,28 @@ class MahasiswaKpController extends Controller
             ->whereNotIn('status_kp', ['Selesai'])
             ->first();
 
-        // Cek pengaturan pendaftaran KP
-        $isOpen = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_buka', '0') == '1';
-        $startDate = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_mulai', '');
-        $endDate = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_selesai', '');
-        
-        $isPeriodValid = true;
+        // Cek pendaftaran berdasarkan menu periode
         $now = now();
-        
-        if ($isOpen) {
-            if (!empty($startDate) && $now->startOfDay()->lt(\Carbon\Carbon::parse($startDate)->startOfDay())) {
-                $isPeriodValid = false;
-            }
-            if (!empty($endDate) && $now->startOfDay()->gt(\Carbon\Carbon::parse($endDate)->startOfDay())) {
-                $isPeriodValid = false;
-            }
-        }
-        
-        $registrationOpen = $isOpen && $isPeriodValid;
+        $activePeriod = \Modules\EOffice\Models\KpPeriode::where('is_active', true)
+            ->whereDate('tanggal_buka', '<=', $now)
+            ->whereDate('tanggal_tutup', '>=', $now)
+            ->first();
 
-        return view('eoffice::kp.mahasiswa.pendaftaran', compact('mahasiswa', 'existingKp', 'registrationOpen', 'startDate', 'endDate'));
+        // Jika tidak ada yang sedang buka pendaftarannya, cek kalau ada periode aktif yang menampung fallback informasi
+        if (!$activePeriod) {
+            $fallbackPeriod = \Modules\EOffice\Models\KpPeriode::where('is_active', true)->latest()->first();
+        } else {
+            $fallbackPeriod = $activePeriod;
+        }
+
+        $registrationOpen = $activePeriod != null;
+        $startDate = $fallbackPeriod ? ($fallbackPeriod->tanggal_buka ?? '') : '';
+        $endDate = $fallbackPeriod ? ($fallbackPeriod->tanggal_tutup ?? '') : '';
+
+        // Ambil kelas yang dibuka pada periode aktif
+        $listKelas = $activePeriod ? ($activePeriod->kelas_dibuka ?? []) : [];
+
+        return view('eoffice::kp.mahasiswa.pendaftaran', compact('mahasiswa', 'existingKp', 'registrationOpen', 'startDate', 'endDate', 'listKelas'));
     }
 
     /**
@@ -319,32 +313,35 @@ class MahasiswaKpController extends Controller
      */
     public function storePendaftaran(Request $request)
     {
-        // Cek apakah pendaftaran dibuka
-        $isOpen = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_buka', '0') == '1';
-        $startDate = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_mulai', '');
-        $endDate = \Modules\EOffice\Models\KpSetting::get('pendaftaran_kp_selesai', '');
-        
-        $isPeriodValid = true;
         $now = now();
-        
-        if ($isOpen) {
-            if (!empty($startDate) && $now->startOfDay()->lt(\Carbon\Carbon::parse($startDate)->startOfDay())) {
-                $isPeriodValid = false;
-            }
-            if (!empty($endDate) && $now->startOfDay()->gt(\Carbon\Carbon::parse($endDate)->startOfDay())) {
-                $isPeriodValid = false;
-            }
+        $activePeriod = \Modules\EOffice\Models\KpPeriode::where('is_active', true)
+            ->whereDate('tanggal_buka', '<=', $now)
+            ->whereDate('tanggal_tutup', '>=', $now)
+            ->first();
+
+        if (!$activePeriod) {
+            return redirect()->back()->with('error', 'Pendaftaran Kerja Praktik saat ini sedang ditutup di semua periode.');
         }
-        
-        if (!$isOpen || !$isPeriodValid) {
-            return redirect()->back()->with('error', 'Pendaftaran Kerja Praktik saat ini sedang ditutup.');
-        }
-        $validated = $request->validate([
-            'rencana_judul'   => 'required|string|max:255',
-            'rencana_tempat'  => 'required|string|max:255',
-            'tanggal_mulai'   => 'required|date',
+
+        // Ambil kelas yang dibuka pada periode aktif untuk divalidasi
+        $listKelas = $activePeriod->kelas_dibuka ?? [];
+
+        $rules = [
+            'judul_kp' => 'required|string|max:255',
+            'instansi_kp' => 'required|string|max:255',
+            'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
-        ]);
+            'ipk' => 'required|numeric|min:0|max:4.00',
+            'sks_diambil' => 'required|integer|min:0',
+            'kelas' => 'required|string',
+            'transkrip_terbaik' => 'required|file|mimes:pdf,jpg,jpeg,png|max:10240',
+        ];
+
+        if (!empty($listKelas)) {
+            $rules['kelas'] .= '|in:' . implode(',', $listKelas);
+        }
+
+        $validated = $request->validate($rules);
 
         $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
 
@@ -359,15 +356,37 @@ class MahasiswaKpController extends Controller
 
         // Buat record KP baru
         $kp = KerjaPraktik::create([
-            'nim'             => $mahasiswa->nim,
-            'mahasiswa_id'    => $mahasiswa->id,
-            'rencana_judul'   => $validated['rencana_judul'],
-            'rencana_tempat'  => $validated['rencana_tempat'],
-            'tanggal_mulai'   => $validated['tanggal_mulai'],
+            'nim' => $mahasiswa->nim,
+            'mahasiswa_id' => $mahasiswa->id,
+            'judul_kp' => $validated['judul_kp'],
+            'instansi_kp' => $validated['instansi_kp'],
+            'ipk' => $validated['ipk'],
+            'kelas' => $validated['kelas'],
+            'sks_diambil' => $validated['sks_diambil'],
+            'tanggal_mulai' => $validated['tanggal_mulai'],
             'tanggal_selesai' => $validated['tanggal_selesai'],
-            'status_kp'       => 'Pra-KP',
-            'is_acc_admin'    => false,
+            'status_kp' => 'Pra-KP',
+            'is_acc_admin' => false,
         ]);
+
+        // Simpan file transkrip terbaik (IRS)
+        if ($request->hasFile('transkrip_terbaik')) {
+            $file = $request->file('transkrip_terbaik');
+            $fileName = $file->getClientOriginalName();
+            $path = $file->store("kp/{$mahasiswa->nim}/transkrip", 'public');
+
+            // Tambahkan ke eo_kp_dokumen
+            KpDokumen::create([
+                'kp_id' => $kp->id,
+                'jenis_dokumen' => 'Transkrip',
+                'file_path' => $path,
+                'file_name' => $fileName,
+                'phase' => 'pra_kp',
+                'status_validasi' => 'menunggu',
+                'approval_status' => 'pending',
+                'tanggal_upload' => now(),
+            ]);
+        }
 
         return redirect()
             ->route('eoffice.kp.mahasiswa.dashboard')
@@ -419,7 +438,7 @@ class MahasiswaKpController extends Controller
     {
         $validated = $request->validate([
             'jenis_dokumen' => 'required|string|in:Bukti Terima,Laporan,Makalah,CV,Foto,Kartu Hijau,Nilai Lapangan,A2',
-            'file'          => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
+            'file' => 'required|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:10240',
             'nilai_input_mahasiswa' => 'nullable|numeric|min:0|max:100',
         ]);
 
@@ -453,7 +472,7 @@ class MahasiswaKpController extends Controller
         $existing = KpDokumen::where('kp_id', $kp->id)
             ->where('jenis_dokumen', $validated['jenis_dokumen'])
             ->first();
-            
+
         $data = [
             'file_path' => $path,
             'file_name' => $fileName,
@@ -462,7 +481,7 @@ class MahasiswaKpController extends Controller
             'approval_status' => 'pending', // New approval workflow
             'tanggal_upload' => now(),
         ];
-        
+
         if (isset($validated['nilai_input_mahasiswa'])) {
             $data['nilai_input_mahasiswa'] = $validated['nilai_input_mahasiswa'];
         }
@@ -486,8 +505,8 @@ class MahasiswaKpController extends Controller
     public function updateDataKp(Request $request)
     {
         $validated = $request->validate([
-            'judul_fix'  => 'required|string|max:255',
-            'tempat_fix' => 'required|string|max:255',
+            'judul_kp' => 'required|string|max:255',
+            'instansi_kp' => 'required|string|max:255',
         ]);
 
         $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
@@ -520,9 +539,9 @@ class MahasiswaKpController extends Controller
     public function exportA2(Request $request)
     {
         $request->validate([
-            'nama'       => 'required|string',
-            'nip'        => 'required|string',
-            'jabatan'    => 'required|string',
+            'nama' => 'required|string',
+            'nip' => 'required|string',
+            'jabatan' => 'required|string',
             'perusahaan' => 'required|string',
         ]);
 
@@ -537,7 +556,7 @@ class MahasiswaKpController extends Controller
 
         // Lokasi file template (yang diupload koordinator)
         $templatePath = storage_path('app/templates/form_a2.docx');
-        
+
         // Cek jika template belum ada, bisa menggunakan fallback atau error
         if (!file_exists($templatePath)) {
             // Coba cek path default aplikasi sebagai fallback
@@ -555,14 +574,14 @@ class MahasiswaKpController extends Controller
             $templateProcessor->setValue('nip', htmlspecialchars($request->nip));
             $templateProcessor->setValue('jabatan', htmlspecialchars($request->jabatan));
             $templateProcessor->setValue('perusahaan', htmlspecialchars($request->perusahaan));
-            
+
             $templateProcessor->setValue('nama_pembimbing', htmlspecialchars($request->nama));
             $templateProcessor->setValue('nip_pembimbing', htmlspecialchars($request->nip));
             $templateProcessor->setValue('jabatan_pembimbing', htmlspecialchars($request->jabatan));
 
             $templateProcessor->setValue('nama_mahasiswa', htmlspecialchars($mahasiswa->user->name));
             $templateProcessor->setValue('nim_mahasiswa', htmlspecialchars($mahasiswa->nim));
-            $templateProcessor->setValue('topik', htmlspecialchars($kp->rencana_judul ?? '-'));
+            $templateProcessor->setValue('topik', htmlspecialchars($kp->judul_kp ?? '-'));
 
             // Output file sementara
             $fileName = 'Form_A2_' . preg_replace('/[^a-zA-Z0-9]+/', '_', $mahasiswa->user->name) . '.docx';
@@ -603,17 +622,23 @@ class MahasiswaKpController extends Controller
         $dokumenByJenis = $kp->dokumen->groupBy('jenis_dokumen');
 
         // Ambil dokumen spesifik secara eksplisit (untuk history)
-        $cvDoc          = $dokumenByJenis->get('CV')?->sortByDesc('created_at')->first();
-        $fotoDoc        = $dokumenByJenis->get('Foto')?->sortByDesc('created_at')->first();
-        $kartuHijauDoc  = $dokumenByJenis->get('Kartu Hijau')?->sortByDesc('created_at')->first();
+        $cvDoc = $dokumenByJenis->get('CV')?->sortByDesc('created_at')->first();
+        $fotoDoc = $dokumenByJenis->get('Foto')?->sortByDesc('created_at')->first();
+        $kartuHijauDoc = $dokumenByJenis->get('Kartu Hijau')?->sortByDesc('created_at')->first();
         $nilaiLapanganDoc = $dokumenByJenis->get('Nilai Lapangan')?->sortByDesc('created_at')->first();
 
         // Cek kelengkapan syarat seminar
         $syaratSeminar = $this->cekSyaratSeminar($kp, $dokumenByJenis);
 
         return view('eoffice::kp.mahasiswa.seminar', compact(
-            'mahasiswa', 'kp', 'dokumenByJenis', 'syaratSeminar',
-            'cvDoc', 'fotoDoc', 'kartuHijauDoc', 'nilaiLapanganDoc'
+            'mahasiswa',
+            'kp',
+            'dokumenByJenis',
+            'syaratSeminar',
+            'cvDoc',
+            'fotoDoc',
+            'kartuHijauDoc',
+            'nilaiLapanganDoc'
         ));
     }
 
@@ -625,9 +650,9 @@ class MahasiswaKpController extends Controller
     {
         $validated = $request->validate([
             'tanggal_seminar' => 'required|date',
-            'waktu_mulai'     => 'required|date_format:H:i',
-            'waktu_selesai'   => 'required|date_format:H:i',
-            'ruangan'         => 'required|string|max:100',
+            'waktu_mulai' => 'required|date_format:H:i',
+            'waktu_selesai' => 'required|date_format:H:i',
+            'ruangan' => 'required|string|max:100',
         ]);
 
         $mahasiswa = KpMahasiswa::getOrCreateFromAuth();
@@ -637,18 +662,14 @@ class MahasiswaKpController extends Controller
 
         $dokumenByJenis = $kp->dokumen->groupBy('jenis_dokumen');
 
-        $cvDoc          = $dokumenByJenis->get('CV dan Foto')?->sortByDesc('created_at')->first() ?? $dokumenByJenis->get('CV')?->sortByDesc('created_at')->first();
-        $fotoDoc        = $dokumenByJenis->get('Foto')?->sortByDesc('created_at')->first();
-        $kartuHijauDoc  = $dokumenByJenis->get('Kartu Hijau')?->sortByDesc('created_at')->first();
+        $kartuHijauDoc = $dokumenByJenis->get('Kartu Hijau')?->sortByDesc('created_at')->first();
         $nilaiLapanganDoc = $dokumenByJenis->get('Nilai Lapangan')?->sortByDesc('created_at')->first();
 
-        $cvStatus = $cvDoc ? strtolower($cvDoc->status_validasi) : 'belum';
-        $ftStatus = $fotoDoc ? strtolower($fotoDoc->status_validasi) : 'belum';
         $khStatus = $kartuHijauDoc ? strtolower($kartuHijauDoc->status_validasi) : 'belum';
         $nlStatus = $nilaiLapanganDoc ? strtolower($nilaiLapanganDoc->status_validasi) : 'belum';
 
-        if ($cvStatus !== 'disetujui' || $ftStatus !== 'disetujui' || $khStatus !== 'disetujui' || $nlStatus !== 'disetujui') {
-            return redirect()->back()->with('error', 'Tidak dapat mengajukan seminar. Syarat dokumen (CV, Foto, Kartu Hijau, dan Form A2) harus diunggah dan disetujui Koordinator terlebih dahulu.');
+        if ($khStatus !== 'disetujui' || $nlStatus !== 'disetujui') {
+            return redirect()->back()->with('error', 'Tidak dapat mengajukan seminar. Syarat dokumen (Kartu Hijau dan Form A2) harus diunggah dan disetujui Koordinator terlebih dahulu.');
         }
 
         // Buat atau update seminar
@@ -656,11 +677,11 @@ class MahasiswaKpController extends Controller
         KpSeminar::updateOrCreate(
             ['kp_id' => $kp->id],
             [
-                'tanggal_seminar'         => $validated['tanggal_seminar'],
-                'waktu_seminar'           => $waktuSeminar,
-                'ruangan'                 => $validated['ruangan'],
-                'status_validasi_syarat'  => 'proses', // Tetap di-set untuk backward compatibility
-                'status_validasi_dosen'   => 'pending',
+                'tanggal_seminar' => $validated['tanggal_seminar'],
+                'waktu_seminar' => $waktuSeminar,
+                'ruangan' => $validated['ruangan'],
+                'status_validasi_syarat' => 'proses', // Tetap di-set untuk backward compatibility
+                'status_validasi_dosen' => 'pending',
             ]
         );
 
@@ -698,16 +719,16 @@ class MahasiswaKpController extends Controller
         $buktiTerima = isset($dokumenByJenis['Bukti Terima'])
             && $dokumenByJenis['Bukti Terima']->where('approval_status', 'approved')->isNotEmpty();
 
-        $judulFix = !empty($kp->judul_fix) && !empty($kp->tempat_fix);
+        $judulFix = !empty($kp->judul_kp) && !empty($kp->instansi_kp);
 
         return [
-            'laporan_acc'      => $laporanAcc,
-            'makalah_acc'      => $makalahAcc,
-            'kartu_hijau'      => $kartuHijau,
-            'nilai_lapangan'   => $nilaiLapangan,
-            'bukti_terima'     => $buktiTerima,
-            'judul_fix'        => $judulFix,
-            'semua_terpenuhi'  => $laporanAcc && $makalahAcc && $kartuHijau && $nilaiLapangan && $buktiTerima && $judulFix,
+            'laporan_acc' => $laporanAcc,
+            'makalah_acc' => $makalahAcc,
+            'kartu_hijau' => $kartuHijau,
+            'nilai_lapangan' => $nilaiLapangan,
+            'bukti_terima' => $buktiTerima,
+            'judul_kp' => $judulFix,
+            'semua_terpenuhi' => $laporanAcc && $makalahAcc && $kartuHijau && $nilaiLapangan && $buktiTerima && $judulFix,
         ];
     }
 }

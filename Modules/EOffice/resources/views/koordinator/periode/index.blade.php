@@ -11,21 +11,9 @@
                 Periode Kerja Praktik
             </h1>
         </div>
-        <a href="{{ route('eoffice.kp.koordinator.periode.create') }}" style="
-            display:inline-flex; align-items:center; justify-content:center;
-            gap:8px;
-            padding:10px 20px;
-            background:#0B266E;
-            color:#ffffff;
-            font-family:'Inter Tight',sans-serif;
-            font-size:14px;
-            font-weight:600;
-            border-radius:10px;
-            text-decoration:none;
-            transition:background 0.2s;
-            letter-spacing:0.01em;
-        " onmouseover="this.style.background='#233C7D';" onmouseout="this.style.background='#0B266E';">
-            <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+        <a href="{{ route('eoffice.kp.koordinator.periode.create') }}"
+            class="flex items-center justify-center px-4 py-2.5 bg-slate-900 border border-transparent text-white rounded-xl hover:bg-slate-800 transition-colors shadow-sm text-sm font-semibold">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                 stroke-linejoin="round" viewBox="0 0 24 24">
                 <path d="M12 5v14m-7-7h14" />
             </svg>
@@ -52,43 +40,36 @@
     @endif
 
     {{-- Table Container --}}
-    <div style="
-        background:#ffffff;
-        border-radius:16px;
-        border:1px solid #F1F1F3;
-        box-shadow:0px 1px 3px rgba(0,0,0,0.06), 0px 1px 2px rgba(0,0,0,0.04);
-        padding:24px;
-    ">
+    <div
+        style="background:#fff; border:1px solid #EAECF0; border-radius:12px; box-shadow:0 1px 2px rgba(16, 24, 40, 0.05); overflow:hidden; padding:24px;">
         <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
             <h2 style="font-family:'Inter Tight',sans-serif; font-size:16px; font-weight:600; color:#0D0D12;">
                 Period Table
             </h2>
             <div class="flex items-center gap-3 w-full sm:w-auto">
-                <div class="relative w-full sm:w-[280px]">
+                {{-- Search --}}
+                <div style="position:relative; flex:1; min-width:260px; max-width:320px;">
+                    <svg style="position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; color:#98A2B3;"
+                        fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
                     <input type="text" placeholder="Search" style="
-                        padding:8px 16px 8px 36px;
-                        border:1px solid #E2E8F0;
+                        width:100%;
+                        padding:8px 12px 8px 36px;
+                        border:1px solid #E4E7EC;
                         border-radius:8px;
                         font-family:'Inter Tight',sans-serif;
-                        font-size:13px;
-                        font-weight:500;
-                        color:#666D80;
+                        font-size:14px;
                         outline:none;
-                        width:100%;
-                    ">
-                    <svg class="absolute left-3 top-2.5 text-[#A0AABF]" width="16" height="16" fill="none"
-                        stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round"
-                            d="M21 21l-4.35-4.35M17 10a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                    </svg>
+                        transition:border-color 0.2s;
+                    " onfocus="this.style.borderColor='#A8B4FB'" onblur="this.style.borderColor='#E4E7EC'">
                 </div>
 
                 <button style="
-                    display:flex; align-items:center; gap:6px;
-                    padding:8px 12px;
-                    border:1px solid #E2E8F0;
-                    border-radius:8px;
-                    background:#ffffff;
+                    display:inline-flex; align-items:center; gap:8px;
+                    padding:8px 14px;
+                    background:#fff; border:1px solid #E4E7EC; border-radius:8px;
                     font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#4B5563;
                     transition:background 0.2s;
                     white-space:nowrap;
@@ -102,11 +83,9 @@
                 </button>
 
                 <button style="
-                    display:flex; align-items:center; gap:6px;
-                    padding:8px 12px;
-                    border:1px solid #E2E8F0;
-                    border-radius:8px;
-                    background:#ffffff;
+                    display:inline-flex; align-items:center; gap:8px;
+                    padding:8px 14px;
+                    background:#fff; border:1px solid #E4E7EC; border-radius:8px;
                     font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#4B5563;
                     transition:background 0.2s;
                     white-space:nowrap;
@@ -125,16 +104,16 @@
                 <thead>
                     <tr style="border-bottom:1px solid #F1F1F3; background-color:#FAFAFC;">
                         <th
-                            style="padding:12px 16px 12px 48px; font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#666D80; text-transform:uppercase; letter-spacing:0.02em;">
+                            style="padding:8px 12px 8px 36px; font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:700; color:#666D80; text-transform:uppercase; letter-spacing:0.04em;">
                             Nama Periode</th>
                         <th
-                            style="padding:12px 16px; font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#666D80; text-transform:uppercase; letter-spacing:0.02em;">
+                            style="padding:8px 12px; font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:700; color:#666D80; text-transform:uppercase; letter-spacing:0.04em;">
                             Durasi</th>
                         <th
-                            style="padding:12px 16px; font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#666D80; text-transform:uppercase; letter-spacing:0.02em;">
+                            style="padding:8px 12px; font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:700; color:#666D80; text-transform:uppercase; letter-spacing:0.04em;">
                             Status</th>
                         <th
-                            style="padding:12px 16px; font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#666D80; text-transform:uppercase; letter-spacing:0.02em;">
+                            style="padding:8px 12px; font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:700; color:#666D80; text-transform:uppercase; letter-spacing:0.04em;">
                             Action</th>
                     </tr>
                 </thead>
@@ -142,8 +121,8 @@
                     <tbody x-data="{ openOptions: false, expanded: false }">
                         <tr style="border-bottom:1px solid #F1F1F3;" class="hover:bg-[#F8F5FF] transition-colors">
                             <td
-                                style="padding:16px 16px 16px 20px; font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:500; color:#0D0D12;">
-                                <div class="flex items-center gap-3 cursor-pointer" @click="expanded = !expanded">
+                                style="padding:8px 12px 8px 20px; font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:500; color:#0D0D12;">
+                                <div class="flex items-center gap-2 cursor-pointer" @click="expanded = !expanded">
                                     <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"
                                         viewBox="0 0 24 24" :class="expanded ? 'rotate-180' : ''"
                                         class="transition-transform duration-200 text-[#666D80]">
@@ -152,99 +131,93 @@
                                     <span>Semester {{ $periode->semester }} {{ $periode->tahun_ajaran }}</span>
                                 </div>
                             </td>
-                            <td style="padding:16px; font-family:'Inter Tight',sans-serif; font-size:14px; color:#4B5563;">
+                            <td
+                                style="padding:8px 12px; font-family:'Inter Tight',sans-serif; font-size:12px; color:#4B5563;">
                                 {{ $periode->tanggal_buka ? \Carbon\Carbon::parse($periode->tanggal_buka)->translatedFormat('d F Y') : '-' }}
                                 -
                                 {{ $periode->tanggal_tutup ? \Carbon\Carbon::parse($periode->tanggal_tutup)->translatedFormat('d F Y') : '-' }}
                             </td>
-                            <td style="padding:16px;">
+                            <td style="padding:8px 12px;">
                                 @if($periode->is_active)
                                     <span
                                         style="
-                                                                                                                                    display:inline-flex; align-items:center; gap:6px;
-                                                                                                                                    padding:4px 10px;
-                                                                                                                                    background:#F0FDF4;
-                                                                                                                                    border:1px solid #BBF7D0;
-                                                                                                                                    border-radius:9999px;
-                                                                                                                                    font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#15803D;
-                                                                                                                                ">
+                                                                                                                                                                                    display:inline-flex; align-items:center; gap:6px;
+                                                                                                                                                                                    padding:4px 10px;
+                                                                                                                                                                                    background:#F0FDF4;
+                                                                                                                                                                                    border:1px solid #BBF7D0;
+                                                                                                                                                                                    border-radius:9999px;
+                                                                                                                                                                                    font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#15803D;
+                                                                                                                                                                                ">
                                         <span style="width:6px; height:6px; background:#15803D; border-radius:50%;"></span>
                                         Aktif
                                     </span>
                                 @else
                                     <span
                                         style="
-                                                                                                                                    display:inline-flex; align-items:center; gap:6px;
-                                                                                                                                    padding:4px 10px;
-                                                                                                                                    background:#F1F1F3;
-                                                                                                                                    border:1px solid #E2E8F0;
-                                                                                                                                    border-radius:9999px;
-                                                                                                                                    font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#666D80;
-                                                                                                                                ">
+                                                                                                                                                                                    display:inline-flex; align-items:center; gap:6px;
+                                                                                                                                                                                    padding:4px 10px;
+                                                                                                                                                                                    background:#F1F1F3;
+                                                                                                                                                                                    border:1px solid #E2E8F0;
+                                                                                                                                                                                    border-radius:9999px;
+                                                                                                                                                                                    font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#666D80;
+                                                                                                                                                                                ">
                                         <span style="width:6px; height:6px; background:#666D80; border-radius:50%;"></span>
                                         Nonaktif
                                     </span>
                                 @endif
                             </td>
-                            <td style="padding:16px; position:relative;">
-                                <button @click="openOptions = !openOptions" @click.outside="openOptions = false"
-                                    style="padding:8px; border-radius:8px; color:#666D80; transition:background 0.2s;"
-                                    class="hover:bg-gray-100">
-                                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24">
-                                        <path
-                                            d="M12 8a2 2 0 100-4 2 2 0 000 4zm0 6a2 2 0 100-4 2 2 0 000 4zm2 4a2 2 0 11-4 0 2 2 0 014 0z">
-                                        </path>
-                                    </svg>
-                                </button>
-
-                                {{-- Dropdown --}}
-                                <div x-show="openOptions" style="display:none;" x-transition
-                                    class="absolute right-0 mt-1 w-32 bg-white rounded-lg shadow-lg border border-gray-100 z-10 py-1">
-                                    <!-- Edit Link -->
-                                    <a href="{{ route('eoffice.kp.koordinator.periode.edit', $periode->id) }}"
-                                        class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
+                            <td class="py-3 px-4 align-middle text-center relative" x-data="{ openOptions: false }"
+                                @click.outside="openOptions = false">
+                                <div class="flex items-center justify-center pointer-events-auto" @click.stop>
+                                    <button type="button" @click="openOptions = !openOptions"
+                                        class="p-1 px-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition-colors focus:outline-none">
+                                        <svg class="w-5 h-5 flex-shrink-0" fill="none" stroke="currentColor"
                                             viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                d="M5 12h.01M12 12h.01M19 12h.01M6 12a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0zm7 0a1 1 0 11-2 0 1 1 0 012 0z">
                                             </path>
                                         </svg>
-                                        Edit
-                                    </a>
-                                    <!-- Delete Form -->
-                                    <form action="{{ route('eoffice.kp.koordinator.periode.destroy', $periode->id) }}"
-                                        method="POST"
-                                        onsubmit="return confirm('Apakah Anda yakin ingin menghapus periode ini?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit"
-                                            class="w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 flex items-center gap-2">
-                                            <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"
-                                                viewBox="0 0 24 24">
-                                                <path stroke-linecap="round" stroke-linejoin="round"
-                                                    d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16">
-                                                </path>
-                                            </svg>
-                                            Hapus
-                                        </button>
-                                    </form>
+                                    </button>
+
+                                    {{-- Dropdown Menu --}}
+                                    <div x-show="openOptions" style="display:none;"
+                                        x-transition:enter="transition ease-out duration-100"
+                                        x-transition:enter-start="transform opacity-0 scale-95"
+                                        x-transition:enter-end="transform opacity-100 scale-100"
+                                        x-transition:leave="transition ease-in duration-75"
+                                        x-transition:leave-start="transform opacity-100 scale-100"
+                                        x-transition:leave-end="transform opacity-0 scale-95"
+                                        class="absolute right-10 top-10 mt-0 w-32 bg-white rounded-lg shadow-lg border border-slate-100 overflow-hidden z-50 text-left">
+
+                                        <a href="{{ route('eoffice.kp.koordinator.periode.edit', $periode->id) }}"
+                                            class="block w-full text-left px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 hover:text-indigo-600 transition-colors">
+                                            Edit
+                                        </a>
+                                        <form action="{{ route('eoffice.kp.koordinator.periode.destroy', $periode->id) }}"
+                                            method="POST" class="inline w-full m-0 p-0"
+                                            onsubmit="return confirm('Apakah Anda yakin ingin menghapus periode ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit"
+                                                class="w-full text-left px-4 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50 transition-colors">
+                                                Hapus
+                                            </button>
+                                        </form>
+                                    </div>
                                 </div>
                             </td>
                         </tr>
                         <!-- Expandable Details Row -->
                         <tr x-show="expanded" style="display:none;" x-transition>
                             <td colspan="4" class="p-0 border-b border-[#F1F1F3] bg-[#FAFAFC]">
-                                <div class="flex" style="padding: 16px 16px 24px 16px;">
-                                    <!-- Spacer for chevron (20px pad + 16px icon + 12px gap = 48px) -->
-                                    <div style="width: 48px; flex-shrink: 0;"></div>
-
+                                <div class="flex flex-col md:flex-row gap-4 px-4 py-3" style="padding-left: 56px;">
                                     <!-- Content Area -->
-                                    <div class="flex-1 max-w-[600px] flex flex-col gap-6">
+                                    <div class="flex-1 max-w-[600px] flex flex-col gap-4">
 
                                         <!-- Kelas Dibuka -->
                                         <div>
                                             <h4
-                                                style="font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:700; color:#A0AABF; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:12px;">
+                                                style="font-family:'Inter Tight',sans-serif; font-size:10px; font-weight:700; color:#A0AABF; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:4px;">
                                                 Kelas yang Dibuka
                                             </h4>
                                             @if($periode->kelas_dibuka && is_array($periode->kelas_dibuka) && count($periode->kelas_dibuka) > 0)
@@ -264,32 +237,32 @@
                                         <!-- Tanggal Fase -->
                                         <div>
                                             <h4
-                                                style="font-family:'Inter Tight',sans-serif; font-size:11px; font-weight:700; color:#A0AABF; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:12px;">
+                                                style="font-family:'Inter Tight',sans-serif; font-size:10px; font-weight:700; color:#A0AABF; letter-spacing:0.04em; text-transform:uppercase; margin-bottom:4px;">
                                                 Tanggal Fase
                                             </h4>
                                             <div class="flex flex-col gap-4">
-                                                <div class="flex items-center text-sm"
+                                                <div class="flex items-center"
                                                     style="font-family:'Inter Tight',sans-serif;">
-                                                    <div class="w-[120px] text-[#848A96] font-medium">Pra KP</div>
-                                                    <div class="text-[#272835] font-semibold">
+                                                    <div class="w-[120px] text-xs text-[#848A96] font-medium">Pra KP</div>
+                                                    <div class="text-xs text-[#272835] font-semibold">
                                                         {{ $periode->pra_kp_mulai ? \Carbon\Carbon::parse($periode->pra_kp_mulai)->translatedFormat('d M Y') : '-' }}
                                                         -
                                                         {{ $periode->pra_kp_akhir ? \Carbon\Carbon::parse($periode->pra_kp_akhir)->translatedFormat('d M Y') : '-' }}
                                                     </div>
                                                 </div>
-                                                <div class="flex items-center text-sm"
+                                                <div class="flex items-center"
                                                     style="font-family:'Inter Tight',sans-serif;">
-                                                    <div class="w-[120px] text-[#848A96] font-medium">Saat KP</div>
-                                                    <div class="text-[#272835] font-semibold">
+                                                    <div class="w-[120px] text-xs text-[#848A96] font-medium">Saat KP</div>
+                                                    <div class="text-xs text-[#272835] font-semibold">
                                                         {{ $periode->saat_kp_mulai ? \Carbon\Carbon::parse($periode->saat_kp_mulai)->translatedFormat('d M Y') : '-' }}
                                                         -
                                                         {{ $periode->saat_kp_akhir ? \Carbon\Carbon::parse($periode->saat_kp_akhir)->translatedFormat('d M Y') : '-' }}
                                                     </div>
                                                 </div>
-                                                <div class="flex items-center text-sm"
+                                                <div class="flex items-center"
                                                     style="font-family:'Inter Tight',sans-serif;">
-                                                    <div class="w-[120px] text-[#848A96] font-medium">Pasca KP</div>
-                                                    <div class="text-[#272835] font-semibold">
+                                                    <div class="w-[120px] text-xs text-[#848A96] font-medium">Pasca KP</div>
+                                                    <div class="text-xs text-[#272835] font-semibold">
                                                         {{ $periode->pasca_kp_mulai ? \Carbon\Carbon::parse($periode->pasca_kp_mulai)->translatedFormat('d M Y') : '-' }}
                                                         -
                                                         {{ $periode->pasca_kp_akhir ? \Carbon\Carbon::parse($periode->pasca_kp_akhir)->translatedFormat('d M Y') : '-' }}

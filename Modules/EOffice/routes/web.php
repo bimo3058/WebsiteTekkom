@@ -453,13 +453,13 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             $user = auth()->user();
             $email = strtolower($user->email ?? '');
 
-            if ($email === 'ike.pertiwi@undip.ac.id') {
+            if ($user->hasRole('koor_kp')) {
                 return redirect()->route('eoffice.kp.koordinator.dashboard');
             }
             if ($user->hasRole('superadmin') || $user->hasRole('admin_eoffice', 'eoffice')) {
                 return redirect()->route('eoffice.manprak.admin.dashboard');
             }
-            if ($user->hasRole('dosen', 'eoffice') || (str_ends_with($email, '@undip.ac.id') && !str_ends_with($email, '@students.undip.ac.id'))) {
+            if ($user->hasRole('dosen', 'eoffice')) {
                 return redirect()->route('eoffice.manprak.dosen.dashboard');
             }
             if ($user->hasRole('koor_prak', 'eoffice')) {
@@ -497,7 +497,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
         // ── Route Mahasiswa KP (baru) ──────────────────────────────────────
         Route::prefix('mahasiswa')->name('mahasiswa.')->group(function () {
             Route::get('/dashboard', [MahasiswaKpController::class, 'dashboard'])->name('dashboard');
-            Route::get('/informasi', [MahasiswaKpController::class, 'informasi'])->name('informasi');
+            Route::get('/proposal', [MahasiswaKpController::class, 'proposal'])->name('proposal');
+            Route::get('/surat', [MahasiswaKpController::class, 'surat'])->name('surat');
             Route::get('/pengumuman', [MahasiswaKpController::class, 'pengumuman'])->name('pengumuman');
             Route::get('/pengumuman/{id}/lampiran', [MahasiswaKpController::class, 'serveLampiran'])->name('pengumuman.lampiran');
             Route::get('/faq', [MahasiswaKpController::class, 'faq'])->name('faq');
@@ -544,10 +545,12 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::put('/pengumuman/{id}', [KoordinatorController::class, 'updatePengumuman'])->name('pengumuman.update');
             Route::delete('/pengumuman/{id}', [KoordinatorController::class, 'destroyPengumuman'])->name('pengumuman.destroy');
 
-            Route::get('/template', [KoordinatorController::class, 'template'])->name('template');
-            Route::post('/template', [KoordinatorController::class, 'storeTemplate'])->name('template.store');
-            Route::put('/template/{id}', [KoordinatorController::class, 'updateTemplate'])->name('template.update');
-            Route::delete('/template/{id}', [KoordinatorController::class, 'destroyTemplate'])->name('template.destroy');
+            Route::get('/persyaratan-dokumen', [KoordinatorController::class, 'persyaratanDokumen'])->name('persyaratan_dokumen');
+            Route::post('/persyaratan-dokumen/apply-default', [KoordinatorController::class, 'applyDefaultPersyaratan'])->name('persyaratan_dokumen.apply_default');
+            Route::get('/persyaratan-dokumen/{phase}/edit', [KoordinatorController::class, 'editPersyaratan'])->name('persyaratan_dokumen.edit');
+            Route::put('/persyaratan-dokumen/{phase}', [KoordinatorController::class, 'updatePersyaratan'])->name('persyaratan_dokumen.update');
+            Route::delete('/persyaratan-dokumen/{phase}', [KoordinatorController::class, 'destroyPersyaratanPhase'])->name('persyaratan_dokumen.destroy');
+
             Route::get('/faq', [KoordinatorController::class, 'faq'])->name('faq');
             Route::post('/faq/dokumen', [KoordinatorController::class, 'storeDokumenPanduan'])->name('faq.dokumen.store');
             Route::delete('/faq/dokumen/{id}', [KoordinatorController::class, 'destroyDokumenPanduan'])->name('faq.dokumen.destroy');
@@ -564,7 +567,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
 
             Route::get('/data-mahasiswa', [KoordinatorController::class, 'dataMahasiswa'])->name('data_mahasiswa');
             Route::get('/data-mahasiswa/export', [KoordinatorController::class, 'exportDataMahasiswa'])->name('data_mahasiswa.export');
-
+            Route::put('/data-mahasiswa/{id}', [KoordinatorController::class, 'updateDataMahasiswa'])->name('data_mahasiswa.update');
             Route::get('/periode', [KoordinatorController::class, 'periode'])->name('periode');
             Route::get('/periode/create', [KoordinatorController::class, 'createPeriode'])->name('periode.create');
             Route::post('/periode', [KoordinatorController::class, 'storePeriode'])->name('periode.store');
