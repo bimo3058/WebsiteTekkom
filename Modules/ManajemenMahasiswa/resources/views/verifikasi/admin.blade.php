@@ -245,15 +245,6 @@
                        onblur="this.style.borderColor='var(--c-border)'; this.style.boxShadow='none'">
             </div>
 
-            <!-- Status Filter -->
-            <select name="status"
-                    style="height:34px; padding:0 10px; border:1px solid var(--c-border); border-radius:8px; font-size:12.5px; font-weight:600; font-family:inherit; color:var(--c-fg-sec); outline:none; background:#fff; cursor:pointer;"
-                    onchange="document.getElementById('filterForm').submit()">
-                <option value="pending" {{ $status === 'pending' ? 'selected' : '' }}>Pending</option>
-                <option value="approved" {{ $status === 'approved' ? 'selected' : '' }}>Disetujui</option>
-                <option value="rejected" {{ $status === 'rejected' ? 'selected' : '' }}>Ditolak</option>
-                <option value="semua" {{ $status === 'semua' ? 'selected' : '' }}>Semua Status</option>
-            </select>
 
             <!-- Angkatan Filter -->
             <select name="angkatan"
@@ -509,16 +500,7 @@
                             <td style="padding:14px 16px;">
                                 @if($p->verification_status === 'approved')
                                     @if($p->reward_status === $P::CLAIM_DIAJUKAN)
-                                        <div>
-                                            <span class="claim-badge diajukan">Menunggu</span>
-                                            <div style="margin-top:4px;">
-                                                <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index', ['reward' => 'menunggu']) }}"
-                                                   class="btn-tinjau" style="font-size:.72rem; padding:3px 10px;">
-                                                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></svg>
-                                                    Kelola
-                                                </a>
-                                            </div>
-                                        </div>
+                                        <span class="claim-badge diajukan">Menunggu</span>
                                     @elseif($p->reward_status === $P::CLAIM_DISETUJUI)
                                         <span class="claim-badge disetujui">Disetujui</span>
                                     @elseif($p->reward_status === $P::CLAIM_DITOLAK)

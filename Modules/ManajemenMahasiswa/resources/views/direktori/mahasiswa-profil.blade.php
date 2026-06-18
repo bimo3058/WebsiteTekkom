@@ -130,7 +130,7 @@
         border-radius: 20px;
         display: inline-block;
     }
-    .peran-badge.ketua { background: #FFFBEB; color: #92400e; }
+    .peran-badge.ketua { background: #eef2ff; color: #0B266E; }
     .peran-badge.anggota { background: #eef2ff; color: #0B266E; }
     .peran-badge.panitia { background: #f3e8ff; color: #7c3aed; }
     .peran-badge.peserta { background: #ECFDF5; color: #059669; }
@@ -329,13 +329,31 @@
 </div>
 
 <!-- Riwayat Kegiatan -->
+@php
+    // Pisahkan kegiatan internal (punya kegiatan_id / auto entry) dan eksternal (manual tanpa kegiatan_id)
+    $kegiatanInternal = $riwayatKegiatan->filter(function ($rw) {
+        $hasKegiatan = is_object($rw->kegiatan ?? null) && ($rw->kegiatan->id ?? false);
+        $isAutoEntry = !empty($rw->is_auto);
+        return $hasKegiatan || $isAutoEntry;
+    })->values();
+
+    $kegiatanEksternal = $riwayatKegiatan->filter(function ($rw) {
+        $hasKegiatan = is_object($rw->kegiatan ?? null) && ($rw->kegiatan->id ?? false);
+        $isAutoEntry = !empty($rw->is_auto);
+        return !$hasKegiatan && !$isAutoEntry;
+    })->values();
+@endphp
+
+<!-- Kegiatan Internal -->
 <div class="section-card">
     <div class="section-title">
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"></rect><line x1="16" x2="16" y1="2" y2="6"></line><line x1="8" x2="8" y1="2" y2="6"></line><line x1="3" x2="21" y1="10" y2="10"></line></svg>
-        Riwayat Keikutsertaan Kegiatan
+        Kegiatan Internal
+        <span style="font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 20px; background: #eef2ff; color: #0B266E;">{{ $kegiatanInternal->count() }}</span>
     </div>
+    <p style="font-size: 12px; color: #666D80; margin: -8px 0 14px 0;">Kegiatan himpunan & prodi yang tercatat di sistem (sebagai ketua pelaksana atau panitia)</p>
 
-    @if($riwayatKegiatan->count() > 0)
+    @if($kegiatanInternal->count() > 0)
         <div style="overflow-x: auto; border-radius: 10px; border: 1px solid #f3f4f6;">
             <table class="riwayat-table">
                 <thead>
@@ -345,18 +363,15 @@
                         <th>Peran</th>
                         <th>Sumber</th>
                         <th>Tanggal</th>
-                        <th>Verifikasi</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($riwayatKegiatan as $i => $rw)
+                    @foreach($kegiatanInternal as $i => $rw)
                         @php
                             $hasKegiatan = is_object($rw->kegiatan ?? null) && ($rw->kegiatan->id ?? false);
-                            $namaManual  = $rw->nama_kegiatan_manual ?? null;
                             $peranManual = $rw->peran_manual ?? null;
                             $peranValue  = $peranManual ?: ucfirst($rw->peran ?? '');
                             $isAutoEntry = !empty($rw->is_auto);
-                            $isManualEntry = !$hasKegiatan && !$isAutoEntry;
                             $tanggalDisplay = null;
                             if ($hasKegiatan && $rw->kegiatan->tanggal_mulai) {
                                 $tanggalDisplay = $rw->kegiatan->tanggal_mulai;
@@ -372,24 +387,16 @@
                                        style="color: #0B266E; font-weight: 600; text-decoration: none;">
                                         {{ $rw->kegiatan->judul }}
                                     </a>
-                                @elseif($namaManual)
-                                    <span style="font-weight: 600; color: #0D0D12;">{{ $namaManual }}</span>
-                                    <span style="font-size: 9px; font-weight: 700; padding: 1px 6px; border-radius: 6px; background: #FFFBEB; color: #d97706; margin-left: 6px; vertical-align: 1px;">Eksternal</span>
                                 @else
                                     <span style="color: #666D80;">Kegiatan tidak ditemukan</span>
                                 @endif
                             </td>
-                            <td><span class="peran-badge {{ $rw->peran ?? '' }}">{{ $peranValue }}</span></td>
+                            <td><span style="font-size: 14px; color: #374151;">{{ $peranValue }}</span></td>
                             <td>
                                 @if($isAutoEntry)
                                     <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #ECFDF5; color: #059669;">
                                         <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><polyline points="20 6 9 17 4 12"></polyline></svg>
                                         Auto
-                                    </span>
-                                @elseif($isManualEntry)
-                                    <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #FFFBEB; color: #d97706;">
-                                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px;"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
-                                        Input Manual
                                     </span>
                                 @else
                                     <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #eef2ff; color: #0B266E;">Sistem</span>
@@ -402,10 +409,59 @@
                                     -
                                 @endif
                             </td>
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <p style="color: #666D80; font-size: 14px; text-align: center; padding: 20px 0;">Belum ada kegiatan internal.</p>
+    @endif
+</div>
+
+<!-- Kegiatan Eksternal -->
+<div class="section-card">
+    <div class="section-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
+        Kegiatan Eksternal
+        <span style="font-size: 11px; font-weight: 600; padding: 2px 10px; border-radius: 20px; background: #FFFBEB; color: #d97706;">{{ $kegiatanEksternal->count() }}</span>
+    </div>
+    <p style="font-size: 12px; color: #666D80; margin: -8px 0 14px 0;">Kegiatan di luar sistem yang diajukan melalui verifikasi data</p>
+
+    @if($kegiatanEksternal->count() > 0)
+        <div style="overflow-x: auto; border-radius: 10px; border: 1px solid #f3f4f6;">
+            <table class="riwayat-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nama Kegiatan</th>
+                        <th>Peran</th>
+                        <th>Tanggal</th>
+                        <th>Verifikasi</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($kegiatanEksternal as $i => $rw)
+                        @php
+                            $peranManual = $rw->peran_manual ?? null;
+                            $peranValue  = $peranManual ?: ucfirst($rw->peran ?? '');
+                            $tanggalDisplay = isset($rw->tanggal_kegiatan) && $rw->tanggal_kegiatan ? $rw->tanggal_kegiatan : null;
+                        @endphp
+                        <tr>
+                            <td style="color: #666D80;">{{ $i + 1 }}</td>
                             <td>
-                                @if($isAutoEntry)
-                                    <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #ECFDF5; color: #059669;"><svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-1px;margin-right:3px;"><polyline points="20 6 9 17 4 12"/></svg>Auto</span>
-                                @elseif(isset($rw->verification_status))
+                                <span style="font-weight: 600; color: #0D0D12;">{{ $rw->nama_kegiatan_manual ?? 'Kegiatan tidak ditemukan' }}</span>
+                            </td>
+                            <td><span style="font-size: 14px; color: #374151;">{{ $peranValue }}</span></td>
+                            <td style="font-size: 13px; color: #666D80;">
+                                @if($tanggalDisplay)
+                                    {{ \Carbon\Carbon::parse($tanggalDisplay)->translatedFormat('d M Y') }}
+                                @else
+                                    -
+                                @endif
+                            </td>
+                            <td>
+                                @if(isset($rw->verification_status))
                                     @if($rw->verification_status === 'pending')
                                         <span style="font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 8px; background: #FFFBEB; color: #d97706;"><span style="display:inline-block;width:6px;height:6px;border-radius:50%;background:currentColor;margin-right:4px;vertical-align:1px;"></span>Pending</span>
                                     @elseif($rw->verification_status === 'approved')
@@ -423,7 +479,7 @@
             </table>
         </div>
     @else
-        <p style="color: #666D80; font-size: 14px; text-align: center; padding: 20px 0;">Belum ada riwayat kegiatan.</p>
+        <p style="color: #666D80; font-size: 14px; text-align: center; padding: 20px 0;">Belum ada kegiatan eksternal.</p>
     @endif
 </div>
 
