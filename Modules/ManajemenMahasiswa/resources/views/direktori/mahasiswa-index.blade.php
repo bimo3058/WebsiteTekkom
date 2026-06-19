@@ -10,20 +10,20 @@
         align-items: center;
     }
     .filter-select-custom {
-        padding: 7px 16px;
-        border-radius: 20px;
-        border: 1.5px solid #e5e7eb;
+        padding: 0 14px;
+        border-radius: 8px;
+        border: 1px solid #DFE1E7;
         background: #ffffff;
         color: #374151;
         font-size: 13px;
         font-weight: 600;
         outline: none;
-        transition: all 0.2s;
+        transition: all 0.15s;
         height: 38px;
     }
     .filter-select-custom:focus {
-        border-color: #818cf8;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        border-color: #0B266E;
+        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
     }
 
     /* ── Search Bar ── */
@@ -36,21 +36,23 @@
         left: 12px;
         top: 50%;
         transform: translateY(-50%);
-        color: #9ca3af;
+        color: #666D80;
     }
     .search-input {
-        background-color: #f3f4f6;
-        border: none;
+        background-color: #ffffff;
+        border: 1px solid #DFE1E7;
         border-radius: 8px;
-        height: 42px;
+        height: 38px;
         padding-left: 36px;
         font-size: 13px;
         font-weight: 500;
         width: 100%;
+        color: #374151;
     }
     .search-input:focus {
         background-color: #ffffff;
-        box-shadow: 0 0 0 2px #e0e7ff;
+        border-color: #0B266E;
+        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
         outline: none;
     }
 
@@ -61,21 +63,21 @@
         border-spacing: 0;
     }
     .mhs-table thead th {
-        background: #f8fafc;
+        background: #FAFAFA;
         padding: 12px 16px;
         font-size: 12px;
         font-weight: 700;
-        color: #64748b;
+        color: #666D80;
         text-transform: uppercase;
         letter-spacing: 0.05em;
-        border-bottom: 2px solid #e5e7eb;
+        border-bottom: 2px solid #DFE1E7;
         white-space: nowrap;
     }
     .mhs-table tbody tr {
         transition: background 0.15s;
     }
     .mhs-table tbody tr:hover {
-        background: #f8fafc;
+        background: #FAFAFA;
     }
     .mhs-table tbody td {
         padding: 14px 16px;
@@ -88,16 +90,16 @@
         width: 38px;
         height: 38px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
+        background: linear-gradient(135deg, #eef2ff, #dbe4f5);
         display: flex;
         align-items: center;
         justify-content: center;
         font-weight: 700;
-        color: #4f46e5;
+        color: #0B266E;
         font-size: 14px;
         flex-shrink: 0;
         overflow: hidden;
-        border: 2px solid #e0e7ff;
+        border: 2px solid #eef2ff;
     }
     .mhs-avatar img {
         width: 100%;
@@ -114,7 +116,7 @@
         right: -1px;
     }
     .online-dot.online { background: #22c55e; }
-    .online-dot.offline { background: #d1d5db; }
+    .online-dot.offline { background: #C1C7CF; }
 
     .status-badge {
         font-size: 11px;
@@ -123,8 +125,8 @@
         border-radius: 20px;
         display: inline-block;
     }
-    .status-badge.aktif { background: #dcfce7; color: #166534; }
-    .status-badge.cuti { background: #fef3c7; color: #92400e; }
+    .status-badge.aktif { background: #ECFDF5; color: #059669; }
+    .status-badge.cuti { background: #FFFBEB; color: #92400e; }
     .status-badge.drop_out { background: #fef2f2; color: #991b1b; }
     .status-badge.pindah_studi { background: #f3f4f6; color: #374151; }
     .status-badge.wafat { background: #ede9fe; color: #5b21b6; }
@@ -145,14 +147,14 @@
     }
     .btn-action-view {
         background: #eef2ff;
-        color: #4f46e5;
+        color: #0B266E;
     }
     .btn-action-view:hover {
-        background: #e0e7ff;
-        color: #4338ca;
+        background: #eef2ff;
+        color: #091958;
     }
     .btn-action-edit {
-        background: #fef3c7;
+        background: #FFFBEB;
         color: #92400e;
     }
     .btn-action-edit:hover {
@@ -164,10 +166,10 @@
     .empty-state {
         text-align: center;
         padding: 60px 20px;
-        color: #9ca3af;
+        color: #666D80;
     }
     .empty-state h5 {
-        color: #6b7280;
+        color: #666D80;
         font-weight: 600;
         margin-bottom: 4px;
     }
@@ -198,12 +200,12 @@
     .stat-value {
         font-size: 22px;
         font-weight: 800;
-        color: #1f2937;
+        color: #0D0D12;
         line-height: 1;
     }
     .stat-label {
         font-size: 12px;
-        color: #9ca3af;
+        color: #666D80;
         font-weight: 500;
     }
 
@@ -213,20 +215,20 @@
         padding: 2px 6px;
         border-radius: 6px;
         background: #eef2ff;
-        color: #4f46e5;
+        color: #0B266E;
         letter-spacing: 0.05em;
     }
 
     .last-active {
         font-size: 11px;
-        color: #9ca3af;
+        color: #666D80;
     }
 </style>
 
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show" role="alert"
-         style="border-radius: 10px; border: none; background: #dcfce7; color: #166534; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
         {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -236,8 +238,8 @@
 <!-- Page Header -->
 <div class="d-flex justify-content-between align-items-start mb-4">
     <div>
-        <h3 class="fw-bold mb-1 text-dark">Direktori Mahasiswa</h3>
-        <p class="text-dark fw-bold mb-0" style="font-size: 14px;">Daftar seluruh mahasiswa yang terdaftar di program studi
+        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:#0D0D12;letter-spacing:-.02em;">Direktori Mahasiswa</h3>
+        <p class="mb-0" style="font-size:.82rem;color:#666D80;font-weight:500;">Daftar seluruh mahasiswa yang terdaftar di program studi
             <span class="sso-badge ms-1">SSO UNDIP</span>
         </p>
     </div>
@@ -248,7 +250,7 @@
     <div class="col">
         <div class="stat-card p-3">
             <div class="stat-icon" style="background: #eef2ff;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                     <circle cx="9" cy="7" r="4"></circle>
                     <path d="M22 21v-2a4 4 0 0 0-3-3.87"></path>
@@ -263,7 +265,7 @@
     </div>
     <div class="col">
         <div class="stat-card p-3">
-            <div class="stat-icon" style="background: #dcfce7;">
+            <div class="stat-icon" style="background: #ECFDF5;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                     <polyline points="22 4 12 14.01 9 11.01"></polyline>
@@ -277,7 +279,7 @@
     </div>
     <div class="col">
         <div class="stat-card p-3">
-            <div class="stat-icon" style="background: #fef3c7;">
+            <div class="stat-icon" style="background: #FFFBEB;">
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <line x1="12" y1="8" x2="12" y2="12"></line>
@@ -308,7 +310,7 @@
     <div class="col">
         <div class="stat-card p-3">
             <div class="stat-icon" style="background: #f3f4f6;">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4b5563" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#353849" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <polyline points="16 16 12 20 8 16"></polyline>
                     <line x1="12" y1="12" x2="12" y2="20"></line>
                     <polyline points="8 8 12 4 16 8"></polyline>
@@ -405,7 +407,7 @@
             <tbody>
                 @foreach($mahasiswa as $index => $mhs)
                     <tr>
-                        <td style="color: #9ca3af; font-weight: 500;">{{ $mahasiswa->firstItem() + $index }}</td>
+                        <td style="color: #666D80; font-weight: 500;">{{ $mahasiswa->firstItem() + $index }}</td>
                         <td>
                             <div class="d-flex align-items-center gap-3">
                                 <div style="position: relative;">
@@ -421,14 +423,14 @@
                                     @endif
                                 </div>
                                 <div>
-                                    <div style="font-weight: 600; color: #1f2937;">{{ $mhs->nama }}</div>
+                                    <div style="font-weight: 600; color: #0D0D12;">{{ $mhs->nama }}</div>
                                     @if($mhs->user && $mhs->user->email)
-                                        <div style="font-size: 12px; color: #9ca3af;">{{ $mhs->user->email }}</div>
+                                        <div style="font-size: 12px; color: #666D80;">{{ $mhs->user->email }}</div>
                                     @endif
                                 </div>
                             </div>
                         </td>
-                        <td style="font-weight: 600; font-family: monospace; color: #4f46e5;">{{ $mhs->nim }}</td>
+                        <td style="font-weight: 600; font-family: monospace; color: #0B266E;">{{ $mhs->nim }}</td>
                         <td><span style="font-weight: 600;">{{ $mhs->angkatan }}</span></td>
                         <td>
                             <span class="status-badge {{ $mhs->status }}">
@@ -519,7 +521,7 @@
 
             </div>
             {{-- Info teks --}}
-            <div style="font-size: 12px; color: #9ca3af; font-weight: 500;">
+            <div style="font-size: 12px; color: #666D80; font-weight: 500;">
                 Showing {{ $mahasiswa->firstItem() }}–{{ $mahasiswa->lastItem() }} of {{ $mahasiswa->total() }} results
             </div>
         </div>
@@ -537,24 +539,24 @@
                 font-weight: 600;
                 color: #374151;
                 background: #ffffff;
-                border: 1.5px solid #e5e7eb;
+                border: 1px solid #DFE1E7;
                 text-decoration: none !important;
                 transition: all 0.15s;
                 cursor: pointer;
             }
             .page-btn:hover:not(.disabled):not(.page-btn-active) {
-                background: #f1f5f9;
-                border-color: #c7d2fe;
-                color: #4f46e5;
+                background: #F6F8FA;
+                border-color: #0B266E;
+                color: #0B266E;
             }
             .page-btn-active {
-                background: #4f46e5;
-                border-color: #4f46e5;
+                background: #0B266E;
+                border-color: #0B266E;
                 color: #ffffff !important;
                 cursor: default;
             }
             .page-btn-nav {
-                color: #6b7280;
+                color: #666D80;
             }
             .page-btn-nav.disabled {
                 opacity: 0.35;
@@ -563,7 +565,7 @@
             .page-btn-dots {
                 border: none;
                 background: transparent;
-                color: #9ca3af;
+                color: #666D80;
                 cursor: default;
                 min-width: 24px;
                 padding: 0;
@@ -573,14 +575,14 @@
 @else
     <div class="empty-state">
         <div style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#9ca3af" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"></path>
                 <circle cx="9" cy="7" r="4"></circle>
                 <line x1="17" y1="11" x2="23" y2="11"></line>
             </svg>
         </div>
         <h5>Belum ada data mahasiswa</h5>
-        <p style="font-size: 14px; color: #9ca3af;">Data mahasiswa yang terdaftar akan muncul di sini</p>
+        <p style="font-size: 14px; color: #666D80;">Data mahasiswa yang terdaftar akan muncul di sini</p>
     </div>
 @endif
 

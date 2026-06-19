@@ -131,7 +131,7 @@ class SuperAdminController extends Controller
                 'is_active' => $dbModules['capstone'] ?? false,
                 'icon'      => 'school',
                 'route'     => 'capstone.dashboard',
-                'groups'    => DB::table('capstone_groups')->whereNull('deleted_at')->count(),
+                'groups'    => (function() { try { return DB::table('capstone_groups')->whereNull('deleted_at')->count(); } catch (\Throwable $e) { return DB::table('capstone_groups')->count(); } })(),
                 'periods'   => DB::table('capstone_periods')->count(),
             ],
             'eoffice' => [

@@ -30,7 +30,8 @@ class ProkerController extends Controller
         $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'gpm'])->isNotEmpty();
         $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan',
                                          'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
-        $canManage = $isAdmin || $isPengurus;
+        // GPM & Kadep view-only — hanya admin murni & pengurus yang boleh kelola
+        $canManage = $roles->intersect(['superadmin', 'admin_kemahasiswaan'])->isNotEmpty() || $isPengurus;
 
         $query = Kegiatan::with(['bidangs', 'kategoris', 'ketuaPelaksana.user'])
             ->where('status', Kegiatan::STATUS_DRAFT)
@@ -86,14 +87,14 @@ class ProkerController extends Controller
             'superadmin', 'ketua_himpunan', 'wakil_ketua_himpunan',
             'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
-        // Role yang boleh edit proker (sinkron dengan route middleware edit)
+        // Role yang boleh edit proker (sinkron dengan route middleware edit) — GPM & Kadep view-only
         $canEdit = $roles->intersect([
-            'superadmin', 'admin_kemahasiswaan', 'gpm', 'dpm',
+            'superadmin', 'admin_kemahasiswaan', 'dpm',
             'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
-        // Role yang boleh hapus proker (sinkron dengan route middleware destroy)
+        // Role yang boleh hapus proker (sinkron dengan route middleware destroy) — GPM & Kadep view-only
         $canDelete = $roles->intersect([
-            'superadmin', 'admin_kemahasiswaan', 'gpm', 'dpm',
+            'superadmin', 'admin_kemahasiswaan', 'dpm',
             'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
         $isCreator = $proker->user_id === Auth::id();

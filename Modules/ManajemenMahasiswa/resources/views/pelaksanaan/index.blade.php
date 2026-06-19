@@ -1,46 +1,47 @@
 <x-manajemenmahasiswa::layouts.mahasiswa>
 
 <style>
-    .filter-chip { padding:7px 18px;border-radius:20px;border:1.5px solid #e5e7eb;background:#fff;color:#374151;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.2s;text-decoration:none !important;display:inline-block; }
-    .filter-chip:hover { border-color:#818cf8;color:#4f46e5;background:#eef2ff; }
-    .filter-chip.active { background:#4f46e5;color:#fff !important;border-color:#4f46e5; }
-    .filter-select-custom { padding:7px 16px;border-radius:20px;border:1.5px solid #e5e7eb;background:#fff;color:#374151;font-size:13px;font-weight:600;outline:none;height:38px; }
+    .filter-chip { padding:7px 16px;border-radius:8px;border:1px solid #DFE1E7;background:#fff;color:#666D80;font-size:13px;font-weight:600;cursor:pointer;transition:all 0.15s;text-decoration:none !important;display:inline-block; }
+    .filter-chip:hover { border-color:#0B266E;color:#0B266E;background:rgba(11,38,110,0.06); }
+    .filter-chip.active { background:#0B266E;color:#fff !important;border-color:#0B266E; }
+    .filter-select-custom { padding:0 14px;border-radius:8px;border:1px solid #DFE1E7;background:#fff;color:#374151;font-size:13px;font-weight:600;outline:none;height:38px;transition:all 0.15s; }
+    .filter-select-custom:focus { border-color:#0B266E;box-shadow:0 0 0 3px rgba(11,38,110,0.1); }
     .search-wrapper { position:relative;flex-grow:1; }
-    .search-icon { position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#9ca3af; }
-    .search-input { background:#f3f4f6;border:none;border-radius:8px;height:42px;padding-left:36px;font-size:13px;width:100%; }
-    .search-input:focus { background:#fff;box-shadow:0 0 0 2px #e0e7ff;outline:none; }
-    .filter-section { display:flex;flex-wrap:wrap;gap:10px;margin-bottom:20px;align-items:center; }
+    .search-icon { position:absolute;left:12px;top:50%;transform:translateY(-50%);color:#666D80; }
+    .search-input { background:#fff;border:1px solid #DFE1E7;border-radius:8px;height:38px;padding-left:36px;font-size:13px;width:100%;color:#374151; }
+    .search-input:focus { background:#fff;border-color:#0B266E;box-shadow:0 0 0 3px rgba(11,38,110,0.1);outline:none; }
+    .filter-section { display:flex;flex-wrap:wrap;gap:8px;margin-bottom:20px;align-items:center; }
 
     /* Cards */
-    .pelaksanaan-card { background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);transition:all 0.25s;text-decoration:none !important;display:flex;flex-direction:column;border:1px solid #f3f4f6; }
-    .pelaksanaan-card:hover { transform:translateY(-3px);box-shadow:0 12px 24px -4px rgba(79,70,229,0.12);border-color:#c7d2fe; }
-    .card-banner { width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,#e0e7ff,#c7d2fe);display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative; }
+    .pelaksanaan-card { background:#fff;border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.04);transition:all 0.2s;text-decoration:none !important;display:flex;flex-direction:column;border:1px solid #DFE1E7; }
+    .pelaksanaan-card:hover { transform:translateY(-3px);box-shadow:0 12px 24px -4px rgba(11,38,110,0.12);border-color:rgba(11,38,110,0.25); }
+    .card-banner { width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,rgba(11,38,110,0.06),rgba(11,38,110,0.12));display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative; }
     .card-banner img { width:100%;height:100%;object-fit:cover; }
     .card-body { padding:16px 18px 18px;display:flex;flex-direction:column;flex:1; }
-    .badge-bidang { font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#eef2ff;color:#4f46e5; }
-    .card-title { font-weight:700;font-size:15px;color:#1f2937;margin:8px 0 10px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
-    .card-meta { display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:#9ca3af;font-weight:500;padding-top:10px;border-top:1px solid #f3f4f6;margin-top:auto; }
+    .badge-bidang { font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;background:#eef2ff;color:#0B266E; }
+    .card-title { font-weight:700;font-size:15px;color:#0D0D12;margin:8px 0 10px;line-height:1.4;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden; }
+    .card-meta { display:flex;flex-wrap:wrap;gap:10px;font-size:12px;color:#666D80;font-weight:500;padding-top:10px;border-top:1px solid #f3f4f6;margin-top:auto; }
     .card-meta span { display:inline-flex;align-items:center;gap:4px; }
 
     /* Status */
     .status-badge { display:inline-flex;align-items:center;gap:5px;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700; }
-    .status-disetujui { background:#dcfce7;color:#166534; }
+    .status-disetujui { background:#ECFDF5;color:#059669; }
     .status-berlangsung { background:#dbeafe;color:#1d4ed8; }
     .status-selesai { background:#f3f4f6;color:#374151; }
-    .empty-state { text-align:center;padding:50px 20px;color:#9ca3af; }
-    .empty-state h5 { color:#6b7280;font-weight:600;margin-bottom:4px; }
+    .empty-state { text-align:center;padding:50px 20px;color:#666D80; }
+    .empty-state h5 { color:#666D80;font-weight:600;margin-bottom:4px; }
 </style>
 
 @if(session('success'))
-    <div class="alert alert-success alert-dismissible fade show" style="border-radius:10px;border:none;background:#dcfce7;color:#166534;font-weight:500;font-size:14px;">
+    <div class="alert alert-success alert-dismissible fade show" style="border-radius:10px;border:none;background:#ECFDF5;color:#059669;font-weight:500;font-size:14px;">
         {{ session('success') }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
 @endif
 
 <div class="d-flex justify-content-between align-items-start mb-4">
     <div>
-        <h3 class="fw-bold mb-1 text-dark">Pelaksanaan Kegiatan</h3>
-        <p class="text-muted mb-0" style="font-size:14px;font-weight:500;">Proker yang sudah disetujui — lengkapi data pelaksanaan di sini</p>
+        <h3 class="fw-bold mb-1" style="font-size:1.45rem;color:#0D0D12;letter-spacing:-.02em;">Pelaksanaan Kegiatan</h3>
+        <p class="mb-0" style="font-size:.82rem;color:#666D80;font-weight:500;">Proker yang sudah disetujui — lengkapi data pelaksanaan di sini</p>
     </div>
 </div>
 
@@ -67,7 +68,7 @@
            class="filter-chip {{ !request('bidang')||request('bidang')==='semua'?'active':'' }}">Semua</a>
         <a href="{{ route('manajemenmahasiswa.pelaksanaan.index', array_merge(request()->except('page'),['bidang'=>'prodi'])) }}"
            class="filter-chip {{ request('bidang')==='prodi'?'active':'' }}"
-           style="{{ request('bidang')==='prodi'?'background:#7c3aed;border-color:#7c3aed;':'' }}">Prodi</a>
+           style="{{ request('bidang')==='prodi'?'background:#0B266E;border-color:#0B266E;':'' }}">Prodi</a>
         @foreach($bidangList as $bidang)
             <a href="{{ route('manajemenmahasiswa.pelaksanaan.index', array_merge(request()->except('page'),['bidang'=>$bidang->id])) }}"
                class="filter-chip {{ request('bidang')==$bidang->id?'active':'' }}">{{ $bidang->nama_bidang }}</a>
@@ -84,7 +85,7 @@
                         @if($item->banner)
                             <img src="{{ $item->banner_url }}" alt="{{ $item->judul }}">
                         @else
-                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#a5b4fc" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
+                            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#5C78B8" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="1"/><path d="M9 12h6M9 16h4"/></svg>
                         @endif
                     </div>
                     <div class="card-body">
@@ -94,7 +95,7 @@
                                     <span class="badge-bidang">{{ $b->nama_bidang }}</span>
                                 @endforeach
                             @else
-                                <span class="badge-bidang" style="background:#f3e8ff;color:#7c3aed;">Prodi</span>
+                                <span class="badge-bidang" style="background:#eef2ff;color:#0B266E;">Prodi</span>
                             @endif
                         </div>
                         <div class="card-title">{{ $item->judul }}</div>
@@ -122,7 +123,7 @@
         <h5>Belum ada proker yang siap dilaksanakan</h5>
         <p>Proker yang sudah disetujui admin akan muncul di sini</p>
         <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="btn mt-2"
-           style="background:#4f46e5;color:#fff;border-radius:10px;font-weight:600;font-size:14px;">
+           style="background:#0B266E;color:#fff;border-radius:8px;font-weight:600;font-size:14px;">
             Lihat Rencana Proker
         </a>
     </div>

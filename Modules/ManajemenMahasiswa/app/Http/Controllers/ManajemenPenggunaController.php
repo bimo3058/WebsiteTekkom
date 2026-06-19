@@ -137,7 +137,7 @@ class ManajemenPenggunaController extends Controller
         abort_if($actor->id === $user->id, 403, 'Tidak dapat mengubah role diri sendiri.');
 
         // Jangan boleh ubah superadmin/admin global
-        abort_if($user->hasAnyRole(['superadmin', 'admin', 'dosen', 'gpm']), 403, 'Tidak dapat mengubah role pengguna ini.');
+        abort_if($user->hasAnyRole(['superadmin', 'admin', 'dosen', 'gpm', 'ketua_departemen']), 403, 'Tidak dapat mengubah role pengguna ini.');
 
         $request->validate([
             'roles'   => ['required', 'array', 'min:1'],

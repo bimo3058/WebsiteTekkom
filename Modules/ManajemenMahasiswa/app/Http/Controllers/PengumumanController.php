@@ -34,7 +34,7 @@ class PengumumanController extends Controller
         // Admin murni (list lama): superadmin, admin, admin_kemahasiswaan
         // Blog-card baru: pengurus himpunan + gpm + dosen + dosen_koordinator
         $adminRoles    = ['superadmin', 'admin', 'admin_kemahasiswaan'];
-        $blogCardRoles = ['pengurus_himpunan', 'staff_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'gpm', 'dosen', 'dosen_koordinator'];
+        $blogCardRoles = ['pengurus_himpunan', 'staff_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'gpm', 'ketua_departemen', 'dpm', 'dosen', 'dosen_koordinator'];
 
         $isAdmin        = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan'])->isNotEmpty();
         $isAdminView    = $roles->intersect($adminRoles)->isNotEmpty();
@@ -239,7 +239,7 @@ class PengumumanController extends Controller
         $isPersonalPinned = $this->pengumumanService->isPersonalPinned($id, $user->id);
 
         // Admin, GPM, Pengurus, Dosen: admin layout
-        if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'dosen', 'pengurus_himpunan', 'gpm', 'admin_kemahasiswaan'])->isNotEmpty()) {
+        if ($roles->intersect(['superadmin', 'admin', 'dosen_koordinator', 'dosen', 'pengurus_himpunan', 'gpm', 'ketua_departemen', 'dpm', 'admin_kemahasiswaan'])->isNotEmpty()) {
             return view('manajemenmahasiswa::pengumuman.pengumuman-detail', compact('pengumuman', 'user', 'isPersonalPinned'));
         }
 
@@ -252,7 +252,7 @@ class PengumumanController extends Controller
     public function pin(int $id)
     {
         $user = Auth::user();
-        if (!$user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm'])) {
+        if (!$user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan'])) {
             abort(403, 'Akses ditolak.');
         }
 
@@ -523,7 +523,7 @@ class PengumumanController extends Controller
         }
 
         // Fix #1: Validasi backend bahwa verifier_id benar-benar punya role ketua yang valid
-        $validVerifierRoles = ['ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit'];
+        $validVerifierRoles = ['ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'dpm'];
         $validated = $request->validate([
             'verifier_id' => [
                 'required',
@@ -604,7 +604,7 @@ class PengumumanController extends Controller
     {
         $user = Auth::user();
         $statusFilter = $request->query('status', 'pending');
-        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
+        $isAdmin = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm']);
 
         if ($isAdmin) {
             $requests     = $this->pengumumanService->getAllRequests($statusFilter);
@@ -626,7 +626,7 @@ class PengumumanController extends Controller
         $approvalRequest = PengumumanApprovalRequest::findOrFail($requestId);
         $user = Auth::user();
 
-        $canOverride = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
+        $canOverride = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm']);
 
         if (!$canOverride && $approvalRequest->verifier_id !== $user->id) {
             abort(403, 'Anda bukan verifikator untuk pengumuman ini.');
@@ -658,7 +658,7 @@ class PengumumanController extends Controller
         $approvalRequest = PengumumanApprovalRequest::findOrFail($requestId);
         $user = Auth::user();
 
-        $canOverride = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
+        $canOverride = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm']);
 
         if (!$canOverride && $approvalRequest->verifier_id !== $user->id) {
             abort(403, 'Anda bukan verifikator untuk pengumuman ini.');
@@ -677,4 +677,3 @@ class PengumumanController extends Controller
         return back()->with('success', 'Pengumuman berhasil ditolak dan dikembalikan ke draft.');
     }
 }
-
