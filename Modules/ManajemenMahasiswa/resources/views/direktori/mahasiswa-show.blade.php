@@ -358,6 +358,16 @@
                 @endswitch
             </span></div>
         </div>
+        @if($isCanSeeIpk)
+        <div>
+            <div class="info-item-label">IPK</div>
+            @if($mhs->ipk !== null)
+                <div class="info-item-value">{{ number_format($mhs->ipk, 2) }} / 4.00</div>
+            @else
+                <div class="info-item-value" style="color: #9ca3af; font-style: italic;">Belum diisi</div>
+            @endif
+        </div>
+        @endif
     </div>
 </div>
 

@@ -291,6 +291,7 @@ class DirektoriAlumniController extends Controller
                     'angkatan' => $km?->angkatan ?? $student?->cohort_year ?? date('Y'),
                     'tahun_lulus' => $km?->tahun_lulus ?? (int) date('Y'),
                     'program_studi' => 'S1 Teknik Komputer',
+                    'ipk' => $km?->ipk,
                 ]);
 
                 // Sekaligus pastikan status km juga konsisten
@@ -312,6 +313,15 @@ class DirektoriAlumniController extends Controller
                     ->where('status', Kemahasiswaan::STATUS_ALUMNI)
                     ->update(['status' => Kemahasiswaan::STATUS_AKTIF]);
                 $changed = true;
+            }
+
+            // 3. Sinkronisasi IPK: untuk semua alumni yang sudah ada, pastikan IPK sesuai dengan mk_kemahasiswaan
+            $alumniRecords = Alumni::whereIn('user_id', $alumniUserIds)->get();
+            foreach ($alumniRecords as $alumniRecord) {
+                $km = Kemahasiswaan::where('user_id', $alumniRecord->user_id)->first();
+                if ($km && $km->ipk !== null && (string) $alumniRecord->ipk !== (string) $km->ipk) {
+                    $alumniRecord->update(['ipk' => $km->ipk]);
+                }
             }
 
             if ($changed) {
@@ -413,6 +423,8 @@ class DirektoriAlumniController extends Controller
             $canGenerateCv   = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan');
             $canSeeHistory   = $this->canSeeHistory();
             $canManageHistory = $this->canManageHistory();
+            // Hanya admin group, GPM, DPM, Dosen yang bisa lihat IPK
+            $isCanSeeIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator');
 
             return view('manajemenmahasiswa::direktori.alumni-show', compact(
                 'alumni',
@@ -423,6 +435,7 @@ class DirektoriAlumniController extends Controller
                 'canGenerateCv',
                 'canSeeHistory',
                 'canManageHistory',
+                'isCanSeeIpk',
             ))->with('layout', $this->resolveLayout());
 
         } catch (\Throwable) {
@@ -453,6 +466,7 @@ class DirektoriAlumniController extends Controller
                         'angkatan' => $mhs->angkatan,
                         'tahun_lulus' => $mhs->tahun_lulus ?? date('Y'),
                         'program_studi' => 'Teknik Komputer',
+                        'ipk' => $mhs->ipk,
                     ]));
                 } else {
                     return back()->with('error', 'Akses ditolak. Anda belum terdaftar sebagai alumni.');

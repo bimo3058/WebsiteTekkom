@@ -320,6 +320,8 @@ class VerifikasiController extends Controller
 
         $rewardAturan = RewardAturan::latest()->get();
 
+        $isAlumni = $this->hasRole('alumni');
+
         return view('manajemenmahasiswa::verifikasi.mahasiswa', compact(
             'riwayatData',
             'prestasiData',
@@ -329,6 +331,7 @@ class VerifikasiController extends Controller
             'kuota',
             'tab',
             'rewardAturan',
+            'isAlumni',
         ))->with('layout', $this->resolveLayout());
     }
 

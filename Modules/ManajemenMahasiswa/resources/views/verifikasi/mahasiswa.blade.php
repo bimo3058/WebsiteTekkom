@@ -509,15 +509,19 @@
                                             <span class="claim-badge ditolak">Reward ditolak</span>
                                             <div class="reward-actions">
                                                 <button type="button" class="btn-tinjau" onclick="openRewardDetail(@js($rdData))">Tinjau</button>
-                                                <button type="button" class="btn-claim"
-                                                        onclick="openAjukanReward({{ $p->id }}, @js($p->nama_prestasi))">Ajukan Ulang</button>
+                                                @unless($isAlumni ?? false)
+                                                    <button type="button" class="btn-claim"
+                                                            onclick="openAjukanReward({{ $p->id }}, @js($p->nama_prestasi))">Ajukan Ulang</button>
+                                                @endunless
                                             </div>
                                         </div>
                                     @else
                                         <div class="reward-stack">
                                             <span class="claim-badge belum">Belum diajukan</span>
-                                            <button type="button" class="btn-claim"
-                                                    onclick="openAjukanReward({{ $p->id }}, @js($p->nama_prestasi))">Ajukan Reward</button>
+                                            @unless($isAlumni ?? false)
+                                                <button type="button" class="btn-claim"
+                                                        onclick="openAjukanReward({{ $p->id }}, @js($p->nama_prestasi))">Ajukan Reward</button>
+                                            @endunless
                                         </div>
                                     @endif
                                 @else

@@ -255,6 +255,12 @@
                         <span class="dot">•</span>
                         <span>{{ $alumni->program_studi }}</span>
                     @endif
+                    @if($isCanSeeIpk)
+                        @if($alumni->ipk !== null)
+                            <span class="dot">•</span>
+                            <span>IPK {{ number_format($alumni->ipk, 2) }}</span>
+                        @endif
+                    @endif
                 </div>
             </div>
             <span class="status-badge-lg {{ $alumni->status_karir ?? 'belum_terdata' }}">
@@ -420,13 +426,6 @@
             <span class="material-symbols-outlined" style="font-size:18px;color:#0B266E;">emoji_events</span>
             Prestasi / Lomba
         </span>
-        @if($canManageHistory)
-            <button type="button" class="btn-add-riwayat"
-                    data-bs-toggle="modal" data-bs-target="#modalTambahPrestasi">
-                <span class="material-symbols-outlined" style="font-size:14px;">add</span>
-                Tambah
-            </button>
-        @endif
     </div>
 
     @php $prestasi = $kemahasiswaan?->prestasi ?? collect(); @endphp
@@ -508,23 +507,35 @@
 
 
 
-{{-- ── Riwayat Kegiatan ─────────────────────────────────────────────────── --}}
+{{-- ── Riwayat Kegiatan (dipisah Internal & Eksternal, mengikuti direktori mahasiswa) ── --}}
+@php
+    // Internal: kegiatan yang tercatat di sistem (punya objek kegiatan) atau entry otomatis (ketua/panitia)
+    $kegiatanInternal = $riwayatKegiatan->filter(function ($rw) {
+        $hasKegiatan = is_object($rw->kegiatan ?? null) && ($rw->kegiatan->id ?? false);
+        $isAutoEntry = !empty($rw->is_auto);
+        return $hasKegiatan || $isAutoEntry;
+    })->values();
+
+    // Eksternal: kegiatan manual di luar sistem (tanpa objek kegiatan & bukan entry otomatis)
+    $kegiatanEksternal = $riwayatKegiatan->filter(function ($rw) {
+        $hasKegiatan = is_object($rw->kegiatan ?? null) && ($rw->kegiatan->id ?? false);
+        $isAutoEntry = !empty($rw->is_auto);
+        return !$hasKegiatan && !$isAutoEntry;
+    })->values();
+@endphp
+
+{{-- Kegiatan Internal --}}
 <div class="history-section">
     <div class="history-section-title">
         <span>
             <span class="material-symbols-outlined" style="font-size:18px;color:#0B266E;">calendar_month</span>
-            Riwayat Keikutsertaan Kegiatan
+            Kegiatan Internal
+            <span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:#eef2ff;color:#0B266E;margin-left:4px;">{{ $kegiatanInternal->count() }}</span>
         </span>
-        @if($canManageHistory)
-            <button type="button" class="btn-add-riwayat"
-                    data-bs-toggle="modal" data-bs-target="#modalTambahRiwayat">
-                <span class="material-symbols-outlined" style="font-size:14px;">add</span>
-                Tambah
-            </button>
-        @endif
     </div>
+    <p style="font-size:12px;color:#666D80;margin:-8px 0 14px 0;">Kegiatan himpunan & prodi yang tercatat di sistem (sebagai ketua pelaksana atau panitia)</p>
 
-    @if($riwayatKegiatan->count() > 0)
+    @if($kegiatanInternal->count() > 0)
         <div style="overflow-x:auto;border-radius:10px;border:1px solid #f3f4f6;">
             <table class="riwayat-table">
                 <thead>
@@ -537,13 +548,12 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach($riwayatKegiatan as $i => $rw)
+                    @foreach($kegiatanInternal as $i => $rw)
                         @php
-                            $hasKegiatan   = is_object($rw->kegiatan ?? null) && ($rw->kegiatan->id ?? false);
-                            $namaManual    = $rw->nama_kegiatan_manual ?? null;
-                            $peranManual   = $rw->peran_manual ?? null;
-                            $peranValue    = $peranManual ?: ucfirst($rw->peran ?? '');
-                            $isAutoEntry   = !empty($rw->is_auto);
+                            $hasKegiatan    = is_object($rw->kegiatan ?? null) && ($rw->kegiatan->id ?? false);
+                            $peranManual    = $rw->peran_manual ?? null;
+                            $peranValue     = $peranManual ?: ucfirst($rw->peran ?? '');
+                            $isAutoEntry    = !empty($rw->is_auto);
                             $tanggalDisplay = null;
                             if ($hasKegiatan && $rw->kegiatan->tanggal_mulai) {
                                 $tanggalDisplay = $rw->kegiatan->tanggal_mulai;
@@ -559,14 +569,11 @@
                                        style="color:#0B266E;font-weight:600;text-decoration:none;">
                                         {{ $rw->kegiatan->judul }}
                                     </a>
-                                @elseif($namaManual)
-                                    <span style="font-weight:600;color:#0D0D12;">{{ $namaManual }}</span>
-                                    <span style="font-size:9px;font-weight:700;padding:1px 6px;border-radius:6px;background:#FFFBEB;color:#d97706;margin-left:6px;">Eksternal</span>
                                 @else
                                     <span style="color:#666D80;">Kegiatan tidak ditemukan</span>
                                 @endif
                             </td>
-                            <td><span class="peran-badge {{ $rw->peran ?? '' }}">{{ $peranValue }}</span></td>
+                            <td><span style="font-size:14px;color:#374151;">{{ $peranValue }}</span></td>
                             <td style="font-size:13px;color:#666D80;">
                                 {{ $tanggalDisplay ? \Carbon\Carbon::parse($tanggalDisplay)->translatedFormat('d M Y') : '—' }}
                             </td>
@@ -590,7 +597,70 @@
             </table>
         </div>
     @else
-        <p class="empty-state">Belum ada riwayat kegiatan.</p>
+        <p class="empty-state">Belum ada kegiatan internal.</p>
+    @endif
+</div>
+
+{{-- Kegiatan Eksternal --}}
+<div class="history-section">
+    <div class="history-section-title">
+        <span>
+            <span class="material-symbols-outlined" style="font-size:18px;color:#d97706;">location_on</span>
+            Kegiatan Eksternal
+            <span style="font-size:11px;font-weight:600;padding:2px 10px;border-radius:20px;background:#FFFBEB;color:#d97706;margin-left:4px;">{{ $kegiatanEksternal->count() }}</span>
+        </span>
+    </div>
+    <p style="font-size:12px;color:#666D80;margin:-8px 0 14px 0;">Kegiatan di luar sistem yang diajukan mahasiswa melalui verifikasi data</p>
+
+    @if($kegiatanEksternal->count() > 0)
+        <div style="overflow-x:auto;border-radius:10px;border:1px solid #f3f4f6;">
+            <table class="riwayat-table">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Nama Kegiatan</th>
+                        <th>Peran</th>
+                        <th>Tanggal</th>
+                        @if($canManageHistory)<th></th>@endif
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach($kegiatanEksternal as $i => $rw)
+                        @php
+                            $peranManual    = $rw->peran_manual ?? null;
+                            $peranValue     = $peranManual ?: ucfirst($rw->peran ?? '');
+                            $tanggalDisplay = isset($rw->tanggal_kegiatan) && $rw->tanggal_kegiatan ? $rw->tanggal_kegiatan : null;
+                        @endphp
+                        <tr>
+                            <td style="color:#666D80;">{{ $i + 1 }}</td>
+                            <td>
+                                <span style="font-weight:600;color:#0D0D12;">{{ $rw->nama_kegiatan_manual ?? 'Kegiatan tidak ditemukan' }}</span>
+                            </td>
+                            <td><span style="font-size:14px;color:#374151;">{{ $peranValue }}</span></td>
+                            <td style="font-size:13px;color:#666D80;">
+                                {{ $tanggalDisplay ? \Carbon\Carbon::parse($tanggalDisplay)->translatedFormat('d M Y') : '—' }}
+                            </td>
+                            @if($canManageHistory)
+                            <td>
+                                @if($rw->id)
+                                    <form method="POST"
+                                          action="{{ route('manajemenmahasiswa.direktori.alumni.riwayat.destroy', $rw->id) }}"
+                                          onsubmit="return confirm('Hapus riwayat ini?')">
+                                        @csrf @method('DELETE')
+                                        <button type="submit" class="btn-del-sm">Hapus</button>
+                                    </form>
+                                @else
+                                    <span style="font-size:11px;color:#C1C7CF;">Auto</span>
+                                @endif
+                            </td>
+                            @endif
+                        </tr>
+                    @endforeach
+                </tbody>
+            </table>
+        </div>
+    @else
+        <p class="empty-state">Belum ada kegiatan eksternal.</p>
     @endif
 </div>
 
