@@ -49,7 +49,16 @@
                 @forelse ($riwayat as $item)
                         <tr class="table-row" data-mk="{{ $item->mataKuliah?->nama ?? '' }} {{ $item->mataKuliah?->kode ?? '' }}" data-status="{{ $item->status->value }}" data-year="{{ $item->tahun_ajaran }}">
                         <td class="table-cell-strong">{{ $item->tahun_ajaran }} - {{ $item->semester }}</td>
-                        <td class="table-cell">{{ $item->mataKuliah?->nama ?? 'N/A' }} <span class="text-xs text-slate-500">({{ $item->mataKuliah?->kode ?? 'N/A' }})</span></td>
+                        <td class="table-cell">
+                            {{ $item->mataKuliah?->nama ?? 'N/A' }} <span class="text-xs text-slate-500">({{ $item->mataKuliah?->kode ?? 'N/A' }})</span>
+                            <div class="mt-1">
+                                @if($item->creation_method === 'generator')
+                                    <span class="inline-flex items-center rounded-full bg-blue-50 px-2 py-0.5 text-[10px] font-semibold text-blue-700 border border-blue-200">Form</span>
+                                @else
+                                    <span class="inline-flex items-center rounded-full bg-slate-100 px-2 py-0.5 text-[10px] font-semibold text-slate-600 border border-slate-200">Upload</span>
+                                @endif
+                            </div>
+                        </td>
                         <td class="table-cell">{{ $item->created_at->format('d M Y') }}</td>
                         <td class="table-cell">
                             @php

@@ -31,13 +31,9 @@
             <!-- Topbar -->
             <header class="bg-white border-b border-slate-200 h-16 flex-shrink-0 flex items-center justify-between px-6 z-10">
                 <div class="flex items-center text-sm font-medium text-slate-600">
-<<<<<<< HEAD
                     <span class="mr-2">SIBASO</span>
-=======
-                    <span class="mr-2">SIBASKOM</span>
                     <span class="mx-2 text-slate-300">/</span>
                     <span class="text-slate-500 font-semibold">GPM</span>
->>>>>>> 7434167313ec190790457a15aace01fc6a498f07
                     @hasSection('breadcrumbs')
                         <span class="mx-2 text-slate-300">/</span>
                         @yield('breadcrumbs')

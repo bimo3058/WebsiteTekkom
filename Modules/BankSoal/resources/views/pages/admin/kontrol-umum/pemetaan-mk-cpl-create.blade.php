@@ -138,9 +138,9 @@
     // T[i] = state per tab
     const T=[
         {leftPool:[],rightPool:[],selId:null,selIds:new Set(),lq:'',lp:1,rq:'',rp:1,
-         endpoint:BASE+'/pemetaan/mk-cpl',leftKey:'mk_id',rightKey:'cpl_ids'},
+         endpoint:BASE+'/pemetaan/mk-cpl/sync',leftKey:'mk_id',rightKey:'cpl_ids'},
         {leftPool:[],rightPool:[],selId:null,selIds:new Set(),lq:'',lp:1,rq:'',rp:1,
-         endpoint:BASE+'/pemetaan/cpl-mk',leftKey:'cpl_id',rightKey:'mk_ids'},
+         endpoint:BASE+'/pemetaan/cpl-mk/sync',leftKey:'cpl_id',rightKey:'mk_ids'},
     ];
     let opt={cpl:[],mk:[]};
 
@@ -177,9 +177,9 @@
         const paged=all.slice((T[i].lp-1)*LS,T[i].lp*LS);
         const el=document.getElementById('leftItems'+i);
         const rows=paged.map(x=>{
-            const sel=T[i].selId===x.id,dis=T[i].selId!==null&&!sel;
+            const sel=T[i].selId===x.id;
             const lbl=getLabel(x,T[i].leftPool);
-            return `<div class="comp-item ${sel?'selected':''} ${dis?'disabled':''}" onclick="selLeft(${i},${x.id})">${lbl}</div>`;
+            return `<div class="comp-item ${sel?'selected':''}" onclick="selLeft(${i},${x.id})">${lbl}</div>`;
         }).join('');
         const ghosts='<div class="comp-item" style="visibility:hidden;pointer-events:none">&nbsp;</div>'
             .repeat(Math.max(0,LS-paged.length));
@@ -202,10 +202,37 @@
     }
 
     function setLP(i,p){T[i].lp=p;renderLeft(i);}
-    function selLeft(i,id){
-        if(T[i].selId!==null&&T[i].selId!==id)return;
-        T[i].selId=T[i].selId===id?null:id;
-        renderLeft(i);
+    async function selLeft(i,id){
+        if (T[i].selId === id) {
+            T[i].selId = null;
+            T[i].selIds.clear();
+            renderLeft(i);
+            renderRight(i);
+        } else {
+            T[i].selId = id;
+            T[i].selIds.clear();
+            renderLeft(i);
+            
+            window.showLoader();
+            try {
+                const type = i === 0 ? 'mk-cpl' : 'cpl-mk';
+                const response = await fetch(`${BASE}/pemetaan/existing?type=${type}&id=${id}`, {
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF }
+                });
+                const result = await response.json();
+                if (result.success && Array.isArray(result.data)) {
+                    T[i].selIds = new Set(result.data);
+                } else {
+                    T[i].selIds.clear();
+                }
+            } catch (err) {
+                console.error("Error fetching existing mapping:", err);
+                T[i].selIds.clear();
+            } finally {
+                window.hideLoader();
+                renderRight(i);
+            }
+        }
     }
 
     function renderRight(i){

@@ -1,17 +1,21 @@
 class RpsCpmkRows {
     constructor(form) {
+        console.log("RpsCpmkRows constructor initialized. Form element:", form);
         this.form = form;
-        this.rowContainer = form?.querySelector("[data-cpmk-rows]");
-        this.template = form?.querySelector("#cpmkRowTemplate");
-        this.addButton = form?.querySelector("#addCpmkRowBtn");
-        this.mkSelect = form?.querySelector("#mkSelect");
-        this.dosenSelect = form?.querySelector("#dosenSelect");
+        this.rowContainer = form?.querySelector("[data-cpmk-rows]") || document.querySelector("[data-cpmk-rows]");
+        this.template = form?.querySelector("#cpmkRowTemplate") || document.querySelector("#cpmkRowTemplate");
+        this.addButton = form?.querySelector("#addCpmkRowBtn") || document.querySelector("#addCpmkRowBtn");
+        this.mkSelect = form?.querySelector("#mkSelect") || document.querySelector("#mkSelect");
+        this.dosenSelect = form?.querySelector("#dosenSelect") || document.querySelector("#dosenSelect");
         this.dosenTs = null;
         this.routeCpl = form?.dataset?.routeCpl || "";
         this.routeDosen = form?.dataset?.routeDosen || "";
         this.cplOptions = [];
         this.dosenOptions = [];
-        
+
+        console.log("RpsCpmkRows elements - rowContainer:", this.rowContainer, "template:", this.template, "addButton:", this.addButton, "mkSelect:", this.mkSelect, "dosenSelect:", this.dosenSelect);
+        console.log("RpsCpmkRows config - routeCpl:", this.routeCpl, "routeDosen:", this.routeDosen);
+
         let maxIndex = -1;
         const existingRows = this.rowContainer ? this.rowContainer.querySelectorAll("[data-cpmk-row]") : [];
         existingRows.forEach(row => {
@@ -24,17 +28,24 @@ class RpsCpmkRows {
     }
 
     init() {
-        if (!this.form || !this.rowContainer || !this.template) {
+        console.log("RpsCpmkRows init() executing.");
+        if (!this.form) {
+            console.warn("RpsCpmkRows missing required form element, aborting init.");
             return;
         }
 
         this.bindEvents();
-        this.ensureAtLeastOneRow();
+
+        if (this.rowContainer && this.template) {
+            this.ensureAtLeastOneRow();
+            this.refreshAllPreviews();
+            this.updateCpmkFormState();
+        }
+
         this.loadLinkedData();
-        this.refreshAllPreviews();
-        this.updateCpmkFormState();
 
         window.BanksoalRpsUploadForm = this;
+        console.log("RpsCpmkRows init() complete.");
     }
 
     bindEvents() {
@@ -48,31 +59,33 @@ class RpsCpmkRows {
             });
         }
 
-        this.rowContainer.addEventListener("click", (event) => {
-            const removeButton = event.target.closest("[data-remove-cpmk-row]");
-            if (!removeButton) {
-                return;
-            }
+        if (this.rowContainer) {
+            this.rowContainer.addEventListener("click", (event) => {
+                const removeButton = event.target.closest("[data-remove-cpmk-row]");
+                if (!removeButton) {
+                    return;
+                }
 
-            const row = removeButton.closest("[data-cpmk-row]");
-            this.removeRow(row);
-        });
+                const row = removeButton.closest("[data-cpmk-row]");
+                this.removeRow(row);
+            });
 
-        this.rowContainer.addEventListener("input", (event) => {
-            const row = event.target.closest("[data-cpmk-row]");
-            if (row) {
-                this.updatePreview(row);
-                this.updateCpmkFormState();
-            }
-        });
+            this.rowContainer.addEventListener("input", (event) => {
+                const row = event.target.closest("[data-cpmk-row]");
+                if (row) {
+                    this.updatePreview(row);
+                    this.updateCpmkFormState();
+                }
+            });
 
-        this.rowContainer.addEventListener("change", (event) => {
-            const row = event.target.closest("[data-cpmk-row]");
-            if (row) {
-                this.updatePreview(row);
-                this.updateCpmkFormState();
-            }
-        });
+            this.rowContainer.addEventListener("change", (event) => {
+                const row = event.target.closest("[data-cpmk-row]");
+                if (row) {
+                    this.updatePreview(row);
+                    this.updateCpmkFormState();
+                }
+            });
+        }
     }
 
     ensureAtLeastOneRow() {
@@ -91,11 +104,18 @@ class RpsCpmkRows {
     }
 
     async loadLinkedData() {
-        await Promise.all([this.loadDosenOptions(), this.loadCplOptions()]);
+        if (window.showLoader) window.showLoader();
+        try {
+            await Promise.all([this.loadDosenOptions(), this.loadCplOptions()]);
+        } finally {
+            if (window.hideLoader) window.hideLoader();
+        }
     }
 
     async loadDosenOptions() {
+        console.log("loadDosenOptions starting. routeDosen:", this.routeDosen, "dosenSelect:", this.dosenSelect);
         if (!this.dosenSelect || !this.routeDosen) {
+            console.warn("loadDosenOptions early return: missing select or route");
             return;
         }
 
@@ -103,14 +123,17 @@ class RpsCpmkRows {
         const url = mkId
             ? `${this.routeDosen}?mk_id=${encodeURIComponent(String(mkId))}`
             : this.routeDosen;
+        console.log("loadDosenOptions fetching from URL:", url);
 
         try {
             const response = await fetch(url);
+            console.log("loadDosenOptions response status:", response.status);
             if (!response.ok) {
                 throw new Error(`HTTP ${response.status}`);
             }
 
             const data = await response.json();
+            console.log("loadDosenOptions data fetched length:", data?.length);
             this.dosenOptions = Array.isArray(data) ? data : [];
             this.renderDosenOptions();
         } catch (error) {
@@ -126,7 +149,7 @@ class RpsCpmkRows {
         let selectedValues = Array.from(this.dosenSelect.selectedOptions).map(
             (option) => option.value,
         );
-        
+
         if (this.dosenSelect.dataset.selectedDosenIds) {
             try {
                 const preselected = JSON.parse(this.dosenSelect.dataset.selectedDosenIds);
@@ -138,6 +161,28 @@ class RpsCpmkRows {
             }
         }
 
+        const isEditPage = this.dosenSelect.hasAttribute('data-selected-dosen-ids');
+
+        console.log("renderDosenOptions starting. Options count:", this.dosenOptions.length);
+
+        // Destroy existing TomSelect instance first to prevent HTML reset overwriting new options
+        try {
+            if (window.TomSelect) {
+                const existingTs = this.dosenSelect.tomselect || this.dosenTs;
+                if (existingTs) {
+                    console.log("renderDosenOptions: destroying existing TomSelect instance.");
+                    try {
+                        existingTs.destroy();
+                    } catch (e) {
+                        console.warn("Failed to destroy TomSelect instance:", e);
+                    }
+                    this.dosenTs = null;
+                }
+            }
+        } catch (err) {
+            console.warn("TomSelect destroy failed:", err);
+        }
+
         this.dosenSelect.innerHTML =
             '<option value="">Pilih dosen pengampu lain</option>';
 
@@ -145,7 +190,7 @@ class RpsCpmkRows {
             const option = document.createElement("option");
             option.value = String(item.id);
             option.textContent = item.name;
-            if (selectedValues.includes(option.value)) {
+            if (selectedValues.includes(option.value) || (!isEditPage && item.is_pengampu)) {
                 option.selected = true;
             }
             this.dosenSelect.appendChild(option);
@@ -154,24 +199,16 @@ class RpsCpmkRows {
         // Initialize TomSelect on dosen select for better UX (search + remove button)
         try {
             if (window.TomSelect) {
-                if (this.dosenTs) {
-                    try {
-                        this.dosenTs.destroy();
-                    } catch (e) {
-                        /* ignore */
-                    }
-                    this.dosenTs = null;
-                }
-
+                console.log("renderDosenOptions: initializing TomSelect");
                 this.dosenTs = new TomSelect(this.dosenSelect, {
                     plugins: { remove_button: { title: "Hapus dosen ini" } },
                     maxOptions: 100,
                     searchField: ["text"],
-                    valueField: "value",
-                    labelField: "text",
                     persist: false,
                     hideSelected: false,
                 });
+            } else {
+                console.warn("renderDosenOptions: window.TomSelect is not defined!");
             }
         } catch (err) {
             console.warn("TomSelect init failed for dosenSelect:", err);
@@ -181,6 +218,15 @@ class RpsCpmkRows {
     async loadCplOptions() {
         if (!this.routeCpl) {
             return;
+        }
+
+        // Set loading placeholder
+        if (this.rowContainer) {
+            const selects = this.rowContainer.querySelectorAll("[data-cpmk-cpl-select]");
+            selects.forEach(select => {
+                select.innerHTML = '<option value="">Memuat CPL</option>';
+                select.disabled = true;
+            });
         }
 
         const mkId = this.mkSelect?.value || "";
@@ -204,6 +250,7 @@ class RpsCpmkRows {
     }
 
     renderAllCplSelects() {
+        if (!this.rowContainer) return;
         const rows = this.rowContainer.querySelectorAll("[data-cpmk-row]");
         rows.forEach((row) => this.renderCplSelect(row));
         this.updateCpmkFormState();
@@ -247,6 +294,9 @@ class RpsCpmkRows {
     }
 
     addRow(initialValues = {}) {
+        if (!this.rowContainer || !this.template) {
+            return;
+        }
         const index = this.rowCounter++;
         const markup = this.template.innerHTML.replaceAll(
             "__INDEX__",
@@ -298,7 +348,7 @@ class RpsCpmkRows {
     }
 
     removeRow(row) {
-        if (!row) {
+        if (!row || !this.rowContainer) {
             return;
         }
 
@@ -325,6 +375,7 @@ class RpsCpmkRows {
     }
 
     refreshAllPreviews() {
+        if (!this.rowContainer) return;
         const rows = this.rowContainer.querySelectorAll("[data-cpmk-row]");
         rows.forEach((row) => this.updatePreview(row));
     }
@@ -400,11 +451,15 @@ class RpsCpmkRows {
     }
 
     updateCpmkFormState() {
+        const creationMethodEl = document.getElementById('creation_method_input');
+        const creationMethod = creationMethodEl ? creationMethodEl.value : 'upload';
+
+        const isUploadActive = (creationMethod === 'upload');
         const hasMk = !!(this.mkSelect?.value);
-        
+
         let allRequiredFilled = true;
         const rows = this.rowContainer ? this.rowContainer.querySelectorAll("[data-cpmk-row]") : [];
-        
+
         rows.forEach(row => {
             const cplSelect = row.querySelector("[data-cpmk-cpl-select]");
             const kodeInput = row.querySelector('input[name*="[kode]"]');
@@ -412,31 +467,31 @@ class RpsCpmkRows {
             const objekInput = row.querySelector('input[name*="[objek]"]');
             const konteksInput = row.querySelector('input[name*="[konteks]"]');
             const removeBtn = row.querySelector("[data-remove-cpmk-row]");
-            
-            if (!hasMk) {
+
+            if (!isUploadActive || !hasMk) {
                 if (cplSelect) {
                     cplSelect.disabled = true;
-                    cplSelect.title = "Pilih Mata Kuliah terlebih dahulu";
+                    cplSelect.title = !isUploadActive ? "" : "Pilih Mata Kuliah terlebih dahulu";
                 }
                 if (kodeInput) {
                     kodeInput.disabled = true;
-                    kodeInput.title = "Pilih Mata Kuliah terlebih dahulu";
+                    kodeInput.title = !isUploadActive ? "" : "Pilih Mata Kuliah terlebih dahulu";
                 }
                 if (kkoSelect) {
                     kkoSelect.disabled = true;
-                    kkoSelect.title = "Pilih Mata Kuliah terlebih dahulu";
+                    kkoSelect.title = !isUploadActive ? "" : "Pilih Mata Kuliah terlebih dahulu";
                 }
                 if (objekInput) {
                     objekInput.disabled = true;
-                    objekInput.title = "Pilih Mata Kuliah terlebih dahulu";
+                    objekInput.title = !isUploadActive ? "" : "Pilih Mata Kuliah terlebih dahulu";
                 }
                 if (konteksInput) {
                     konteksInput.disabled = true;
-                    konteksInput.title = "Pilih Mata Kuliah terlebih dahulu";
+                    konteksInput.title = !isUploadActive ? "" : "Pilih Mata Kuliah terlebih dahulu";
                 }
                 if (removeBtn) {
                     removeBtn.disabled = true;
-                    removeBtn.title = "Pilih Mata Kuliah terlebih dahulu";
+                    removeBtn.title = !isUploadActive ? "" : "Pilih Mata Kuliah terlebih dahulu";
                     removeBtn.style.opacity = "0.5";
                     removeBtn.style.cursor = "not-allowed";
                 }
@@ -444,8 +499,8 @@ class RpsCpmkRows {
             } else {
                 if (cplSelect) {
                     cplSelect.disabled = !this.cplOptions.length;
-                    cplSelect.title = cplSelect.disabled 
-                        ? "Tidak ada CPL yang terpetakan dengan Mata Kuliah ini" 
+                    cplSelect.title = cplSelect.disabled
+                        ? "Tidak ada CPL yang terpetakan dengan Mata Kuliah ini"
                         : "Pilih CPL";
                 }
                 if (kodeInput) {
@@ -484,19 +539,24 @@ class RpsCpmkRows {
         });
 
         if (this.addButton) {
-            if (!hasMk) {
+            if (!isUploadActive) {
+                this.addButton.disabled = true;
+                this.addButton.title = "";
+            } else if (!hasMk) {
                 this.addButton.title = "Pilih Mata Kuliah terlebih dahulu";
+                this.addButton.disabled = true;
             } else if (!allRequiredFilled) {
                 this.addButton.title = "Lengkapi seluruh kolom CPMK yang ada terlebih dahulu";
+                this.addButton.disabled = true;
             } else {
                 this.addButton.title = "Tambah baris CPMK baru";
+                this.addButton.disabled = false;
             }
-            this.addButton.disabled = !(hasMk && allRequiredFilled);
         }
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+function initRpsCpmk() {
     const form = document.querySelector('form[data-cpmk-row-builder="1"]');
     if (!form) {
         return;
@@ -504,4 +564,10 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const builder = new RpsCpmkRows(form);
     builder.init();
-});
+}
+
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", initRpsCpmk);
+} else {
+    initRpsCpmk();
+}

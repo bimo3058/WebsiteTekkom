@@ -21,32 +21,10 @@
             <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="UNDIP" style="width:32px;height:32px;object-fit:contain;">
         </div>
 
-<<<<<<< HEAD
         {{-- Brand text --}}
         <div x-show="sidebarOpen" x-transition:enter="transition duration-150 ease-out" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="flex-1 min-w-0">
             <div class="font-bold text-[14px] text-[#0D0D12] leading-[1.2] whitespace-nowrap overflow-hidden text-ellipsis" style="font-family:'Geist', 'Inter Tight', sans-serif; letter-spacing:-.01em;">SIBASO</div>
             <div class="font-medium text-[9px] text-[#808897] mt-[2px] whitespace-nowrap overflow-hidden text-ellipsis">Sistem Informasi Bank Soal</div>
-=======
-        <!-- Header -->
-        <div class="px-6 py-8 flex items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-                <!-- Icon Background -->
-                <div class="w-10 h-10 flex items-center justify-center flex-shrink-0">
-                    <img src="{{ asset('images/logo-undip.png') }}" alt="UNDIP Logo" class="w-10 h-10 object-contain">
-                </div>
-                <!-- Title Content -->
-                <div x-show="sidebarOpen" class="flex flex-col whitespace-nowrap overflow-hidden" x-transition.opacity.duration.300ms>
-                    <span class="font-bold text-slate-900 text-base leading-tight tracking-tight uppercase">SIBASKOM</span>
-                    <span class="font-semibold text-slate-500 text-[10px] leading-tight tracking-wider uppercase opacity-80 truncate" style="max-width: 170px;">Sistem Informasi Bank Soal Teknik Komputer</span>
-                </div>
-            </div>
-            <!-- Toggle Button -->
-            <button @click="sidebarOpen = !sidebarOpen" class="absolute -right-3 top-10 bg-white border border-slate-200 text-slate-400 hover:text-primary rounded-lg p-1 shadow-sm transition-colors z-30">
-                <svg :class="sidebarOpen ? '' : 'rotate-180'" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
-            </button>
->>>>>>> 7434167313ec190790457a15aace01fc6a498f07
         </div>
 
         {{-- Collapse button --}}
@@ -117,8 +95,8 @@
                     <a href="{{ route('banksoal.admin.kontrol-banksoal.rps') }}" class="block p-[7px_10px] rounded-lg text-[13px] transition-colors {{ $isRps ? 'bg-[#F6F8FA] text-[#0D0D12] font-semibold' : 'text-[#353849] hover:bg-[#F6F8FA]' }}">Manajemen RPS</a>
                     <a href="{{ route('banksoal.admin.kontrol-banksoal.soal') }}" class="block p-[7px_10px] rounded-lg text-[13px] transition-colors {{ $isSoal ? 'bg-[#F6F8FA] text-[#0D0D12] font-semibold' : 'text-[#353849] hover:bg-[#F6F8FA]' }}">Manajemen Soal</a>
                 </div>
-            </div>
-        </div>
+                    </div>
+                </div>
 
         {{-- UJIAN KOMPREHENSIF SECTION --}}
         <div x-show="sidebarOpen" class="text-[10px] font-semibold text-[#808897] tracking-[0.06em] uppercase p-[12px_10px_5px] whitespace-nowrap mt-1">Ujian Komprehensif</div>
@@ -146,28 +124,7 @@
                     <a href="{{ route('banksoal.pendaftaran.index') }}" class="block p-[7px_10px] rounded-lg text-[13px] transition-colors {{ $isDaftar ? 'bg-[#F6F8FA] text-[#0D0D12] font-semibold' : 'text-[#353849] hover:bg-[#F6F8FA]' }}">Daftar Peserta</a>
                 </div>
             </div>
-<<<<<<< HEAD
         </div>
-=======
-        </nav>
-    </div>
-
-    <!-- Bottom Profile Area -->
-    <div class="p-4 mt-auto">
-        <div class="bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center">
-            
-            @if(auth()->user()->hasRole('superadmin'))
-                <a href="{{ route('superadmin.dashboard') }}" class="group w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-t-xl transition-all border-b border-slate-200">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"/></svg>
-                    <span x-show="sidebarOpen" class="text-xs font-bold uppercase tracking-wider whitespace-nowrap">HOME</span>
-                </a>
-            @endif
-
-            <a href="{{ route('profile.edit') }}" class="group w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-transparent text-slate-600 hover:bg-slate-100 hover:text-slate-900 {{ auth()->user()->hasRole('superadmin') ? '' : 'rounded-t-xl' }} transition-all border-b border-slate-200">
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                <span x-show="sidebarOpen" class="text-xs font-bold uppercase tracking-wider whitespace-nowrap">Settings</span>
-            </a>
->>>>>>> 7434167313ec190790457a15aace01fc6a498f07
 
         {{-- Monitoring Ujian Accordion --}}
         @php 

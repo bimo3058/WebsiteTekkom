@@ -77,6 +77,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::get('/pemetaan/cpl-mk', [PemetaanController::class, 'listCplMk'])->name('pemetaan.cpl-mk.index');
             Route::get('/pemetaan/dosen-mk', [PemetaanController::class, 'listDosenMk'])->name('pemetaan.dosen-mk.index');
             Route::get('/pemetaan/dosen-by-dosen', [PemetaanController::class, 'listDosenByDosen'])->name('pemetaan.dosen-by-dosen.index');
+            Route::get('/pemetaan/existing', [PemetaanController::class, 'getExistingMappings'])->name('pemetaan.existing');
         });
 
         # Admin Routes - Kontrol BankSoal
@@ -104,6 +105,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::get('/cpmk', [DosenRpsController::class, 'getCpmkByCpl'])->name('cpmk');
                 Route::get('/cpmk-by-rps/{rpsId}', [DosenRpsController::class, 'getCpmkByRps'])->name('cpmk-by-rps');
                 Route::get('/dosen', [DosenRpsController::class, 'getDosenByMk'])->name('dosen');
+                Route::get('/wizard-cache/{mkId}', [DosenRpsController::class, 'getWizardCache'])->name('get-wizard-cache');
             });
             // RPS - GPM
             Route::middleware(['role:gpm', GpmSessionCheck::class])->prefix('gpm')->name('gpm.')->group(function () {
@@ -205,9 +207,11 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::post('/pemetaan/mk-cpl', [PemetaanController::class, 'storeMkCpl'])->name('pemetaan.mk-cpl.store');
             Route::post('/pemetaan/mk-cpl/sync', [PemetaanController::class, 'syncMkCpl'])->name('pemetaan.mk-cpl.sync');
             Route::post('/pemetaan/cpl-mk', [PemetaanController::class, 'storeCplMk'])->name('pemetaan.cpl-mk.store');
+            Route::post('/pemetaan/cpl-mk/sync', [PemetaanController::class, 'syncCplMk'])->name('pemetaan.cpl-mk.sync');
             Route::post('/pemetaan/dosen-mk', [PemetaanController::class, 'storeDosenMk'])->name('pemetaan.dosen-mk.store');
             Route::post('/pemetaan/dosen-mk/sync', [PemetaanController::class, 'syncMkDosen'])->name('pemetaan.dosen-mk.sync');
             Route::post('/pemetaan/dosen-mk-by-dosen', [PemetaanController::class, 'storeDosenMkByDosen'])->name('pemetaan.dosen-mk-by-dosen.store');
+            Route::post('/pemetaan/dosen-mk-by-dosen/sync', [PemetaanController::class, 'syncDosenMkByDosen'])->name('pemetaan.dosen-mk-by-dosen.sync');
         });
 
         // 1. Blok RPS
@@ -216,6 +220,8 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::post('/submit', [DosenRpsController::class, 'store'])->name('store');
                 Route::put('/{rpsId}', [DosenRpsController::class, 'update'])->name('update');
+                Route::post('/wizard-cache', [DosenRpsController::class, 'saveWizardCache'])->name('wizard-cache');
+                Route::post('/clear-wizard-cache', [DosenRpsController::class, 'clearWizardCache'])->name('clear-wizard-cache');
             });
             // RPS - GPM
             Route::middleware(['role:gpm', GpmSessionCheck::class])->prefix('gpm')->name('gpm.')->group(function () {

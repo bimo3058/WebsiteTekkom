@@ -76,13 +76,14 @@ class RpsController extends Controller
                 try {
                     $response = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(2)->get($fileUrl);
                     if ($response->status() === 404) {
-                        // Coba lakukan pencarian self-healing dengan nama berkas baru yang mungkin sudah direname
-                        $mkName = trim($rps->mk_nama ?? 'MataKuliah');
-                        $mkName = preg_replace('/\s+/', ' ', $mkName);
-                        $tahunAjaranSafe = str_replace('/', '-', (string) $rps->tahun_ajaran);
-                        $semesterSafe = ucfirst(strtolower((string) $rps->semester));
-                        
-                        $baseFileName = sprintf('RPS_%s_%s_%s', $mkName, $tahunAjaranSafe, $semesterSafe);
+                        $versionCount = DB::table('bs_audit_logs')
+                            ->where('subject_type', 'rps')
+                            ->where('subject_id', $rpsId)
+                            ->whereIn('action', ['created', 'updated'])
+                            ->count();
+                        $version = 'V' . max(1, $versionCount);
+
+                        $baseFileName = sprintf('RPS_%s_%s_%s_%s', $mkName, $tahunAjaranSafe, $semesterSafe, $version);
                         $baseFileName = preg_replace('/[\\\\:*?"<>|]+/', '', $baseFileName);
                         $baseFileName = trim((string) $baseFileName, " \t\n\r\0\x0B._");
                         
