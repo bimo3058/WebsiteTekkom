@@ -1,11 +1,11 @@
 <div>
     <h3 class="text-lg font-bold text-slate-800 mb-6">Keahlian (Skills)</h3>
 
-    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-xl">
+    <div class="p-4 mb-6 rounded-xl border" style="background: var(--c-primary-subtle); border-color: rgba(11,38,110,0.12);">
         <div class="flex items-start gap-3">
-            <span class="material-symbols-outlined text-blue-500 text-[20px]">info</span>
-            <p class="text-sm text-blue-700">
-                Tambahkan keahlian teknis (hard skills) dan non-teknis (soft skills) yang relevan. Keahlian ini sangat penting untuk membantu sistem Applicant Tracking System (ATS) memfilter profil Anda.
+            <span class="material-symbols-outlined text-[20px] mt-0.5 flex-shrink-0" style="color: var(--c-primary);">info</span>
+            <p class="text-sm" style="color: var(--c-fg-sec);">
+                Tambahkan keahlian teknis (hard skills) dan non-teknis (soft skills) yang relevan. Keahlian ini sangat penting untuk membantu sistem <strong style="color: var(--c-primary);">Applicant Tracking System (ATS)</strong> memfilter profil Anda.
             </p>
         </div>
     </div>
@@ -32,19 +32,19 @@
         <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
             <div class="flex flex-col md:flex-row gap-4 items-end">
                 <div class="flex-1 w-full">
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Nama Keahlian</label>
-                    <input type="text" x-model="newSkill.nama" placeholder="Contoh: Laravel, Python, Public Speaking" class="w-full text-sm border-slate-200 rounded-lg p-2 outline-none focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4]">
+                    <label class="form-label" style="font-size:11px">Nama Keahlian</label>
+                    <input type="text" x-model="newSkill.nama" placeholder="Contoh: Laravel, Python, Public Speaking" class="form-control">
                 </div>
                 <div class="w-full md:w-40">
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Level</label>
-                    <select x-model="newSkill.level" class="w-full text-sm border-slate-200 rounded-lg p-2 outline-none focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4] bg-white">
+                    <label class="form-label" style="font-size:11px">Level</label>
+                    <select x-model="newSkill.level" class="form-control">
                         <option>Beginner</option>
                         <option>Intermediate</option>
                         <option>Advanced</option>
                         <option>Expert</option>
                     </select>
                 </div>
-                <button @click="addSkill()" class="w-full md:w-auto text-xs font-bold bg-[#5E53F4] text-white px-4 py-2.5 rounded-lg hover:bg-[#4e44e0] transition-all shadow-sm h-[38px]">
+                <button @click="addSkill()" class="btn-primary text-xs w-full md:w-auto" style="height: 38px;">
                     Tambah
                 </button>
             </div>

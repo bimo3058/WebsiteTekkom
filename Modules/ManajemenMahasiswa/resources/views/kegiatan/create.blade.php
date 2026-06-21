@@ -12,7 +12,7 @@
     .form-card-title {
         font-weight: 700;
         font-size: 16px;
-        color: #1f2937;
+        color: #0D0D12;
         margin-bottom: 20px;
         display: flex;
         align-items: center;
@@ -33,23 +33,23 @@
     }
     .form-control-custom,
     .form-select-custom {
-        border: 1.5px solid #e5e7eb;
+        border: 1.5px solid #DFE1E7;
         border-radius: 10px;
         padding: 10px 14px;
         font-size: 14px;
         font-weight: 500;
-        color: #1f2937;
+        color: #0D0D12;
         transition: all 0.2s;
         background: #fff;
     }
     .form-control-custom:focus,
     .form-select-custom:focus {
-        border-color: #818cf8;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        border-color: #0B266E;
+        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
         outline: none;
     }
     .form-control-custom::placeholder {
-        color: #9ca3af;
+        color: #666D80;
         font-weight: 400;
     }
     textarea.form-control-custom {
@@ -70,7 +70,7 @@
         left: 0;
         right: 0;
         background: #fff;
-        border: 1.5px solid #e5e7eb;
+        border: 1.5px solid #DFE1E7;
         border-top: none;
         border-radius: 0 0 10px 10px;
         max-height: 200px;
@@ -93,11 +93,11 @@
     }
     .search-select-option:hover {
         background: #eef2ff;
-        color: #4f46e5;
+        color: #0B266E;
     }
     .search-select-option .sub-text {
         font-size: 11px;
-        color: #9ca3af;
+        color: #666D80;
         font-weight: 400;
     }
 
@@ -113,7 +113,7 @@
         align-items: center;
         gap: 8px;
         padding: 10px 16px;
-        border: 1.5px solid #e5e7eb;
+        border: 1.5px solid #DFE1E7;
         border-radius: 10px;
         background: #fff;
         cursor: pointer;
@@ -124,20 +124,20 @@
         user-select: none;
     }
     .checkbox-card:hover {
-        border-color: #a5b4fc;
-        background: #f5f3ff;
+        border-color: #5C78B8;
+        background: #eef2ff;
     }
     .checkbox-card input[type="checkbox"] {
         width: 16px;
         height: 16px;
-        accent-color: #4f46e5;
+        accent-color: #0B266E;
         cursor: pointer;
         flex-shrink: 0;
     }
     .checkbox-card.checked {
-        border-color: #4f46e5;
+        border-color: #0B266E;
         background: #eef2ff;
-        color: #4338ca;
+        color: #091958;
         font-weight: 600;
     }
     .checkbox-card.disabled {
@@ -147,14 +147,14 @@
     }
     .checkbox-hint {
         font-size: 11px;
-        color: #9ca3af;
+        color: #666D80;
         font-weight: 400;
         margin-top: 6px;
     }
 
     /* ── Banner Preview ── */
     .banner-upload-area {
-        border: 2px dashed #d1d5db;
+        border: 2px dashed #C1C7CF;
         border-radius: 12px;
         padding: 30px;
         text-align: center;
@@ -163,8 +163,8 @@
         background: #fafafa;
     }
     .banner-upload-area:hover {
-        border-color: #818cf8;
-        background: #f5f3ff;
+        border-color: #0B266E;
+        background: #eef2ff;
     }
     .banner-upload-area .upload-icon {
         font-size: 36px;
@@ -172,13 +172,13 @@
         opacity: 0.5;
     }
     .banner-upload-area p {
-        color: #6b7280;
+        color: #666D80;
         font-size: 13px;
         font-weight: 500;
         margin: 0;
     }
     .banner-upload-area small {
-        color: #9ca3af;
+        color: #666D80;
         font-size: 12px;
     }
     .banner-preview {
@@ -259,7 +259,7 @@
 
     /* ── Multi File Upload ── */
     .file-upload-area {
-        border: 2px dashed #d1d5db;
+        border: 2px dashed #C1C7CF;
         border-radius: 12px;
         padding: 24px;
         text-align: center;
@@ -269,8 +269,8 @@
     }
     .file-upload-area:hover,
     .file-upload-area.dragover {
-        border-color: #818cf8;
-        background: #f5f3ff;
+        border-color: #0B266E;
+        background: #eef2ff;
     }
     .file-upload-area .upload-icon {
         font-size: 28px;
@@ -278,13 +278,13 @@
         opacity: 0.5;
     }
     .file-upload-area p {
-        color: #6b7280;
+        color: #666D80;
         font-size: 13px;
         font-weight: 500;
         margin: 0;
     }
     .file-upload-area small {
-        color: #9ca3af;
+        color: #666D80;
         font-size: 12px;
     }
     .file-preview-grid {
@@ -297,7 +297,7 @@
         position: relative;
         border-radius: 10px;
         overflow: hidden;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #DFE1E7;
         background: #f9fafb;
         transition: all 0.2s;
     }
@@ -317,7 +317,7 @@
     }
     .file-preview-item .file-size {
         font-size: 10px;
-        color: #9ca3af;
+        color: #666D80;
         font-weight: 400;
     }
     .file-preview-item .btn-remove-file {
@@ -347,7 +347,7 @@
         align-items: center;
         gap: 10px;
         padding: 12px 14px;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #DFE1E7;
         border-radius: 10px;
         background: #f9fafb;
         position: relative;
@@ -371,7 +371,7 @@
     }
     .doc-preview-item .doc-size {
         font-size: 11px;
-        color: #9ca3af;
+        color: #666D80;
     }
     .doc-preview-item .btn-remove-doc {
         width: 26px;
@@ -405,7 +405,7 @@
         height: 40px;
         border-radius: 50%;
         background: #ffffff;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #DFE1E7;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -418,13 +418,13 @@
     }
     .btn-back:hover {
         background: #f3f4f6;
-        border-color: #d1d5db;
-        color: #1f2937;
+        border-color: #C1C7CF;
+        color: #0D0D12;
     }
 
     /* ── Buttons ── */
     .btn-submit {
-        background: #4f46e5;
+        background: #0B266E;
         color: #ffffff;
         font-weight: 600;
         font-size: 14px;
@@ -435,9 +435,9 @@
         transition: all 0.2s;
     }
     .btn-submit:hover {
-        background: #4338ca;
+        background: #091958;
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        box-shadow: 0 4px 12px rgba(11, 38, 110, 0.3);
     }
     .btn-cancel {
         background: #f3f4f6;
@@ -452,8 +452,8 @@
         transition: all 0.2s;
     }
     .btn-cancel:hover {
-        background: #e5e7eb;
-        color: #1f2937;
+        background: #DFE1E7;
+        color: #0D0D12;
     }
 
     /* ── Multi-Select Panitia ── */
@@ -466,7 +466,7 @@
         gap: 8px;
         min-height: 44px;
         padding: 8px 12px;
-        border: 1.5px solid #e5e7eb;
+        border: 1.5px solid #DFE1E7;
         border-radius: 10px;
         background: #fff;
         cursor: text;
@@ -474,8 +474,8 @@
         align-items: center;
     }
     .panitia-chips-container:focus-within {
-        border-color: #818cf8;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        border-color: #0B266E;
+        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
     }
     .panitia-chip {
         display: inline-flex;
@@ -483,23 +483,23 @@
         gap: 6px;
         padding: 4px 10px;
         background: #eef2ff;
-        color: #4338ca;
+        color: #091958;
         border-radius: 20px;
         font-size: 12px;
         font-weight: 600;
-        border: 1px solid #c7d2fe;
+        border: 1px solid #5C78B8;
         transition: all 0.15s;
         white-space: nowrap;
     }
     .panitia-chip:hover {
-        background: #e0e7ff;
+        background: #eef2ff;
     }
     .panitia-chip-remove {
         width: 16px;
         height: 16px;
         border-radius: 50%;
-        background: #c7d2fe;
-        color: #4338ca;
+        background: #5C78B8;
+        color: #091958;
         border: none;
         font-size: 11px;
         cursor: pointer;
@@ -520,14 +520,14 @@
         outline: none;
         font-size: 13px;
         font-weight: 500;
-        color: #1f2937;
+        color: #0D0D12;
         flex: 1;
         min-width: 120px;
         background: transparent;
         padding: 2px 0;
     }
     .panitia-search-input::placeholder {
-        color: #9ca3af;
+        color: #666D80;
         font-weight: 400;
     }
     .panitia-dropdown {
@@ -536,7 +536,7 @@
         left: 0;
         right: 0;
         background: #fff;
-        border: 1.5px solid #e5e7eb;
+        border: 1.5px solid #DFE1E7;
         border-top: none;
         border-radius: 0 0 10px 10px;
         max-height: 220px;
@@ -562,7 +562,7 @@
     }
     .panitia-option:hover {
         background: #eef2ff;
-        color: #4f46e5;
+        color: #0B266E;
     }
     .panitia-option.selected {
         background: #f0fdf4;
@@ -572,7 +572,7 @@
     }
     .panitia-option .sub-text {
         font-size: 11px;
-        color: #9ca3af;
+        color: #666D80;
         font-weight: 400;
     }
     .panitia-option .check-icon {
@@ -588,13 +588,13 @@
         padding: 14px;
         text-align: center;
         font-size: 13px;
-        color: #9ca3af;
+        color: #666D80;
         font-weight: 400;
     }
     .panitia-count-badge {
         font-size: 11px;
         font-weight: 600;
-        color: #6b7280;
+        color: #666D80;
         background: #f3f4f6;
         padding: 2px 8px;
         border-radius: 20px;
@@ -608,8 +608,8 @@
         &larr;
     </a>
     <div>
-        <h3 class="fw-bold mb-0 text-dark">Tambah Kegiatan Baru</h3>
-        <p class="text-muted mb-0" style="font-size: 14px; font-weight: 500;">Isi formulir berikut untuk menambahkan kegiatan baru</p>
+        <h3 class="fw-bold mb-0" style="font-size:1.45rem;color:#0D0D12;letter-spacing:-.02em;">Tambah Kegiatan Baru</h3>
+        <p class="mb-0" style="font-size:.82rem;color:#666D80;font-weight:500;">Isi formulir berikut untuk menambahkan kegiatan baru</p>
     </div>
 </div>
 
@@ -742,7 +742,7 @@
             </div>
 
             <div class="col-md-6">
-                <label class="form-label-custom">Dosen Pendamping <span style="color: #9ca3af; font-weight: 400;">(opsional)</span></label>
+                <label class="form-label-custom">Dosen Pendamping <span style="color: #666D80; font-weight: 400;">(opsional)</span></label>
                 <div class="search-select-wrapper">
                     <input type="hidden" name="dosen_pendamping_id" id="dosenPendampingId" value="{{ old('dosen_pendamping_id') }}">
                     <input type="text" class="form-control form-control-custom" id="dosenPendampingSearch"
@@ -769,7 +769,7 @@
         <div class="mb-1">
             <label class="form-label-custom">
                 Panitia Kegiatan
-                <span style="color: #9ca3af; font-weight: 400;">(opsional)</span>
+                <span style="color: #666D80; font-weight: 400;">(opsional)</span>
                 <span class="panitia-count-badge" id="panitiaCountBadge" style="display:none;">0 dipilih</span>
             </label>
             <div class="panitia-select-wrapper" id="panitiaSelectWrapper">
@@ -793,7 +793,7 @@
                                 {{ $mhs->user->name ?? 'N/A' }}
                                 <div class="sub-text">NIM: {{ $mhs->student_number }} • Angkatan {{ $mhs->cohort_year }}</div>
                             </div>
-                            <span class="check-icon">✓</span>
+                            <span class="check-icon"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>
                         </div>
                     @endforeach
                     <div class="panitia-empty" id="panitiaEmpty" style="display:none;">Tidak ada mahasiswa yang cocok</div>
@@ -833,7 +833,7 @@
         <div class="banner-upload-area" onclick="document.getElementById('bannerInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
             <p>Klik untuk upload banner kegiatan</p>
-            <small>Format: JPG, PNG, WebP • Maks: 10MB<br><span style="color: #4f46e5; font-weight: 500;">Rekomendasi: Resolusi 1280 x 720 (Rasio 16:9)</span></small>
+            <small>Format: JPG, PNG, WebP • Maks: 10MB<br><span style="color: #0B266E; font-weight: 500;">Rekomendasi: Resolusi 1280 x 720 (Rasio 16:9)</span></small>
         </div>
         <input type="file" name="banner" id="bannerInput" accept="image/jpeg,image/png,image/webp"
                style="display: none;" onchange="previewBanner(this)">
@@ -842,7 +842,7 @@
 
     <!-- Foto Kegiatan -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Foto Kegiatan <span style="color: #9ca3af; font-weight: 400; font-size: 13px;">(opsional, maks 10 foto)</span></div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg> Foto Kegiatan <span style="color: #666D80; font-weight: 400; font-size: 13px;">(opsional, maks 10 foto)</span></div>
 
         <div class="file-upload-area" id="fotoUploadArea" onclick="document.getElementById('fotoInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg></div>
@@ -856,7 +856,7 @@
 
     <!-- Dokumen Kegiatan -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen Kegiatan <span style="color: #9ca3af; font-weight: 400; font-size: 13px;">(opsional, maks 10 dokumen)</span></div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"></path><polyline points="14 2 14 8 20 8"></polyline></svg> Dokumen Kegiatan <span style="color: #666D80; font-weight: 400; font-size: 13px;">(opsional, maks 10 dokumen)</span></div>
 
         <div class="file-upload-area" id="dokumenUploadArea" onclick="document.getElementById('dokumenInput').click()">
             <div class="upload-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"></path></svg></div>
@@ -873,7 +873,7 @@
     <div class="d-flex gap-3 justify-content-end mt-2">
         <a href="{{ route('manajemenmahasiswa.kegiatan.index') }}" class="btn-cancel">Batal</a>
         <button type="submit" class="btn-submit">
-            💾 Simpan Kegiatan
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-3px;margin-right:6px;"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Simpan Kegiatan
         </button>
     </div>
 </form>
@@ -983,7 +983,7 @@ function renderFotoPreviews() {
         const reader = new FileReader();
         reader.onload = function(e) {
             item.innerHTML = `
-                <button type="button" class="btn-remove-file" onclick="removeFoto(${i})">✕</button>
+                <button type="button" class="btn-remove-file" onclick="removeFoto(${i})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
                 <img src="${e.target.result}" alt="${file.name}" style="cursor: pointer;" onclick="openLightbox(this.src)" title="Klik untuk memperbesar">
                 <div class="file-info">${file.name}<br><span class="file-size">${formatFileSize(file.size)}</span></div>
             `;
@@ -1033,7 +1033,7 @@ function renderDokumenPreviews() {
                 <div class="doc-name">${file.name}</div>
                 <div class="doc-size">${formatFileSize(file.size)} • ${ext.toUpperCase()}</div>
             </div>
-            <button type="button" class="btn-remove-doc" onclick="removeDokumen(${i})">✕</button>
+            <button type="button" class="btn-remove-doc" onclick="removeDokumen(${i})"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         `;
         list.appendChild(item);
     });
@@ -1149,7 +1149,7 @@ function renderPanitiaChips() {
         chip.className = 'panitia-chip';
         chip.innerHTML = `
             ${name}
-            <button type="button" class="panitia-chip-remove" onclick="removePanitia('${id}')" title="Hapus">✕</button>
+            <button type="button" class="panitia-chip-remove" onclick="removePanitia('${id}')" title="Hapus"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
         `;
         container.insertBefore(chip, searchInput);
     });

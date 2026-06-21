@@ -11,12 +11,12 @@
     .form-title {
         font-size: 20px;
         font-weight: 800;
-        color: #1f2937;
+        color: #0D0D12;
         margin-bottom: 4px;
     }
     .form-subtitle {
         font-size: 14px;
-        color: #9ca3af;
+        color: #666D80;
         margin-bottom: 28px;
     }
     .form-label-custom {
@@ -26,29 +26,29 @@
         margin-bottom: 6px;
     }
     .form-control-custom {
-        border: 1.5px solid #e5e7eb;
+        border: 1.5px solid #DFE1E7;
         border-radius: 10px;
         padding: 10px 14px;
         font-size: 14px;
         transition: all 0.2s;
     }
     .form-control-custom:focus {
-        border-color: #818cf8;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        border-color: #0B266E;
+        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
     }
     .form-select-custom {
-        border: 1.5px solid #e5e7eb;
+        border: 1.5px solid #DFE1E7;
         border-radius: 10px;
         padding: 10px 14px;
         font-size: 14px;
         transition: all 0.2s;
     }
     .form-select-custom:focus {
-        border-color: #818cf8;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        border-color: #0B266E;
+        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
     }
     .btn-primary-custom {
-        background: #4f46e5;
+        background: #0B266E;
         color: #fff;
         border: none;
         padding: 10px 24px;
@@ -62,12 +62,12 @@
         gap: 6px;
     }
     .btn-primary-custom:hover {
-        background: #4338ca;
+        background: #091958;
     }
     .btn-outline-custom {
         background: transparent;
-        color: #6b7280;
-        border: 1.5px solid #e5e7eb;
+        color: #666D80;
+        border: 1.5px solid #DFE1E7;
         padding: 10px 24px;
         border-radius: 10px;
         font-size: 14px;
@@ -80,8 +80,8 @@
         gap: 6px;
     }
     .btn-outline-custom:hover {
-        background: #f8fafc;
-        border-color: #d1d5db;
+        background: #FAFAFA;
+        border-color: #C1C7CF;
         color: #374151;
     }
     .sso-tag {
@@ -90,7 +90,7 @@
         padding: 1px 5px;
         border-radius: 4px;
         background: #eef2ff;
-        color: #4f46e5;
+        color: #0B266E;
         letter-spacing: 0.03em;
         margin-left: 6px;
         vertical-align: middle;
@@ -185,8 +185,17 @@
                 </select>
             </div>
 
-
-
+            <!-- IPK -->
+            <div class="col-md-6">
+                <label class="form-label-custom">IPK</label>
+                <input type="number" name="ipk" class="form-control form-control-custom"
+                       value="{{ old('ipk', $mhs->ipk) }}" min="0" max="4" step="0.01"
+                       placeholder="Contoh: 3.75">
+                <small class="text-muted d-block mt-1" style="font-size: 11px;">
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1 text-warning"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
+                    Masukkan nilai IPK antara <strong>0.00</strong> hingga <strong>4.00</strong>.
+                </small>
+            </div>
 
             <!-- Email Pribadi -->
             <div class="col-md-6">
@@ -205,10 +214,9 @@
                 <label class="form-label-custom">Kontak</label>
                 <div class="d-flex position-relative form-control-custom p-0" style="overflow: visible; background: #fff;">
                     <button type="button" @click.prevent="toggle($el)"
-                            class="btn border-0 d-flex align-items-center gap-2" style="background: #f8fafc; border-right: 1.5px solid #e5e7eb !important; border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 8.5px; border-bottom-left-radius: 8.5px;">
-                        <span x-text="selected.flag" style="font-size: 15px;"></span>
-                        <span x-text="selected.dial" style="font-size: 13px; font-weight: 600; color: #475569;"></span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                            class="btn border-0 d-flex align-items-center gap-2" style="background: #FAFAFA; border-right: 1.5px solid #DFE1E7 !important; border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 8.5px; border-bottom-left-radius: 8.5px;">
+                        <span x-text="selected.dial" style="font-size: 13px; font-weight: 600; color: #353849;"></span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#353849" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                              :style="open ? 'transform:rotate(180deg)' : ''" style="transition: transform 0.2s;"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
                     <input type="text" name="kontak" class="form-control border-0 shadow-none"
@@ -220,7 +228,7 @@
                     <!-- Dropdown -->
                     <div x-show="open" @click.outside="open = false" :style="dropdownStyle"
                          class="position-fixed bg-white border rounded shadow-lg" style="display:none; width: 240px; z-index: 9999; border-radius: 12px !important; overflow: hidden;">
-                        <div class="p-2 border-bottom" style="background: #f8fafc;">
+                        <div class="p-2 border-bottom" style="background: #FAFAFA;">
                             <input type="text" x-model="search" @click.stop placeholder="Cari negara..." class="form-control form-control-sm" style="font-size: 12px; border-radius: 8px;">
                         </div>
                         <ul class="list-unstyled mb-0" style="max-height: 200px; overflow-y: auto;">
@@ -228,10 +236,9 @@
                                 <li>
                                     <button type="button" @click="select(c)"
                                             class="w-100 btn text-start d-flex align-items-center gap-2 py-2 px-3 border-0 rounded-0"
-                                            :style="selected.name === c.name ? 'background: #f1f5f9;' : 'background: #fff;'">
-                                        <span x-text="c.flag" style="font-size: 15px;"></span>
+                                            :style="selected.name === c.name ? 'background: #F6F8FA;' : 'background: #fff;'">
                                         <span x-text="c.name" class="text-truncate flex-grow-1" style="font-size: 12px; color: #374151; font-weight: 500;"></span>
-                                        <span x-text="c.dial" style="font-size: 11px; font-weight: 700; color: #9ca3af;"></span>
+                                        <span x-text="c.dial" style="font-size: 11px; font-weight: 700; color: #666D80;"></span>
                                     </button>
                                 </li>
                             </template>
@@ -266,38 +273,38 @@
 document.addEventListener('alpine:init', () => {
     Alpine.data('mhsPhoneCode', (defaultDial) => {
         const countries = [
-            { flag: '🇦🇫', name: 'Afghanistan',       dial: '+93'  },
-            { flag: '🇿🇦', name: 'Afrika Selatan',     dial: '+27'  },
-            { flag: '🇺🇸', name: 'Amerika Serikat',    dial: '+1'   },
-            { flag: '🇸🇦', name: 'Arab Saudi',         dial: '+966' },
-            { flag: '🇦🇷', name: 'Argentina',          dial: '+54'  },
-            { flag: '🇦🇺', name: 'Australia',          dial: '+61'  },
-            { flag: '🇳🇱', name: 'Belanda',            dial: '+31'  },
-            { flag: '🇧🇷', name: 'Brasil',             dial: '+55'  },
-            { flag: '🇧🇳', name: 'Brunei',             dial: '+673' },
-            { flag: '🇦🇪', name: 'Uni Emirat Arab',    dial: '+971' },
-            { flag: '🇵🇭', name: 'Filipina',           dial: '+63'  },
-            { flag: '🇮🇳', name: 'India',              dial: '+91'  },
-            { flag: '🇮🇩', name: 'Indonesia',          dial: '+62'  },
-            { flag: '🇬🇧', name: 'Inggris',            dial: '+44'  },
-            { flag: '🇮🇹', name: 'Italia',             dial: '+39'  },
-            { flag: '🇯🇵', name: 'Jepang',             dial: '+81'  },
-            { flag: '🇩🇪', name: 'Jerman',             dial: '+49'  },
-            { flag: '🇰🇭', name: 'Kamboja',            dial: '+855' },
-            { flag: '🇨🇦', name: 'Kanada',             dial: '+1'   },
-            { flag: '🇰🇷', name: 'Korea Selatan',      dial: '+82'  },
-            { flag: '🇱🇦', name: 'Laos',               dial: '+856' },
-            { flag: '🇲🇾', name: 'Malaysia',           dial: '+60'  },
-            { flag: '🇲🇲', name: 'Myanmar',            dial: '+95'  },
-            { flag: '🇵🇰', name: 'Pakistan',           dial: '+92'  },
-            { flag: '🇫🇷', name: 'Prancis',            dial: '+33'  },
-            { flag: '🇶🇦', name: 'Qatar',              dial: '+974' },
-            { flag: '🇳🇿', name: 'Selandia Baru',      dial: '+64'  },
-            { flag: '🇸🇬', name: 'Singapura',          dial: '+65'  },
-            { flag: '🇹🇭', name: 'Thailand',           dial: '+66'  },
-            { flag: '🇹🇷', name: 'Turki',              dial: '+90'  },
-            { flag: '🇻🇳', name: 'Vietnam',            dial: '+84'  },
-            { flag: '🇨🇳', name: 'China',              dial: '+86'  },
+            { name: 'Afghanistan',       dial: '+93'  },
+            { name: 'Afrika Selatan',     dial: '+27'  },
+            { name: 'Amerika Serikat',    dial: '+1'   },
+            { name: 'Arab Saudi',         dial: '+966' },
+            { name: 'Argentina',          dial: '+54'  },
+            { name: 'Australia',          dial: '+61'  },
+            { name: 'Belanda',            dial: '+31'  },
+            { name: 'Brasil',             dial: '+55'  },
+            { name: 'Brunei',             dial: '+673' },
+            { name: 'Uni Emirat Arab',    dial: '+971' },
+            { name: 'Filipina',           dial: '+63'  },
+            { name: 'India',              dial: '+91'  },
+            { name: 'Indonesia',          dial: '+62'  },
+            { name: 'Inggris',            dial: '+44'  },
+            { name: 'Italia',             dial: '+39'  },
+            { name: 'Jepang',             dial: '+81'  },
+            { name: 'Jerman',             dial: '+49'  },
+            { name: 'Kamboja',            dial: '+855' },
+            { name: 'Kanada',             dial: '+1'   },
+            { name: 'Korea Selatan',      dial: '+82'  },
+            { name: 'Laos',               dial: '+856' },
+            { name: 'Malaysia',           dial: '+60'  },
+            { name: 'Myanmar',            dial: '+95'  },
+            { name: 'Pakistan',           dial: '+92'  },
+            { name: 'Prancis',            dial: '+33'  },
+            { name: 'Qatar',              dial: '+974' },
+            { name: 'Selandia Baru',      dial: '+64'  },
+            { name: 'Singapura',          dial: '+65'  },
+            { name: 'Thailand',           dial: '+66'  },
+            { name: 'Turki',              dial: '+90'  },
+            { name: 'Vietnam',            dial: '+84'  },
+            { name: 'China',              dial: '+86'  },
         ];
 
         const defaultCountry = countries.find(c => c.dial === defaultDial) ?? countries.find(c => c.dial === '+62');

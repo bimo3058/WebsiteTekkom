@@ -24,22 +24,22 @@
         align-items: center;
         gap: 6px;
         background: #fff;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #DFE1E7;
         color: #374151;
         transition: all 0.2s;
     }
-    .btn-back:hover { background: #f9fafb; color: #111827; }
+    .btn-back:hover { background: #f9fafb; color: #0D0D12; }
 
     .edit-card {
         background: #fff;
         border-radius: 14px;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #DFE1E7;
         padding: 32px;
     }
     .section-divider {
         font-size: 15px;
         font-weight: 700;
-        color: #4f46e5;
+        color: #0B266E;
         margin-bottom: 16px;
         padding-bottom: 10px;
         border-bottom: 2px solid #eef2ff;
@@ -50,25 +50,25 @@
     .form-label {
         font-size: 13px;
         font-weight: 600;
-        color: #475569;
+        color: #353849;
         margin-bottom: 6px;
     }
     .form-control, .form-select {
-        border: 1.5px solid #e2e8f0;
+        border: 1.5px solid #DFE1E7;
         border-radius: 10px;
         padding: 10px 14px;
         font-size: 14px;
-        color: #1e293b;
-        background: #f8fafc;
+        color: #0D0D12;
+        background: #FAFAFA;
         transition: all 0.2s;
     }
     .form-control:focus, .form-select:focus {
-        border-color: #6366f1;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        border-color: #0B266E;
+        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
         background: #ffffff;
     }
     .btn-save {
-        background: linear-gradient(135deg, #4f46e5, #6366f1);
+        background: linear-gradient(135deg, #0B266E, #091958);
         color: #ffffff;
         border: none;
         padding: 11px 28px;
@@ -79,9 +79,9 @@
         transition: all 0.2s;
     }
     .btn-save:hover {
-        background: linear-gradient(135deg, #4338ca, #4f46e5);
+        background: linear-gradient(135deg, #091958, #0B266E);
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        box-shadow: 0 4px 12px rgba(11, 38, 110, 0.3);
     }
 </style>
 @endpush
@@ -96,8 +96,8 @@
 
 <div class="edit-card">
     <div class="mb-4">
-        <h5 class="fw-bold mb-1" style="font-size: 20px; color: #1f2937;">Edit Data Alumni</h5>
-        <p class="text-muted mb-0" style="font-size: 14px;">Admin — perbarui biodata dan karir alumni</p>
+        <h5 class="fw-bold mb-1" style="font-size: 20px; color: #0D0D12;">Edit Data Alumni</h5>
+        <p class="mb-0" style="font-size: 14px; color: #666D80;">Admin — perbarui biodata dan karir alumni</p>
     </div>
 
     <form action="{{ route('manajemenmahasiswa.direktori.alumni.update', $alumni->id) }}" method="POST">
@@ -138,7 +138,7 @@
 
         <!-- Section: Akademik -->
         <div class="section-divider">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
             Informasi Akademik
         </div>
         <div class="row g-3 mb-4">
@@ -166,12 +166,12 @@
             <!-- Kontak -->
             <div class="col-md-12" x-data="alumniPhoneCode('{{ $savedCode }}')">
                 <label class="form-label">Kontak / WhatsApp</label>
-                <div class="d-flex position-relative p-0" style="overflow: visible; background: #fff; border: 1.5px solid #e2e8f0; border-radius: 10px;">
+                <div class="d-flex position-relative p-0" style="overflow: visible; background: #fff; border: 1.5px solid #DFE1E7; border-radius: 10px;">
                     <button type="button" @click.prevent="toggle($el)"
-                            class="btn border-0 d-flex align-items-center gap-2" style="background: #f8fafc; border-right: 1.5px solid #e2e8f0 !important; border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 8.5px; border-bottom-left-radius: 8.5px;">
+                            class="btn border-0 d-flex align-items-center gap-2" style="background: #FAFAFA; border-right: 1.5px solid #DFE1E7 !important; border-top-right-radius: 0; border-bottom-right-radius: 0; border-top-left-radius: 8.5px; border-bottom-left-radius: 8.5px;">
                         <span x-text="selected.flag" style="font-size: 15px;"></span>
-                        <span x-text="selected.dial" style="font-size: 13px; font-weight: 600; color: #475569;"></span>
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                        <span x-text="selected.dial" style="font-size: 13px; font-weight: 600; color: #353849;"></span>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#353849" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                              :style="open ? 'transform:rotate(180deg)' : ''" style="transition: transform 0.2s;"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
                     <input type="text" name="kontak" class="form-control border-0 shadow-none w-100"
@@ -183,7 +183,7 @@
                     <!-- Dropdown -->
                     <div x-show="open" @click.outside="open = false" :style="dropdownStyle"
                          class="position-fixed bg-white border rounded shadow-lg" style="display:none; width: 240px; z-index: 9999; border-radius: 12px !important; overflow: hidden;">
-                        <div class="p-2 border-bottom" style="background: #f8fafc;">
+                        <div class="p-2 border-bottom" style="background: #FAFAFA;">
                             <input type="text" x-model="search" @click.stop placeholder="Cari negara..." class="form-control form-control-sm" style="font-size: 12px; border-radius: 8px;">
                         </div>
                         <ul class="list-unstyled mb-0" style="max-height: 200px; overflow-y: auto;">
@@ -191,10 +191,10 @@
                                 <li>
                                     <button type="button" @click="select(c)"
                                             class="w-100 btn text-start d-flex align-items-center gap-2 py-2 px-3 border-0 rounded-0"
-                                            :style="selected.name === c.name ? 'background: #f1f5f9;' : 'background: #fff;'">
+                                            :style="selected.name === c.name ? 'background: #F6F8FA;' : 'background: #fff;'">
                                         <span x-text="c.flag" style="font-size: 15px;"></span>
                                         <span x-text="c.name" class="text-truncate flex-grow-1" style="font-size: 12px; color: #374151; font-weight: 500;"></span>
-                                        <span x-text="c.dial" style="font-size: 11px; font-weight: 700; color: #9ca3af;"></span>
+                                        <span x-text="c.dial" style="font-size: 11px; font-weight: 700; color: #666D80;"></span>
                                     </button>
                                 </li>
                             </template>
@@ -213,7 +213,7 @@
 
         <!-- Section: Karir -->
         <div class="section-divider">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#4f46e5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
             Informasi Karir
         </div>
         <div class="row g-3">
@@ -259,7 +259,7 @@
             </div>
         </div>
 
-        <div class="d-flex justify-content-end pt-4 mt-3" style="border-top: 1px solid #f1f5f9;">
+        <div class="d-flex justify-content-end pt-4 mt-3" style="border-top: 1px solid #F6F8FA;">
             <button type="submit" class="btn-save">
                 Simpan Perubahan
             </button>

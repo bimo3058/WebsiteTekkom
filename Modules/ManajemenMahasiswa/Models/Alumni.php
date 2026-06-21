@@ -19,6 +19,7 @@ class Alumni extends Model
         'angkatan',
         'program_studi',
         'tahun_lulus',
+        'ipk',
         'perusahaan',
         'jabatan',
         'bidang_industri',
@@ -31,6 +32,7 @@ class Alumni extends Model
         'angkatan'            => 'integer',
         'tahun_lulus'         => 'integer',
         'tahun_mulai_bekerja' => 'integer',
+        'ipk'                 => 'decimal:2',
     ];
 
     // -------------------------------------------------------------------------

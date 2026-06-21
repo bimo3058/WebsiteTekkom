@@ -11,6 +11,7 @@ use Modules\ManajemenMahasiswa\Models\Kemahasiswaan;
 use Modules\ManajemenMahasiswa\Models\RiwayatKegiatan;
 use Modules\ManajemenMahasiswa\Models\Prestasi;
 use Modules\ManajemenMahasiswa\Models\VerifikasiBukti;
+use Modules\ManajemenMahasiswa\Models\RewardAturan;
 
 class VerifikasiController extends Controller
 {
@@ -31,7 +32,7 @@ class VerifikasiController extends Controller
 
     private function isVerificator(): bool
     {
-        return $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+        return $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'dpm');
     }
 
     private function resolveLayout(): string
@@ -39,7 +40,7 @@ class VerifikasiController extends Controller
         $user  = Auth::user();
         $roles = $user->roles->pluck('name')->toArray();
 
-        if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles)) {
+        if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles) || \in_array('dpm', $roles)) {
             return 'manajemenmahasiswa::layouts.admin';
         }
 
@@ -107,8 +108,8 @@ class VerifikasiController extends Controller
 
     private function adminIndex(Request $request)
     {
-        $tab    = $request->get('tab', 'riwayat');
-        $status = $request->get('status', 'pending');
+        $tab    = $request->get('tab', 'prestasi');
+        $status = $request->get('status', 'semua');
         $search = $request->get('search');
         $angkatan = $request->get('angkatan');
 
@@ -139,7 +140,7 @@ class VerifikasiController extends Controller
         $riwayatData = $riwayatQuery->orderByDesc('created_at')->paginate(15, ['*'], 'riwayat_page');
 
         // ── Prestasi ──
-        $prestasiQuery = Prestasi::with(['kemahasiswaan.user', 'verifiedBy', 'buktiFiles']);
+        $prestasiQuery = Prestasi::with(['kemahasiswaan.user', 'verifiedBy', 'claimedBy', 'reviewedBy', 'buktiFiles']);
 
         if ($status && $status !== 'semua') {
             $prestasiQuery->where('verification_status', $status);
@@ -165,6 +166,22 @@ class VerifikasiController extends Controller
         // Counters
         $pendingRiwayat  = RiwayatKegiatan::manualOnly()->pending()->count();
         $pendingPrestasi = Prestasi::pending()->count();
+        $pendingPrestasiReward = Prestasi::rewardDiajukan()->count(); // utk badge tombol "Klaim Reward"
+
+        // ── Stat cards — global counts per tab (tidak terpengaruh filter search/angkatan) ──
+        if ($tab === 'riwayat') {
+            $adminStats = [
+                'pending'  => RiwayatKegiatan::manualOnly()->pending()->count(),
+                'approved' => RiwayatKegiatan::manualOnly()->where('verification_status', 'approved')->count(),
+                'rejected' => RiwayatKegiatan::manualOnly()->where('verification_status', 'rejected')->count(),
+            ];
+        } else {
+            $adminStats = [
+                'pending'  => Prestasi::pending()->count(),
+                'approved' => Prestasi::where('verification_status', 'approved')->count(),
+                'rejected' => Prestasi::where('verification_status', 'rejected')->count(),
+            ];
+        }
 
         // Angkatan list for filter
         $angkatanList = Kemahasiswaan::select('angkatan')
@@ -182,6 +199,80 @@ class VerifikasiController extends Controller
             'search',
             'angkatan',
             'angkatanList',
+            'pendingPrestasiReward',
+            'adminStats',
+        ))->with('layout', $this->resolveLayout());
+    }
+
+    // -------------------------------------------------------------------------
+    // Admin View — Halaman khusus daftar Klaim Reward Prestasi (Request Bu Bellia / B.2)
+    // -------------------------------------------------------------------------
+
+    public function rewardIndex(Request $request)
+    {
+        $reward   = $request->get('reward', 'menunggu');
+        $search   = $request->get('search');
+        $angkatan = $request->get('angkatan');
+
+        $rewardStatusMap = [
+            'menunggu'  => Prestasi::CLAIM_DIAJUKAN,
+            'disetujui' => Prestasi::CLAIM_DISETUJUI,
+            'ditolak'   => Prestasi::CLAIM_DITOLAK,
+        ];
+        $claimStatus = $rewardStatusMap[$reward] ?? Prestasi::CLAIM_DIAJUKAN;
+
+        $rewardQuery = Prestasi::with(['kemahasiswaan.user', 'reviewedBy', 'buktiFiles'])
+            ->where('claim_status', $claimStatus);
+
+        if ($search) {
+            $rewardQuery->whereHas('kemahasiswaan', function ($q) use ($search) {
+                $q->where(function ($query) use ($search) {
+                    $query->where('nama', 'like', "%{$search}%")
+                          ->orWhere('nim', 'like', "%{$search}%");
+                });
+            });
+        }
+
+        if ($angkatan && $angkatan !== 'semua') {
+            $rewardQuery->whereHas('kemahasiswaan', function ($q) use ($angkatan) {
+                $q->where('angkatan', $angkatan);
+            });
+        }
+
+        $rewardData = $rewardQuery->orderByDesc('claimed_at')->paginate(15);
+
+        $pendingPrestasiReward = Prestasi::rewardDiajukan()->count();
+
+        // Hitungan status klaim untuk kartu statistik (selaras dgn Verifikasi Prestasi)
+        $rewardStats = [
+            'menunggu'  => $pendingPrestasiReward,
+            'disetujui' => Prestasi::rewardDisetujui()->count(),
+            'ditolak'   => Prestasi::rewardDitolak()->count(),
+        ];
+
+        $kuotaMap = $this->rewardKuotaMap(
+            $rewardData->pluck('kemahasiswaan_id')->filter()->unique()->all()
+        );
+
+        $angkatanList = Kemahasiswaan::select('angkatan')
+            ->distinct()
+            ->orderBy('angkatan', 'desc')
+            ->pluck('angkatan');
+
+        $rewardAturan = RewardAturan::with('uploadedBy')->latest()->get();
+        $canManageRewardAturan = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+
+        return view('manajemenmahasiswa::verifikasi.reward', compact(
+            'rewardData',
+            'reward',
+            'search',
+            'angkatan',
+            'angkatanList',
+            'pendingPrestasiReward',
+            'rewardStats',
+            'kuotaMap',
+            'rewardAturan',
+            'canManageRewardAturan',
         ))->with('layout', $this->resolveLayout());
     }
 
@@ -192,6 +283,7 @@ class VerifikasiController extends Controller
     private function mahasiswaIndex(Request $request)
     {
         $user = Auth::user();
+        $tab  = $request->get('tab', 'prestasi');
         $student = Student::where('user_id', $user->id)->first();
         $mhs = Kemahasiswaan::where('user_id', $user->id)->first();
 
@@ -212,7 +304,7 @@ class VerifikasiController extends Controller
         }
 
         if ($mhs) {
-            $prestasiData = Prestasi::with(['verifiedBy', 'buktiFiles'])
+            $prestasiData = Prestasi::with(['verifiedBy', 'reviewedBy', 'buktiFiles'])
                 ->where('kemahasiswaan_id', $mhs->id)
                 ->orderByDesc('created_at')
                 ->get();
@@ -222,12 +314,24 @@ class VerifikasiController extends Controller
             $stats['rejected'] += $prestasiData->where('verification_status', 'rejected')->count();
         }
 
+        $kuota = $mhs
+            ? $this->rewardKuotaTerpakai($mhs->id)
+            : [Prestasi::KUOTA_UMUM => 0, Prestasi::KUOTA_INVENTION => 0];
+
+        $rewardAturan = RewardAturan::latest()->get();
+
+        $isAlumni = $this->hasRole('alumni');
+
         return view('manajemenmahasiswa::verifikasi.mahasiswa', compact(
             'riwayatData',
             'prestasiData',
             'stats',
             'mhs',
             'student',
+            'kuota',
+            'tab',
+            'rewardAturan',
+            'isAlumni',
         ))->with('layout', $this->resolveLayout());
     }
 
@@ -245,11 +349,9 @@ class VerifikasiController extends Controller
             'nama_kegiatan_manual' => 'required|string|max:50',
             'peran_manual'         => 'required|string|max:50',
             'tanggal_kegiatan'     => 'required|date',
-            'bukti_images'         => 'nullable|array|max:5',
-            'bukti_images.*'       => 'file|mimes:jpg,jpeg,png,gif,webp|max:10240',
-            'bukti_docs'           => 'nullable|array|max:5',
-            'bukti_docs.*'         => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
-        ]);
+            'bukti_docs'           => 'required|array|size:1',
+            'bukti_docs.*'         => 'file|mimes:pdf|max:10240',
+        ], [], ['bukti_docs' => 'bukti kegiatan']);
 
         $user    = Auth::user();
         $student = $this->ensureStudentRecord($user);
@@ -268,7 +370,7 @@ class VerifikasiController extends Controller
         $this->uploadBuktiFiles($request, 'riwayat', $riwayat->id);
 
         return redirect()
-            ->route('manajemenmahasiswa.verifikasi.index')
+            ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat'])
             ->with('success', 'Riwayat kegiatan berhasil diajukan untuk verifikasi.');
     }
 
@@ -286,11 +388,9 @@ class VerifikasiController extends Controller
             'nama_prestasi' => 'required|string|max:50',
             'tingkat'       => 'required|in:' . implode(',', Prestasi::TINGKAT_LIST),
             'tanggal'       => 'required|date',
-            'bukti_images'  => 'nullable|array|max:5',
-            'bukti_images.*'=> 'file|mimes:jpg,jpeg,png,gif,webp|max:10240',
-            'bukti_docs'    => 'nullable|array|max:5',
-            'bukti_docs.*'  => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
-        ]);
+            'bukti_docs'    => 'required|array|size:1',
+            'bukti_docs.*'  => 'file|mimes:pdf|max:10240',
+        ], [], ['bukti_docs' => 'bukti kegiatan']);
 
         $user = Auth::user();
 
@@ -312,13 +412,14 @@ class VerifikasiController extends Controller
             'tanggal'             => $request->tanggal,
             'tahun'               => date('Y', strtotime($request->tanggal)),
             'verification_status' => 'pending',
+            'claim_status'        => Prestasi::CLAIM_BELUM_AJUKAN,
         ]);
 
         // Upload bukti files ke Supabase
         $this->uploadBuktiFiles($request, 'prestasi', $prestasi->id);
 
         return redirect()
-            ->route('manajemenmahasiswa.verifikasi.index')
+            ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
             ->with('success', 'Prestasi berhasil diajukan untuk verifikasi.');
     }
 
@@ -412,6 +513,355 @@ class VerifikasiController extends Controller
         return redirect()
             ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
             ->with('success', 'Prestasi telah ditolak.');
+    }
+
+    // -------------------------------------------------------------------------
+    // Ajukan Reward — Mahasiswa pemilik mengajukan reward prestasinya
+    // (Request Bu Bellia / B.2 — dasar SK FT 774/2025)
+    // -------------------------------------------------------------------------
+
+    public function ajukanReward(Request $request, int $id)
+    {
+        $prestasi = Prestasi::with('kemahasiswaan')->findOrFail($id);
+
+        // Hanya pemilik prestasi yang boleh mengajukan
+        if (!$this->ownsPrestasi($prestasi)) {
+            abort(403, 'Anda hanya dapat mengajukan reward untuk prestasi milik sendiri.');
+        }
+
+        // Guard 1: hanya prestasi yang sudah diverifikasi (approved)
+        if ($prestasi->verification_status !== Prestasi::VERIF_APPROVED) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+                ->with('error', 'Prestasi harus diverifikasi (disetujui) dulu sebelum bisa diajukan reward.');
+        }
+
+        // Guard 2: belum ada pengajuan aktif (boleh ajukan ulang bila sebelumnya ditolak)
+        if (!$prestasi->rewardBisaDiajukan()) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+                ->with('error', 'Reward prestasi ini sudah diajukan atau sudah disetujui.');
+        }
+
+        $validated = $request->validate([
+            'reward_penyelenggara' => 'required|in:' . implode(',', Prestasi::PENYELENGGARA_LIST),
+            'reward_capaian'       => 'required|string',
+            'reward_is_invention'  => 'nullable|boolean',
+        ]);
+
+        $penyelenggara = $validated['reward_penyelenggara'];
+        $capaian       = $validated['reward_capaian'];
+        // is_invention hanya relevan untuk kategori "lainnya"
+        $isInvention   = $penyelenggara === Prestasi::PENYELENGGARA_LAINNYA
+            ? $request->boolean('reward_is_invention')
+            : false;
+
+        // Validasi capaian harus valid untuk penyelenggara yang dipilih
+        if (!\in_array($capaian, Prestasi::CAPAIAN_BY_PENYELENGGARA[$penyelenggara], true)) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+                ->with('error', 'Kombinasi penyelenggara dan capaian tidak valid.');
+        }
+
+        $jatah = Prestasi::hitungJatahReward($penyelenggara, $capaian, $isInvention);
+
+        // Usulan MK: hanya MK kurikulum yang valid, jumlah maks sesuai jatah (SK 774)
+        $mkFlat     = Prestasi::mataKuliahFlat();
+        $mkValid    = array_keys($mkFlat);
+        $mkInput    = (array) $request->input('reward_mk_diajukan', []);
+        $mkDiajukan = array_values(array_unique(array_filter(
+            $mkInput,
+            fn ($mk) => \in_array($mk, $mkValid, true)
+        )));
+
+        if (empty($mkDiajukan)) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+                ->with('error', 'Pilih minimal satu mata kuliah yang ingin dinaikkan nilainya sebelum mengajukan reward.');
+        }
+
+        if (count($mkDiajukan) > $jatah['jml_mk_max']) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+                ->with('error', "Maksimal {$jatah['jml_mk_max']} mata kuliah untuk capaian ini.");
+        }
+
+        // Total SKS usulan tidak boleh melebihi plafon SKS jatah (SK 774)
+        $totalSks = array_sum(array_map(fn ($mk) => $mkFlat[$mk] ?? 0, $mkDiajukan));
+        if ($totalSks > $jatah['sks_max']) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+                ->with('error', "Total SKS mata kuliah yang dipilih ({$totalSks} SKS) melebihi batas {$jatah['sks_max']} SKS untuk capaian ini.");
+        }
+
+        $prestasi->update([
+            'reward_penyelenggara' => $penyelenggara,
+            'reward_capaian'       => $capaian,
+            'reward_is_invention'  => $isInvention,
+            'reward_jml_mk_max'    => $jatah['jml_mk_max'],
+            'reward_sks_max'       => $jatah['sks_max'],
+            'reward_mk_diajukan'   => $mkDiajukan,
+            'claim_status'         => Prestasi::CLAIM_DIAJUKAN,
+            'claimed_by'           => Auth::id(),
+            'claimed_at'           => now(),
+            // bersihkan jejak review lama jika ini pengajuan ulang setelah ditolak
+            'reward_mk_disetujui'  => null,
+            'reward_reviewed_by'   => null,
+            'reward_reviewed_at'   => null,
+            'reward_note'          => null,
+        ]);
+
+        return redirect()
+            ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+            ->with('success', 'Pengajuan reward berhasil dikirim. Menunggu persetujuan departemen.');
+    }
+
+    // -------------------------------------------------------------------------
+    // Batalkan Reward — Mahasiswa pemilik membatalkan pengajuan (selama diajukan)
+    // -------------------------------------------------------------------------
+
+    public function batalkanReward(int $id)
+    {
+        $prestasi = Prestasi::with('kemahasiswaan')->findOrFail($id);
+
+        if (!$this->ownsPrestasi($prestasi)) {
+            abort(403, 'Anda hanya dapat membatalkan pengajuan reward milik sendiri.');
+        }
+
+        if (!$prestasi->isRewardDiajukan()) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+                ->with('error', 'Hanya pengajuan yang masih menunggu persetujuan yang dapat dibatalkan.');
+        }
+
+        $prestasi->update([
+            'claim_status'         => Prestasi::CLAIM_BELUM_AJUKAN,
+            'claimed_by'           => null,
+            'claimed_at'           => null,
+            'reward_penyelenggara' => null,
+            'reward_capaian'       => null,
+            'reward_is_invention'  => false,
+            'reward_jml_mk_max'    => null,
+            'reward_sks_max'       => null,
+            'reward_mk_diajukan'   => null,
+        ]);
+
+        return redirect()
+            ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+            ->with('success', 'Pengajuan reward berhasil dibatalkan.');
+    }
+
+    // -------------------------------------------------------------------------
+    // Setujui Reward — Admin/Departemen menyetujui & menetapkan MK
+    // -------------------------------------------------------------------------
+
+    public function setujuiReward(Request $request, int $id)
+    {
+        $prestasi = Prestasi::with('kemahasiswaan')->findOrFail($id);
+
+        if (!$prestasi->isRewardDiajukan()) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.reward.index')
+                ->with('error', 'Hanya pengajuan yang menunggu persetujuan yang dapat disetujui.');
+        }
+
+        $request->validate([
+            'reward_note' => 'nullable|string|max:300',
+        ]);
+
+        // MK final = usulan mahasiswa (admin hanya melihat, tidak mengubah)
+        $mkFinal = implode(', ', $prestasi->reward_mk_diajukan ?? []);
+        if ($mkFinal === '') {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.reward.index')
+                ->with('error', 'Pengajuan ini belum memuat usulan mata kuliah dari mahasiswa, tidak dapat disetujui.');
+        }
+
+        // Guard kuota keras (SK 774 poin 4 = umum maks 2x, poin 5 = invention maks 1x)
+        $grup     = $prestasi->rewardKuotaGrup();
+        $maks     = Prestasi::KUOTA_MAKS[$grup];
+        $terpakai = $this->rewardKuotaTerpakai($prestasi->kemahasiswaan_id);
+
+        if (($terpakai[$grup] ?? 0) >= $maks) {
+            $labelGrup = $grup === Prestasi::KUOTA_INVENTION ? 'invention/expo/fair' : 'umum';
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.reward.index')
+                ->with('error', "Kuota reward {$labelGrup} mahasiswa ini sudah penuh (maks {$maks}×). Pengajuan tidak dapat disetujui.");
+        }
+
+        $prestasi->update([
+            'claim_status'        => Prestasi::CLAIM_DISETUJUI,
+            'reward_mk_disetujui' => $mkFinal,
+            'reward_note'         => $request->reward_note ?: null,
+            'reward_reviewed_by'  => Auth::id(),
+            'reward_reviewed_at'  => now(),
+        ]);
+
+        return redirect()
+            ->route('manajemenmahasiswa.verifikasi.reward.index')
+            ->with('success', 'Pengajuan reward disetujui.');
+    }
+
+    // -------------------------------------------------------------------------
+    // Tolak Reward — Admin/Departemen menolak pengajuan dengan alasan
+    // -------------------------------------------------------------------------
+
+    public function tolakReward(Request $request, int $id)
+    {
+        $prestasi = Prestasi::findOrFail($id);
+
+        if (!$prestasi->isRewardDiajukan()) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.reward.index')
+                ->with('error', 'Hanya pengajuan yang menunggu persetujuan yang dapat ditolak.');
+        }
+
+        $request->validate([
+            'reward_note' => 'required|string|max:300',
+        ]);
+
+        $prestasi->update([
+            'claim_status'       => Prestasi::CLAIM_DITOLAK,
+            'reward_note'        => $request->reward_note,
+            'reward_reviewed_by' => Auth::id(),
+            'reward_reviewed_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('manajemenmahasiswa.verifikasi.reward.index')
+            ->with('success', 'Pengajuan reward ditolak.');
+    }
+
+    // -------------------------------------------------------------------------
+    // Batalkan Persetujuan Reward — admin membatalkan reward yg sudah disetujui
+    // (mis. Fakultas menolak menaikkan nilai). Jadi DITOLAK + alasan, kuota balik.
+    // -------------------------------------------------------------------------
+
+    public function batalkanPersetujuanReward(Request $request, int $id)
+    {
+        $prestasi = Prestasi::findOrFail($id);
+
+        if (!$prestasi->isRewardDisetujui()) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.reward.index', ['reward' => 'disetujui'])
+                ->with('error', 'Hanya reward yang sudah disetujui yang dapat dibatalkan.');
+        }
+
+        $request->validate([
+            'reward_note' => 'required|string|max:300',
+        ]);
+
+        $prestasi->update([
+            'claim_status'       => Prestasi::CLAIM_DITOLAK,
+            'reward_note'        => $request->reward_note,
+            'reward_reviewed_by' => Auth::id(),
+            'reward_reviewed_at' => now(),
+        ]);
+
+        return redirect()
+            ->route('manajemenmahasiswa.verifikasi.reward.index', ['reward' => 'ditolak'])
+            ->with('success', 'Persetujuan reward dibatalkan. Status diubah menjadi ditolak & kuota mahasiswa dikembalikan.');
+    }
+
+    // -------------------------------------------------------------------------
+    // Helper — Cek apakah prestasi milik user yang sedang login
+    // -------------------------------------------------------------------------
+
+    private function ownsPrestasi(Prestasi $prestasi): bool
+    {
+        return $prestasi->kemahasiswaan
+            && $prestasi->kemahasiswaan->user_id === Auth::id();
+    }
+
+    // -------------------------------------------------------------------------
+    // Helper — Hitung kuota reward terpakai (disetujui) per mahasiswa
+    // -------------------------------------------------------------------------
+
+    private function rewardKuotaTerpakai(int $kemahasiswaanId): array
+    {
+        $terpakai = [Prestasi::KUOTA_UMUM => 0, Prestasi::KUOTA_INVENTION => 0];
+
+        $rows = Prestasi::rewardDisetujui()
+            ->where('kemahasiswaan_id', $kemahasiswaanId)
+            ->get(['reward_penyelenggara', 'reward_is_invention']);
+
+        foreach ($rows as $r) {
+            $grup = Prestasi::tentukanKuotaGrup($r->reward_penyelenggara, (bool) $r->reward_is_invention);
+            $terpakai[$grup]++;
+        }
+
+        return $terpakai;
+    }
+
+    // -------------------------------------------------------------------------
+    // Helper — Peta kuota terpakai untuk banyak mahasiswa sekaligus (admin view)
+    // -------------------------------------------------------------------------
+
+    private function rewardKuotaMap(array $kemahasiswaanIds): array
+    {
+        if (empty($kemahasiswaanIds)) {
+            return [];
+        }
+
+        $rows = Prestasi::rewardDisetujui()
+            ->whereIn('kemahasiswaan_id', $kemahasiswaanIds)
+            ->get(['kemahasiswaan_id', 'reward_penyelenggara', 'reward_is_invention']);
+
+        $map = [];
+        foreach ($rows as $r) {
+            $grup = Prestasi::tentukanKuotaGrup($r->reward_penyelenggara, (bool) $r->reward_is_invention);
+            $map[$r->kemahasiswaan_id][$grup] = ($map[$r->kemahasiswaan_id][$grup] ?? 0) + 1;
+        }
+
+        return $map;
+    }
+
+    // -------------------------------------------------------------------------
+    // Dokumen Aturan Reward (SK FT 774) — admin upload/hapus, dirujuk 2 role
+    // -------------------------------------------------------------------------
+
+    public function aturanStore(Request $request)
+    {
+        $request->validate([
+            'judul' => 'required|string|max:150',
+            'file'  => 'required|file|mimes:pdf,jpg,jpeg,png,webp|max:10240',
+        ], [], ['file' => 'dokumen']);
+
+        $file     = $request->file('file');
+        $supabase = app(SupabaseStorage::class);
+        $path     = $supabase->upload($file, 'mk_verifikasi/aturan');
+
+        if (!$path) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.reward.index')
+                ->with('error', 'Gagal mengunggah dokumen. Coba lagi.');
+        }
+
+        $isImage = str_starts_with((string) $file->getMimeType(), 'image/');
+
+        RewardAturan::create([
+            'judul'       => $request->judul,
+            'nama_file'   => $file->getClientOriginalName(),
+            'path_file'   => $path,
+            'tipe_file'   => $isImage ? RewardAturan::TIPE_IMAGE : RewardAturan::TIPE_DOCUMENT,
+            'uploaded_by' => Auth::id(),
+        ]);
+
+        return redirect()
+            ->route('manajemenmahasiswa.verifikasi.reward.index')
+            ->with('success', 'Dokumen aturan reward berhasil diunggah.');
+    }
+
+    public function aturanDestroy(int $id)
+    {
+        $aturan = RewardAturan::findOrFail($id);
+
+        app(SupabaseStorage::class)->delete($aturan->path_file);
+        $aturan->delete();
+
+        return redirect()
+            ->route('manajemenmahasiswa.verifikasi.reward.index')
+            ->with('success', 'Dokumen aturan reward dihapus.');
     }
 
     // -------------------------------------------------------------------------

@@ -48,6 +48,8 @@
                 margin: 0;
                 line-height: 1.3;
                 letter-spacing: -0.025em;
+                word-break: break-word;
+                overflow-wrap: break-word;
             }
 
             .meta-container {
@@ -459,7 +461,7 @@
         $isAdminOrKoor = $roles->intersect(['superadmin', 'admin', 'dosen_koordinator'])->isNotEmpty();
         $canDelete = $user->id === $pengumuman->user_id || $isAdminOrKoor;
         $canEdit = $user->id === $pengumuman->user_id || $isAdminOrKoor;
-        $canPinGlobal = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+        $canPinGlobal = $user->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
     @endphp
 
     <div class="detail-card">

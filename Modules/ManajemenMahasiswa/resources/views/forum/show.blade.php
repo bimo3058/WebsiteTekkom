@@ -890,9 +890,13 @@
 
             // ── AJAX Comment Submit ────────────────────────────────────────────
             async function submitCommentForm(form, isReply) {
+                if (form.dataset.submitting === '1') return;
+
                 const submitBtn = form.querySelector('button[type="submit"]');
                 const textarea  = form.querySelector('textarea[name="konten"]');
                 if (!textarea || textarea.value.trim().length < 3) return;
+
+                form.dataset.submitting = '1';
 
                 // Tampilkan loading state
                 const origHtml = submitBtn.innerHTML;
@@ -915,9 +919,10 @@
                     const data = await res.json();
 
                     if (!res.ok || !data.success) {
-                        showToast(data.message ?? 'Gagal mengirim komentar.');
+                        showToast(data.error ?? data.message ?? 'Gagal mengirim komentar.');
                         submitBtn.disabled = false;
                         submitBtn.innerHTML = origHtml;
+                        form.dataset.submitting = '';
                         return;
                     }
 
@@ -949,6 +954,11 @@
                     const replyFormWrapper = form.closest('.inline-reply-form');
                     if (replyFormWrapper) replyFormWrapper.classList.remove('show');
 
+                    // Reset button
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = origHtml;
+                    form.dataset.submitting = '';
+
                     // Tampilkan notifikasi XP
                     showToast(data.xp_message ?? 'Komentar terkirim!');
 
@@ -961,6 +971,7 @@
                     showToast('Terjadi kesalahan. Coba lagi.');
                     submitBtn.disabled = false;
                     submitBtn.innerHTML = origHtml;
+                    form.dataset.submitting = '';
                 }
             }
 
