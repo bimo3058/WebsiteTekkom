@@ -172,7 +172,11 @@ class DosenController extends Controller
             ->join('eo_kerja_praktik as kp', 'eo_kp_dokumen.kp_id', '=', 'kp.id')
             ->leftJoin('eo_kp_mahasiswa as m', 'kp.mahasiswa_id', '=', 'm.id')
             ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
-            ->whereIn('eo_kp_dokumen.jenis_dokumen', ['Laporan', 'Makalah']);
+            ->join('eo_kp_template as t', function ($join) {
+                $join->on('eo_kp_dokumen.jenis_dokumen', '=', 't.title')
+                    ->on('kp.periode_id', '=', 't.periode_id');
+            })
+            ->whereIn('t.approver_role', ['dosen_pembimbing', 'keduanya']);
 
         if ($kpDosen) {
             $query->where('kp.dosen_pembimbing_id', $kpDosen->id);

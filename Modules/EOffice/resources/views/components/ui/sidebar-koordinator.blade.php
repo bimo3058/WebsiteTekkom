@@ -97,7 +97,7 @@
                         @endif
                         <a href="{{ route($item['route']) }}"
                             class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                                                                    {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                                                                        {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
                             @if($item['active'])
                                 <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
                                     @if($item['icon'] === 'periode')
@@ -194,7 +194,7 @@
                         @endif
                         <a href="{{ route($item['route']) }}"
                             class="flex items-center gap-3 py-2.5 px-3 rounded-[5px] transition-all group
-                                                                    {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
+                                                                        {{ $item['active'] ? 'bg-[#F0F2FA]' : 'hover:bg-[#F8F9FB]' }}">
                             @if($item['active'])
                                 <span class="w-7 h-7 bg-[#353849] rounded-lg flex items-center justify-center flex-shrink-0">
                                     @if($item['icon'] === 'annc')

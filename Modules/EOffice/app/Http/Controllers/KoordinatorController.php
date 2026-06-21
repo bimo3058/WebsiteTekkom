@@ -291,12 +291,15 @@ class KoordinatorController extends Controller implements HasMiddleware
                 \Modules\EOffice\Models\KpTemplate::create([
                     'periode_id' => $periodeId,
                     'title' => $source->title,
-                    'description' => $source->description,
+                    'description' => null,
                     'phase' => $source->phase,
                     'file_name' => $source->file_name,
-                    'file_path' => $source->file_path, // Aman karena file_path merujuk storage yang sama
+                    'file_path' => $source->file_path, // Aman karena merujuk object ID/URL yang sama di Supabase
                     'file_type' => $source->file_type,
                     'is_required' => $source->is_required,
+                    'is_downloadable' => $source->is_downloadable,
+                    'is_uploadable' => $source->is_uploadable,
+                    'approver_role' => $source->approver_role,
                     'uploaded_by' => auth()->id(),
                 ]);
                 $copiedCount++;
@@ -386,7 +389,8 @@ class KoordinatorController extends Controller implements HasMiddleware
                 $file = $files[$index];
                 $fileName = $file->getClientOriginalName();
                 $fileType = $file->getClientOriginalExtension();
-                $storedPath = $file->store('kp-templates/' . $phase, 'public');
+                $supabase = app(\App\Services\SupabaseStorage::class);
+                $storedPath = $supabase->upload($file, 'kp-templates/' . $phase, null, $fileName);
                 $filePath = $storedPath;
             } else {
                 // Preserve existing file if doc had one (matched by existing_file hidden field or doc id)
@@ -399,12 +403,15 @@ class KoordinatorController extends Controller implements HasMiddleware
             \Modules\EOffice\Models\KpTemplate::create([
                 'periode_id' => $periodeId,
                 'title' => $doc['title'],
-                'description' => $doc['description'] ?? null,
+                'description' => null,
                 'phase' => $phase,
                 'file_name' => $fileName,
                 'file_path' => $filePath,
                 'file_type' => $fileType ?: 'document',
                 'is_required' => true,
+                'is_downloadable' => isset($doc['is_downloadable']),
+                'is_uploadable' => isset($doc['is_uploadable']),
+                'approver_role' => $doc['approver_role'] ?? 'koordinator',
                 'uploaded_by' => auth()->id(),
             ]);
         }
@@ -436,12 +443,16 @@ class KoordinatorController extends Controller implements HasMiddleware
         $validated = $request->validate([
             'title' => 'required|string|max:255',
             'phase' => 'required|in:pra_kp,saat_kp,pasca_kp,keperluan_perusahaan',
-            'file_path' => 'required|file|mimes:pdf,doc,docx|max:5120', // Max 5MB
+            'file_path' => 'nullable|file|mimes:pdf,doc,docx|max:5120', // Max 5MB
         ]);
 
         $data = [
             'title' => $validated['title'],
             'phase' => $validated['phase'],
+            'is_downloadable' => $request->has('is_downloadable'),
+            'is_uploadable' => $request->has('is_uploadable'),
+            'is_required' => $request->has('is_required'),
+            'approver_role' => $request->input('approver_role', 'koordinator'),
             'uploaded_by' => auth()->id(),
         ];
 
@@ -449,7 +460,8 @@ class KoordinatorController extends Controller implements HasMiddleware
             $file = $request->file('file_path');
             $data['file_name'] = $file->getClientOriginalName();
             $data['file_type'] = $file->getClientOriginalExtension();
-            $data['file_path'] = $file->store('kp_templates', 'public');
+            $supabase = app(\App\Services\SupabaseStorage::class);
+            $data['file_path'] = $supabase->upload($file, 'kp_templates', null, $data['file_name']);
         }
 
         try {
@@ -473,13 +485,18 @@ class KoordinatorController extends Controller implements HasMiddleware
         $data = [
             'title' => $validated['title'],
             'phase' => $validated['phase'],
+            'is_downloadable' => $request->has('is_downloadable'),
+            'is_uploadable' => $request->has('is_uploadable'),
+            'is_required' => $request->has('is_required'),
+            'approver_role' => $request->input('approver_role', 'koordinator'),
         ];
 
         if ($request->hasFile('file_path')) {
             $file = $request->file('file_path');
             $data['file_name'] = $file->getClientOriginalName();
             $data['file_type'] = $file->getClientOriginalExtension();
-            $data['file_path'] = $file->store('kp_templates', 'public');
+            $supabase = app(\App\Services\SupabaseStorage::class);
+            $data['file_path'] = $supabase->upload($file, 'kp_templates', null, $data['file_name']);
         }
 
         $template->update($data);
@@ -496,12 +513,14 @@ class KoordinatorController extends Controller implements HasMiddleware
 
     public function validasiBerkas()
     {
+        $templates = \Modules\EOffice\Models\TemplateDokumenKP::all()->groupBy('periode_id');
         $kps = KerjaPraktik::with(['mahasiswa.user', 'dosenPembimbing.user', 'dokumen'])
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $mahasiswas = $kps->map(function ($kp) {
+        $mahasiswas = $kps->map(function ($kp) use ($templates) {
             $dokumens = $kp->dokumen;
+            $periodTemplates = $templates[$kp->periode_id] ?? collect();
 
             // Map status_validasi to UI status
             $mapStatus = function ($status) {
@@ -512,8 +531,10 @@ class KoordinatorController extends Controller implements HasMiddleware
                 return 'pending';
             };
 
-            $praKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['Transkrip', 'Surat Pengantar', 'Form Pendaftaran', 'Proposal']))
-                ->map(fn($d) => (object) [
+            $praKp = $dokumens->filter(function ($d) use ($periodTemplates) {
+                $t = $periodTemplates->firstWhere('title', $d->jenis_dokumen);
+                return $t && $t->phase === 'pra_kp';
+            })->map(fn($d) => (object) [
                     'id' => $d->id,
                     'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
                     'file_url' => $d->file_path ? asset('storage/' . $d->file_path) : null,
@@ -524,8 +545,10 @@ class KoordinatorController extends Controller implements HasMiddleware
                     'catatan' => $d->revision_note ?? ''
                 ])->values();
 
-            $saatKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['Bukti Terima', 'Laporan', 'Laporan Progress', 'Logbook', 'Makalah']))
-                ->map(fn($d) => (object) [
+            $saatKp = $dokumens->filter(function ($d) use ($periodTemplates) {
+                $t = $periodTemplates->firstWhere('title', $d->jenis_dokumen);
+                return $t && $t->phase === 'saat_kp';
+            })->map(fn($d) => (object) [
                     'id' => $d->id,
                     'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
                     'file_url' => $d->file_path ? asset('storage/' . $d->file_path) : null,
@@ -536,8 +559,10 @@ class KoordinatorController extends Controller implements HasMiddleware
                     'catatan' => $d->revision_note ?? ''
                 ])->values();
 
-            $pascaKp = $dokumens->filter(fn($d) => in_array($d->jenis_dokumen, ['CV', 'Foto', 'A2', 'Kartu Hijau', 'Nilai Lapangan', 'Laporan Akhir']))
-                ->map(fn($d) => (object) [
+            $pascaKp = $dokumens->filter(function ($d) use ($periodTemplates) {
+                $t = $periodTemplates->firstWhere('title', $d->jenis_dokumen);
+                return $t && $t->phase === 'pasca_kp';
+            })->map(fn($d) => (object) [
                     'id' => $d->id,
                     'nama_file' => $d->file_name ?? basename($d->file_path ?? $d->jenis_dokumen),
                     'file_url' => $d->file_path ? asset('storage/' . $d->file_path) : null,
@@ -730,10 +755,11 @@ class KoordinatorController extends Controller implements HasMiddleware
 
             // Find matching periode based on dates (because eo_kerja_praktik lacks exact periode_id)
             $matchedPeriode = $allPeriodes->first(function ($p) use ($kp) {
-                if (!$kp->created_at || !$p->pra_kp_mulai || !$p->pra_kp_akhir)
+                if (!$kp->created_at || !$p->pra_kp_mulai)
                     return false;
+                $endDate = $p->pasca_kp_akhir ? clone $p->pasca_kp_akhir : (clone $p->pra_kp_akhir)->addMonths(6);
                 return $kp->created_at->format('Y-m-d') >= $p->pra_kp_mulai->format('Y-m-d')
-                    && $kp->created_at->format('Y-m-d') <= $p->pra_kp_akhir->format('Y-m-d');
+                    && $kp->created_at->format('Y-m-d') <= $endDate->format('Y-m-d');
             });
 
             $periodeName = $matchedPeriode ? "Semester {$matchedPeriode->semester} {$matchedPeriode->tahun_ajaran}" : 'Unknown';
@@ -1230,7 +1256,8 @@ class KoordinatorController extends Controller implements HasMiddleware
 
     public function createPeriode()
     {
-        return view('eoffice::koordinator.periode.create');
+        $allPeriodes = \Modules\EOffice\Models\KpPeriode::with('komponenNilai')->orderBy('created_at', 'desc')->get();
+        return view('eoffice::koordinator.periode.create', compact('allPeriodes'));
     }
 
     public function storePeriode(Request $request)
