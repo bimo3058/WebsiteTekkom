@@ -294,8 +294,9 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::get('/', [KegiatanController::class, 'index'])->name('index');
             Route::get('/{id}', [KegiatanController::class, 'show'])->name('show')->where('id', '[0-9]+');
 
-            // Tambah Kegiatan — pengurus + admin + dpm (GPM & Kadep view-only)
-            Route::middleware('role:pengurus_himpunan|admin_kemahasiswaan|superadmin|dpm')->group(function () {
+            // Tambah Kegiatan — hanya role kurasi di luar alur himpunan (admin + dpm).
+            // Role himpunan wajib lewat alur Proker → Pelaksanaan → publish.
+            Route::middleware('role:admin_kemahasiswaan|superadmin|dpm')->group(function () {
                 Route::get('/create', [KegiatanController::class, 'create'])->name('create');
                 Route::post('/', [KegiatanController::class, 'store'])->name('store');
             });
@@ -444,7 +445,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->name('prestasi.reward.batal')->where('id', '[0-9]+');
             });
 
-            // Approve/Reject — admin only
+            // Approve/Reject & kelola reward — verifikator (admin group + DPM)
             Route::middleware('role:superadmin|admin|admin_kemahasiswaan|dpm')
                 ->group(function () {
                 // Halaman khusus daftar klaim reward prestasi (Request Bu Bellia / B.2)

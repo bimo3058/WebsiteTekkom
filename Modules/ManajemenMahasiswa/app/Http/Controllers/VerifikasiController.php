@@ -433,7 +433,22 @@ class VerifikasiController extends Controller
             'verification_note' => 'nullable|string|max:200',
         ]);
 
-        $riwayat = RiwayatKegiatan::findOrFail($id);
+        $riwayat = RiwayatKegiatan::with('student')->findOrFail($id);
+
+        // Guard: hanya pengajuan yang masih menunggu yang dapat diverifikasi
+        if ($riwayat->verification_status !== 'pending') {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat'])
+                ->with('error', 'Riwayat kegiatan ini sudah pernah diverifikasi sebelumnya.');
+        }
+
+        // Guard: verifikator tidak boleh memverifikasi pengajuannya sendiri
+        if ($this->ownsRiwayat($riwayat)) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat'])
+                ->with('error', 'Anda tidak dapat memverifikasi riwayat kegiatan yang Anda ajukan sendiri.');
+        }
+
         $riwayat->update([
             'verification_status' => 'approved',
             'verified_by'         => Auth::id(),
@@ -456,7 +471,22 @@ class VerifikasiController extends Controller
             'verification_note' => 'required|string|max:200',
         ]);
 
-        $riwayat = RiwayatKegiatan::findOrFail($id);
+        $riwayat = RiwayatKegiatan::with('student')->findOrFail($id);
+
+        // Guard: hanya pengajuan yang masih menunggu yang dapat diverifikasi
+        if ($riwayat->verification_status !== 'pending') {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat'])
+                ->with('error', 'Riwayat kegiatan ini sudah pernah diverifikasi sebelumnya.');
+        }
+
+        // Guard: verifikator tidak boleh memverifikasi pengajuannya sendiri
+        if ($this->ownsRiwayat($riwayat)) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'riwayat'])
+                ->with('error', 'Anda tidak dapat memverifikasi riwayat kegiatan yang Anda ajukan sendiri.');
+        }
+
         $riwayat->update([
             'verification_status' => 'rejected',
             'verified_by'         => Auth::id(),
@@ -479,7 +509,22 @@ class VerifikasiController extends Controller
             'verification_note' => 'nullable|string|max:200',
         ]);
 
-        $prestasi = Prestasi::findOrFail($id);
+        $prestasi = Prestasi::with('kemahasiswaan')->findOrFail($id);
+
+        // Guard: hanya pengajuan yang masih menunggu yang dapat diverifikasi
+        if ($prestasi->verification_status !== Prestasi::VERIF_PENDING) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+                ->with('error', 'Prestasi ini sudah pernah diverifikasi sebelumnya.');
+        }
+
+        // Guard: verifikator tidak boleh memverifikasi prestasinya sendiri
+        if ($this->ownsPrestasi($prestasi)) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+                ->with('error', 'Anda tidak dapat memverifikasi prestasi yang Anda ajukan sendiri.');
+        }
+
         $prestasi->update([
             'verification_status' => 'approved',
             'verified_by'         => Auth::id(),
@@ -502,7 +547,22 @@ class VerifikasiController extends Controller
             'verification_note' => 'required|string|max:200',
         ]);
 
-        $prestasi = Prestasi::findOrFail($id);
+        $prestasi = Prestasi::with('kemahasiswaan')->findOrFail($id);
+
+        // Guard: hanya pengajuan yang masih menunggu yang dapat diverifikasi
+        if ($prestasi->verification_status !== Prestasi::VERIF_PENDING) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+                ->with('error', 'Prestasi ini sudah pernah diverifikasi sebelumnya.');
+        }
+
+        // Guard: verifikator tidak boleh memverifikasi prestasinya sendiri
+        if ($this->ownsPrestasi($prestasi)) {
+            return redirect()
+                ->route('manajemenmahasiswa.verifikasi.index', ['tab' => 'prestasi'])
+                ->with('error', 'Anda tidak dapat memverifikasi prestasi yang Anda ajukan sendiri.');
+        }
+
         $prestasi->update([
             'verification_status' => 'rejected',
             'verified_by'         => Auth::id(),
@@ -771,6 +831,16 @@ class VerifikasiController extends Controller
     {
         return $prestasi->kemahasiswaan
             && $prestasi->kemahasiswaan->user_id === Auth::id();
+    }
+
+    // -------------------------------------------------------------------------
+    // Helper — Cek apakah riwayat kegiatan milik user yang sedang login
+    // -------------------------------------------------------------------------
+
+    private function ownsRiwayat(RiwayatKegiatan $riwayat): bool
+    {
+        return $riwayat->student
+            && $riwayat->student->user_id === Auth::id();
     }
 
     // -------------------------------------------------------------------------

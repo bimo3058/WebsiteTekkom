@@ -180,10 +180,15 @@ class DirektoriMahasiswaController extends Controller
             ->get();
 
         // 3. Ambil semua kegiatan di mana mahasiswa ini adalah ketua pelaksana
-        $kegiatanAsKetua = Kegiatan::where('ketua_pelaksana_id', $studentId)->get();
+        //    Hanya kegiatan berstatus "selesai" yang dihitung sebagai riwayat
+        //    (konsisten dengan Laporan & Arsip; menyembunyikan draft/legacy).
+        $kegiatanAsKetua = Kegiatan::where('ketua_pelaksana_id', $studentId)
+            ->where('status', Kegiatan::STATUS_SELESAI)
+            ->get();
 
         // 4. Ambil semua kegiatan di mana mahasiswa ini adalah panitia (via pivot)
         $kegiatanAsPanitia = Kegiatan::whereHas('panitia', fn($q) => $q->where('students.id', $studentId))
+            ->where('status', Kegiatan::STATUS_SELESAI)
             ->with(['panitia' => fn($q) => $q->where('students.id', $studentId)])
             ->get();
 
@@ -292,7 +297,21 @@ class DirektoriMahasiswaController extends Controller
                 $query->search($request->search);
             }
 
-            [$mahasiswa, $angkatanList] = $this->withRetry(function () use ($query) {
+            // Query khusus kartu statistik: ikut filter angkatan + search,
+            // TAPI sengaja TIDAK ikut filter status — sebab kartu-kartu ini
+            // justru menampilkan rincian jumlah per status untuk angkatan terpilih.
+            $statsQuery = Kemahasiswaan::query()
+                ->where('status', '!=', Kemahasiswaan::STATUS_ALUMNI);
+
+            if ($request->filled('angkatan') && $request->angkatan !== 'semua') {
+                $statsQuery->byAngkatan((int) $request->angkatan);
+            }
+
+            if ($request->filled('search')) {
+                $statsQuery->search($request->search);
+            }
+
+            [$mahasiswa, $angkatanList, $statusCounts] = $this->withRetry(function () use ($query, $statsQuery) {
                 $mahasiswa = $query->orderBy('angkatan', 'desc')
                     ->orderBy('nama', 'asc')
                     ->paginate(15);
@@ -302,13 +321,20 @@ class DirektoriMahasiswaController extends Controller
                     ->orderBy('angkatan', 'desc')
                     ->pluck('angkatan');
 
-                return [$mahasiswa, $angkatanList];
+                // Jumlah mahasiswa per status (mengikuti filter angkatan + search)
+                $statusCounts = (clone $statsQuery)
+                    ->selectRaw('status, COUNT(*) as total')
+                    ->groupBy('status')
+                    ->pluck('total', 'status');
+
+                return [$mahasiswa, $angkatanList, $statusCounts];
             });
 
         } catch (\Throwable) {
             // Koneksi DB benar-benar tidak stabil — tampilkan state kosong dengan pesan error
             $mahasiswa = new \Illuminate\Pagination\LengthAwarePaginator([], 0, 15);
             $angkatanList = collect();
+            $statusCounts = collect();
         }
 
         $isAdmin    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
@@ -321,6 +347,7 @@ class DirektoriMahasiswaController extends Controller
         return view('manajemenmahasiswa::direktori.mahasiswa-index', compact(
             'mahasiswa',
             'angkatanList',
+            'statusCounts',
             'isAdmin',
             'isGpm',
             'isPengurus',
@@ -412,8 +439,8 @@ class DirektoriMahasiswaController extends Controller
             'ipk'         => 'nullable|numeric|min:0|max:4',
             'tahun_lulus' => 'nullable|integer|min:2000|max:2099',
             'profesi'     => 'nullable|string|max:255',
-            'kontak'      => 'nullable|string|max:255',
-            'email_pribadi' => 'nullable|email|max:255',
+            'kontak'      => 'nullable|string|max:15',
+            'email_pribadi' => 'nullable|email|max:100',
         ]);
 
         $mhs = Kemahasiswaan::findOrFail($id);

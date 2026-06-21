@@ -258,7 +258,7 @@
                 </svg>
             </div>
             <div>
-                <div class="stat-value" style="font-size: 18px;">{{ $mahasiswa->total() }}</div>
+                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->sum() }}</div>
                 <div class="stat-label" style="font-size: 11px;">Total Mahasiswa</div>
             </div>
         </div>
@@ -272,7 +272,7 @@
                 </svg>
             </div>
             <div>
-                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','aktif')->count() }}</div>
+                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('aktif', 0) }}</div>
                 <div class="stat-label" style="font-size: 11px;">Aktif</div>
             </div>
         </div>
@@ -287,7 +287,7 @@
                 </svg>
             </div>
             <div>
-                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','cuti')->count() }}</div>
+                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('cuti', 0) }}</div>
                 <div class="stat-label" style="font-size: 11px;">Cuti</div>
             </div>
         </div>
@@ -302,7 +302,7 @@
                 </svg>
             </div>
             <div>
-                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','drop_out')->count() }}</div>
+                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('drop_out', 0) }}</div>
                 <div class="stat-label" style="font-size: 11px;">DO</div>
             </div>
         </div>
@@ -318,7 +318,7 @@
                 </svg>
             </div>
             <div>
-                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','pindah_studi')->count() }}</div>
+                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('pindah_studi', 0) }}</div>
                 <div class="stat-label" style="font-size: 11px;">Pindah Studi</div>
             </div>
         </div>
@@ -333,7 +333,7 @@
                 </svg>
             </div>
             <div>
-                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','wafat')->count() }}</div>
+                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('wafat', 0) }}</div>
                 <div class="stat-label" style="font-size: 11px;">Wafat</div>
             </div>
         </div>
@@ -348,7 +348,7 @@
                 </svg>
             </div>
             <div>
-                <div class="stat-value" style="font-size: 18px;">{{ \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('status','mangkir')->count() }}</div>
+                <div class="stat-value" style="font-size: 18px;">{{ $statusCounts->get('mangkir', 0) }}</div>
                 <div class="stat-label" style="font-size: 11px;">Mangkir</div>
             </div>
         </div>

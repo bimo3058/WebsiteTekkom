@@ -202,6 +202,7 @@
                 <label class="form-label-custom">Email Pribadi</label>
                 <input type="email" name="email_pribadi" class="form-control form-control-custom"
                        value="{{ old('email_pribadi', $mhs->user?->personal_email) }}"
+                       maxlength="100"
                        placeholder="contoh@gmail.com">
                 <small class="text-muted d-block mt-1" style="font-size: 11px;">
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1 text-warning"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
@@ -219,9 +220,9 @@
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#353849" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
                              :style="open ? 'transform:rotate(180deg)' : ''" style="transition: transform 0.2s;"><polyline points="6 9 12 15 18 9"></polyline></svg>
                     </button>
-                    <input type="text" name="kontak" class="form-control border-0 shadow-none"
-                           value="{{ old('kontak', $localNum) }}" placeholder="8123456789" 
-                           @input="$el.value = $el.value.replace(/[^0-9]/g, '')"
+                    <input type="text" name="kontak" inputmode="numeric" maxlength="15" class="form-control border-0 shadow-none"
+                           value="{{ old('kontak', $localNum) }}" placeholder="8123456789"
+                           @input="$el.value = $el.value.replace(/[^0-9]/g, '').slice(0, 15)"
                            style="background: transparent; font-size: 14px; font-weight: 600; color: #374151;">
                     <input type="hidden" name="phone_code" :value="selected.dial">
 

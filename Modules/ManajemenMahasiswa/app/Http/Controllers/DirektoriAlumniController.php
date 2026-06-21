@@ -179,10 +179,15 @@ class DirektoriAlumniController extends Controller
             ->get();
 
         // 3. Sebagai ketua pelaksana
-        $kegiatanAsKetua = Kegiatan::where('ketua_pelaksana_id', $studentId)->get();
+        //    Hanya kegiatan berstatus "selesai" yang dihitung sebagai riwayat
+        //    (konsisten dengan Laporan & Arsip; menyembunyikan draft/legacy).
+        $kegiatanAsKetua = Kegiatan::where('ketua_pelaksana_id', $studentId)
+            ->where('status', Kegiatan::STATUS_SELESAI)
+            ->get();
 
         // 4. Sebagai panitia (via pivot)
         $kegiatanAsPanitia = Kegiatan::whereHas('panitia', fn($q) => $q->where('students.id', $studentId))
+            ->where('status', Kegiatan::STATUS_SELESAI)
             ->with(['panitia' => fn($q) => $q->where('students.id', $studentId)])
             ->get();
 

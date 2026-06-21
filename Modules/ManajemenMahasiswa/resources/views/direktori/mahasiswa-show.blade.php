@@ -77,9 +77,12 @@
         gap: 8px;
     }
     .info-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-        gap: 16px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px 44px;
+    }
+    .info-grid > div {
+        min-width: 140px;
     }
     .info-item-label {
         font-size: 12px;
@@ -307,13 +310,13 @@
         @if($mhs->user && $mhs->user->email)
         <div>
             <div class="info-item-label">Email UNDIP <span class="sso-tag">SSO</span></div>
-            <div class="info-item-value" style="word-break: break-all;">{{ $mhs->user->email }}</div>
+            <div class="info-item-value" style="max-width: 360px; overflow-wrap: anywhere;">{{ $mhs->user->email }}</div>
         </div>
         @endif
         @if($mhs->user && $mhs->user->personal_email)
         <div>
             <div class="info-item-label">Email Pribadi</div>
-            <div class="info-item-value" style="word-break: break-all;">{{ $mhs->user->personal_email }}</div>
+            <div class="info-item-value" style="max-width: 360px; overflow-wrap: anywhere;">{{ $mhs->user->personal_email }}</div>
         </div>
         @endif
 

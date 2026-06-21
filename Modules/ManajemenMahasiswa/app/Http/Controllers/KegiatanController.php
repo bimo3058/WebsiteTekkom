@@ -79,12 +79,19 @@ class KegiatanController extends Controller
             'dpm',
         ])->isNotEmpty();
 
+        // Tombol "Tambah Kegiatan" (create langsung ke arsip) hanya untuk role kurasi
+        // di luar alur himpunan — role himpunan wajib lewat Proker → Pelaksanaan → publish.
+        $canTambahKegiatan = $roles->intersect([
+            'superadmin', 'admin_kemahasiswaan', 'dpm',
+        ])->isNotEmpty();
+
         return view('manajemenmahasiswa::kegiatan.index', compact(
             'kegiatan',
             'bidangList',
             'tahunList',
             'kategoriList',
             'isAdmin',
+            'canTambahKegiatan',
         ));
     }
 
@@ -119,7 +126,7 @@ class KegiatanController extends Controller
 
     /**
      * Form buat kegiatan baru.
-     * Akses: pengurus_himpunan, admin_kemahasiswaan, superadmin
+     * Akses: admin_kemahasiswaan, superadmin, dpm (role kurasi di luar alur himpunan).
      */
     public function create()
     {
