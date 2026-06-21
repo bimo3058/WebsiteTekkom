@@ -37,18 +37,20 @@ class CbtEngineController extends Controller
     {
         $request->validate(['token' => 'required|string|size:6']);
 
-        $token     = strtoupper($request->token);
-        $pendaftar = PendaftarUjian::where('mahasiswa_id', auth()->id())
-            ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
-            ->whereHas('jadwal')
-            ->with('jadwal')
+        $token = strtoupper($request->token);
+
+        // Cari JadwalUjian yang aktif dan berisi mahasiswa ini sebagai pendaftar yang approved
+        $jadwal = JadwalUjian::where('status', 'aktif')
+            ->whereHas('pendaftars', function ($q) {
+                $q->where('mahasiswa_id', auth()->id())
+                  ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
+                  ->whereNull('deleted_at');
+            })
             ->first();
 
-        if (! $pendaftar || ! $pendaftar->jadwal) {
-            return back()->with('error', 'Anda tidak terdaftar atau belum dialokasikan ke sesi ujian apapun.');
+        if (! $jadwal) {
+            return back()->with('error', 'Anda tidak terdaftar atau belum dialokasikan ke sesi ujian yang aktif.');
         }
-
-        $jadwal = $pendaftar->jadwal;
 
         if ($jadwal->token !== $token) {
             return back()->with('error', 'Token yang Anda masukkan salah.');
@@ -91,18 +93,20 @@ class CbtEngineController extends Controller
     {
         $request->validate(['token' => 'required|string|size:6']);
 
-        $token     = strtoupper($request->token);
-        $pendaftar = PendaftarUjian::where('mahasiswa_id', auth()->id())
-            ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
-            ->whereHas('jadwal')
-            ->with('jadwal')
+        $token = strtoupper($request->token);
+
+        // Cari JadwalUjian yang aktif dan berisi mahasiswa ini sebagai pendaftar yang approved
+        $jadwal = JadwalUjian::where('status', 'aktif')
+            ->whereHas('pendaftars', function ($q) {
+                $q->where('mahasiswa_id', auth()->id())
+                  ->where('status_pendaftaran', PendaftaranStatus::Approved->value)
+                  ->whereNull('deleted_at');
+            })
             ->first();
 
-        if (! $pendaftar || ! $pendaftar->jadwal) {
-            return response()->json(['valid' => false, 'message' => 'Anda tidak terdaftar atau belum dialokasikan ke sesi ujian apapun.']);
+        if (! $jadwal) {
+            return response()->json(['valid' => false, 'message' => 'Anda tidak terdaftar atau belum dialokasikan ke sesi ujian yang aktif.']);
         }
-
-        $jadwal = $pendaftar->jadwal;
 
         if ($jadwal->token !== $token) {
             return response()->json(['valid' => false, 'message' => 'Token yang Anda masukkan salah.']);
@@ -219,10 +223,10 @@ class CbtEngineController extends Controller
         $jadwal   = $session->jadwal;
         $jawabans = KompreJawaban::where('kompre_session_id', $session->id)
             ->orderBy('urutan_soal')
-            ->with(['pertanyaan', 'pertanyaan.jawabans', 'pertanyaan.cpl'])
+            ->with(['pertanyaan', 'pertanyaan.jawaban', 'pertanyaan.cpl'])
             ->get()
             ->map(function ($j) {
-                $opsiMap    = collect($j->pertanyaan->jawabans)->keyBy('id');
+                $opsiMap    = collect($j->pertanyaan->jawaban)->keyBy('id');
                 $opsiSorted = collect($j->urutan_opsi)
                     ->map(fn($oId) => $opsiMap->get($oId))
                     ->filter()

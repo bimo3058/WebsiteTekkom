@@ -28,7 +28,7 @@
             <!-- Topbar -->
             <header class="bg-white border-b border-slate-200 h-16 flex-shrink-0 flex items-center justify-between px-6 z-10">
                 <div class="flex items-center text-sm font-medium text-slate-600">
-                    <span class="mr-2">SIBASKOM</span> 
+                    <span class="mr-2">SIBASO</span> 
                     @hasSection('breadcrumbs')
                         <span class="mx-2 text-slate-300">/</span>
                         @yield('breadcrumbs')
@@ -60,8 +60,8 @@
             </header>
 
             <!-- Main Content Area -->
-            <main class="w-full flex-1 overflow-y-auto">
-                <div class="p-8 w-full max-w-screen-2xl mx-auto">
+            <main class="w-full flex-1 overflow-y-auto bg-slate-50">
+                <div id="banksoal-main-content" class="p-4 md:p-6 w-full max-w-screen-2xl mx-auto">
                     {{ $slot }}
                 </div>
             </main>

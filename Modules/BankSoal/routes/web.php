@@ -369,6 +369,7 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
         Route::post('/pengajuan-pendaftaran/form', [MahasiswaController::class, 'storePendaftaran'])->name('pendaftaran.store');
 
         Route::get('/riwayat-ujian', [MahasiswaController::class, 'riwayat'])->name('riwayat');
+        Route::get('/riwayat-ujian/{id}', [MahasiswaController::class, 'detailRiwayat'])->name('riwayat.detail');
 
         // CBT Engine Routes
         // Flow: validate-token (generate soal + start sesi) -> engine/run

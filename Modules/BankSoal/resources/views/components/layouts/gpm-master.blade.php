@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
-    <title>{{ config('app.name', 'SIBASKOM') }} - GPM</title>
+    <title>{{ config('app.name', 'SIBASO') }} - GPM</title>
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.bunny.net">
@@ -31,7 +31,7 @@
             <!-- Topbar -->
             <header class="bg-white border-b border-slate-200 h-16 flex-shrink-0 flex items-center justify-between px-6 z-10">
                 <div class="flex items-center text-sm font-medium text-slate-600">
-                    <span class="mr-2">SIBASKOM</span>
+                    <span class="mr-2">SIBASO</span>
                     @hasSection('breadcrumbs')
                         <span class="mx-2 text-slate-300">/</span>
                         @yield('breadcrumbs')
