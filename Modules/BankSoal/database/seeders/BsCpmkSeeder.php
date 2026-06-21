@@ -9,7 +9,7 @@ class BsCpmkSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('bs_cpmk')->insert([
+        $data = [
             [
                 'id' => 1,
                 'kode' => 'CPMK-1.1',
@@ -143,6 +143,13 @@ class BsCpmkSeeder extends Seeder
                 'created_at' => '2026-03-13 13:12:48',
                 'updated_at' => '2026-03-13 13:12:48',
             ],
-        ]);
+        ];
+
+        foreach ($data as $item) {
+            DB::table('bs_cpmk')->updateOrInsert(
+                ['id' => $item['id']],
+                $item
+            );
+        }
     }
 }

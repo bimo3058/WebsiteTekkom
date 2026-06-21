@@ -48,3 +48,5 @@ _ds_tmp/
 
 # Zip export
 *.zip
+*.kiro
+.kiro/specs/ui-standardization/.config.kiro

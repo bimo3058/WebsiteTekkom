@@ -183,8 +183,8 @@ class DashboardController extends Controller
 
 
 
-        // GPM
-        if ($roles->contains('gpm')) {
+        // GPM (Hanya jika sesi GPM aktif via switcher)
+        if ($roles->contains('gpm') && session('active_banksoal_role') === 'gpm') {
             // 1. Ambil Antrean Bank Soal (Mata kuliah yang belum direview)
             $prioritasBankSoal = DB::table('bs_mata_kuliah')
                 ->join('bs_pertanyaan', 'bs_mata_kuliah.id', '=', 'bs_pertanyaan.mk_id')
@@ -325,5 +325,27 @@ class DashboardController extends Controller
         }
 
         abort(403, 'Akses ditolak.');
+    }
+
+    /**
+     * Switch user active session role in Bank Soal module.
+     */
+    public function switchRole($role)
+    {
+        if (!in_array($role, ['dosen', 'gpm'])) {
+            abort(400);
+        }
+
+        $user  = Auth::user();
+        $roles = $user->roles->pluck('name');
+        
+        if (!$roles->contains($role)) {
+            abort(403, 'Anda tidak memiliki peran ini.');
+        }
+
+        session(['active_banksoal_role' => $role]);
+
+        $roleLabel = $role === 'gpm' ? 'GPM' : 'Dosen';
+        return redirect()->route('banksoal.dashboard')->with('success', 'Berhasil beralih peran ke ' . $roleLabel);
     }
 }

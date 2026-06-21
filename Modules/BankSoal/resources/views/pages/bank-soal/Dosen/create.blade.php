@@ -10,26 +10,6 @@
         </x-slot:actions>
     </x-banksoal::ui.page-header>
 
-    @if(session('error'))
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Waduh, Gagal...',
-                    text: @json(session('error')),
-                    confirmButtonColor: '#ef4444',
-                    background: '#ffffff',
-                    customClass: {
-                        title: 'text-slate-800 text-xl font-bold',
-                        htmlContainer: 'text-slate-600 text-sm',
-                        confirmButton: 'rounded-xl px-5 py-2.5 font-semibold transition-colors'
-                    }
-                });
-            });
-        </script>
-    @endif
-
     <x-banksoal::ui.panel title="Form Soal" subtitle="Gunakan format pilihan ganda dan tandai satu jawaban benar." padding="p-0">
         <form action="{{ route('banksoal.soal.dosen.store') }}" method="POST" id="formSoal">
             @csrf
@@ -195,7 +175,7 @@
 
             // Sinkronkan Quill HTML ke hidden input sebelum submit form
             var form = document.getElementById('formSoal');
-            form.onsubmit = function() {
+            form.addEventListener('submit', function() {
                 // Populate hidden input on submit
                 var soalInput = document.getElementById('soalInput');
                 // Mengambil HTML dari editor, jika kosong/hanya whitespace dikembalikan string kosong supaya validasi server menangkap
@@ -205,7 +185,11 @@
                 } else {
                     soalInput.value = htmlContent;
                 }
-            };
+                
+                if (form.checkValidity()) {
+                    window.showLoader();
+                }
+            });
 
             const mkSelect = document.getElementById('mk_id');
             const cplSelect = document.getElementById('cpl_id');

@@ -31,7 +31,13 @@
             <!-- Topbar -->
             <header class="bg-white border-b border-slate-200 h-16 flex-shrink-0 flex items-center justify-between px-6 z-10">
                 <div class="flex items-center text-sm font-medium text-slate-600">
+<<<<<<< HEAD
                     <span class="mr-2">SIBASO</span>
+=======
+                    <span class="mr-2">SIBASKOM</span>
+                    <span class="mx-2 text-slate-300">/</span>
+                    <span class="text-slate-500 font-semibold">GPM</span>
+>>>>>>> 7434167313ec190790457a15aace01fc6a498f07
                     @hasSection('breadcrumbs')
                         <span class="mx-2 text-slate-300">/</span>
                         @yield('breadcrumbs')
@@ -74,6 +80,25 @@
 
     <!-- Global Component untuk Toast Message -->
     <x-banksoal::global-toast />
+
+    <!-- Global Loader Overlay (Style 1 for non-interruptible POST/mutation queries) -->
+    <div class="pm-loader" id="loaderOverlay" style="position:fixed;inset:0;background:rgba(255,255,255,.7);display:none;align-items:center;justify-content:center;z-index:999999;">
+        <div class="pm-spinner" style="width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:rgb(11,38,110);border-radius:50%;animation:pm-spin .7s linear infinite;"></div>
+    </div>
+    <style>
+        .pm-loader.show { display: flex !important; }
+        @keyframes pm-spin { to { transform: rotate(360deg); } }
+    </style>
+    <script>
+        window.showLoader = function() {
+            const overlay = document.getElementById('loaderOverlay');
+            if (overlay) overlay.classList.add('show');
+        };
+        window.hideLoader = function() {
+            const overlay = document.getElementById('loaderOverlay');
+            if (overlay) overlay.classList.remove('show');
+        };
+    </script>
 
     @include('banksoal::partials.gpm.layout-scripts')
     @livewireScripts

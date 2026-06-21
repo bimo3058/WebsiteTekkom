@@ -85,14 +85,14 @@
                         <div class="grid grid-cols-1 gap-6 sm:grid-cols-2">
                             <div>
                                 <label class="text-sm font-bold text-slate-700 block mb-2">Semester <span class="text-rose-500">*</span></label>
-                                <select name="semester" x-model="formData.semester" required class="w-full rounded-2xl border border-slate-200 px-5 py-3.5 text-sm focus:border-navy focus:ring-4 focus:ring-navy/5 outline-none transition-all appearance-none bg-no-repeat bg-[right_1.25rem_center] bg-[length:1rem]" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%236b7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6 8 4 4 4-4%22/%3E%3C/svg%3E')">
+                                <select name="semester" x-model="formData.semester" disabled required class="w-full rounded-2xl border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed px-5 py-3.5 text-sm focus:border-navy focus:ring-4 focus:ring-navy/5 outline-none transition-all appearance-none bg-no-repeat bg-[right_1.25rem_center] bg-[length:1rem]" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%2394a3b8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6 8 4 4 4-4%22/%3E%3C/svg%3E')">
                                     <option value="Ganjil">Ganjil</option>
                                     <option value="Genap">Genap</option>
                                 </select>
                             </div>
                             <div>
                                 <label class="text-sm font-bold text-slate-700 block mb-2">Tahun Ajaran <span class="text-rose-500">*</span></label>
-                                <select name="tahun_ajaran" x-model="formData.tahun_ajaran" required class="w-full rounded-2xl border border-slate-200 px-5 py-3.5 text-sm focus:border-navy focus:ring-4 focus:ring-navy/5 outline-none transition-all appearance-none bg-no-repeat bg-[right_1.25rem_center] bg-[length:1rem]" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%236b7280%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6 8 4 4 4-4%22/%3E%3C/svg%3E')">
+                                <select name="tahun_ajaran" x-model="formData.tahun_ajaran" disabled required class="w-full rounded-2xl border border-slate-200 bg-slate-100 text-slate-500 cursor-not-allowed px-5 py-3.5 text-sm focus:border-navy focus:ring-4 focus:ring-navy/5 outline-none transition-all appearance-none bg-no-repeat bg-[right_1.25rem_center] bg-[length:1rem]" style="background-image: url('data:image/svg+xml;charset=utf-8,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 fill=%22none%22 viewBox=%220 0 20 20%22%3E%3Cpath stroke=%22%2394a3b8%22 stroke-linecap=%22round%22 stroke-linejoin=%22round%22 stroke-width=%221.5%22 d=%22m6 8 4 4 4-4%22/%3E%3C/svg%3E')">
                                     <option value="" disabled>Pilih Tahun Ajaran</option>
                                     @foreach($tahunAjarans as $ta)
                                         <option value="{{ $ta }}">{{ $ta }}</option>
@@ -249,7 +249,7 @@
                 formData: {
                     judul: '{{ old('judul') }}',
                     semester: '{{ old('semester', $currentSemester) }}',
-                    tahun_ajaran: '{{ old('tahun_ajaran') }}',
+                    tahun_ajaran: '{{ old('tahun_ajaran', $currentTahunAjaran) }}',
                     tanggal_mulai: '{{ old('tanggal_mulai') }}',
                     tanggal_selesai: '{{ old('tanggal_selesai') }}',
                     is_active: true

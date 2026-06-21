@@ -281,21 +281,14 @@
                     const result = await response.json();
 
                     if (result.success) {
-                        Swal.fire({
-                            icon: 'success',
-                            title: 'Berhasil!',
-                            text: result.message,
-                            timer: 1500,
-                            showConfirmButton: false
-                        }).then(() => {
-                            window.location.reload();
-                        });
+                        window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'success', message: result.message || 'Parameter berhasil dihapus.' } }));
+                        setTimeout(() => window.location.reload(), 1500);
                     } else {
-                        Swal.fire('Gagal!', result.message || 'Gagal menghapus parameter.', 'error');
+                        window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: result.message || 'Gagal menghapus parameter.' } }));
                     }
                 } catch (error) {
                     console.error('Delete error:', error);
-                    Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: 'Terjadi kesalahan jaringan.' } }));
                 }
             }
         }
@@ -305,10 +298,11 @@
             const skor = skorInput.value;
 
             if (skor === '' || skor < 0 || skor > 100) {
-                Swal.fire('Input Tidak Valid', 'Skor harus diisi antara 0 hingga 100.', 'warning');
+                window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'warning', message: 'Skor harus diisi antara 0 hingga 100.' } }));
                 return;
             }
 
+            window.showLoader();
             try {
                 const response = await fetch(API_SKOR_URL, {
                     method: 'POST',
@@ -323,19 +317,15 @@
                 const result = await response.json();
 
                 if (result.success) {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: result.message,
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'success', message: result.message || 'Skor minimum berhasil disimpan.' } }));
                 } else {
-                    Swal.fire('Gagal!', result.message || 'Gagal menyimpan skor.', 'error');
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: result.message || 'Gagal menyimpan skor.' } }));
                 }
             } catch (error) {
                 console.error('Save skor error:', error);
-                Swal.fire('Error', 'Terjadi kesalahan jaringan.', 'error');
+                window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: 'Terjadi kesalahan jaringan.' } }));
+            } finally {
+                window.hideLoader();
             }
         }
     </script>

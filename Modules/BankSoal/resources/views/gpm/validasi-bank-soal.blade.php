@@ -18,58 +18,117 @@
     <x-banksoal::notification.alerts />
     <x-banksoal::ui.page-header title="Validasi Bank Soal" subtitle="Pilih paket soal mata kuliah yang perlu dievaluasi" />
 
-    <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-        <div class="relative flex-1">
-            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                </svg>
-            </div>
-            <input type="text" data-search-tab="menunggu" placeholder="Cari mata kuliah atau dosen..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none">
-        </div>
-
-        <div class="flex items-center gap-3">
-            <button type="button" id="filterBtn" class="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl px-4 py-2.5 font-medium transition-colors border border-primary/20">
-                <i class="fas fa-filter"></i> Filter
-            </button>
-            <select class="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none cursor-pointer min-w-[180px]" id="sortBy">
-                <option value="terbaru">Terbaru</option>
-                <option value="terlama">Terlama</option>
-                <option value="nama-asc">Nama A-Z</option>
-                <option value="nama-desc">Nama Z-A</option>
-            </select>
-        </div>
-    </div>
-
-    <!-- Filter Modal -->
-    <div id="filterModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-start justify-center pt-8 overflow-y-auto">
-        <div class="bg-white rounded-2xl shadow-lg w-full max-w-md mx-auto animate-popup">
-            <div class="border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-slate-900">Filter</h3>
-                <button type="button" id="closeFilterBtn" class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <div class="px-6 py-4 space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Status</label>
-                    <select id="filterStatus" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none cursor-pointer">
-                        <option value="">Semua Status</option>
-                        <option value="menunggu">Menunggu Validasi</option>
-                        <option value="selesai">Selesai Direview</option>
-                    </select>
+    <div x-data="{
+        searchQuery: '',
+        selectedDosen: '',
+        sortBy: 'terbaru',
+        filterOpen: false,
+        
+        applyFiltersAndSort() {
+            const tbody = document.querySelector('#table-menunggu tbody');
+            if (!tbody) return;
+            const rows = Array.from(tbody.querySelectorAll('tr:not(.no-results-message)'));
+            let visibleCount = 0;
+            
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                const matchesSearch = text.includes(this.searchQuery.toLowerCase().trim());
+                const matchesDosen = this.selectedDosen === '' || text.includes(this.selectedDosen.toLowerCase());
+                
+                if (matchesSearch && matchesDosen) {
+                    row.classList.remove('hidden');
+                    visibleCount++;
+                } else {
+                    row.classList.add('hidden');
+                }
+            });
+            
+            if (this.sortBy === 'nama-asc') {
+                rows.sort((a, b) => {
+                    const nameA = (a.querySelector('td:first-child .font-semibold')?.textContent || '').trim();
+                    const nameB = (b.querySelector('td:first-child .font-semibold')?.textContent || '').trim();
+                    return nameA.localeCompare(nameB);
+                });
+            } else if (this.sortBy === 'nama-desc') {
+                rows.sort((a, b) => {
+                    const nameA = (a.querySelector('td:first-child .font-semibold')?.textContent || '').trim();
+                    const nameB = (b.querySelector('td:first-child .font-semibold')?.textContent || '').trim();
+                    return nameB.localeCompare(nameA);
+                });
+            }
+            
+            rows.forEach(row => tbody.appendChild(row));
+            
+            const noResults = tbody.querySelector('.no-results-message');
+            if (noResults) {
+                if (visibleCount === 0) noResults.classList.remove('hidden');
+                else noResults.classList.add('hidden');
+            }
+            
+            const countElem = document.getElementById('count-menunggu');
+            if (countElem) countElem.textContent = visibleCount;
+        }
+    }">
+        <div class="bg-white rounded-2xl border border-slate-200 shadow-sm p-4 mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+            <div class="relative flex-1">
+                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                    </svg>
                 </div>
+                <input type="text" x-model="searchQuery" @input="applyFiltersAndSort()" placeholder="Cari mata kuliah atau dosen..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none">
             </div>
-            <div class="border-t border-slate-200 px-6 py-4 flex items-center gap-3">
-                <button type="button" id="applyFilterBtn" class="flex-1 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white rounded-xl px-4 py-2.5 font-medium transition-colors">
-                    <i class="fas fa-check"></i> Terapkan
-                </button>
-                <button type="button" id="resetFilterBtn" class="flex-1 inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl px-4 py-2.5 font-medium transition-colors">
-                    <i class="fas fa-redo"></i> Reset
-                </button>
+
+            <div class="flex items-center gap-3">
+                <div class="relative" @click.away="filterOpen = false">
+                    <button @click="filterOpen = !filterOpen" type="button" class="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl px-4 py-2.5 font-medium transition-colors border border-primary/20"
+                        :class="selectedDosen ? 'border-primary bg-primary/20' : ''">
+                        <i class="fas fa-filter"></i> Filter
+                        <template x-if="selectedDosen">
+                            <span class="w-2 h-2 rounded-full bg-primary"></span>
+                        </template>
+                    </button>
+
+                    <div x-show="filterOpen" x-cloak
+                         x-transition:enter="transition ease-out duration-200"
+                         x-transition:enter-start="opacity-0 translate-y-2 scale-95"
+                         x-transition:enter-end="opacity-100 translate-y-0 scale-100"
+                         class="absolute right-0 mt-2 w-72 origin-top-right rounded-2xl border border-slate-100 bg-white shadow-xl z-50 p-5 space-y-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Dosen Pengampu</label>
+                            <div class="space-y-2">
+                                <select x-model="selectedDosen" @change="applyFiltersAndSort()" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-primary/20">
+                                    <option value="">Semua Dosen</option>
+                                    @php
+                                        $dosens = $paket_soal->pluck('dosen_pengampu')->filter()->unique();
+                                    @endphp
+                                    @foreach($dosens as $dsn)
+                                        <option value="{{ $dsn }}">{{ $dsn }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex gap-2 pt-2 border-t border-slate-100">
+                            <button type="button" @click="selectedDosen = ''; searchQuery = ''; applyFiltersAndSort(); filterOpen = false;"
+                                class="flex-1 py-2 text-xs font-bold text-slate-500 hover:text-slate-700 transition-colors">
+                                Reset
+                            </button>
+                            <button type="button" @click="filterOpen = false"
+                                class="flex-1 py-2 rounded-lg bg-primary text-white text-xs font-bold hover:opacity-90 shadow-md shadow-primary/20 transition-all">
+                                Tutup
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <select x-model="sortBy" @change="applyFiltersAndSort()" class="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none cursor-pointer min-w-[180px] focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none" id="sortBy">
+                    <option value="terbaru">Terbaru</option>
+                    <option value="terlama">Terlama</option>
+                    <option value="nama-asc">Nama A-Z</option>
+                    <option value="nama-desc">Nama Z-A</option>
+                </select>
             </div>
         </div>
-    </div>
 
     <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
         <div class="px-6 pt-4 border-b border-slate-200">
@@ -86,7 +145,7 @@
         </div>
 
         <div class="overflow-x-auto" data-tab-panel="menunggu">
-            <table class="w-full">
+            <table class="w-full" id="table-menunggu">
                 <thead class="bg-primary text-white border-b border-primary/20">
                     <tr>
                         <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
@@ -145,46 +204,11 @@
         @endif
     </div>
 
+    </div>
+
     @push('scripts')
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-            // Filter Modal Handlers
-            const filterBtn = document.getElementById('filterBtn');
-            const closeFilterBtn = document.getElementById('closeFilterBtn');
-            const filterModal = document.getElementById('filterModal');
-            const applyFilterBtn = document.getElementById('applyFilterBtn');
-            const resetFilterBtn = document.getElementById('resetFilterBtn');
-            const filterStatus = document.getElementById('filterStatus');
-
-            filterBtn.addEventListener('click', () => {
-                filterModal.classList.remove('hidden');
-            });
-
-            closeFilterBtn.addEventListener('click', () => {
-                filterModal.classList.add('hidden');
-            });
-
-            filterModal.addEventListener('click', (e) => {
-                if (e.target === filterModal) {
-                    filterModal.classList.add('hidden');
-                }
-            });
-
-            applyFilterBtn.addEventListener('click', () => {
-                filterModal.classList.add('hidden');
-                // Filter logic can be extended here
-            });
-
-            resetFilterBtn.addEventListener('click', () => {
-                filterStatus.value = '';
-            });
-
-            // Sort functionality
-            const sortBy = document.getElementById('sortBy');
-            sortBy.addEventListener('change', function() {
-                // Sort logic can be extended here
-            });
-
             function debounce(func, delay) {
                 let timeoutId;
                 return function (...args) {

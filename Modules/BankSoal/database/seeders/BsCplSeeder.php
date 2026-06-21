@@ -9,7 +9,7 @@ class BsCplSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('bs_cpl')->insert([
+        $data = [
             [
                 'id' => 1,
                 'kode' => 'CPL-001',
@@ -80,6 +80,13 @@ class BsCplSeeder extends Seeder
                 'created_at' => '2026-03-13 04:12:48',
                 'updated_at' => '2026-03-13 04:12:48',
             ],
-        ]);
+        ];
+
+        foreach ($data as $item) {
+            DB::table('bs_cpl')->updateOrInsert(
+                ['id' => $item['id']],
+                $item
+            );
+        }
     }
 }
