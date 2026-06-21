@@ -30,8 +30,9 @@ class ProkerController extends Controller
         $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'gpm'])->isNotEmpty();
         $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan',
                                          'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
-        // GPM & Kadep view-only — hanya admin murni & pengurus yang boleh kelola
-        $canManage = $roles->intersect(['superadmin', 'admin_kemahasiswaan'])->isNotEmpty() || $isPengurus;
+        // GPM & Kadep view-only — admin, DPM & pengurus yang boleh kelola
+        // (DPM disertakan agar sinkron dengan akses route create/edit/destroy & flag canEdit/canDelete di show())
+        $canManage = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'dpm'])->isNotEmpty() || $isPengurus;
 
         $query = Kegiatan::with(['bidangs', 'kategoris', 'ketuaPelaksana.user'])
             ->where('status', Kegiatan::STATUS_DRAFT)
@@ -74,7 +75,10 @@ class ProkerController extends Controller
             'bidangs', 'kategoris',
             'ketuaPelaksana.user', 'dosenPendamping.user',
             'panitia.user', 'creator', 'disetujuiOleh',
-        ])->where('status', Kegiatan::STATUS_DRAFT)->findOrFail($id);
+        ])->findOrFail($id);
+        // Catatan: TIDAK difilter status agar detail proker tetap bisa dibuka
+        // setelah diajukan (disetujui) / diarsipkan (selesai). Sebelumnya findOrFail
+        // dibatasi STATUS_DRAFT sehingga URL proker/{id} 404 begitu proker diajukan.
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
@@ -270,7 +274,7 @@ class ProkerController extends Controller
         // diisi saat Subbab 2 (Pelaksanaan Kegiatan).
         return $request->validate([
             'judul'                  => 'required|string|max:255',
-            'deskripsi'              => 'required|string|min:20',
+            'deskripsi'              => 'required|string|min:20|max:3000',
             'kategori_kegiatan_id'   => 'required|array|min:1|max:2',
             'kategori_kegiatan_id.*' => 'exists:mk_kategori_kegiatan,id',
             'bidang_id'              => $bidangRule,

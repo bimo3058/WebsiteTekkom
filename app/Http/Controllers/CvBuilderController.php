@@ -230,19 +230,9 @@ class CvBuilderController extends Controller
             $cvProfile->cv_domisili = $request->cv_domisili;
             $cvProfile->cv_portfolio = $request->cv_portfolio;
 
-            // Sinkronisasi ke tabel users agar Global Profile selalu terupdate
-            $user->updateQuietly([
-                'whatsapp' => $fullWa,
-                'personal_email' => $request->personal_email,
-            ]);
-
-            // Sinkronisasi ke mk_kemahasiswaan
-            try {
-                Kemahasiswaan::where('user_id', $user->id)
-                    ->update(['kontak' => $fullWa]);
-            } catch (\Throwable $e) {
-                // Abaikan jika error
-            }
+            // Catatan: WhatsApp & email pribadi bersifat read-only di wizard ini
+            // (sumber kebenaran = Profil Utama), jadi TIDAK ditulis balik ke tabel
+            // users / mk_kemahasiswaan agar tidak menimpa data yang lebih baru.
         } elseif ($step == 2) {
             $request->validate([
                 'pendidikan' => 'nullable|array',

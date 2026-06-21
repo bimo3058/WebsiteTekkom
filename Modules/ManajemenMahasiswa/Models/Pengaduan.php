@@ -153,4 +153,18 @@ class Pengaduan extends Model
     {
         return $this->status === self::STATUS_SELESAI;
     }
+
+    /**
+     * Label status yang ramah pengguna (sumber tunggal untuk seluruh tampilan).
+     */
+    public function statusLabel(): string
+    {
+        return match ($this->status) {
+            self::STATUS_BARU          => 'Baru',
+            self::STATUS_DIBACA        => 'Diproses',
+            self::STATUS_DIDELEGASIKAN => 'Didelegasikan',
+            self::STATUS_SELESAI       => 'Selesai',
+            default                    => ucfirst(str_replace('_', ' ', (string) $this->status)),
+        };
+    }
 }

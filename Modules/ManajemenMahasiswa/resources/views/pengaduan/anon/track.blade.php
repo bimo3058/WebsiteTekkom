@@ -115,7 +115,7 @@
                 };
             @endphp
             <span class="tag-label tag-kategori">{{ ucwords(str_replace('_', ' ', $kategori)) }}</span>
-            <span class="tag-label {{ $statusStyle }}">{{ $status === 'dibaca' ? 'Diproses' : ucfirst($pengaduan->status) }}</span>
+            <span class="tag-label {{ $statusStyle }}">{{ $pengaduan->statusLabel() }}</span>
             <span class="tag-label tag-anonim">
                 <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
             </span>

@@ -176,7 +176,7 @@
     <div style="display:flex;align-items:center;justify-content:space-between;gap:12px;">
         <div>
             <p style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:2px;display:flex;align-items:center;gap:6px;">
-                <span class="material-symbols-outlined" style="font-size:16px;color:#5E53F4;">description</span>
+                <span class="material-symbols-outlined" style="font-size:16px;color:#0B266E;">description</span>
                 CV Builder
             </p>
             <p style="font-size:12px;color:#64748b;line-height:1.5;">Buat CV profesional semi-otomatis dari data profil & akademik Anda.</p>
@@ -189,8 +189,8 @@
                 Download PDF
             </a>
             <a href="{{ route('profile.cv.index') }}"
-                style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:#5E53F4;color:#fff;font-size:12px;font-weight:600;border-radius:8px;text-decoration:none;white-space:nowrap;transition:background .15s;"
-                onmouseover="this.style.background='#4e44e0'" onmouseout="this.style.background='#5E53F4'">
+                style="display:inline-flex;align-items:center;gap:5px;padding:7px 14px;background:#0B266E;color:#fff;font-size:12px;font-weight:600;border-radius:8px;text-decoration:none;white-space:nowrap;transition:background .15s;"
+                onmouseover="this.style.background='#091958'" onmouseout="this.style.background='#0B266E'">
                 <span class="material-symbols-outlined" style="font-size:14px;">edit</span>
                 Mulai / Edit CV
             </a>

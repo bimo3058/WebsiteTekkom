@@ -53,7 +53,11 @@ class PelaksanaanController extends Controller
         // Filter bidang
         if ($request->filled('bidang') && $request->bidang !== 'semua') {
             if ($request->bidang === 'prodi') {
-                $query->whereDoesntHave('bidangs');
+                // Selaras dengan filter Prodi di Rencana Proker: tanpa bidang ATAU berkategori Prodi
+                $query->where(function ($q) {
+                    $q->whereDoesntHave('bidangs')
+                      ->orWhereHas('kategoris', fn($k) => $k->where('nama_kategori', 'like', '%Prodi%'));
+                });
             } else {
                 $query->whereHas('bidangs', fn($q) => $q->where('mk_bidang.id', $request->bidang));
             }
@@ -224,6 +228,10 @@ class PelaksanaanController extends Controller
             'judul'              => $validated['judul'],
             'deskripsi'          => $validated['deskripsi'],
             'tanggal_mulai'      => $validated['tanggal_mulai'],
+            // Isi kolom `tahun` dari tahun tanggal mulai. Tanpa ini, kegiatan hasil
+            // alur himpunan (Proker → Pelaksanaan → Arsip) selalu ber-`tahun` NULL
+            // sehingga hilang dari filter tahun di Pelaksanaan & Laporan/Arsip.
+            'tahun'              => \Carbon\Carbon::parse($validated['tanggal_mulai'])->year,
             'tanggal_selesai'    => $validated['tanggal_selesai'] ?? null,
             'jam_mulai'          => $validated['jam_mulai'] ?? null,
             'jam_selesai'        => $validated['jam_selesai'] ?? null,

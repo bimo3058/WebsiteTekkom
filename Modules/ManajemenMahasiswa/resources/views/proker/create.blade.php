@@ -53,7 +53,7 @@
     <a href="{{ route('manajemenmahasiswa.proker.index') }}" class="btn-back">&larr;</a>
     <div>
         <h3 class="fw-bold mb-0" style="font-size:1.45rem;color:#0D0D12;letter-spacing:-.02em;">Buat Rencana Proker</h3>
-        <p class="mb-0" style="font-size:.82rem;color:#666D80;font-weight:500;">Isi informasi umum program kerja — simpan sebagai draft atau langsung ajukan</p>
+        <p class="mb-0" style="font-size:.82rem;color:#666D80;font-weight:500;">Isi informasi umum program kerja. Proker tersimpan sebagai draft — ajukan dari halaman detail untuk lanjut ke tahap pelaksanaan.</p>
     </div>
 </div>
 
@@ -89,8 +89,12 @@
             <label class="form-label-custom">Deskripsi Proker <span class="required">*</span></label>
             <textarea name="deskripsi" id="deskripsiInput" class="form-control form-control-custom"
                       placeholder="Jelaskan tujuan, sasaran, latar belakang, dan manfaat dari program kerja ini..."
-                      required oninput="updateCharCount('deskripsiInput','deskripsiCount',3000)">{{ old('deskripsi') }}</textarea>
-            <div class="char-counter"><span id="deskripsiCount">0</span>/3000 karakter</div>
+                      required minlength="20" maxlength="3000"
+                      oninput="updateCharCount('deskripsiInput','deskripsiCount',3000)">{{ old('deskripsi') }}</textarea>
+            <div class="d-flex justify-content-between align-items-center" style="margin-top:4px;">
+                <span style="font-size:11px;color:#666D80;font-weight:500;">Minimal 20 karakter</span>
+                <span class="char-counter" style="margin-top:0;"><span id="deskripsiCount">0</span>/3000 karakter</span>
+            </div>
         </div>
     </div>
 
@@ -163,7 +167,7 @@
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/></svg>
             </div>
             <div class="banner-upload-title">Klik atau drag & drop gambar banner</div>
-            <div class="banner-upload-hint">PNG, JPG, WEBP — Maks. 2 MB · Rasio ideal 16:9 (1280×720px)</div>
+            <div class="banner-upload-hint">PNG, JPG, WEBP — Maks. 10 MB · Rasio ideal 16:9 (1280×720px)</div>
         </div>
     </div>
 

@@ -132,8 +132,11 @@ class VerifikasiController extends Controller
         }
 
         if ($angkatan && $angkatan !== 'semua') {
-            $riwayatQuery->whereHas('student', function ($q) use ($angkatan) {
-                $q->where('cohort_year', $angkatan);
+            // Samakan sumber angkatan dengan dropdown (mk_kemahasiswaan.angkatan),
+            // dipetakan ke student lewat user_id agar konsisten dengan tab prestasi.
+            $userIds = Kemahasiswaan::where('angkatan', $angkatan)->pluck('user_id');
+            $riwayatQuery->whereHas('student', function ($q) use ($userIds) {
+                $q->whereIn('user_id', $userIds);
             });
         }
 

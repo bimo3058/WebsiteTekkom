@@ -241,7 +241,7 @@
                         default => 'tag-baru',
                     };
                 @endphp
-                <span class="tag-label {{ $statusStyle }}">{{ strtolower($pengaduan->status) === 'dibaca' ? 'Diproses' : ucfirst(str_replace('_', ' ', $pengaduan->status)) }}</span>
+                <span class="tag-label {{ $statusStyle }}">{{ $pengaduan->statusLabel() }}</span>
                 @if($pengaduan->is_anonim)
                     <span class="tag-label tag-anonim">
                         <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
@@ -409,7 +409,7 @@
                         default   => 'tag-baru',
                     };
                 @endphp
-                <span class="tag-label {{ $statusStyle }}">{{ strtolower($pengaduan->status) === 'dibaca' ? 'Diproses' : ucfirst(str_replace('_', ' ', $pengaduan->status)) }}</span>
+                <span class="tag-label {{ $statusStyle }}">{{ $pengaduan->statusLabel() }}</span>
                 @if($pengaduan->is_anonim)
                     <span class="tag-label tag-anonim">
                         <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial
@@ -631,9 +631,9 @@
                                             "{{ $d->alasan_tolak }}"
                                         </div>
                                     @endif
-                                    @if($d->tanggapan)
+                                    @if($d->notes_balik)
                                         <div class="mt-2 text-muted" style="font-size: 12px; font-style: italic; background: #fff; padding: 6px 10px; border-radius: 6px; border: 1px dashed #cbd5e1;">
-                                            "{{ Str::limit($d->tanggapan, 100) }}"
+                                            "{{ Str::limit($d->notes_balik, 100) }}"
                                         </div>
                                     @endif
                                 </div>

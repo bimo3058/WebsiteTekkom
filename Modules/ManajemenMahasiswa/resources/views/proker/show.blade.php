@@ -161,6 +161,21 @@
 </div>
 @endif
 
+@if($proker->status === 'selesai')
+<div class="detail-card" style="background:#ECFDF5;border:1px solid rgba(5,150,105,0.25);">
+    <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+        <div>
+            <div style="font-weight:700;color:#047857;margin-bottom:4px;"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:6px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>Kegiatan Selesai &amp; Diarsipkan</div>
+            <div style="font-size:14px;color:#059669;font-weight:500;">Laporan akhir kegiatan ini ada di halaman Laporan &amp; Arsip.</div>
+        </div>
+        <a href="{{ route('manajemenmahasiswa.kegiatan.show', $proker->id) }}"
+           class="btn" style="background:#059669;color:#fff;font-weight:600;padding:10px 22px;border-radius:8px;font-size:14px;white-space:nowrap;">
+            Lihat di Arsip &rarr;
+        </a>
+    </div>
+</div>
+@endif
+
 {{-- Modals --}}
 @if($canDelete && $proker->status === 'draft')
 <div id="deleteModal" class="modal-overlay" style="display:none;">

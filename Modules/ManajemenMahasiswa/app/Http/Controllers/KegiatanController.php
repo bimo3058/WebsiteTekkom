@@ -50,8 +50,12 @@ class KegiatanController extends Controller
         // Filter by bidang or prodi
         if ($request->filled('bidang') && $request->bidang !== 'semua') {
             if ($request->bidang === 'prodi') {
-                // Kegiatan Prodi = kegiatan tanpa bidang (no bidangs in pivot)
-                $query->whereDoesntHave('bidangs');
+                // Kegiatan Prodi = tanpa bidang ATAU berkategori Prodi
+                // (selaras dengan filter Prodi di Rencana Proker & Pelaksanaan)
+                $query->where(function ($q) {
+                    $q->whereDoesntHave('bidangs')
+                      ->orWhereHas('kategoris', fn($k) => $k->where('nama_kategori', 'like', '%Prodi%'));
+                });
             } else {
                 $query->whereHas('bidangs', fn($q) => $q->where('mk_bidang.id', $request->bidang));
             }

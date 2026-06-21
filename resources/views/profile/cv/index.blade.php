@@ -215,33 +215,38 @@
                     }
                 },
 
-                async saveAndNext() {
-                    this.loading = true;
-                    this.error = false;
-
+                // Bangun payload untuk step tertentu (hanya step 1-5 yang punya data).
+                buildPayload(step) {
                     const payload = {};
-                    if (this.step === 1) {
+                    if (step === 1) {
                         payload.tentang_diri = this.data.cv.tentang_diri;
                         payload.personal_email = this.data.user.personal_email;
                         payload.whatsapp = this.data.user.whatsapp;
                         payload.cv_domisili = this.data.cv.cv_domisili;
                         payload.cv_portfolio = this.data.cv.cv_portfolio;
                     }
-                    if (this.step === 2) {
+                    if (step === 2) {
                         payload.pendidikan = this.data.cv.pendidikan;
                         payload.bahasa = this.data.cv.bahasa;
                     }
-                    if (this.step === 3) {
+                    if (step === 3) {
                         payload.pengalaman_kerja = this.data.cv.pengalaman_kerja;
                         payload.kegiatan_organisasi = this.data.cv.kegiatan_organisasi;
                     }
-                    if (this.step === 4) {
+                    if (step === 4) {
                         payload.proyek = this.data.cv.proyek;
                         payload.sertifikasi = this.data.cv.sertifikasi;
                     }
-                    if (this.step === 5) {
+                    if (step === 5) {
                         payload.keahlian = this.data.cv.keahlian;
                     }
+                    return payload;
+                },
+
+                // Simpan step yang sedang aktif. Return true jika sukses, false jika gagal.
+                // Step 6 (preview) tidak punya data untuk disimpan.
+                async persistCurrentStep() {
+                    if (this.step < 1 || this.step > 5) return true;
 
                     try {
                         const response = await fetch(`/profile/cv/step/${this.step}`, {
@@ -251,7 +256,7 @@
                                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
                                 'Accept': 'application/json'
                             },
-                            body: JSON.stringify(payload)
+                            body: JSON.stringify(this.buildPayload(this.step))
                         });
 
                         const result = await response.json();
@@ -264,21 +269,42 @@
                             throw new Error(msg);
                         }
 
-                        if (result.success) {
-                            this.loadStepData(this.step + 1);
-                        } else {
+                        if (!result.success) {
                             throw new Error(result.message || 'Gagal menyimpan data.');
                         }
+
+                        return true;
                     } catch (err) {
                         this.error = true;
                         this.errorMsg = err.message || 'Terjadi kesalahan jaringan.';
+                        return false;
+                    }
+                },
+
+                async saveAndNext() {
+                    this.loading = true;
+                    this.error = false;
+
+                    if (await this.persistCurrentStep()) {
+                        this.loadStepData(this.step + 1);
+                    } else {
                         this.loading = false;
                     }
                 },
 
-                goToStep(target) {
-                    if (target >= 1 && target <= this.maxStep && target !== this.step) {
+                // Pindah step (lewat lingkaran stepper / tombol Sebelumnya). Simpan dulu
+                // step aktif agar input yang belum disimpan tidak hilang; batalkan pindah
+                // jika penyimpanan gagal (validasi) supaya pesan error tetap terlihat.
+                async goToStep(target) {
+                    if (target < 1 || target > this.maxStep || target === this.step) return;
+
+                    this.loading = true;
+                    this.error = false;
+
+                    if (await this.persistCurrentStep()) {
                         this.loadStepData(target);
+                    } else {
+                        this.loading = false;
                     }
                 },
 

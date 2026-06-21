@@ -376,18 +376,20 @@
                 <input type="text" name="q" value="{{ $filters['q'] ?? '' }}" class="search-input"
                     placeholder="Cari judul, kronologi, atau ID pengaduan…">
             </div>
-            <select name="kategori" class="filter-select" onchange="document.getElementById('pgdFilterForm').submit()">
-                <option value="">Semua Kategori</option>
-                @foreach($kategoriOptions as $value => $meta)
-                    <option value="{{ $value }}" {{ ($filters['kategori'] ?? '') === $value ? 'selected' : '' }}>{{ $meta['label'] }}</option>
-                @endforeach
-            </select>
-            <select name="status" class="filter-select" onchange="document.getElementById('pgdFilterForm').submit()">
-                <option value="">Semua Status</option>
-                @foreach($statusOptions as $value => $label)
-                    <option value="{{ $value }}" {{ ($filters['status'] ?? '') === $value ? 'selected' : '' }}>{{ $label }}</option>
-                @endforeach
-            </select>
+            @if($isStaff)
+                <select name="kategori" class="filter-select" onchange="document.getElementById('pgdFilterForm').submit()">
+                    <option value="">Semua Kategori</option>
+                    @foreach($kategoriOptions as $value => $meta)
+                        <option value="{{ $value }}" {{ ($filters['kategori'] ?? '') === $value ? 'selected' : '' }}>{{ $meta['label'] }}</option>
+                    @endforeach
+                </select>
+                <select name="status" class="filter-select" onchange="document.getElementById('pgdFilterForm').submit()">
+                    <option value="">Semua Status</option>
+                    @foreach($statusOptions as $value => $label)
+                        <option value="{{ $value }}" {{ ($filters['status'] ?? '') === $value ? 'selected' : '' }}>{{ $label }}</option>
+                    @endforeach
+                </select>
+            @endif
         </div>
     </form>
 
@@ -406,7 +408,7 @@
         <a href="{{ $detailUrl }}" class="forum-card">
             <div class="tags-row">
                 <span class="tag-label tag-kategori">{{ $kategoriLabel }}</span>
-                <span class="tag-label tag-{{ $status }}">{{ $status === 'dibaca' ? 'Diproses' : ucfirst(str_replace('_', ' ', $status)) }}</span>
+                <span class="tag-label tag-{{ $status }}">{{ $item->statusLabel() }}</span>
                 @if($item->is_anonim)
                     <span class="tag-label tag-anonim">
                         <x-manajemenmahasiswa::ui.icon name="locked-01" size="11" /> Konfidensial

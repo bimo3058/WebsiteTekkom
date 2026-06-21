@@ -220,9 +220,13 @@ class PengaduanController extends Controller
 
         $this->ensureMahasiswa($user);
 
-        // Redirect ke halaman pilihan jalur jika tidak ada jalur valid
+        // Form ini khusus jalur Reguler. Jalur Konfidensial memakai alur
+        // magic link terpisah (anon.generate), jadi arahkan ke sana.
         $jalur = $request->query('jalur');
-        if (!in_array($jalur, ['reguler', 'konfidensial'])) {
+        if ($jalur === 'konfidensial') {
+            return redirect()->route('manajemenmahasiswa.pengaduan.anon.generate');
+        }
+        if ($jalur !== 'reguler') {
             return redirect()->route('manajemenmahasiswa.pengaduan.jalur');
         }
 
@@ -286,7 +290,8 @@ class PengaduanController extends Controller
 
         if ($pengaduan->is_anonim) {
             return redirect()
-                ->route('manajemenmahasiswa.pengaduan.track.success', ['token' => $pengaduan->anon_token]);
+                ->route('manajemenmahasiswa.pengaduan.track', ['token' => $pengaduan->anon_token])
+                ->with('success', 'Pengaduan konfidensial berhasil dikirim. Simpan tautan ini untuk memantau tiket Anda.');
         }
 
         return redirect()

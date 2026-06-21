@@ -149,7 +149,7 @@
         }
 
         .btn-print {
-            background: #2563eb;
+            background: #0B266E;
             color: white;
             border: none;
             padding: 12px 24px;
@@ -157,7 +157,7 @@
             font-size: 14px;
             font-weight: bold;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(37, 99, 235, 0.2);
+            box-shadow: 0 4px 6px rgba(11, 38, 110, 0.2);
         }
 
         @media screen {
@@ -196,7 +196,7 @@
             @elseif(!empty($user['email']))
                 <span>{{ $user['email'] }}</span>
             @endif
-            <span>{{ $cv->cv_domisili ?? 'Semarang, Indonesia' }}</span>
+            @if(!empty($cv->cv_domisili))<span>{{ $cv->cv_domisili }}</span>@endif
             @if(!empty($cv->cv_portfolio))
                 <span>{{ $cv->cv_portfolio }}</span>
             @endif
@@ -241,8 +241,8 @@
             @if(!empty($exp['deskripsi']))
             <div class="item-desc">
                 <ul>
-                    <!-- Jika deskripsi berisi bullet point text, akan dirender dengan baik. Idealnya dipecah menjadi list, tapi string multiline juga cukup -->
-                    <li>{{ $exp['deskripsi'] }}</li>
+                    <!-- Deskripsi multiline dirender per-baris agar enter tetap terlihat -->
+                    <li>{!! nl2br(e($exp['deskripsi'])) !!}</li>
                 </ul>
             </div>
             @endif
@@ -275,7 +275,7 @@
             @if(!empty($keg['deskripsi']))
             <div class="item-desc">
                 <ul>
-                    <li>{{ $keg['deskripsi'] }}</li>
+                    <li>{!! nl2br(e($keg['deskripsi'])) !!}</li>
                 </ul>
             </div>
             @endif
@@ -298,7 +298,7 @@
             @if(!empty($proj['deskripsi']))
             <div class="item-desc">
                 <ul>
-                    <li>{{ $proj['deskripsi'] }}</li>
+                    <li>{!! nl2br(e($proj['deskripsi'])) !!}</li>
                 </ul>
             </div>
             @endif
@@ -333,7 +333,7 @@
                 <h3 class="item-title">{{ $p['nama'] }}</h3>
                 <span class="item-date">{{ $p['tahun'] }}</span>
             </div>
-            <div class="item-subtitle">Tingkat: {{ ucfirst($p['tingkat']) }}</div>
+            <div class="item-subtitle">Tingkat: {{ ucfirst($p['tingkat'] ?? '') }}</div>
         </div>
         @endforeach
     </section>

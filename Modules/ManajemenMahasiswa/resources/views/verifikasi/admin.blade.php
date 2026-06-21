@@ -185,7 +185,7 @@
 
 <!-- Admin Stat Cards -->
 <div class="admin-stats">
-    <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => $tab, 'status' => 'pending']) }}"
+    <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => $tab, 'status' => 'pending', 'search' => $search, 'angkatan' => $angkatan]) }}"
        class="admin-stat-card pending {{ $status === 'pending' ? 'active' : '' }}">
         <div class="stat-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
@@ -195,7 +195,7 @@
             <div class="stat-lbl">Menunggu Verifikasi</div>
         </div>
     </a>
-    <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => $tab, 'status' => 'approved']) }}"
+    <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => $tab, 'status' => 'approved', 'search' => $search, 'angkatan' => $angkatan]) }}"
        class="admin-stat-card approved {{ $status === 'approved' ? 'active' : '' }}">
         <div class="stat-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
@@ -205,7 +205,7 @@
             <div class="stat-lbl">Disetujui</div>
         </div>
     </a>
-    <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => $tab, 'status' => 'rejected']) }}"
+    <a href="{{ route('manajemenmahasiswa.verifikasi.index', ['tab' => $tab, 'status' => 'rejected', 'search' => $search, 'angkatan' => $angkatan]) }}"
        class="admin-stat-card rejected {{ $status === 'rejected' ? 'active' : '' }}">
         <div class="stat-icon">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
@@ -231,6 +231,7 @@
         <form method="GET" action="{{ route('manajemenmahasiswa.verifikasi.index') }}" id="filterForm"
               style="display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:0;">
             <input type="hidden" name="tab" value="{{ $tab }}">
+            <input type="hidden" name="status" value="{{ $status }}">
 
             <!-- Search -->
             <div style="position:relative; width:min(220px, calc(100vw - 200px)); min-width:120px;">
@@ -446,10 +447,10 @@
                             onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
                             <td style="padding:14px 12px; font-size:13px; font-weight:400; color:var(--c-fg-muted); width:48px;">{{ ($prestasiData->currentPage() - 1) * $prestasiData->perPage() + $i + 1 }}</td>
                             <td style="padding:14px 16px; min-width:160px;">
-                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">{{ $p->kemahasiswaan->nama ?? '-' }}</p>
+                                <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:160px;">{{ $p->kemahasiswaan?->nama ?? '-' }}</p>
                             </td>
                             <td style="padding:14px 16px;">
-                                <span style="font-family:monospace; font-size:12px; font-weight:600; color:var(--c-primary);">{{ $p->kemahasiswaan->nim ?? '-' }}</span>
+                                <span style="font-family:monospace; font-size:12px; font-weight:600; color:var(--c-primary);">{{ $p->kemahasiswaan?->nim ?? '-' }}</span>
                             </td>
                             <td style="padding:14px 16px; min-width:180px;">
                                 <p style="font-size:13px; font-weight:600; color:var(--c-fg); margin:0; overflow:hidden; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; line-height:1.5; max-width:220px;">{{ $p->nama_prestasi }}</p>

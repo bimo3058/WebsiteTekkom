@@ -709,13 +709,10 @@ class DirektoriMahasiswaController extends Controller
     public function generateCvSelf()
     {
         $user = Auth::user();
-        $mhs = Kemahasiswaan::with([
-            'prestasi' => function ($q) {
-                $q->where('verification_status', 'approved');
-            },
-            'user',
-            'user.student'
-        ])->where('user_id', $user->id)->firstOrFail();
+
+        // Tidak pakai firstOrFail Kemahasiswaan: mahasiswa yang datanya hanya ada di
+        // tabel `students` (login Microsoft, belum punya baris mk_kemahasiswaan) tetap
+        // bisa mengunduh CV. getAllCvData() sudah query Kemahasiswaan + fallback students.
 
         // Ambil CV Profile jika ada, atau buat instance kosong tanpa disimpan
         $cvProfile = \App\Models\CvProfile::where('user_id', $user->id)->first() ?? new \App\Models\CvProfile([
