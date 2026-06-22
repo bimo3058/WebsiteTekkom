@@ -160,7 +160,8 @@ class DosenController extends Controller
     {
         $kpDosen = \Modules\EOffice\Models\KpDosen::where('user_id', auth()->id())->first();
 
-        // Ambil semua dokumen (Laporan & Makalah) beserta nama mahasiswa dari global users
+        $templates = \Modules\EOffice\Models\TemplateDokumenKP::all()->groupBy('periode_id');
+
         $query = \Modules\EOffice\Models\KpDokumen::select(
             'eo_kp_dokumen.*',
             'kp.nim',
@@ -171,12 +172,7 @@ class DosenController extends Controller
         )
             ->join('eo_kerja_praktik as kp', 'eo_kp_dokumen.kp_id', '=', 'kp.id')
             ->leftJoin('eo_kp_mahasiswa as m', 'kp.mahasiswa_id', '=', 'm.id')
-            ->leftJoin('users as u', 'm.user_id', '=', 'u.id')
-            ->join('eo_kp_template as t', function ($join) {
-                $join->on('eo_kp_dokumen.jenis_dokumen', '=', 't.title')
-                    ->on('kp.periode_id', '=', 't.periode_id');
-            })
-            ->whereIn('t.approver_role', ['dosen_pembimbing', 'keduanya']);
+            ->leftJoin('users as u', 'm.user_id', '=', 'u.id');
 
         if ($kpDosen) {
             $query->where('kp.dosen_pembimbing_id', $kpDosen->id);
@@ -184,9 +180,26 @@ class DosenController extends Controller
             $query->whereNull('kp.id'); // Kosongkan jika dosen belum terdaftar
         }
 
-        $dokumens = $query->orderByRaw("CASE eo_kp_dokumen.status_validasi WHEN 'pending' THEN 0 ELSE 1 END")
+        $allDokumens = $query->orderByRaw("CASE eo_kp_dokumen.status_validasi WHEN 'pending' THEN 0 ELSE 1 END")
             ->orderBy('eo_kp_dokumen.tanggal_upload', 'desc')
+            ->with(['kerjaPraktik'])
             ->get();
+
+        $dokumens = $allDokumens->filter(function ($d) use ($templates) {
+            $kp = $d->kerjaPraktik;
+            if (!$kp)
+                return true;
+
+            $periodTemplates = $templates[$kp->periode_id] ?? collect();
+            $t = $periodTemplates->firstWhere('title', $d->jenis_dokumen);
+
+            if ($t) {
+                return in_array($t->approver_role, ['dosen_pembimbing', 'keduanya']);
+            }
+
+            // Legacy fallback defaults
+            return in_array($d->jenis_dokumen, ['Laporan', 'Makalah']);
+        })->values();
 
         // Statistik ringkas untuk header halaman
         $stats = [
