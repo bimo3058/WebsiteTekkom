@@ -86,14 +86,20 @@ class DirektoriAlumniController extends Controller
     {
         $roles = $this->getUserRoles();
 
-        if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles)) {
+        // Admin group + DPM → layout admin
+        if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles) || \in_array('dpm', $roles)) {
             return 'manajemenmahasiswa::layouts.admin';
         }
-        if (\in_array('gpm', $roles) || \in_array('dosen', $roles) || \in_array('dosen_koordinator', $roles)) {
+        // GPM, Dosen, Ketua Departemen → layout dosen
+        if (\in_array('gpm', $roles) || \in_array('dosen', $roles) || \in_array('dosen_koordinator', $roles) || \in_array('ketua_departemen', $roles)) {
             return 'manajemenmahasiswa::layouts.dosen';
         }
-        if (\in_array('pengurus_himpunan', $roles)) {
-            return 'manajemenmahasiswa::layouts.admin';
+        // Semua jenis pengurus himpunan → layout admin
+        $pengurus = ['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
+        foreach ($pengurus as $role) {
+            if (\in_array($role, $roles)) {
+                return 'manajemenmahasiswa::layouts.admin';
+            }
         }
         return 'manajemenmahasiswa::layouts.mahasiswa';
     }
@@ -535,7 +541,12 @@ class DirektoriAlumniController extends Controller
                 ->with('error', 'Koneksi database sedang tidak stabil. Silakan coba lagi.');
         }
 
-        return view('manajemenmahasiswa::direktori.alumni-edit', compact('alumni'))
+        // IPK = data sensitif. Samakan gating dengan halaman show: hanya admin group/GPM/DPM/Dosen.
+        // (Route edit sudah dibatasi admin group sehingga flag ini selalu true utk editor saat ini,
+        //  namun tetap digating agar konsisten & aman bila akses edit kelak diperluas.)
+        $isCanSeeIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator');
+
+        return view('manajemenmahasiswa::direktori.alumni-edit', compact('alumni', 'isCanSeeIpk'))
             ->with('layout', $this->resolveLayout());
     }
 
@@ -550,13 +561,25 @@ class DirektoriAlumniController extends Controller
             'angkatan' => 'required|integer|min:2000|max:2099',
             'tahun_lulus' => 'required|integer|min:2000|max:2099',
             'program_studi' => 'nullable|string|max:255',
+            'ipk' => 'nullable|numeric|min:0|max:4',
             'status_karir' => 'nullable|string|in:' . implode(',', Alumni::STATUS_LIST),
             'perusahaan' => 'nullable|string|max:255',
             'jabatan' => 'nullable|string|max:255',
             'bidang_industri' => 'nullable|string',
             'tahun_mulai_bekerja' => 'nullable|integer',
             'linkedin' => 'nullable|url|max:255',
+            'personal_email' => 'nullable|email|max:255',
         ]);
+
+        // Email pribadi disimpan di tabel users (bukan kolom mk_alumni) — pisahkan dari payload alumni.
+        $personalEmail = $validated['personal_email'] ?? null;
+        unset($validated['personal_email']);
+
+        // IPK = data sensitif. Hanya role tertentu yang boleh mengubahnya (samakan gating dgn halaman show).
+        $canEditIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator');
+        if (!$canEditIpk) {
+            unset($validated['ipk']);
+        }
 
         try {
             $alumni = $this->withRetry(fn() => $this->alumniService->update($id, $validated));
@@ -588,6 +611,21 @@ class DirektoriAlumniController extends Controller
                 
                 // Sync ke kemahasiswaan
                 \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('user_id', $alumni->user_id)->update(['kontak' => $fullWa]);
+            }
+
+            // Sinkronisasi email pribadi ke tabel users
+            if ($request->has('personal_email')) {
+                $userModel = \App\Models\User::find($alumni->user_id);
+                if ($userModel) {
+                    $userModel->updateQuietly(['personal_email' => $personalEmail]);
+                }
+            }
+
+            // Write-through IPK ke mk_kemahasiswaan (sumber utama IPK) agar perubahan tidak ketimpa
+            // oleh auto-sync di halaman index. Hanya jika role berhak & field IPK memang dikirim.
+            if ($canEditIpk && array_key_exists('ipk', $validated)) {
+                \Modules\ManajemenMahasiswa\Models\Kemahasiswaan::where('user_id', $alumni->user_id)
+                    ->update(['ipk' => $validated['ipk']]);
             }
 
         } catch (\Throwable $e) {

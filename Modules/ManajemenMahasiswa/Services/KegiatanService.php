@@ -14,14 +14,14 @@ class KegiatanService
      */
     public function listKegiatan(array $filters = [], int $perPage = 20): LengthAwarePaginator
     {
-        $query = Kegiatan::with(['kategoriKegiatan', 'bidang', 'kepengurusan', 'ketuaStudent'])
+        $query = Kegiatan::with(['kategoriKegiatan', 'bidang', 'ketuaPelaksana.user'])
             ->when(isset($filters['bidang_id']), fn($q) => $q->byBidang((int) $filters['bidang_id']))
             ->when(isset($filters['kategori_id']), fn($q) => $q->byKategori((int) $filters['kategori_id']))
             ->when(isset($filters['tahun']), fn($q) => $q->byTahun((int) $filters['tahun']))
-            ->when(isset($filters['kepengurusan_id']), fn($q) => $q->where('kepengurusan_id', $filters['kepengurusan_id']))
-            ->when(isset($filters['search']), fn($q) => $q->where('nama_kegiatan', 'like', "%{$filters['search']}%"));
+            ->when(isset($filters['status']), fn($q) => $q->where('status', $filters['status']))
+            ->when(isset($filters['search']), fn($q) => $q->where('judul', 'like', "%{$filters['search']}%"));
 
-        return $query->orderByDesc('tanggal')->paginate($perPage);
+        return $query->orderByDesc('tanggal_mulai')->paginate($perPage);
     }
 
     public function findById(int $id): Kegiatan
@@ -29,9 +29,8 @@ class KegiatanService
         return Kegiatan::with([
             'kategoriKegiatan',
             'bidang',
-            'kepengurusan',
-            'ketuaStudent',
-            'lecturer',
+            'ketuaPelaksana.user',
+            'dosenPendamping.user',
             'riwayatKegiatan.student',
         ])->findOrFail($id);
     }

@@ -125,16 +125,22 @@ class DirektoriMahasiswaController extends Controller
     {
         $roles = $this->getUserRoles();
 
-        if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles)) {
+        // Admin group + DPM → layout admin
+        if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles) || \in_array('dpm', $roles)) {
             return 'manajemenmahasiswa::layouts.admin';
         }
 
-        if (\in_array('gpm', $roles) || \in_array('dosen', $roles) || \in_array('dosen_koordinator', $roles)) {
+        // GPM, Dosen, Ketua Departemen → layout dosen
+        if (\in_array('gpm', $roles) || \in_array('dosen', $roles) || \in_array('dosen_koordinator', $roles) || \in_array('ketua_departemen', $roles)) {
             return 'manajemenmahasiswa::layouts.dosen';
         }
 
-        if (\in_array('pengurus_himpunan', $roles)) {
-            return 'manajemenmahasiswa::layouts.admin';
+        // Semua jenis pengurus himpunan → layout admin
+        $pengurus = ['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
+        foreach ($pengurus as $role) {
+            if (\in_array($role, $roles)) {
+                return 'manajemenmahasiswa::layouts.admin';
+            }
         }
 
         // Default: mahasiswa / alumni
@@ -341,8 +347,8 @@ class DirektoriMahasiswaController extends Controller
         $isGpm      = $this->hasRole('gpm');
         $isPengurus = $this->hasRole('pengurus_himpunan');
         $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
-        // Admin group, GPM, DPM, dan Dosen bisa generate CV mahasiswa lain
-        $isCanCv    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator');
+        // Hanya admin group, GPM, dan DPM yang boleh generate CV mahasiswa lain
+        $isCanCv    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm');
 
         return view('manajemenmahasiswa::direktori.mahasiswa-index', compact(
             'mahasiswa',
@@ -648,8 +654,9 @@ class DirektoriMahasiswaController extends Controller
         $riwayat = RiwayatKegiatan::findOrFail($riwayatId);
         $riwayat->update($request->only(['kegiatan_id', 'peran']));
 
-        // Cari kemahasiswaan untuk redirect
-        $mhs = Kemahasiswaan::where('user_id', $riwayat->student_id)->firstOrFail();
+        // Cari kemahasiswaan untuk redirect.
+        // student_id pada riwayat adalah students.id — resolve dulu ke user_id lewat relasi student.
+        $mhs = Kemahasiswaan::where('user_id', $riwayat->student?->user_id)->firstOrFail();
 
         return redirect()
             ->route('manajemenmahasiswa.direktori.mahasiswa.show', $mhs->id)
@@ -663,7 +670,8 @@ class DirektoriMahasiswaController extends Controller
     public function destroyRiwayat(int $riwayatId)
     {
         $riwayat = RiwayatKegiatan::findOrFail($riwayatId);
-        $mhs = Kemahasiswaan::where('user_id', $riwayat->student_id)->firstOrFail();
+        // student_id pada riwayat adalah students.id — resolve dulu ke user_id lewat relasi student.
+        $mhs = Kemahasiswaan::where('user_id', $riwayat->student?->user_id)->firstOrFail();
         $riwayat->delete();
 
         return redirect()

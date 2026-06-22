@@ -98,7 +98,7 @@
     </div>
     
     <div class="d-flex gap-2">
-        @if($canManage)
+        @if($canManage && $proker->status !== 'selesai')
             <a href="{{ route('manajemenmahasiswa.pelaksanaan.edit', $proker->id) }}"
                class="btn d-flex align-items-center gap-2"
                style="background: #0B266E; color: #fff; font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: 10px;">
@@ -109,7 +109,7 @@
                 Edit
             </a>
         @endif
-        @if($canDelete)
+        @if($canDelete && $proker->status !== 'selesai')
             <button type="button" class="btn d-flex align-items-center gap-2"
                     style="background: #fee2e2; color: #dc2626; font-weight: 600; font-size: 13px; padding: 8px 18px; border-radius: 10px; border: none;"
                     onclick="document.getElementById('deleteModal').style.display='flex'">
@@ -140,14 +140,8 @@
                         Unggah ke Arsip
                     </button>
                 @endif
-            @else
-                <button type="button" disabled
-                    title="Hanya Ketua / Wakil Ketua / Ketua Bidang / Ketua Unit yang dapat mengunggah ke arsip"
-                    style="background:#DFE1E7;color:#666D80;font-weight:600;font-size:13px;padding:8px 18px;border-radius:10px;display:inline-flex;align-items:center;gap:6px;border:none;cursor:not-allowed;">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    Unggah ke Arsip
-                </button>
             @endif
+            {{-- Role tanpa hak arsip (staff_himpunan, gpm) tidak menampilkan tombol sama sekali (view-only) --}}
         @endif
         @if($proker->status === 'selesai')
             <a href="{{ route('manajemenmahasiswa.kegiatan.show', $proker->id) }}"
@@ -352,9 +346,10 @@
 <!-- Foto & Dokumen Kegiatan — Enhanced Gallery                    -->
 <!-- ═══════════════════════════════════════════════════════════════════════ -->
 @php
-    $images    = $proker->repoMulmed ? $proker->repoMulmed->where('tipe_file', 'image') : collect();
-    $documents = $proker->repoMulmed ? $proker->repoMulmed->where('tipe_file', 'document') : collect();
-    $totalFiles = $images->count() + $documents->count();
+    // Dokumen hanya terlihat oleh sebagian role; hitung file yang BENAR-BENAR tampil
+    // bagi user ini supaya empty-state tetap muncul (bukan area kosong) saat mis. hanya ada dokumen.
+    $visibleDocuments = (isset($canViewRestricted) && $canViewRestricted) ? $documents->count() : 0;
+    $totalFiles = $images->count() + $visibleDocuments;
 @endphp
 
 @if($totalFiles > 0)

@@ -522,7 +522,7 @@
             </div>
             {{-- Info teks --}}
             <div style="font-size: 12px; color: #666D80; font-weight: 500;">
-                Showing {{ $mahasiswa->firstItem() }}–{{ $mahasiswa->lastItem() }} of {{ $mahasiswa->total() }} results
+                Menampilkan {{ $mahasiswa->firstItem() }}–{{ $mahasiswa->lastItem() }} dari {{ $mahasiswa->total() }} mahasiswa
             </div>
         </div>
 

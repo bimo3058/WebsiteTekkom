@@ -620,7 +620,9 @@
 
         @php
             $userRoles = auth()->user()->roles->pluck('name');
-            $canViewRestricted = $userRoles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'ketua_departemen', 'dosen_koordinator', 'dosen', 'pengurus_himpunan'])->isNotEmpty();
+            // Anggaran & Dokumen tampil untuk SEMUA role kecuali mahasiswa & alumni murni.
+            // (denylist agar konsisten dengan halaman Pelaksanaan dan tidak ada role pengelola yang terlewat — mis. DPM)
+            $canViewRestricted = $userRoles->diff(['mahasiswa', 'alumni'])->isNotEmpty();
         @endphp
         @if($kegiatan->anggaran && $canViewRestricted)
         <div class="meta-item">
@@ -725,7 +727,10 @@
     $images    = $kegiatan->repoMulmed ? $kegiatan->repoMulmed->where('tipe_file', 'image') : collect();
     $videos    = $kegiatan->repoMulmed ? $kegiatan->repoMulmed->where('tipe_file', 'video') : collect();
     $documents = $kegiatan->repoMulmed ? $kegiatan->repoMulmed->where('tipe_file', 'document') : collect();
-    $totalFiles = $images->count() + $videos->count() + $documents->count();
+    // Dokumen hanya terlihat oleh sebagian role; hitung file yang BENAR-BENAR tampil
+    // bagi user ini supaya empty-state tetap muncul (bukan area kosong) saat mis. hanya ada dokumen.
+    $visibleDocuments = (isset($canViewRestricted) && $canViewRestricted) ? $documents->count() : 0;
+    $totalFiles = $images->count() + $videos->count() + $visibleDocuments;
 @endphp
 
 @if($totalFiles > 0)

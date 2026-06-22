@@ -30,6 +30,7 @@ class PelaksanaanController extends Controller
         $bidangList = Bidang::orderBy('nama_bidang')->get();
         $tahunList = Kegiatan::select('tahun')
             ->whereNotNull('tahun')
+            ->where('status', Kegiatan::STATUS_DISETUJUI)
             ->distinct()
             ->orderBy('tahun', 'desc')
             ->pluck('tahun')
@@ -104,10 +105,9 @@ class PelaksanaanController extends Controller
         $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan',
                                          'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
         $canManage = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'dpm'])->isNotEmpty() || $isPengurus; // GPM & Kadep view-only
-        $canViewRestricted = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm',
-                                                'dosen_koordinator', 'dosen', 'pengurus_himpunan',
-                                                'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang',
-                                                'ketua_unit', 'staff_himpunan'])->isNotEmpty();
+        // Anggaran & Dokumen tampil untuk SEMUA role kecuali mahasiswa & alumni murni.
+        // (denylist agar konsisten dengan halaman Arsip dan tidak ada role pengelola yang terlewat — mis. DPM)
+        $canViewRestricted = $roles->diff(['mahasiswa', 'alumni'])->isNotEmpty();
         // Hanya role tertentu yang boleh menekan "Unggah ke Arsip"
         // (staff_himpunan TIDAK termasuk, dosen DPM/GPM juga tidak — hanya pengurus inti + admin)
         $canArsip = $roles->intersect([
@@ -142,7 +142,10 @@ class PelaksanaanController extends Controller
             'ketuaPelaksana.user', 'dosenPendamping.user',
             'panitia.user', 'creator',
             'repoMulmed',
-        ])->where('status', Kegiatan::STATUS_DISETUJUI)->findOrFail($id);
+        ])->whereIn('status', [
+            Kegiatan::STATUS_DISETUJUI,
+            Kegiatan::STATUS_SELESAI,
+        ])->findOrFail($id);
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
@@ -196,11 +199,13 @@ class PelaksanaanController extends Controller
 
         $validated = $request->validate([
             'judul'                     => 'required|string|max:255',
-            'kategori_kegiatan_id'      => 'nullable|array|max:2',
+            // Disamakan dengan aturan di Laporan & Arsip agar kegiatan yang diarsipkan
+            // selalu lolos validasi saat diedit di subbab Arsip (hindari "jebakan" validasi).
+            'kategori_kegiatan_id'      => 'required|array|min:1|max:2',
             'kategori_kegiatan_id.*'    => 'integer|exists:mk_kategori_kegiatan,id',
             'bidang_id'                 => 'nullable|array',
             'bidang_id.*'               => 'integer|exists:mk_bidang,id',
-            'deskripsi'                 => 'required|string',
+            'deskripsi'                 => 'required|string|min:20',
             'tanggal_mulai'             => 'required|date',
             'tanggal_selesai'           => 'nullable|date|after_or_equal:tanggal_mulai',
             'jam_mulai'                 => 'nullable|string',
@@ -251,15 +256,28 @@ class PelaksanaanController extends Controller
             $proker->update(['penanggung_jawab' => null]);
         }
 
-        // Sync kategori & bidang
-        if (!empty($validated['kategori_kegiatan_id'])) {
-            $proker->kategoris()->sync($validated['kategori_kegiatan_id']);
+        // Sync kategori & bidang (pivot tables)
+        $kategoriIds = $validated['kategori_kegiatan_id'] ?? [];
+        $bidangIds = $validated['bidang_id'] ?? [];
+
+        if (!empty($kategoriIds)) {
+            $proker->kategoris()->sync($kategoriIds);
+        } else {
+            // Simetris dengan bidang: kosongkan pivot bila tak ada kategori dipilih
+            // (mencegah kategori lama "nyangkut" sementara kolom FK sudah null).
+            $proker->kategoris()->detach();
         }
-        if (!empty($validated['bidang_id'])) {
-            $proker->bidangs()->sync($validated['bidang_id']);
+        if (!empty($bidangIds)) {
+            $proker->bidangs()->sync($bidangIds);
         } else {
             $proker->bidangs()->detach();
         }
+
+        // Sync backward-compat FK columns (first item) — agar view lama tetap konsisten
+        $proker->update([
+            'kategori_kegiatan_id' => $kategoriIds[0] ?? null,
+            'bidang_id'            => $bidangIds[0] ?? null,
+        ]);
 
         // Sync panitia
         $panitiaIds = $validated['panitia_ids'] ?? [];
@@ -270,13 +288,14 @@ class PelaksanaanController extends Controller
         }
         $proker->panitia()->sync($panitiaSyncData);
 
-        // Upload banner
+        // Upload banner — simpan ke kolom `banner` di mk_kegiatan (bukan repo_mulmed)
         if ($request->hasFile('banner')) {
-            $file = $request->file('banner');
-            $this->repoMulmedService->upload($file, [
-                'kegiatan_id'       => $proker->id,
-                'judul_file'        => 'banner',
-                'visibility_status' => 'public',
+            // Hapus banner lama jika ada
+            if ($proker->banner) {
+                $this->supabase->delete($proker->banner);
+            }
+            $proker->update([
+                'banner' => $this->supabase->upload($request->file('banner'), 'mk_mulmed/image'),
             ]);
         }
 
@@ -304,8 +323,9 @@ class PelaksanaanController extends Controller
     public function publishToArsip($id)
     {
         // Proteksi backend: sinkron dengan route middleware + $canArsip di show()
+        // GPM adalah view-only — TIDAK boleh melakukan arsip
         $allowedRoles = [
-            'superadmin', 'admin_kemahasiswaan', 'gpm', 'dpm',
+            'superadmin', 'admin_kemahasiswaan', 'dpm',
             'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ];
         $userRoles = Auth::user()->roles->pluck('name');
@@ -338,11 +358,11 @@ class PelaksanaanController extends Controller
 
     public function destroy($id)
     {
+        // Hanya kegiatan berstatus 'disetujui' yang boleh dihapus dari Pelaksanaan.
+        // Kegiatan yang sudah diarsipkan (selesai) harus dihapus dari subbab Arsip.
         $proker = Kegiatan::with('repoMulmed')
-            ->whereIn('status', [
-                Kegiatan::STATUS_DISETUJUI,
-                Kegiatan::STATUS_SELESAI,
-            ])->findOrFail($id);
+            ->where('status', Kegiatan::STATUS_DISETUJUI)
+            ->findOrFail($id);
 
         if ($proker->banner) {
             $this->supabase->delete($proker->banner);

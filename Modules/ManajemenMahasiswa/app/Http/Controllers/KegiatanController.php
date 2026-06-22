@@ -184,6 +184,12 @@ class KegiatanController extends Controller
 
         $validated['status'] = 'selesai';
 
+        // Tahun diturunkan dari tanggal mulai bila tidak diisi eksplisit, agar kegiatan
+        // muncul di dropdown & filter Tahun pada Laporan & Arsip (selaras alur Pelaksanaan).
+        if (empty($validated['tahun']) && !empty($validated['tanggal_mulai'])) {
+            $validated['tahun'] = \Carbon\Carbon::parse($validated['tanggal_mulai'])->year;
+        }
+
         // Handle banner upload
         if ($request->hasFile('banner')) {
             $validated['banner'] = $this->supabase->upload($request->file('banner'), 'mk_mulmed/image');
@@ -291,6 +297,12 @@ class KegiatanController extends Controller
         ]);
 
         $validated['status'] = 'selesai';
+
+        // Tahun diturunkan dari tanggal mulai bila tidak diisi eksplisit, agar kegiatan
+        // muncul di dropdown & filter Tahun pada Laporan & Arsip (selaras alur Pelaksanaan).
+        if (empty($validated['tahun']) && !empty($validated['tanggal_mulai'])) {
+            $validated['tahun'] = \Carbon\Carbon::parse($validated['tanggal_mulai'])->year;
+        }
 
         // Handle banner upload
         if ($request->hasFile('banner')) {

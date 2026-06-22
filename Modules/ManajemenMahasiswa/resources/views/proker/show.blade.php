@@ -9,6 +9,8 @@
 .status-badge{display:inline-flex;align-items:center;gap:5px;padding:5px 14px;border-radius:20px;font-size:12px;font-weight:700}
 .status-draft{background:#f3f4f6;color:#666D80}
 .status-diajukan{background:#FFFBEB;color:#92400e}
+.status-disetujui{background:#eef2ff;color:#0B266E}
+.status-selesai{background:#ECFDF5;color:#059669}
 .status-ditolak{background:#fee2e2;color:#dc2626}
 /* Buttons */
 .btn-ajukan{background:linear-gradient(135deg,#0B266E,#0B266E);color:#fff;font-weight:600;padding:10px 24px;border-radius:10px;border:none;cursor:pointer;font-size:14px;transition:all 0.2s;display:inline-flex;align-items:center;gap:8px;}

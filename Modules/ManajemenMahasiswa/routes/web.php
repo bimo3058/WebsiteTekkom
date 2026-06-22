@@ -367,8 +367,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('riwayat.destroy')->where('riwayatId', '[0-9]+');
                 });
 
-                // Generate CV — admin group, GPM, DPM, dan Dosen
-                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|ketua_departemen|dpm|dosen|dosen_koordinator')
+                // Generate CV — admin group, GPM, DPM
+                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm')
                     ->group(function () {
                     Route::get('/{id}/cv', [DirektoriMahasiswaController::class, 'generateCv'])
                         ->name('cv')->where('id', '[0-9]+');

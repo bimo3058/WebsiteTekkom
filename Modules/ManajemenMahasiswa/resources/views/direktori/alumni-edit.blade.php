@@ -162,6 +162,14 @@
                 <input type="number" name="tahun_lulus" class="form-control @error('tahun_lulus') is-invalid @enderror" value="{{ old('tahun_lulus', $alumni->tahun_lulus) }}" required min="2000" max="2099">
                 @error('tahun_lulus') <div class="invalid-feedback">{{ $message }}</div> @enderror
             </div>
+            @if($isCanSeeIpk)
+            <div class="col-md-6">
+                <label class="form-label">IPK</label>
+                <input type="number" step="0.01" min="0" max="4" name="ipk" class="form-control @error('ipk') is-invalid @enderror" value="{{ old('ipk', $alumni->ipk) }}" placeholder="0.00">
+                @error('ipk') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <small class="text-muted d-block mt-1" style="font-size: 11px;">Tersinkron dengan data Kemahasiswaan · skala 0–4.</small>
+            </div>
+            @endif
 
             <!-- Kontak -->
             <div class="col-md-12" x-data="alumniPhoneCode('{{ $savedCode }}')">
@@ -208,6 +216,14 @@
                     <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="me-1 text-warning"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="16" x2="12" y2="12"></line><line x1="12" y1="8" x2="12.01" y2="8"></line></svg>
                     Hanya masukkan <strong>angka</strong> tanpa spasi atau karakter khusus.
                 </small>
+            </div>
+
+            <!-- Email Pribadi -->
+            <div class="col-md-12">
+                <label class="form-label">Email Pribadi</label>
+                <input type="email" name="personal_email" class="form-control @error('personal_email') is-invalid @enderror" value="{{ old('personal_email', $alumni->user->personal_email ?? '') }}" placeholder="nama@email.com">
+                @error('personal_email') <div class="invalid-feedback">{{ $message }}</div> @enderror
+                <small class="text-muted d-block mt-1" style="font-size: 11px;">Email pribadi alumni (di luar email SSO UNDIP).</small>
             </div>
         </div>
 
