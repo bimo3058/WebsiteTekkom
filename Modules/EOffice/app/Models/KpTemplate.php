@@ -17,7 +17,10 @@ class KpTemplate extends Model
         'file_path',
         'file_type',
         'is_required',
+        'is_downloadable',
+        'is_uploadable',
         'uploaded_by',
+        'approver_role',
     ];
 
     public function periode()

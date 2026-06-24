@@ -35,7 +35,7 @@ class DaftarAsprakController extends Controller
         // (asprak ATAU koor) — inilah yang relevan untuk halaman pendaftaran
         $praktikumDenganPeriode = Praktikum::where('status', 'aktif')
             ->whereHas('periodeAktif') // scope via relasi — lihat bawah
-            ->with(['dosen', 'matkul'])
+            ->with(['dosens', 'matkul'])
             ->get();
 
         // Fallback manual jika relasi belum ada: query langsung
@@ -48,7 +48,7 @@ class DaftarAsprakController extends Controller
 
             $praktikumDenganPeriode = Praktikum::whereIn('id', $praktikumIdsDenganPeriode)
                 ->where('status', 'aktif')
-                ->with(['dosen', 'matkul'])
+                ->with(['dosens', 'matkul'])
                 ->get();
         }
 

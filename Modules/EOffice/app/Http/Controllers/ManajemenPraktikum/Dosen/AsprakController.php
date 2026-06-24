@@ -16,7 +16,7 @@ class AsprakController extends Controller
     {
         $user = auth()->user();
 
-        $praktikumList = Praktikum::where('dosen_id', $user->id)
+        $praktikumList = Praktikum::whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
             ->orderByDesc('created_at')
             ->get();
 

@@ -21,6 +21,8 @@ class DaftarPraktikan extends Model
         'praktikum_id',
         'user_id',
         'status',
+        'kelompok',
+        'shift',
     ];
 
     // ── Relationships ──────────────────────────────────────────────────────────
@@ -48,5 +50,10 @@ class DaftarPraktikan extends Model
     public function pengumpulanTugas()
     {
         return $this->hasMany(PengumpulanTugas::class, 'daftar_praktikan_id');
+    }
+
+    public function nilaiJenisTugas()
+    {
+        return $this->hasMany(NilaiJenisTugas::class, 'daftar_praktikan_id');
     }
 }

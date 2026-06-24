@@ -21,6 +21,7 @@ class PengumpulanTugas extends Model
         'catatan',
         'nilai',
         'catatan_revisi',
+        'file_revisi_asprak',
         'is_revision',
         'status_pengumpulan',
     ];
@@ -45,5 +46,10 @@ class PengumpulanTugas extends Model
     public function daftarPraktikan()
     {
         return $this->belongsTo(DaftarPraktikan::class, 'daftar_praktikan_id');
+    }
+
+    public function riwayat()
+    {
+        return $this->hasMany(RiwayatPengumpulan::class, 'pengumpulan_tugas_id')->orderByDesc('created_at');
     }
 }

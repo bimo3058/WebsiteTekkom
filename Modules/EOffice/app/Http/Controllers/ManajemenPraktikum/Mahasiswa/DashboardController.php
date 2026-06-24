@@ -75,8 +75,11 @@ class DashboardController extends Controller
                 ->where('dipublikasikan', true)
                 ->get();
 
-            // Pengumuman terbaru yang published
-            $pengumuman = Pengumuman::where('praktikum_id', $terdaftarDi->id)
+            // Pengumuman terbaru yang published (terkait kelas ini atau pengumuman pendaftaran sistem)
+            $pengumuman = Pengumuman::where(function ($q) use ($terdaftarDi) {
+                    $q->where('praktikum_id', $terdaftarDi->id)
+                      ->orWhereIn('tipe_sistem', ['buka', 'tutup']);
+                })
                 ->where('is_published', true)
                 ->orderByDesc('created_at')
                 ->limit(4)

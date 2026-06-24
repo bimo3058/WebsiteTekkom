@@ -34,7 +34,7 @@ class PeriodePendaftaranController extends Controller
 
         // Ambil semua praktikum yang diampu dosen ini
         $praktikumList = Praktikum::with(['matkul', 'koordinator'])
-            ->where('dosen_id', $user->id)
+            ->whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
             ->where('status', 'aktif')
             ->orderByDesc('created_at')
             ->get();
@@ -87,7 +87,7 @@ class PeriodePendaftaranController extends Controller
 
         // Pastikan praktikum milik dosen ini
         $praktikum = Praktikum::where('id', $request->praktikum_id)
-            ->where('dosen_id', $user->id)
+            ->whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
             ->where('status', 'aktif')
             ->firstOrFail();
 
@@ -139,7 +139,7 @@ class PeriodePendaftaranController extends Controller
         $periode = PeriodePendaftaran::with('praktikum')->findOrFail($id);
 
         // Pastikan praktikum milik dosen ini & jenis = koor
-        if ((string) $periode->praktikum?->dosen_id !== (string) $user->id) {
+        if (!$periode->praktikum?->dosens->contains('id', $user->id)) {
             return back()->with('error', 'Anda tidak berhak menutup periode ini.');
         }
         if ($periode->jenis !== 'koor') {
@@ -159,7 +159,7 @@ class PeriodePendaftaranController extends Controller
         $user    = auth()->user();
         $periode = PeriodePendaftaran::with('praktikum')->findOrFail($id);
 
-        if ((string) $periode->praktikum?->dosen_id !== (string) $user->id) {
+        if (!$periode->praktikum?->dosens->contains('id', $user->id)) {
             return back()->with('error', 'Anda tidak berhak menghapus periode ini.');
         }
         if ($periode->jenis !== 'koor') {
