@@ -589,7 +589,6 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
             Route::put('/periode/{id}', [KoordinatorController::class, 'updatePeriode'])->name('periode.update');
             Route::delete('/periode/{id}', [KoordinatorController::class, 'destroyPeriode'])->name('periode.destroy');
 
-            Route::get('/pendaftar', [KoordinatorController::class, 'pendaftarKp'])->name('pendaftar');
             Route::delete('/pendaftar/{id}', [KoordinatorController::class, 'resetPendaftar'])->name('pendaftar.destroy');
         });
     });

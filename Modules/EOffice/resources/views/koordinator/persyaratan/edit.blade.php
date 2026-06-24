@@ -19,11 +19,14 @@
     'description' => $t->description ?? '',
     'existing_file' => $t->file_name ?: '',
     'existing_path' => $t->file_path ?: '',
+    'is_downloadable' => (bool) $t->is_downloadable,
+    'is_uploadable' => (bool) $t->is_uploadable,
+    'approver_role' => $t->approver_role ?? 'koordinator',
     'new_file' => '',
-    'file_url' => '',
+    'file_url' => $t->file_path ? app(\App\Services\SupabaseStorage::class)->getPublicUrl($t->file_path) : '',
 ])->values()) }},
         addDoc() {
-            this.docs.push({ id: null, title: '', description: '', existing_file: '', existing_path: '', new_file: '', file_url: '' });
+            this.docs.push({ id: null, title: '', description: '', existing_file: '', existing_path: '', is_downloadable: true, is_uploadable: false, approver_role: 'koordinator', new_file: '', file_url: '' });
         },
         removeDoc(index) {
             this.docs.splice(index, 1);
@@ -93,10 +96,9 @@
                             <!-- Column Headers -->
                             <div
                                 class="hidden sm:grid grid-cols-12 gap-3 px-5 py-3 border-b border-[#E4E7EC] bg-[#F9FAFB]">
-                                <div class="col-span-5 text-left"><span
-                                        class="text-[12px] font-medium text-[#666D80]">Nama Dokumen</span></div>
-                                <div class="col-span-6 text-left"><span
-                                        class="text-[12px] font-medium text-[#666D80]">Deskripsi</span></div>
+                                <div class="col-span-11 text-left"><span
+                                        class="text-[12px] font-medium text-[#666D80]">Nama Dokumen <span
+                                            class="text-red-500">*</span></span></div>
                                 <div class="col-span-1 text-center"><span
                                         class="text-[12px] font-medium text-[#666D80]">Aksi</span></div>
                             </div>
@@ -110,17 +112,11 @@
                                             <div class="flex-1 space-y-3">
                                                 <!-- Row: Name & Description -->
                                                 <div class="grid grid-cols-1 sm:grid-cols-11 gap-3">
-                                                    <div class="col-span-5">
+                                                    <div class="col-span-11">
                                                         <input type="text" :name="'docs[' + index + '][title]'"
                                                             x-model="doc.title"
                                                             class="w-full border border-[#E4E7EC] rounded-[8px] px-3.5 py-2 text-[13px] text-[#0D0D12] focus:outline-none focus:border-[#2E3182] transition-colors placeholder:text-[#A4ABB8]"
                                                             placeholder="masukkan nama dokumen" required>
-                                                    </div>
-                                                    <div class="col-span-6">
-                                                        <input type="text" :name="'docs[' + index + '][description]'"
-                                                            x-model="doc.description"
-                                                            class="w-full border border-[#E4E7EC] rounded-[8px] px-3.5 py-2 text-[13px] text-[#0D0D12] focus:outline-none focus:border-[#2E3182] transition-colors placeholder:text-[#A4ABB8]"
-                                                            placeholder="(optional)">
                                                     </div>
                                                     <input type="hidden" :name="'docs[' + index + '][existing_file]'"
                                                         :value="doc.existing_file">
@@ -128,14 +124,52 @@
                                                         :value="doc.existing_path">
                                                 </div>
 
+                                                <!-- Row: Requirements Toggles -->
+                                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                                    <label
+                                                        class="flex items-center gap-2 cursor-pointer bg-[#F9FAFB] border border-[#E4E7EC] rounded-[8px] px-3.5 py-2 hover:bg-[#F3F4F6] transition-colors">
+                                                        <input type="checkbox"
+                                                            :name="'docs[' + index + '][is_downloadable]'"
+                                                            x-model="doc.is_downloadable" value="1"
+                                                            class="w-4 h-4 text-[#2E3182] border-gray-300 rounded focus:ring-[#2E3182]">
+                                                        <span class="text-[13px] font-medium text-[#0D0D12]">Sediakan
+                                                            Template Download</span>
+                                                    </label>
+                                                    <label
+                                                        class="flex items-center gap-2 cursor-pointer bg-[#F9FAFB] border border-[#E4E7EC] rounded-[8px] px-3.5 py-2 hover:bg-[#F3F4F6] transition-colors">
+                                                        <input type="checkbox"
+                                                            :name="'docs[' + index + '][is_uploadable]'"
+                                                            x-model="doc.is_uploadable" value="1"
+                                                            class="w-4 h-4 text-[#2E3182] border-gray-300 rounded focus:ring-[#2E3182]">
+                                                        <span class="text-[13px] font-medium text-[#0D0D12]">Wajibkan
+                                                            Mahasiswa Upload</span>
+                                                    </label>
+                                                </div>
+
+                                                <!-- Row: Approver Role Selector -->
+                                                <div
+                                                    class="flex items-center gap-3 bg-[#F9FAFB] border border-[#E4E7EC] rounded-[8px] px-3.5 py-2 transition-colors">
+                                                    <span
+                                                        class="text-[13px] font-medium text-[#666D80] min-w-max">Validasi
+                                                        Kepada:</span>
+                                                    <select :name="'docs[' + index + '][approver_role]'"
+                                                        x-model="doc.approver_role"
+                                                        class="w-full bg-transparent border-none text-[13px] text-[#0D0D12] font-semibold focus:ring-0 cursor-pointer p-0">
+                                                        <option value="koordinator">Koordinator KP</option>
+                                                        <option value="dosen_pembimbing">Dosen Pembimbing</option>
+                                                        <option value="keduanya">Koordinator & Dosen</option>
+                                                        <option value="tanpa_review">Tanpa Validasi (Auto)</option>
+                                                    </select>
+                                                </div>
+
                                                 <!-- Row: File Upload Box -->
-                                                <div class="w-full">
+                                                <div class="w-full" x-show="doc.is_downloadable" x-transition>
                                                     <!-- State: Empty (No file) -->
                                                     <label x-show="!doc.existing_file && !doc.new_file"
                                                         class="flex justify-between items-center w-full border border-[#E4E7EC] rounded-[8px] px-3.5 py-2 cursor-pointer bg-white hover:bg-[#F8F9FA] transition-colors group">
                                                         <span
                                                             class="text-[13px] text-[#A4ABB8] group-hover:text-[#666D80] truncate select-none">tambahkan
-                                                            file form template (optional)</span>
+                                                            file form template (wajib)</span>
                                                         <svg class="w-4 h-4 text-[#A4ABB8] group-hover:text-[#666D80] shrink-0"
                                                             fill="none" stroke="currentColor" stroke-width="2"
                                                             viewBox="0 0 24 24">
@@ -143,6 +177,7 @@
                                                                 d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                                                         </svg>
                                                         <input type="file" :name="'files[' + index + ']'" class="hidden"
+                                                            :required="doc.is_downloadable && !doc.existing_file"
                                                             @change="if($event.target.files.length) { doc.new_file = $event.target.files[0].name; if(doc.file_url) URL.revokeObjectURL(doc.file_url); doc.file_url = URL.createObjectURL($event.target.files[0]); }"
                                                             accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx">
                                                     </label>
@@ -159,8 +194,7 @@
                                                                     d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                                                             </svg>
                                                             <template x-if="doc.existing_path && !doc.new_file">
-                                                                <a :href="'/storage/' + doc.existing_path"
-                                                                    target="_blank"
+                                                                <a :href="doc.file_url" target="_blank"
                                                                     class="text-[13px] text-[#2E3182] hover:text-[#1c1e54] font-medium hover:underline truncate"
                                                                     x-text="doc.existing_file"
                                                                     title="Lihat Dokumen"></a>

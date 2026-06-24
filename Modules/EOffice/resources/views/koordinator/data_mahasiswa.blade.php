@@ -344,107 +344,66 @@
 
                             <!-- Expandable Detail Row -->
                             <tr x-show="expanded" x-transition x-cloak
-                                class="bg-indigo-50/10 border-b border-slate-100 overflow-hidden">
+                                class="bg-slate-50 border-b border-slate-200 overflow-hidden shadow-inner">
                                 <td colspan="6" class="p-0">
-                                    <div class="px-12 py-6 grid grid-cols-1 lg:grid-cols-3 gap-8">
-                                        <!-- Column 1: Info & Profile KP -->
-                                        <div class="space-y-4">
-                                            <div>
-                                                <p
-                                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                                                    Judul Kerja Praktik</p>
-                                                <p class="text-sm font-semibold text-slate-800 leading-snug"
-                                                    x-text="m.judul_kp"></p>
-                                                <p class="text-xs text-indigo-600 font-medium mt-1"
-                                                    x-text="m.tempat_kp"></p>
-                                            </div>
-                                            <div class="pt-2 border-t border-slate-100">
-                                                <p
-                                                    class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                                                    Dosen Pembimbing</p>
-                                                <div class="flex items-center gap-2 mt-1.5">
-                                                    <div
-                                                        class="w-6 h-6 rounded bg-slate-200 flex items-center justify-center text-[10px] font-bold text-slate-500">
-                                                        <svg class="w-3 h-3" fill="none" stroke="currentColor"
-                                                            viewBox="0 0 24 24">
-                                                            <path stroke-linecap="round" stroke-linejoin="round"
-                                                                stroke-width="2"
-                                                                d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
-                                                        </svg>
-                                                    </div>
-                                                    <p class="text-[13px] font-semibold text-slate-700"
-                                                        x-text="m.dosen_pembimbing || 'Belum di-assign'"></p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Column 2: Rincian Nilai -->
-                                        <div class="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-                                            <h4
-                                                class="text-[11px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5 border-b border-slate-100 pb-2 mb-3">
-                                                <svg class="w-3.5 h-3.5 text-slate-400" fill="none"
-                                                    stroke="currentColor" viewBox="0 0 24 24">
-                                                    <path stroke-linecap="round" stroke-linejoin="round"
-                                                        stroke-width="2"
-                                                        d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                                                </svg>
-                                                Rekapitulasi Nilai
-                                            </h4>
-                                            <div class="space-y-2.5">
-                                                <div class="flex items-center justify-between">
-                                                    <span class="text-xs text-slate-600">Nilai Lapangan</span>
-                                                    <span class="text-xs font-bold text-slate-900"
-                                                        x-text="m.nilai_lapangan !== null ? m.nilai_lapangan : '-'"></span>
-                                                </div>
-                                                <div class="flex items-center justify-between">
-                                                    <span class="text-xs text-slate-600">Nilai Laporan</span>
-                                                    <span class="text-xs font-bold text-slate-900"
-                                                        x-text="m.nilai_laporan !== null ? m.nilai_laporan : '-'"></span>
-                                                </div>
-                                                <div class="flex items-center justify-between">
-                                                    <span class="text-xs text-slate-600">Nilai Seminar</span>
-                                                    <span class="text-xs font-bold text-slate-900"
-                                                        x-text="m.nilai_seminar !== null ? m.nilai_seminar : '-'"></span>
-                                                </div>
-                                                <div
-                                                    class="pt-2 mt-2 border-t border-slate-100 flex items-center justify-between">
-                                                    <span class="text-[11px] font-bold text-slate-500 uppercase">Nilai
-                                                        Mutu Akhir</span>
-                                                    <span class="text-sm font-black text-indigo-600"
-                                                        x-text="m.nilai_akhir !== null ? m.nilai_akhir : '-'"></span>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <!-- Column 3: Riwayat Status -->
+                                    <div class="px-8 py-5 grid grid-cols-1 lg:grid-cols-2 gap-x-16 gap-y-6">
+                                        <!-- Left Column: PROFIL KERJA PRAKTIK -->
                                         <div>
-                                            <h4
-                                                class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-3">
-                                                Status Progress</h4>
-                                            <div
-                                                class="space-y-3 relative before:absolute before:inset-0 before:ml-[9px] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-slate-200 before:to-transparent">
-                                                <template x-for="(riwayat, i) in m.riwayat_approval" :key="i">
-                                                    <div
-                                                        class="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-                                                        <!-- Icon indicator -->
-                                                        <div
-                                                            class="flex items-center justify-center w-5 h-5 rounded-full border-2 border-white bg-indigo-500 shadow shrink-0 md:order-1 md:group-odd:-translate-x-1/2 md:group-even:translate-x-1/2">
-                                                            <div class="w-1.5 h-1.5 bg-white rounded-full"></div>
-                                                        </div>
-                                                        <!-- Card -->
-                                                        <div
-                                                            class="w-[calc(100%-2.5rem)] md:w-[calc(50%-1.5rem)] p-2.5 rounded-lg border border-slate-100 bg-white shadow-sm">
-                                                            <div class="flex items-center justify-between">
-                                                                <span class="text-[10px] font-bold text-slate-400"
-                                                                    x-text="riwayat.tanggal"></span>
+                                            <div class="space-y-2.5">
+                                                <div>
+                                                    <span class="block text-[13px] font-medium text-slate-400 mb-0.5">Judul Laporan</span>
+                                                    <span class="block text-[13px] font-semibold text-slate-800 leading-snug" x-text="m.judul_kp || '-'"></span>
+                                                </div>
+                                                <div>
+                                                    <span class="block text-[13px] font-medium text-slate-400 mb-0.5">Instansi</span>
+                                                    <span class="block text-[13px] font-semibold text-slate-800 leading-snug" x-text="m.tempat_kp || '-'"></span>
+                                                </div>
+                                                <div>
+                                                    <span class="block text-[13px] font-medium text-slate-400 mb-0.5">Dosen Pembimbing</span>
+                                                    <span class="block text-[13px] font-semibold text-slate-800 leading-snug" x-text="m.dosen_pembimbing || 'Belum di-assign'"></span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <!-- Right Column: KOMPONEN PENILAIAN -->
+                                        <div>
+                                            <h4 class="text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Komponen Penilaian</h4>
+                                            <div class="space-y-1.5">
+                                                <!-- Dynamic Values -->
+                                                <template x-if="m.semua_nilai && m.semua_nilai.length > 0">
+                                                    <div>
+                                                        <template x-for="n in m.semua_nilai" :key="n.nama">
+                                                            <div class="flex justify-between items-center gap-4 py-0.5">
+                                                                <span class="text-[13px] font-medium text-slate-400" x-text="n.nama"></span>
+                                                                <span class="text-[13px] font-bold text-slate-800" x-text="n.nilai !== null && n.nilai !== '' ? n.nilai : '-'"></span>
                                                             </div>
-                                                            <p class="text-xs font-semibold text-slate-800 mt-0.5"
-                                                                x-text="riwayat.status"></p>
-                                                            <p class="text-[10px] text-slate-500 mt-1 leading-snug"
-                                                                x-text="riwayat.keterangan"></p>
+                                                        </template>
+                                                    </div>
+                                                </template>
+
+                                                <!-- Legacy Values for undefined periods -->
+                                                <template x-if="!m.semua_nilai || m.semua_nilai.length === 0">
+                                                    <div>
+                                                        <div class="flex justify-between items-center gap-4 py-0.5">
+                                                            <span class="text-[13px] font-medium text-slate-400">Nilai Lapangan</span>
+                                                            <span class="text-[13px] font-bold text-slate-800" x-text="m.nilai_lapangan !== null ? m.nilai_lapangan : '-'"></span>
+                                                        </div>
+                                                        <div class="flex justify-between items-center gap-4 py-0.5 mt-1.5">
+                                                            <span class="text-[13px] font-medium text-slate-400">Nilai Laporan</span>
+                                                            <span class="text-[13px] font-bold text-slate-800" x-text="m.nilai_laporan !== null ? m.nilai_laporan : '-'"></span>
+                                                        </div>
+                                                        <div class="flex justify-between items-center gap-4 py-0.5 mt-1.5">
+                                                            <span class="text-[13px] font-medium text-slate-400">Nilai Seminar</span>
+                                                            <span class="text-[13px] font-bold text-slate-800" x-text="m.nilai_seminar !== null ? m.nilai_seminar : '-'"></span>
                                                         </div>
                                                     </div>
                                                 </template>
+
+                                                <!-- Final Evaluated Score -->
+                                                <div class="flex justify-between items-center gap-4 pt-2 mt-2 border-t border-slate-200">
+                                                    <span class="text-[11px] font-bold text-slate-800 uppercase">Nilai Mutu Akhir</span>
+                                                    <span class="text-sm font-black text-indigo-600" x-text="m.nilai_akhir !== null ? m.nilai_akhir : '-'"></span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -499,10 +458,7 @@
             </div>
         </div>
 
-    </div>
-
-    <!-- Edit Modal injected here later -->
-    <template x-teleport="body">
+        <!-- Edit Modal -->
         <div x-show="detailModal" class="fixed inset-0 z-[100] flex items-center justify-center overflow-y-auto"
             aria-labelledby="modal-title" role="dialog" aria-modal="true" x-cloak>
 
@@ -654,23 +610,54 @@
                                         </div>
                                     </div>
 
-                                    <div class="grid grid-cols-2 gap-4">
-                                        <div>
-                                            <label class="block text-xs font-bold text-slate-700 mb-1.5"
-                                                for="nilai_lapangan">Nilai Lapangan</label>
-                                            <input type="number" step="0.01" min="0" max="100" name="nilai_lapangan"
-                                                id="nilai_lapangan"
-                                                class="w-full text-sm border-slate-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 shadow-sm"
-                                                :value="selectedMahasiswa.nilai_lapangan">
+                                    <template
+                                        x-if="selectedMahasiswa.komponen_koordinator && selectedMahasiswa.komponen_koordinator.length > 0">
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <template x-for="komp in selectedMahasiswa.komponen_koordinator"
+                                                :key="komp.id">
+                                                <div>
+                                                    <label class="block text-xs font-bold text-slate-700 mb-1.5"
+                                                        :for="'nilai_' + komp.id">
+                                                        <span x-text="komp.nama_komponen"></span>
+                                                        <span class="text-slate-400 font-normal ml-1"
+                                                            x-text="`(${komp.bobot}%)`"></span>
+                                                    </label>
+                                                    <input type="number" step="0.01" min="0" max="100"
+                                                        :name="'nilai_' + komp.id" :id="'nilai_' + komp.id"
+                                                        class="w-full text-sm border-slate-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 shadow-sm"
+                                                        :value="komp.nilai_angka">
+                                                </div>
+                                            </template>
+                                            <div class="col-span-full mt-2">
+                                                <label class="block text-xs font-bold text-slate-700 mb-1.5"
+                                                    for="nilai_akhir">Nilai Akhir / Mutu (Override Opsional)</label>
+                                                <input type="text" name="nilai_akhir" id="nilai_akhir"
+                                                    class="w-full text-sm border-slate-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 shadow-sm placeholder-slate-400"
+                                                    placeholder="A, AB, B, dsb" :value="selectedMahasiswa.nilai_akhir">
+                                            </div>
                                         </div>
-                                        <div>
-                                            <label class="block text-xs font-bold text-slate-700 mb-1.5"
-                                                for="nilai_akhir">Nilai Akhir / Mutu</label>
-                                            <input type="text" name="nilai_akhir" id="nilai_akhir"
-                                                class="w-full text-sm border-slate-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 shadow-sm placeholder-slate-400"
-                                                placeholder="A, AB, B, dsb" :value="selectedMahasiswa.nilai_akhir">
+                                    </template>
+
+                                    <template
+                                        x-if="!selectedMahasiswa.komponen_koordinator || selectedMahasiswa.komponen_koordinator.length === 0">
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-700 mb-1.5"
+                                                    for="nilai_lapangan">Nilai Lapangan</label>
+                                                <input type="number" step="0.01" min="0" max="100" name="nilai_lapangan"
+                                                    id="nilai_lapangan"
+                                                    class="w-full text-sm border-slate-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 shadow-sm"
+                                                    :value="selectedMahasiswa.nilai_lapangan">
+                                            </div>
+                                            <div>
+                                                <label class="block text-xs font-bold text-slate-700 mb-1.5"
+                                                    for="nilai_akhir">Nilai Akhir / Mutu</label>
+                                                <input type="text" name="nilai_akhir" id="nilai_akhir"
+                                                    class="w-full text-sm border-slate-200 rounded-lg px-3 py-2.5 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 text-slate-700 shadow-sm placeholder-slate-400"
+                                                    placeholder="A, AB, B, dsb" :value="selectedMahasiswa.nilai_akhir">
+                                            </div>
                                         </div>
-                                    </div>
+                                    </template>
                                     <p class="text-[10px] text-slate-400 mt-3">*Nilai Laporan dan Seminar adalah
                                         otoritas penuh Dosen Pembimbing melalui Menu Bimbingan Mahasiswa.</p>
                                 </div>
@@ -693,7 +680,8 @@
                 </form>
             </div>
         </div>
-    </template>
+
+    </div>
 
     @push('scripts')
         <script>

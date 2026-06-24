@@ -197,39 +197,66 @@
                             method="POST" id="formNilai">
                             @csrf
                             <input type="hidden" name="nilai_status" value="valid">
-                            <div>
-                                <label class="block text-sm font-bold text-slate-700 mb-2">Nilai Lapangan <span
-                                        class="text-red-500">*</span></label>
-                                <div class="relative">
-                                    <input type="number" name="nilai_validasi_koordinator" x-model="inputNilai" min="0"
-                                        max="100" placeholder="Masukkan nilai 0-100"
-                                        class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-base font-bold px-4 py-3 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
-                                        required>
-                                    <div
-                                        class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
-                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                                        </svg>
-                                    </div>
+                            <template
+                                x-if="selectedStudent?.komponen_koordinator && selectedStudent?.komponen_koordinator.length > 0">
+                                <div>
+                                    <template x-for="komp in selectedStudent.komponen_koordinator" :key="komp.id">
+                                        <div class="mb-4">
+                                            <label class="block text-sm font-bold text-slate-700 mb-2">
+                                                <span x-text="komp.nama_komponen"></span>
+                                                <span class="text-slate-400 font-normal ml-1"
+                                                    x-text="`(Bobot: ${komp.bobot}%)`"></span>
+                                                <span class="text-red-500">*</span>
+                                            </label>
+                                            <input type="number" :name="'nilai_' + komp.id" :value="komp.nilai_angka"
+                                                min="0" max="100" step="0.01" placeholder="Masukkan nilai 0-100"
+                                                class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-base font-bold px-4 py-3 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
+                                                required>
+                                        </div>
+                                    </template>
+                                    <p class="text-xs text-slate-500 mt-2 font-medium mb-6">Pastikan mengisi keseluruhan
+                                        komponen sesuai dengan rubrik (0 - 100).</p>
                                 </div>
-                                <p class="text-xs text-slate-500 mt-2 font-medium mb-6">Nilai final hasil validasi dari
-                                    berkas (0 - 100).</p>
-                                <button type="submit" @click.prevent="konfirmasiNilai"
-                                    class="w-full mt-4 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 group">
-                                    Konfirmasi Nilai
-                                    <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none"
-                                        stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                            d="M14 5l7 7m0 0l-7 7m7-7H3" />
-                                    </svg>
-                                </button>
-                            </div>
-                        </form>
+                            </template>
+
+                            <template
+                                x-if="!selectedStudent?.komponen_koordinator || selectedStudent?.komponen_koordinator.length === 0">
+                                <div>
+                                    <label class="block text-sm font-bold text-slate-700 mb-2">Nilai Lapangan <span
+                                            class="text-red-500">*</span></label>
+                                    <div class="relative">
+                                        <input type="number" name="nilai_validasi_koordinator" x-model="inputNilai"
+                                            min="0" max="100" placeholder="Masukkan nilai 0-100"
+                                            class="w-full bg-slate-50 border border-slate-200 text-slate-800 text-base font-bold px-4 py-3 rounded-xl focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500 transition-all outline-none"
+                                            required>
+                                        <div
+                                            class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-400">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                            </svg>
+                                        </div>
+                                    </div>
+                                    <p class="text-xs text-slate-500 mt-2 font-medium mb-6">Nilai final hasil validasi
+                                        dari
+                                        berkas (0 - 100).</p>
+                                </div>
+                            </template>
+                            <button type="submit" @click.prevent="konfirmasiNilai"
+                                class="w-full mt-4 flex items-center justify-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3.5 rounded-xl transition-all shadow-md shadow-indigo-500/20 hover:shadow-lg hover:shadow-indigo-500/30 group">
+                                Konfirmasi Nilai
+                                <svg class="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none"
+                                    stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                                </svg>
+                            </button>
                     </div>
+                    </form>
                 </div>
             </div>
         </div>
+    </div>
 
     </div>
 
@@ -249,7 +276,7 @@
                     openDetail(mhs) {
                         if (!mhs.file_nilai) return;
                         this.selectedStudent = mhs;
-                        this.inputNilai = '';
+                        this.inputNilai = mhs.nilai_validasi_koordinator || '';
                         this.inputCatatan = '';
                         this.loadingPdf = true;
                         this.viewMode = 'detail';
@@ -257,7 +284,7 @@
                     },
 
                     konfirmasiNilai() {
-                        if (!this.inputNilai || this.inputNilai < 0 || this.inputNilai > 100) { alert("Mohon masukkan nilai yang valid (0-100)."); return; }
+                        // Standard form validation will handle required
                         document.getElementById('formNilai').submit();
                     }
                 }

@@ -56,4 +56,9 @@ class KpPeriode extends Model
     {
         return $this->hasMany(\Modules\EOffice\Models\KpTemplate::class, 'periode_id', 'id');
     }
+
+    public function komponenNilai()
+    {
+        return $this->hasMany(\Modules\EOffice\Models\KpKomponenNilai::class, 'periode_id', 'id');
+    }
 }
