@@ -594,9 +594,53 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
     });
 
     // ════════════════════════════════════════════════════════════════════════
-    // MANAJEMEN PEMINJAMAN
+    // MANAJEMEN PEMINJAMAN / RUANGAN
     // ════════════════════════════════════════════════════════════════════════
-    Route::prefix('eoffice/peminjaman')->name('eoffice.peminjaman.')->group(function () {
-        Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    // Controller Imports
+    // ── Admin ────────────────────────────────────────────────────────────
+    $MRAdminUserController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\UserController::class;
+    $MRAdminRuanganController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\RuanganController::class;
+    $MRAdminPengaturanController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PengaturanController::class;
+
+    Route::prefix('eoffice/peminjaman')->name('eoffice.peminjaman.')->group(function () use ($MRAdminUserController, $MRAdminRuanganController, $MRAdminPengaturanController) {
+        Route::get('/dashboard', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\DashboardController::class, 'index'])->name('dashboard');
+
+        // ── ADMIN ────────────────────────────────────────────────────────────
+        Route::middleware(['role:superadmin|admin_eoffice'])
+            ->prefix('admin')->name('admin.')
+            ->group(function () use ($MRAdminUserController, $MRAdminRuanganController, $MRAdminPengaturanController) {
+                Route::post('user/{user}/suspend', [$MRAdminUserController, 'suspend'])->name('user.suspend');
+                Route::resource('user', $MRAdminUserController);
+                Route::resource('ruangan', $MRAdminRuanganController);
+                Route::delete('ruangan/foto/{id}', [$MRAdminRuanganController, 'destroyFoto'])->name('ruangan.foto.destroy');
+
+                // Persetujuan Peminjaman...
+                Route::get('/persetujuan', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'index'])->name('persetujuan.index');
+                Route::post('/persetujuan/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateStatus'])->name('persetujuan.update');
+
+                // Settings
+                Route::get('/pengaturan', [$MRAdminPengaturanController, 'index'])->name('pengaturan.index');
+                Route::post('/pengaturan/operasional', [$MRAdminPengaturanController, 'updateOperasional'])->name('pengaturan.operasional');
+                Route::post('/pengaturan/libur', [$MRAdminPengaturanController, 'addTanggalLibur'])->name('pengaturan.libur');
+                Route::delete('/pengaturan/libur/{id}', [$MRAdminPengaturanController, 'destroyTanggalLibur'])->name('pengaturan.libur.destroy');
+            });
+        // ── USER / MAHASISWA ──────────────────────────────────────────────────
+        $MRUserPeminjamanController = \Modules\EOffice\Http\Controllers\ManajemenRuangan\User\UserPeminjamanController::class;
+
+        Route::middleware(['auth'])
+            ->prefix('user')->name('user.')
+            ->group(function () use ($MRUserPeminjamanController) {
+                // Booking Kalender & Catalog
+                Route::get('/booking', [$MRUserPeminjamanController, 'booking'])->name('booking');
+                Route::get('/booking/ruangan/{id}', [$MRUserPeminjamanController, 'showRuangan'])->name('booking.ruangan.show');
+                Route::post('/booking/store', [$MRUserPeminjamanController, 'storeBooking'])->name('booking.store');
+                Route::get('/kalender', [$MRUserPeminjamanController, 'kalender'])->name('kalender');
+
+                // Transaksi
+                Route::get('/saya', [$MRUserPeminjamanController, 'saya'])->name('saya');
+                Route::post('/saya/batal/{id}', [$MRUserPeminjamanController, 'batalkanBooking'])->name('saya.batal');
+                Route::get('/riwayat', [$MRUserPeminjamanController, 'riwayat'])->name('riwayat');
+            });
+
     });
 });
