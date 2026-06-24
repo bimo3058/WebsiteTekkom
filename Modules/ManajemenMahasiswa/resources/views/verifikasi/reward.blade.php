@@ -2,6 +2,7 @@
 @php
     $P = \Modules\ManajemenMahasiswa\Models\Prestasi::class;
     $canManageRewardAturan = $canManageRewardAturan ?? false;
+    $canReview = $canReview ?? true;
 @endphp
 
 <style>
@@ -76,6 +77,7 @@
     .detail-status-pill { display: inline-flex; align-items: center; gap: 4px; font-size: .73rem; font-weight: 600; padding: 3px 12px; border-radius: 50px; }
     .detail-status-pill.disetujui { background: #ECFDF5; color: #059669; }
     .detail-status-pill.ditolak { background: #fef2f2; color: #dc2626; }
+    .detail-status-pill.diajukan { background: #dbeafe; color: #1e40af; }
 
     .tinjau-info { font-size: .87rem; color: #374151; background: #fafafa; border: 1px solid #DFE1E7; border-radius: 10px; padding: 12px 14px; line-height: 1.7; }
     .tinjau-info .lbl { color: #666D80; }
@@ -159,7 +161,15 @@
         Kembali ke Verifikasi Prestasi
     </a>
     <h4 style="font-size:1.45rem; font-weight:700; color:#0D0D12; margin-bottom:2px; letter-spacing:-.02em;">Klaim Reward Prestasi</h4>
-    <p style="font-size:.82rem; color:#666D80; margin:0;">Tinjau & setujui pengajuan reward prestasi mahasiswa (konversi nilai mata kuliah, SK FT 774). Keputusan final ada di Bidang Akademik Fakultas.</p>
+    @if($canReview)
+        <p style="font-size:.82rem; color:#666D80; margin:0;">Tinjau & setujui pengajuan reward prestasi mahasiswa (konversi nilai mata kuliah, SK FT 774). Keputusan final ada di Bidang Akademik Fakultas.</p>
+    @else
+        <p style="font-size:.82rem; color:#666D80; margin:0;">Pantau pengajuan reward prestasi mahasiswa (konversi nilai mata kuliah, SK FT 774). Keputusan final ada di Bidang Akademik Fakultas.</p>
+        <span style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:#eef2ff; color:#0B266E; font-size:.72rem; font-weight:700; padding:4px 12px; border-radius:50px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Mode Pemantauan — hanya melihat (tanpa tinjau/setujui/tolak)
+        </span>
+    @endif
 </div>
 
 <!-- Dokumen Aturan Reward (SK FT 774) -->
@@ -286,6 +296,31 @@
                         $grup = $p->rewardKuotaGrup();
                         $kuotaTerpakai = $kuotaMap[$p->kemahasiswaan_id][$grup] ?? 0;
                         $kuotaMaks = $P::KUOTA_MAKS[$grup];
+                        // Payload detail read-only — dipakai tombol "Detail" (admin & pengawas).
+                        $detailPayload = [
+                            "nama"           => $p->nama_prestasi,
+                            "mahasiswa"      => $p->kemahasiswaan->nama ?? "-",
+                            "nim"            => $p->kemahasiswaan->nim ?? "-",
+                            "penyelenggara"  => $p->reward_penyelenggara_label,
+                            "capaian"        => $p->reward_capaian_label,
+                            "invention"      => (bool) $p->reward_is_invention,
+                            "jml_mk_max"     => $p->reward_jml_mk_max,
+                            "sks_max"        => $p->reward_sks_max,
+                            "mk_diajukan"    => $p->reward_mk_diajukan ?? [],
+                            "mk_disetujui"   => $p->reward_mk_disetujui,
+                            "kuota_terpakai" => $kuotaTerpakai,
+                            "kuota_maks"     => $kuotaMaks,
+                            "grup"           => $grup,
+                            "status"         => $p->reward_status,
+                            "note"           => $p->reward_note,
+                            "reviewer"       => $p->reviewedBy->name ?? null,
+                            "reviewed_at"    => $p->reward_reviewed_at ? $p->reward_reviewed_at->translatedFormat('d M Y') : null,
+                            "bukti"          => $p->buktiFiles->map(fn ($b) => [
+                                "url"      => $b->public_url,
+                                "nama"     => $b->nama_file,
+                                "is_image" => $b->isImage(),
+                            ])->values()->all(),
+                        ];
                     @endphp
                     <tr>
                         <td style="color: #666D80;">{{ ($rewardData->currentPage() - 1) * $rewardData->perPage() + $i + 1 }}</td>
@@ -306,7 +341,7 @@
                             @endif
                         </td>
                         <td>
-                            @if($p->reward_status === $P::CLAIM_DIAJUKAN)
+                            @if($canReview && $p->reward_status === $P::CLAIM_DIAJUKAN)
                                 <button type="button" class="btn-tinjau" onclick="openTinjauReward(@js([
                                     "id"             => $p->id,
                                     "nama"           => $p->nama_prestasi,
@@ -332,34 +367,11 @@
                                 </button>
                             @else
                                 <div class="d-flex gap-1 flex-wrap">
-                                    <button type="button" class="btn-detail" onclick="openDetailReward(@js([
-                                        "nama"           => $p->nama_prestasi,
-                                        "mahasiswa"      => $p->kemahasiswaan->nama ?? "-",
-                                        "nim"            => $p->kemahasiswaan->nim ?? "-",
-                                        "penyelenggara"  => $p->reward_penyelenggara_label,
-                                        "capaian"        => $p->reward_capaian_label,
-                                        "invention"      => (bool) $p->reward_is_invention,
-                                        "jml_mk_max"     => $p->reward_jml_mk_max,
-                                        "sks_max"        => $p->reward_sks_max,
-                                        "mk_diajukan"    => $p->reward_mk_diajukan ?? [],
-                                        "mk_disetujui"   => $p->reward_mk_disetujui,
-                                        "kuota_terpakai" => $kuotaTerpakai,
-                                        "kuota_maks"     => $kuotaMaks,
-                                        "grup"           => $grup,
-                                        "status"         => $p->reward_status,
-                                        "note"           => $p->reward_note,
-                                        "reviewer"       => $p->reviewedBy->name ?? null,
-                                        "reviewed_at"    => $p->reward_reviewed_at ? $p->reward_reviewed_at->translatedFormat('d M Y') : null,
-                                        "bukti"          => $p->buktiFiles->map(fn ($b) => [
-                                            "url"      => $b->public_url,
-                                            "nama"     => $b->nama_file,
-                                            "is_image" => $b->isImage(),
-                                        ])->values()->all(),
-                                    ]))">
+                                    <button type="button" class="btn-detail" onclick="openDetailReward(@js($detailPayload))">
                                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -1px; margin-right: 2px;"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
                                         Detail
                                     </button>
-                                    @if($p->reward_status === $P::CLAIM_DISETUJUI)
+                                    @if($canReview && $p->reward_status === $P::CLAIM_DISETUJUI)
                                         <button type="button" class="btn-batal-reward"
                                                 onclick="openBatalReward(@js($p->id), @js($p->nama_prestasi), @js($p->kemahasiswaan->nama ?? '-'))">Batalkan</button>
                                     @endif
@@ -408,10 +420,6 @@
                         <label class="form-label fw-bold mb-1" style="font-size: 13px;">Bukti Prestasi</label>
                         <div id="trBukti" class="tr-bukti"></div>
                         <small style="font-size: 11px; color: #666D80;">Klik untuk membuka bukti di tab baru.</small>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold mb-1" style="font-size: 13px;">Aturan Reward (rujukan)</label>
-                        @include('manajemenmahasiswa::verifikasi._aturan_links', ['items' => $rewardAturan])
                     </div>
                     <div class="mb-2">
                         <label class="form-label fw-bold mb-1" style="font-size: 13px;">Catatan <span style="font-weight: 400; color: #666D80;">(wajib untuk menolak)</span></label>
@@ -613,7 +621,7 @@ function openBatalReward(id, nama, mahasiswa) {
 // Detail Reward Modal (read-only, untuk reward yang sudah disetujui/ditolak)
 function openDetailReward(data) {
     const inv = data.invention ? ' (invention/expo/fair)' : '';
-    const statusMap = { 'disetujui': ['disetujui', 'Disetujui'], 'ditolak': ['ditolak', 'Ditolak'] };
+    const statusMap = { 'disetujui': ['disetujui', 'Disetujui'], 'ditolak': ['ditolak', 'Ditolak'], 'diajukan': ['diajukan', 'Menunggu'] };
     const st = statusMap[data.status] || ['', data.status];
 
     // Status area

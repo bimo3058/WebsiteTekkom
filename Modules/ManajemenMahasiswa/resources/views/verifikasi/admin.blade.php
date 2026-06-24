@@ -169,8 +169,14 @@
             <h4 style="font-size:1.45rem; font-weight:700; color:var(--c-fg); margin-bottom:2px; letter-spacing:-.02em;">Verifikasi Riwayat Kegiatan</h4>
             <p style="font-size:.82rem; color:var(--c-fg-muted); margin:0;">Review & verifikasi riwayat keikutsertaan kegiatan yang diajukan mahasiswa</p>
         @endif
+        @unless($canVerify ?? true)
+            <span style="display:inline-flex; align-items:center; gap:6px; margin-top:10px; background:#eef2ff; color:#0B266E; font-size:.72rem; font-weight:700; padding:4px 12px; border-radius:50px;">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                Mode Pemantauan — hanya melihat (tanpa setujui/tolak)
+            </span>
+        @endunless
     </div>
-    @if($tab === 'prestasi')
+    @if($tab === 'prestasi' && ($canViewReward ?? ($canVerify ?? true)))
         <a href="{{ route('manajemenmahasiswa.verifikasi.reward.index') }}"
            style="background:#0B266E; color:#fff; font-weight:600; font-size:.85rem; padding:9px 18px; border-radius:8px; text-decoration:none; white-space:nowrap; display:inline-flex; align-items:center; gap:8px; transition:all .15s; border:none;"
            onmouseover="this.style.background='#091958'" onmouseout="this.style.background='#0B266E'">
@@ -337,6 +343,7 @@
                             </td>
                             <td style="padding:14px 16px; text-align:center;">
                                 @if($rw->verification_status === 'pending')
+                                    @if($canVerify ?? true)
                                     <div style="display:flex; gap:6px; justify-content:center;">
                                         <button type="button" class="btn-approve" title="Setujui"
                                                 onclick="openApproveModal('riwayat', {{ $rw->id }}, '{{ addslashes($rw->nama_kegiatan_manual ?? '') }}')">
@@ -347,6 +354,9 @@
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                         </button>
                                     </div>
+                                    @else
+                                        <span style="font-size: 11px; color: var(--c-fg-muted); font-style: italic;">Menunggu</span>
+                                    @endif
                                 @else
                                     <span style="font-size: 11px; color: var(--c-fg-muted);">
                                         @if($rw->verifiedBy) {{ $rw->verifiedBy->name }} @endif
@@ -515,6 +525,7 @@
                             </td>
                             <td style="padding:14px 16px; text-align:center;">
                                 @if($p->verification_status === 'pending')
+                                    @if($canVerify ?? true)
                                     <div style="display:flex; gap:6px; justify-content:center;">
                                         <button type="button" class="btn-approve" title="Setujui"
                                                 onclick="openApproveModal('prestasi', {{ $p->id }}, '{{ addslashes($p->nama_prestasi) }}')">
@@ -525,6 +536,9 @@
                                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
                                         </button>
                                     </div>
+                                    @else
+                                        <span style="font-size: 11px; color: var(--c-fg-muted); font-style: italic;">Menunggu</span>
+                                    @endif
                                 @else
                                     <span style="font-size: 11px; color: var(--c-fg-muted);">
                                         @if($p->verifiedBy) {{ $p->verifiedBy->name }} @endif
@@ -599,6 +613,8 @@
 
 </div> {{-- End Main Table Card --}}
 
+{{-- Modal & aksi setujui/tolak hanya untuk verifikator (bukan pengawas read-only) --}}
+@if($canVerify ?? true)
 <!-- Reject Modal -->
 <div class="modal fade" id="rejectModal" tabindex="-1">
     <div class="modal-dialog">
@@ -689,5 +705,6 @@ function openApproveModal(type, id, itemName) {
     new bootstrap.Modal(document.getElementById('approveModal')).show();
 }
 </script>
+@endif
 
 </x-dynamic-component>

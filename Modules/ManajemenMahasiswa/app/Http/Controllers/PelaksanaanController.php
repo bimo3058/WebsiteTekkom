@@ -42,10 +42,9 @@ class PelaksanaanController extends Controller
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
-        $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
-        $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan',
-                                         'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
-        $canManage = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'dpm'])->isNotEmpty() || $isPengurus; // GPM & Kadep view-only
+        $isAdmin = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
+        $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
+        $canManage = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm'])->isNotEmpty() || $isPengurus; // GPM & Kadep view-only
 
         $query = Kegiatan::with(['bidangs', 'kategoris', 'ketuaPelaksana.user'])
             ->where('status', Kegiatan::STATUS_DISETUJUI)
@@ -101,25 +100,23 @@ class PelaksanaanController extends Controller
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
-        $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
-        $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan',
-                                         'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
-        $canManage = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'dpm'])->isNotEmpty() || $isPengurus; // GPM & Kadep view-only
+        $isAdmin = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
+        $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
+        $canManage = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm'])->isNotEmpty() || $isPengurus; // GPM & Kadep view-only
         // Anggaran & Dokumen tampil untuk SEMUA role kecuali mahasiswa & alumni murni.
         // (denylist agar konsisten dengan halaman Arsip dan tidak ada role pengelola yang terlewat — mis. DPM)
         $canViewRestricted = $roles->diff(['mahasiswa', 'alumni'])->isNotEmpty();
         // Hanya role tertentu yang boleh menekan "Unggah ke Arsip"
         // (staff_himpunan TIDAK termasuk, dosen DPM/GPM juga tidak — hanya pengurus inti + admin)
         $canArsip = $roles->intersect([
-            'superadmin', 'admin_kemahasiswaan', 'dpm',
-            'ketua_himpunan', 'wakil_ketua_himpunan',
-            'ketua_bidang', 'ketua_unit',
+            'superadmin', 'admin', 'admin_kemahasiswaan', 'dpm',
+            'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
 
         // Hak hapus pelaksanaan: admin + dpm + ketua-ketua himpunan (GPM & Kadep view-only)
         $canDelete = $roles->intersect([
-            'superadmin', 'admin_kemahasiswaan', 'dpm',
-            'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+            'superadmin', 'admin', 'admin_kemahasiswaan', 'dpm',
+            'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
 
         $images    = $proker->repoMulmed ? $proker->repoMulmed->where('tipe_file', 'image') : collect();
@@ -149,10 +146,9 @@ class PelaksanaanController extends Controller
 
         $user    = Auth::user();
         $roles   = $user->roles->pluck('name');
-        $isAdmin = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
-        $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan',
-                                         'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
-        $canManage = $roles->intersect(['superadmin', 'admin_kemahasiswaan', 'dpm'])->isNotEmpty() || $isPengurus; // GPM & Kadep view-only
+        $isAdmin = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
+        $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
+        $canManage = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm'])->isNotEmpty() || $isPengurus; // GPM & Kadep view-only
 
         if (!$canManage) {
             abort(403, 'Akses ditolak.');
@@ -325,8 +321,8 @@ class PelaksanaanController extends Controller
         // Proteksi backend: sinkron dengan route middleware + $canArsip di show()
         // GPM adalah view-only — TIDAK boleh melakukan arsip
         $allowedRoles = [
-            'superadmin', 'admin_kemahasiswaan', 'dpm',
-            'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+            'superadmin', 'admin', 'admin_kemahasiswaan', 'dpm',
+            'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ];
         $userRoles = Auth::user()->roles->pluck('name');
         $canArsip = $userRoles->intersect($allowedRoles)->isNotEmpty();

@@ -33,11 +33,14 @@
     /* ── Form Controls ── */
     .form-label-custom { font-weight: 600; font-size: .87rem; color: var(--c-fg-sec); margin-bottom: 6px; }
     .form-control-custom, .form-select-custom {
-        border: 1.5px solid var(--c-border); border-radius: 10px; padding: 10px 14px;
-        font-size: .87rem; font-weight: 500; color: var(--c-fg-sec); transition: all .2s; background: #fff;
+        border: 1.5px solid #B6BCC6; border-radius: 10px; padding: 10px 14px;
+        font-size: .87rem; font-weight: 500; color: var(--c-fg-sec); transition: all .2s; background: #F1F3F5;
+    }
+    .form-control-custom:hover, .form-select-custom:hover {
+        border-color: var(--c-primary-border); background: #EDEFF2;
     }
     .form-control-custom:focus, .form-select-custom:focus {
-        border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(11,38,110, 0.1); outline: none;
+        border-color: var(--c-primary); box-shadow: 0 0 0 3px rgba(11,38,110, 0.1); outline: none; background: #fff;
     }
 
     .tingkat-badge {
@@ -268,7 +271,7 @@
 @php
     $canSubmit = auth()->user()->hasAnyRole([
         'mahasiswa','pengurus_himpunan',
-        'ketua_himpunan','wakil_ketua_himpunan','ketua_bidang',
+        'ketua_himpunan','ketua_bidang',
         'ketua_unit','staff_himpunan','superadmin','admin','admin_kemahasiswaan'
     ]);
 @endphp
@@ -715,10 +718,6 @@
 
                     <div style="font-size:11px; color:#666D80; margin-top:10px; line-height:1.5;">
                         Catatan: mata kuliah yang dinaikkan nilainya ditetapkan departemen/prodi saat persetujuan. Reward hanya untuk MK bernilai minimal C, maks 2× (atau 1× untuk invention) selama studi.
-                    </div>
-                    <div class="mt-3 pt-3" style="border-top:1px solid #f3f4f6;">
-                        <label class="form-label-custom mb-2 d-block"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px;margin-right:5px;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>Aturan Reward (SK FT 774)</label>
-                        @include('manajemenmahasiswa::verifikasi._aturan_links', ['items' => $rewardAturan])
                     </div>
                 </div>
                 <div class="modal-footer" style="display:flex; justify-content:flex-end; gap:10px;">

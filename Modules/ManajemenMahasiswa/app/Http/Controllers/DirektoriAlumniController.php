@@ -95,7 +95,7 @@ class DirektoriAlumniController extends Controller
             return 'manajemenmahasiswa::layouts.dosen';
         }
         // Semua jenis pengurus himpunan → layout admin
-        $pengurus = ['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
+        $pengurus = ['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
         foreach ($pengurus as $role) {
             if (\in_array($role, $roles)) {
                 return 'manajemenmahasiswa::layouts.admin';
@@ -134,7 +134,8 @@ class DirektoriAlumniController extends Controller
             'gpm',
             'dosen',
             'dosen_koordinator',
-            'pengurus_himpunan'
+            'pengurus_himpunan',
+            'ketua_departemen'
         );
     }
 
@@ -431,11 +432,11 @@ class DirektoriAlumniController extends Controller
 
             // Permission flags — mudah diperluas lewat canSeeHistory() / canManageHistory()
             $isAdmin         = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
-            $canGenerateCv   = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan');
+            $canGenerateCv   = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'pengurus_himpunan', 'ketua_departemen');
             $canSeeHistory   = $this->canSeeHistory();
             $canManageHistory = $this->canManageHistory();
-            // Hanya admin group, GPM, DPM, Dosen yang bisa lihat IPK
-            $isCanSeeIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator');
+            // Admin group, GPM, DPM, Dosen, dan Ketua Departemen bisa lihat IPK
+            $isCanSeeIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator', 'ketua_departemen');
 
             return view('manajemenmahasiswa::direktori.alumni-show', compact(
                 'alumni',

@@ -34,7 +34,7 @@ class PengumumanController extends Controller
         // Admin murni (list lama): superadmin, admin, admin_kemahasiswaan
         // Blog-card baru: pengurus himpunan + gpm + dosen + dosen_koordinator
         $adminRoles    = ['superadmin', 'admin', 'admin_kemahasiswaan'];
-        $blogCardRoles = ['pengurus_himpunan', 'staff_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'gpm', 'ketua_departemen', 'dpm', 'dosen', 'dosen_koordinator'];
+        $blogCardRoles = ['pengurus_himpunan', 'staff_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'gpm', 'ketua_departemen', 'dpm', 'dosen', 'dosen_koordinator'];
 
         $isAdmin        = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan'])->isNotEmpty();
         $isAdminView    = $roles->intersect($adminRoles)->isNotEmpty();
@@ -523,7 +523,7 @@ class PengumumanController extends Controller
         }
 
         // Fix #1: Validasi backend bahwa verifier_id benar-benar punya role ketua yang valid
-        $validVerifierRoles = ['ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'dpm'];
+        $validVerifierRoles = ['ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'dpm'];
         $validated = $request->validate([
             'verifier_id' => [
                 'required',

@@ -74,7 +74,7 @@
                 Hapus
             </button>
         @endif
-        @if($proker->status === 'draft')
+        @if($proker->status === 'draft' && !$isPengawas)
             @if($canAjukan)
                 <form action="{{ route('manajemenmahasiswa.proker.ajukan', $proker->id) }}" method="POST" style="margin:0;">
                     @csrf @method('PATCH')
@@ -85,7 +85,7 @@
                 </form>
             @else
                 <button type="button" disabled
-                    title="Hanya Ketua / Wakil Ketua / Ketua Bidang / Ketua Unit yang dapat mengajukan proker"
+                    title="Hanya Ketua / Ketua Bidang / Ketua Unit yang dapat mengajukan proker"
                     style="height:38px;padding:0 20px;font-size:13px;font-weight:600;border-radius:10px;border:none;display:inline-flex;align-items:center;gap:8px;background:#DFE1E7;color:#666D80;cursor:not-allowed;">
                     <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9 22 2z"/></svg>
                     Ajukan Proker

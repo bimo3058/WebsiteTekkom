@@ -83,7 +83,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::get('/', [PengumumanController::class, 'index'])->name('index');
 
             // Create/Edit/Delete — pengurus + admin + staff_himpunan
-            Route::middleware('role:pengurus_himpunan|staff_himpunan|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit|dosen|gpm|admin|admin_kemahasiswaan|superadmin|dpm|ketua_departemen')->group(function () {
+            Route::middleware('role:pengurus_himpunan|staff_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|dosen|gpm|admin|admin_kemahasiswaan|superadmin|dpm|ketua_departemen')->group(function () {
                 Route::get('/create', [PengumumanController::class, 'create'])->name('create');
                 Route::post('/drafts', [PengumumanController::class, 'saveDraft'])->name('drafts.store');
                 Route::delete('/drafts/{id}', [PengumumanController::class, 'deleteDraft'])->name('drafts.destroy');
@@ -112,7 +112,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 ->name('riwayat.verifikasi');
 
             // Verifikasi Dashboard — ketua himpunan + admin kemahasiswaan
-            Route::middleware('role:ketua_unit|ketua_bidang|ketua_himpunan|wakil_ketua_himpunan|admin|admin_kemahasiswaan|superadmin|dpm')
+            Route::middleware('role:ketua_unit|ketua_bidang|ketua_himpunan|admin|admin_kemahasiswaan|superadmin|dpm')
                 ->group(function () {
                 Route::get('/verifikasi', [PengumumanController::class, 'verifikasiIndex'])
                     ->name('verifikasi.index');
@@ -237,15 +237,15 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
         // ── Rencana Proker (Subbab 1 Manajemen Kegiatan) ──────────────────
         // Akses: superadmin, admin_kemahasiswaan, dpm, gpm, ketua_departemen,
-        //        wakil_ketua_himpunan, ketua_himpunan, ketua_bidang, ketua_unit
+        //        ketua_himpunan, ketua_bidang, ketua_unit
         Route::prefix('proker')->name('proker.')
-            ->middleware('role:superadmin|admin_kemahasiswaan|dpm|gpm|ketua_departemen|wakil_ketua_himpunan|ketua_himpunan|ketua_bidang|ketua_unit')
+            ->middleware('role:superadmin|admin|admin_kemahasiswaan|dpm|gpm|ketua_departemen|ketua_himpunan|ketua_bidang|ketua_unit')
             ->group(function () {
             Route::get('/', [ProkerController::class, 'index'])->name('index');
             Route::get('/{id}', [ProkerController::class, 'show'])->name('show')->where('id', '[0-9]+');
 
             // Pengurus: buat, edit, ajukan — GPM & Kadep hanya lihat (view-only)
-            Route::middleware('role:ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit|admin_kemahasiswaan|superadmin|dpm')
+            Route::middleware('role:ketua_himpunan|ketua_bidang|ketua_unit|admin|admin_kemahasiswaan|superadmin|dpm')
                 ->group(function () {
                 Route::get('/create', [ProkerController::class, 'create'])->name('create');
                 Route::post('/', [ProkerController::class, 'store'])->name('store');
@@ -255,7 +255,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             });
 
             // Hapus — admin, dpm, pengurus inti himpunan (GPM & Kadep view-only)
-            Route::middleware('role:admin_kemahasiswaan|superadmin|dpm|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit')
+            Route::middleware('role:admin|admin_kemahasiswaan|superadmin|dpm|ketua_himpunan|ketua_bidang|ketua_unit')
                 ->group(function () {
                 Route::delete('/{id}', [ProkerController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
             });
@@ -266,15 +266,15 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
         // ── Pelaksanaan Kegiatan (Subbab 2 Manajemen Kegiatan) ────────────
         // Akses: superadmin, admin_kemahasiswaan, dpm, gpm, ketua_departemen,
-        //        wakil_ketua_himpunan, ketua_himpunan, ketua_bidang, ketua_unit, staff_himpunan
+        //        ketua_himpunan, ketua_bidang, ketua_unit, staff_himpunan
         Route::prefix('pelaksanaan')->name('pelaksanaan.')
-            ->middleware('role:superadmin|admin_kemahasiswaan|dpm|gpm|ketua_departemen|wakil_ketua_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan')
+            ->middleware('role:superadmin|admin|admin_kemahasiswaan|dpm|gpm|ketua_departemen|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan')
             ->group(function () {
             Route::get('/', [PelaksanaanController::class, 'index'])->name('index');
             Route::get('/{id}', [PelaksanaanController::class, 'show'])->name('show')->where('id', '[0-9]+');
 
             // Edit & publish — GPM & Kadep hanya lihat (view-only)
-            Route::middleware('role:ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|admin_kemahasiswaan|superadmin|dpm')
+            Route::middleware('role:ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|admin|admin_kemahasiswaan|superadmin|dpm')
                 ->group(function () {
                 Route::get('/{id}/edit', [PelaksanaanController::class, 'edit'])->name('edit')->where('id', '[0-9]+');
                 Route::put('/{id}', [PelaksanaanController::class, 'update'])->name('update')->where('id', '[0-9]+');
@@ -282,7 +282,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             });
 
             // Hapus — admin kemahasiswaan, superadmin, dpm, dan ketua-ketua himpunan (GPM & Kadep view-only)
-            Route::middleware('role:admin_kemahasiswaan|superadmin|dpm|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit')
+            Route::middleware('role:admin|admin_kemahasiswaan|superadmin|dpm|ketua_himpunan|ketua_bidang|ketua_unit')
                 ->group(function () {
                 Route::delete('/{id}', [PelaksanaanController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
             });
@@ -296,13 +296,13 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
 
             // Tambah Kegiatan — hanya role kurasi di luar alur himpunan (admin + dpm).
             // Role himpunan wajib lewat alur Proker → Pelaksanaan → publish.
-            Route::middleware('role:admin_kemahasiswaan|superadmin|dpm')->group(function () {
+            Route::middleware('role:admin|admin_kemahasiswaan|superadmin|dpm')->group(function () {
                 Route::get('/create', [KegiatanController::class, 'create'])->name('create');
                 Route::post('/', [KegiatanController::class, 'store'])->name('store');
             });
 
             // Edit & Hapus — ketua + admin + dpm (GPM, Kadep & staff_himpunan TIDAK termasuk)
-            Route::middleware('role:ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit|admin_kemahasiswaan|superadmin|dpm')->group(function () {
+            Route::middleware('role:ketua_himpunan|ketua_bidang|ketua_unit|admin|admin_kemahasiswaan|superadmin|dpm')->group(function () {
                 Route::get('/{id}/edit', [KegiatanController::class, 'edit'])->name('edit');
                 Route::put('/{id}', [KegiatanController::class, 'update'])->name('update');
                 Route::delete('/{id}', [KegiatanController::class, 'destroy'])->name('destroy');
@@ -340,7 +340,7 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 });
 
                 // Daftar semua mahasiswa — semua role boleh lihat index dan profil
-                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|ketua_departemen|pengurus_himpunan|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|dosen|dosen_koordinator|dpm|mahasiswa|alumni')
+                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|ketua_departemen|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|dosen|dosen_koordinator|dpm|mahasiswa|alumni')
                     ->group(function () {
                     Route::get('/', [DirektoriMahasiswaController::class, 'index'])
                         ->name('index');
@@ -367,8 +367,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                         ->name('riwayat.destroy')->where('riwayatId', '[0-9]+');
                 });
 
-                // Generate CV — admin group, GPM, DPM
-                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm')
+                // Generate CV — admin group, GPM, DPM, Ketua Departemen
+                Route::middleware('role:superadmin|admin|admin_kemahasiswaan|gpm|dpm|ketua_departemen')
                     ->group(function () {
                     Route::get('/{id}/cv', [DirektoriMahasiswaController::class, 'generateCv'])
                         ->name('cv')->where('id', '[0-9]+');
@@ -428,12 +428,13 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
         // ── Verifikasi Data ─────────────────────────────────────────────
         Route::prefix('verifikasi')->name('verifikasi.')->group(function () {
 
-            // Index — mahasiswa, alumni (read-only), pengurus himpunan, dan admin
-            Route::middleware('role:mahasiswa|alumni|pengurus_himpunan|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin|admin_kemahasiswaan|dpm')
+            // Index — mahasiswa, alumni (read-only), pengurus himpunan, admin, verifikator,
+            // serta pengawas mutu GPM & Ketua Departemen (read-only, tanpa approve/reject)
+            Route::middleware('role:mahasiswa|alumni|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin|admin_kemahasiswaan|dpm|gpm|ketua_departemen')
                 ->get('/', [VerifikasiController::class, 'index'])->name('index');
 
             // Submit pengajuan — mahasiswa, semua pengurus himpunan, admin (alumni TIDAK diizinkan)
-            Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|wakil_ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin|admin_kemahasiswaan')
+            Route::middleware('role:mahasiswa|pengurus_himpunan|ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|superadmin|admin|admin_kemahasiswaan')
                 ->group(function () {
                 Route::post('/riwayat', [VerifikasiController::class, 'storeRiwayat'])->name('riwayat.store');
                 Route::post('/prestasi', [VerifikasiController::class, 'storePrestasi'])->name('prestasi.store');
@@ -445,13 +446,16 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                     ->name('prestasi.reward.batal')->where('id', '[0-9]+');
             });
 
+            // Halaman daftar klaim reward prestasi (Request Bu Bellia / B.2) —
+            // verifikator (admin group + DPM) + pengawas mutu GPM & Ketua Departemen
+            // (read-only, tanpa tinjau/setujui/tolak — selaras Verifikasi Prestasi).
+            Route::middleware('role:superadmin|admin|admin_kemahasiswaan|dpm|gpm|ketua_departemen')
+                ->get('/klaim-reward', [VerifikasiController::class, 'rewardIndex'])
+                ->name('reward.index');
+
             // Approve/Reject & kelola reward — verifikator (admin group + DPM)
             Route::middleware('role:superadmin|admin|admin_kemahasiswaan|dpm')
                 ->group(function () {
-                // Halaman khusus daftar klaim reward prestasi (Request Bu Bellia / B.2)
-                Route::get('/klaim-reward', [VerifikasiController::class, 'rewardIndex'])
-                    ->name('reward.index');
-
                 // Dokumen aturan reward (SK FT 774 / aturan terbaru) — admin kelola
                 Route::patch('/riwayat/{id}/approve', [VerifikasiController::class, 'approveRiwayat'])
                     ->name('riwayat.approve')->where('id', '[0-9]+');

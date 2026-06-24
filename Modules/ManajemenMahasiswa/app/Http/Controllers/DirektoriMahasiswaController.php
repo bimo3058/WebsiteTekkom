@@ -136,7 +136,7 @@ class DirektoriMahasiswaController extends Controller
         }
 
         // Semua jenis pengurus himpunan → layout admin
-        $pengurus = ['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
+        $pengurus = ['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
         foreach ($pengurus as $role) {
             if (\in_array($role, $roles)) {
                 return 'manajemenmahasiswa::layouts.admin';
@@ -347,8 +347,8 @@ class DirektoriMahasiswaController extends Controller
         $isGpm      = $this->hasRole('gpm');
         $isPengurus = $this->hasRole('pengurus_himpunan');
         $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
-        // Hanya admin group, GPM, dan DPM yang boleh generate CV mahasiswa lain
-        $isCanCv    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm');
+        // Admin group, GPM, DPM, dan Ketua Departemen boleh generate CV mahasiswa lain
+        $isCanCv    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen');
 
         return view('manajemenmahasiswa::direktori.mahasiswa-index', compact(
             'mahasiswa',
@@ -394,10 +394,10 @@ class DirektoriMahasiswaController extends Controller
             $isPengurus = $this->hasRole('pengurus_himpunan');
             $isGpm      = $this->hasRole('gpm');
             $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
-            // Hanya admin group, GPM, dan DPM yang boleh generate CV mahasiswa lain
-            $isCanCv    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm');
-            // Hanya admin group, GPM, DPM, Dosen yang bisa lihat IPK
-            $isCanSeeIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator');
+            // Admin group, GPM, DPM, dan Ketua Departemen boleh generate CV mahasiswa lain
+            $isCanCv    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen');
+            // Admin group, GPM, DPM, Dosen, dan Ketua Departemen bisa lihat IPK
+            $isCanSeeIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator', 'ketua_departemen');
 
             return view('manajemenmahasiswa::direktori.mahasiswa-show', compact(
                 'mhs',

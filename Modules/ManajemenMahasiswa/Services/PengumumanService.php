@@ -257,7 +257,7 @@ class PengumumanService
 
         // Staff himpunan wajib verifikasi, KECUALI jika juga punya role senior
         $seniorRoles = ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen',
-                        'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+                        'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
                         'dosen', 'dosen_koordinator'];
 
         return $roles->contains('staff_himpunan')
@@ -273,7 +273,6 @@ class PengumumanService
     {
         $verifierRoleNames = [
             'ketua_himpunan',
-            'wakil_ketua_himpunan',
             'ketua_bidang',
             'ketua_unit',
             'dpm',

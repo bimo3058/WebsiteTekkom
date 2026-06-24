@@ -78,15 +78,15 @@ class KegiatanController extends Controller
         $roles = $user->roles->pluck('name');
         // GPM & Kadep view-only — tidak masuk daftar pengelola (hanya bisa lihat)
         $isAdmin = $roles->intersect([
-            'superadmin', 'admin_kemahasiswaan',
-            'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+            'superadmin', 'admin', 'admin_kemahasiswaan',
+            'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
             'dpm',
         ])->isNotEmpty();
 
         // Tombol "Tambah Kegiatan" (create langsung ke arsip) hanya untuk role kurasi
         // di luar alur himpunan — role himpunan wajib lewat Proker → Pelaksanaan → publish.
         $canTambahKegiatan = $roles->intersect([
-            'superadmin', 'admin_kemahasiswaan', 'dpm',
+            'superadmin', 'admin', 'admin_kemahasiswaan', 'dpm',
         ])->isNotEmpty();
 
         return view('manajemenmahasiswa::kegiatan.index', compact(
@@ -120,8 +120,8 @@ class KegiatanController extends Controller
         $roles = $user->roles->pluck('name');
         // GPM & Kadep view-only — tidak masuk daftar pengelola (hanya bisa lihat)
         $isAdmin = $roles->intersect([
-            'superadmin', 'admin_kemahasiswaan',
-            'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
+            'superadmin', 'admin', 'admin_kemahasiswaan',
+            'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
             'dpm',
         ])->isNotEmpty();
 

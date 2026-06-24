@@ -35,18 +35,40 @@ class VerifikasiController extends Controller
         return $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'dpm');
     }
 
+    /**
+     * Pengawas mutu (read-only): GPM & Ketua Departemen.
+     * Boleh MELIHAT seluruh daftar verifikasi, tetapi TIDAK boleh menyetujui/menolak.
+     * Selaras dengan akses view-only mereka di Manajemen Kegiatan dan dashboard
+     * analitik (scope evaluasi mutu).
+     */
+    private function isPengawas(): bool
+    {
+        return $this->hasRole('gpm', 'ketua_departemen');
+    }
+
+    /**
+     * Boleh membuka halaman Klaim Reward Prestasi.
+     * Verifikator (kelola) + pengawas mutu GPM & Ketua Departemen (read-only).
+     */
+    private function canAccessReward(): bool
+    {
+        return $this->isVerificator() || $this->isPengawas();
+    }
+
     private function resolveLayout(): string
     {
         $user  = Auth::user();
         $roles = $user->roles->pluck('name')->toArray();
 
-        if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles) || \in_array('dpm', $roles)) {
+        if (\in_array('superadmin', $roles) || \in_array('admin', $roles) || \in_array('admin_kemahasiswaan', $roles) || \in_array('dpm', $roles)
+            || \in_array('gpm', $roles) || \in_array('ketua_departemen', $roles)) {
+            // GPM & Ketua Departemen melihat tabel monitoring read-only → gunakan shell admin
             return 'manajemenmahasiswa::layouts.admin';
         }
 
 
         // Semua jenis pengurus himpunan menggunakan layout admin
-        $pengurus = ['pengurus_himpunan', 'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
+        $pengurus = ['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'];
         foreach ($pengurus as $role) {
             if (\in_array($role, $roles)) {
                 return 'manajemenmahasiswa::layouts.admin';
@@ -99,6 +121,12 @@ class VerifikasiController extends Controller
             return $this->adminIndex($request);
         }
 
+        // GPM & Ketua Departemen — pengawas mutu: lihat seluruh daftar verifikasi
+        // dalam mode read-only (tanpa tombol setujui/tolak/klaim reward).
+        if ($this->isPengawas()) {
+            return $this->adminIndex($request, readOnly: true);
+        }
+
         return $this->mahasiswaIndex($request);
     }
 
@@ -106,7 +134,7 @@ class VerifikasiController extends Controller
     // Admin View — Dashboard verifikasi semua data
     // -------------------------------------------------------------------------
 
-    private function adminIndex(Request $request)
+    private function adminIndex(Request $request, bool $readOnly = false)
     {
         $tab    = $request->get('tab', 'prestasi');
         $status = $request->get('status', 'semua');
@@ -192,6 +220,11 @@ class VerifikasiController extends Controller
             ->orderBy('angkatan', 'desc')
             ->pluck('angkatan');
 
+        // Pengawas (GPM/Kadep) hanya melihat — sembunyikan tombol setujui/tolak.
+        $canVerify = !$readOnly;
+        // Tombol "Klaim Reward" tetap tampil untuk pengawas (akses halaman read-only).
+        $canViewReward = $this->canAccessReward();
+
         return view('manajemenmahasiswa::verifikasi.admin', compact(
             'riwayatData',
             'prestasiData',
@@ -204,6 +237,8 @@ class VerifikasiController extends Controller
             'angkatanList',
             'pendingPrestasiReward',
             'adminStats',
+            'canVerify',
+            'canViewReward',
         ))->with('layout', $this->resolveLayout());
     }
 
@@ -264,6 +299,8 @@ class VerifikasiController extends Controller
 
         $rewardAturan = RewardAturan::with('uploadedBy')->latest()->get();
         $canManageRewardAturan = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan');
+        // Pengawas mutu (GPM/Kadep) hanya melihat — sembunyikan tinjau/setujui/tolak/batalkan.
+        $canReview = $this->isVerificator();
 
         return view('manajemenmahasiswa::verifikasi.reward', compact(
             'rewardData',
@@ -276,6 +313,7 @@ class VerifikasiController extends Controller
             'kuotaMap',
             'rewardAturan',
             'canManageRewardAturan',
+            'canReview',
         ))->with('layout', $this->resolveLayout());
     }
 

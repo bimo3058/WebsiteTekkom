@@ -372,7 +372,6 @@ class DashboardAnalitikService
     {
         $roleLabels = [
             'ketua_himpunan'       => 'Ketua Himpunan',
-            'wakil_ketua_himpunan' => 'Wakil Ketua Himpunan',
             'ketua_bidang'         => 'Ketua Bidang',
             'ketua_unit'           => 'Ketua Unit',
             'staff_himpunan'       => 'Staff Himpunan',
@@ -390,7 +389,7 @@ class DashboardAnalitikService
         }
         $perJabatan = array_filter($perJabatan, fn ($total) => $total > 0);
 
-        $pengurusIntiRoles = ['ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit'];
+        $pengurusIntiRoles = ['ketua_himpunan', 'ketua_bidang', 'ketua_unit'];
         $pengurusInti = $pengurus
             ->filter(fn ($user) => $user->hasAnyRole($pengurusIntiRoles))
             ->take(8)

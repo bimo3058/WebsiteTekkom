@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('kegiatan_id')->constrained('mk_kegiatan')->cascadeOnDelete();
             
-            // Role yang menandatangani: ketua_himpunan, bendahara, dpm, ketua_departemen
+            // Role yang menandatangani: ketua_himpunan, dpm, ketua_departemen
             $table->string('role');
             
             // User yang menandatangani

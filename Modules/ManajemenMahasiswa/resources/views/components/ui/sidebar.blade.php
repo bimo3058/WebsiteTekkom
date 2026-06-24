@@ -202,7 +202,7 @@
         @endif
 
         @php
-            $isKetua = (bool) array_intersect($sidebarRoles, ['ketua_unit', 'ketua_bidang', 'ketua_himpunan', 'wakil_ketua_himpunan']);
+            $isKetua = (bool) array_intersect($sidebarRoles, ['ketua_unit', 'ketua_bidang', 'ketua_himpunan']);
             $isAdminVerifier = (bool) array_intersect($sidebarRoles, ['admin', 'admin_kemahasiswaan', 'superadmin', 'dpm']);
             $isStaffHimpunan = in_array('staff_himpunan', $sidebarRoles) && !$isKetua && !$isAdminVerifier;
 
@@ -350,8 +350,8 @@
         @php
             $kegiatanRoutes = ['manajemenmahasiswa.proker.*', 'manajemenmahasiswa.pelaksanaan.*', 'manajemenmahasiswa.kegiatan.*'];
             $kegiatanActive = collect($kegiatanRoutes)->contains(fn($r) => request()->routeIs($r));
-            $canViewProker = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'ketua_departemen', 'wakil_ketua_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit']);
-            $canViewPelaksanaan = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'ketua_departemen', 'wakil_ketua_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan']);
+            $canViewProker = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'ketua_departemen', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit']);
+            $canViewPelaksanaan = (bool) array_intersect($sidebarRoles, ['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm', 'gpm', 'ketua_departemen', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan']);
         @endphp
         <div class="sidebar-dropdown {{ $kegiatanActive ? 'open' : '' }}">
             <a href="javascript:void(0)" class="sidebar-dropdown-toggle {{ $kegiatanActive ? 'active' : '' }}"
@@ -385,7 +385,9 @@
             </div>
         </div>
 
-        @if(!array_intersect($sidebarRoles, ['dosen', 'dosen_koordinator', 'ketua_departemen', 'gpm']))
+        {{-- Dosen murni tidak punya akses verifikasi. GPM & Ketua Departemen kini boleh
+             melihat (read-only) sehingga menu ditampilkan untuk mereka. --}}
+        @if(!array_intersect($sidebarRoles, ['dosen', 'dosen_koordinator']))
             @php
                 $verifActive = request()->routeIs('manajemenmahasiswa.verifikasi.*');
                 $verifTab    = request('tab', 'prestasi');
