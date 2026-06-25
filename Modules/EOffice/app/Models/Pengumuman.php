@@ -33,10 +33,12 @@ class Pengumuman extends Model
         'is_published',
         'tipe_sistem',
         'periode_id',
+        'lampiran',
     ];
 
     protected $casts = [
         'is_published' => 'boolean',
+        'lampiran' => 'array',
     ];
 
     // ── Relationships ──────────────────────────────────────────────────────────

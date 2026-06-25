@@ -152,6 +152,11 @@ class DashboardController extends Controller
                 ? ' · Batas: ' . $periode->ditutup_pada->format('d M Y H:i')
                 : '';
 
+            $url = null;
+            if ($isMahasiswa) {
+                $url = route('eoffice.manprak.mahasiswa.daftar-asprak.index', ['praktikum_id' => $periode->praktikum_id]);
+            }
+
             $eofficeItems->push([
                 'module' => 'eoffice',
                 'date'   => $periode->created_at?->diffForHumans() ?? '',
@@ -159,6 +164,7 @@ class DashboardController extends Controller
                 'body'   => $periode->nama . $deadline,
                 'pinned' => true,
                 '_ts'    => $periode->created_at?->timestamp ?? 0,
+                'url'    => $url,
             ]);
         }
 
@@ -186,6 +192,15 @@ class DashboardController extends Controller
             ->get();
 
         foreach ($pengumumanPraktikum as $peng) {
+            $url = null;
+            if ($isMahasiswa) {
+                if ($peng->tipe_sistem === 'buka') {
+                    $url = route('eoffice.manprak.mahasiswa.daftar-asprak.index', ['praktikum_id' => $peng->praktikum_id]);
+                } else {
+                    $url = route('eoffice.manprak.mahasiswa.pengumuman.index', ['praktikum_id' => $peng->praktikum_id]);
+                }
+            }
+
             $eofficeItems->push([
                 'module' => 'eoffice',
                 'date'   => $peng->created_at?->diffForHumans() ?? '',
@@ -193,6 +208,7 @@ class DashboardController extends Controller
                 'body'   => $peng->konten,
                 'pinned' => false,
                 '_ts'    => $peng->created_at?->timestamp ?? 0,
+                'url'    => $url,
             ]);
         }
 

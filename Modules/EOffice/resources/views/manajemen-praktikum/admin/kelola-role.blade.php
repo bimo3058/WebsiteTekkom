@@ -136,7 +136,7 @@
                             </td>
                             <td style="padding:13px 16px;text-align:center;">
                                 @if($a->role === 'koor')
-                                <span class="mp-badge navy sm"><span class="dot"></span>Koordinator</span>
+                                <span class="mp-badge navy sm"><span class="dot"></span>Koor</span>
                                 @else
                                 <span class="mp-badge success sm"><span class="dot"></span>Asprak</span>
                                 @endif
@@ -191,14 +191,49 @@
                 {{-- Pilih User --}}
                 <div>
                     <label style="display:block;font-size:11px;font-weight:600;color:#666D80;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Pilih User</label>
-                    <select name="user_id" required class="mp-input mp-select" style="width:100%;">
-                        <option value="">— Pilih user —</option>
-                        @foreach($users as $u)
-                        <option value="{{ $u->id }}" {{ old('user_id') == $u->id ? 'selected' : '' }}>
-                            {{ $u->name }}
-                        </option>
-                        @endforeach
-                    </select>
+                    <div x-data="{
+                        open: false,
+                        search: '',
+                        selected: '{{ old('user_id') }}',
+                        options: {{ json_encode($users->map(fn($u) => ['id' => $u->id, 'name' => $u->name])) }},
+                        get filteredOptions() {
+                            if (this.search === '') return this.options.slice(0, 50);
+                            const lowerSearch = this.search.toLowerCase();
+                            return this.options.filter(o => o.name.toLowerCase().includes(lowerSearch)).slice(0, 50);
+                        },
+                        selectOption(opt) {
+                            this.selected = opt.id;
+                            this.search = opt.name;
+                            this.open = false;
+                        },
+                        init() {
+                            if (this.selected) {
+                                const opt = this.options.find(o => o.id == this.selected);
+                                if (opt) this.search = opt.name;
+                            }
+                        }
+                    }" class="relative">
+                        <input type="hidden" name="user_id" :value="selected">
+                        <div class="relative">
+                            <input type="text" x-model="search" @focus="open = true" @click.away="open = false"
+                                   placeholder="Ketik nama mahasiswa..." class="mp-input" autocomplete="off"
+                                   @input="selected = ''" style="width:100%; padding-right: 30px;">
+                            <svg class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#A4ABB8] pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-top:-7px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                        </div>
+                        
+                        <div x-show="open" style="display:none; position:absolute; z-index:50; width:100%; background:#fff; border:1px solid #DFE1E7; border-radius:6px; margin-top:4px; max-height:192px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
+                            <template x-for="opt in filteredOptions" :key="opt.id">
+                                <div @click="selectOption(opt)"
+                                     style="padding:8px 12px; cursor:pointer; font-size:12px; color:#0D0D12; border-bottom:1px solid #F3F4F6;"
+                                     onmouseover="this.style.background='#F6F8FA'" onmouseout="this.style.background='transparent'"
+                                     x-text="opt.name">
+                                </div>
+                            </template>
+                            <div x-show="filteredOptions.length === 0" style="padding:12px; text-align:center; font-size:11px; color:#A4ABB8;">
+                                Tidak ada nama yang ditampilkan
+                            </div>
+                        </div>
+                    </div>
                     @error('user_id')
                     <div style="font-size:11px;color:#DF1C41;margin-top:4px;">{{ $message }}</div>
                     @enderror

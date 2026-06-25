@@ -219,10 +219,11 @@
                     </div>
                     <div class="overflow-y-auto flex-1">
                         @forelse($pengumuman as $peng)
-                        <div class="px-5 py-[12px] border-b border-[#F8F9FB] last:border-0">
-                            <div class="text-[13px] font-semibold text-[#0D0D12]">{{ $peng->judul }}</div>
+                        <div class="px-5 py-[12px] border-b border-[#F8F9FB] last:border-0 group {{ isset($peng->url) && $peng->url ? 'cursor-pointer hover:bg-[#F6F8FA] transition-colors' : '' }}"
+                             @if(isset($peng->url) && $peng->url) onclick="window.location.href='{{ $peng->url }}'" @endif>
+                            <div class="text-[13px] font-semibold text-[#0D0D12] group-hover:text-[#0B266E] transition-colors">{{ $peng->judul }}</div>
                             <div class="text-[12px] text-[#666D80] mt-[2px] line-clamp-2">{{ $peng->konten }}</div>
-                            <div class="text-[11px] text-[#A4ABB8] mt-[5px]">{{ $peng->created_at?->diffForHumans() }}</div>
+                            <div class="text-[11px] text-[#A4ABB8] mt-[5px]">{{ $peng->date }}</div>
                         </div>
                         @empty
                         <div class="py-8 text-center text-[13px] text-[#A4ABB8]">Belum ada pengumuman.</div>

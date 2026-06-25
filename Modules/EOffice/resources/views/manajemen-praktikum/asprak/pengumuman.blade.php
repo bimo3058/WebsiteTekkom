@@ -81,7 +81,7 @@
         @endif
     </div>
     <div style="padding:20px;">
-        <form method="POST" action="{{ route('eoffice.manprak.asprak.pengumuman.store') }}"
+        <form method="POST" action="{{ route('eoffice.manprak.asprak.pengumuman.store') }}" enctype="multipart/form-data"
               style="display:flex;flex-direction:column;gap:14px;">
             @csrf
             <input type="hidden" name="praktikum_id" value="{{ $asprak->praktikum_id }}">
@@ -103,6 +103,43 @@
                 <textarea id="konten-pengumuman" name="konten" rows="5" required
                           placeholder="Tulis isi pengumuman di sini..."
                           class="mp-input" style="width:100%;resize:vertical;">{{ old('konten') }}</textarea>
+            </div>
+
+            <div x-data="fileUploader()">
+                <label style="display:block;font-size:12px;font-weight:600;margin-bottom:6px;color:#353849;">
+                    Lampiran (Opsional, Max 3 File)
+                </label>
+                
+                <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+                    <button type="button" @click="$refs.fileInput.click()" 
+                            style="background:#F8FAFC;border:1px solid #DFE1E7;border-radius:6px;padding:6px 12px;font-size:12px;font-weight:600;color:#353849;cursor:pointer;transition:background .2s;"
+                            onmouseover="this.style.background='#F0F4FA'" onmouseout="this.style.background='#F8FAFC'">
+                        + Tambah File
+                    </button>
+                    <span x-text="files.length + '/3 file terpilih'" style="font-size:12px;color:#808897;"></span>
+                </div>
+                
+                <input type="file" x-ref="fileInput" style="display:none" multiple accept="*/*" @change="addFiles($event)">
+                <!-- Hidden input that actually gets submitted -->
+                <input type="file" id="hidden-lampiran" name="lampiran[]" multiple style="display:none">
+
+                <div style="font-size:11px;color:#808897;">Ukuran maksimal per file: 5MB</div>
+
+                <div style="margin-top:10px;display:flex;flex-direction:column;gap:6px;">
+                    <template x-for="(file, index) in files" :key="index">
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#F8FAFC;border:1px solid #EDF0F4;border-radius:6px;">
+                            <div style="display:flex;align-items:center;gap:8px;overflow:hidden;">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="2" stroke-linecap="round"><path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/></svg>
+                                <span x-text="file.name" style="font-size:12px;color:#353849;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:250px;"></span>
+                            </div>
+                            <button type="button" @click="removeFile(index)" title="Hapus file"
+                                    style="background:none;border:none;cursor:pointer;color:#DF1C41;padding:4px;display:flex;align-items:center;justify-content:center;border-radius:4px;"
+                                    onmouseover="this.style.background='#FFF0F2'" onmouseout="this.style.background='none'">
+                                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+                    </template>
+                </div>
             </div>
 
             <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;">
@@ -196,6 +233,23 @@
                 <div style="font-size:13px;color:#353849;line-height:1.7;white-space:pre-line;background:#F8FAFC;border:1px solid #EDF0F4;border-radius:8px;padding:14px;">
                     {{ $p->konten }}
                 </div>
+
+                @if(!empty($p->lampiran))
+                <div style="margin-top:12px;display:flex;flex-wrap:wrap;gap:8px;">
+                    @foreach($p->lampiran as $lamp)
+                    <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($lamp['path'], 'eoffice') }}" target="_blank"
+                       style="display:inline-flex;align-items:center;gap:6px;padding:6px 12px;background:#fff;border:1px solid #DFE1E7;border-radius:6px;font-size:12px;font-weight:500;color:#0B266E;text-decoration:none;transition:all .2s;"
+                       onmouseover="this.style.borderColor='#0B266E';this.style.background='#F0F4FA'" onmouseout="this.style.borderColor='#DFE1E7';this.style.background='#fff'">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                            <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48"/>
+                        </svg>
+                        <span style="max-width:150px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;" title="{{ $lamp['name'] }}">
+                            {{ $lamp['name'] }}
+                        </span>
+                    </a>
+                    @endforeach
+                </div>
+                @endif
             </div>
 
             {{-- Delete button --}}
@@ -228,6 +282,34 @@
 @endforelse
 
 @endif {{-- end if praktikumList not empty --}}
+
+<script>
+function fileUploader() {
+    return {
+        files: [],
+        addFiles(e) {
+            let selectedFiles = Array.from(e.target.files);
+            let totalFiles = this.files.length + selectedFiles.length;
+            if (totalFiles > 3) {
+                alert('Maksimal 3 file yang dapat diunggah!');
+                selectedFiles = selectedFiles.slice(0, 3 - this.files.length);
+            }
+            this.files = [...this.files, ...selectedFiles];
+            this.syncInput();
+            e.target.value = ''; // reset so same file can be picked again
+        },
+        removeFile(index) {
+            this.files.splice(index, 1);
+            this.syncInput();
+        },
+        syncInput() {
+            let dt = new DataTransfer();
+            this.files.forEach(file => dt.items.add(file));
+            document.getElementById('hidden-lampiran').files = dt.files;
+        }
+    }
+}
+</script>
 
 <style>
 @keyframes pulse-badge { 0%,100%{opacity:1} 50%{opacity:.6} }

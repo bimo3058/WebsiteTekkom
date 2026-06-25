@@ -36,7 +36,7 @@
 <div style="display:flex;gap:16px;flex:1;min-height:0;align-items:stretch;padding-bottom:2px;">
 
     {{-- ══ SIDEBAR KIRI ═══════════════════════════════════════════════════ --}}
-    <div style="width:252px;flex-shrink:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-bottom:4px;"
+    <div style="width:300px;flex-shrink:0;overflow-y:auto;display:flex;flex-direction:column;gap:10px;padding-bottom:4px;"
          class="[scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 
         {{-- Info Praktikum --}}
@@ -52,7 +52,7 @@
                 <div>
                     <div style="font-size:10px;font-weight:600;color:#A4ABB8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Periode</div>
                     <div style="font-size:13px;font-weight:600;color:#0D0D12;">{{ $praktikum->semester }} {{ $praktikum->tahun_ajaran }}</div>
-                    <div style="font-size:11px;color:#A4ABB8;">T.A. {{ $praktikum->tahun_ajaran }}/{{ $praktikum->tahun_ajaran + 1 }}</div>
+                    <div style="font-size:11px;color:#A4ABB8;">T.A. {{ $praktikum->tahun_ajaran }}</div>
                 </div>
                 @if($praktikum->matkul)
                 <div>
@@ -61,12 +61,7 @@
                     <span style="font-size:10px;font-family:monospace;font-weight:700;color:#0B266E;background:rgba(11,38,110,0.08);padding:1px 6px;border-radius:4px;display:inline-block;margin-top:3px;">{{ $praktikum->matkul->kode }}</span>
                 </div>
                 @endif
-                @if($praktikum->deskripsi)
-                <div>
-                    <div style="font-size:10px;font-weight:600;color:#A4ABB8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Deskripsi</div>
-                    <div style="font-size:11px;color:#666D80;line-height:1.5;">{{ $praktikum->deskripsi }}</div>
-                </div>
-                @endif
+
                 <div style="height:1px;background:#F3F4F6;margin:0 -2px;"></div>
                 <div>
                     <div style="font-size:10px;font-weight:600;color:#A4ABB8;text-transform:uppercase;letter-spacing:.05em;margin-bottom:3px;">Dibuat</div>
@@ -134,26 +129,7 @@
             </div>
         </div>
 
-        {{-- Aksi Cepat --}}
-        <div style="background:#fff;border:1px solid #DFE1E7;border-radius:13px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">
-            <div style="padding:11px 14px;border-bottom:1px solid #F3F4F6;background:#FAFAFA;">
-                <div style="font-size:11px;font-weight:700;color:#0D0D12;text-transform:uppercase;letter-spacing:.07em;">Aksi Cepat</div>
-            </div>
-            <div style="padding:8px;">
-                @foreach([
-                    ['href' => route('eoffice.manprak.admin.bagi-asprak.index', ['praktikum_id' => $praktikum->id]),  'label' => 'Bagi Asprak ke Modul',    'icon' => 'M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75'],
-                    ['href' => route('eoffice.manprak.admin.pendaftaran-koor.index'),                                  'label' => 'Pendaftaran Koordinator', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4'],
-                    ['href' => route('eoffice.manprak.admin.periode-pendaftaran.index'),                               'label' => 'Periode Pendaftaran',     'icon' => 'M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z'],
-                ] as $act)
-                <a href="{{ $act['href'] }}"
-                   style="display:flex;align-items:center;gap:8px;padding:8px 9px;border-radius:7px;text-decoration:none;color:#353849;font-size:12px;transition:background .12s;"
-                   onmouseover="this.style.background='#F6F8FA'" onmouseout="this.style.background='transparent'">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.8" stroke-linecap="round" style="flex-shrink:0;"><path d="{{ $act['icon'] }}"/></svg>
-                    {{ $act['label'] }}
-                </a>
-                @endforeach
-            </div>
-        </div>
+
 
     </div>
     {{-- /Sidebar --}}
@@ -295,11 +271,7 @@
                     <div style="font-size:13px;font-weight:700;color:#0D0D12;">Daftar Asisten Praktikum</div>
                     <div style="font-size:11px;color:#A4ABB8;margin-top:1px;">{{ $aspraks->count() }} asprak terdaftar di praktikum ini</div>
                 </div>
-                <a href="{{ route('eoffice.manprak.admin.bagi-asprak.index', ['praktikum_id' => $praktikum->id]) }}"
-                   class="mp-btn secondary sm" style="text-decoration:none;flex-shrink:0;">
-                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                    Kelola Asprak
-                </a>
+
             </div>
 
             {{-- Tabel Asprak --}}
@@ -361,7 +333,7 @@
                                 </td>
                                 <td style="padding:12px 14px;text-align:center;">
                                     @if($isKoor)
-                                    <span class="mp-badge warning sm" style="font-size:10px;"><span class="dot"></span>Juga Koor</span>
+                                    <span class="mp-badge warning sm" style="font-size:10px;"><span class="dot"></span>Koor</span>
                                     @else
                                     <span class="mp-badge neutral sm" style="font-size:10px;"><span class="dot"></span>Asprak</span>
                                     @endif
@@ -375,8 +347,7 @@
                                 <td colspan="7" style="padding:56px;text-align:center;">
                                     <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#DFE1E7" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 10px;display:block;"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                                     <div style="font-size:13px;font-weight:600;color:#666D80;">Belum ada asisten praktikum terdaftar.</div>
-                                    <a href="{{ route('eoffice.manprak.admin.bagi-asprak.index', ['praktikum_id' => $praktikum->id]) }}"
-                                       class="mp-btn primary sm" style="margin-top:10px;display:inline-flex;text-decoration:none;font-size:11px;">Tambah Asprak</a>
+
                                 </td>
                             </tr>
                             @endforelse
@@ -410,9 +381,9 @@
             @csrf
             <input type="hidden" name="praktikum_id" value="{{ $praktikum->id }}">
             <div style="background:#F6F8FA;border-radius:9px;padding:11px 13px;font-size:12px;color:#666D80;line-height:1.6;">
-                Upload <strong>CSV</strong> atau <strong>XLSX</strong> dengan kolom
+                Upload <strong>CSV</strong> atau <strong>XLSX</strong>. Sistem dapat mendeteksi format mentah <strong>SSO Kampus</strong> secara otomatis, atau daftar satu kolom dengan header
                 <code style="background:#fff;border:1px solid #DFE1E7;padding:1px 5px;border-radius:4px;font-size:11px;">email</code> atau
-                <code style="background:#fff;border:1px solid #DFE1E7;padding:1px 5px;border-radius:4px;font-size:11px;">nim</code>, satu per baris.
+                <code style="background:#fff;border:1px solid #DFE1E7;padding:1px 5px;border-radius:4px;font-size:11px;">nim</code>.
             </div>
             <div>
                 <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:5px;">Pilih File</label>

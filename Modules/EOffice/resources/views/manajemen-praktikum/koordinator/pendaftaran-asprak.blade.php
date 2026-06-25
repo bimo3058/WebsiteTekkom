@@ -41,6 +41,10 @@
             <option value="approved" {{ request('status')=='approved' ? 'selected' : '' }}>Diterima</option>
             <option value="rejected" {{ request('status')=='rejected' ? 'selected' : '' }}>Ditolak</option>
         </select>
+        <select name="sort" class="mp-input mp-select">
+            <option value="terbaru" {{ request('sort') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+            <option value="ipk_tertinggi" {{ request('sort') == 'ipk_tertinggi' ? 'selected' : '' }}>IPK Tertinggi</option>
+        </select>
         <button type="submit" class="mp-btn primary sm">Filter</button>
     </form>
 </div>
@@ -95,17 +99,19 @@
                         {{ collect($p->jadwal ?? [])->join(', ') ?: '—' }}
                     </td>
                     <td style="padding:12px 16px;">
-                        @if($p->status === 'approved')
-                        <span class="mp-badge success sm"><span class="dot"></span>Diterima</span>
-                        <div style="font-size:10px;color:#666D80;margin-top:2px;">Role asprak aktif</div>
-                        @elseif($p->status === 'rejected')
+                        @if($p->status_koor === 'disetujui')
+                        <div>
+                            <span class="mp-badge success sm"><span class="dot"></span>Disetujui Koor</span>
+                            <div style="font-size:10px;color:#666D80;margin-top:2px;">Menunggu Admin</div>
+                        </div>
+                        @elseif($p->status_koor === 'ditolak' || $p->status === 'rejected')
                         <span class="mp-badge error sm"><span class="dot"></span>Ditolak</span>
                         @else
-                        <span class="mp-badge warning sm"><span class="dot"></span>Menunggu</span>
+                        <span class="mp-badge warning sm"><span class="dot"></span>Menunggu Review</span>
                         @endif
                     </td>
                     <td style="padding:12px 16px;">
-                        @if($p->status === 'pending')
+                        @if($p->status_koor === 'menunggu')
                         <div class="flex gap-2">
                             <form method="POST" action="{{ route('eoffice.manprak.koor.pendaftaran-asprak.approve', $p->id) }}">
                                 @csrf

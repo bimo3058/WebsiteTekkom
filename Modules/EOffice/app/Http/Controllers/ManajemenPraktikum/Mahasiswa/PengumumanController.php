@@ -27,7 +27,7 @@ class PengumumanController extends Controller
 
         // Praktikum yang dipilih (default ke yang pertama)
         $praktikumId = $request->input('praktikum_id', $praktikumList->first()?->id);
-        $praktikum   = $praktikumList->firstWhere('id', $praktikumId);
+        $praktikum = $praktikumList->firstWhere('id', $praktikumId);
 
         // Query pengumuman hanya untuk praktikum yang dipilih
         $pengumumans = $praktikumId

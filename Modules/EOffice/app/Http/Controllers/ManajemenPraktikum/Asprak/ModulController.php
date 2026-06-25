@@ -38,6 +38,10 @@ class ModulController extends Controller
             ? ModulAsprak::where('asprak_id', $asprak->id)->pluck('modul_id')
             : collect();
 
+        if ($asprak && $assignedModulIds->isEmpty()) {
+            return redirect()->route('eoffice.manprak.asprak.dashboard')->with('error', 'Akses ditolak: Anda belum di-assign ke modul manapun di praktikum ini.');
+        }
+
         return view('eoffice::manajemen-praktikum.asprak.modul', compact(
             'praktikum',
             'moduls',
@@ -107,15 +111,19 @@ class ModulController extends Controller
         ])->where('praktikum_id', $asprak?->praktikum_id)
             ->findOrFail($id);
 
-        $daftarPraktikan = DaftarPraktikan::with(['user', 'nilai'])
-            ->where('praktikum_id', $modul->praktikum_id)
-            ->get();
-
         $isAssigned = $asprak
             ? ModulAsprak::where('modul_id', $modul->id)
                 ->where('asprak_id', $asprak->id)
                 ->exists()
             : false;
+
+        if (!$isAssigned) {
+            return back()->with('error', 'Gagal memuat: Anda belum di-assign sebagai pengampu pada modul ini.');
+        }
+
+        $daftarPraktikan = DaftarPraktikan::with(['user', 'nilai'])
+            ->where('praktikum_id', $modul->praktikum_id)
+            ->get();
 
         return view('eoffice::manajemen-praktikum.asprak.modul-detail', compact(
             'modul',
@@ -145,6 +153,15 @@ class ModulController extends Controller
                 ->firstOrFail();
 
         $modul = Modul::where('praktikum_id', $asprak->praktikum_id)->findOrFail($id);
+
+        $isAssigned = ModulAsprak::where('modul_id', $modul->id)
+            ->where('asprak_id', $asprak->id)
+            ->exists();
+        
+        if (!$isAssigned) {
+            return back()->with('error', 'Gagal menyimpan: Anda belum di-assign sebagai pengampu pada modul ini.');
+        }
+
         $modul->update($request->only(['nama', 'deskripsi', 'urutan', 'jadwal_minggu']));
 
         return back()->with('success', 'Modul berhasil diperbarui.');
@@ -163,6 +180,15 @@ class ModulController extends Controller
                 ->firstOrFail();
 
         $modul = Modul::where('praktikum_id', $asprak->praktikum_id)->findOrFail($id);
+
+        $isAssigned = ModulAsprak::where('modul_id', $modul->id)
+            ->where('asprak_id', $asprak->id)
+            ->exists();
+        
+        if (!$isAssigned) {
+            return back()->with('error', 'Gagal menghapus: Anda belum di-assign sebagai pengampu pada modul ini.');
+        }
+
         $modul->delete();
 
         return back()->with('success', 'Modul berhasil dihapus.');

@@ -65,39 +65,14 @@
 
         <div class="mp-alert warning flex-shrink-0" style="margin-top:16px;">
             <div style="font-size:13px;font-weight:600;color:#7C5309;margin-bottom:4px;">
-                Belum ada praktikum yang terhubung ke mata kuliah ini
+                Belum ada kelas praktikum yang aktif untuk mata kuliah ini
             </div>
             <div style="font-size:12px;color:#956321;margin-bottom:12px;">
-                Hubungkan salah satu praktikum aktif ke mata kuliah ini, atau
-                <a href="{{ route('eoffice.manprak.admin.praktikum.index') }}" style="text-decoration:underline;font-weight:600;">buat praktikum baru</a>.
+                Anda tidak dapat membuka periode pendaftaran karena belum ada kelas praktikum yang terbentuk untuk mata kuliah ini di semester berjalan. Silakan buat kelas praktikum baru terlebih dahulu.
             </div>
-
-            @if($praktikumSemua->isNotEmpty())
-            <form method="POST" action="{{ route('eoffice.manprak.admin.periode-pendaftaran.assign-matkul') }}"
-                  style="display:flex;gap:8px;flex-wrap:wrap;align-items:flex-end;">
-                @csrf
-                <input type="hidden" name="matkul_id" value="{{ $matkulDipilih->id }}">
-                <div style="flex:1;min-width:240px;">
-                    <label style="display:block;font-size:11px;font-weight:600;color:#7C5309;margin-bottom:4px;">Pilih praktikum yang ingin dihubungkan:</label>
-                    <select name="praktikum_id" required class="mp-input mp-select w-full" style="border-color:#D39C3D;">
-                        <option value="">— Pilih Praktikum —</option>
-                        @foreach($praktikumSemua as $p)
-                        <option value="{{ $p->id }}">
-                            {{ $p->nama }}
-                            @if($p->kode) [{{ $p->kode }}] @endif
-                            &middot; {{ $p->semester }} {{ $p->tahun_ajaran }}
-                            @if($p->matkul) &middot; ({{ $p->matkul->kode }}) @endif
-                        </option>
-                        @endforeach
-                    </select>
-                </div>
-                <button type="submit" class="mp-btn primary md">Hubungkan &amp; Lanjutkan</button>
-            </form>
-            @else
             <a href="{{ route('eoffice.manprak.admin.praktikum.index') }}" class="mp-btn primary md" style="text-decoration:none;display:inline-flex;">
                 Buat Praktikum Baru &rarr;
             </a>
-            @endif
         </div>
 
         @else
@@ -132,7 +107,7 @@
                     <select name="jenis" required class="mp-input mp-select w-full">
                         <option value="koor">Koordinator Praktikum</option>
                         <option value="asprak">Asisten Praktikum</option>
-                        <option value="praktikan">Praktikan (IRS)</option>
+
                     </select>
                 </div>
                 <div>
@@ -143,12 +118,12 @@
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                     <div>
-                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:4px;">Dibuka Pada</label>
-                        <input type="datetime-local" name="dibuka_pada" class="mp-input w-full">
+                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:4px;">Dibuka Pada <span style="color:#DF1C41;">*</span></label>
+                        <input type="datetime-local" name="dibuka_pada" required class="mp-input w-full">
                     </div>
                     <div>
-                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:4px;">Ditutup Pada</label>
-                        <input type="datetime-local" name="ditutup_pada" class="mp-input w-full">
+                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:4px;">Ditutup Pada <span style="color:#DF1C41;">*</span></label>
+                        <input type="datetime-local" name="ditutup_pada" required class="mp-input w-full">
                     </div>
                 </div>
             </div>
