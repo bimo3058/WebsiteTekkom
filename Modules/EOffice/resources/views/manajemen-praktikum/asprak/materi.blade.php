@@ -55,20 +55,47 @@
                 @enderror
             </div>
 
-            <div>
+            <div x-data="fileUploaderMateri()">
                 <label class="block text-[12px] font-semibold text-[#353849] mb-3">Upload File <span style="color:#DF1C41;">*</span></label>
-                <div id="dropzone-materi" style="border:2px dashed #DFE1E7;border-radius:10px;padding:56px 32px;text-align:center;cursor:pointer;transition:all .2s;background:#FAFBFC;min-height:140px;display:flex;flex-direction:column;align-items:center;justify-content:center;" 
-                     onmouseover="this.style.borderColor='#6366F1';this.style.backgroundColor='#F0F4FF';"
-                     onmouseout="this.style.borderColor='#DFE1E7';this.style.backgroundColor='#FAFBFC';"
-                     onclick="document.getElementById('file-upload-materi').click()">
-                    <svg width="52" height="52" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="1.5" stroke-linecap="round" style="margin-bottom:16px;opacity:0.8;"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                    <div style="font-size:15px;font-weight:700;color:#0D0D12;margin-bottom:6px;">Klik atau drag file ke sini</div>
-                    <div style="font-size:13px;color:#666D80;">PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX hingga 50MB</div>
-                    <input type="file" id="file-upload-materi" name="file" style="display:none;" accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx" required>
+                
+                <div style="display:flex;gap:10px;align-items:center;margin-bottom:8px;">
+                    <button type="button" @click="$refs.fileInput.click()" 
+                            style="background:#F8FAFC;border:1px solid #DFE1E7;border-radius:6px;padding:8px 16px;font-size:13px;font-weight:600;color:#353849;cursor:pointer;transition:background .2s;"
+                            onmouseover="this.style.background='#F0F4FA'" onmouseout="this.style.background='#F8FAFC'">
+                        + Tambah File
+                    </button>
+                    <span x-text="files.length + '/10 file terpilih'" style="font-size:12px;color:#808897;"></span>
                 </div>
-                <div id="file-info-materi" style="margin-top:14px;font-size:13px;color:#666D80;text-align:center;"></div>
+
+                <input type="file" x-ref="fileInput" style="display:none" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx" @change="addFiles($event)">
+                <input type="file" id="hidden-materi" name="file[]" multiple style="display:none" required>
+
+                <div style="font-size:11px;color:#808897;">PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX. Ukuran maksimal per file: 50MB</div>
+
+                <div style="margin-top:12px;display:flex;flex-direction:column;gap:8px;">
+                    <template x-for="(file, index) in files" :key="index">
+                        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px;background:#FAFBFC;border:1px solid #EDF0F4;border-radius:8px;">
+                            <div style="display:flex;align-items:center;gap:10px;overflow:hidden;">
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#6366F1" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                                <div>
+                                    <div x-text="file.name" style="font-size:13px;font-weight:500;color:#353849;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:280px;"></div>
+                                    <div x-text="(file.size / 1024 / 1024).toFixed(2) + ' MB'" style="font-size:11px;color:#808897;"></div>
+                                </div>
+                            </div>
+                            <button type="button" @click="removeFile(index)" title="Hapus file"
+                                    style="background:none;border:none;cursor:pointer;color:#DF1C41;padding:6px;display:flex;align-items:center;justify-content:center;border-radius:6px;"
+                                    onmouseover="this.style.background='#FFF0F2'" onmouseout="this.style.background='none'">
+                                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+                
                 @error('file')
-                <div style="font-size:11px;color:#DF1C41;margin-top:8px;text-align:center;">{{ $message }}</div>
+                <div style="font-size:11px;color:#DF1C41;margin-top:8px;">{{ $message }}</div>
+                @enderror
+                @error('file.*')
+                <div style="font-size:11px;color:#DF1C41;margin-top:8px;">{{ $message }}</div>
                 @enderror
             </div>
 
@@ -77,49 +104,6 @@
                 <button type="reset" class="mp-btn secondary md" style="flex:1;">Batal</button>
             </div>
         </form>
-
-        <script>
-            const dropzone = document.getElementById('dropzone-materi');
-            const fileInput = document.getElementById('file-upload-materi');
-            const fileInfo = document.getElementById('file-info-materi');
-
-            dropzone.addEventListener('click', () => fileInput.click());
-
-            dropzone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                dropzone.style.borderColor = '#6366F1';
-                dropzone.style.backgroundColor = '#F0F4FF';
-            });
-
-            dropzone.addEventListener('dragleave', (e) => {
-                e.preventDefault();
-                dropzone.style.borderColor = '#DFE1E7';
-                dropzone.style.backgroundColor = '#FAFBFC';
-            });
-
-            dropzone.addEventListener('drop', (e) => {
-                e.preventDefault();
-                dropzone.style.borderColor = '#DFE1E7';
-                dropzone.style.backgroundColor = '#FAFBFC';
-                
-                if (e.dataTransfer.files.length > 0) {
-                    fileInput.files = e.dataTransfer.files;
-                    updateFileInfo();
-                }
-            });
-
-            fileInput.addEventListener('change', updateFileInfo);
-
-            function updateFileInfo() {
-                if (fileInput.files.length > 0) {
-                    const file = fileInput.files[0];
-                    const sizeMB = (file.size / 1024 / 1024).toFixed(2);
-                    fileInfo.innerHTML = '<span style="color:#22c55e;font-weight:600;font-size:14px;">✓ ' + file.name + ' (' + sizeMB + 'MB)</span>';
-                } else {
-                    fileInfo.innerHTML = '';
-                }
-            }
-        </script>
     </div>
 </div>
 
@@ -175,8 +159,8 @@
                 <div style="display:flex;gap:8px;flex-shrink:0;margin-top:2px;">
                     @if($materi->file_path)
                     <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice') }}" target="_blank" class="mp-btn primary sm" style="text-decoration:none;white-space:nowrap;display:flex;align-items:center;gap:6px;">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-                        Unduh
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                        Lihat
                     </a>
                     @endif
                     <form method="POST" action="{{ route('eoffice.manprak.asprak.materi.destroy', $materi->id) }}" style="display:inline;" onsubmit="return confirm('Hapus materi ini? Tindakan tidak dapat dibatalkan.')">
@@ -200,5 +184,38 @@
 
 </div>
 {{-- End Scrollable Container --}}
+
+<script>
+function fileUploaderMateri() {
+    return {
+        files: [],
+        addFiles(e) {
+            let selectedFiles = Array.from(e.target.files);
+            let totalFiles = this.files.length + selectedFiles.length;
+            if (totalFiles > 10) {
+                alert('Maksimal 10 file yang dapat diunggah sekaligus!');
+                selectedFiles = selectedFiles.slice(0, 10 - this.files.length);
+            }
+            this.files = [...this.files, ...selectedFiles];
+            this.syncInput();
+            e.target.value = ''; // reset so same file can be picked again
+            this.updateRequired();
+        },
+        removeFile(index) {
+            this.files.splice(index, 1);
+            this.syncInput();
+            this.updateRequired();
+        },
+        syncInput() {
+            let dt = new DataTransfer();
+            this.files.forEach(file => dt.items.add(file));
+            document.getElementById('hidden-materi').files = dt.files;
+        },
+        updateRequired() {
+            document.getElementById('hidden-materi').required = this.files.length === 0;
+        }
+    }
+}
+</script>
 
 </x-eoffice::manajemen-praktikum.layout>

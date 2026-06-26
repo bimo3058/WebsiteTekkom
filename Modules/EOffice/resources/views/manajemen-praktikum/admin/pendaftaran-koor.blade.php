@@ -26,25 +26,34 @@
 
 <div class="mp-card flex-shrink-0">
     <div style="padding:14px 18px;">
-        <form method="GET" class="flex gap-2 flex-wrap">
-            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama mahasiswa..."
-                   class="mp-input" style="width:200px;">
-            <select name="status_dosen" class="mp-input mp-select">
+        <form method="GET" class="flex gap-2 flex-wrap" style="align-items: center; width: 100%;">
+            <select name="praktikum_id" class="mp-input mp-select" style="flex: 1; min-width: 180px;">
+                <option value="">Semua Praktikum Aktif</option>
+                @foreach($praktikumList as $p)
+                <option value="{{ $p->id }}" {{ request('praktikum_id') == $p->id ? 'selected' : '' }}>{{ $p->nama }}</option>
+                @endforeach
+            </select>
+            <select name="status_dosen" class="mp-input mp-select" style="flex: 1; min-width: 150px;">
                 <option value="">Semua Status Dosen</option>
-                <option value="menunggu"  {{ request('status_dosen')=='menunggu'  ? 'selected' : '' }}>Menunggu Review Dosen</option>
+                <option value="menunggu"  {{ request('status_dosen')=='menunggu'  ? 'selected' : '' }}>Menunggu Dosen</option>
                 <option value="disetujui" {{ request('status_dosen')=='disetujui' ? 'selected' : '' }}>Disetujui Dosen</option>
                 <option value="ditolak"   {{ request('status_dosen')=='ditolak'   ? 'selected' : '' }}>Ditolak Dosen</option>
             </select>
-            <select name="status" class="mp-input mp-select">
+            <select name="status" class="mp-input mp-select" style="flex: 1; min-width: 150px;">
                 <option value="">Semua Status Admin</option>
-                <option value="pending"  {{ request('status')=='pending'  ? 'selected' : '' }}>Menunggu</option>
-                <option value="approved" {{ request('status')=='approved' ? 'selected' : '' }}>Disetujui</option>
-                <option value="rejected" {{ request('status')=='rejected' ? 'selected' : '' }}>Ditolak</option>
+                <option value="pending"  {{ request('status')=='pending'  ? 'selected' : '' }}>Menunggu Admin</option>
+                <option value="approved" {{ request('status')=='approved' ? 'selected' : '' }}>Disetujui Admin</option>
+                <option value="rejected" {{ request('status')=='rejected' ? 'selected' : '' }}>Ditolak Admin</option>
             </select>
-            <button type="submit" class="mp-btn primary sm">
+            <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama mahasiswa..."
+                   class="mp-input" style="flex: 1; min-width: 150px;">
+            <button type="submit" class="mp-btn primary sm" style="height: 38px; padding: 0 16px;">
                 <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 Filter
             </button>
+            @if(request()->hasAny(['search','status_dosen','status','praktikum_id']))
+            <a href="{{ route('eoffice.manprak.admin.pendaftaran-koor.index') }}" class="mp-btn secondary sm" style="height: 38px; padding: 0 16px; line-height: 36px;">Reset</a>
+            @endif
         </form>
     </div>
 </div>

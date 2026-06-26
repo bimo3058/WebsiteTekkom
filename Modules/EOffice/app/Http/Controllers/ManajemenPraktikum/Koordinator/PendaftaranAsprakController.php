@@ -23,11 +23,17 @@ class PendaftaranAsprakController extends Controller
     public function index(Request $request)
     {
         $user      = auth()->user();
-        $praktikum = Praktikum::where('koor_id', $user->id)->where('status', 'aktif')->first();
+        $praktikum = DashboardController::resolvePraktikum();
 
         $query = PendaftaranAsprak::with(['user', 'praktikum'])
-            ->where('praktikum_id', $praktikum?->id)
-            ->orderByDesc('created_at');
+            ->where('praktikum_id', $praktikum?->id);
+
+        $sort = $request->input('sort', 'terbaru');
+        if ($sort === 'ipk_tertinggi') {
+            $query->orderByDesc('ipk');
+        } else {
+            $query->orderByDesc('created_at');
+        }
 
         if ($status = $request->input('status')) {
             $query->where('status', $status);
@@ -62,39 +68,25 @@ class PendaftaranAsprakController extends Controller
         if ($pendaftaran->praktikum?->koor_id !== $user->id) {
             return back()->with('error', 'Anda tidak berhak mengelola pendaftaran ini.');
         }
-        if ($pendaftaran->status !== 'pending') {
+        if ($pendaftaran->status_koor !== 'menunggu') {
             return back()->with('error', 'Pendaftaran ini sudah diproses.');
         }
 
         $pendaftaran->update([
-            'status'        => 'approved',
+            'status_koor'   => 'disetujui',
             'catatan_koor'  => $request->input('catatan_koor'),
             'direview_oleh' => $user->id,
             'direview_pada' => now(),
-        ]);
-
-        // Auto assign role asprak ke user
-        $targetUser = $pendaftaran->user;
-        $roleAsprak = Role::where('name', 'asprak')->where('module', 'eoffice')->first();
-
-        if ($targetUser && $roleAsprak) {
-            $targetUser->roles()->syncWithoutDetaching([$roleAsprak->id]);
-        }
-
-        // Tambahkan ke asprak_praktikum
-        AsprakPraktikum::firstOrCreate([
-            'praktikum_id' => $pendaftaran->praktikum_id,
-            'user_id'      => $pendaftaran->user_id,
-            'role'         => 'asprak',
+            // status tetap 'pending' menunggu admin final approve
         ]);
 
         $this->notif->kirim(
             $pendaftaran->user_id,
-            'Pendaftaran Asprak Diterima! 🎉',
-            "Selamat! Anda diterima sebagai Asisten Praktikum {$pendaftaran->praktikum?->nama}. Role asprak telah aktif."
+            'Pendaftaran Asprak Disetujui Koordinator',
+            "Selamat! Pendaftaran Anda sebagai Asisten Praktikum {$pendaftaran->praktikum?->nama} telah disetujui Koordinator. Menunggu persetujuan akhir dari Admin."
         );
 
-        return back()->with('success', "Pendaftaran {$targetUser?->name} diterima. Role asprak telah di-assign otomatis.");
+        return back()->with('success', "Pendaftaran {$pendaftaran->user?->name} disetujui. Admin akan melakukan final approval.");
     }
 
     /**
@@ -108,11 +100,12 @@ class PendaftaranAsprakController extends Controller
         if ($pendaftaran->praktikum?->koor_id !== $user->id) {
             return back()->with('error', 'Anda tidak berhak mengelola pendaftaran ini.');
         }
-        if ($pendaftaran->status !== 'pending') {
+        if ($pendaftaran->status_koor !== 'menunggu') {
             return back()->with('error', 'Pendaftaran ini sudah diproses.');
         }
 
         $pendaftaran->update([
+            'status_koor'      => 'ditolak',
             'status'           => 'rejected',
             'alasan_penolakan' => $request->input('alasan_penolakan'),
             'catatan_koor'     => $request->input('catatan_koor'),

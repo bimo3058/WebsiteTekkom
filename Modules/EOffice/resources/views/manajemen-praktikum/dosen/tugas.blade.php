@@ -33,7 +33,7 @@
                 @foreach($praktikumList as $p)
                 <option value="{{ $p->id }}" {{ ($praktikum?->id == $p->id) ? 'selected' : '' }}>
                     {{ $p->nama }}
-                    @if($p->kode) [{{ $p->kode }}] @endif
+
                     · {{ $p->semester }} {{ $p->tahun_ajaran }}
                 </option>
                 @endforeach

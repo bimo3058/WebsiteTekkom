@@ -138,8 +138,8 @@
                            class="mp-input w-full">
                 </div>
                 <div>
-                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Semester</label>
-                    <select name="semester" class="mp-input mp-select w-full">
+                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Semester <span class="text-red-500">*</span></label>
+                    <select name="semester" required class="mp-input mp-select w-full">
                         <option value="">— Pilih —</option>
                         @for($s = 1; $s <= 8; $s++)
                         <option value="{{ $s }}">Semester {{ $s }}</option>
@@ -181,8 +181,8 @@
                     <input type="number" id="edit-sks" name="sks" required min="1" max="6" class="mp-input w-full">
                 </div>
                 <div>
-                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Semester</label>
-                    <select id="edit-semester" name="semester" class="mp-input mp-select w-full">
+                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Semester <span class="text-red-500">*</span></label>
+                    <select id="edit-semester" name="semester" required class="mp-input mp-select w-full">
                         <option value="">— Pilih —</option>
                         @for($s = 1; $s <= 8; $s++)
                         <option value="{{ $s }}">Semester {{ $s }}</option>

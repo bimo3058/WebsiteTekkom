@@ -30,7 +30,6 @@ class Praktikum extends Model
     protected function casts(): array
     {
         return [
-            'tahun_ajaran' => 'integer',
             'deleted_at'   => 'datetime',
         ];
     }

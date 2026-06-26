@@ -14,7 +14,9 @@ use Modules\EOffice\Services\KoorPraktikumService;
 
 class DashboardController extends Controller
 {
-    public function __construct(protected KoorPraktikumService $koorService) {}
+    public function __construct(protected KoorPraktikumService $koorService)
+    {
+    }
 
     public function index()
     {
@@ -27,9 +29,9 @@ class DashboardController extends Controller
             ->get();
 
         $totalPraktikumDiampu = $praktikums->count();
-        $totalPraktikumAktif  = $praktikums->where('status', 'aktif')->count();
-        $totalMahasiswa       = $praktikums->sum('daftar_praktikan_count');
-        $totalModul           = $praktikums->sum('modul_count');
+        $totalPraktikumAktif = $praktikums->where('status', 'aktif')->count();
+        $totalMahasiswa = $praktikums->sum('daftar_praktikan_count');
+        $totalModul = $praktikums->sum('modul_count');
 
         // Praktikum yang belum punya koordinator
         $praktikumTanpaKoor = $praktikums->whereNull('koor_id')->values();
@@ -69,7 +71,7 @@ class DashboardController extends Controller
     {
         $request->validate([
             'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
-            'nim'          => 'required|string',
+            'nim' => 'required|string',
         ]);
 
         $user = auth()->user();

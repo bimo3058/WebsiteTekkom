@@ -48,3 +48,5 @@ _ds_tmp/
 
 # Zip export
 *.zip
+# Redis dump
+dump.rdb

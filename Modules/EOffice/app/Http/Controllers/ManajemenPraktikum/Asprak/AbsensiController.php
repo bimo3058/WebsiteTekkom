@@ -23,6 +23,10 @@ class AbsensiController extends Controller
         $moduls = $asprak
             ? ModulAsprak::where('asprak_id', $asprak->id)->with('modul.praktikum')->get()->pluck('modul')->filter()->values()
             : collect();
+            
+        if ($asprak && $moduls->isEmpty()) {
+            session()->now('error', 'Akses terbatas: Anda belum di-assign sebagai pengampu pada modul manapun di praktikum ini.');
+        }
 
         return view('eoffice::manajemen-praktikum.asprak.absensi', [
             'moduls'      => $moduls,

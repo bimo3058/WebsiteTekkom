@@ -136,11 +136,11 @@
                 </div>
                 <div>
                     <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:4px;">
-                        Ditutup Pada <span style="color:#666D80;font-weight:400;">(opsional)</span>
+                        Ditutup Pada <span style="color:#DF1C41;">*</span>
                     </label>
                     <input type="datetime-local" name="ditutup_pada" class="mp-input w-full"
-                           value="{{ old('ditutup_pada') }}">
-                    <p style="font-size:11px;color:#666D80;margin-top:4px;">Kosongkan jika tidak ada batas waktu otomatis.</p>
+                           value="{{ old('ditutup_pada') }}" required>
+                    <p style="font-size:11px;color:#666D80;margin-top:4px;">Wajib diisi sebagai batas waktu penutupan pendaftaran.</p>
                 </div>
             </div>
 

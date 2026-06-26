@@ -85,6 +85,14 @@ class DashboardController extends Controller
             ->limit(5)
             ->get();
 
+        // ── Pendaftaran koor terbaru yang perlu di-approve ────────────────────
+
+        $pendaftaranKoorTerbaru = PendaftaranKoordinator::with(['user', 'praktikum'])
+            ->where('status', 'pending')
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
+
         // ── Log aktivitas terbaru ───────────────────────────────────────────────
 
         $recentActivities = \DB::table('eo_audit_logs')
@@ -113,6 +121,7 @@ class DashboardController extends Controller
             'dosenTerbaru',
             'mahasiswaTerbaru',
             'pendaftaranTerbaru',
+            'pendaftaranKoorTerbaru',
             'recentActivities'
         ));
     }

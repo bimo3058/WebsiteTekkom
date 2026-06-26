@@ -150,44 +150,7 @@
         @endforelse
     </div>
 
-    {{-- ── Panel 2: Daftar Mahasiswa ─────────────────────────────── --}}
-    <div style="background:#fff; border:1px solid var(--c-border,#DFE1E7); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04);">
-        <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border-bottom:1px solid var(--c-border,#DFE1E7); background:#FAFAFA;">
-            <div style="font-size:14px; font-weight:700; color:var(--c-fg,#0D0D12);">Daftar Mahasiswa</div>
-            <a href="{{ route('eoffice.manprak.admin.daftar-praktikan.index') }}"
-               style="font-size:11px; font-weight:600; padding:4px 10px; border-radius:6px; background:#0B266E; color:#fff; text-decoration:none;">Lihat</a>
-        </div>
-        <div style="display:grid; grid-template-columns:1fr 1fr 120px 90px; padding:8px 14px; border-bottom:1px solid #F3F4F6; background:#FAFAFA;">
-            <div style="font-size:10px; font-weight:600; color:#A4ABB8; text-transform:uppercase; letter-spacing:.04em;">Mahasiswa</div>
-            <div style="font-size:10px; font-weight:600; color:#A4ABB8; text-transform:uppercase; letter-spacing:.04em;">Email</div>
-            <div style="font-size:10px; font-weight:600; color:#A4ABB8; text-transform:uppercase; letter-spacing:.04em;">NIM</div>
-            <div style="font-size:10px; font-weight:600; color:#A4ABB8; text-transform:uppercase; letter-spacing:.04em; text-align:center;">Praktikum</div>
-        </div>
-        @forelse($mahasiswaTerbaru ?? [] as $m)
-        @php
-            $parts  = explode(' ', $m['name'] ?? 'M');
-            $ini    = strtoupper(substr($parts[0] ?? 'M', 0, 1) . substr($parts[1] ?? $parts[0], 0, 1));
-            $colors = ['sky','navy','green','yellow','violet'];
-            $col    = $colors[crc32($m['email'] ?? '') % count($colors)];
-        @endphp
-        <div style="display:grid; grid-template-columns:1fr 1fr 120px 90px; padding:10px 14px; border-bottom:1px solid #F8F9FB; transition:background .12s;"
-             onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
-            <div style="display:flex; align-items:center; gap:8px; min-width:0;">
-                <div class="mp-av {{ $col }}" style="width:26px; height:26px; font-size:10px; flex-shrink:0;">{{ $ini }}</div>
-                <div style="font-size:12px; font-weight:600; color:var(--c-fg,#0D0D12); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">{{ $m['name'] }}</div>
-            </div>
-            <div style="font-size:11px; color:#666D80; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; align-self:center;">{{ $m['email'] }}</div>
-            <div style="font-size:11px; font-family:monospace; color:#353849; align-self:center;">{{ $m['student_number'] }}</div>
-            <div style="text-align:center; align-self:center;">
-                <span class="mp-badge neutral sm">{{ $m['jumlah_praktikum'] }} Prak</span>
-            </div>
-        </div>
-        @empty
-        <div style="padding:32px; text-align:center; font-size:12px; color:#A4ABB8;">Belum ada data mahasiswa.</div>
-        @endforelse
-    </div>
-
-    {{-- ── Panel 3: Daftar Praktikum ────────────────────────────── --}}
+    {{-- ── Panel 2: Daftar Praktikum ────────────────────────────── --}}
     <div style="background:#fff; border:1px solid var(--c-border,#DFE1E7); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04);">
         <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border-bottom:1px solid var(--c-border,#DFE1E7); background:#FAFAFA;">
             <div style="font-size:14px; font-weight:700; color:var(--c-fg,#0D0D12);">Daftar Praktikum</div>
@@ -226,14 +189,58 @@
         @endforelse
     </div>
 
-    {{-- ── Panel 4: Pendaftaran Pending ───────────────────────────── --}}
+    {{-- ── Panel 3: Pendaftaran Koordinator ───────────────────────────── --}}
     <div style="background:#fff; border:1px solid var(--c-border,#DFE1E7); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04);">
         <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border-bottom:1px solid var(--c-border,#DFE1E7); background:#FAFAFA;">
             <div style="display:flex; align-items:center; gap:8px;">
-                <div style="font-size:14px; font-weight:700; color:var(--c-fg,#0D0D12);">Pendaftaran</div>
-                @if(($totalAsprakPending ?? 0) + ($totalKoorPending ?? 0) > 0)
+                <div style="font-size:14px; font-weight:700; color:var(--c-fg,#0D0D12);">Pendaftaran Koor</div>
+                @if(($totalKoorPending ?? 0) > 0)
+                <span style="font-size:10px; font-weight:700; background:#D39C3D; color:#fff; border-radius:999px; padding:1px 7px;">
+                    {{ $totalKoorPending ?? 0 }}
+                </span>
+                @endif
+            </div>
+            <a href="{{ route('eoffice.manprak.admin.pendaftaran-koor.index') }}"
+               style="font-size:11px; font-weight:600; padding:4px 10px; border-radius:6px; background:#0B266E; color:#fff; text-decoration:none;">Lihat</a>
+        </div>
+        @forelse($pendaftaranKoorTerbaru ?? [] as $pend)
+        @php
+            $isPrak = $pend->praktikum?->nama ?? '—';
+            $tipe   = 'Koor';
+        @endphp
+        <div style="padding:11px 16px; border-bottom:1px solid #F8F9FB; display:flex; align-items:center; gap:10px; transition:background .12s;"
+             onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
+            <div style="width:32px; height:32px; border-radius:8px; background:#FFFBF0; display:flex; align-items:center; justify-content:center; flex-shrink:0;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#D39C3D" stroke-width="1.8" stroke-linecap="round">
+                    <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z"/>
+                </svg>
+            </div>
+            <div style="flex:1; min-width:0;">
+                <div style="font-size:12px; font-weight:600; color:var(--c-fg,#0D0D12); overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">
+                    Pendaftaran {{ $tipe }} · {{ $isPrak }}
+                </div>
+                <div style="font-size:11px; color:#A4ABB8; margin-top:1px;">
+                    {{ $pend->user?->name ?? '—' }} · {{ $pend->created_at?->diffForHumans() }}
+                </div>
+            </div>
+            <span class="mp-badge warning sm"><span class="dot"></span>Pending</span>
+        </div>
+        @empty
+        <div style="padding:32px; text-align:center;">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#DFE1E7" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 8px;display:block;"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg>
+            <div style="font-size:12px; color:#A4ABB8;">Tidak ada pendaftaran koordinator yang menunggu.</div>
+        </div>
+        @endforelse
+    </div>
+
+    {{-- ── Panel 4: Pendaftaran Asprak ───────────────────────────── --}}
+    <div style="background:#fff; border:1px solid var(--c-border,#DFE1E7); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04);">
+        <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border-bottom:1px solid var(--c-border,#DFE1E7); background:#FAFAFA;">
+            <div style="display:flex; align-items:center; gap:8px;">
+                <div style="font-size:14px; font-weight:700; color:var(--c-fg,#0D0D12);">Pendaftaran Asprak</div>
+                @if(($totalAsprakPending ?? 0) > 0)
                 <span style="font-size:10px; font-weight:700; background:#DF1C41; color:#fff; border-radius:999px; padding:1px 7px;">
-                    {{ ($totalAsprakPending ?? 0) + ($totalKoorPending ?? 0) }}
+                    {{ $totalAsprakPending ?? 0 }}
                 </span>
                 @endif
             </div>
@@ -243,7 +250,7 @@
         @forelse($pendaftaranTerbaru ?? [] as $pend)
         @php
             $isPrak = $pend->praktikum?->nama ?? '—';
-            $tipe   = 'Asprak'; // semua dari PendaftaranAsprak
+            $tipe   = 'Asprak';
         @endphp
         <div style="padding:11px 16px; border-bottom:1px solid #F8F9FB; display:flex; align-items:center; gap:10px; transition:background .12s;"
              onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
@@ -265,18 +272,9 @@
         @empty
         <div style="padding:32px; text-align:center;">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#DFE1E7" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 8px;display:block;"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg>
-            <div style="font-size:12px; color:#A4ABB8;">Tidak ada pendaftaran yang perlu ditinjau.</div>
+            <div style="font-size:12px; color:#A4ABB8;">Tidak ada pendaftaran asprak yang perlu ditinjau.</div>
         </div>
         @endforelse
-        @if(($totalKoorPending ?? 0) > 0)
-        <div style="padding:10px 16px; border-top:1px solid #F3F4F6; background:#FFFBF0;">
-            <a href="{{ route('eoffice.manprak.admin.pendaftaran-koor.index') }}"
-               style="font-size:12px; color:#D39C3D; font-weight:600; text-decoration:none; display:flex; align-items:center; gap:4px;">
-                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                Ada {{ $totalKoorPending }} pendaftaran koordinator menunggu →
-            </a>
-        </div>
-        @endif
     </div>
 
 </div>

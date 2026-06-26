@@ -66,27 +66,69 @@ class DaftarPraktikanController extends Controller
             }
         }
 
-        // Import dari file CSV (kolom: nim atau email)
+        // Import dari file Excel / CSV yang strukturnya bisa dinamis (seperti dari SSO)
         if ($request->hasFile('file')) {
-            $path   = $request->file('file')->getRealPath();
-            $rows   = array_map('str_getcsv', file($path));
-            array_shift($rows); // hapus header
+            $path = $request->file('file')->getRealPath();
 
-            foreach ($rows as $row) {
-                if (empty($row[0])) continue;
-                $identifier = trim($row[0]);
+            try {
+                $spreadsheet = \PhpOffice\PhpSpreadsheet\IOFactory::load($path);
+                $worksheet   = $spreadsheet->getActiveSheet();
+                $rows        = $worksheet->toArray();
 
-                $targetUser = User::where('email', $identifier)
-                    ->orWhereHas('student', fn($q) => $q->where('student_number', $identifier))
-                    ->first();
+                $identifiers = [];
 
-                if (!$targetUser) continue;
+                // Scan seluruh cell untuk mencari header "nim" atau "email"
+                foreach ($rows as $r => $row) {
+                    foreach ($row as $c => $val) {
+                        $header = strtolower(trim((string)$val));
+                        if ($header === 'nim' || $header === 'email') {
+                            // Baca nilai di bawah header ini sampai habis
+                            for ($i = $r + 1; $i < count($rows); $i++) {
+                                $cellVal = trim((string)($rows[$i][$c] ?? ''));
+                                if ($cellVal === '') continue;
 
-                DaftarPraktikan::firstOrCreate([
-                    'praktikum_id' => $request->praktikum_id,
-                    'user_id'      => $targetUser->id,
-                ], ['status' => 'terdaftar']);
-                $added++;
+                                // Basic sanitize (hapus spasi)
+                                $cellVal = preg_replace('/\s+/', '', $cellVal);
+                                if (strlen($cellVal) >= 5) {
+                                    $identifiers[] = $cellVal;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                $identifiers = array_unique($identifiers);
+
+                // Jika formatnya flat (baris pertama langsung data tanpa header), kita perlu fallback
+                if (empty($identifiers)) {
+                    foreach ($rows as $row) {
+                        $cellVal = trim((string)($row[0] ?? ''));
+                        if (empty($cellVal)) continue;
+                        if (strtolower($cellVal) === 'nim' || strtolower($cellVal) === 'email') continue;
+
+                        $cellVal = preg_replace('/\s+/', '', $cellVal);
+                        if (strlen($cellVal) >= 5) {
+                            $identifiers[] = $cellVal;
+                        }
+                    }
+                }
+
+                foreach ($identifiers as $identifier) {
+                    $targetUser = User::where('email', $identifier)
+                        ->orWhereHas('student', fn($q) => $q->where('student_number', $identifier))
+                        ->first();
+
+                    if (!$targetUser) continue;
+
+                    DaftarPraktikan::firstOrCreate([
+                        'praktikum_id' => $request->praktikum_id,
+                        'user_id'      => $targetUser->id,
+                    ], ['status' => 'terdaftar']);
+                    $added++;
+                }
+
+            } catch (\Exception $e) {
+                return back()->with('error', 'Gagal membaca file: ' . $e->getMessage());
             }
         }
 

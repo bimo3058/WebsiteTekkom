@@ -216,7 +216,6 @@
                     ['href' => route('eoffice.manprak.admin.periode-pendaftaran.index'),    'label' => 'Periode Pendaftaran','match' => 'periode-pendaftaran',      'icon' => $iCal],
                     ['href' => route('eoffice.manprak.admin.pendaftaran-koor.index'),       'label' => 'Pendaftaran Koor',   'match' => 'pendaftaran-koor',         'icon' => $iCheck],
                     ['href' => route('eoffice.manprak.admin.pendaftaran-asprak.index'),     'label' => 'Pendaftaran Asprak', 'match' => 'pendaftaran-asprak',       'icon' => $iList],
-                    ['href' => route('eoffice.manprak.admin.bagi-asprak.index'),            'label' => 'Distribusi Asprak',  'match' => 'bagi-asprak',              'icon' => $iGear],
                     ['href' => route('eoffice.manprak.admin.kelola-role.index'),            'label' => 'Kelola Role',        'match' => 'kelola-role',              'icon' => $iUser],
                 ],
             ],
@@ -264,13 +263,12 @@
                 'Pendaftaran' => [
                     ['href' => route('eoffice.manprak.koordinator.periode-pendaftaran.index'), 'label' => 'Buka Periode Asprak','match' => 'koordinator.periode-pendaftaran', 'icon' => $iCal],
                     ['href' => route('eoffice.manprak.koor.pendaftaran-asprak.index'), 'label' => 'Seleksi Asprak',   'match' => 'koor.pendaftaran-asprak',    'icon' => $iCheck],
-                    ['href' => route('eoffice.manprak.koor.pendaftaran-praktikan.index'), 'label' => 'Pendaftaran Praktikan', 'match' => 'koor.pendaftaran-praktikan', 'icon' => $iList],
+
                 ],
                 'Kelola' => [
                     ['href' => route('eoffice.manprak.koor.modul.index'),              'label' => 'Kelola Modul',     'match' => 'koor.modul',                 'icon' => $iBook],
                     ['href' => route('eoffice.manprak.koor.bagi-modul.index'),         'label' => 'Bagi Modul',       'match' => 'bagi-modul',                 'icon' => $iGear],
                     ['href' => route('eoffice.manprak.koor.praktikan.index'),          'label' => 'Data Praktikan',   'match' => 'koor.praktikan',             'icon' => $iUser],
-                    ['href' => route('eoffice.manprak.koor.pengumuman.index'),         'label' => 'Pengumuman',       'match' => 'koor.pengumuman',            'icon' => $iBell],
                     ['href' => route('eoffice.manprak.koor.nilai.index'),              'label' => 'Absensi & Nilai',  'match' => 'koor.nilai',                 'icon' => $iCheck],
                 ],
             ],
@@ -309,11 +307,11 @@
                     ['href' => route('eoffice.manprak.mahasiswa.dashboard'),            'label' => 'Dashboard',         'match' => 'mahasiswa.dashboard',  'icon' => $iHome],
                 ],
                 'Aktivitas' => [
-                    ['href' => route('eoffice.manprak.mahasiswa.pendaftaran-praktikan.index'), 'label' => 'Daftar Praktikan (IRS)', 'match' => 'mahasiswa.pendaftaran-praktikan', 'icon' => $iUser],
+
                     ['href' => route('eoffice.manprak.mahasiswa.modul.index'),          'label' => 'Daftar Modul',      'match' => 'mahasiswa.modul',      'icon' => $iBook],
                     ['href' => route('eoffice.manprak.mahasiswa.pengumuman.index'),     'label' => 'Pengumuman',        'match' => 'mahasiswa.pengumuman', 'icon' => $iBell],
                     ['href' => route('eoffice.manprak.mahasiswa.tugas.index'),          'label' => 'Tugas',             'match' => 'mahasiswa.tugas',      'icon' => $iEdit],
-                    ['href' => route('eoffice.manprak.mahasiswa.nilai.index'),          'label' => 'Nilai',             'match' => 'mahasiswa.nilai',      'icon' => $iCheck],
+                    ['href' => route('eoffice.manprak.mahasiswa.nilai.index'),          'label' => 'Absensi & Nilai',   'match' => 'mahasiswa.nilai',      'icon' => $iCheck],
                     ['href' => route('eoffice.manprak.mahasiswa.daftar-asprak.index'), 'label' => 'Daftar Asprak/Koor','match' => 'daftar-asprak',        'icon' => $iUser],
                 ],
             ],

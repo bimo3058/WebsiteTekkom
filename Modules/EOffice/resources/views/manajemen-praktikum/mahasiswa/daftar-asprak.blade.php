@@ -65,7 +65,7 @@
                 @endphp
                 <option value="{{ $p->id }}" {{ request('praktikum_id') == $p->id ? 'selected' : '' }}>
                     {{ $p->nama }}
-                    @if($p->kode) [{{ $p->kode }}] @endif
+
                     {{ $p->semester }} {{ $p->tahun_ajaran }}
                     {{ count($badge) ? '(' . implode('+', $badge) . ')' : '' }}
                 </option>
@@ -94,35 +94,20 @@
         ->where('praktikum_id', $selectedPraktikum->id)
         ->orderByDesc('created_at')
         ->first();
+        
+    $isAsprakDiPraktikumIni = \Modules\EOffice\Models\AsprakPraktikum::where('user_id', auth()->id())
+        ->where('praktikum_id', $selectedPraktikum->id)
+        ->where('role', 'asprak')
+        ->exists();
+
+    $isKoorDiPraktikumIni = \Modules\EOffice\Models\AsprakPraktikum::where('user_id', auth()->id())
+        ->where('praktikum_id', $selectedPraktikum->id)
+        ->where('role', 'koor')
+        ->exists();
 @endphp
 
-<div class="sec-head">
-    <span class="sec-bar"></span>
-    <span class="sec-title">{{ $selectedPraktikum->nama }}</span>
-    <span class="sec-rule"></span>
-</div>
 
-{{-- Info praktikum --}}
-<div class="mp-card flex-shrink-0">
-    <div style="padding:16px 20px;display:grid;grid-template-columns:repeat(3,1fr);gap:16px;">
-        <div>
-            <div style="font-size:11px;font-weight:600;color:#808897;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">Kode</div>
-            <div style="font-size:13px;color:#353849;">{{ $selectedPraktikum->kode ?? '—' }}</div>
-        </div>
-        <div>
-            <div style="font-size:11px;font-weight:600;color:#808897;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">Dosen Pengampu</div>
-            <div style="font-size:13px;color:#353849;">{{ $selectedPraktikum->dosen?->name ?? '—' }}</div>
-        </div>
-        <div>
-            <div style="font-size:11px;font-weight:600;color:#808897;text-transform:uppercase;letter-spacing:.04em;margin-bottom:4px;">Status Praktikan</div>
-            @if($sudahTerdaftar)
-            <span class="mp-badge success sm"><span class="dot"></span>Terdaftar</span>
-            @else
-            <span class="mp-badge warning sm"><span class="dot"></span>Belum ikut</span>
-            @endif
-        </div>
-    </div>
-</div>
+
 
 {{-- Dua kolom: Asprak | Koor --}}
 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
@@ -147,7 +132,7 @@
             </div>
         </div>
 
-        @elseif($sudahJadiAsprak)
+        @elseif($isAsprakDiPraktikumIni)
         <div class="mp-card flex-shrink-0">
             <div style="padding:20px;">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
@@ -179,7 +164,8 @@
                 <span class="mp-card-title">Form Pendaftaran Asisten Praktikum</span>
             </div>
             <form method="POST" action="{{ route('eoffice.manprak.mahasiswa.daftar-asprak.store') }}"
-                  enctype="multipart/form-data" style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+                  enctype="multipart/form-data" style="padding:20px;display:flex;flex-direction:column;gap:14px;"
+                  onsubmit="const btn = this.querySelector('button[type=submit]'); btn.disabled = true; btn.innerHTML = 'Mengirim...';">
                 @csrf
                 <input type="hidden" name="praktikum_id" value="{{ $selectedPraktikum->id }}">
 
@@ -190,26 +176,20 @@
                 </div>
 
                 <div>
-                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Motivasi <span style="color:#DF1C41;">*</span></label>
-                    <textarea name="motivasi" rows="4" required minlength="30" placeholder="Ceritakan pengalaman & motivasi Anda menjadi asisten..."
+                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Motivasi</label>
+                    <textarea name="motivasi" rows="4" placeholder="Ceritakan pengalaman & motivasi Anda menjadi asisten..."
                               class="mp-input" style="width:100%;resize:none;"></textarea>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                    <div>
-                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">CV <span style="font-weight:400;color:#666D80;">(PDF/DOCX)</span></label>
-                        <input type="file" name="cv" accept=".pdf,.docx" class="mp-input">
-                    </div>
-                    <div>
-                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Transkrip <span style="font-weight:400;color:#666D80;">(PDF)</span></label>
-                        <input type="file" name="transkrip" accept=".pdf" class="mp-input">
-                    </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Transkrip <span style="color:#DF1C41;">*</span> <span style="font-weight:400;color:#666D80;">(PDF)</span></label>
+                    <input type="file" name="transkrip" accept=".pdf" required class="mp-input" style="width:100%;">
                 </div>
 
                 <div>
                     <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:8px;">Jadwal Ketersediaan</label>
                     <div style="display:flex;flex-wrap:wrap;gap:12px;">
-                        @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'] as $hari)
+                        @foreach(['Senin','Selasa','Rabu','Kamis','Jumat','Sabtu','Minggu'] as $hari)
                         <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
                             <input type="checkbox" name="jadwal[]" value="{{ $hari }}" class="accent-[#0B266E]">
                             <span style="font-size:12px;color:#353849;">{{ $hari }}</span>
@@ -247,7 +227,7 @@
             </div>
         </div>
 
-        @elseif($sudahJadiKoor)
+        @elseif($isKoorDiPraktikumIni)
         <div class="mp-card flex-shrink-0">
             <div style="padding:20px;">
                 <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
@@ -284,7 +264,8 @@
                 <span class="mp-card-title">Form Pendaftaran Koordinator</span>
             </div>
             <form method="POST" action="{{ route('eoffice.manprak.mahasiswa.daftar-koor.store') }}"
-                  enctype="multipart/form-data" style="padding:20px;display:flex;flex-direction:column;gap:14px;">
+                  enctype="multipart/form-data" style="padding:20px;display:flex;flex-direction:column;gap:14px;"
+                  onsubmit="const btn = this.querySelector('button[type=submit]'); btn.disabled = true; btn.innerHTML = 'Mengirim...';">
                 @csrf
                 <input type="hidden" name="praktikum_id" value="{{ $selectedPraktikum->id }}">
 
@@ -295,20 +276,14 @@
                 </div>
 
                 <div>
-                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Motivasi & Visi <span style="color:#DF1C41;">*</span></label>
-                    <textarea name="motivasi" rows="4" required minlength="30" placeholder="Jelaskan visi Anda sebagai koordinator praktikum..."
+                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Motivasi & Visi</label>
+                    <textarea name="motivasi" rows="4" placeholder="Jelaskan visi Anda sebagai koordinator praktikum..."
                               class="mp-input" style="width:100%;resize:none;"></textarea>
                 </div>
 
-                <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
-                    <div>
-                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">CV <span style="font-weight:400;color:#666D80;">(PDF/DOCX)</span></label>
-                        <input type="file" name="cv" accept=".pdf,.docx" class="mp-input">
-                    </div>
-                    <div>
-                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Transkrip <span style="font-weight:400;color:#666D80;">(PDF)</span></label>
-                        <input type="file" name="transkrip" accept=".pdf" class="mp-input">
-                    </div>
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:6px;">Transkrip <span style="color:#DF1C41;">*</span> <span style="font-weight:400;color:#666D80;">(PDF)</span></label>
+                    <input type="file" name="transkrip" accept=".pdf" required class="mp-input" style="width:100%;">
                 </div>
 
                 <button type="submit" class="mp-btn primary md" style="margin-top:6px;">

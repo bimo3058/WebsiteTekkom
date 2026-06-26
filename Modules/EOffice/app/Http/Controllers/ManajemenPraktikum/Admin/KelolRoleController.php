@@ -100,11 +100,14 @@ class KelolRoleController extends Controller
                 ->update(['koor_id' => null]);
         }
 
-        // 3. Cabut role Spatie — selalu
-        //    Pakai removeRole() Spatie bukan detach() langsung agar cache permission ikut di-flush
+        // 3. Cabut role Spatie HANYA jika tidak ada di praktikum lain
         $roleName = $role === 'koor' ? 'koor_prak' : 'asprak';
+        $stillHasRole = AsprakPraktikum::where('user_id', $userId)
+            ->where('role', $role)
+            ->where('id', '!=', $record->id)
+            ->exists();
 
-        if ($user) {
+        if ($user && !$stillHasRole) {
             // Coba via Spatie removeRole() dulu (handles cache flush otomatis)
             try {
                 if ($user->hasRole($roleName)) {
@@ -129,6 +132,11 @@ class KelolRoleController extends Controller
                 ->increment('session_version');
         }
 
-        return back()->with('success', "{$name} berhasil dilepas dari role {$role}. Akses {$roleName} sudah dicabut — user perlu login ulang.");
+        $message = "{$name} berhasil dilepas dari role {$role} di praktikum ini.";
+        if (!$stillHasRole) {
+            $message .= " Akses {$roleName} dari sistem sudah dicabut sepenuhnya.";
+        }
+
+        return back()->with('success', $message);
     }
 }

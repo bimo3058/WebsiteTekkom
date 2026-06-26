@@ -8,9 +8,6 @@
             @if($isAssigned)
             <span class="mp-badge success sm"><span class="dot"></span>Diampu Anda</span>
             @endif
-            @if($modul->kode_modul)
-            <span class="mp-badge navy sm" style="font-family:monospace;letter-spacing:0.1em;">{{ $modul->kode_modul }}</span>
-            @endif
         </div>
         <p class="mp-page-sub">
             {{ $modul->praktikum?->nama }} &middot; Urutan {{ $modul->urutan }} &middot; {{ $modul->jadwal_minggu ?? 'Jadwal belum diisi' }}

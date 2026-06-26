@@ -66,7 +66,9 @@ class DashboardController extends Controller
             $this->koorService->assign($praktikum, $user);
         }
 
-        $totalAsprak         = $praktikum?->asprak_praktikum_count ?? 0;
+        $totalAsprak = \Modules\EOffice\Models\AsistenPraktikum::where('praktikum_id', $praktikum?->id)
+            ->where('role', 'asprak')
+            ->count();
         $totalPraktikan      = $praktikum?->daftar_praktikan_count ?? 0;
         $totalModul          = $praktikum?->modul_count ?? 0;
 
@@ -130,16 +132,6 @@ class DashboardController extends Controller
         return back()->with('success', "Tampilan beralih ke: {$praktikum->nama}");
     }
 
-    /**
-     * Generate / refresh kode join kelas untuk praktikum yang dikoordinatori.
-     */
-    public function generateKodePraktikum()
-    {
-        $p = self::resolvePraktikum() ?? abort(404);
-        $p->update(['kode' => Praktikum::generateKode()]);
-
-        return back()->with('success', "Kode praktikum baru: {$p->kode} — bagikan ke praktikan yang sudah disetujui.");
-    }
 
     /**
      * Lihat daftar praktikan praktikum yang dikoordinatori.

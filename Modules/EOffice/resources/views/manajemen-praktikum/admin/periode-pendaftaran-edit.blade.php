@@ -68,7 +68,7 @@
                         <select name="jenis" required class="mp-input mp-select w-full">
                             <option value="koor" {{ $periode->jenis === 'koor' ? 'selected' : '' }}>Koordinator Praktikum</option>
                             <option value="asprak" {{ $periode->jenis === 'asprak' ? 'selected' : '' }}>Asisten Praktikum</option>
-                            <option value="praktikan" {{ $periode->jenis === 'praktikan' ? 'selected' : '' }}>Praktikan (IRS)</option>
+
                         </select>
                     </div>
                 </div>
@@ -80,14 +80,14 @@
 
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
                     <div>
-                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:4px;">Dibuka Pada</label>
-                        <input type="datetime-local" name="dibuka_pada"
+                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:4px;">Dibuka Pada <span style="color:#DF1C41;">*</span></label>
+                        <input type="datetime-local" name="dibuka_pada" required
                                value="{{ old('dibuka_pada', $periode->dibuka_pada?->format('Y-m-d\TH:i')) }}"
                                class="mp-input w-full">
                     </div>
                     <div>
-                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:4px;">Ditutup Pada</label>
-                        <input type="datetime-local" name="ditutup_pada"
+                        <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:4px;">Ditutup Pada <span style="color:#DF1C41;">*</span></label>
+                        <input type="datetime-local" name="ditutup_pada" required
                                value="{{ old('ditutup_pada', $periode->ditutup_pada?->format('Y-m-d\TH:i')) }}"
                                class="mp-input w-full">
                     </div>
