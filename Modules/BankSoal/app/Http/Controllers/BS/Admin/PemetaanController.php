@@ -612,5 +612,99 @@ class PemetaanController extends Controller
             return response()->json(['success' => false, 'message' => 'Gagal memperbarui: ' . $e->getMessage()], 500);
         }
     }
+
+    public function syncCplMk(Request $request): JsonResponse
+    {
+        $this->authorize('banksoal.edit');
+
+        $validated = $request->validate([
+            'cpl_id' => ['required', 'integer', 'exists:bs_cpl,id'],
+            'mk_ids' => ['required', 'array', 'min:1'],
+            'mk_ids.*' => ['required', 'integer', 'exists:bs_mata_kuliah,id'],
+        ]);
+
+        try {
+            $mkIds = collect($validated['mk_ids'])->map(fn($id) => (int) $id)->unique()->values();
+            DB::table('bs_mata_kuliah_cpl')->where('cpl_id', $validated['cpl_id'])->delete();
+            $rows = $mkIds->map(fn($id) => ['cpl_id' => $validated['cpl_id'], 'mk_id' => $id])->all();
+            DB::table('bs_mata_kuliah_cpl')->insert($rows);
+            return response()->json(['success' => true, 'message' => 'Pemetaan CPL ke MK berhasil diperbarui']);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal memperbarui: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function syncDosenMkByDosen(Request $request): JsonResponse
+    {
+        $this->authorize('banksoal.edit');
+
+        $validated = $request->validate([
+            'user_id' => ['required', 'integer', 'exists:users,id', Rule::exists('lecturers', 'user_id')],
+            'mk_ids'  => ['required', 'array', 'min:1'],
+            'mk_ids.*' => ['required', 'integer', 'exists:bs_mata_kuliah,id'],
+        ]);
+
+        try {
+            $mkIds = collect($validated['mk_ids'])->map(fn($id) => (int) $id)->unique()->values();
+            DosenPengampuMk::where('user_id', $validated['user_id'])->delete();
+            $rows = $mkIds->map(fn($id) => [
+                'user_id'    => (int) $validated['user_id'],
+                'mk_id'      => (int) $id,
+                'is_rps'     => false,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ])->all();
+            DB::table('bs_dosen_pengampu_mk')->insert($rows);
+            return response()->json(['success' => true, 'message' => 'Pemetaan Dosen ke MK berhasil diperbarui']);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'message' => 'Gagal memperbarui: ' . $e->getMessage()], 500);
+        }
+    }
+
+    public function getExistingMappings(Request $request): JsonResponse
+    {
+        $this->authorize('banksoal.view');
+
+        $type = $request->input('type');
+        $id = $request->input('id');
+
+        if (!$type || !$id) {
+            return response()->json(['success' => false, 'message' => 'Type and ID are required.'], 400);
+        }
+
+        $mappedIds = [];
+
+        switch ($type) {
+            case 'mk-cpl':
+                $mappedIds = DB::table('bs_mata_kuliah_cpl')
+                    ->where('mk_id', $id)
+                    ->pluck('cpl_id')
+                    ->toArray();
+                break;
+            case 'cpl-mk':
+                $mappedIds = DB::table('bs_mata_kuliah_cpl')
+                    ->where('cpl_id', $id)
+                    ->pluck('mk_id')
+                    ->toArray();
+                break;
+            case 'dosen-mk':
+                $mappedIds = DB::table('bs_dosen_pengampu_mk')
+                    ->where('mk_id', $id)
+                    ->pluck('user_id')
+                    ->toArray();
+                break;
+            case 'dosen-by-dosen':
+                $mappedIds = DB::table('bs_dosen_pengampu_mk')
+                    ->where('user_id', $id)
+                    ->pluck('mk_id')
+                    ->toArray();
+                break;
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => array_map('intval', $mappedIds),
+        ]);
+    }
 }
 

@@ -662,6 +662,7 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
     <script>
         const PAGE_SIZE = 5;
+        const TABLE_STATE_STORAGE_KEY = 'banksoal.admin.kontrol-umum.pemetaan.state';
         const csrfToken = '{{ csrf_token() }}';
         const BASE_API = '{{ url("/bank-soal/admin/api/pemetaan") }}';
         let mkCplTomSelect = null;
@@ -700,6 +701,46 @@
             dosenMk: { all: [], filtered: [], currentPage: 1, timer: null, selected: new Set() },
         };
 
+        function readTableState() {
+            try {
+                return JSON.parse(sessionStorage.getItem(TABLE_STATE_STORAGE_KEY) || '{}') || {};
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function writeTableState(updater) {
+            const current = readTableState();
+            const next = typeof updater === 'function' ? updater(current) : updater;
+            sessionStorage.setItem(TABLE_STATE_STORAGE_KEY, JSON.stringify(next || {}));
+        }
+
+        function saveTableState(key) {
+            writeTableState((data) => ({
+                ...data,
+                [key]: {
+                    search: document.getElementById(mappingConfig[key].searchId)?.value ?? '',
+                    sortDirection: document.getElementById(mappingConfig[key].sortId)?.value ?? 'asc',
+                    currentPage: state[key].currentPage,
+                },
+            }));
+        }
+
+        function restoreTableState() {
+            const saved = readTableState();
+            Object.keys(mappingConfig).forEach((key) => {
+                const cfg = mappingConfig[key];
+                const tableState = saved[key];
+                if (!tableState) return;
+
+                const searchInput = document.getElementById(cfg.searchId);
+                const sortSelect = document.getElementById(cfg.sortId);
+                if (searchInput) searchInput.value = tableState.search ?? '';
+                if (sortSelect) sortSelect.value = tableState.sortDirection ?? 'asc';
+                state[key].currentPage = Number(tableState.currentPage || 1);
+            });
+        }
+
         // key field per table (the primary anchor for the row)
         const ROW_KEY = { mkCpl: 'mk_id', dosenMk: 'mk_id' };
         // edit URL builders
@@ -722,10 +763,11 @@
         const BULK_KEY = { mkCpl: 'mk_ids', dosenMk: 'mk_ids' };
 
         document.addEventListener('DOMContentLoaded', async () => {
+            restoreTableState();
             await loadOptions();
             initMkCplMultiselect();
             initDosenMkMultiselect();
-            await Promise.all([loadList('mkCpl'), loadList('dosenMk')]);
+            await Promise.all([loadList('mkCpl', true), loadList('dosenMk', true)]);
         });
 
         function initMkCplMultiselect() {
@@ -856,7 +898,7 @@
             }
         }
 
-        async function loadList(key) {
+        async function loadList(key, keepPage = false) {
             const spinnerId = { cpmkCpl: 'cpmkCplSpinner', mkCpl: 'mkCplSpinner', dosenMk: 'dosenMkSpinner' }[key];
             const wrapperId = { cpmkCpl: 'cpmkCplWrapper', mkCpl: 'mkCplWrapper', dosenMk: 'dosenMkWrapper' }[key];
             if (spinnerId) { document.getElementById(spinnerId).classList.add('show'); }
@@ -871,7 +913,7 @@
                 }
 
                 state[key].all = result.data || [];
-                applyFilterSort(key, false);
+                applyFilterSort(key, keepPage);
             } catch (error) {
                 showError(toFriendlyMessage(error.message, 'Gagal memuat data pemetaan'));
             } finally {
@@ -885,12 +927,14 @@
             state[key].timer = setTimeout(() => {
                 state[key].currentPage = 1;
                 applyFilterSort(key, false);
+                saveTableState(key);
             }, 300);
         }
 
         function handleSort(key) {
             state[key].currentPage = 1;
             applyFilterSort(key, false);
+            saveTableState(key);
         }
 
         function applyFilterSort(key, keepPage = false) {
@@ -918,6 +962,7 @@
             }
 
             renderTable(key);
+            saveTableState(key);
         }
 
         function renderTable(key) {
@@ -940,6 +985,7 @@
                 body.innerHTML = '';
                 empty.style.display = 'block';
                 pagination.style.display = 'none';
+                saveTableState(key);
                 return;
             }
 
@@ -949,6 +995,7 @@
             body.innerHTML = renderRows(key, pageItems);
             paginationList.innerHTML = renderPaginationButtons(key, totalPages);
             updateBulkBar(key);
+            saveTableState(key);
         }
 
         // SVG icons
@@ -969,7 +1016,7 @@
                         <td class="col-act"><div class="dots-wrap">
                             <button class="btn-dots" onclick="toggleDots(this)" title="Aksi">⋯</button>
                             <div class="dots-menu">
-                                <a href="${EDIT_URL.cpmkCpl(id)}">${ICON_EDIT} Edit</a>
+                                <a href="${EDIT_URL.cpmkCpl(id)}" onclick="saveTableState('mkCpl')">${ICON_EDIT} Edit</a>
                                 <button class="menu-delete" onclick="deleteAllMapping('cpmkCpl',${id},'${escapeHtml(item.cpl_kode)}')">  ${ICON_DELETE} Hapus Semua</button>
                             </div>
                         </div></td>
@@ -988,7 +1035,7 @@
                         <td class="col-act"><div class="dots-wrap">
                             <button class="btn-dots" onclick="toggleDots(this)" title="Aksi">⋯</button>
                             <div class="dots-menu">
-                                <a href="${EDIT_URL.mkCpl(id)}">${ICON_EDIT} Edit</a>
+                                <a href="${EDIT_URL.mkCpl(id)}" onclick="saveTableState('mkCpl')">${ICON_EDIT} Edit</a>
                                 <button class="menu-delete" onclick="deleteAllMapping('mkCpl',${id},'${escapeHtml(item.mk_kode)}')">  ${ICON_DELETE} Hapus Semua</button>
                             </div>
                         </div></td>
@@ -1007,7 +1054,7 @@
                     <td class="col-act"><div class="dots-wrap">
                         <button class="btn-dots" onclick="toggleDots(this)" title="Aksi">⋯</button>
                         <div class="dots-menu">
-                            <a href="${EDIT_URL.dosenMk(id)}">${ICON_EDIT} Edit</a>
+                            <a href="${EDIT_URL.dosenMk(id)}" onclick="saveTableState('dosenMk')">${ICON_EDIT} Edit</a>
                             <button class="menu-delete" onclick="deleteAllMapping('dosenMk',${id},'${escapeHtml(item.mk_kode)}')">  ${ICON_DELETE} Hapus Semua</button>
                         </div>
                     </div></td>
@@ -1026,7 +1073,7 @@
             return b;
         }
 
-        function goToPage(key, page) { state[key].currentPage = page; renderTable(key); }
+        function goToPage(key, page) { state[key].currentPage = page; renderTable(key); saveTableState(key); }
 
         /* ── Dropdown toggle ── */
         function toggleDots(btn) {
@@ -1110,14 +1157,16 @@
                 cancelButtonText: 'Batal', confirmButtonColor: '#ef4444',
             });
             if (!result.isConfirmed) return;
+            window.showLoader();
             try {
                 const r = await fetch(DEL_ALL_URL[key](id), { method: 'DELETE', headers: { Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken } });
                 const d = await readApiResponse(r);
                 if (r.ok && d.success) {
                     await Swal.fire({ icon: 'success', title: 'Berhasil', text: d.message, timer: 1400, showConfirmButton: false });
-                    loadList(key);
+                    loadList(key, true);
                 } else Swal.fire({ icon: 'error', title: 'Gagal', text: d.message || 'Terjadi kesalahan' });
             } catch(e) { Swal.fire({ icon: 'error', title: 'Error', text: e.message }); }
+            finally { window.hideLoader(); }
         }
 
         /* ── Bulk delete ── */
@@ -1131,6 +1180,7 @@
                 cancelButtonText: 'Batal', confirmButtonColor: '#ef4444',
             });
             if (!result.isConfirmed) return;
+            window.showLoader();
             try {
                 const body = {}; body[BULK_KEY[key]] = ids;
                 const r = await fetch(BULK_DEL_URL[key], { method: 'DELETE', headers: { 'Content-Type': 'application/json', Accept: 'application/json', 'X-CSRF-TOKEN': csrfToken }, body: JSON.stringify(body) });
@@ -1138,9 +1188,10 @@
                 if (r.ok && d.success) {
                     state[key].selected.clear();
                     await Swal.fire({ icon: 'success', title: 'Berhasil', text: d.message, timer: 1400, showConfirmButton: false });
-                    loadList(key);
+                    loadList(key, true);
                 } else Swal.fire({ icon: 'error', title: 'Gagal', text: d.message || 'Terjadi kesalahan' });
             } catch(e) { Swal.fire({ icon: 'error', title: 'Error', text: e.message }); }
+            finally { window.hideLoader(); }
         }
 
         function openModal(type) {
@@ -1230,6 +1281,7 @@
         }
 
         async function createMapping(url, payload, modalId, listKey, fieldMap = {}) {
+            window.showLoader();
             try {
                 const response = await fetch(url, {
                     method: 'POST',
@@ -1250,10 +1302,12 @@
                 }
 
                 closeModal(modalId);
-                await loadList(listKey);
+                await loadList(listKey, true);
                 showSuccess(result.message || 'Pemetaan berhasil disimpan');
             } catch (error) {
                 showError(toFriendlyMessage(error.message, 'Gagal menyimpan pemetaan'));
+            } finally {
+                window.hideLoader();
             }
         }
 
@@ -1281,6 +1335,7 @@
 
             if (!confirm.isConfirmed) return;
 
+            window.showLoader();
             try {
                 const response = await fetch(url, {
                     method: 'DELETE',
@@ -1297,19 +1352,21 @@
                     throw new Error(result.message || 'Gagal menghapus pemetaan');
                 }
 
-                await loadList(listKey);
+                await loadList(listKey, true);
                 showSuccess(result.message || 'Pemetaan berhasil dihapus');
             } catch (error) {
                 showError(toFriendlyMessage(error.message, 'Gagal menghapus pemetaan'));
+            } finally {
+                window.hideLoader();
             }
         }
 
         function showSuccess(message) {
-            Swal.fire({ icon: 'success', title: 'Berhasil', text: message, confirmButtonColor: '#3b82f6' });
+            window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'success', message: message } }));
         }
 
         function showError(message) {
-            Swal.fire({ icon: 'error', title: 'Error', text: message, confirmButtonColor: '#ef4444' });
+            window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: message } }));
         }
     </script>
     @endpush

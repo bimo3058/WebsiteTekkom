@@ -16,6 +16,7 @@ class PeriodeController extends Controller
         $this->updateStatusOtomatis();
 
         $search  = $request->get('search', '');
+        $statusFilter = $request->get('status', 'all');
         $perPage = in_array((int) $request->get('perPage', 5), [5, 10, 25, 50])
             ? (int) $request->get('perPage', 5)
             : 5;
@@ -29,11 +30,15 @@ class PeriodeController extends Controller
             });
         }
 
+        if ($statusFilter !== 'all') {
+            $query->where('status', $statusFilter);
+        }
+
         $periodes = $query->orderBy('created_at', 'desc')
                           ->paginate($perPage)
                           ->withQueryString();
 
-        return view('banksoal::periode.index', compact('periodes', 'search', 'perPage'));
+        return view('banksoal::periode.index', compact('periodes', 'search', 'perPage', 'statusFilter'));
     }
 
     /**

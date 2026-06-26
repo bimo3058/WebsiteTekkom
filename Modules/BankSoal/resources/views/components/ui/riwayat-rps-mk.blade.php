@@ -65,7 +65,7 @@
 
     @if(method_exists($riwayatMkDisetujui, 'links'))
         <div class="px-6 py-4 border-t border-slate-200 bg-slate-50">
-            {{ $riwayatMkDisetujui->onEachSide(1)->links() }}
+            {{ $riwayatMkDisetujui->onEachSide(1)->links('banksoal::components.ui.laravel-pagination') }}
         </div>
     @endif
 </div>

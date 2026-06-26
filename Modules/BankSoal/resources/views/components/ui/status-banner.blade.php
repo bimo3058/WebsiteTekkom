@@ -10,7 +10,7 @@
             <div>
                 <h3 class="font-bold text-slate-800 mb-1 text-lg">{{ $activePeriode->judul }}</h3>
                 <p class="text-slate-600 text-sm">
-                    Batas akhir pengunggahan RPS untuk Semester <strong>{{ $activePeriode->semester }} {{ $activePeriode->tahun_ajaran }}</strong> adalah <strong>{{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->translatedFormat('d F Y') }}</strong>.
+                    Batas akhir pengunggahan RPS untuk Semester <strong>{{ $activePeriode->semester }} {{ $activePeriode->tahun_ajaran }}</strong> adalah <strong>{{ \Carbon\Carbon::parse($activePeriode->tanggal_selesai)->locale('id')->translatedFormat('d F Y, H:i') }} WIB</strong>.
                     @if(!$isUploadOpen)
                         <span class="text-red-600 font-semibold block mt-2">⚠️ Sesi unggah saat ini sedang ditutup.</span>
                     @endif

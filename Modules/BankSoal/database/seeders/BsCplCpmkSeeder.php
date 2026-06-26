@@ -9,7 +9,7 @@ class BsCplCpmkSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('bs_cpl_cpmk')->insert([
+        $data = [
             ['cpl_id' => 1, 'cpmk_id' => 1],
             ['cpl_id' => 1, 'cpmk_id' => 2],
             ['cpl_id' => 2, 'cpmk_id' => 3],
@@ -29,6 +29,12 @@ class BsCplCpmkSeeder extends Seeder
             ['cpl_id' => 9, 'cpmk_id' => 17],
             ['cpl_id' => 9, 'cpmk_id' => 18],
             ['cpl_id' => 10, 'cpmk_id' => 19],
-        ]);
+        ];
+
+        foreach ($data as $item) {
+            DB::table('bs_cpmk')
+                ->where('id', $item['cpmk_id'])
+                ->update(['cpl_id' => $item['cpl_id']]);
+        }
     }
 }

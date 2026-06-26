@@ -1,6 +1,6 @@
 <x-banksoal::layouts.admin>
     @section('breadcrumbs')
-        <a href="#" class="hover:text-[#2A3A7C] transition-colors text-gray-500">Sistem Ujian</a>
+        <a href="#" class="hover:text-primary transition-colors text-gray-500">Sistem Ujian</a>
         <span class="mx-2 text-gray-300">/</span>
         <span class="text-gray-900 font-semibold">Aktivasi Sesi</span>
     @endsection
@@ -50,11 +50,11 @@
                     <!-- Trigger Button -->
                     <button type="button" @click="toggle()" class="group inline-flex items-center gap-2.5 pl-4 pr-3 py-2 rounded-lg text-[13px] font-semibold border transition-all duration-200 shadow-sm
                                    {{ $selectedPeriode
-            ? 'bg-white text-gray-900 border-gray-300 hover:border-[#2A3A7C]/40 hover:shadow-md'
-            : 'bg-[#2A3A7C] text-white border-[#2A3A7C] hover:bg-[#1E2A5E]' }}">
+            ? 'bg-white text-gray-900 border-gray-300 hover:border-primary/40 hover:shadow-md'
+            : 'bg-primary text-white border-primary hover:bg-primary/90' }}">
                         @if($selectedPeriode)
                             <span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
-                            <span class="max-w-[220px] truncate">{{ $selectedPeriode->nama_periode }}</span>
+                            <span class="">{{ $selectedPeriode->nama_periode }}</span>
                         @else
                             <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
@@ -83,7 +83,7 @@
                                 <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0"></path>
                                 </svg>
-                                <input x-ref="searchInput" x-model="search" type="text" placeholder="Cari nama periode..." class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2A3A7C]/20 focus:border-[#2A3A7C]">
+                                <input x-ref="searchInput" x-model="search" type="text" placeholder="Cari nama periode..." class="w-full pl-9 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-xl text-[13px] text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary">
                             </div>
                             <p class="text-[11px] text-gray-400 mt-2 pl-1">
                                 <span x-text="filtered.length"></span> dari {{ $periodes->count() }} periode
@@ -94,10 +94,10 @@
                         <div class="overflow-y-auto max-h-64 py-1.5">
                             <template x-for="p in filtered" :key="p.id">
                                 <a :href="p.url" class="flex items-center gap-3 px-4 py-2.5 text-[13px] font-medium transition-colors hover:bg-gray-50 group/item"
-                                    :class="p.id == {{ $selectedPeriodeId ?? 'null' }} ? 'bg-[#2A3A7C]/10 text-[#2A3A7C]' : 'text-gray-900'">
-                                    <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" :class="p.id == {{ $selectedPeriodeId ?? 'null' }} ? 'bg-[#2A3A7C]' : 'bg-gray-300'"></span>
-                                    <span x-text="p.nama" class="flex-1 truncate"></span>
-                                    <svg x-show="p.id == {{ $selectedPeriodeId ?? 'null' }}" class="w-3.5 h-3.5 text-[#2A3A7C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    :class="p.id == {{ $selectedPeriodeId ?? 'null' }} ? 'bg-primary/10 text-primary' : 'text-gray-900'">
+                                    <span class="w-1.5 h-1.5 rounded-full flex-shrink-0" :class="p.id == {{ $selectedPeriodeId ?? 'null' }} ? 'bg-primary' : 'bg-gray-300'"></span>
+                                    <span x-text="p.nama" class="flex-1 whitespace-normal break-words text-left"></span>
+                                    <svg x-show="p.id == {{ $selectedPeriodeId ?? 'null' }}" class="w-3.5 h-3.5 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
                                     </svg>
                                 </a>
@@ -116,11 +116,11 @@
         </div>
 
         @if (!request('periode_id'))
-            <div class="mb-6 bg-[#2A3A7C]/5 border border-[#2A3A7C]/20 rounded-xl p-4 flex gap-3">
-                <svg class="w-5 h-5 text-[#2A3A7C] flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="mb-6 bg-primary/5 border border-primary/20 rounded-xl p-4 flex gap-3">
+                <svg class="w-5 h-5 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
-                <p class="text-[13px] text-[#2A3A7C] font-medium mt-0.5">
+                <p class="text-[13px] text-primary font-medium mt-0.5">
                     Data Sesi Ujian akan tampil setelah Anda memilih <strong class="font-bold">Periode Ujian</strong> di atas.
                 </p>
             </div>
@@ -156,10 +156,12 @@
                     </div>
 
                     <div class="p-5 flex-1">
-                        <div class="text-[11px] font-bold tracking-wider text-[#2A3A7C] uppercase mb-1">
-                            {{ \Carbon\Carbon::parse($jadwal->tanggal_ujian)->format('l, d M Y') }}
+                        <div class="text-[11px] font-bold tracking-wider text-primary uppercase mb-1">
+                            {{ \Carbon\Carbon::parse($jadwal->tanggal_ujian)->translatedFormat('l, d F Y') }}
                         </div>
-                        <h3 class="text-[16px] font-bold text-gray-900 mb-2">{{ $jadwal->nama_sesi }}</h3>
+                        <h3 class="text-[16px] font-bold text-gray-900 mb-2">
+                            {{ is_numeric($jadwal->nama_sesi) ? 'Sesi ' . $jadwal->nama_sesi : $jadwal->nama_sesi }}
+                        </h3>
 
                         <div class="flex items-center gap-2 text-[13px] text-gray-500 mb-1 font-medium">
                             <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -202,7 +204,7 @@
                                 @csrf
                                 @method('PATCH')
                                 <input type="hidden" name="status" value="aktif">
-                                <button type="submit" class="w-full text-center px-4 py-2 bg-[#2A3A7C] hover:bg-[#1E2A5E] text-white text-[13px] font-semibold rounded-lg transition-colors shadow-sm focus:ring-2 focus:ring-[#2A3A7C]/20">
+                                <button type="submit" class="w-full text-center px-4 py-2 bg-primary hover:bg-primary/90 text-white text-[13px] font-semibold rounded-lg transition-colors shadow-sm focus:ring-2 focus:ring-primary/20">
                                     Aktifkan Sesi & Token
                                 </button>
                             </form>

@@ -13,7 +13,7 @@
 
     @if($icon)
         <svg viewBox="0 0 24 24"
-             fill="{{ $active ? 'var(--c-primary)' : 'none' }}"
+             fill="none"
              stroke="{{ $active ? 'var(--c-primary)' : 'currentColor' }}"
              stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
             <path d="{{ $icon }}"/>

@@ -833,11 +833,108 @@
         const EDIT_CPL_URL = '{{ url("/bank-soal/admin/kontrol-umum/cpl") }}';
         const csrfToken = '{{ csrf_token() }}';
         const PAGE_SIZE = 10;
+        const TABLE_STATE_STORAGE_KEY = 'banksoal.admin.kontrol-umum.mata-kuliah.state';
 
         let allMataKuliah = [];
         let filteredMataKuliah = [];
         let searchTimeout;
         let currentPage = 1;
+        let currentPageCpl = 1;
+
+        function readTableState() {
+            try {
+                return JSON.parse(sessionStorage.getItem(TABLE_STATE_STORAGE_KEY) || '{}') || {};
+            } catch (error) {
+                return {};
+            }
+        }
+
+        function writeTableState(updater) {
+            const current = readTableState();
+            const next = typeof updater === 'function' ? updater(current) : updater;
+            sessionStorage.setItem(TABLE_STATE_STORAGE_KEY, JSON.stringify(next || {}));
+        }
+
+        function saveMataKuliahTableState() {
+            writeTableState((state) => ({
+                ...state,
+                mk: {
+                    search: document.getElementById('searchInput')?.value ?? '',
+                    sortField: document.getElementById('sortField')?.value ?? 'kode',
+                    sortDirection: document.getElementById('sortDirection')?.value ?? 'asc',
+                    currentPage,
+                },
+            }));
+        }
+
+        function saveCplTableState() {
+            writeTableState((state) => ({
+                ...state,
+                cpl: {
+                    search: document.getElementById('cplSearch')?.value ?? '',
+                    sortDirection: document.getElementById('cplSortDirection')?.value ?? 'asc',
+                    currentPage: currentPageCpl,
+                },
+            }));
+        }
+
+        function restoreTableState() {
+            const state = readTableState();
+
+            if (state.mk) {
+                const searchInput = document.getElementById('searchInput');
+                const sortField = document.getElementById('sortField');
+                const sortDirection = document.getElementById('sortDirection');
+
+                if (searchInput) searchInput.value = state.mk.search ?? '';
+                if (sortField) sortField.value = state.mk.sortField ?? 'kode';
+                if (sortDirection) sortDirection.value = state.mk.sortDirection ?? 'asc';
+                currentPage = Number(state.mk.currentPage || 1);
+            }
+
+            if (state.cpl) {
+                const searchInput = document.getElementById('cplSearch');
+                const sortDirection = document.getElementById('cplSortDirection');
+
+                if (searchInput) searchInput.value = state.cpl.search ?? '';
+                if (sortDirection) sortDirection.value = state.cpl.sortDirection ?? 'asc';
+                currentPageCpl = Number(state.cpl.currentPage || 1);
+            }
+        }
+
+        function applyMataKuliahFilters(keepPage = false) {
+            const query = document.getElementById('searchInput').value.toLowerCase().trim();
+            if (query === '') {
+                filteredMataKuliah = [...allMataKuliah];
+            } else {
+                filteredMataKuliah = allMataKuliah.filter((mk) =>
+                    mk.kode.toLowerCase().includes(query) || mk.nama.toLowerCase().includes(query)
+                );
+            }
+
+            if (!keepPage) {
+                currentPage = 1;
+            }
+
+            handleSort();
+        }
+
+        function applyCplFilters(keepPage = false) {
+            const query = document.getElementById('cplSearch').value.toLowerCase().trim();
+            if (query === '') {
+                filteredCpl = [...allCpl];
+            } else {
+                filteredCpl = allCpl.filter((cpl) =>
+                    String(cpl.kode).toLowerCase().includes(query) || String(cpl.deskripsi).toLowerCase().includes(query)
+                );
+            }
+
+            if (!keepPage) {
+                currentPageCpl = 1;
+            }
+
+            handleSortCpl();
+        }
 
         async function readApiResponse(response) {
             const contentType = response.headers.get('content-type') || '';
@@ -886,11 +983,12 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            loadAllMataKuliah();
-            loadAllCpl();
+            restoreTableState();
+            loadAllMataKuliah(true);
+            loadAllCpl(true);
         });
 
-        async function loadAllMataKuliah() {
+        async function loadAllMataKuliah(keepPage = false) {
             document.getElementById('tblLoading').classList.add('show');
             document.getElementById('tblWrapper').style.display = 'none';
             document.getElementById('emptyState').style.display = 'none';
@@ -905,9 +1003,7 @@
                 const result = await readApiResponse(response);
                 if (result.success) {
                     allMataKuliah = result.data;
-                    filteredMataKuliah = [...allMataKuliah];
-                    currentPage = 1;
-                    renderTable();
+                    applyMataKuliahFilters(keepPage);
                 } else {
                     throw new Error(toFriendlyMessage(result.message, 'Gagal memuat data mata kuliah'));
                 }
@@ -922,19 +1018,11 @@
         function handleSearch(value) {
             clearTimeout(searchTimeout);
             searchTimeout = setTimeout(() => {
-                const query = value.toLowerCase().trim();
-                if (query === '') {
-                    filteredMataKuliah = [...allMataKuliah];
-                } else {
-                    filteredMataKuliah = allMataKuliah.filter((mk) =>
-                        mk.kode.toLowerCase().includes(query) || mk.nama.toLowerCase().includes(query)
-                    );
-                }
-
                 currentPage = 1;
                 document.getElementById('selectAllCheckbox').checked = false;
                 updateBulkDeleteUI();
-                handleSort();
+                applyMataKuliahFilters(false);
+                saveMataKuliahTableState();
             }, 300);
         }
 
@@ -961,6 +1049,7 @@
 
             if (currentPage < 1) currentPage = 1;
             renderTable();
+            saveMataKuliahTableState();
         }
 
         // ── 3-dot dropdown ──────────────────────────────────────────
@@ -1056,7 +1145,7 @@
                         <div class="dots-wrap">
                             <button class="btn-dots" onclick="toggleDots(this)" title="Aksi">&#8943;</button>
                             <div class="dots-menu">
-                                <a href="${EDIT_MK_URL}/${mk.id}/edit" class="dots-menu-link" style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;text-decoration:none;color:var(--slate-700);border-bottom:1px solid var(--slate-100);">${ICON_EDIT} Edit</a>
+                                <a href="${EDIT_MK_URL}/${mk.id}/edit" onclick="saveMataKuliahTableState()" class="dots-menu-link" style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;text-decoration:none;color:var(--slate-700);border-bottom:1px solid var(--slate-100);">${ICON_EDIT} Edit</a>
                                 <button class="menu-delete" onclick="deleteMataKuliah(${mk.id})">${ICON_DEL} Hapus</button>
                             </div>
                         </div>
@@ -1065,6 +1154,7 @@
             `).join('');
 
             renderPagination(totalPages);
+            saveMataKuliahTableState();
         }
 
         function renderPagination(totalPages) {
@@ -1090,6 +1180,7 @@
             document.getElementById('selectAllCheckbox').checked = false;
             updateBulkDeleteUI();
             renderTable();
+            saveMataKuliahTableState();
         }
 
 
@@ -1125,32 +1216,32 @@
                 cancelButtonColor: '#94a3b8',
                 confirmButtonText: 'Ya, Hapus',
                 cancelButtonText: 'Batal',
-            }).then(async (dialogResult) => {
-                if (!dialogResult.isConfirmed) return;
+                showLoaderOnConfirm: true,
+                preConfirm: async () => {
+                    try {
+                        const response = await fetch(`${API_URL}/${id}`, {
+                            method: 'DELETE',
+                            headers: {
+                                Accept: 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                            },
+                        });
 
-                try {
-                    const response = await fetch(`${API_URL}/${id}`, {
-                        method: 'DELETE',
-                        headers: {
-                            Accept: 'application/json',
-                            'X-CSRF-TOKEN': csrfToken,
-                        },
-                    });
-
-                    const result = await readApiResponse(response);
-                    if (!response.ok) {
-                        throw new Error(toFriendlyMessage(result.message, 'Gagal menghapus data'));
+                        const result = await readApiResponse(response);
+                        if (!response.ok) {
+                            throw new Error(toFriendlyMessage(result.message, 'Gagal menghapus data'));
+                        }
+                        return result;
+                    } catch (error) {
+                        Swal.showValidationMessage(toFriendlyMessage(error.message, 'Gagal menghapus data'));
                     }
-
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
                     allMataKuliah = allMataKuliah.filter((item) => Number(item.id) !== Number(id));
-                    const currentSearch = document.getElementById('searchInput').value;
-                    if (currentPage > 1 && filteredMataKuliah.length % PAGE_SIZE === 1) {
-                        currentPage = Math.max(1, currentPage - 1);
-                    }
-                    handleSearch(currentSearch);
+                    applyMataKuliahFilters(true);
                     showSuccess('Mata kuliah berhasil dihapus');
-                } catch (error) {
-                    showError(toFriendlyMessage(error.message, 'Gagal menghapus data'));
                 }
             });
         }
@@ -1202,39 +1293,42 @@
                 cancelButtonColor: '#94a3b8',
                 confirmButtonText: 'Ya, Hapus Semua',
                 cancelButtonText: 'Batal',
-            }).then(async (dialogResult) => {
-                if (!dialogResult.isConfirmed) return;
+                showLoaderOnConfirm: true,
+                preConfirm: async () => {
+                    try {
+                        const response = await fetch(`${API_URL}/bulk-delete`, {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                Accept: 'application/json',
+                                'X-CSRF-TOKEN': csrfToken,
+                            },
+                            body: JSON.stringify({ ids: selectedIds }),
+                        });
 
-                try {
-                    const response = await fetch(`${API_URL}/bulk-delete`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            Accept: 'application/json',
-                            'X-CSRF-TOKEN': csrfToken,
-                        },
-                        body: JSON.stringify({ ids: selectedIds }),
-                    });
-
-                    const result = await readApiResponse(response);
-                    if (!response.ok) {
-                        throw new Error(toFriendlyMessage(result.message, 'Gagal menghapus data terpilih'));
+                        const result = await readApiResponse(response);
+                        if (!response.ok) {
+                            throw new Error(toFriendlyMessage(result.message, 'Gagal menghapus data terpilih'));
+                        }
+                        return result;
+                    } catch (error) {
+                        Swal.showValidationMessage(toFriendlyMessage(error.message, 'Gagal menghapus data terpilih'));
                     }
-
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
                     allMataKuliah = allMataKuliah.filter((item) => !selectedIds.includes(Number(item.id)));
                     cancelBulkSelect();
-                    const currentSearch = document.getElementById('searchInput').value;
-                    currentPage = 1;
-                    handleSearch(currentSearch);
+                    applyMataKuliahFilters(true);
                     showSuccess('Mata kuliah terpilih berhasil dihapus');
-                } catch (error) {
-                    showError(toFriendlyMessage(error.message, 'Gagal menghapus data terpilih'));
                 }
             });
         }
 
         async function toggleActive(id, checkbox) {
             const isActive = checkbox.checked;
+            window.showLoader();
             try {
                 const response = await fetch(`${API_URL}/${id}/toggle-active`, {
                     method: 'PATCH',
@@ -1258,20 +1352,13 @@
                 
                 // Re-render
                 renderTable();
+                saveMataKuliahTableState();
                 
-                const Toast = Swal.mixin({
-                    toast: true,
-                    position: 'top-end',
-                    showConfirmButton: false,
-                    timer: 2000,
-                    timerProgressBar: true,
-                });
-                Toast.fire({
-                    icon: 'success',
-                    title: 'Status berhasil diperbarui'
-                });
+                showSuccess('Status berhasil diperbarui');
             } catch (error) {
                 showError(toFriendlyMessage(error.message, 'Gagal mengubah status aktif'));
+            } finally {
+                window.hideLoader();
             }
         }
 
@@ -1312,7 +1399,7 @@
                         throw new Error(toFriendlyMessage(result.message, 'Gagal sinkronisasi semester'));
                     }
 
-                    await loadAllMataKuliah();
+                    await loadAllMataKuliah(true);
                     showSuccess(result.message);
                 } catch (error) {
                     showError(toFriendlyMessage(error.message, 'Gagal sinkronisasi semester'));
@@ -1321,39 +1408,23 @@
         }
 
         function showSuccess(message) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil',
-                text: message,
-                confirmButtonColor: '#3b82f6',
-            });
+            window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'success', message: message } }));
         }
 
         function showError(message) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: message,
-                confirmButtonColor: '#ef4444',
-            });
+            window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: message } }));
         }
 
         function showWarning(message) {
-            Swal.fire({
-                icon: 'warning',
-                title: 'Perhatian',
-                text: message,
-                confirmButtonColor: '#3b82f6',
-            });
+            window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'warning', message: message } }));
         }
 
         const API_URL_CPL = '{{ url("/bank-soal/admin/api/cpl") }}';
         let allCpl = [];
         let filteredCpl = [];
         let searchTimeoutCpl;
-        let currentPageCpl = 1;
 
-        async function loadAllCpl() {
+        async function loadAllCpl(keepPage = false) {
             document.getElementById('cplLoading').classList.add('show');
             document.getElementById('cplTableWrapper').style.display = 'none';
             document.getElementById('cplEmptyState').style.display = 'none';
@@ -1364,9 +1435,7 @@
                 const result = await readApiResponse(response);
                 if (result.success) {
                     allCpl = result.data;
-                    filteredCpl = [...allCpl];
-                    currentPageCpl = 1;
-                    renderTableCpl();
+                    applyCplFilters(keepPage);
                 } else {
                     throw new Error(result.message);
                 }
@@ -1382,16 +1451,9 @@
         function handleSearchCpl(value) {
             clearTimeout(searchTimeoutCpl);
             searchTimeoutCpl = setTimeout(() => {
-                const query = value.toLowerCase().trim();
-                if (query === '') {
-                    filteredCpl = [...allCpl];
-                } else {
-                    filteredCpl = allCpl.filter((cpl) =>
-                        String(cpl.kode).toLowerCase().includes(query) || String(cpl.deskripsi).toLowerCase().includes(query)
-                    );
-                }
                 currentPageCpl = 1;
-                handleSortCpl();
+                applyCplFilters(false);
+                saveCplTableState();
             }, 300);
         }
 
@@ -1406,6 +1468,7 @@
             });
             if (currentPageCpl < 1) currentPageCpl = 1;
             renderTableCpl();
+            saveCplTableState();
         }
 
         function renderTableCpl() {
@@ -1437,7 +1500,7 @@
                         <div class="dots-wrap">
                             <button class="btn-dots" onclick="toggleDots(this)" title="Aksi">&#8943;</button>
                             <div class="dots-menu">
-                                <a href="${EDIT_CPL_URL}/${cpl.id}/edit" class="dots-menu-link" style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;text-decoration:none;color:var(--slate-700);border-bottom:1px solid var(--slate-100);">${ICON_EDIT} Edit</a>
+                                <a href="${EDIT_CPL_URL}/${cpl.id}/edit" onclick="saveCplTableState()" class="dots-menu-link" style="display:flex;align-items:center;gap:8px;padding:9px 14px;font-size:13px;text-decoration:none;color:var(--slate-700);border-bottom:1px solid var(--slate-100);">${ICON_EDIT} Edit</a>
                                 <button class="menu-delete" onclick="deleteCpl(${cpl.id}, '${escapeHtml(cpl.kode)}')">${ICON_DEL} Hapus</button>
                             </div>
                         </div>
@@ -1446,6 +1509,7 @@
             `).join('');
 
             renderPaginationCpl(totalPages);
+            saveCplTableState();
         }
 
         function renderPaginationCpl(totalPages) {
@@ -1463,6 +1527,7 @@
         function goToPageCpl(page) {
             currentPageCpl = page;
             renderTableCpl();
+            saveCplTableState();
         }
 
 
@@ -1476,8 +1541,8 @@
                 cancelButtonColor: '#94a3b8',
                 confirmButtonText: 'Ya, Hapus',
                 cancelButtonText: 'Batal',
-            }).then(async (result) => {
-                if (result.isConfirmed) {
+                showLoaderOnConfirm: true,
+                preConfirm: async () => {
                     try {
                         const response = await fetch(`${API_URL_CPL}/${id}`, {
                             method: 'DELETE',
@@ -1485,16 +1550,17 @@
                         });
                         const res = await readApiResponse(response);
                         if (!response.ok) throw new Error(res.message || 'Gagal menghapus CPL');
-                        allCpl = allCpl.filter((item) => Number(item.id) !== Number(id));
-                        const currentSearch = document.getElementById('cplSearch').value;
-                        if (currentPageCpl > 1 && filteredCpl.length % PAGE_SIZE === 1) {
-                            currentPageCpl = Math.max(1, currentPageCpl - 1);
-                        }
-                        handleSearchCpl(currentSearch);
-                        showSuccess('CPL berhasil dihapus');
+                        return res;
                     } catch (error) {
-                        showError(error.message);
+                        Swal.showValidationMessage(error.message);
                     }
+                },
+                allowOutsideClick: () => !Swal.isLoading()
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    allCpl = allCpl.filter((item) => Number(item.id) !== Number(id));
+                    applyCplFilters(true);
+                    showSuccess('CPL berhasil dihapus');
                 }
             });
         }

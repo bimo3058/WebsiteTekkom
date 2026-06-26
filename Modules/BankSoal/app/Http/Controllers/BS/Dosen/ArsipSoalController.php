@@ -4,6 +4,7 @@ namespace Modules\BankSoal\Http\Controllers\BS\Dosen;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Modules\BankSoal\Models\PenarikanSoal;
 use Modules\BankSoal\Services\ArsipSoalService;
@@ -259,19 +260,29 @@ class ArsipSoalController extends Controller
             return back()->with('error', 'Gagal menyimpan file PDF arsip ke Cloud Storage.');
         }
 
-        $metodeUjian = $validated['metode_ujian'] ?? 'online';
-        $penarikan = $this->arsipSoalService->savePenarikanSoal($userId, $validated['mk_id'], [
-            'nama_ekstraksi' => $validated['nama_arsip'],
-            'tipe_ujian' => $validated['tipe_ujian'],
-            'metode_ujian' => $metodeUjian,
-            'status_cetak' => $metodeUjian === 'offline' ? 'pending' : null,
-            'tahun_akademik' => $validated['tahun_akademik'],
-            'semester' => $validated['semester'],
-            'tanggal_ujian' => $validated['tanggal_ujian'] ?? null,
-            'soal_list' => [],
-            'pdf_file_path' => $storedPath,
-            'status' => 'pending'
-        ]);
+        try {
+            $metodeUjian = $validated['metode_ujian'] ?? 'online';
+            $penarikan = $this->arsipSoalService->savePenarikanSoal($userId, $validated['mk_id'], [
+                'nama_ekstraksi' => $validated['nama_arsip'],
+                'tipe_ujian' => $validated['tipe_ujian'],
+                'metode_ujian' => $metodeUjian,
+                'status_cetak' => $metodeUjian === 'offline' ? 'pending' : null,
+                'tahun_akademik' => $validated['tahun_akademik'],
+                'semester' => $validated['semester'],
+                'tanggal_ujian' => $validated['tanggal_ujian'] ?? null,
+                'soal_list' => [],
+                'pdf_file_path' => $storedPath,
+                'status' => 'pending'
+            ]);
+
+            if (! $penarikan) {
+                throw new \RuntimeException('Gagal menyimpan metadata arsip soal PDF.');
+            }
+        } catch (\Throwable $e) {
+            $supabaseStorage->delete($storedPath);
+
+            return back()->with('error', 'Gagal menyimpan data arsip soal. File PDF sudah dihapus dari storage.');
+        }
 
         return redirect()->route('banksoal.arsip.dosen.penarikan.edit', $penarikan->id)
             ->with('success', 'File PDF berhasil diunggah. Silakan review data sebelum dimasukkan ke arsip final.');
@@ -302,18 +313,28 @@ class ArsipSoalController extends Controller
             return back()->with('error', 'Gagal menyimpan file CSV arsip.');
         }
 
-        $metodeUjian = $validated['metode_ujian'] ?? 'online';
-        $penarikan = $this->arsipSoalService->savePenarikanSoal($userId, $validated['mk_id'], [
-            'nama_ekstraksi' => $validated['nama_arsip'],
-            'tipe_ujian' => $validated['tipe_ujian'],
-            'metode_ujian' => $metodeUjian,
-            'status_cetak' => $metodeUjian === 'offline' ? 'pending' : null,
-            'tahun_akademik' => $validated['tahun_akademik'],
-            'semester' => $validated['semester'],
-            'tanggal_ujian' => $validated['tanggal_ujian'] ?? null,
-            'soal_list' => [],
-            'status' => 'pending'
-        ]);
+        try {
+            $metodeUjian = $validated['metode_ujian'] ?? 'online';
+            $penarikan = $this->arsipSoalService->savePenarikanSoal($userId, $validated['mk_id'], [
+                'nama_ekstraksi' => $validated['nama_arsip'],
+                'tipe_ujian' => $validated['tipe_ujian'],
+                'metode_ujian' => $metodeUjian,
+                'status_cetak' => $metodeUjian === 'offline' ? 'pending' : null,
+                'tahun_akademik' => $validated['tahun_akademik'],
+                'semester' => $validated['semester'],
+                'tanggal_ujian' => $validated['tanggal_ujian'] ?? null,
+                'soal_list' => [],
+                'status' => 'pending'
+            ]);
+
+            if (! $penarikan) {
+                throw new \RuntimeException('Gagal menyimpan metadata arsip soal CSV.');
+            }
+        } catch (\Throwable $e) {
+            Storage::disk('local')->delete($storedPath);
+
+            return back()->with('error', 'Gagal menyimpan data arsip soal. File CSV/Excel sudah dihapus dari storage lokal.');
+        }
 
         return redirect()->route('banksoal.arsip.dosen.penarikan.edit', $penarikan->id)
             ->with('success', 'File CSV/Excel berhasil diunggah. Silakan review data sebelum dimasukkan ke arsip final.');

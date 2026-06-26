@@ -6,16 +6,16 @@
     $isTidakDijawab = !$terpilihId;
 @endphp
 
-<div class="bg-white rounded-xl border border-gray-200 mb-5">
+<div class="bg-white rounded-xl border border-gray-200 mb-3 shadow-sm">
     {{-- Header / Question --}}
-    <div class="px-6 pt-5 pb-5 border-b border-gray-100">
-        <div class="flex items-start justify-between mb-4">
-            <div class="flex items-center gap-3">
-                <span class="text-[15px] font-bold text-gray-900">{{ $kompreJawaban->urutan_soal }}.</span>
+    <div class="px-4 py-3 border-b border-gray-100">
+        <div class="flex items-start justify-between mb-1.5">
+            <div class="flex items-center gap-2">
+                <span class="text-[14px] font-bold text-gray-900">{{ $kompreJawaban->urutan_soal }}.</span>
                 @if($pertanyaan?->cpl && (!isset($hideCplBadge) || !$hideCplBadge))
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-gray-50 text-gray-500 border border-gray-200"
+                    <span class="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium bg-gray-50 text-gray-500 border border-gray-200"
                           title="{{ $pertanyaan->cpl->deskripsi }}">
-                        {{ $pertanyaan->cpl->kode }}
+                        {{ preg_replace('/^CPL-0*/', 'CPL ', $pertanyaan->cpl->kode) }}
                     </span>
                 @endif
             </div>
@@ -36,16 +36,16 @@
             @endif
         </div>
 
-        <div class="prose max-w-none text-[14px] text-gray-800 leading-relaxed ml-7 prose-p:mt-0">
+        <div class="prose max-w-none text-[13.5px] text-gray-800 leading-snug ml-5 prose-p:mt-0 prose-p:mb-0">
             {!! $pertanyaan->soal ?? '<span class="text-gray-400 italic">Teks soal tidak tersedia.</span>' !!}
         </div>
     </div>
 
     {{-- Options --}}
-    @if($pertanyaan?->jawabans)
-        <div class="px-6 py-5 bg-gray-50/30 rounded-b-xl">
-            <div class="ml-7 space-y-2.5">
-                @foreach($pertanyaan->jawabans as $opsiIdx => $opsi)
+    @if($pertanyaan?->jawaban)
+        <div class="px-4 py-3 bg-gray-50/30 rounded-b-xl">
+            <div class="ml-5 space-y-1.5">
+                @foreach($pertanyaan->jawaban as $opsiIdx => $opsi)
                     @php
                         $isSelected = $terpilihId == $opsi->id;
                         $isCorrect  = $opsi->is_benar;
@@ -71,12 +71,12 @@
                             $opacity    = 'opacity-80';
                         }
                     @endphp
-                    <div class="flex items-start p-3 rounded-lg {{ $optBorder }} {{ $optBg }} {{ $opacity }} transition-colors">
-                        <div class="w-7 h-7 rounded-md flex items-center justify-center font-bold text-[12px] flex-shrink-0 mr-3.5 {{ $letterCls }}">
+                    <div class="flex items-start px-2.5 py-1.5 rounded-lg {{ $optBorder }} {{ $optBg }} {{ $opacity }} transition-colors">
+                        <div class="w-6 h-6 rounded flex items-center justify-center font-bold text-[11px] flex-shrink-0 mr-2.5 {{ $letterCls }}">
                             {{ $letter }}
                         </div>
-                        <div class="flex-1 flex items-start justify-between gap-3">
-                            <div class="{{ $textCls }} text-[13.5px] leading-relaxed pt-0.5">
+                        <div class="flex-1 flex items-start justify-between gap-2">
+                            <div class="{{ $textCls }} text-[13px] leading-snug pt-0.5">
                                 {!! $opsi->deskripsi !!}
                             </div>
                             <div class="flex items-center gap-2 flex-shrink-0 pt-0.5">
