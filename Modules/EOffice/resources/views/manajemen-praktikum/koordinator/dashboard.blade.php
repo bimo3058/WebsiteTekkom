@@ -12,11 +12,23 @@
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
             <h1 class="mp-page-title">Dashboard Koordinator</h1>
             <span class="mp-badge sm" style="background:#E0E7FF;color:#6366F1;"><span class="dot"></span>Koor. Prak.</span>
+            @if(isset($praktikum) && $praktikum)
+            <span class="mp-badge sm" style="background:{{ $praktikum->status === 'aktif' ? '#DDF2EE' : '#ECEFF3' }};color:{{ $praktikum->status === 'aktif' ? '#174E43' : '#666D80' }};">
+                <span class="dot" style="background:{{ $praktikum->status === 'aktif' ? '#40C4AA' : '#A4ABB8' }};"></span>
+                {{ ucfirst($praktikum->status) }}
+            </span>
+            @endif
         </div>
         <p class="mp-page-sub">
             Selamat datang, {{ $firstName }} · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
-            @if(isset($praktikum) && $praktikum) · {{ $praktikum->nama }} @endif
+            @if(isset($praktikum) && $praktikum) · <strong>{{ $praktikum->nama }}</strong> @endif
         </p>
+        {{-- Hint jika koor punya banyak praktikum --}}
+        @if(isset($allPraktikum) && $allPraktikum->count() > 1)
+        <p class="mp-page-sub" style="margin-top:3px;color:#808897;">
+            Anda mengampu {{ $allPraktikum->count() }} praktikum · Ganti tampilan via tombol di kanan atas
+        </p>
+        @endif
     </div>
     <div class="mp-page-actions">
         <a href="{{ route('eoffice.manprak.koor.pengumuman.index') }}" class="mp-btn secondary md" style="text-decoration:none;">
@@ -91,8 +103,8 @@
     @endif
 </div>
 
-{{-- Progress Distribusi + Kode Join (2 kolom) --}}
-<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;flex-shrink:0;">
+{{-- Progress Distribusi --}}
+<div style="display:grid;grid-template-columns:1fr;gap:14px;flex-shrink:0;">
 
     {{-- Progress Distribusi Asprak --}}
     <div class="mp-card" style="padding:20px;">
@@ -119,34 +131,7 @@
         @endif
     </div>
 
-    {{-- Kode Join Praktikum --}}
-    <div class="mp-card" style="padding:20px;">
-        <div style="font-size:11px;font-weight:600;color:#666D80;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Kode Join Praktikum</div>
-        <div style="font-size:12px;color:#666D80;margin-bottom:16px;">Bagikan ke praktikan yang IRS-nya sudah diverifikasi.</div>
-        <div class="flex items-center gap-3 flex-wrap">
-            @if(isset($praktikum->kode) && $praktikum->kode)
-            <div style="display:flex;align-items:center;gap:10px;padding:10px 16px;border-radius:10px;background:#EEF1FA;border:1px solid #B7C2DE;">
-                <span id="kode-text" style="font-size:22px;font-weight:700;letter-spacing:.15em;color:#0B266E;font-family:ui-monospace,monospace;" class="select-all">{{ $praktikum->kode }}</span>
-                <button onclick="navigator.clipboard.writeText('{{ $praktikum->kode }}').then(()=>this.textContent='✓').catch(()=>{}); setTimeout(()=>this.textContent='Salin',1500)"
-                    class="mp-btn secondary sm" style="font-size:11px;">Salin</button>
-            </div>
-            @else
-            <div style="padding:10px 16px;background:#F9FAFB;border-radius:10px;border:1px solid #DFE1E7;font-size:13px;color:#808897;font-style:italic;">Belum ada kode</div>
-            @endif
-            <form method="POST" action="{{ route('eoffice.manprak.koor.praktikum.generate-kode') }}">
-                @csrf
-                <button class="mp-btn primary md">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M23 4v6h-6M1 20v-6h6M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
-                    {{ isset($praktikum->kode) && $praktikum->kode ? 'Buat Kode Baru' : 'Generate Kode' }}
-                </button>
-            </form>
-        </div>
-        @if(isset($praktikum->kode) && $praktikum->kode)
-        <div style="margin-top:12px;padding:10px 12px;border-radius:8px;background:#F9ECCB;border:1px solid rgba(211,156,61,.3);font-size:11px;color:#5B3D1E;">
-            Kode akan hangus jika kamu generate ulang. Pastikan semua praktikan yang berhak sudah bergabung.
-        </div>
-        @endif
-    </div>
+
 
 </div>
 

@@ -24,10 +24,6 @@
 </div>
 @endif
 
-<div class="mp-alert warning flex-shrink-0">
-    <strong>Alur:</strong> Mahasiswa mendaftar &rarr; Anda review (IPK, motivasi, transkrip) &rarr; Terima &rarr; Role <code>asprak</code> di-assign otomatis sesuai praktikum Anda.
-</div>
-
 <div class="sec-head">
     <span class="sec-bar"></span>
     <span class="sec-title">Daftar Pendaftar Asprak</span>
@@ -44,6 +40,10 @@
             <option value="pending"  {{ request('status')=='pending'  ? 'selected' : '' }}>Menunggu</option>
             <option value="approved" {{ request('status')=='approved' ? 'selected' : '' }}>Diterima</option>
             <option value="rejected" {{ request('status')=='rejected' ? 'selected' : '' }}>Ditolak</option>
+        </select>
+        <select name="sort" class="mp-input mp-select">
+            <option value="terbaru" {{ request('sort') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+            <option value="ipk_tertinggi" {{ request('sort') == 'ipk_tertinggi' ? 'selected' : '' }}>IPK Tertinggi</option>
         </select>
         <button type="submit" class="mp-btn primary sm">Filter</button>
     </form>
@@ -84,11 +84,11 @@
                     </td>
                     <td style="padding:12px 16px;">
                         @if($p->cv_path)
-                        <a href="{{ Storage::url($p->cv_path) }}" target="_blank"
+                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->cv_path, 'eoffice') }}" target="_blank"
                            style="font-size:11px;font-weight:600;color:#0B266E;text-decoration:none;display:block;" class="hover:underline">CV</a>
                         @endif
                         @if($p->transkrip_path)
-                        <a href="{{ Storage::url($p->transkrip_path) }}" target="_blank"
+                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->transkrip_path, 'eoffice') }}" target="_blank"
                            style="font-size:11px;font-weight:600;color:#0B266E;text-decoration:none;display:block;" class="hover:underline">Transkrip</a>
                         @endif
                         @if(!$p->cv_path && !$p->transkrip_path)
@@ -99,17 +99,19 @@
                         {{ collect($p->jadwal ?? [])->join(', ') ?: '—' }}
                     </td>
                     <td style="padding:12px 16px;">
-                        @if($p->status === 'approved')
-                        <span class="mp-badge success sm"><span class="dot"></span>Diterima</span>
-                        <div style="font-size:10px;color:#666D80;margin-top:2px;">Role asprak aktif</div>
-                        @elseif($p->status === 'rejected')
+                        @if($p->status_koor === 'disetujui')
+                        <div>
+                            <span class="mp-badge success sm"><span class="dot"></span>Disetujui Koor</span>
+                            <div style="font-size:10px;color:#666D80;margin-top:2px;">Menunggu Admin</div>
+                        </div>
+                        @elseif($p->status_koor === 'ditolak' || $p->status === 'rejected')
                         <span class="mp-badge error sm"><span class="dot"></span>Ditolak</span>
                         @else
-                        <span class="mp-badge warning sm"><span class="dot"></span>Menunggu</span>
+                        <span class="mp-badge warning sm"><span class="dot"></span>Menunggu Review</span>
                         @endif
                     </td>
                     <td style="padding:12px 16px;">
-                        @if($p->status === 'pending')
+                        @if($p->status_koor === 'menunggu')
                         <div class="flex gap-2">
                             <form method="POST" action="{{ route('eoffice.manprak.koor.pendaftaran-asprak.approve', $p->id) }}">
                                 @csrf

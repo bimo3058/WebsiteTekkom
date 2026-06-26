@@ -62,7 +62,7 @@
                 <thead>
                     <tr style="background:#F9FAFB;">
                         <th class="mp-th text-left" style="padding:10px 16px;">Modul</th>
-                        <th class="mp-th text-left" style="padding:10px 16px;">Kode</th>
+
                         <th class="mp-th text-left" style="padding:10px 16px;">Asprak</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">Konten</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">Aksi</th>
@@ -75,15 +75,7 @@
                             <div style="font-weight:600;color:#0D0D12;">{{ $m->urutan }}. {{ $m->nama }}</div>
                             <div style="font-size:11px;color:#666D80;">{{ $m->jadwal_minggu ?? 'Jadwal belum diisi' }}</div>
                         </td>
-                        <td style="padding:12px 16px;color:#353849;">
-                            <div style="font-family:monospace;font-size:12px;font-weight:600;">{{ $m->kode_modul ?? '-' }}</div>
-                            <form method="POST" action="{{ route('eoffice.manprak.koor.modul.generate-kode', $m->id) }}" class="mt-2">
-                                @csrf
-                                <button type="submit" class="mp-btn ghost sm" style="font-size:11px;">
-                                    {{ $m->kode_modul ? 'Refresh Kode' : 'Generate Kode' }}
-                                </button>
-                            </form>
-                        </td>
+
                         <td style="padding:12px 16px;font-size:12px;color:#666D80;">{{ $m->modulAsprak->pluck('asprak.user.name')->filter()->join(', ') ?: '-' }}</td>
                         <td style="padding:12px 16px;font-size:12px;color:#666D80;">{{ $m->materi->count() }} materi, {{ $m->tugas->count() }} tugas</td>
                         <td style="padding:12px 16px;">

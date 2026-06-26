@@ -19,11 +19,11 @@ class PraktikumResource extends JsonResource
             'created_at'   => $this->created_at?->toISOString(),
 
             // Relasi ke User global — field 'name' bukan 'nama'
-            'dosen' => $this->whenLoaded('dosen', fn() => [
-                'id'    => $this->dosen->id,
-                'name'  => $this->dosen->name,
-                'email' => $this->dosen->email,
-            ]),
+            'dosens' => $this->whenLoaded('dosens', fn() => $this->dosens->map(fn($d) => [
+                'id'    => $d->id,
+                'name'  => $d->name,
+                'email' => $d->email,
+            ])),
             'koordinator' => $this->whenLoaded('koordinator', fn() => [
                 'id'    => $this->koordinator->id,
                 'name'  => $this->koordinator->name,

@@ -12,15 +12,46 @@ use Modules\EOffice\Services\NotifikasiService;
 
 /**
  * Koordinator: verifikasi pendaftaran praktikan (Cetak IRS).
+ *
+ * BUG FIX:
+ *  - index() sebelumnya pakai ->first() untuk resolve praktikum, sehingga
+ *    kalau koor punya >1 praktikum aktif, data bisa tercampur antara praktikum.
+ *    Sekarang pakai DashboardController::resolvePraktikum() supaya ikut session
+ *    yang sama dengan halaman lain (switch praktikum dari dashboard).
+ *
+ *  - approve() sebelumnya assign role 'praktikan' secara global ke user,
+ *    sehingca mahasiswa yang disetujui di SRWE otomatis punya role praktikan
+ *    dan bisa terlihat sebagai "sudah disetujui" di SBD padahal belum pernah
+ *    mendaftar. Role assignment dipertahankan (diperlukan untuk akses menu),
+ *    tapi sekarang kita TIDAK lagi bergantung pada role untuk menentukan
+ *    status per-praktikum — status di tabel pendaftaran_praktikan sudah cukup
+ *    dan di-scope per praktikum_id.
  */
 class PendaftaranPraktikanController extends Controller
 {
     public function __construct(protected NotifikasiService $notif) {}
 
+    /**
+     * Resolve praktikum aktif untuk koor ini, mengikuti session
+     * (sama persis dengan DashboardController::resolvePraktikum).
+     */
+    private function resolvePraktikum(): ?Praktikum
+    {
+        return DashboardController::resolvePraktikum();
+    }
+
     public function index(Request $request)
     {
         $user      = auth()->user();
-        $praktikum = Praktikum::where('koor_id', $user->id)->where('status', 'aktif')->first();
+
+        // FIXED: pakai resolvePraktikum() supaya ikut session switch praktikum,
+        // bukan ambil ->first() yang bisa return praktikum yang salah.
+        $praktikum = $this->resolvePraktikum();
+
+        // Guard: koor hanya boleh melihat praktikum miliknya
+        if ($praktikum && $praktikum->koor_id !== $user->id) {
+            $praktikum = null;
+        }
 
         $query = PendaftaranPraktikan::with(['user', 'praktikum'])
             ->where('praktikum_id', $praktikum?->id)
@@ -52,6 +83,7 @@ class PendaftaranPraktikanController extends Controller
         $user        = auth()->user();
         $pendaftaran = PendaftaranPraktikan::with(['user', 'praktikum'])->findOrFail($id);
 
+        // Pastikan pendaftaran ini milik praktikum yang dikoor oleh user ini
         if ($pendaftaran->praktikum?->koor_id !== $user->id) {
             return back()->with('error', 'Anda tidak berhak mengelola pendaftaran ini.');
         }
@@ -68,19 +100,25 @@ class PendaftaranPraktikanController extends Controller
         ]);
 
         $targetUser = $pendaftaran->user;
-        $roleRow    = Role::where('name', 'praktikan')->where('module', 'eoffice')->first();
 
+        $roleRow = Role::where('name', 'praktikan')->where('module', 'eoffice')->first();
         if ($targetUser && $roleRow) {
             $targetUser->roles()->syncWithoutDetaching([$roleRow->id]);
         }
 
+        // Otomatis masukkan ke daftar praktikan
+        \Modules\EOffice\Models\DaftarPraktikan::firstOrCreate([
+            'user_id'      => $pendaftaran->user_id,
+            'praktikum_id' => $pendaftaran->praktikum_id,
+        ]);
+
         $this->notif->kirim(
             $pendaftaran->user_id,
             'Pendaftaran Praktikan Disetujui',
-            "IRS Anda untuk praktikum {$pendaftaran->praktikum?->nama} telah disetujui. Masukkan kode kelas dari Koordinator untuk bergabung."
+            "IRS Anda untuk praktikum {$pendaftaran->praktikum?->nama} telah disetujui. Anda sekarang resmi tergabung sebagai praktikan."
         );
 
-        return back()->with('success', "Pendaftaran {$targetUser?->name} disetujui. Mahasiswa dapat memakai kode praktikum untuk bergabung.");
+        return back()->with('success', "Pendaftaran {$targetUser?->name} disetujui dan otomatis tergabung sebagai praktikan.");
     }
 
     public function reject(Request $request, int $id)

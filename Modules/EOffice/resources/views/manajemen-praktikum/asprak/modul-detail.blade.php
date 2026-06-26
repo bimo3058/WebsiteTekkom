@@ -8,9 +8,6 @@
             @if($isAssigned)
             <span class="mp-badge success sm"><span class="dot"></span>Diampu Anda</span>
             @endif
-            @if($modul->kode_modul)
-            <span class="mp-badge navy sm" style="font-family:monospace;letter-spacing:0.1em;">{{ $modul->kode_modul }}</span>
-            @endif
         </div>
         <p class="mp-page-sub">
             {{ $modul->praktikum?->nama }} &middot; Urutan {{ $modul->urutan }} &middot; {{ $modul->jadwal_minggu ?? 'Jadwal belum diisi' }}
@@ -160,7 +157,7 @@
                     </div>
                 </div>
                 @if($materi->file_path)
-                <a href="{{ Storage::url($materi->file_path) }}" target="_blank" class="mp-btn primary sm flex-shrink-0" style="text-decoration:none;">Unduh</a>
+                <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice') }}" target="_blank" class="mp-btn primary sm flex-shrink-0" style="text-decoration:none;">Unduh</a>
                 @endif
             </div>
             @empty

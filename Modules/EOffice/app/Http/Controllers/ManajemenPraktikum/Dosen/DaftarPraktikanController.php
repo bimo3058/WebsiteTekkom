@@ -16,7 +16,7 @@ class DaftarPraktikanController extends Controller
     {
         $user = auth()->user();
 
-        $praktikumList = Praktikum::where('dosen_id', $user->id)
+        $praktikumList = Praktikum::whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
             ->orderByDesc('created_at')
             ->get();
 
@@ -25,8 +25,11 @@ class DaftarPraktikanController extends Controller
 
         $search = $request->input('search');
 
-        $query = DaftarPraktikan::with(['user'])
-            ->where('praktikum_id', $praktikumId);
+        $query = DaftarPraktikan::with(['user', 'user.student'])
+            ->where('praktikum_id', $praktikumId)
+            ->orderByRaw("CASE WHEN (shift IS NULL OR shift = '') THEN 1 ELSE 0 END, shift ASC")
+            ->orderByRaw("CASE WHEN (kelompok IS NULL OR kelompok = '') THEN 1 ELSE 0 END, kelompok ASC")
+            ->orderBy('created_at');
 
         if ($search) {
             $query->whereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%")

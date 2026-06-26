@@ -13,6 +13,7 @@ use Modules\ManajemenMahasiswa\Models\ThreadPollVote;
 use Modules\ManajemenMahasiswa\Services\ThreadService;
 use Modules\ManajemenMahasiswa\Services\CommentService;
 use Modules\ManajemenMahasiswa\Services\GamificationService;
+use Modules\ManajemenMahasiswa\Services\ContentModerationService;
 use App\Services\SupabaseStorage;
 use Modules\ManajemenMahasiswa\Models\RepoMulmed;
 use Modules\ManajemenMahasiswa\Models\ForumNotification;
@@ -24,6 +25,7 @@ class ForumController extends Controller
         private CommentService $commentService,
         private GamificationService $gamificationService,
         private SupabaseStorage $supabaseStorage,
+        private ContentModerationService $moderationService,
     ) {
     }
 
@@ -34,6 +36,12 @@ class ForumController extends Controller
     {
         $user = Auth::user();
         $roles = $user->roles->pluck('name');
+
+        // Overlay aturan forum (hanya muncul sekali per sesi login)
+        $showRulesOverlay = !session()->has('forum_rules_shown');
+        if ($showRulesOverlay) {
+            session()->put('forum_rules_shown', true);
+        }
 
         $threads = $this->threadService->listThreads($request->all(), 15);
         $leaderboard = $this->gamificationService->getLeaderboard(10);
@@ -61,7 +69,7 @@ class ForumController extends Controller
                 ->get()
             : collect();
 
-        $viewData = compact('threads', 'leaderboard', 'userStats', 'categories', 'user', 'userVotes', 'authorTiers', 'forumReports');
+        $viewData = compact('threads', 'leaderboard', 'userStats', 'categories', 'user', 'userVotes', 'authorTiers', 'forumReports', 'showRulesOverlay');
 
         return view('manajemenmahasiswa::forum.index', $viewData);
     }
@@ -90,6 +98,15 @@ class ForumController extends Controller
             'kategori.*' => 'string',
             'konten' => 'nullable|string',
         ]);
+
+        // Anti-spam: rate limit
+        $rateCheck = $this->moderationService->checkRateLimit(Auth::id(), 'save_draft');
+        if (!$rateCheck['passed']) {
+            return response()->json([
+                'success' => false,
+                'message' => $rateCheck['message'],
+            ], 429);
+        }
 
         $draftId = $request->input('draft_id');
 
@@ -173,7 +190,7 @@ class ForumController extends Controller
             'konten' => 'nullable|string',
             'media_files' => 'nullable|array|max:5',
             'media_files.*' => 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:10240',
-            'link_url' => 'nullable|url|max:2000',
+            'link_url' => 'nullable|string|max:2000',
             'has_poll' => 'nullable|boolean',
             'poll_options' => 'nullable|array|max:6',
             'poll_options.*' => 'nullable|string|max:150',
@@ -181,6 +198,18 @@ class ForumController extends Controller
         ];
 
         $validated = $request->validate($rules);
+
+        // ── Anti-Spam & Sensor Kata Terlarang ─────────────────────────────
+        $textsToCheck = array_filter([
+            $validated['judul'] ?? '',
+            $validated['konten'] ?? '',
+        ]);
+        $moderation = $this->moderationService->validateContent(
+            Auth::id(), 'create_thread', ...$textsToCheck
+        );
+        if (!$moderation['passed']) {
+            return back()->withErrors(['moderation' => $moderation['errors']])->withInput();
+        }
 
         // Bangun konten HTML dari komponen unified
         $konten = '';
@@ -494,7 +523,7 @@ class ForumController extends Controller
             'konten' => 'nullable|string',
             'media_files' => 'nullable|array|max:5',
             'media_files.*' => 'file|mimes:jpg,jpeg,png,gif,webp,mp4,webm|max:10240',
-            'link_url' => 'nullable|url|max:2000',
+            'link_url' => 'nullable|string|max:2000',
             'remove_media' => 'nullable|array',
             'remove_media.*' => 'string',
             // Poll fields
@@ -510,6 +539,18 @@ class ForumController extends Controller
             'poll_new_options' => 'nullable|array|max:4',
             'poll_new_options.*' => 'nullable|string|max:150',
         ]);
+
+        // ── Anti-Spam & Sensor Kata Terlarang ─────────────────────────────
+        $textsToCheck = array_filter([
+            $validated['judul'] ?? '',
+            $validated['konten'] ?? '',
+        ]);
+        $moderation = $this->moderationService->validateContent(
+            $user->id, 'update_thread', ...$textsToCheck
+        );
+        if (!$moderation['passed']) {
+            return back()->withErrors(['moderation' => $moderation['errors']])->withInput();
+        }
 
         // Rebuild konten HTML
         $konten = '';
@@ -754,6 +795,20 @@ class ForumController extends Controller
     {
         $request->validate(['konten' => 'required|string|min:3']);
 
+        // ── Anti-Spam & Sensor Kata Terlarang ─────────────────────────────
+        $moderation = $this->moderationService->validateContent(
+            Auth::id(), 'create_comment', $request->konten
+        );
+        if (!$moderation['passed']) {
+            if ($request->ajax()) {
+                return response()->json([
+                    'success' => false,
+                    'error'   => implode(' ', $moderation['errors']),
+                ], 422);
+            }
+            return back()->withErrors(['konten' => $moderation['errors']])->withInput();
+        }
+
         $user = Auth::user();
 
         $oldLevel = $this->gamificationService->calculateLevel(
@@ -847,6 +902,17 @@ class ForumController extends Controller
     public function updateComment(int $commentId, Request $request)
     {
         $request->validate(['konten' => 'required|string|min:3']);
+
+        // ── Anti-Spam & Sensor Kata Terlarang ─────────────────────────────
+        $moderation = $this->moderationService->validateContent(
+            Auth::id(), 'update_comment', $request->konten
+        );
+        if (!$moderation['passed']) {
+            if ($request->wantsJson()) {
+                return response()->json(['error' => implode(' ', $moderation['errors'])], 422);
+            }
+            return back()->withErrors(['konten' => $moderation['errors']])->withInput();
+        }
 
         try {
             $comment = $this->commentService->updateComment($commentId, Auth::id(), $request->konten);

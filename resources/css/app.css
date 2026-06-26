@@ -1,8 +1,8 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&display=swap");
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../../tailwind.config.js";
+
 
 /*
  * ═══════════════════════════════════════════════════════════════
@@ -177,11 +177,11 @@
         @apply inline-flex px-2.5 py-1 rounded-full text-xs font-semibold;
     }
 
-    .badge-success   { @apply badge bg-green-100 text-green-700; }
-    .badge-warning   { @apply badge bg-yellow-100 text-yellow-700; }
-    .badge-danger    { @apply badge bg-red-100 text-red-700; }
-    .badge-info      { @apply badge bg-blue-100 text-blue-700; }
-    .badge-secondary { @apply badge bg-slate-100 text-slate-700; }
+    .badge-success   { @apply inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-700; }
+    .badge-warning   { @apply inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-yellow-100 text-yellow-700; }
+    .badge-danger    { @apply inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700; }
+    .badge-info      { @apply inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-100 text-blue-700; }
+    .badge-secondary { @apply inline-flex px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-700; }
 
     /* ── Form Elements ──────────────────────────────────────── */
     .form-group         { @apply mb-6 relative; }
@@ -318,10 +318,10 @@
 
     /* ── Alerts ─────────────────────────────────────────────── */
     .alert         { @apply p-4 rounded-xl flex items-start gap-3 border; }
-    .alert-success { @apply alert bg-green-50 border-green-200 text-green-700; }
-    .alert-warning { @apply alert bg-yellow-50 border-yellow-200 text-yellow-700; }
-    .alert-danger  { @apply alert bg-red-50 border-red-200 text-red-700; }
-    .alert-info    { @apply alert bg-blue-50 border-blue-200 text-blue-700; }
+    .alert-success { @apply p-4 rounded-xl flex items-start gap-3 border bg-green-50 border-green-200 text-green-700; }
+    .alert-warning { @apply p-4 rounded-xl flex items-start gap-3 border bg-yellow-50 border-yellow-200 text-yellow-700; }
+    .alert-danger  { @apply p-4 rounded-xl flex items-start gap-3 border bg-red-50 border-red-200 text-red-700; }
+    .alert-info    { @apply p-4 rounded-xl flex items-start gap-3 border bg-blue-50 border-blue-200 text-blue-700; }
     .alert-icon    { @apply w-5 h-5 flex-shrink-0 mt-0.5; }
 
     /* ── Snackbar ────────────────────────────────────────────── */
@@ -392,9 +392,9 @@
 
     /* ── Status Banner ──────────────────────────────────────── */
     .status-banner         { @apply mb-8 p-5 rounded-lg flex items-start justify-between gap-4 border-l-4; }
-    .status-banner-success { @apply status-banner bg-green-50 border-l-green-300; }
-    .status-banner-warning { @apply status-banner bg-yellow-50 border-l-yellow-300; }
-    .status-banner-danger  { @apply status-banner bg-red-50 border-l-red-300; }
+    .status-banner-success { @apply mb-8 p-5 rounded-lg flex items-start justify-between gap-4 border-l-4 bg-green-50 border-l-green-300; }
+    .status-banner-warning { @apply mb-8 p-5 rounded-lg flex items-start justify-between gap-4 border-l-4 bg-yellow-50 border-l-yellow-300; }
+    .status-banner-danger  { @apply mb-8 p-5 rounded-lg flex items-start justify-between gap-4 border-l-4 bg-red-50 border-l-red-300; }
 
     /* ── File Upload ────────────────────────────────────────── */
     .upload-zone {

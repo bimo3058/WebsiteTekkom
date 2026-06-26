@@ -21,7 +21,6 @@ class Praktikum extends Model
         'kode',
         'matkul_id',
         'deskripsi',
-        'dosen_id',
         'koor_id',
         'tahun_ajaran',
         'semester',
@@ -31,7 +30,6 @@ class Praktikum extends Model
     protected function casts(): array
     {
         return [
-            'tahun_ajaran' => 'integer',
             'deleted_at'   => 'datetime',
         ];
     }
@@ -69,9 +67,17 @@ class Praktikum extends Model
         return $this->belongsTo(MatkulPraktikum::class, 'matkul_id');
     }
 
-    public function dosen()
+    public function dosens()
     {
-        return $this->belongsTo(User::class, 'dosen_id');
+        return $this->belongsToMany(User::class, 'eo_praktikum_dosen', 'praktikum_id', 'dosen_id');
+    }
+
+    /**
+     * Backward compatibility accessor for $praktikum->dosen
+     */
+    public function getDosenAttribute()
+    {
+        return $this->dosens->first();
     }
 
     public function koordinator()

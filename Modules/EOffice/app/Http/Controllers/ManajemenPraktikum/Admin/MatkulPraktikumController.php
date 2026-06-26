@@ -34,7 +34,7 @@ class MatkulPraktikumController extends Controller
             'kode'     => 'required|string|max:20|unique:eo_matkul_praktikum,kode',
             'nama'     => 'required|string|max:255',
             'sks'      => 'required|integer|min:1|max:6',
-            'semester' => 'nullable|integer|min:1|max:8',
+            'semester' => 'required|integer|min:1|max:8',
         ]);
 
         MatkulPraktikum::create($request->only(['kode', 'nama', 'sks', 'semester']));
@@ -50,7 +50,7 @@ class MatkulPraktikumController extends Controller
             'kode'     => "required|string|max:20|unique:eo_matkul_praktikum,kode,{$id}",
             'nama'     => 'required|string|max:255',
             'sks'      => 'required|integer|min:1|max:6',
-            'semester' => 'nullable|integer|min:1|max:8',
+            'semester' => 'required|integer|min:1|max:8',
         ]);
 
         $mk->update($request->only(['kode', 'nama', 'sks', 'semester']));

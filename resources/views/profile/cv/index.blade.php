@@ -1,71 +1,76 @@
 <x-app-layout>
     <x-sidebar :user="auth()->user()">
-        <div class="min-h-screen bg-[#F8F9FA]">
+        <div class="min-h-screen" style="background: var(--c-bg);">
             <div class="py-6" x-data="cvWizard()">
                 <div class="max-w-4xl mx-auto sm:px-6 lg:px-8">
                     <div class="mb-6 flex items-center justify-between">
                         <div>
-                            <h2 class="text-2xl font-bold text-slate-800 tracking-tight">CV Builder</h2>
-                            <p class="text-sm text-slate-500 mt-1">Lengkapi data Anda untuk menghasilkan CV profesional.
-                            </p>
+                            <h2 class="page-title" style="font-size: 1.5rem;">CV Builder</h2>
+                            <p class="page-subtitle">Lengkapi data Anda untuk menghasilkan CV profesional.</p>
                         </div>
                         <a href="{{ route('profile.edit') }}"
-                            class="text-sm font-semibold text-slate-500 hover:text-slate-700 transition-colors flex items-center gap-2">
+                            class="btn-secondary text-sm">
                             <span class="material-symbols-outlined text-[18px]">arrow_back</span>
                             Kembali ke Profil
                         </a>
                     </div>
 
                     <!-- Stepper Header -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 mb-6 p-6">
-                        <div class="relative flex justify-between items-center w-full">
-                            <div
-                                class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-slate-100 z-0 rounded-full">
-                            </div>
-                            <div class="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 bg-[#5E53F4] z-0 rounded-full transition-all duration-500 ease-out"
-                                :style="`width: ${((step - 1) / (steps.length - 1)) * 100}%`"></div>
-
-                            <template x-for="(s, index) in steps" :key="index">
-                                <div class="relative z-10 flex flex-col items-center">
-                                    <button @click="goToStep(index + 1)"
-                                        class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300"
-                                        :class="[
-                                        step > index + 1 ? 'bg-[#5E53F4] text-white shadow-md' :
-                                        step === index + 1 ? 'bg-white border-4 border-[#5E53F4] text-[#5E53F4] shadow-sm scale-110' :
-                                        'bg-white border-2 border-slate-200 text-slate-400'
-                                    ]" :disabled="index + 1 > maxStep">
-                                        <template x-if="step > index + 1"><span
-                                                class="material-symbols-outlined text-[18px]">check</span></template>
-                                        <template x-if="step <= index + 1"><span x-text="index + 1"></span></template>
-                                    </button>
-                                    <span
-                                        class="absolute top-12 whitespace-nowrap text-[11px] font-bold tracking-wide uppercase transition-colors duration-300"
-                                        :class="step >= index + 1 ? 'text-slate-800' : 'text-slate-400'"
-                                        x-text="s.title"></span>
+                    <div class="card mb-6">
+                        <div class="p-6">
+                            <div class="relative flex justify-between items-center w-full">
+                                <div
+                                    class="absolute left-0 top-1/2 transform -translate-y-1/2 w-full h-1 bg-slate-100 z-0 rounded-full">
                                 </div>
-                            </template>
+                                <div class="absolute left-0 top-1/2 transform -translate-y-1/2 h-1 z-0 rounded-full transition-all duration-500 ease-out"
+                                    style="background: var(--c-primary);"
+                                    :style="`width: ${((step - 1) / (steps.length - 1)) * 100}%`"></div>
+
+                                <template x-for="(s, index) in steps" :key="index">
+                                    <div class="relative z-10 flex flex-col items-center">
+                                        <button @click="goToStep(index + 1)"
+                                            class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm transition-all duration-300"
+                                            :class="[
+                                            step > index + 1 ? 'text-white shadow-md' :
+                                            step === index + 1 ? 'bg-white shadow-sm scale-110' :
+                                            'bg-white border-2 border-slate-200 text-slate-400'
+                                        ]"
+                                            :style="step > index + 1 ? 'background: var(--c-primary);' : (step === index + 1 ? 'border: 4px solid var(--c-primary); color: var(--c-primary);' : '')"
+                                            :disabled="index + 1 > maxStep">
+                                            <template x-if="step > index + 1"><span
+                                                    class="material-symbols-outlined text-[18px]">check</span></template>
+                                            <template x-if="step <= index + 1"><span x-text="index + 1"></span></template>
+                                        </button>
+                                        <span
+                                            class="absolute top-12 whitespace-nowrap text-[11px] font-bold tracking-wide uppercase transition-colors duration-300"
+                                            :class="step >= index + 1 ? 'text-slate-800' : 'text-slate-400'"
+                                            x-text="s.title"></span>
+                                    </div>
+                                </template>
+                            </div>
+                            <div class="h-8"></div>
                         </div>
-                        <div class="h-8"></div>
                     </div>
 
                     <!-- Step Content -->
-                    <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-8 relative min-h-[400px]">
+                    <div class="card p-8 relative min-h-[400px]">
 
                         <!-- Loading State -->
                         <div x-show="loading"
                             class="absolute inset-0 bg-white/80 z-20 rounded-2xl flex flex-col items-center justify-center">
-                            <div
-                                class="w-8 h-8 border-4 border-[#5E53F4]/20 border-t-[#5E53F4] rounded-full animate-spin">
+                            <div class="w-8 h-8 border-4 rounded-full animate-spin"
+                                style="border-color: var(--c-primary-subtle); border-top-color: var(--c-primary);">
                             </div>
                             <p class="mt-4 text-sm font-bold text-slate-500">Memuat data...</p>
                         </div>
 
                         <!-- Error Alert -->
                         <div x-show="error"
-                            class="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
-                            <span class="material-symbols-outlined text-red-500">error</span>
-                            <p class="text-sm text-red-700 font-medium" x-text="errorMsg"></p>
-                            <button @click="error = false" class="ml-auto text-red-400 hover:text-red-600">
+                            class="mb-6 p-4 rounded-xl flex items-start gap-3"
+                            style="background: var(--c-error-subtle); border: 1px solid var(--c-error);">
+                            <span class="material-symbols-outlined" style="color: var(--c-error);">error</span>
+                            <p class="text-sm font-medium" style="color: var(--c-error);" x-text="errorMsg"></p>
+                            <button @click="error = false" class="ml-auto" style="color: var(--c-error); opacity: 0.6;">
                                 <span class="material-symbols-outlined text-[18px]">close</span>
                             </button>
                         </div>
@@ -104,14 +109,14 @@
                     <!-- Footer Navigation -->
                     <div class="mt-6 flex justify-between items-center">
                         <button @click="goToStep(step - 1)" x-show="step > 1"
-                            class="px-6 py-2.5 rounded-xl border-2 border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 hover:border-slate-300 transition-all flex items-center gap-2">
+                            class="btn-secondary text-sm">
                             <span class="material-symbols-outlined text-[18px]">arrow_back</span>
                             Sebelumnya
                         </button>
                         <div x-show="step === 1"></div>
 
                         <button @click="saveAndNext()" x-show="step < 6"
-                            class="px-6 py-2.5 rounded-xl bg-[#5E53F4] text-white font-bold text-sm hover:bg-[#4e44e0] active:scale-95 transition-all shadow-sm shadow-[#5E53F4]/30 flex items-center gap-2">
+                            class="btn-primary text-sm shadow-sm">
                             Simpan & Lanjut
                             <span class="material-symbols-outlined text-[18px]">arrow_forward</span>
                         </button>

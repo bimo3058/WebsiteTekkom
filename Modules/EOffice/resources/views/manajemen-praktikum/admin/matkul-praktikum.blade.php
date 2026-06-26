@@ -53,45 +53,48 @@
 @endphp
 
 @foreach($grouped->sortKeys() as $sem => $items)
-<div class="mp-card flex-shrink-0">
-    <div class="mp-card-header">
+<div style="background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; margin-bottom: 20px; flex-shrink:0;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border, #DFE1E7);">
         <div class="flex items-center gap-3">
             <span class="mp-badge primary sm">Semester {{ $sem }}</span>
-            <span style="font-size:12px;font-weight:600;color:#0D0D12;">{{ $items->count() }} mata kuliah</span>
+            <span style="font-size:13px;font-weight:700;color:var(--c-fg, #0D0D12);">{{ $items->count() }} mata kuliah</span>
         </div>
     </div>
-    <table class="w-full" style="font-size:13px;">
-        <thead>
-            <tr style="border-bottom:1px solid #DFE1E7;background:#F9FAFB;">
-                <th class="mp-th text-left" style="padding:10px 20px;width:160px;">Kode MK</th>
-                <th class="mp-th text-left" style="padding:10px 20px;">Nama Mata Kuliah</th>
-                <th class="mp-th text-left" style="padding:10px 20px;width:60px;">SKS</th>
-                <th class="mp-th text-left" style="padding:10px 20px;width:120px;">Aksi</th>
-            </tr>
-        </thead>
-        <tbody>
-            @foreach($items as $mk)
-            <tr class="mp-tr" style="border-bottom:1px solid #DFE1E7;">
-                <td style="padding:12px 20px;">
-                    <span class="mp-badge primary sm" style="font-family:monospace;">{{ $mk->kode }}</span>
-                </td>
-                <td style="padding:12px 20px;font-weight:500;color:#0D0D12;">{{ $mk->nama }}</td>
-                <td style="padding:12px 20px;text-align:center;font-weight:700;color:#353849;">{{ $mk->sks }}</td>
-                <td style="padding:12px 20px;">
-                    <div class="flex gap-2">
-                        <button onclick="openEdit({{ $mk->id }}, '{{ addslashes($mk->kode) }}', '{{ addslashes($mk->nama) }}', {{ $mk->sks }}, {{ $mk->semester ?? 'null' }})"
-                                class="mp-btn secondary sm">Edit</button>
-                        <form method="POST" action="{{ route('eoffice.manprak.admin.matkul-praktikum.destroy', $mk->id) }}"
-                              onsubmit="return confirm('Hapus {{ addslashes($mk->nama) }}?')">
-                            @csrf @method('DELETE')
-                            <button type="submit" class="mp-btn destructive sm">Hapus</button>
-                        </form>
-                    </div>
-                </td>
-            </tr>
-            @endforeach
-        </tbody>
-    </table>
+    <div style="overflow-x:auto;">
+        <table style="width:100%; border-collapse:collapse; min-width:780px;">
+            <thead>
+                <tr style="border-bottom:1px solid var(--c-border, #DFE1E7); background:#FAFAFA;">
+                    <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:160px;">Kode MK</th>
+                    <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Nama Mata Kuliah</th>
+                    <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:80px;">SKS</th>
+                    <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:120px;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($items as $mk)
+                <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s;"
+                    onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'">
+                    <td style="padding:14px 16px;">
+                        <span class="mp-badge primary sm" style="font-family:monospace;">{{ $mk->kode }}</span>
+                    </td>
+                    <td style="padding:14px 16px; font-size:13px; font-weight:600; color:var(--c-fg, #0D0D12);">{{ $mk->nama }}</td>
+                    <td style="padding:14px 16px; font-size:13px; font-weight:700; color:var(--c-fg, #353849);">{{ $mk->sks }}</td>
+                    <td style="padding:14px 16px;">
+                        <div class="flex gap-2">
+                            <button onclick="openEdit({{ $mk->id }}, '{{ addslashes($mk->kode) }}', '{{ addslashes($mk->nama) }}', {{ $mk->sks }}, {{ $mk->semester ?? 'null' }})"
+                                    class="mp-btn secondary sm">Edit</button>
+                            <form method="POST" action="{{ route('eoffice.manprak.admin.matkul-praktikum.destroy', $mk->id) }}"
+                                  onsubmit="return confirm('Hapus {{ addslashes($mk->nama) }}?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="mp-btn destructive sm">Hapus</button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                @endforeach
+            </tbody>
+        </table>
+    </div>
 </div>
 @endforeach
 
@@ -135,8 +138,8 @@
                            class="mp-input w-full">
                 </div>
                 <div>
-                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Semester</label>
-                    <select name="semester" class="mp-input mp-select w-full">
+                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Semester <span class="text-red-500">*</span></label>
+                    <select name="semester" required class="mp-input mp-select w-full">
                         <option value="">— Pilih —</option>
                         @for($s = 1; $s <= 8; $s++)
                         <option value="{{ $s }}">Semester {{ $s }}</option>
@@ -178,8 +181,8 @@
                     <input type="number" id="edit-sks" name="sks" required min="1" max="6" class="mp-input w-full">
                 </div>
                 <div>
-                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Semester</label>
-                    <select id="edit-semester" name="semester" class="mp-input mp-select w-full">
+                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Semester <span class="text-red-500">*</span></label>
+                    <select id="edit-semester" name="semester" required class="mp-input mp-select w-full">
                         <option value="">— Pilih —</option>
                         @for($s = 1; $s <= 8; $s++)
                         <option value="{{ $s }}">Semester {{ $s }}</option>

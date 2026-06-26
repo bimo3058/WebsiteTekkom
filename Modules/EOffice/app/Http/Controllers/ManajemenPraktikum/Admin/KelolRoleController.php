@@ -8,12 +8,13 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\EOffice\Models\AsprakPraktikum;
 use Modules\EOffice\Models\Praktikum;
+use Spatie\Permission\PermissionRegistrar;
 
 class KelolRoleController extends Controller
 {
     public function index(Request $request)
     {
-        $praktikumList = Praktikum::with(['dosen', 'koordinator'])
+        $praktikumList = Praktikum::with(['dosens', 'koordinator'])
             ->orderBy('nama')
             ->get();
 
@@ -71,6 +72,12 @@ class KelolRoleController extends Controller
             User::find($request->user_id)?->roles()->syncWithoutDetaching([$role->id]);
         }
 
+        // Jika assign sebagai koor, update eo_praktikum.koor_id juga
+        if ($request->role === 'koor') {
+            Praktikum::where('id', $request->praktikum_id)
+                ->update(['koor_id' => $request->user_id]);
+        }
+
         $user = User::find($request->user_id);
         return back()->with('success', "{$user?->name} berhasil di-assign sebagai {$request->role}.");
     }
@@ -78,11 +85,58 @@ class KelolRoleController extends Controller
     public function revokeRole($id)
     {
         $record = AsprakPraktikum::with('user')->findOrFail($id);
-        $name   = $record->user?->name ?? 'User';
+        $user   = $record->user;
+        $name   = $user?->name ?? 'User';
         $role   = $record->role;
+        $userId = $record->user_id;
 
-        $record->delete(); // soft delete — tidak cabut role global karena bisa asprak di praktikum lain
+        // 1. Soft delete record asprak_praktikum ini
+        $record->delete();
 
-        return back()->with('success', "{$name} berhasil dilepas dari role {$role} di praktikum ini.");
+        // 2. Jika role = koor, kosongkan koor_id di eo_praktikum
+        if ($role === 'koor') {
+            Praktikum::where('id', $record->praktikum_id)
+                ->where('koor_id', $userId)
+                ->update(['koor_id' => null]);
+        }
+
+        // 3. Cabut role Spatie HANYA jika tidak ada di praktikum lain
+        $roleName = $role === 'koor' ? 'koor_prak' : 'asprak';
+        $stillHasRole = AsprakPraktikum::where('user_id', $userId)
+            ->where('role', $role)
+            ->where('id', '!=', $record->id)
+            ->exists();
+
+        if ($user && !$stillHasRole) {
+            // Coba via Spatie removeRole() dulu (handles cache flush otomatis)
+            try {
+                if ($user->hasRole($roleName)) {
+                    $user->removeRole($roleName);
+                }
+            } catch (\Exception $e) {
+                // Fallback: detach manual + flush cache
+                $spatieRole = Role::where('name', $roleName)
+                    ->where('module', 'eoffice')
+                    ->first();
+                if ($spatieRole) {
+                    $user->roles()->detach($spatieRole->id);
+                }
+            }
+
+            // Flush Spatie permission cache untuk user ini
+            app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+            // Increment session version agar session aktif user ikut invalid
+            \DB::table('users')
+                ->where('id', $userId)
+                ->increment('session_version');
+        }
+
+        $message = "{$name} berhasil dilepas dari role {$role} di praktikum ini.";
+        if (!$stillHasRole) {
+            $message .= " Akses {$roleName} dari sistem sudah dicabut sepenuhnya.";
+        }
+
+        return back()->with('success', $message);
     }
 }

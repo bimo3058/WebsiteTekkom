@@ -34,10 +34,18 @@ class PendaftaranKoorController extends Controller
         if ($search = $request->input('search')) {
             $query->whereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%"));
         }
+        if ($praktikumId = $request->input('praktikum_id')) {
+            $query->where('praktikum_id', $praktikumId);
+        }
 
         $pendaftaran = $query->paginate(15)->withQueryString();
+        
+        $praktikumList = \Modules\EOffice\Models\Praktikum::with('matkul')
+            ->where('status', 'aktif')
+            ->orderByDesc('created_at')
+            ->get();
 
-        return view('eoffice::manajemen-praktikum.admin.pendaftaran-koor', compact('pendaftaran'));
+        return view('eoffice::manajemen-praktikum.admin.pendaftaran-koor', compact('pendaftaran', 'praktikumList'));
     }
 
     /**

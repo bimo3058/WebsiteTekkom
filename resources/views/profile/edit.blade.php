@@ -283,6 +283,8 @@
                             @include('profile.partials.settings-panel-notifikasi')
                         </div>
 
+                    <div x-show="tab==='notifikasi'" x-transition.opacity.duration.150ms>
+                        @include('profile.partials.settings-panel-notifikasi')
                     </div>
         </div>
             </div>

@@ -19,10 +19,11 @@ class KerjaPraktik extends Model
         'nim',
         'mahasiswa_id',
         'dosen_pembimbing_id',
-        'rencana_judul',
-        'rencana_tempat',
-        'tempat_fix',
-        'judul_fix',
+        'judul_kp',
+        'instansi_kp',
+        'ipk',
+        'kelas',
+        'sks_diambil',
         'tanggal_mulai',
         'tanggal_selesai',
         'status_kp',
@@ -42,7 +43,7 @@ class KerjaPraktik extends Model
      */
     public function dosenPembimbing()
     {
-        return $this->belongsTo(\App\Models\User::class, 'dosen_pembimbing_id');
+        return $this->belongsTo(KpDosen::class, 'dosen_pembimbing_id');
     }
 
     /**
@@ -67,6 +68,57 @@ class KerjaPraktik extends Model
     public function penilaian()
     {
         return $this->hasOne(KpPenilaian::class, 'kp_id');
+    }
+
+    /**
+     * Relasi ke tabel periode
+     */
+    public function periode()
+    {
+        return $this->belongsTo(KpPeriode::class, 'periode_id');
+    }
+
+    /**
+     * Relasi ke tabel detail penilaian komponen dinamis
+     */
+    public function nilaiDetail()
+    {
+        return $this->hasMany(KpNilaiDetail::class, 'kp_id');
+    }
+
+    /**
+     * Relasi ke tabel balancing (draft/final)
+     */
+    public function balancing()
+    {
+        return $this->hasOne(KpBalancing::class, 'kp_id');
+    }
+
+    /**
+     * Accessor virtual mapping untuk referensi fk periode_id menggunakan relasi waktu
+     * demi kompatibilitas Eloquent eager loading ('periode').
+     */
+    public function getPeriodeIdAttribute()
+    {
+        static $periodes = null;
+        if ($periodes === null) {
+            $periodes = KpPeriode::all();
+        }
+
+        if (!array_key_exists('created_at', $this->attributes) || !$this->attributes['created_at']) {
+            return null;
+        }
+
+        $createdAt = \Carbon\Carbon::parse($this->attributes['created_at'])->format('Y-m-d');
+
+        $matched = $periodes->first(function ($p) use ($createdAt) {
+            if (!$p->pra_kp_mulai || !$p->pra_kp_akhir)
+                return false;
+            return $createdAt >= $p->pra_kp_mulai->format('Y-m-d')
+                && $createdAt <= $p->pra_kp_akhir->format('Y-m-d');
+        });
+
+        return $matched ? $matched->id : null;
     }
 
     /**

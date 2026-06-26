@@ -14,35 +14,37 @@ use Modules\EOffice\Services\KoorPraktikumService;
 
 class DashboardController extends Controller
 {
-    public function __construct(protected KoorPraktikumService $koorService) {}
+    public function __construct(protected KoorPraktikumService $koorService)
+    {
+    }
 
     public function index()
     {
         $user = auth()->user();
 
         $praktikums = Praktikum::with(['koordinator', 'modul'])
-            ->where('dosen_id', $user->id)
+            ->whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
             ->withCount(['daftarPraktikan', 'modul', 'asprakPraktikum'])
             ->orderByDesc('created_at')
             ->get();
 
         $totalPraktikumDiampu = $praktikums->count();
-        $totalPraktikumAktif  = $praktikums->where('status', 'aktif')->count();
-        $totalMahasiswa       = $praktikums->sum('daftar_praktikan_count');
-        $totalModul           = $praktikums->sum('modul_count');
+        $totalPraktikumAktif = $praktikums->where('status', 'aktif')->count();
+        $totalMahasiswa = $praktikums->sum('daftar_praktikan_count');
+        $totalModul = $praktikums->sum('modul_count');
 
         // Praktikum yang belum punya koordinator
         $praktikumTanpaKoor = $praktikums->whereNull('koor_id')->values();
 
         // Pendaftaran koordinator yang pending (perlu tindakan dosen)
         $pendaftaranKoorPending = PendaftaranKoordinator::with(['user', 'praktikum'])
-            ->whereHas('praktikum', fn($q) => $q->where('dosen_id', $user->id))
+            ->whereHas('praktikum', fn($q) => $q->whereHas('dosens', fn($q2) => $q2->where('users.id', $user->id)))
             ->where('status', 'pending')
             ->orderByDesc('created_at')
             ->get();
 
         // Nilai yang belum diapprove dosen
-        $nilaiMenungguApproval = Nilai::whereHas('daftarPraktikan.praktikum', fn($q) => $q->where('dosen_id', $user->id))
+        $nilaiMenungguApproval = Nilai::whereHas('daftarPraktikan.praktikum', fn($q) => $q->whereHas('dosens', fn($q2) => $q2->where('users.id', $user->id)))
             ->where('disetujui_koor', true)
             ->where('disetujui_dosen', false)
             ->count();
@@ -69,13 +71,13 @@ class DashboardController extends Controller
     {
         $request->validate([
             'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
-            'nim'          => 'required|string',
+            'nim' => 'required|string',
         ]);
 
         $user = auth()->user();
 
         $praktikum = Praktikum::where('id', $request->praktikum_id)
-            ->where('dosen_id', $user->id)
+            ->whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
             ->firstOrFail();
 
         // Cari user berdasarkan NIM (student_number di tabel students)

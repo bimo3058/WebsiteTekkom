@@ -32,8 +32,8 @@ class KerjaPraktikController extends Controller
     {
         // 1. Validasi data yang dikirim mahasiswa
         $validatedData = $request->validate([
-            'rencana_tempat' => 'required|string|max:255',
-            'rencana_judul' => 'required|string|max:255',
+            'instansi_kp' => 'required|string|max:255',
+            'judul_kp' => 'required|string|max:255',
             'tanggal_mulai' => 'required|date',
             'tanggal_selesai' => 'required|date|after:tanggal_mulai',
         ]);

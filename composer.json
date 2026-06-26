@@ -19,6 +19,7 @@
         "laravel/tinker": "^2.10.1",
         "maatwebsite/excel": "~3.1",
         "nwidart/laravel-modules": "*",
+        "phpoffice/phpword": "*",
         "predis/predis": "*",
         "socialiteproviders/microsoft-azure": "*",
         "spatie/laravel-permission": "^6.4"

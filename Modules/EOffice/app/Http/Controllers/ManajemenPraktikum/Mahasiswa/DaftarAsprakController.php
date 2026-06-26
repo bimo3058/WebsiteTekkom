@@ -2,6 +2,7 @@
 
 namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa;
 
+use App\Services\SupabaseStorage;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\EOffice\Models\AsprakPraktikum;
@@ -13,9 +14,8 @@ use Modules\EOffice\Models\Praktikum;
 
 class DaftarAsprakController extends Controller
 {
-    /**
-     * Ambil periode yang sedang aktif untuk praktikum & jenis tertentu.
-     */
+    public function __construct(private SupabaseStorage $supabase) {}
+
     private function getPeriodeAktif(string $praktikumId, string $jenis): ?PeriodePendaftaran
     {
         return PeriodePendaftaran::where('praktikum_id', $praktikumId)
@@ -35,7 +35,7 @@ class DaftarAsprakController extends Controller
         // (asprak ATAU koor) — inilah yang relevan untuk halaman pendaftaran
         $praktikumDenganPeriode = Praktikum::where('status', 'aktif')
             ->whereHas('periodeAktif') // scope via relasi — lihat bawah
-            ->with(['dosen', 'matkul'])
+            ->with(['dosens', 'matkul'])
             ->get();
 
         // Fallback manual jika relasi belum ada: query langsung
@@ -48,7 +48,7 @@ class DaftarAsprakController extends Controller
 
             $praktikumDenganPeriode = Praktikum::whereIn('id', $praktikumIdsDenganPeriode)
                 ->where('status', 'aktif')
-                ->with(['dosen', 'matkul'])
+                ->with(['dosens', 'matkul'])
                 ->get();
         }
 
@@ -118,9 +118,8 @@ class DaftarAsprakController extends Controller
         $request->validate([
             'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
             'ipk'          => 'required|numeric|min:0|max:4',
-            'motivasi'     => 'required|string|min:20|max:1000',
-            'cv'           => 'nullable|file|max:5120|mimes:pdf,docx',
-            'transkrip'    => 'nullable|file|max:5120|mimes:pdf',
+            'motivasi'     => 'nullable|string|max:1000',
+            'transkrip'    => 'required|file|max:5120|mimes:pdf',
             'jadwal'       => 'nullable|array',
         ]);
 
@@ -141,11 +140,9 @@ class DaftarAsprakController extends Controller
             return back()->with('error', 'Anda sudah memiliki pendaftaran asprak aktif untuk praktikum ini.');
         }
 
-        $cvPath = $request->hasFile('cv')
-            ? $request->file('cv')->store('asprak-cv/' . $user->id, 'local')
-            : null;
+
         $transkripPath = $request->hasFile('transkrip')
-            ? $request->file('transkrip')->store('asprak-transkrip/' . $user->id, 'local')
+            ? $this->supabase->upload($request->file('transkrip'), 'asprak-transkrip/' . $user->id, 'eoffice')
             : null;
 
         PendaftaranAsprak::create([
@@ -153,7 +150,7 @@ class DaftarAsprakController extends Controller
             'praktikum_id'   => $request->praktikum_id,
             'ipk'            => $request->ipk,
             'motivasi'       => $request->motivasi,
-            'cv_path'        => $cvPath,
+            'cv_path'        => null,
             'transkrip_path' => $transkripPath,
             'jadwal'         => $request->jadwal ?? [],
             'status'         => 'pending',
@@ -171,8 +168,8 @@ class DaftarAsprakController extends Controller
         $request->validate([
             'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
             'ipk'          => 'required|numeric|min:0|max:4',
-            'motivasi'     => 'required|string|min:20|max:1000',
-            'transkrip'    => 'nullable|file|max:5120|mimes:pdf',
+            'motivasi'     => 'nullable|string|max:1000',
+            'transkrip'    => 'required|file|max:5120|mimes:pdf',
         ]);
 
         $user = auth()->user();
@@ -192,12 +189,17 @@ class DaftarAsprakController extends Controller
             return back()->with('error', 'Anda sudah memiliki pendaftaran koordinator aktif untuk praktikum ini.');
         }
 
+        $transkripPath = $request->hasFile('transkrip')
+            ? $this->supabase->upload($request->file('transkrip'), 'koor-transkrip/' . $user->id, 'eoffice')
+            : null;
+
         PendaftaranKoordinator::create([
-            'user_id'      => $user->id,
-            'praktikum_id' => $request->praktikum_id,
-            'ipk'          => $request->ipk,
-            'motivasi'     => $request->motivasi,
-            'status'       => 'pending',
+            'user_id'        => $user->id,
+            'praktikum_id'   => $request->praktikum_id,
+            'ipk'            => $request->ipk,
+            'motivasi'       => $request->motivasi,
+            'transkrip_path' => $transkripPath,
+            'status'         => 'pending',
         ]);
 
         return back()->with('success', 'Pendaftaran Koordinator berhasil dikirim! Tunggu konfirmasi dari Dosen.');

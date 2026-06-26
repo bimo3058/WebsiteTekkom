@@ -7,29 +7,46 @@ use Illuminate\Routing\Controller;
 use Modules\EOffice\Models\AsistenPraktikum;
 use Modules\EOffice\Models\Pengumuman;
 use Modules\EOffice\Models\Praktikum;
+use App\Services\SupabaseStorage;
 
 /**
  * Asprak: Pengumuman (semua asprak bisa upload/hapus).
- * Sesuai docx: unggah/hapus postingan yang dapat dilakukan oleh semua asprak.
+ * Mendukung dropdown filter per praktikum yang di-assign ke asprak.
  */
 class PengumumanController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
-        $user   = auth()->user();
-        $asprak = AsistenPraktikum::where('user_id', $user->id)
+        $user = auth()->user();
+
+        // Semua assignment asprak milik user ini
+        $asprakList = AsistenPraktikum::where('user_id', $user->id)
             ->where('role', 'asprak')
             ->whereNull('deleted_at')
-            ->first();
+            ->with('praktikum')
+            ->get();
 
-        $pengumumans = $asprak
-            ? Pengumuman::where('praktikum_id', $asprak->praktikum_id)
+        $praktikumList = $asprakList->map(fn($a) => $a->praktikum)->filter();
+
+        // Praktikum yang dipilih (default ke yang pertama)
+        $praktikumId = $request->input('praktikum_id', $praktikumList->first()?->id);
+        $asprak      = $asprakList->firstWhere('praktikum_id', $praktikumId);
+        $praktikum   = $praktikumList->firstWhere('id', $praktikumId);
+
+        // Pengumuman hanya untuk praktikum yang dipilih
+        $pengumumans = $praktikumId
+            ? Pengumuman::where('praktikum_id', $praktikumId)
                 ->with('user')
                 ->orderByDesc('created_at')
                 ->get()
             : collect();
 
-        return view('eoffice::manajemen-praktikum.asprak.pengumuman', compact('pengumumans', 'asprak'));
+        return view('eoffice::manajemen-praktikum.asprak.pengumuman', compact(
+            'pengumumans',
+            'asprak',
+            'praktikumList',
+            'praktikum'
+        ));
     }
 
     public function store(Request $request)
@@ -39,6 +56,8 @@ class PengumumanController extends Controller
             'judul'        => 'required|string|max:255',
             'konten'       => 'required|string',
             'is_published' => 'boolean',
+            'lampiran'     => 'nullable|array|max:3',
+            'lampiran.*'   => 'file|max:5120',
         ]);
 
         $user   = auth()->user();
@@ -52,29 +71,48 @@ class PengumumanController extends Controller
             return back()->with('error', 'Anda tidak terdaftar sebagai asprak di praktikum ini.');
         }
 
+        $lampiranPaths = [];
+        if ($request->hasFile('lampiran')) {
+            $storage = app(SupabaseStorage::class);
+            foreach ($request->file('lampiran') as $file) {
+                $path = $storage->upload($file, 'pengumuman', 'eoffice');
+                if ($path) {
+                    $lampiranPaths[] = [
+                        'name' => $file->getClientOriginalName(),
+                        'path' => $path,
+                    ];
+                }
+            }
+        }
+
         Pengumuman::create([
             'praktikum_id' => $request->praktikum_id,
             'user_id'      => $user->id,
             'judul'        => $request->judul,
             'konten'       => $request->konten,
             'is_published' => $request->boolean('is_published'),
+            'lampiran'     => empty($lampiranPaths) ? null : $lampiranPaths,
         ]);
 
-        return back()->with('success', 'Pengumuman berhasil diunggah.');
+        return redirect()->route('eoffice.manprak.asprak.pengumuman.index', [
+            'praktikum_id' => $request->praktikum_id,
+        ])->with('success', 'Pengumuman berhasil diunggah.');
     }
 
     public function destroy(int $id)
     {
-        $user        = auth()->user();
-        $pengumuman  = Pengumuman::findOrFail($id);
+        $user       = auth()->user();
+        $pengumuman = Pengumuman::findOrFail($id);
 
-        // Asprak hanya bisa hapus miliknya sendiri, kecuali koor/admin
         if ($pengumuman->user_id !== $user->id && !$user->hasAnyRole(['koor_prak', 'admin_eoffice', 'superadmin'])) {
             return back()->with('error', 'Anda hanya bisa menghapus pengumuman milik sendiri.');
         }
 
+        $praktikumId = $pengumuman->praktikum_id;
         $pengumuman->delete();
 
-        return back()->with('success', 'Pengumuman berhasil dihapus.');
+        return redirect()->route('eoffice.manprak.asprak.pengumuman.index', [
+            'praktikum_id' => $praktikumId,
+        ])->with('success', 'Pengumuman berhasil dihapus.');
     }
 }

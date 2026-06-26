@@ -45,53 +45,100 @@
                         Kembali ke Dashboard
                     </a>
                 </div>
+            @elseif(!$registrationOpen)
+                {{-- Pendaftaran Ditutup --}}
+                <div class="bg-white rounded-xl border border-slate-200 shadow-sm p-8 text-center max-w-2xl mx-auto mt-10">
+                    <div class="w-16 h-16 bg-rose-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <svg class="w-8 h-8 text-rose-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+                    </div>
+                    <h2 class="text-xl font-bold text-slate-900 mb-2">Pendaftaran Ditutup</h2>
+                    <p class="text-slate-600 mb-4">
+                        Saat ini periode pendaftaran Kerja Praktik sedang ditutup.
+                        @if($startDate || $endDate)
+                            <br><br>
+                            <span class="inline-flex bg-slate-50 border border-slate-200 rounded px-3 py-2 text-sm font-medium">
+                                Jadwal Pendaftaran: 
+                                {{ $startDate ? \Carbon\Carbon::parse($startDate)->format('d M Y') : 'Kapan Saja' }}
+                                - 
+                                {{ $endDate ? \Carbon\Carbon::parse($endDate)->format('d M Y') : 'Kapan Saja' }}
+                            </span>
+                        @endif
+                    </p>
+                    <p class="text-sm text-slate-500 mb-6">Silakan cek kembali di lain waktu atau hubungi Koordinator KP untuk informasi lebih lanjut.</p>
+                    <a href="{{ route('eoffice.kp.mahasiswa.dashboard') }}" class="inline-flex items-center px-6 py-3 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors">
+                        Kembali ke Dashboard
+                    </a>
+                </div>
             @else
+                {{-- Banner Pengingat Penutupan Pendaftaran --}}
+                @if($endDate)
+                    <div class="mb-6 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3 shadow-sm max-w-3xl">
+                        <div class="p-2 bg-blue-100 rounded-lg text-blue-700 flex-shrink-0">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-blue-900">Pemberitahuan Pendaftaran</h4>
+                            <p class="text-xs text-blue-700 mt-1">Batas akhir pendaftaran Kerja Praktik adalah tanggal <strong class="text-blue-950">{{ \Carbon\Carbon::parse($endDate)->translatedFormat('d F Y') }}</strong>. Pastikan Anda menyelesaikan pengisian data sebelum tanggal tersebut.</p>
+                        </div>
+                    </div>
+                @endif
+
                 {{-- Form Pendaftaran --}}
                 <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden max-w-3xl">
                     <div class="px-6 py-5 border-b border-slate-200 bg-slate-50/50">
                         <h2 class="text-base font-bold text-slate-800">Formulir Pengajuan</h2>
                         <p class="text-sm text-slate-500 mt-0.5">Pastikan data yang Anda isi sudah benar dan final.</p>
                     </div>
-
                     <form action="{{ route('eoffice.kp.mahasiswa.pendaftaran.store') }}" method="POST" enctype="multipart/form-data" class="p-6">
                         @csrf
                         
                         <div class="space-y-6">
-                            {{-- Transkrip --}}
-                            <div>
-                                <label class="block text-sm font-medium text-slate-700 mb-2">Upload Transkrip Nilai Terakhir <span class="text-red-500">*</span></label>
-                                <div class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-slate-300 border-dashed rounded-lg hover:border-blue-500 transition-colors bg-slate-50" x-data="{ fileName: '' }">
-                                    <div class="space-y-1 text-center">
-                                        <svg class="mx-auto h-12 w-12 text-slate-400" stroke="currentColor" fill="none" viewBox="0 0 48 48" aria-hidden="true"><path d="M28 8H12a4 4 0 00-4 4v20m32-12v8m0 0v8a4 4 0 01-4 4H12a4 4 0 01-4-4v-4m32-4l-3.172-3.172a4 4 0 00-5.656 0L28 28M8 32l9.172-9.172a4 4 0 015.656 0L28 28m0 0l4 4m4-24h8m-4-4v8m-12 4h.02" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" /></svg>
-                                        <div class="flex text-sm text-slate-600 justify-center">
-                                            <label for="transkrip" class="relative cursor-pointer bg-white rounded-md font-medium text-blue-600 hover:text-blue-500 focus-within:outline-none px-1">
-                                                <span>Upload a file</span>
-                                                <input id="transkrip" name="transkrip" type="file" class="sr-only" required accept=".pdf,.jpg,.jpeg,.png" @change="fileName = $event.target.files[0].name">
-                                            </label>
-                                            <p class="pl-1">or drag and drop</p>
-                                        </div>
-                                        <p class="text-xs text-slate-500">PDF, PNG, JPG up to 5MB</p>
-                                        <p class="text-sm font-semibold text-blue-600 mt-2" x-show="fileName" x-text="fileName"></p>
-                                    </div>
-                                </div>
-                                @error('transkrip') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
-                            </div>
+
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 {{-- Rencana Judul --}}
                                 <div class="md:col-span-2">
-                                    <label for="rencana_judul" class="block text-sm font-medium text-slate-700 mb-1">Rencana Topik / Judul KP <span class="text-red-500">*</span></label>
-                                    <input type="text" name="rencana_judul" id="rencana_judul" value="{{ old('rencana_judul') }}" required placeholder="Contoh: Pembuatan Sistem Otomasi Jaringan..."
+                                    <label for="judul_kp" class="block text-sm font-medium text-slate-700 mb-1">Rencana Topik / Judul KP <span class="text-red-500">*</span></label>
+                                    <input type="text" name="judul_kp" id="judul_kp" value="{{ old('judul_kp') }}" required placeholder="Contoh: Pembuatan Sistem Otomasi Jaringan..."
                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2.5 px-4 border">
-                                    @error('rencana_judul') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    @error('judul_kp') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
 
                                 {{-- Rencana Tempat --}}
                                 <div class="md:col-span-2">
-                                    <label for="rencana_tempat" class="block text-sm font-medium text-slate-700 mb-1">Rencana Tempat Instansi <span class="text-red-500">*</span></label>
-                                    <input type="text" name="rencana_tempat" id="rencana_tempat" value="{{ old('rencana_tempat') }}" required placeholder="Contoh: PT Telekomunikasi Indonesia (Telkom)"
+                                    <label for="instansi_kp" class="block text-sm font-medium text-slate-700 mb-1">Rencana Tempat Instansi <span class="text-red-500">*</span></label>
+                                    <input type="text" name="instansi_kp" id="instansi_kp" value="{{ old('instansi_kp') }}" required placeholder="Contoh: PT Telekomunikasi Indonesia (Telkom)"
                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2.5 px-4 border">
-                                    @error('rencana_tempat') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                    @error('instansi_kp') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+
+                                {{-- IPK --}}
+                                <div>
+                                    <label for="ipk" class="block text-sm font-medium text-slate-700 mb-1">Indeks Prestasi Kumulatif (IPK) <span class="text-red-500">*</span></label>
+                                    <input type="number" name="ipk" id="ipk" value="{{ old('ipk') }}" step="0.01" min="0" max="4.00" required placeholder="Contoh: 3.50"
+                                           class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2.5 px-4 border">
+                                    @error('ipk') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+
+                                {{-- Kelas --}}
+                                <div>
+                                    <label for="kelas" class="block text-sm font-medium text-slate-700 mb-1">Kelas <span class="text-red-500">*</span></label>
+                                    <select name="kelas" id="kelas" required
+                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2.5 px-4 border text-slate-700 bg-white">
+                                        <option value="" disabled {{ old('kelas') == '' ? 'selected' : '' }}>Pilih Kelas</option>
+                                        @foreach($listKelas as $kls)
+                                            <option value="{{ $kls }}" {{ old('kelas') == $kls ? 'selected' : '' }}>{{ $kls }}</option>
+                                        @endforeach
+                                    </select>
+                                    @error('kelas') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+
+                                {{-- SKS yang Diambil --}}
+                                <div class="md:col-span-2">
+                                    <label for="sks_diambil" class="block text-sm font-medium text-slate-700 mb-1">Jumlah SKS yang Telah Diambil <span class="text-red-500">*</span></label>
+                                    <input type="number" name="sks_diambil" id="sks_diambil" value="{{ old('sks_diambil') }}" min="0" required placeholder="Contoh: 110"
+                                           class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2.5 px-4 border">
+                                    @error('sks_diambil') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
 
                                 {{-- Tanggal Mulai --}}
@@ -108,6 +155,15 @@
                                     <input type="date" name="tanggal_selesai" id="tanggal_selesai" value="{{ old('tanggal_selesai') }}" required
                                            class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 text-sm py-2.5 px-4 border text-slate-600">
                                     @error('tanggal_selesai') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
+                                </div>
+
+                                {{-- Bukti IRS / Transkrip Terbaik --}}
+                                <div class="md:col-span-2">
+                                    <label for="transkrip_terbaik" class="block text-sm font-medium text-slate-700 mb-1">Bukti IRS / Transkrip Terbaik (PDF/JPG/PNG) <span class="text-red-500">*</span></label>
+                                    <input type="file" name="transkrip_terbaik" id="transkrip_terbaik" required accept=".pdf,image/*"
+                                           class="w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 border rounded-lg p-2">
+                                    <p class="text-xs text-slate-400 mt-1">Maksimal ukuran file: 10MB</p>
+                                    @error('transkrip_terbaik') <p class="mt-1 text-sm text-red-600">{{ $message }}</p> @enderror
                                 </div>
                             </div>
                         </div>

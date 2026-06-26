@@ -25,17 +25,19 @@
 <div class="flex gap-3 flex-shrink-0">
     <form method="GET" class="flex gap-2 flex-1">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama / kode..."
-               class="mp-input flex-1">
-        <select name="status" class="mp-input mp-select">
+               class="mp-input flex-1" style="min-width: 150px;">
+        <select name="status" class="mp-input mp-select" style="width: 140px;">
             <option value="">Semua Status</option>
             <option value="aktif" {{ request('status')==='aktif'?'selected':'' }}>Aktif</option>
             <option value="nonaktif" {{ request('status')==='nonaktif'?'selected':'' }}>Nonaktif</option>
         </select>
-        <select name="semester" class="mp-input mp-select">
+        <select name="semester" class="mp-input mp-select" style="width: 140px;">
             <option value="">Semua Semester</option>
-            <option value="Ganjil">Ganjil</option>
-            <option value="Genap">Genap</option>
+            <option value="Ganjil" {{ request('semester')==='Ganjil'?'selected':'' }}>Ganjil</option>
+            <option value="Genap"  {{ request('semester')==='Genap'?'selected':'' }}>Genap</option>
         </select>
+        <input type="text" name="tahun_ajaran" value="{{ request('tahun_ajaran') }}" placeholder="Tahun Ajaran..."
+               class="mp-input" style="width: 140px;">
         <button type="submit" class="mp-btn primary sm">Filter</button>
         <a href="{{ route('eoffice.manprak.admin.praktikum.index') }}" class="mp-btn secondary sm">Reset</a>
     </form>
@@ -49,65 +51,86 @@
 </div>
 
 {{-- Table --}}
-<div class="mp-card flex-1 min-h-0">
-    <div style="flex-shrink:0;">
-        <div style="display:flex;align-items:center;padding:10px 20px;background:#F9FAFB;border-bottom:1px solid #DFE1E7;">
-            <div class="mp-th" style="width:100px;">Kode</div>
-            <div class="mp-th flex-1">Nama Praktikum</div>
-            <div class="mp-th" style="width:160px;">Dosen Pengampu</div>
-            <div class="mp-th" style="width:140px;">Koordinator</div>
-            <div class="mp-th" style="width:80px;">Praktikan</div>
-            <div class="mp-th" style="width:90px;">Status</div>
-            <div class="mp-th" style="width:80px;">Aksi</div>
-        </div>
+<div style="background:#fff; border:1px solid var(--c-border, #DFE1E7); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04); display:flex; flex-direction:column; flex:1; min-height:0;">
+    <div style="display:flex; align-items:center; justify-content:space-between; padding:14px 16px; border-bottom:1px solid var(--c-border, #DFE1E7);">
+        <h2 style="font-size:14px; font-weight:700; color:var(--c-fg, #0D0D12); margin:0;">Daftar Praktikum</h2>
     </div>
-    <div class="overflow-y-auto flex-1">
-        @forelse($praktikums ?? [] as $p)
-        <div class="mp-tr" style="display:flex;align-items:center;padding:12px 20px;">
-            <div style="width:100px;font-size:12px;font-weight:700;letter-spacing:.05em;color:#0B266E;font-family:monospace;">{{ $p->kode ?? '—' }}</div>
-            <div class="flex-1 pr-3">
-                <div style="font-size:13px;font-weight:600;color:#0D0D12;" class="truncate">{{ $p->nama }}</div>
-                <div style="font-size:11px;color:#666D80;">{{ $p->tahun_ajaran }} / Sem. {{ $p->semester }}</div>
-            </div>
-            <div style="width:160px;font-size:12px;color:#666D80;" class="truncate">{{ $p->dosen?->name ?? '—' }}</div>
-            <div style="width:140px;font-size:12px;color:#666D80;" class="truncate">
-                @if($p->koordinator)
-                    {{ $p->koordinator->name }}
-                @else
-                    <span style="color:#DF1C41;font-size:11px;font-weight:600;">Belum ditunjuk</span>
-                @endif
-            </div>
-            <div style="width:80px;font-size:13px;font-weight:600;color:#0D0D12;text-align:center;">{{ $p->daftar_praktikan_count ?? 0 }}</div>
-            <div style="width:90px;">
-                @if($p->status === 'aktif')
-                    <span class="mp-badge success sm"><span class="dot"></span>Aktif</span>
-                @else
-                    <span class="mp-badge neutral sm"><span class="dot"></span>Nonaktif</span>
-                @endif
-            </div>
-            <div class="flex gap-1" style="width:80px;">
-                <a href="{{ route('eoffice.manprak.admin.praktikum.edit', $p->id) }}"
-                   class="mp-btn secondary sm" style="padding:5px 8px;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
-                </a>
-                <form method="POST" action="{{ route('eoffice.manprak.admin.praktikum.destroy', $p->id) }}"
-                      onsubmit="return confirm('Hapus praktikum {{ $p->nama }}?')">
-                    @csrf @method('DELETE')
-                    <button type="submit" class="mp-btn destructive sm" style="padding:5px 8px;">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
-                    </button>
-                </form>
-            </div>
-        </div>
-        @empty
-        <div style="padding:64px 20px;text-align:center;">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#DFE1E7" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-            <div style="font-size:13px;color:#666D80;">Belum ada data praktikum.</div>
-        </div>
-        @endforelse
+    <div class="overflow-x-auto flex-1">
+        <table style="width:100%; border-collapse:collapse; min-width:850px;">
+            <thead>
+                <tr style="border-bottom:1px solid var(--c-border, #DFE1E7); background:#FAFAFA;">
+
+                    <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Nama Praktikum</th>
+                    <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:160px;">Dosen Pengampu</th>
+                    <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:140px;">Koordinator</th>
+                    <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:80px;">Praktikan</th>
+                    <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:90px;">Status</th>
+                    <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap; width:80px;">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @forelse($praktikums ?? [] as $p)
+                <tr style="border-bottom:1px solid #F3F4F6; transition:background .12s; cursor:pointer;"
+                    onmouseover="this.style.background='#FAFAFA'" onmouseout="this.style.background='transparent'"
+                    onclick="window.location='{{ route('eoffice.manprak.admin.praktikum.detail', $p->id) }}'">
+
+                    <td style="padding:14px 16px;">
+                        <div style="font-size:13px; font-weight:600; color:#0B266E;" class="truncate">{{ $p->nama }}</div>
+                        <div style="font-size:11px; color:var(--c-fg-muted, #666D80);">{{ $p->tahun_ajaran }} / Sem. {{ $p->semester }}</div>
+                    </td>
+                    <td style="padding:14px 16px; font-size:13px; color:var(--c-fg-muted, #666D80);" class="truncate">
+                        @forelse($p->dosens as $dosen)
+                            <div style="margin-bottom:2px;">{{ $dosen->name }}</div>
+                        @empty
+                            —
+                        @endforelse
+                    </td>
+                    <td style="padding:14px 16px; font-size:13px; color:var(--c-fg-muted, #666D80);" class="truncate">
+                        @if($p->koordinator)
+                            {{ $p->koordinator->name }}
+                        @else
+                            <span style="color:#EF4444; font-size:11px; font-weight:600;">Belum ditunjuk</span>
+                        @endif
+                    </td>
+                    <td style="padding:14px 16px; font-size:13px; font-weight:600; color:var(--c-fg, #0D0D12); text-align:center;">
+                        {{ $p->daftar_praktikan_count ?? 0 }}
+                    </td>
+                    <td style="padding:14px 16px; text-align:center;">
+                        @if($p->status === 'aktif')
+                            <span class="mp-badge success sm"><span class="dot"></span>Aktif</span>
+                        @else
+                            <span class="mp-badge neutral sm"><span class="dot"></span>Nonaktif</span>
+                        @endif
+                    </td>
+                    <td style="padding:14px 16px; text-align:center;">
+                        <div class="flex gap-1 justify-center">
+                            <a href="{{ route('eoffice.manprak.admin.praktikum.edit', $p->id) }}"
+                               class="mp-btn secondary sm" style="padding:5px 8px;">
+                                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                            </a>
+                            <form method="POST" action="{{ route('eoffice.manprak.admin.praktikum.destroy', $p->id) }}"
+                                  onsubmit="return confirm('Hapus praktikum {{ $p->nama }}?')">
+                                @csrf @method('DELETE')
+                                <button type="submit" class="mp-btn destructive sm" style="padding:5px 8px;">
+                                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>
+                                </button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                @empty
+                <tr>
+                    <td colspan="6" style="padding:64px 20px; text-align:center;">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--c-border, #DFE1E7)" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 12px;display:block;"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+                        <div style="font-size:13px;color:var(--c-fg-muted, #666D80);">Belum ada data praktikum.</div>
+                    </td>
+                </tr>
+                @endforelse
+            </tbody>
+        </table>
     </div>
     @if(isset($praktikums) && method_exists($praktikums, 'links'))
-    <div style="padding:12px 20px;border-top:1px solid #DFE1E7;flex-shrink:0;">
+    <div style="padding:12px 20px; border-top:1px solid var(--c-border, #DFE1E7); flex-shrink:0;">
         {{ $praktikums->links() }}
     </div>
     @endif
@@ -123,6 +146,16 @@
         </div>
         <form method="POST" action="{{ route('eoffice.manprak.admin.praktikum.store') }}" class="p-6">
             @csrf
+            @if($errors->any())
+            <div class="mb-4 p-3 bg-[#FFF5F5] border border-[#FCA5A5] rounded-[9px]">
+                <div class="text-[#EF4444] text-[12px] font-bold mb-1">Gagal menyimpan data:</div>
+                <ul class="list-disc pl-5 text-[11px] text-[#EF4444] m-0">
+                    @foreach($errors->all() as $err)
+                    <li>{{ $err }}</li>
+                    @endforeach
+                </ul>
+            </div>
+            @endif
             <div class="flex flex-col gap-4">
                 <div>
                     <label class="block text-[12px] font-semibold text-[#353849] mb-1">Nama Praktikum <span class="text-red-500">*</span></label>
@@ -130,8 +163,8 @@
                            value="{{ old('nama') }}" class="mp-input w-full">
                 </div>
                 <div>
-                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Mata Kuliah Praktikum</label>
-                    <select name="matkul_id" class="mp-input mp-select w-full">
+                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Mata Kuliah Praktikum <span class="text-red-500">*</span></label>
+                    <select name="matkul_id" required class="mp-input mp-select w-full">
                         <option value="">— Pilih Mata Kuliah —</option>
                         @foreach(($matkulList ?? collect())->groupBy('semester') as $sem => $items)
                         <optgroup label="Semester {{ $sem }}">
@@ -147,7 +180,7 @@
                 <div class="grid grid-cols-2 gap-3">
                     <div>
                         <label class="block text-[12px] font-semibold text-[#353849] mb-1">Tahun Ajaran <span class="text-red-500">*</span></label>
-                        <input type="number" name="tahun_ajaran" required placeholder="2025" value="{{ old('tahun_ajaran', now()->year) }}"
+                        <input type="text" name="tahun_ajaran" required placeholder="2025/2026" value="{{ old('tahun_ajaran') }}"
                                class="mp-input w-full">
                     </div>
                     <div>
@@ -158,23 +191,32 @@
                         </select>
                     </div>
                 </div>
-                <div>
-                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Dosen Pengampu</label>
-                    <select name="dosen_id" class="mp-input mp-select w-full">
-                        <option value="">— Pilih Dosen —</option>
-                        @foreach($dosenList ?? [] as $d)
-                        <option value="{{ $d->id }}" {{ old('dosen_id') == $d->id ? 'selected' : '' }}>{{ $d->name }}</option>
-                        @endforeach
-                    </select>
+                @php
+                    $oldDosenIds = old('dosen_ids', ['']);
+                    if (!is_array($oldDosenIds) || empty($oldDosenIds)) {
+                        $oldDosenIds = [''];
+                    }
+                @endphp
+                <div x-data="{ dosens: {{ json_encode($oldDosenIds) }} }">
+                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Dosen Pengampu <span class="text-red-500">*</span></label>
+                    <template x-for="(dosen, index) in dosens" :key="index">
+                        <div class="flex gap-2 mb-2">
+                            <select :name="'dosen_ids[' + index + ']'" x-model="dosens[index]" required class="mp-input mp-select w-full">
+                                <option value="">— Pilih Dosen —</option>
+                                @foreach($dosenList ?? [] as $d)
+                                <option value="{{ $d->id }}">{{ $d->name }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" x-show="dosens.length > 1" @click="dosens.splice(index, 1)" class="mp-btn destructive sm px-3" style="padding:0 12px;">✕</button>
+                        </div>
+                    </template>
+                    <button type="button" x-show="dosens.length < 3" @click="dosens.push('')" class="mp-btn secondary sm w-full mt-1" style="border:1px dashed #A4ABB8;">+ Tambah Dosen Pengampu</button>
+                    <p class="text-[11px] text-[#666D80] mt-1 text-right">Maks. 3 Dosen</p>
                 </div>
+
                 <div>
-                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Deskripsi</label>
-                    <textarea name="deskripsi" rows="2" placeholder="Deskripsi singkat praktikum..."
-                              class="mp-input w-full resize-none">{{ old('deskripsi') }}</textarea>
-                </div>
-                <div>
-                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Status</label>
-                    <select name="status" class="mp-input mp-select w-full">
+                    <label class="block text-[12px] font-semibold text-[#353849] mb-1">Status <span class="text-red-500">*</span></label>
+                    <select name="status" required class="mp-input mp-select w-full">
                         <option value="aktif">Aktif</option>
                         <option value="nonaktif">Nonaktif</option>
                     </select>

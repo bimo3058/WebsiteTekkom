@@ -2,6 +2,7 @@
 
 namespace Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa;
 
+use App\Services\SupabaseStorage;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Modules\EOffice\Models\DaftarPraktikan;
@@ -11,6 +12,8 @@ use Modules\EOffice\Models\Praktikum;
 
 class PendaftaranPraktikanController extends Controller
 {
+    public function __construct(private SupabaseStorage $supabase) {}
+
     private function getPeriodeAktif(string $praktikumId): ?PeriodePendaftaran
     {
         return PeriodePendaftaran::where('praktikum_id', $praktikumId)
@@ -22,7 +25,7 @@ class PendaftaranPraktikanController extends Controller
             ->first();
     }
 
-    public function index()
+    public function index(Request $request)
     {
         $user = auth()->user();
 
@@ -33,7 +36,7 @@ class PendaftaranPraktikanController extends Controller
                     ->where(fn ($x) => $x->whereNull('dibuka_pada')->orWhere('dibuka_pada', '<=', now()))
                     ->where(fn ($x) => $x->whereNull('ditutup_pada')->orWhere('ditutup_pada', '>', now()));
             })
-            ->with(['dosen', 'matkul'])
+            ->with(['dosens', 'matkul'])
             ->orderBy('nama')
             ->get();
 
@@ -48,10 +51,36 @@ class PendaftaranPraktikanController extends Controller
             $periodeByPraktikum[$p->id] = $this->getPeriodeAktif($p->id);
         }
 
+        $daftarPraktikan = DaftarPraktikan::with(['praktikum.dosens', 'praktikum.koordinator'])
+            ->where('user_id', $user->id)
+            ->get();
+
+        $activePraktikumId = $request->input('praktikum_id')
+            ?? session('mhs_praktikum_id')
+            ?? $daftarPraktikan->first()?->praktikum_id;
+
+        if ($activePraktikumId) {
+            session(['mhs_praktikum_id' => $activePraktikumId]);
+        }
+
+        $activePraktikum = $daftarPraktikan->firstWhere('praktikum_id', $activePraktikumId)?->praktikum;
+
+        $classmates = collect();
+        if ($activePraktikum) {
+            $classmates = DaftarPraktikan::with(['user', 'user.student'])
+                ->where('praktikum_id', $activePraktikum->id)
+                ->orderByRaw("CASE WHEN (shift IS NULL OR shift = '') THEN 1 ELSE 0 END, shift ASC")
+                ->orderByRaw("CASE WHEN (kelompok IS NULL OR kelompok = '') THEN 1 ELSE 0 END, kelompok ASC")
+                ->orderBy('created_at')
+                ->get();
+        }
+
         return view('eoffice::manajemen-praktikum.mahasiswa.pendaftaran-praktikan', compact(
             'praktikumBuka',
             'riwayat',
-            'periodeByPraktikum'
+            'periodeByPraktikum',
+            'activePraktikum',
+            'classmates'
         ));
     }
 
@@ -89,7 +118,7 @@ class PendaftaranPraktikanController extends Controller
             return back()->with('error', 'Anda sudah disetujui. Gunakan kode praktikum di dashboard untuk bergabung ke kelas.');
         }
 
-        $irsPath = $request->file('irs')->store('praktikan-irs/' . $user->id, 'public');
+        $irsPath = $this->supabase->upload($request->file('irs'), 'praktikan-irs/' . $user->id, 'eoffice');
 
         PendaftaranPraktikan::create([
             'user_id'       => $user->id,

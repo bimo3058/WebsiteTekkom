@@ -9,17 +9,11 @@
         </div>
         <p class="mp-page-sub">
             {{ $modul->praktikum?->nama }} · {{ $modul->jadwal_minggu ?? 'Jadwal belum diisi' }}
-            · Kode: <span style="font-family:monospace;font-weight:700;">{{ $modul->kode_modul ?? '-' }}</span>
             · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
         </p>
     </div>
     <div class="mp-page-actions">
-        <form method="POST" action="{{ route('eoffice.manprak.koor.modul.generate-kode', $modul->id) }}">
-            @csrf
-            <button type="submit" class="mp-btn secondary md">
-                {{ $modul->kode_modul ? 'Refresh Kode' : 'Generate Kode' }}
-            </button>
-        </form>
+
         <a href="{{ route('eoffice.manprak.koor.modul.index') }}" class="mp-btn secondary md" style="text-decoration:none;">Kembali</a>
     </div>
 </div>

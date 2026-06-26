@@ -219,14 +219,37 @@
                     </div>
                     <div class="overflow-y-auto flex-1">
                         @forelse($pengumuman as $peng)
-                        <div class="px-5 py-[12px] border-b border-[#F8F9FB] last:border-0">
-                            <div class="text-[13px] font-semibold text-[#0D0D12]">{{ $peng->judul }}</div>
+                        <div class="px-5 py-[12px] border-b border-[#F8F9FB] last:border-0 group {{ isset($peng->url) && $peng->url ? 'cursor-pointer hover:bg-[#F6F8FA] transition-colors' : '' }}"
+                             @if(isset($peng->url) && $peng->url) onclick="window.location.href='{{ $peng->url }}'" @endif>
+                            <div class="text-[13px] font-semibold text-[#0D0D12] group-hover:text-[#0B266E] transition-colors">{{ $peng->judul }}</div>
                             <div class="text-[12px] text-[#666D80] mt-[2px] line-clamp-2">{{ $peng->konten }}</div>
-                            <div class="text-[11px] text-[#A4ABB8] mt-[5px]">{{ $peng->created_at?->diffForHumans() }}</div>
+                            <div class="text-[11px] text-[#A4ABB8] mt-[5px]">{{ $peng->date }}</div>
                         </div>
                         @empty
                         <div class="py-8 text-center text-[13px] text-[#A4ABB8]">Belum ada pengumuman.</div>
                         @endforelse
+                    </div>
+                </div>
+
+                {{-- Timeline KP --}}
+                <div class="flex flex-col bg-white border border-[#DFE1E7] rounded-[14px] overflow-hidden shadow-[0_1px_2px_rgba(228,229,231,.24)] flex-1 min-w-0">
+                    <div class="px-5 py-4 border-b border-[#DFE1E7] flex-shrink-0">
+                        <div class="font-bold text-[15px] text-[#0D0D12]">Timeline KP</div>
+                    </div>
+                    <div class="overflow-y-auto flex-1 px-5 py-4">
+                        @if(isset($timelineKp) && $timelineKp->count() > 0)
+                            <div class="relative border-l-2 border-[#DFE1E7] ml-2 space-y-4">
+                                @foreach($timelineKp as $item)
+                                <div class="relative pl-5">
+                                    <div class="absolute w-3 h-3 bg-[#D39C3D] rounded-full -left-[7px] top-1.5 border-2 border-white"></div>
+                                    <div class="text-[13px] font-semibold text-[#0D0D12]">{{ $item->judul }}</div>
+                                    <div class="text-[12px] text-[#666D80] mt-[2px]">{{ $item->konten }}</div>
+                                </div>
+                                @endforeach
+                            </div>
+                        @else
+                            <div class="py-6 text-center text-[13px] text-[#A4ABB8]">Belum ada timeline KP.</div>
+                        @endif
                     </div>
                 </div>
 

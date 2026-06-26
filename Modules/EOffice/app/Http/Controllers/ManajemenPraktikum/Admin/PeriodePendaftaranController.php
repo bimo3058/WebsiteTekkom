@@ -12,7 +12,9 @@ use Modules\EOffice\Services\NotifikasiService;
 use Modules\EOffice\Services\PeriodePendaftaranService;
 
 /**
- * Admin: Kelola periode pendaftaran koor & asprak.
+ * Admin: Kelola periode pendaftaran PRAKTIKAN.
+ *
+ * Periode koor dibuka oleh Dosen, periode asprak dibuka oleh Koordinator.
  * Dropdown utama dari eo_matkul_praktikum (sudah di-seed).
  */
 class PeriodePendaftaranController extends Controller
@@ -33,15 +35,16 @@ class PeriodePendaftaranController extends Controller
         // Praktikum yg cocok matkul_id-nya (sudah di-link)
         // Jika matkul dipilih tapi belum ada yg di-link → tampilkan semua aktif agar bisa di-assign
         if ($matkulDipilih) {
-            $praktikumLinked = Praktikum::with(['dosen', 'koordinator'])
+            $praktikumLinked = Praktikum::with(['dosens', 'koordinator'])
                 ->where('matkul_id', $matkulId)
                 ->where('status', 'aktif')
                 ->orderByDesc('created_at')
                 ->get();
 
-            // Semua praktikum aktif (untuk dropdown assign jika belum ada yang terhubung)
-            $praktikumSemua = Praktikum::with(['dosen', 'matkul'])
+            // Semua praktikum aktif yang BELUM ditautkan ke matkul apapun
+            $praktikumSemua = Praktikum::with(['dosens', 'matkul'])
                 ->where('status', 'aktif')
+                ->whereNull('matkul_id')
                 ->orderByDesc('created_at')
                 ->get();
         } else {
@@ -100,9 +103,9 @@ class PeriodePendaftaranController extends Controller
     {
         $this->periodeService->tutupKadaluarsa();
 
-        $periode = PeriodePendaftaran::with(['praktikum.matkul', 'praktikum.dosen', 'dibukaOleh'])
+        $periode = PeriodePendaftaran::with(['praktikum.matkul', 'praktikum.dosens', 'dibukaOleh'])
             ->findOrFail($id);
-        $praktikumList = Praktikum::with(['matkul', 'dosen'])
+        $praktikumList = Praktikum::with(['matkul', 'dosens'])
             ->where('status', 'aktif')
             ->orderByDesc('created_at')
             ->get();
@@ -119,10 +122,10 @@ class PeriodePendaftaranController extends Controller
 
         $request->validate([
             'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
-            'jenis'        => 'required|in:koor,asprak,praktikan',
+            'jenis'        => 'required|in:praktikan',
             'nama'         => 'required|string|max:255',
-            'dibuka_pada'  => 'nullable|date',
-            'ditutup_pada' => 'nullable|date|after_or_equal:dibuka_pada',
+            'dibuka_pada'  => 'required|date',
+            'ditutup_pada' => 'required|date|after_or_equal:dibuka_pada',
             'is_aktif'     => 'nullable|boolean',
         ]);
 
@@ -164,10 +167,10 @@ class PeriodePendaftaranController extends Controller
     {
         $request->validate([
             'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
-            'jenis'        => 'required|in:koor,asprak,praktikan',
+            'jenis'        => 'required|in:praktikan',
             'nama'         => 'nullable|string|max:255',
-            'dibuka_pada'  => 'nullable|date',
-            'ditutup_pada' => 'nullable|date|after_or_equal:dibuka_pada',
+            'dibuka_pada'  => 'required|date',
+            'ditutup_pada' => 'required|date|after_or_equal:dibuka_pada',
         ]);
 
         PeriodePendaftaran::where('praktikum_id', $request->praktikum_id)

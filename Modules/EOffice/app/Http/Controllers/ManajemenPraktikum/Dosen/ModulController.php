@@ -19,7 +19,7 @@ class ModulController extends Controller
     {
         $user = auth()->user();
 
-        $praktikums = Praktikum::where('dosen_id', $user->id)
+        $praktikums = Praktikum::whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
             ->where('status', 'aktif')
             ->orderByDesc('created_at')
             ->get();

@@ -256,7 +256,7 @@ class PengumumanService
         $roles = $user->roles->pluck('name');
 
         // Staff himpunan wajib verifikasi, KECUALI jika juga punya role senior
-        $seniorRoles = ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm',
+        $seniorRoles = ['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'ketua_departemen',
                         'ketua_himpunan', 'wakil_ketua_himpunan', 'ketua_bidang', 'ketua_unit',
                         'dosen', 'dosen_koordinator'];
 
@@ -276,6 +276,7 @@ class PengumumanService
             'wakil_ketua_himpunan',
             'ketua_bidang',
             'ketua_unit',
+            'dpm',
         ];
 
         // Filter berdasarkan role saja — filter PengurusHimaskom.status_keaktifan
