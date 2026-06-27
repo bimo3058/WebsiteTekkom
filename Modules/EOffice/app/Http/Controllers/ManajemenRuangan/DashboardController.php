@@ -4,6 +4,7 @@ namespace Modules\EOffice\Http\Controllers\ManajemenRuangan;
 
 use App\Http\Controllers\Controller;
 use Modules\EOffice\Models\Ruangan;
+use Modules\EOffice\Models\Peminjaman;
 use App\Models\User;
 
 class DashboardController extends Controller
@@ -15,11 +16,15 @@ class DashboardController extends Controller
 
         if ($isAdmin) {
             $totalRuangan = Ruangan::where('is_active', true)->count();
-            $totalUser = User::count();
+            $dipakaiHariIni = Peminjaman::where('status', 'disetujui')
+                ->whereDate('tanggal_pinjam', \Carbon\Carbon::today())
+                ->count();
             $recentRuangan = Ruangan::orderBy('created_at', 'desc')->take(5)->get();
-            // Nanti ditambahkan query Peminjaman kalau modulnya sudah siap
 
-            return view('eoffice::manajemen-ruangan.admin.dashboard', compact('totalRuangan', 'totalUser', 'recentRuangan'));
+            Peminjaman::autoExpirePending(); // Ensure garbage collection triggers metrics updates
+            $pendingApproval = Peminjaman::where('status', 'menunggu')->count();
+
+            return view('eoffice::manajemen-ruangan.admin.dashboard', compact('totalRuangan', 'dipakaiHariIni', 'recentRuangan', 'pendingApproval'));
         }
 
         // Return regular user dashboard

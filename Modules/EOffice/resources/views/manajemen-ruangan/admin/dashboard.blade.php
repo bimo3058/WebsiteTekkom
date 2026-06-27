@@ -25,17 +25,20 @@
                     <polyline points="12 6 12 12 16 14" />
                 </svg></div>
             <div class="mp-stat-label">Menunggu Approval</div>
-            <div class="mp-stat-value">0</div>
+            <div class="mp-stat-value">{{ number_format($pendingApproval ?? 0) }}</div>
             <div class="mp-stat-sub">Butuh tindakan admin</div>
         </div>
         <div class="mp-stat">
             <div class="mp-stat-icon violet"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round">
-                    <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2M12 11a4 4 0 100-8 4 4 0 000 8z" />
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
                 </svg></div>
-            <div class="mp-stat-label">Total Pengguna</div>
-            <div class="mp-stat-value">{{ number_format($totalUser ?? 0) }}</div>
-            <div class="mp-stat-sub">Terdaftar di sistem</div>
+            <div class="mp-stat-label">Digunakan Hari Ini</div>
+            <div class="mp-stat-value">{{ number_format($dipakaiHariIni ?? 0) }}</div>
+            <div class="mp-stat-sub">Jadwal disetujui hari ini</div>
         </div>
     </div>
 
