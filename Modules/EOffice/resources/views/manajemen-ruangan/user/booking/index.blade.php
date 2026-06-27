@@ -10,38 +10,24 @@
             </div>
             <div class="flex items-center gap-3">
                 <div class="relative">
-                    <input type="text" id="searchInput" onkeyup="filterRooms()"
-                        placeholder="Cari nama ruangan..."
-                        class="mp-input pl-9 pr-4 py-2 text-[13px] w-56 rounded-lg border border-gray-300">
-                    <svg class="w-4 h-4 text-gray-400 absolute left-2.5 top-1/2 -translate-y-1/2" fill="none"
+                    <svg class="w-4 h-4 text-gray-400 absolute left-3 top-1/2 -translate-y-1/2" fill="none"
                         stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                             d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0" />
                     </svg>
+                    <input type="text" id="searchInput" onkeyup="filterRooms()"
+                        placeholder="Cari nama ruangan..."
+                        class="pl-9 pr-4 py-2 text-[13px] w-56 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
                 </div>
                 <a href="{{ route('eoffice.peminjaman.user.kalender') }}"
-                    class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-lg bg-indigo-50 text-indigo-700 text-[13px] font-semibold border border-indigo-200 hover:bg-indigo-100 transition-colors">
-                    📅 Kalender
+                    class="inline-flex items-center justify-center px-4 py-2 rounded-lg bg-indigo-50 text-indigo-700 text-[13px] font-semibold border border-indigo-200 hover:bg-indigo-100 transition-colors">
+                    Lihat Kalender
                 </a>
             </div>
         </div>
     </div>
 
-    {{-- =================== STATS STRIP =================== --}}
-    <div class="grid grid-cols-3 gap-4 mt-5 mb-6">
-        <div class="bg-white rounded-xl border border-gray-200 p-4 text-center shadow-sm">
-            <p class="text-2xl font-bold text-indigo-700">{{ $ruangans->count() }}</p>
-            <p class="text-[11px] text-gray-500 font-medium mt-0.5">Ruangan Tersedia</p>
-        </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-4 text-center shadow-sm">
-            <p class="text-2xl font-bold text-emerald-600">{{ $ruangans->sum('kapasitas') }}</p>
-            <p class="text-[11px] text-gray-500 font-medium mt-0.5">Total Kapasitas</p>
-        </div>
-        <div class="bg-white rounded-xl border border-gray-200 p-4 text-center shadow-sm">
-            <p class="text-2xl font-bold text-amber-600">{{ $pendingCount }}</p>
-            <p class="text-[11px] text-gray-500 font-medium mt-0.5">Proses Persetujuanmu</p>
-        </div>
-    </div>
+
 
     {{-- =================== ROOM CARDS GRID =================== --}}
     @if ($ruangans->count() > 0)
@@ -73,12 +59,12 @@
 
                     {{-- Room Image Placeholder / Actual Photo --}}
                     <a href="{{ $detailUrl }}"
-                        class="h-36 relative flex items-center justify-center border-b border-gray-100 overflow-hidden group bg-gradient-to-br from-indigo-50 to-indigo-100">
+                        class="block w-full aspect-video relative border-b border-gray-100 overflow-hidden group bg-gradient-to-br from-indigo-50 to-indigo-100">
                         @if($room->fotos->count() > 0)
                             <img src="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($room->fotos->first()->path_foto) }}" alt="Foto {{ $room->nama }}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
                         @else
-                            <div class="text-center">
-                                <svg class="w-12 h-12 text-indigo-300 mx-auto mb-1 group-hover:text-indigo-400 transition-colors"
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <svg class="w-12 h-12 text-indigo-300 mb-1 group-hover:text-indigo-400 transition-colors"
                                     fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
                                         d="M3 3v18h18M8 17V9m4 8V5m4 12v-4" />
@@ -128,29 +114,17 @@
                         @endif
 
                         {{-- Action Buttons --}}
-                        <div class="mt-auto pt-3 border-t border-gray-100 flex items-center justify-between gap-2">
-                            @if ($bookedToday > 0)
-                                <span class="flex items-center gap-1.5 text-[11px] font-semibold text-amber-700">
-                                    <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
-                                    {{ $bookedToday }}x terbooking hari ini
-                                </span>
-                            @else
-                                <span class="flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700">
-                                    <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                                    Bebas hari ini
-                                </span>
-                            @endif
-
+                        <div class="mt-auto pt-3 border-t border-gray-100 flex items-center justify-end gap-2">
                             <div class="flex items-center gap-2">
                                 {{-- Detail Page Link --}}
                                 <a href="{{ $detailUrl }}"
-                                    class="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-[12px] font-semibold transition-colors border border-gray-200">
-                                    🔍 Detail
+                                    class="inline-flex items-center px-4 py-1.5 rounded-lg bg-gray-100 hover:bg-gray-200 text-gray-700 text-[12px] font-semibold transition-colors border border-gray-200">
+                                    Detail
                                 </a>
                                 {{-- Schedule Button --}}
                                 <a href="{{ $kalenderUrl }}"
-                                    class="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[12px] font-bold transition-colors shadow-sm whitespace-nowrap">
-                                    📅 Jadwal
+                                    class="inline-flex items-center px-4 py-1.5 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white text-[12px] font-bold transition-colors shadow-sm whitespace-nowrap">
+                                    Jadwal
                                 </a>
                             </div>
                         </div>

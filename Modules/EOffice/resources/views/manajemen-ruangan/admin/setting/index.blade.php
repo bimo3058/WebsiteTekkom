@@ -32,6 +32,17 @@
                             style="padding: 10px 14px; font-size: 14px;" required>
                     </div>
 
+                    <div style="margin-bottom: 24px;">
+                        <label
+                            style="display:block; font-size:12px; font-weight:600; margin-bottom:8px; color: #4B5563;">Batas
+                            Minimal H- Booking (Hari)</label>
+                        <input type="number" name="batas_h_min_booking" min="0" max="30" class="mp-input"
+                            value="{{ $batasHMinBooking ?? 0 }}" style="padding: 10px 14px; font-size: 14px;" required>
+                        <p style="font-size: 11px; color: #6B7280; margin-top: 6px;">Contoh: Isi <strong>2</strong> jika
+                            booking minimal harus 2 hari sebelum pemakaian. Isi <strong>0</strong> untuk mengizinkan
+                            booking di hari yang sama.</p>
+                    </div>
+
                     <div style="background: #F8F9FB; padding: 16px; border-radius: 10px; border: 1px solid #E5E7EB;">
                         <label style="display:flex; align-items:flex-start; gap:12px; cursor:pointer;">
                             <input type="checkbox" name="buka_akhir_pekan" value="1" {{ $bukaAkhirPekan ? 'checked' : '' }} style="margin-top: 2px; width: 16px; height: 16px; accent-color: #0B266E;">
@@ -85,7 +96,8 @@
                 @error('tanggal')
                     <div
                         style="background: #FEF2F2; color: #991B1B; padding: 10px 14px; border-radius: 8px; margin-top:-14px; margin-bottom: 16px; font-size:13px; border: 1px solid #FCA5A5;">
-                        {{ $message }}</div>
+                        {{ $message }}
+                    </div>
                 @enderror
 
                 <div class="mp-table-wrap" style="border:1px solid #E5E7EB; border-radius: 8px;">
@@ -105,7 +117,8 @@
                             @forelse($tanggalLibur as $libur)
                                 <tr class="mp-tr">
                                     <td style="font-weight:600; color: #111827;">
-                                        {{ \Carbon\Carbon::parse($libur->tanggal)->translatedFormat('d F Y') }}</td>
+                                        {{ \Carbon\Carbon::parse($libur->tanggal)->translatedFormat('d F Y') }}
+                                    </td>
                                     <td style="color: #4B5563;">{{ $libur->keterangan }}</td>
                                     <td style="text-align:right;">
                                         <form method="POST"

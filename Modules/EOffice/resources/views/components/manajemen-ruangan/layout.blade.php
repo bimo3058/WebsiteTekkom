@@ -531,7 +531,8 @@
                     ],
                     'Sistem Ruangan' => [
                         ['href' => '#', 'label' => 'Kalender Global', 'match' => 'admin.kalender', 'icon' => $iCal],
-                        ['href' => route('eoffice.peminjaman.admin.persetujuan.index'), 'label' => 'Persetujuan Peminjaman', 'match' => 'admin.persetujuan', 'icon' => $iList],
+                        ['href' => route('eoffice.peminjaman.admin.persetujuan.index'), 'label' => 'Persetujuan', 'match' => 'admin.persetujuan', 'icon' => 'M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2'],
+                        ['href' => route('eoffice.peminjaman.admin.riwayat.index'), 'label' => 'Arsip', 'match' => 'admin.riwayat', 'icon' => 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z'],
                     ],
                     'Master Data' => [
                         ['href' => route('eoffice.peminjaman.admin.user.index'), 'label' => 'Manajemen User', 'match' => 'admin.user', 'icon' => $iUser],
@@ -634,7 +635,7 @@
                                         </svg>
                                         <span
                                             class="text-[13px] flex-1 overflow-hidden text-ellipsis transition-[opacity,width] duration-200
-                                                                                                                                                                                     {{ $active ? 'font-semibold' : 'font-medium' }}"
+                                                                                                                                                                                                             {{ $active ? 'font-semibold' : 'font-medium' }}"
                                             :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">{{ $item['label'] }}</span>
                                     </a>
                                 @endforeach

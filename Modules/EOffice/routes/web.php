@@ -609,13 +609,15 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
         Route::middleware(['role:superadmin|admin_eoffice'])
             ->prefix('admin')->name('admin.')
             ->group(function () use ($MRAdminUserController, $MRAdminRuanganController, $MRAdminPengaturanController) {
-                Route::post('user/{user}/suspend', [$MRAdminUserController, 'suspend'])->name('user.suspend');
-                Route::resource('user', $MRAdminUserController);
+                Route::get('user', [$MRAdminUserController, 'index'])->name('user.index');
+                Route::get('user/{user}/history', [$MRAdminUserController, 'history'])->name('user.history');
+                Route::post('user/{user}/toggle-blacklist', [$MRAdminUserController, 'toggleBlacklist'])->name('user.toggleBlacklist');
                 Route::resource('ruangan', $MRAdminRuanganController);
                 Route::delete('ruangan/foto/{id}', [$MRAdminRuanganController, 'destroyFoto'])->name('ruangan.foto.destroy');
 
-                // Persetujuan Peminjaman...
+                // Persetujuan Peminjaman & Riwayat...
                 Route::get('/persetujuan', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'index'])->name('persetujuan.index');
+                Route::get('/riwayat-peminjaman', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'riwayat'])->name('riwayat.index');
                 Route::post('/persetujuan/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateStatus'])->name('persetujuan.update');
 
                 // Settings

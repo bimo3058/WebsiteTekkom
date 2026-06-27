@@ -5,108 +5,78 @@ namespace Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Spatie\Permission\Models\Role;
+use Modules\EOffice\Models\Peminjaman;
+use Modules\EOffice\Models\MrBlacklist;
 
 class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $query = User::with('roles');
+        // Ambil User ID dari mahasiswa yang pernah booking ruangan
+        $activeUserIds = Peminjaman::select('user_id')->distinct()->pluck('user_id');
+
+        $query = User::whereIn('id', $activeUserIds);
 
         if ($request->has('search')) {
             $search = $request->search;
             $query->where(function ($q) use ($search) {
                 $q->where('name', 'like', "%{$search}%")
-                    ->orWhere('email', 'like', "%{$search}%");
+                    ->orWhere('email', 'like', "%{$search}%")
+                    ->orWhere('nomor_induk', 'like', "%{$search}%");
             });
         }
 
-        $users = $query->paginate(15);
-        $roles = Role::all();
+        $users = $query->paginate(15)->withQueryString();
 
-        return view('eoffice::manajemen-ruangan.admin.user.index', compact('users', 'roles'));
+        // Load relationships manually to avoid mutating global App\Models\User
+        $blacklists = MrBlacklist::whereIn('user_id', $users->pluck('id'))->get()->keyBy('user_id');
+
+        // Get total booking count manually for these users
+        $bookingCounts = Peminjaman::whereIn('user_id', $users->pluck('id'))
+            ->selectRaw('user_id, count(*) as count')
+            ->groupBy('user_id')
+            ->pluck('count', 'user_id');
+
+        return view('eoffice::manajemen-ruangan.admin.user.index', compact('users', 'blacklists', 'bookingCounts'));
     }
 
-    public function create()
+    public function history(User $user)
     {
-        // For simplicity, we can use a modal in index, or a separate view.
-        // I will use a separate view.
-        $roles = Role::all();
-        return view('eoffice::manajemen-ruangan.admin.user.create', compact('roles'));
-    }
+        $peminjamans = Peminjaman::with('ruangan')
+            ->where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'role' => 'nullable|string|exists:roles,name',
+        // Render a dedicated history partial or return JSON (we will return JSON and render it via alpine)
+        return response()->json([
+            'success' => true,
+            'name' => $user->name,
+            'data' => $peminjamans->map(function ($p) {
+                return [
+                    'ruangan' => $p->ruangan->nama ?? 'Ruangan Dihapus',
+                    'tujuan' => $p->tujuan,
+                    'tanggal' => \Carbon\Carbon::parse($p->tanggal_pinjam)->format('d/m/Y'),
+                    'waktu' => \Carbon\Carbon::parse($p->jam_mulai)->format('H:i') . ' - ' . \Carbon\Carbon::parse($p->jam_selesai)->format('H:i'),
+                    'status' => $p->status
+                ];
+            })
         ]);
-
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
-
-        if ($request->role) {
-            $user->assignRole($request->role);
-        }
-
-        return redirect()->route('eoffice.peminjaman.admin.user.index')->with('success', 'User berhasil ditambahkan.');
     }
 
-    public function edit(User $user)
+    public function toggleBlacklist(Request $request, User $user)
     {
-        $roles = Role::all();
-        return view('eoffice::manajemen-ruangan.admin.user.edit', compact('user', 'roles'));
-    }
+        $blacklist = MrBlacklist::where('user_id', $user->id)->first();
 
-    public function update(Request $request, User $user)
-    {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'role' => 'nullable|string|exists:roles,name',
-        ]);
-
-        $user->update([
-            'name' => $request->name,
-            'email' => $request->email,
-        ]);
-
-        if ($request->filled('password')) {
-            $user->update(['password' => Hash::make($request->password)]);
-        }
-
-        if ($request->role) {
-            // Remove previous roles or just sync
-            $user->syncRoles([$request->role]);
-        }
-
-        return redirect()->route('eoffice.peminjaman.admin.user.index')->with('success', 'Data user berhasil diperbarui.');
-    }
-
-    public function destroy(User $user)
-    {
-        // Instead of hard delete, suspend or delete based on logic.
-        // We'll use soft deletes since User model uses SoftDeletes.
-        $user->delete();
-        return redirect()->route('eoffice.peminjaman.admin.user.index')->with('success', 'User berhasil dihapus.');
-    }
-
-    public function suspend(User $user)
-    {
-        if ($user->isSuspended()) {
-            $user->unsuspend();
-            $msg = 'Akun user berhasil diaktifkan.';
+        if ($blacklist) {
+            $blacklist->delete();
+            return back()->with('success', 'Status akun ' . $user->name . ' berhasil dipulihkan.');
         } else {
-            $user->suspend('Dinonaktifkan oleh Admin Manajemen Ruangan');
-            $msg = 'Akun user berhasil dinonaktifkan.';
+            $request->validate(['alasan' => 'required|string']);
+            MrBlacklist::create([
+                'user_id' => $user->id,
+                'alasan' => $request->alasan
+            ]);
+            return back()->with('success', 'Akun ' . $user->name . ' berhasil di-suspend dari peminjaman ruangan.');
         }
-
-        return back()->with('success', $msg);
     }
 }

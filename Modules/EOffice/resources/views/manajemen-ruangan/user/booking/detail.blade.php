@@ -18,7 +18,7 @@
 
             {{-- Photo Area / Actual Photo --}}
             <div class="mp-card overflow-hidden">
-                <div class="h-64 relative flex items-center justify-center bg-gradient-to-br from-indigo-100 via-indigo-50 to-blue-50">
+                <div class="aspect-video w-full relative flex items-center justify-center bg-gradient-to-br from-indigo-100 via-indigo-50 to-blue-50">
                     <style>
                         .gallery-slider::-webkit-scrollbar { display: none; }
                         .gallery-slider { -ms-overflow-style: none; scrollbar-width: none; }

@@ -40,4 +40,28 @@ class Peminjaman extends Model
     {
         return $this->belongsTo(Ruangan::class);
     }
+
+    public static function autoExpirePending()
+    {
+        $now = \Carbon\Carbon::now();
+        $today = $now->format('Y-m-d');
+        $currentTime = $now->format('H:i:s');
+
+        $expired = self::where('status', 'menunggu')
+            ->where(function ($q) use ($today, $currentTime) {
+                $q->where('tanggal_pinjam', '<', $today)
+                    ->orWhere(function ($subQ) use ($today, $currentTime) {
+                        $subQ->where('tanggal_pinjam', '=', $today)
+                            ->where('jam_mulai', '<=', $currentTime);
+                    });
+            })->get();
+
+        foreach ($expired as $pinjam) {
+            $pinjam->update([
+                'status' => 'ditolak',
+                'alasan_penolakan' => 'Sistem (Kadaluarsa otomatis - Waktu peminjaman sudah terlewat)',
+                'waktu_approval' => now()
+            ]);
+        }
+    }
 }

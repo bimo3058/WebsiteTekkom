@@ -123,13 +123,13 @@
                             {{-- Row 1: Day headers spanning all rooms --}}
                             <tr style="background: #F1F3F9;">
                                 <th
-                                    style="width: 64px; min-width:64px; border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; background:#F8F9FB; color: #4B5563; font-weight: 700; vertical-align:middle;">
+                                    style="width: 64px; min-width:64px; border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; background:#F8F9FB; color: #4B5563; font-weight: 700; vertical-align:middle; position: sticky; left: 0; z-index: 20; border-right: 2px solid #D1D5DB;">
                                     Jam
                                 </th>
                                 @foreach($weekDays as $day)
                                     <th colspan="{{ $ruangans->count() }}"
                                         style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; color: #111827; font-weight: 700;
-                                                {{ $day->isToday() ? 'background: #EEF2FF; color: #4338CA;' : 'background: #F8F9FB;' }}">
+                                                                                {{ $day->isToday() ? 'background: #EEF2FF; color: #4338CA;' : 'background: #F8F9FB;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
                                         <div
                                             style="font-size:11px; font-weight:500; color: {{ $day->isToday() ? '#6366f1' : '#6B7280' }}; margin-top:2px;">
@@ -140,7 +140,9 @@
                             </tr>
                             {{-- Row 2: Room sub-headers per day --}}
                             <tr style="background: #FAFAFA;">
-                                <th style="border: 1px solid #E5E7EB;"></th>
+                                <th
+                                    style="border: 1px solid #E5E7EB; background: #FAFAFA; position: sticky; left: 0; z-index: 20; border-right: 2px solid #D1D5DB;">
+                                </th>
                                 @foreach($weekDays as $day)
                                     @foreach($ruangans as $ruang)
                                         <th
@@ -156,9 +158,8 @@
                                 <tr style="{{ $loop->odd ? 'background:#FFFFFF;' : 'background:#FAFAFA;' }}">
                                     {{-- Time label --}}
                                     <td
-                                        style="border: 1px solid #E5E7EB; padding: 6px 8px; text-align:center; font-weight:700; font-size:11px; color:#374151; background:#F8F9FB; white-space:nowrap;">
-                                        {{ str_pad($jam, 2, '0', STR_PAD_LEFT) }}:00 -
-                                        {{ str_pad($jam + 1, 2, '0', STR_PAD_LEFT) }}:00
+                                        style="border: 1px solid #E5E7EB; padding: 6px 8px; text-align:center; font-weight:700; font-size:11px; color:#374151; background:#F8F9FB; white-space:nowrap; position: sticky; left: 0; z-index: 10; border-right: 2px solid #D1D5DB;">
+                                        {{ str_pad($jam, 2, '0', STR_PAD_LEFT) }}.00
                                     </td>
                                     {{-- Cells per day per room --}}
                                     @foreach($weekDays as $day)
@@ -176,6 +177,9 @@
                                                 $isWeekend = $day->isWeekend();
                                                 $isClosedWeekend = !$bukaAkhirPekan && $isWeekend;
 
+                                                $minDate = \Carbon\Carbon::today()->addDays($batasHMinBooking);
+                                                $isTooEarly = $day->copy()->startOfDay()->lt($minDate);
+
                                                 $jamStr = str_pad($jam, 2, '0', STR_PAD_LEFT) . ':00';
                                                 $isOutOfHours = ($jamStr < $jamBuka) || ($jamStr >= $jamTutup);
 
@@ -189,6 +193,12 @@
                                                     $bg = '#FEE2E2';
                                                     $border = '#F87171';
                                                     $label = 'Libur';
+                                                    $cursor = 'not-allowed';
+                                                    $href = null;
+                                                } elseif ($isTooEarly) {
+                                                    $bg = '#F3F4F6';
+                                                    $border = '#FCA5A5';
+                                                    $label = 'H-' . $batasHMinBooking;
                                                     $cursor = 'not-allowed';
                                                     $href = null;
                                                 } elseif ($slotStatus === 'disetujui') {
@@ -217,9 +227,9 @@
                                                         @click="openBookingModal('{{ $ruang->id }}', '{{ $ruang->nama }}', '{{ $dateStr }}', '{{ str_pad($jam, 2, '0', STR_PAD_LEFT) }}:00')"
                                                         title="Booking {{ $ruang->nama }} — {{ $day->translatedFormat('D, d M') }} pukul {{ str_pad($jam, 2, '0', STR_PAD_LEFT) }}:00"
                                                         style="display:flex; align-items:center; justify-content:center; min-height:34px; width:100%;
-                                                                                              background:{{ $bg }}; border:1px solid {{ $border }}; border-radius:5px;
-                                                                                              font-size:9px; font-weight:700; color:#065F46; text-decoration:none;
-                                                                                              cursor:{{ $cursor }}; transition:all 0.15s;"
+                                                                                                                                                                              background:{{ $bg }}; border:1px solid {{ $border }}; border-radius:5px;
+                                                                                                                                                                              font-size:9px; font-weight:700; color:#065F46; text-decoration:none;
+                                                                                                                                                                              cursor:{{ $cursor }}; transition:all 0.15s;"
                                                         onmouseover="this.style.background='#A7F3D0'; this.style.transform='scale(1.03)'"
                                                         onmouseout="this.style.background='{{ $bg }}'; this.style.transform='scale(1)'">
                                                         ✓
@@ -227,9 +237,9 @@
                                                 @else
                                                     <div
                                                         style="display:flex; align-items:center; justify-content:center; min-height:34px; width:100%;
-                                                                                                background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
-                                                                                                font-size:9px; font-weight:700; color:{{ $isPast ? '#9CA3AF' : ($slotStatus == 'disetujui' ? '#B91C1C' : '#B45309') }};
-                                                                                                cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '0.9' }};">
+                                                                                                                                                                                background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
+                                                                                                                                                                                font-size:9px; font-weight:700; color:{{ $isPast ? '#9CA3AF' : ($slotStatus == 'disetujui' ? '#B91C1C' : '#B45309') }};
+                                                                                                                                                                                cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '0.9' }};">
                                                         {{ $label }}
                                                     </div>
                                                 @endif
@@ -318,8 +328,8 @@
                                 <a href="{{ $weekLink }}"
                                     title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
                                     style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                          background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #6366F1' : '1px solid #E5E7EB' }};
-                                                          transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
+                                                                                                          background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #6366F1' : '1px solid #E5E7EB' }};
+                                                                                                          transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                     <div
@@ -475,7 +485,7 @@
                         class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-colors focus:ring-2 focus:ring-gray-200">
                         Batal
                     </button>
-                    <button type="button" onclick="document.getElementById('bookingForm').submit()"
+                    <button type="submit" form="bookingForm"
                         class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 border border-transparent rounded-lg shadow-sm hover:bg-indigo-700 transition-colors focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                         Kirim Pengajuan
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

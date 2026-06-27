@@ -14,6 +14,8 @@ class UserPeminjamanController extends Controller
     // Feature 2 & 3: Catalog & Interactive Calendar Booking
     public function booking(Request $request)
     {
+        Peminjaman::autoExpirePending();
+
         $ruangans = Ruangan::where('is_active', true)
             ->with([
                 'fotos',
@@ -62,6 +64,15 @@ class UserPeminjamanController extends Controller
             'jam_selesai' => 'required|after:jam_mulai',
             'file_berkas' => 'nullable|file|mimes:pdf,doc,docx,jpg,jpeg,png|max:5120'
         ]);
+
+        // Interceptor: Cek status blacklist / Banned account 
+        $blacklist = \Modules\EOffice\Models\MrBlacklist::where('user_id', auth()->id())->first();
+        if ($blacklist) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['Suspend' => 'Akun Anda sedang ditangguhkan dari layanan peminjaman ruangan. Alasan: ' . ($blacklist->alasan ?? 'Pelanggaran ketentuan')]);
+        }
+
         $filePath = null;
         if ($request->hasFile('file_berkas')) {
             $filePath = $request->file('file_berkas')->store('eo_mr_berkas', 'public');
@@ -85,6 +96,13 @@ class UserPeminjamanController extends Controller
         $jamTutup = Pengaturan::where('key', 'jam_tutup')->value('value') ?? '16:00';
         if ($request->jam_mulai < $jamBuka || $request->jam_selesai > $jamTutup) {
             return redirect()->back()->withErrors("Jam peminjaman harus berada di dalam jam operasional ({$jamBuka} - {$jamTutup}).");
+        }
+
+        // Cek batas minimum H- booking
+        $batasHMinBooking = (int) (Pengaturan::where('key', 'batas_h_min_booking')->value('value') ?? 0);
+        $minDate = \Carbon\Carbon::today()->addDays($batasHMinBooking);
+        if (\Carbon\Carbon::parse($request->tanggal_pinjam)->startOfDay()->lt($minDate)) {
+            return redirect()->back()->withErrors("Peminjaman gagal! Pengajuan harus dilakukan sekurang-kurangnya H-{$batasHMinBooking} dari tanggal pemakaian.");
         }
 
         // Pengecekan Bentrok Jadwal Peminjaman
@@ -124,14 +142,16 @@ class UserPeminjamanController extends Controller
 
     public function kalender(Request $request)
     {
+        Peminjaman::autoExpirePending();
+
         $mode = $request->get('mode', 'week'); // 'week' or 'month'
         $today = \Carbon\Carbon::today();
 
         // --- Week Mode ---
         $weekStart = $request->get('week_start')
-            ? \Carbon\Carbon::parse($request->get('week_start'))->startOfWeek(\Carbon\Carbon::MONDAY)
-            : $today->copy()->startOfWeek(\Carbon\Carbon::MONDAY);
-        $weekEnd = $weekStart->copy()->endOfWeek(\Carbon\Carbon::SUNDAY);
+            ? \Carbon\Carbon::parse($request->get('week_start'))
+            : $today->copy();
+        $weekEnd = $weekStart->copy()->addDays(6);
 
         // --- Month Mode ---
         $monthDate = $request->get('month')
@@ -171,6 +191,7 @@ class UserPeminjamanController extends Controller
         $jamBuka = Pengaturan::where('key', 'jam_buka')->value('value') ?? '08:00';
         $jamTutup = Pengaturan::where('key', 'jam_tutup')->value('value') ?? '16:00';
         $bukaAkhirPekan = filter_var(Pengaturan::where('key', 'buka_akhir_pekan')->value('value') ?? false, FILTER_VALIDATE_BOOLEAN);
+        $batasHMinBooking = (int) (Pengaturan::where('key', 'batas_h_min_booking')->value('value') ?? 0);
 
         $user = auth()->user();
         $nim = explode('@', $user->email)[0];
@@ -193,6 +214,7 @@ class UserPeminjamanController extends Controller
             'jamBuka',
             'jamTutup',
             'bukaAkhirPekan',
+            'batasHMinBooking',
             'user',
             'nim',
             'phone'
@@ -202,11 +224,14 @@ class UserPeminjamanController extends Controller
     // Feature 4: Peminjaman Saya
     public function saya()
     {
+        Peminjaman::autoExpirePending();
+
         $now = \Carbon\Carbon::now();
         $dateToday = $now->copy()->format('Y-m-d');
         $timeNow = $now->copy()->format('H:i:s');
 
-        $peminjamans = Peminjaman::where('user_id', auth()->id())
+        $peminjamans = Peminjaman::with('ruangan')
+            ->where('user_id', auth()->id())
             ->where(function ($q) use ($dateToday, $timeNow) {
                 $q->where('status', 'menunggu')
                     ->orWhere(function ($subQ) use ($dateToday, $timeNow) {
@@ -245,11 +270,14 @@ class UserPeminjamanController extends Controller
     // Feature 5: Riwayat Peminjaman (Finished/Rejected/Canceled)
     public function riwayat()
     {
+        Peminjaman::autoExpirePending();
+
         $now = \Carbon\Carbon::now();
         $dateToday = $now->copy()->format('Y-m-d');
         $timeNow = $now->copy()->format('H:i:s');
 
-        $riwayats = Peminjaman::where('user_id', auth()->id())
+        $riwayats = Peminjaman::with('ruangan')
+            ->where('user_id', auth()->id())
             ->where(function ($q) use ($dateToday, $timeNow) {
                 // Yang ditolak/dibatalkan
                 $q->whereIn('status', ['ditolak', 'dibatalkan'])

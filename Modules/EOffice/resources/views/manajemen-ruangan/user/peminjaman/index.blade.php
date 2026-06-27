@@ -3,8 +3,8 @@
     <div class="mp-page-header">
         <div>
             <h1 class="mp-page-title">Peminjaman Saya</h1>
-            <p class="mp-page-sub">Pantau antrean pengajuan ruangan Anda yang sedang menunggu persetujuan (approval).
-            </p>
+            <p class="mp-page-sub">Pantau status pengajuan yang sedang diproses dan kelola jadwal pemakaian ruangan Anda
+                yang akan datang.</p>
         </div>
         <div>
             <a href="{{ route('eoffice.peminjaman.user.booking') }}"
@@ -54,13 +54,11 @@
                                     @if($booking->status == 'menunggu')
                                         <span
                                             class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-amber-50 text-amber-700 border border-amber-200">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
                                             Menunggu
                                         </span>
                                     @elseif($booking->status == 'disetujui')
                                         <span
                                             class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-bold uppercase tracking-wider bg-emerald-50 text-emerald-700 border border-emerald-200">
-                                            <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
                                             Disetujui
                                         </span>
                                     @endif
@@ -91,17 +89,23 @@
                             </div>
 
                             <div class="bg-gray-50 p-4 border-t border-gray-100 flex items-center justify-between rounded-b-xl">
-                                <a href="{{ asset('storage/' . $booking->berkas_pendukung) }}" target="_blank"
-                                    class="text-[12px] font-semibold text-gray-600 hover:text-indigo-600 inline-flex items-center gap-1">
-                                    <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
-                                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                                        <polyline points="14 2 14 8 20 8"></polyline>
-                                        <line x1="16" y1="13" x2="8" y2="13"></line>
-                                        <line x1="16" y1="17" x2="8" y2="17"></line>
-                                        <polyline points="10 9 9 9 8 9"></polyline>
-                                    </svg>
-                                    Lihat Berkas
-                                </a>
+                                @if($booking->berkas_pendukung)
+                                    <a href="{{ asset('storage/' . $booking->berkas_pendukung) }}" target="_blank"
+                                        class="text-[12px] font-semibold text-gray-600 hover:text-indigo-600 inline-flex items-center gap-1">
+                                        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                                            <polyline points="14 2 14 8 20 8"></polyline>
+                                            <line x1="16" y1="13" x2="8" y2="13"></line>
+                                            <line x1="16" y1="17" x2="8" y2="17"></line>
+                                            <polyline points="10 9 9 9 8 9"></polyline>
+                                        </svg>
+                                        Lihat Berkas
+                                    </a>
+                                @else
+                                    <span class="text-[12px] italic font-medium text-gray-400 inline-flex items-center gap-1">
+                                        Tanpa lampiran berkas
+                                    </span>
+                                @endif
 
                                 <form method="POST" action="{{ route('eoffice.peminjaman.user.saya.batal', $booking->id) }}"
                                     onsubmit="return confirm('Apakah Anda yakin ingin secara sukarela membatalkan pengajuan ini?');"

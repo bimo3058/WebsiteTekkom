@@ -18,6 +18,7 @@ class PengaturanController extends Controller
         $jamBuka = $settings['jam_buka'] ?? '08:00';
         $jamTutup = $settings['jam_tutup'] ?? '16:00';
         $bukaAkhirPekan = filter_var($settings['buka_akhir_pekan'] ?? false, FILTER_VALIDATE_BOOLEAN);
+        $batasHMinBooking = $settings['batas_h_min_booking'] ?? 0;
 
         // Get blackout dates
         $tanggalLibur = TanggalLibur::orderBy('tanggal')->get();
@@ -26,6 +27,7 @@ class PengaturanController extends Controller
             'jamBuka',
             'jamTutup',
             'bukaAkhirPekan',
+            'batasHMinBooking',
             'tanggalLibur'
         ));
     }
@@ -35,10 +37,12 @@ class PengaturanController extends Controller
         $request->validate([
             'jam_buka' => 'required|date_format:H:i',
             'jam_tutup' => 'required|date_format:H:i',
+            'batas_h_min_booking' => 'required|integer|min:0|max:30',
         ]);
 
         Pengaturan::updateOrCreate(['key' => 'jam_buka'], ['value' => $request->jam_buka]);
         Pengaturan::updateOrCreate(['key' => 'jam_tutup'], ['value' => $request->jam_tutup]);
+        Pengaturan::updateOrCreate(['key' => 'batas_h_min_booking'], ['value' => $request->batas_h_min_booking]);
         Pengaturan::updateOrCreate(['key' => 'buka_akhir_pekan'], ['value' => $request->has('buka_akhir_pekan') ? '1' : '0']);
 
         return redirect()->back()->with('success', 'Jam operasional berhasil diperbarui.');
