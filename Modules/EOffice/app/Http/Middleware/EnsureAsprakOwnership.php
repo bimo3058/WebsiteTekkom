@@ -38,19 +38,17 @@ class EnsureAsprakOwnership
     {
         $user = $request->user();
 
-        // Koor dan admin dapat bypass — mereka punya akses lebih luas
-        if ($user?->hasAnyRole(['superadmin', 'admin_eoffice', 'koor_prak'])) {
-            return $next($request);
-        }
-
-        // Ambil semua record asprak aktif milik user ini (bisa >1 jika pegang banyak praktikum)
         $allAsprak = AsprakPraktikum::with('praktikum')
             ->where('user_id', $user?->id)
             ->where('role', 'asprak')
             ->whereNull('deleted_at')
             ->get();
 
+        // Jika tidak punya role asprak tapi admin/koor, izinkan bypass (read-only view)
         if ($allAsprak->isEmpty()) {
+            if ($user?->hasAnyRole(['superadmin', 'admin_eoffice', 'koor_prak'])) {
+                return $next($request);
+            }
             abort(403, 'Anda belum terdaftar sebagai Asisten Praktikum aktif.');
         }
 
@@ -59,7 +57,7 @@ class EnsureAsprakOwnership
             ?? session('manprak_asprak_praktikum_id');
 
         $asprak = ($selectedPraktikumId
-            ? $allAsprak->firstWhere('praktikum_id', $selectedPraktikumId)
+            ? $allAsprak->first(fn($a) => $a->praktikum_id == $selectedPraktikumId)
             : null) ?? $allAsprak->first();
 
         // Simpan pilihan ke session agar page lain ikut context yang sama

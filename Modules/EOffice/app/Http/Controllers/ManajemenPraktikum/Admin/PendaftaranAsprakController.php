@@ -21,10 +21,21 @@ class PendaftaranAsprakController extends Controller
         if ($search = $request->input('search')) {
             $query->whereHas('user', fn($q) => $q->where('name', 'like', "%{$search}%"));
         }
+        if ($praktikumId = $request->input('praktikum_id')) {
+            $query->where('praktikum_id', $praktikumId);
+        }
+        if ($statusKoor = $request->input('status_koor')) {
+            $query->where('status_koor', $statusKoor);
+        }
 
         $pendaftaran = $query->paginate(15)->withQueryString();
 
-        return view('eoffice::manajemen-praktikum.admin.pendaftaran-asprak', compact('pendaftaran'));
+        $praktikumList = \Modules\EOffice\Models\Praktikum::with('matkul')
+            ->where('status', 'aktif')
+            ->orderByDesc('created_at')
+            ->get();
+
+        return view('eoffice::manajemen-praktikum.admin.pendaftaran-asprak', compact('pendaftaran', 'praktikumList'));
     }
 
     public function approve(Request $request, int $id)
@@ -33,6 +44,9 @@ class PendaftaranAsprakController extends Controller
 
         if ($pendaftaran->status !== 'pending') {
             return back()->with('error', 'Pendaftaran ini sudah diproses.');
+        }
+        if ($pendaftaran->status_koor !== 'disetujui') {
+            return back()->with('error', 'Pendaftaran belum disetujui oleh Koordinator.');
         }
 
         $pendaftaran->update(['status' => 'approved']);

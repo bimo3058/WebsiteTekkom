@@ -25,6 +25,7 @@ class PendaftaranAsprak extends Model
         'transkrip_path',
         'jadwal',
         'status',
+        'status_koor',
         'alasan_penolakan',
         'direview_oleh',
         'direview_pada',

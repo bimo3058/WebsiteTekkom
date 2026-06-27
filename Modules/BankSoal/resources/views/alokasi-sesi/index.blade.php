@@ -61,7 +61,7 @@
                                        : 'bg-primary text-white border-primary hover:bg-primary/90' }}">
                         @if($selectedPeriode)
                             <span class="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0"></span>
-                            <span class="max-w-[220px] truncate">{{ $selectedPeriode->nama_periode }}</span>
+                            <span>{{ $selectedPeriode->nama_periode }}</span>
                         @else
                             <svg class="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                             <span>Pilih Periode Ujian</span>
@@ -108,7 +108,7 @@
                                    :class="p.id == {{ $selectedPeriodeId ?? 'null' }} ? 'bg-primary/10 text-primary' : 'text-slate-700'">
                                     <span class="w-1.5 h-1.5 rounded-full flex-shrink-0"
                                           :class="p.id == {{ $selectedPeriodeId ?? 'null' }} ? 'bg-primary' : 'bg-slate-300'"></span>
-                                    <span x-text="p.nama" class="flex-1 truncate"></span>
+                                    <span x-text="p.nama" class="flex-1"></span>
                                     <svg x-show="p.id == {{ $selectedPeriodeId ?? 'null' }}" class="w-3.5 h-3.5 text-primary flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path></svg>
                                 </a>
                             </template>
@@ -134,7 +134,7 @@
             <span class="text-[13px] text-slate-500 font-medium">Rentang Ujian:</span>
             @if($selectedPeriode->tanggal_mulai_ujian && $selectedPeriode->tanggal_selesai_ujian)
                 <span class="px-3 py-1 bg-primary/10 text-primary text-[13px] font-semibold border border-primary/20 rounded-lg">
-                    {{ \Carbon\Carbon::parse($selectedPeriode->tanggal_mulai_ujian)->translatedFormat('d M Y') }} &ndash; {{ \Carbon\Carbon::parse($selectedPeriode->tanggal_selesai_ujian)->translatedFormat('d M Y') }}
+                    {{ \Carbon\Carbon::parse($selectedPeriode->tanggal_mulai_ujian)->translatedFormat('d F Y') }} &ndash; {{ \Carbon\Carbon::parse($selectedPeriode->tanggal_selesai_ujian)->translatedFormat('d F Y') }}
                 </span>
             @else
                 <span class="text-[13px] text-slate-400 italic">Tanggal Ujian belum diatur di Setup Periode.</span>
@@ -152,88 +152,9 @@
         </div>
         @endif
 
-        <!-- Table Jadwal -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-            <!-- Header Table Actions -->
-            <div class="px-6 py-4 flex items-center justify-between border-b border-slate-200 bg-slate-50">
-                <div class="flex items-center gap-5">
-                    <h2 class="font-bold text-slate-800">Daftar Sesi Ujian</h2>
-
-                </div>
-                <button @click="openModal = true" @if(!$selectedPeriode) disabled @endif class="inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed transition-colors rounded-xl px-4 py-2 text-white font-semibold text-[13px] shadow-sm focus:outline-none focus:ring-2 focus:ring-primary/30">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 4v16m8-8H4"/></svg>
-                    Tambah Sesi
-                </button>
-            </div>
-
-            <div class="overflow-x-auto w-full">
-                <table class="w-full text-left text-sm text-slate-600">
-                    <thead class="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-600 uppercase tracking-wider">
-                        <tr>
-                            <th scope="col" class="px-6 py-4 whitespace-nowrap w-3/12">Nama Sesi</th>
-                            <th scope="col" class="px-6 py-4 whitespace-nowrap w-3/12">Waktu</th>
-                            <th scope="col" class="px-6 py-4 whitespace-nowrap w-3/12">Alokasi & Kuota</th>
-                            <th scope="col" class="px-6 py-4 whitespace-nowrap text-center w-3/12">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-slate-100 bg-white">
-                        @forelse($jadwals as $jadwal)
-                        <tr class="hover:bg-slate-50/70 transition-colors cursor-pointer group" @click="openJadwalDrawer({{ $jadwal->id }})">
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span class="font-semibold text-slate-800 group-hover:text-primary transition-colors">{{ is_numeric($jadwal->nama_sesi) ? 'Sesi ' . $jadwal->nama_sesi : $jadwal->nama_sesi }}</span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-slate-600 font-medium">
-                                <div class="flex flex-col gap-1">
-                                    <span>{{ $jadwal->tanggal_ujian ? \Carbon\Carbon::parse($jadwal->tanggal_ujian)->translatedFormat('d M Y') . ' • ' : '' }}{{ \Carbon\Carbon::parse($jadwal->waktu_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($jadwal->waktu_selesai)->format('H:i') }} WIB</span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                @php 
-                                    $percent = $jadwal->kuota > 0 ? ($jadwal->terisi / $jadwal->kuota) * 100 : 100; 
-                                    $isFull = $jadwal->terisi >= $jadwal->kuota;
-                                @endphp
-                                <div class="flex items-center gap-3">
-                                    <div class="w-full bg-slate-100 rounded-full h-2 max-w-[100px]">
-                                        <div class="h-2 rounded-full {{ $isFull ? 'bg-red-500' : 'bg-primary' }}" data-progress="{{ (int) min($percent, 100) }}"></div>
-                                    </div>
-                                    <span class="text-xs font-bold {{ $isFull ? 'text-red-600' : 'text-slate-600' }}">{{ $jadwal->terisi }} / {{ $jadwal->kuota }}</span>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-center text-sm font-medium">
-                                <div class="flex items-center justify-center gap-2">
-                                    <button @click.stop="openJadwalDrawer({{ $jadwal->id }})" class="text-primary bg-primary/10 border border-primary/20 hover:bg-primary/20 px-3 py-1.5 rounded-lg transition-colors text-[13px] font-bold shadow-sm">
-                                        Kelola Peserta
-                                    </button>
-                                    
-                                    <form id="form-delete-{{ $jadwal->id }}" action="{{ route('banksoal.periode.jadwal.destroy', $jadwal->id) }}" method="POST" class="inline">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="button" @click.stop="openDeleteConfirm({{ $jadwal->id }})" class="text-red-600 border border-transparent hover:border-red-200 hover:text-red-900 bg-transparent hover:bg-red-50 p-1.5 rounded-lg transition-colors" title="Hapus Jadwal">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                        </button>
-                                    </form>
-                                </div>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="4" class="px-6 py-16 text-center bg-white border-b-0">
-                                <div class="flex flex-col items-center justify-center">
-                                    <div class="w-12 h-12 bg-slate-50 border border-slate-100 flex items-center justify-center rounded-full mb-3">
-                                        <svg class="w-6 h-6 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    </div>
-                                    <h3 class="text-[13px] font-semibold text-slate-700">Belum Ada Sesi Ujian</h3>
-                                    <p class="text-xs text-slate-500 mt-1 max-w-xs mx-auto leading-relaxed">
-                                        {{ $selectedPeriode ? 'Buat sesi pertama untuk mulai mengalokasikan jadwal peserta.' : 'Pilih periode ujian di atas untuk menampilkan sesi ujian.' }}
-                                    </p>
-
-                                </div>
-                            </td>
-                        </tr>
-                        @endforelse
-                    </tbody>
-                </table>
-            </div>
+        <!-- Table Jadwal Container -->
+        <div class="mb-8">
+            @include('banksoal::alokasi-sesi._table')
         </div>
 
         @if($activePeriode)
@@ -249,38 +170,39 @@
                 <div class="px-6 py-5 flex items-center justify-between border-b border-slate-200 bg-slate-50">
                     <h2 class="font-bold text-slate-800">Daftar Peserta {{ $activePeriode->nama_periode }}</h2>
                 </div>
-                <div class="p-6 space-y-8">
+                <div class="p-6 grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
                     @foreach($allocatedGroups as $jadwalId => $pesertas)
                         @php
                             $jadwal = $pesertas->first()->jadwal;
-                            $tanggal = $jadwal && $jadwal->tanggal_ujian ? \Carbon\Carbon::parse($jadwal->tanggal_ujian)->translatedFormat('l, d F Y') : 'Tanggal Belum Diatur';
-                            $mulai = $jadwal && $jadwal->waktu_mulai ? \Carbon\Carbon::parse($jadwal->waktu_mulai)->format('H.i') : '...';
-                            $selesai = $jadwal && $jadwal->waktu_selesai ? \Carbon\Carbon::parse($jadwal->waktu_selesai)->format('H.i') : '...';
+                            $tanggal = $jadwal && $jadwal->tanggal_ujian ? \Carbon\Carbon::parse($jadwal->tanggal_ujian)->translatedFormat('l, d F Y') : 'Tgl Belum Diatur';
+                            $mulai = $jadwal && $jadwal->waktu_mulai ? \Carbon\Carbon::parse($jadwal->waktu_mulai)->format('H:i') : '...';
+                            $selesai = $jadwal && $jadwal->waktu_selesai ? \Carbon\Carbon::parse($jadwal->waktu_selesai)->format('H:i') : '...';
                         @endphp
-                        <div>
-                            <h3 class="font-bold text-[15px] text-primary-700 mb-3 ml-1 flex items-center gap-2">
-                                <div class="w-2 h-2 rounded-full bg-primary-500"></div>
-                                {{ $jadwal->nama_sesi ?? 'Nama Sesi Kosong' }}: {{ $tanggal }} pukul {{ $mulai }}-{{ $selesai }} WIB
-                            </h3>
-                            <div class="overflow-x-auto w-full border border-slate-200 rounded-xl">
-                                <table class="w-full text-left text-sm text-slate-600">
-                                    <thead class="bg-slate-50/80 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
-                                        <tr>
-                                            <th scope="col" class="px-6 py-3.5 w-12 text-center">No.</th>
-                                            <th scope="col" class="px-6 py-3.5 w-48">NIM</th>
-                                            <th scope="col" class="px-6 py-3.5">Nama Mahasiswa</th>
+                        <div class="bg-white border border-slate-200 rounded-[12px] overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col">
+                            <div class="px-5 py-4 border-b border-slate-200 bg-slate-50">
+                                <h3 class="font-bold text-[15px] text-primary mb-0 m-0">
+                                    {{ is_numeric($jadwal->nama_sesi) ? 'Sesi ' . $jadwal->nama_sesi : ($jadwal->nama_sesi ?? 'Nama Sesi Kosong') }}: {{ $tanggal }} pukul {{ $mulai }}-{{ $selesai }} WIB
+                                </h3>
+                            </div>
+                            <div class="overflow-x-auto w-full">
+                                <table class="w-full text-left text-[13px] border-collapse min-w-[380px]">
+                                    <thead>
+                                        <tr class="border-b border-slate-200 bg-[#FAFAFA]">
+                                            <th scope="col" class="px-4 py-[11px] w-12 text-left font-semibold text-[11px] text-slate-500">No</th>
+                                            <th scope="col" class="px-4 py-[11px] w-32 text-left font-semibold text-[11px] text-slate-500">NIM</th>
+                                            <th scope="col" class="px-4 py-[11px] text-left font-semibold text-[11px] text-slate-500">Nama Mahasiswa</th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-slate-100 bg-white">
+                                    <tbody class="bg-white">
                                         @foreach($pesertas as $index => $peserta)
-                                        <tr class="hover:bg-slate-50/50 transition-colors">
-                                            <td class="px-6 py-3.5 text-center text-slate-500 font-medium">
+                                        <tr class="border-b border-[#F3F4F6] hover:bg-[#FAFAFA] transition-colors duration-150">
+                                            <td class="px-4 py-3.5 text-slate-500 font-medium">
                                                 {{ $index + 1 }}
                                             </td>
-                                            <td class="px-6 py-3.5 font-semibold text-slate-800">
+                                            <td class="px-4 py-3.5 font-semibold text-slate-800">
                                                 {{ $peserta->nim }}
                                             </td>
-                                            <td class="px-6 py-3.5 font-medium text-slate-700">
+                                            <td class="px-4 py-3.5 font-medium text-slate-700">
                                                 {{ $peserta->nama_lengkap }}
                                             </td>
                                         </tr>

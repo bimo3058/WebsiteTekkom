@@ -22,7 +22,7 @@ class DashboardController extends Controller
         // Fallback jika bypass (koor/admin masuk halaman asprak)
         if (! $asprak) {
             $user   = auth()->user();
-            $asprak = AsistenPraktikum::with(['praktikum.dosen', 'modulAsprak.modul'])
+            $asprak = AsistenPraktikum::with(['praktikum.dosens', 'modulAsprak.modul'])
                 ->where('user_id', $user->id)->where('role', 'asprak')->whereNull('deleted_at')->first();
         }
 
@@ -35,6 +35,10 @@ class DashboardController extends Controller
 
         $totalModul  = $modulDiampu->count();
         $totalMateri = $modulDiampu->sum(fn($m) => $m?->materi?->count() ?? 0);
+
+        if ($asprak && $totalModul === 0) {
+            session()->now('error', 'Akses terbatas: Anda belum di-assign sebagai pengampu pada modul manapun di praktikum ini.');
+        }
 
         // Pengumpulan tugas yang belum dinilai (status: belum_dicek)
         $tugasPendingNilai = PengumpulanTugas::whereHas(

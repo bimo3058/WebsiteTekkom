@@ -18,19 +18,36 @@
     <span class="sec-rule"></span>
 </div>
 
-<div class="mp-card flex-shrink-0" style="padding:14px 16px;">
-    <div class="flex gap-2 flex-wrap">
-        <a href="{{ route('eoffice.manprak.admin.pendaftaran-asprak.index') }}"
-           class="mp-badge neutral sm" style="text-decoration:none;padding:6px 12px;cursor:pointer;border:{{ !request('status') ? '2px solid #0B266E' : '1px solid #DFE1E7' }};">
-            Semua
-        </a>
-        @foreach(['pending'=>['warning','Menunggu'], 'approved'=>['success','Disetujui'], 'rejected'=>['error','Ditolak']] as $st => $label)
-        <a href="{{ request()->fullUrlWithQuery(['status' => $st]) }}"
-           class="mp-badge {{ $label[0] }} sm" style="text-decoration:none;padding:6px 12px;cursor:pointer;border:{{ request('status') === $st ? '2px solid #0B266E' : '1px solid transparent' }};">
-            {{ $label[1] }}
-        </a>
-        @endforeach
-    </div>
+<div class="mp-card flex-shrink-0" style="padding:14px 18px;">
+    <form method="GET" class="flex gap-2 flex-wrap" style="align-items: center; width: 100%;">
+        <select name="praktikum_id" class="mp-input mp-select" style="flex: 1; min-width: 180px;">
+            <option value="">Semua Praktikum Aktif</option>
+            @foreach($praktikumList as $p)
+            <option value="{{ $p->id }}" {{ request('praktikum_id') == $p->id ? 'selected' : '' }}>{{ $p->nama }}</option>
+            @endforeach
+        </select>
+        <select name="status_koor" class="mp-input mp-select" style="flex: 1; min-width: 150px;">
+            <option value="">Semua Status Koor</option>
+            <option value="menunggu"  {{ request('status_koor')=='menunggu'  ? 'selected' : '' }}>Menunggu Koor</option>
+            <option value="disetujui" {{ request('status_koor')=='disetujui' ? 'selected' : '' }}>Disetujui Koor</option>
+            <option value="ditolak"   {{ request('status_koor')=='ditolak'   ? 'selected' : '' }}>Ditolak Koor</option>
+        </select>
+        <select name="status" class="mp-input mp-select" style="flex: 1; min-width: 150px;">
+            <option value="">Semua Status Admin</option>
+            <option value="pending"  {{ request('status')=='pending'  ? 'selected' : '' }}>Menunggu Admin</option>
+            <option value="approved" {{ request('status')=='approved' ? 'selected' : '' }}>Disetujui Admin</option>
+            <option value="rejected" {{ request('status')=='rejected' ? 'selected' : '' }}>Ditolak Admin</option>
+        </select>
+        <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama / NIM..."
+               class="mp-input" style="flex: 1; min-width: 150px;">
+        <button type="submit" class="mp-btn primary sm" style="height: 38px; padding: 0 16px;">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            Filter
+        </button>
+        @if(request()->hasAny(['search','status_koor','status','praktikum_id']))
+        <a href="{{ route('eoffice.manprak.admin.pendaftaran-asprak.index') }}" class="mp-btn secondary sm" style="height: 38px; padding: 0 16px; line-height: 36px;">Reset</a>
+        @endif
+    </form>
 </div>
 
 {{-- Daftar Pendaftar --}}
@@ -51,7 +68,8 @@
                     <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">IPK</th>
                     <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Motivasi</th>
                     <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Terdaftar</th>
-                    <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Status</th>
+                    <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Status Koor</th>
+                    <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Status Admin</th>
                     <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Aksi</th>
                 </tr>
             </thead>
@@ -89,16 +107,25 @@
                         {{ $pend->created_at?->format('d M Y') ?? '—' }}
                     </td>
                     <td style="padding:14px 16px; text-align:center;">
-                        @if($pend->status === 'pending')
-                        <span class="mp-badge warning sm"><span class="dot"></span>Menunggu</span>
-                        @elseif($pend->status === 'approved')
+                        @if($pend->status_koor === 'disetujui')
                         <span class="mp-badge success sm"><span class="dot"></span>Disetujui</span>
-                        @else
+                        @elseif($pend->status_koor === 'ditolak')
                         <span class="mp-badge error sm"><span class="dot"></span>Ditolak</span>
+                        @else
+                        <span class="mp-badge warning sm"><span class="dot"></span>Menunggu</span>
                         @endif
                     </td>
                     <td style="padding:14px 16px; text-align:center;">
-                        @if($pend->status === 'pending')
+                        @if($pend->status === 'approved')
+                        <span class="mp-badge navy sm"><span class="dot"></span>Disetujui</span>
+                        @elseif($pend->status === 'rejected')
+                        <span class="mp-badge error sm"><span class="dot"></span>Ditolak</span>
+                        @else
+                        <span class="mp-badge warning sm"><span class="dot"></span>Menunggu</span>
+                        @endif
+                    </td>
+                    <td style="padding:14px 16px; text-align:center;">
+                        @if($pend->status === 'pending' && $pend->status_koor === 'disetujui')
                         <div class="flex gap-2 justify-center">
                             <form method="POST" action="{{ route('eoffice.manprak.admin.pendaftaran-asprak.approve', $pend->id) }}" style="display:inline;">
                                 @csrf
@@ -110,6 +137,8 @@
                                 <button type="submit" class="mp-btn destructive sm">Tolak</button>
                             </form>
                         </div>
+                        @elseif($pend->status === 'pending' && $pend->status_koor === 'menunggu')
+                        <span style="font-size:11px; color:var(--c-fg-muted, #666D80);">Tunggu Koor</span>
                         @else
                         <span style="font-size:11px;color:var(--c-fg-muted, #666D80);">Selesai</span>
                         @endif

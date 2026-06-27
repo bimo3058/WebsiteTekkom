@@ -38,9 +38,17 @@ class ArsipController extends Controller
                 'tipe_ujian' => ($data['agenda'] ?? null),
                 'tahun_akademik' => $data['tahun_ajaran'],
                 'semester' => $data['semester'],
-                'soal_data' => json_encode(array_map(function ($s) {
-                    return array_merge(['id' => $s['id'] ?? null, 'cpl' => $s['cpl'] ?? null, 'cpmk' => $s['cpmk'] ?? null, 'tipe_soal' => $s['tipe_soal'] ?? null], $s);
-                }, $soalArray)),
+                    'soal_data' => json_encode(array_map(function ($s) {
+                        return [
+                            'nomor' => $s['nomor'] ?? null,
+                            'id' => $s['id'] ?? null,
+                            'soal' => $s['soal'] ?? null,
+                            'cpl' => $s['cpl'] ?? null,
+                            'cpmk' => $s['cpmk'] ?? null,
+                            'tipe_soal' => $s['tipe_soal'] ?? null,
+                            'bobot' => $s['bobot'] ?? null,
+                        ];
+                    }, $soalArray)),
                 'jumlah_soal' => $jumlah,
                 'total_bobot' => $total,
                 'status' => $request->boolean('direct_archive') ? 'archived' : 'pending',

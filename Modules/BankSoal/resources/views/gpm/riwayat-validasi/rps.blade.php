@@ -12,7 +12,7 @@
     <div class="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div class="overflow-x-auto">
             <table class="min-w-full text-sm">
-                <thead class="bg-slate-50 text-xs uppercase text-slate-500">
+                <thead class="bg-primary text-xs uppercase text-white">
                     <tr>
                         <th class="px-6 py-4 text-left">Mata Kuliah</th>
                         <th class="px-6 py-4 text-left">Dosen Pengampu</th>
@@ -68,7 +68,7 @@
         @if($riwayat_rps->hasPages())
             <div class="flex flex-col gap-3 border-t border-slate-200 px-6 py-4 sm:flex-row sm:items-center sm:justify-between">
                 <span class="text-xs text-slate-500">Menampilkan {{ $riwayat_rps->firstItem() }}-{{ $riwayat_rps->lastItem() }} dari {{ $riwayat_rps->total() }} hasil</span>
-                {{ $riwayat_rps->links('pagination::tailwind') }}
+                {{ $riwayat_rps->links('banksoal::components.ui.laravel-pagination') }}
             </div>
         @endif
     </div>

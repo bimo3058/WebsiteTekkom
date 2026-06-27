@@ -81,7 +81,7 @@ class PeriodePendaftaranController extends Controller
             'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
             'nama'         => 'nullable|string|max:255',
             'dibuka_pada'  => 'nullable|date',
-            'ditutup_pada' => 'nullable|date|after_or_equal:dibuka_pada',
+            'ditutup_pada' => 'required|date|after_or_equal:dibuka_pada',
         ]);
 
         // Pastikan praktikum di-assign ke koor ini

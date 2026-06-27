@@ -10,7 +10,10 @@ class BsMataKuliahCplSeeder extends Seeder
     public function run(): void
     {
         DB::table('bs_mata_kuliah_cpl')->truncate();
-        DB::table('bs_mata_kuliah_cpl')->insert([
+        $existingMataKuliahIds = DB::table('bs_mata_kuliah')->pluck('id')->all();
+        $existingMataKuliahIds = array_flip($existingMataKuliahIds);
+
+        $data = array_values(array_filter([
             ['mk_id' => 5, 'cpl_id' => 4],
             ['mk_id' => 5, 'cpl_id' => 5],
             ['mk_id' => 6, 'cpl_id' => 4],
@@ -130,6 +133,8 @@ class BsMataKuliahCplSeeder extends Seeder
             ['mk_id' => 29, 'cpl_id' => 4],
             ['mk_id' => 29, 'cpl_id' => 5]
 
-        ]);
+        ], static fn (array $item): bool => isset($existingMataKuliahIds[$item['mk_id']])));
+
+        DB::table('bs_mata_kuliah_cpl')->insert($data);
     }
 }

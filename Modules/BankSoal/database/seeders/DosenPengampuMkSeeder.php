@@ -13,8 +13,11 @@ class DosenPengampuMkSeeder extends Seeder
     public function run(): void
     {
         $timestamp = now();
+        DB::table('bs_dosen_pengampu_mk')->truncate();
+        $existingMataKuliahIds = DB::table('bs_mata_kuliah')->pluck('id')->all();
+        $existingMataKuliahIds = array_flip($existingMataKuliahIds);
         
-        $data = [
+        $data = array_values(array_filter([
             // User 2
             ['user_id' => 2, 'mk_id' => 1, 'is_rps' => 'false'],
             ['user_id' => 2, 'mk_id' => 4, 'is_rps' => 'false'],
@@ -54,7 +57,7 @@ class DosenPengampuMkSeeder extends Seeder
             ['user_id' => 8, 'mk_id' => 7, 'is_rps' => 'false'],
             ['user_id' => 8, 'mk_id' => 15, 'is_rps' => 'false'],
             ['user_id' => 8, 'mk_id' => 25, 'is_rps' => 'false'],
-        ];
+        ], static fn (array $item): bool => isset($existingMataKuliahIds[$item['mk_id']])));
         
         // Add timestamps
         foreach ($data as &$item) {

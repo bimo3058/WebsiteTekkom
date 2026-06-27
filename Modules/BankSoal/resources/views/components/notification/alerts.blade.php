@@ -41,6 +41,13 @@
                     return false;
                 }
 
+                // Jika layout sudah memiliki global-toast (Alpine), biarkan dia yang memproses session flash ini.
+                // Hal ini mencegah duplikasi notifikasi sukses/error di halaman.
+                if (document.querySelector('[x-data="toastManager()"]')) {
+                    hasShownFlashSnackbar = true;
+                    return true;
+                }
+
                 const flashData = document.getElementById('banksoal-flash-snackbar-data');
                 if (!flashData) return true;
 

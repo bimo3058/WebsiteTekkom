@@ -7,6 +7,7 @@ use Illuminate\Routing\Controller;
 use Modules\EOffice\Models\AsistenPraktikum;
 use Modules\EOffice\Models\Pengumuman;
 use Modules\EOffice\Models\Praktikum;
+use App\Services\SupabaseStorage;
 
 /**
  * Asprak: Pengumuman (semua asprak bisa upload/hapus).
@@ -55,6 +56,8 @@ class PengumumanController extends Controller
             'judul'        => 'required|string|max:255',
             'konten'       => 'required|string',
             'is_published' => 'boolean',
+            'lampiran'     => 'nullable|array|max:3',
+            'lampiran.*'   => 'file|max:5120',
         ]);
 
         $user   = auth()->user();
@@ -68,12 +71,27 @@ class PengumumanController extends Controller
             return back()->with('error', 'Anda tidak terdaftar sebagai asprak di praktikum ini.');
         }
 
+        $lampiranPaths = [];
+        if ($request->hasFile('lampiran')) {
+            $storage = app(SupabaseStorage::class);
+            foreach ($request->file('lampiran') as $file) {
+                $path = $storage->upload($file, 'pengumuman', 'eoffice');
+                if ($path) {
+                    $lampiranPaths[] = [
+                        'name' => $file->getClientOriginalName(),
+                        'path' => $path,
+                    ];
+                }
+            }
+        }
+
         Pengumuman::create([
             'praktikum_id' => $request->praktikum_id,
             'user_id'      => $user->id,
             'judul'        => $request->judul,
             'konten'       => $request->konten,
             'is_published' => $request->boolean('is_published'),
+            'lampiran'     => empty($lampiranPaths) ? null : $lampiranPaths,
         ]);
 
         return redirect()->route('eoffice.manprak.asprak.pengumuman.index', [

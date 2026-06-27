@@ -4,10 +4,28 @@ namespace Modules\BankSoal\Imports;
 
 use Maatwebsite\Excel\Concerns\ToModel;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
+use Maatwebsite\Excel\Concerns\WithCustomCsvSettings;
 use Modules\BankSoal\Models\MataKuliah;
 
-class MataKuliahImport implements ToModel, WithHeadingRow
+class MataKuliahImport implements ToModel, WithHeadingRow, WithCustomCsvSettings
 {
+    private string $delimiter = ',';
+
+    public function __construct(string $delimiter = ',')
+    {
+        $this->delimiter = $delimiter;
+    }
+
+    /**
+     * Provide csv settings for importer (delimiter)
+     */
+    public function getCsvSettings(): array
+    {
+        return [
+            'delimiter' => $this->delimiter,
+        ];
+    }
+
     public function model(array $row)
     {
         // Heading row will be formatted to lower_case by WithHeadingRow

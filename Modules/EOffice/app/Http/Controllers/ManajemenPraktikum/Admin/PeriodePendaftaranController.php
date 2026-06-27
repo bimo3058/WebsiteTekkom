@@ -41,9 +41,10 @@ class PeriodePendaftaranController extends Controller
                 ->orderByDesc('created_at')
                 ->get();
 
-            // Semua praktikum aktif (untuk dropdown assign jika belum ada yang terhubung)
+            // Semua praktikum aktif yang BELUM ditautkan ke matkul apapun
             $praktikumSemua = Praktikum::with(['dosens', 'matkul'])
                 ->where('status', 'aktif')
+                ->whereNull('matkul_id')
                 ->orderByDesc('created_at')
                 ->get();
         } else {
@@ -123,8 +124,8 @@ class PeriodePendaftaranController extends Controller
             'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
             'jenis'        => 'required|in:praktikan',
             'nama'         => 'required|string|max:255',
-            'dibuka_pada'  => 'nullable|date',
-            'ditutup_pada' => 'nullable|date|after_or_equal:dibuka_pada',
+            'dibuka_pada'  => 'required|date',
+            'ditutup_pada' => 'required|date|after_or_equal:dibuka_pada',
             'is_aktif'     => 'nullable|boolean',
         ]);
 
@@ -168,8 +169,8 @@ class PeriodePendaftaranController extends Controller
             'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
             'jenis'        => 'required|in:praktikan',
             'nama'         => 'nullable|string|max:255',
-            'dibuka_pada'  => 'nullable|date',
-            'ditutup_pada' => 'nullable|date|after_or_equal:dibuka_pada',
+            'dibuka_pada'  => 'required|date',
+            'ditutup_pada' => 'required|date|after_or_equal:dibuka_pada',
         ]);
 
         PeriodePendaftaran::where('praktikum_id', $request->praktikum_id)

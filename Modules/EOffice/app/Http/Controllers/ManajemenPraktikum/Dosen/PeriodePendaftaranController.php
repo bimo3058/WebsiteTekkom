@@ -82,7 +82,7 @@ class PeriodePendaftaranController extends Controller
             'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
             'nama'         => 'nullable|string|max:255',
             'dibuka_pada'  => 'nullable|date',
-            'ditutup_pada' => 'nullable|date|after_or_equal:dibuka_pada',
+            'ditutup_pada' => 'required|date|after_or_equal:dibuka_pada',
         ]);
 
         // Pastikan praktikum milik dosen ini
@@ -90,6 +90,10 @@ class PeriodePendaftaranController extends Controller
             ->whereHas('dosens', fn($q) => $q->where('users.id', $user->id))
             ->where('status', 'aktif')
             ->firstOrFail();
+
+        if ($praktikum->koor_id) {
+            return back()->with('error', 'Praktikum ini sudah memiliki Koordinator. Pendaftaran tidak diperlukan lagi.');
+        }
 
         // Nonaktifkan periode koor yang lama untuk praktikum ini
         PeriodePendaftaran::where('praktikum_id', $praktikum->id)

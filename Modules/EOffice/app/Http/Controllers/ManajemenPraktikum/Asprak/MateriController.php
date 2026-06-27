@@ -23,6 +23,10 @@ class MateriController extends Controller
         $modulIds = $asprak
             ? ModulAsprak::where('asprak_id', $asprak->id)->pluck('modul_id')
             : collect();
+            
+        if ($asprak && $modulIds->isEmpty()) {
+            session()->now('error', 'Akses terbatas: Anda belum di-assign sebagai pengampu pada modul manapun di praktikum ini.');
+        }
 
         $materis = MateriModul::whereIn('modul_id', $modulIds)->with('modul.praktikum')->orderByDesc('created_at')->get();
 
@@ -39,7 +43,8 @@ class MateriController extends Controller
             'modul_id'  => 'required|exists:modul_praktikum,id',
             'judul'     => 'required|string|max:255',
             'deskripsi' => 'nullable|string',
-            'file'      => 'nullable|file|max:20480',
+            'file'      => 'nullable|array|max:10',
+            'file.*'    => 'file|max:51200',
         ]);
 
         $path     = null;
@@ -56,18 +61,32 @@ class MateriController extends Controller
         }
 
         if ($request->hasFile('file')) {
-            $path     = $this->supabase->upload($request->file('file'), 'materi-modul', 'eoffice');
-            $tipeFile = $request->file('file')->getClientMimeType();
+            $files = $request->file('file');
+            foreach ($files as $file) {
+                $path = $this->supabase->upload($file, 'materi-modul', 'eoffice');
+                $tipeFile = $file->getClientMimeType();
+                if ($path) {
+                    $judul = count($files) > 1 ? $request->judul . ' - ' . $file->getClientOriginalName() : $request->judul;
+                    MateriModul::create([
+                        'modul_id'  => $request->modul_id,
+                        'user_id'   => auth()->id(),
+                        'judul'     => $judul,
+                        'deskripsi' => $request->deskripsi,
+                        'file_path' => $path,
+                        'tipe_file' => $tipeFile,
+                    ]);
+                }
+            }
+        } else {
+            MateriModul::create([
+                'modul_id'  => $request->modul_id,
+                'user_id'   => auth()->id(),
+                'judul'     => $request->judul,
+                'deskripsi' => $request->deskripsi,
+                'file_path' => null,
+                'tipe_file' => null,
+            ]);
         }
-
-        MateriModul::create([
-            'modul_id'  => $request->modul_id,
-            'user_id'   => auth()->id(),
-            'judul'     => $request->judul,
-            'deskripsi' => $request->deskripsi,
-            'file_path' => $path,
-            'tipe_file' => $tipeFile,
-        ]);
 
         return back()->with('success', 'Materi berhasil diunggah.');
     }

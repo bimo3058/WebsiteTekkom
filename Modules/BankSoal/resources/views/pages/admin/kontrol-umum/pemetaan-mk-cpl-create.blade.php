@@ -8,7 +8,6 @@
     @endsection
 
     @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
         .pm-page{--pm:rgb(11,38,110);--pm-hover:rgb(8,28,82);--pm-light:rgba(11,38,110,.08);--s50:#f8fafc;--s100:#f1f5f9;--s200:#e2e8f0;--s300:#cbd5e1;--s400:#94a3b8;--s500:#64748b;--s600:#475569;--s700:#334155;--s800:#1e293b}
         .pm-page *{box-sizing:border-box}
@@ -55,14 +54,8 @@
         .pm-page .sa-row input{width:15px;height:15px;accent-color:var(--pm);cursor:pointer}
         .pm-page .sa-row label{font-size:12px;font-weight:600;color:var(--s500);cursor:pointer}
         .pm-page .form-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:20px}
-        .pm-loader{position:fixed;inset:0;background:rgba(255,255,255,.7);display:none;align-items:center;justify-content:center;z-index:50}
-        .pm-loader.show{display:flex}
-        .pm-spinner{width:32px;height:32px;border:3px solid #e2e8f0;border-top-color:rgb(11,38,110);border-radius:50%;animation:pm-spin .7s linear infinite}
-        @keyframes pm-spin{to{transform:rotate(360deg)}}
     </style>
     @endpush
-
-    <div class="pm-loader" id="loaderOverlay"><div class="pm-spinner"></div></div>
 
     <div class="pm-page">
     <div class="page-header">
@@ -139,21 +132,20 @@
     </div>{{-- end .pm-page --}}
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
     <script>
     const CSRF='{{ csrf_token() }}',BASE='{{ url("/bank-soal/admin/api") }}',BACK='{{ route("banksoal.admin.kontrol-umum.pemetaan") }}';
     const LS=8,RS=10;
     // T[i] = state per tab
     const T=[
         {leftPool:[],rightPool:[],selId:null,selIds:new Set(),lq:'',lp:1,rq:'',rp:1,
-         endpoint:BASE+'/pemetaan/mk-cpl',leftKey:'mk_id',rightKey:'cpl_ids'},
+         endpoint:BASE+'/pemetaan/mk-cpl/sync',leftKey:'mk_id',rightKey:'cpl_ids'},
         {leftPool:[],rightPool:[],selId:null,selIds:new Set(),lq:'',lp:1,rq:'',rp:1,
-         endpoint:BASE+'/pemetaan/cpl-mk',leftKey:'cpl_id',rightKey:'mk_ids'},
+         endpoint:BASE+'/pemetaan/cpl-mk/sync',leftKey:'cpl_id',rightKey:'mk_ids'},
     ];
     let opt={cpl:[],mk:[]};
 
     document.addEventListener('DOMContentLoaded',async()=>{
-        document.getElementById('loaderOverlay').classList.add('show');
+        window.showLoader();
         try{
             const r=await fetch(BASE+'/pemetaan/options',{headers:{'Accept':'application/json','X-CSRF-TOKEN':CSRF}});
             const d=await r.json();
@@ -162,7 +154,7 @@
                 opt.mk=d.data.mata_kuliah.sort((a,b)=>(a.kode+a.nama).localeCompare(b.kode+b.nama,undefined,{numeric:true}));
             }
         }catch(e){console.error(e);}
-        document.getElementById('loaderOverlay').classList.remove('show');
+        window.hideLoader();
         T[0].leftPool=opt.mk; T[0].rightPool=opt.cpl;
         T[1].leftPool=opt.cpl; T[1].rightPool=opt.mk;
         renderLeft(0);renderRight(0);
@@ -185,9 +177,9 @@
         const paged=all.slice((T[i].lp-1)*LS,T[i].lp*LS);
         const el=document.getElementById('leftItems'+i);
         const rows=paged.map(x=>{
-            const sel=T[i].selId===x.id,dis=T[i].selId!==null&&!sel;
+            const sel=T[i].selId===x.id;
             const lbl=getLabel(x,T[i].leftPool);
-            return `<div class="comp-item ${sel?'selected':''} ${dis?'disabled':''}" onclick="selLeft(${i},${x.id})">${lbl}</div>`;
+            return `<div class="comp-item ${sel?'selected':''}" onclick="selLeft(${i},${x.id})">${lbl}</div>`;
         }).join('');
         const ghosts='<div class="comp-item" style="visibility:hidden;pointer-events:none">&nbsp;</div>'
             .repeat(Math.max(0,LS-paged.length));
@@ -210,10 +202,37 @@
     }
 
     function setLP(i,p){T[i].lp=p;renderLeft(i);}
-    function selLeft(i,id){
-        if(T[i].selId!==null&&T[i].selId!==id)return;
-        T[i].selId=T[i].selId===id?null:id;
-        renderLeft(i);
+    async function selLeft(i,id){
+        if (T[i].selId === id) {
+            T[i].selId = null;
+            T[i].selIds.clear();
+            renderLeft(i);
+            renderRight(i);
+        } else {
+            T[i].selId = id;
+            T[i].selIds.clear();
+            renderLeft(i);
+            
+            window.showLoader();
+            try {
+                const type = i === 0 ? 'mk-cpl' : 'cpl-mk';
+                const response = await fetch(`${BASE}/pemetaan/existing?type=${type}&id=${id}`, {
+                    headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': CSRF }
+                });
+                const result = await response.json();
+                if (result.success && Array.isArray(result.data)) {
+                    T[i].selIds = new Set(result.data);
+                } else {
+                    T[i].selIds.clear();
+                }
+            } catch (err) {
+                console.error("Error fetching existing mapping:", err);
+                T[i].selIds.clear();
+            } finally {
+                window.hideLoader();
+                renderRight(i);
+            }
+        }
     }
 
     function renderRight(i){
@@ -273,18 +292,22 @@
         const t=T[i];if(t.selId===null||t.selIds.size===0)return;
         const btn=document.getElementById('saveBtn'+i);
         btn.disabled=true;btn.textContent='Menyimpan...';
+        window.showLoader();
         const body={[t.leftKey]:t.selId,[t.rightKey]:[...t.selIds]};
         try{
             const r=await fetch(t.endpoint,{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':CSRF},body:JSON.stringify(body)});
             const d=await r.json();
             if(r.ok&&d.success){
-                await Swal.fire({icon:'success',title:'Berhasil',text:d.message,timer:1600,showConfirmButton:false});
-                window.location.href=BACK;
+                window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'success', message: d.message || 'Pemetaan berhasil disimpan.' } }));
+                setTimeout(() => {
+                    window.location.href=BACK;
+                }, 1500);
             }else{
-                Swal.fire({icon:'error',title:'Gagal',text:d.message||'Terjadi kesalahan'});
+                window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: d.message || 'Terjadi kesalahan.' } }));
                 btn.disabled=false;btn.textContent='Simpan Pemetaan';
             }
-        }catch(e){Swal.fire({icon:'error',title:'Error',text:e.message});btn.disabled=false;btn.textContent='Simpan Pemetaan';}
+        }catch(e){window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: e.message || 'Terjadi kesalahan jaringan.' } }));btn.disabled=false;btn.textContent='Simpan Pemetaan';}
+        finally { window.hideLoader(); }
     }
     </script>
     @endpush

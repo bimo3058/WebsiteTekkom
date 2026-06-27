@@ -29,11 +29,6 @@ class Cpmk extends Model
         return $value;
     }
 
-    public function cpls()
-    {
-        return $this->belongsToMany(Cpl::class, 'bs_cpl_cpmk', 'cpmk_id', 'cpl_id');
-    }
-
     public function cpl()
     {
         return $this->belongsTo(Cpl::class, 'cpl_id');

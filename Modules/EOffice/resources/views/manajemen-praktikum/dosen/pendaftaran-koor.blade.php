@@ -28,6 +28,10 @@
         <form method="GET" class="flex gap-2 flex-wrap">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama mahasiswa..."
                    class="mp-input" style="width:200px;">
+            <select name="sort" class="mp-input mp-select">
+                <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
+                <option value="ipk_tertinggi" {{ request('sort') == 'ipk_tertinggi' ? 'selected' : '' }}>IPK Tertinggi</option>
+            </select>
             <select name="praktikum_id" class="mp-input mp-select">
                 <option value="">Semua Praktikum</option>
                 @foreach($praktikumList as $pr)
@@ -65,6 +69,7 @@
                     <th class="mp-th text-left" style="padding:10px 16px;">Praktikum</th>
                     <th class="mp-th text-center" style="padding:10px 16px;">IPK</th>
                     <th class="mp-th text-left" style="padding:10px 16px;">Motivasi</th>
+                    <th class="mp-th text-left" style="padding:10px 16px;">Berkas</th>
                     <th class="mp-th text-center" style="padding:10px 16px;">Status</th>
                     <th class="mp-th text-left" style="padding:10px 16px;">Aksi</th>
                 </tr>
@@ -94,6 +99,14 @@
                     </td>
                     <td style="padding:12px 16px;color:#666D80;max-width:200px;">
                         <div class="line-clamp-2" style="font-size:12px;">{{ $p->motivasi ?? '—' }}</div>
+                    </td>
+                    <td style="padding:12px 16px;">
+                        @if($p->transkrip_path)
+                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->transkrip_path, 'eoffice') }}" target="_blank"
+                           style="font-size:11px;font-weight:600;color:#0B266E;text-decoration:none;display:block;" class="hover:underline">Transkrip</a>
+                        @else
+                        <span style="font-size:11px;color:#808897;">—</span>
+                        @endif
                     </td>
                     <td style="padding:12px 16px;text-align:center;">
                         @if($p->status_dosen === 'disetujui')
@@ -136,7 +149,7 @@
                 </tr>
                 @empty
                 <tr>
-                    <td colspan="6" style="padding:48px;text-align:center;">
+                    <td colspan="7" style="padding:48px;text-align:center;">
                         <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" style="margin:0 auto 12px;display:block;">
                             <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M23 11l-3.5 3.5-1.5-1.5"/>
                         </svg>

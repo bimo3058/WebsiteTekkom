@@ -125,7 +125,7 @@
                         <th>Materi</th>
                         <th>Deskripsi</th>
                         <th>Diunggah</th>
-                        <th style="text-align:right;">Unduh</th>
+                        <th style="text-align:right;"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -163,14 +163,14 @@
                         </td>
                         <td style="text-align:right;">
                             @if($materi->file_path)
-                            <a href="{{ Storage::disk('public')->url($materi->file_path) }}"
+                            <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($materi->file_path, 'eoffice') }}"
                                target="_blank"
                                class="mp-btn primary sm" style="text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
                                 <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                          d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/>
+                                          d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>
                                 </svg>
-                                Unduh
+                                Lihat
                             </a>
                             @else
                             <span class="mp-badge neutral sm">Tidak ada file</span>

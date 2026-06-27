@@ -18,6 +18,6 @@ class Cpl extends Model
 
     public function cpmks()
     {
-        return $this->belongsToMany(Cpmk::class, 'bs_cpl_cpmk', 'cpl_id', 'cpmk_id');
+        return $this->hasMany(Cpmk::class, 'cpl_id');
     }
 }

@@ -150,8 +150,8 @@
         </div>
 
         <!-- Body / Loading state -->
-        <div id="manualInsertLoading" class="p-8 flex flex-col items-center justify-center space-y-3">
-             <i class="fas fa-circle-notch fa-spin text-3xl text-primary"></i>
+        <div id="manualInsertLoading" class="p-8 flex flex-col items-center justify-center space-y-3 tbl-loading">
+             <div class="tbl-spinner"></div>
              <span class="text-sm font-medium text-slate-500 animate-pulse">Memuat bank soal...</span>
         </div>
 
@@ -607,36 +607,14 @@
     document.addEventListener('visibilitychange', maybeShowArchiveConfirmAfterReturn);
 </script>
 
-<!-- Loading overlay (used during saving draft / archiving) -->
-<div id="reviewLoadingOverlay" class="hidden fixed inset-0 z-[130] items-center justify-center bg-black/40">
-    <div class="bg-white rounded-lg p-6 flex items-center gap-4 shadow-lg">
-        <i class="fas fa-circle-notch fa-spin text-2xl text-slate-700"></i>
-        <div>
-            <div id="reviewLoadingText" class="text-sm font-medium text-slate-800">Memproses...</div>
-            <div class="text-xs text-slate-500">Mohon tunggu—jangan tutup halaman.</div>
-        </div>
-    </div>
-</div>
-
 <script>
     function showLoading(message) {
-        const overlay = document.getElementById('reviewLoadingOverlay');
-        const text = document.getElementById('reviewLoadingText');
-        if (text && message) text.innerText = message;
-        if (overlay) {
-            overlay.classList.remove('hidden');
-            overlay.classList.add('flex');
-        }
+        window.showLoader();
     }
 
     function hideLoading() {
-        const overlay = document.getElementById('reviewLoadingOverlay');
-        if (overlay) {
-            overlay.classList.add('hidden');
-            overlay.classList.remove('flex');
-        }
+        window.hideLoader();
     }
-
 </script>
 
 <!-- Archive confirmation modal -->
