@@ -25,6 +25,8 @@ class PraktikumController extends Controller
     {
         $query = Praktikum::with(['dosens', 'koordinator', 'matkul'])
             ->withCount('daftarPraktikan')
+            ->orderBy('status', 'asc') // 'aktif' di atas 'nonaktif'
+            ->orderBy('tahun_ajaran', 'desc') // tahun paling baru ke paling lama
             ->orderBy('created_at', 'desc');
 
         if ($search = $request->input('search')) {
@@ -40,6 +42,10 @@ class PraktikumController extends Controller
 
         if ($semester = $request->input('semester')) {
             $query->where('semester', $semester);
+        }
+
+        if ($tahunAjaran = $request->input('tahun_ajaran')) {
+            $query->where('tahun_ajaran', $tahunAjaran);
         }
 
         $praktikums = $query->paginate(15)->withQueryString();
@@ -267,16 +273,6 @@ class PraktikumController extends Controller
             'message' => 'Koordinator berhasil diassign ke Praktikum dan otomatis aktif sebagai asprak.',
             'data'    => new PraktikumResource($praktikum->load(['dosens', 'koordinator'])),
         ]);
-    }
-
-    /**
-     * POST /eoffice/manprak/admin/praktikum/generate-kode
-     * Generate kode unik untuk praktikum baru.
-     */
-    public function generateKode(): JsonResponse
-    {
-        $kode = Praktikum::generateKode();
-        return response()->json(['success' => true, 'kode' => $kode]);
     }
 
 }

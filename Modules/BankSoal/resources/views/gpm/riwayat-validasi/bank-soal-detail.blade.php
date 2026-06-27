@@ -10,7 +10,7 @@
     </div>
 
     <div class="mb-6 flex justify-end">
-        {{ $riwayatSoal->links() }}
+        {{ $riwayatSoal->links('banksoal::components.ui.laravel-pagination') }}
     </div>
 
     <div class="space-y-6">
@@ -120,6 +120,6 @@
     </div>
 
     <div class="mt-6 flex justify-center">
-        {{ $riwayatSoal->links() }}
+        {{ $riwayatSoal->links('banksoal::components.ui.laravel-pagination') }}
     </div>
 </x-banksoal::layouts.gpm-master>

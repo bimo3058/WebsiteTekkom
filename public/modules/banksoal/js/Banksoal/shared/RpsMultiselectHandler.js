@@ -573,7 +573,6 @@ class RpsMultiselectHandler {
 
     /**
      * Fetch and populate CPMK based on selected CPL(s)
-     * If multiple CPL selected (e.g., 1, 2, 3), fetch CPMK for all (1.1, 1.2, 2.1, 2.2, 3.1, etc.)
      */
     _fetchAndPopulateCpmkByCpl(cplIds) {
         if (!cplIds || cplIds.length === 0) {

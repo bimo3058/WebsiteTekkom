@@ -101,24 +101,24 @@ class PendaftaranPraktikanController extends Controller
 
         $targetUser = $pendaftaran->user;
 
-        // NOTE: Role 'praktikan' tetap di-assign secara global karena dipakai
-        // untuk akses menu/middleware. Status per-praktikum ditentukan oleh
-        // kolom status di tabel eo_pendaftaran_praktikan (scoped ke praktikum_id),
-        // BUKAN dari role. Jadi user punya role praktikan tidak berarti dia
-        // otomatis terdaftar di semua praktikum — harus ada record DaftarPraktikan
-        // dengan praktikum_id yang sesuai (dibuat saat user input kode join).
         $roleRow = Role::where('name', 'praktikan')->where('module', 'eoffice')->first();
         if ($targetUser && $roleRow) {
             $targetUser->roles()->syncWithoutDetaching([$roleRow->id]);
         }
 
+        // Otomatis masukkan ke daftar praktikan
+        \Modules\EOffice\Models\DaftarPraktikan::firstOrCreate([
+            'user_id'      => $pendaftaran->user_id,
+            'praktikum_id' => $pendaftaran->praktikum_id,
+        ]);
+
         $this->notif->kirim(
             $pendaftaran->user_id,
             'Pendaftaran Praktikan Disetujui',
-            "IRS Anda untuk praktikum {$pendaftaran->praktikum?->nama} telah disetujui. Masukkan kode kelas dari Koordinator untuk bergabung."
+            "IRS Anda untuk praktikum {$pendaftaran->praktikum?->nama} telah disetujui. Anda sekarang resmi tergabung sebagai praktikan."
         );
 
-        return back()->with('success', "Pendaftaran {$targetUser?->name} disetujui. Mahasiswa dapat memakai kode praktikum untuk bergabung.");
+        return back()->with('success', "Pendaftaran {$targetUser?->name} disetujui dan otomatis tergabung sebagai praktikan.");
     }
 
     public function reject(Request $request, int $id)

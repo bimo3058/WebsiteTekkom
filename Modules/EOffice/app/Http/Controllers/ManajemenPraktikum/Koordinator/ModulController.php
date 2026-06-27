@@ -104,15 +104,4 @@ class ModulController extends Controller
         return back()->with('success', 'Modul berhasil dihapus.');
     }
 
-    public function generateKode(int $id)
-    {
-        $user  = auth()->user();
-        $modul = Modul::with('praktikum')->findOrFail($id);
-
-        if ($modul->praktikum?->koor_id !== $user->id) abort(403);
-
-        $modul->update(['kode_modul' => strtoupper(substr(md5(uniqid()), 0, 6))]);
-
-        return back()->with('success', "Kode modul: {$modul->kode_modul}");
-    }
 }

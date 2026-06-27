@@ -24,6 +24,8 @@ use Modules\BankSoal\Http\Controllers\Komprehensif\JadwalController;
 use Modules\BankSoal\Http\Controllers\Komprehensif\MahasiswaController;
 use Modules\BankSoal\Http\Controllers\Komprehensif\PendaftarAdminController;
 use Modules\BankSoal\Http\Controllers\Komprehensif\PeriodeController;
+use Modules\BankSoal\Http\Middleware\GpmSessionCheck;
+use Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController;
 
 Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->group(function () {
 
@@ -36,6 +38,11 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         Route::get('/dashboard', [DashboardController::class, 'index'])
             ->middleware('role:admin_banksoal|superadmin|dosen|gpm')
             ->name('banksoal.dashboard');
+
+        # Role Switcher
+        Route::get('/switch-role/{role}', [DashboardController::class, 'switchRole'])
+            ->name('banksoal.switch-role')
+            ->middleware('role:dosen|gpm');
 
         # Admin Routes - Kontrol Umum
         Route::middleware('role:admin_banksoal|superadmin')->prefix('admin/kontrol-umum')->name('banksoal.admin.kontrol-umum.')->group(function () {
@@ -70,6 +77,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::get('/pemetaan/cpl-mk', [PemetaanController::class, 'listCplMk'])->name('pemetaan.cpl-mk.index');
             Route::get('/pemetaan/dosen-mk', [PemetaanController::class, 'listDosenMk'])->name('pemetaan.dosen-mk.index');
             Route::get('/pemetaan/dosen-by-dosen', [PemetaanController::class, 'listDosenByDosen'])->name('pemetaan.dosen-by-dosen.index');
+            Route::get('/pemetaan/existing', [PemetaanController::class, 'getExistingMappings'])->name('pemetaan.existing');
         });
 
         # Admin Routes - Kontrol BankSoal
@@ -97,9 +105,10 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
                 Route::get('/cpmk', [DosenRpsController::class, 'getCpmkByCpl'])->name('cpmk');
                 Route::get('/cpmk-by-rps/{rpsId}', [DosenRpsController::class, 'getCpmkByRps'])->name('cpmk-by-rps');
                 Route::get('/dosen', [DosenRpsController::class, 'getDosenByMk'])->name('dosen');
+                Route::get('/wizard-cache/{mkId}', [DosenRpsController::class, 'getWizardCache'])->name('get-wizard-cache');
             });
             // RPS - GPM
-            Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
+            Route::middleware(['role:gpm', GpmSessionCheck::class])->prefix('gpm')->name('gpm.')->group(function () {
                 Route::get('/', [RiwayatValidasiController::class, 'index'])->name('index');
                 Route::get('/validasi-rps', [GpmRpsController::class, 'validasiRps'])->name('validasi-rps');
                 Route::get('/validasi-rps/review/{rpsId}', [GpmRpsController::class, 'validasiRpsReview'])->name('validasi-rps.review');
@@ -141,7 +150,7 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             });
             
            // Banksoal - GPM
-            Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
+            Route::middleware(['role:gpm', GpmSessionCheck::class])->prefix('gpm')->name('gpm.')->group(function () {
                 Route::get('/riwayat-validasi', [RiwayatValidasiController::class, 'index'])->name('riwayat-validasi');
                 Route::get('/validasi-bank-soal', [ValidasiBankSoalController::class, 'index'])->name('validasi-bank-soal');
                 Route::get('/validasi-bank-soal/review', [ValidasiBankSoalController::class, 'review'])->name('validasi-bank-soal.review');
@@ -198,9 +207,11 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::post('/pemetaan/mk-cpl', [PemetaanController::class, 'storeMkCpl'])->name('pemetaan.mk-cpl.store');
             Route::post('/pemetaan/mk-cpl/sync', [PemetaanController::class, 'syncMkCpl'])->name('pemetaan.mk-cpl.sync');
             Route::post('/pemetaan/cpl-mk', [PemetaanController::class, 'storeCplMk'])->name('pemetaan.cpl-mk.store');
+            Route::post('/pemetaan/cpl-mk/sync', [PemetaanController::class, 'syncCplMk'])->name('pemetaan.cpl-mk.sync');
             Route::post('/pemetaan/dosen-mk', [PemetaanController::class, 'storeDosenMk'])->name('pemetaan.dosen-mk.store');
             Route::post('/pemetaan/dosen-mk/sync', [PemetaanController::class, 'syncMkDosen'])->name('pemetaan.dosen-mk.sync');
             Route::post('/pemetaan/dosen-mk-by-dosen', [PemetaanController::class, 'storeDosenMkByDosen'])->name('pemetaan.dosen-mk-by-dosen.store');
+            Route::post('/pemetaan/dosen-mk-by-dosen/sync', [PemetaanController::class, 'syncDosenMkByDosen'])->name('pemetaan.dosen-mk-by-dosen.sync');
         });
 
         // 1. Blok RPS
@@ -209,9 +220,11 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
             Route::middleware('role:dosen')->prefix('dosen')->name('dosen.')->group(function () {
                 Route::post('/submit', [DosenRpsController::class, 'store'])->name('store');
                 Route::put('/{rpsId}', [DosenRpsController::class, 'update'])->name('update');
+                Route::post('/wizard-cache', [DosenRpsController::class, 'saveWizardCache'])->name('wizard-cache');
+                Route::post('/clear-wizard-cache', [DosenRpsController::class, 'clearWizardCache'])->name('clear-wizard-cache');
             });
             // RPS - GPM
-            Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
+            Route::middleware(['role:gpm', GpmSessionCheck::class])->prefix('gpm')->name('gpm.')->group(function () {
                 Route::post('/validasi-rps/store', [GpmRpsController::class, 'storeValidasi'])->name('validasi-rps.store');                
                 Route::post('/periode-rps', [PeriodeRpsController::class, 'store'])->name('periode-rps.store');
                 Route::put('/periode-rps/{id}', [PeriodeRpsController::class, 'update'])->name('periode-rps.update');
@@ -224,20 +237,20 @@ Route::middleware(['auth', 'module.active:bank_soal'])->prefix('bank-soal')->gro
         // 2. Blok Bank Soal
         Route::prefix('soal')->name('banksoal.soal.')->group(function () {
             // Bank Soal - GPM
-            Route::middleware('role:gpm')->prefix('gpm')->name('gpm.')->group(function () {
+            Route::middleware(['role:gpm', GpmSessionCheck::class])->prefix('gpm')->name('gpm.')->group(function () {
                 Route::post('/validasi-bank-soal/store', [ValidasiBankSoalController::class, 'store'])->name('validasi-bank-soal.store');            
                 Route::put('/validasi-bank-soal/update/{id}', [ValidasiBankSoalController::class, 'update'])->name('validasi-bank-soal.update');
                 
                 // Parameter Management (Full CRUD)
                 Route::prefix('parameter')->name('parameter.')->group(function () {
-                    Route::get('/', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'index'])->name('index');
-                    Route::get('/create', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'create'])->name('create');
-                    Route::post('/', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'store'])->name('store');
-                    Route::get('/{id}', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'show'])->name('show');
-                    Route::get('/{id}/edit', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'edit'])->name('edit');
-                    Route::put('/{id}', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'update'])->name('update');
-                    Route::delete('/{id}', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'destroy'])->name('destroy');
-                    Route::post('/skor', [\Modules\BankSoal\Http\Controllers\BS\GPM\ParameterController::class, 'updateSkor'])->name('skor.update');
+                    Route::get('/', [ParameterController::class, 'index'])->name('index');
+                    Route::get('/create', [ParameterController::class, 'create'])->name('create');
+                    Route::post('/', [ParameterController::class, 'store'])->name('store');
+                    Route::get('/{id}', [ParameterController::class, 'show'])->name('show');
+                    Route::get('/{id}/edit', [ParameterController::class, 'edit'])->name('edit');
+                    Route::put('/{id}', [ParameterController::class, 'update'])->name('update');
+                    Route::delete('/{id}', [ParameterController::class, 'destroy'])->name('destroy');
+                    Route::post('/skor', [ParameterController::class, 'updateSkor'])->name('skor.update');
                 });
             });
 
@@ -369,6 +382,7 @@ Route::middleware(['auth', 'role:mahasiswa', 'module.active:bank_soal'])
         Route::post('/pengajuan-pendaftaran/form', [MahasiswaController::class, 'storePendaftaran'])->name('pendaftaran.store');
 
         Route::get('/riwayat-ujian', [MahasiswaController::class, 'riwayat'])->name('riwayat');
+        Route::get('/riwayat-ujian/{id}', [MahasiswaController::class, 'detailRiwayat'])->name('riwayat.detail');
 
         // CBT Engine Routes
         // Flow: validate-token (generate soal + start sesi) -> engine/run

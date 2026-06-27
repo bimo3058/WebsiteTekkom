@@ -63,45 +63,72 @@ class CbtSessionService
     }
 
     /**
-     * Hasilkan soal ujian secara acak dan alokasikan ke sesi.
+     * Hasilkan soal ujian dengan distribusi tingkat kesulitan adaptif.
      *
-     * Mengambil SOAL_PER_CPL soal dari masing-masing TOTAL_CPL CPL
-     * secara acak, kemudian mengacak keseluruhan urutan soal dan opsi jawaban.
+     * Alur:
+     * 1. Analisis kelemahan CPL dari sesi terakhir yang gagal (jika ada)
+     * 2. Tentukan distribusi target (easy/intermediate/advanced) per CPL
+     * 3. Balance pool soal jika distribusi di bank soal timpang
+     * 4. Pilih soal sesuai distribusi, acak urutan, bulk insert
      *
-     * OPTIMASI:
-     * - 1 query untuk CPL (ganti 10 query loop individual)
-     * - 1 query untuk semua soal via whereIn (ganti N+1 loop pertanyaan)
-     * - shuffle() di PHP lebih cepat dari ORDER BY RANDOM() di remote DB
-     * - 1 bulk INSERT untuk semua jawabans (ganti 100x individual create)
+     * Jika mahasiswa belum pernah ujian → distribusi default (3/4/3).
+     * Jika pernah gagal → CPL lemah mendapat soal lebih mudah,
+     * CPL kuat mendapat soal lebih sulit.
      */
     public function generateSoal(KompreSession $session): void
     {
-        // ✅ Query 1: Ambil semua CPL sekali, acak di PHP
-        $cplIds = Cpl::pluck('id')->shuffle()->take(self::TOTAL_CPL);
+        // ── Step 1: Analisis CPL weakness dari riwayat ujian sebelumnya ──
+        $cplWeakness = $this->analyzeCplWeakness($session->user_id);
 
-        // ✅ Query 2: Ambil semua soal dari CPL yang terpilih SEKALIGUS
-        // beserta jawabans-nya (eager load, bukan lazy load dalam loop)
+        // ── Step 2: Ambil semua 10 CPL (tetap) dan semua soal disetujui ──
+        $cplIds = Cpl::pluck('id');
+
         $allPertanyaans = Pertanyaan::whereIn('cpl_id', $cplIds)
             ->where('status', Pertanyaan::STATUS_DISETUJUI)
-            ->with('jawabans:id,soal_id') // eager load hanya kolom yang dibutuhkan
-            ->get()
-            ->groupBy('cpl_id');
+            ->with('jawaban:id,soal_id')
+            ->get();
 
-        // Pilih soal per CPL secara merata, acak di PHP (lebih cepat dari ORDER BY RANDOM())
         $soals = collect();
+
+        // ── Step 3: Per CPL, balance pool lalu pilih soal ──
         foreach ($cplIds as $cplId) {
-            $pool = $allPertanyaans->get($cplId, collect());
-            $soals = $soals->merge($pool->shuffle()->take(self::SOAL_PER_CPL));
+            $pool = $allPertanyaans->where('cpl_id', $cplId);
+
+            // Tentukan distribusi target berdasarkan weakness map
+            $kategori     = $cplWeakness[$cplId] ?? 'default';
+            $distribution = $this->getDifficultyDistribution($kategori);
+
+            // Balance pool: promosikan soal surplus ke level defisit
+            $balancedPool = $this->balancePool($pool, $distribution);
+
+            // Pilih soal sesuai distribusi dari pool yang sudah balanced
+            $picked = collect();
+            foreach ($distribution as $level => $count) {
+                if ($count <= 0) continue;
+                $picked = $picked->merge(
+                    $balancedPool[$level]->take($count)
+                );
+            }
+
+            // Fallback terakhir: jika masih kurang, ambil dari sisa apapun
+            if ($picked->count() < self::SOAL_PER_CPL) {
+                $remaining = $pool->diff($picked)->shuffle();
+                $picked = $picked->merge(
+                    $remaining->take(self::SOAL_PER_CPL - $picked->count())
+                );
+            }
+
+            $soals = $soals->merge($picked->take(self::SOAL_PER_CPL));
         }
 
-        // Acak urutan final semua soal
+        // ── Step 4: Acak urutan final semua soal ──
         $soals = $soals->shuffle()->values();
 
-        // ✅ Validasi minimum soal
+        // ── Step 5: Validasi minimum soal ──
         $required = self::SOAL_PER_CPL * self::TOTAL_CPL;
         if ($soals->count() < $required) {
             throw new \RuntimeException(sprintf(
-                'Bank soal tidak mencukupi. Dibutuhkan %d soal (%d CPL × %d soal), hanya %d tersedia dari CPL yang dipilih. Hubungi admin untuk menambah soal.',
+                'Bank soal tidak mencukupi. Dibutuhkan %d soal (%d CPL × %d soal), hanya %d tersedia. Hubungi admin untuk menambah soal.',
                 $required,
                 self::TOTAL_CPL,
                 self::SOAL_PER_CPL,
@@ -109,18 +136,17 @@ class CbtSessionService
             ));
         }
 
-        // ✅ Query 3: Satu bulk INSERT menggantikan 100x individual create()
-        $now   = now();
-        $rows  = $soals->map(function ($soal, $idx) use ($session, $now) {
-            // Acak urutan opsi di PHP dari data yang sudah di-eager-load
-            $opsiIds = $soal->jawabans->pluck('id')->shuffle()->toArray();
+        // ── Step 6: Satu bulk INSERT (tidak berubah) ──
+        $now  = now();
+        $rows = $soals->map(function ($soal, $idx) use ($session, $now) {
+            $opsiIds = $soal->jawaban->pluck('id')->shuffle()->toArray();
 
             return [
                 'kompre_session_id' => $session->id,
                 'pertanyaan_id'     => $soal->id,
                 'urutan_soal'       => $idx + 1,
                 'urutan_opsi'       => json_encode($opsiIds),
-                'kesulitan_now'     => $soal->kesulitan,
+                'kesulitan_now'     => $soal->kesulitan, // tetap simpan kesulitan ASLI
                 'created_at'        => $now,
                 'updated_at'        => $now,
             ];
@@ -189,5 +215,151 @@ class CbtSessionService
 
         // Fallback: tanpa jadwal, gunakan durasi penuh (backward-compatible)
         return $endByDuration;
+    }
+
+    // =========================================================================
+    // Adaptive Difficulty Logic
+    // =========================================================================
+
+    /**
+     * Analisis kelemahan CPL dari sesi terakhir yang gagal.
+     *
+     * Selalu mengambil sesi TERAKHIR yang gagal (score < 60).
+     * Bersifat iteratif: jika gagal 3x, yang dianalisis adalah kegagalan ke-3.
+     * Jika tidak ada riwayat gagal (ujian pertama), return array kosong
+     * sehingga distribusi default diterapkan.
+     *
+     * Mahasiswa yang sudah lulus tidak bisa ujian lagi, jadi tidak perlu
+     * cek apakah pernah lulus setelah gagal.
+     *
+     * @return array<int, string> [cpl_id => 'sangat_lemah'|'lemah'|'cukup'|'baik']
+     */
+    private function analyzeCplWeakness(int $userId): array
+    {
+        $lastFailedSession = KompreSession::where('user_id', $userId)
+            ->where('status', KompreSessionStatus::Finished)
+            ->where('score', '<', 60)
+            ->orderByDesc('finished_at')
+            ->first();
+
+        // Ujian pertama kali atau tidak ada riwayat gagal
+        if (!$lastFailedSession) {
+            return [];
+        }
+
+        $jawabans = KompreJawaban::where('kompre_session_id', $lastFailedSession->id)
+            ->with(['pertanyaan:id,cpl_id', 'opsiTerpilih:id,is_benar'])
+            ->get();
+
+        $cplMap = [];
+
+        foreach ($jawabans->groupBy(fn($j) => $j->pertanyaan?->cpl_id) as $cplId => $items) {
+            if (!$cplId) continue;
+
+            $total = $items->count();
+            $benar = $items->filter(fn($j) => $j->jawaban_dipilih && $j->opsiTerpilih?->is_benar)->count();
+            $pct   = $total > 0 ? ($benar / $total) * 100 : 0;
+
+            $cplMap[$cplId] = match (true) {
+                $pct <= 30 => 'sangat_lemah',
+                $pct <= 50 => 'lemah',
+                $pct <= 70 => 'cukup',
+                default    => 'baik',
+            };
+        }
+
+        return $cplMap;
+    }
+
+    /**
+     * Distribusi target soal per tingkat kesulitan berdasarkan kategori CPL.
+     *
+     * @return array{easy: int, intermediate: int, advanced: int}
+     */
+    private function getDifficultyDistribution(string $kategori): array
+    {
+        return match ($kategori) {
+            'sangat_lemah' => ['easy' => 7, 'intermediate' => 3, 'advanced' => 0],
+            'lemah'        => ['easy' => 4, 'intermediate' => 4, 'advanced' => 2],
+            'cukup'        => ['easy' => 2, 'intermediate' => 5, 'advanced' => 3],
+            'baik'         => ['easy' => 1, 'intermediate' => 4, 'advanced' => 5],
+            default        => ['easy' => 3, 'intermediate' => 4, 'advanced' => 3],
+        };
+    }
+
+    /**
+     * Smart Pool Balancer — seimbangkan pool soal per CPL.
+     *
+     * Jika suatu level kesulitan tidak punya cukup soal untuk memenuhi
+     * distribusi target, ambil soal dari level TERDEKAT yang surplus
+     * sebagai "decoy". Soal yang dipromosikan tetap menyimpan kesulitan
+     * aslinya — promosi hanya mempengaruhi slot distribusi.
+     *
+     * Prioritas promosi (dari level terdekat):
+     *   - Defisit intermediate → isi dari easy dulu, baru advanced
+     *   - Defisit advanced     → isi dari intermediate dulu, baru easy
+     *   - Defisit easy         → isi dari intermediate dulu, baru advanced
+     *
+     * @param  \Illuminate\Support\Collection  $pool         Semua soal untuk 1 CPL
+     * @param  array{easy: int, intermediate: int, advanced: int} $distribution Target distribusi
+     * @return array{easy: \Illuminate\Support\Collection, intermediate: \Illuminate\Support\Collection, advanced: \Illuminate\Support\Collection}
+     */
+    private function balancePool($pool, array $distribution): array
+    {
+        $levels = ['easy', 'intermediate', 'advanced'];
+
+        // 1. Kelompokkan pool asli berdasarkan kesulitan
+        $grouped = [];
+        foreach ($levels as $level) {
+            $grouped[$level] = $pool->where('kesulitan', $level)->shuffle()->values();
+        }
+
+        // 2. Hitung surplus & defisit per level
+        $surplus = [];
+        $deficit = [];
+        foreach ($levels as $level) {
+            $have = $grouped[$level]->count();
+            $need = $distribution[$level];
+            if ($have > $need) {
+                $surplus[$level] = $have - $need;
+            } elseif ($have < $need) {
+                $deficit[$level] = $need - $have;
+            }
+        }
+
+        // 3. Urutan promosi: ambil dari level TERDEKAT dulu
+        $promotionOrder = [
+            'easy'         => ['intermediate', 'advanced'],
+            'intermediate' => ['easy', 'advanced'],
+            'advanced'     => ['intermediate', 'easy'],
+        ];
+
+        // 4. Promosikan soal surplus ke level defisit
+        foreach ($deficit as $deficitLevel => $deficitCount) {
+            $donors = $promotionOrder[$deficitLevel] ?? [];
+
+            foreach ($donors as $donorLevel) {
+                if ($deficitCount <= 0) break;
+                if (($surplus[$donorLevel] ?? 0) <= 0) continue;
+
+                // Soal yang bisa didonasikan = sisanya setelah slot asli terpenuhi
+                $donorPool   = $grouped[$donorLevel];
+                $donorNeeded = $distribution[$donorLevel];
+                $available   = $donorPool->slice($donorNeeded)->values();
+                $toMove      = min($deficitCount, $available->count(), $surplus[$donorLevel]);
+
+                if ($toMove > 0) {
+                    // Pindahkan ke pool level defisit
+                    $moved = $available->take($toMove);
+                    $grouped[$deficitLevel] = $grouped[$deficitLevel]->merge($moved);
+
+                    // Kurangi surplus dan defisit
+                    $surplus[$donorLevel] -= $toMove;
+                    $deficitCount         -= $toMove;
+                }
+            }
+        }
+
+        return $grouped;
     }
 }

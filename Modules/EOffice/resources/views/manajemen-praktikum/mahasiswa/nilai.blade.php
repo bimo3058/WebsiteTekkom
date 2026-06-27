@@ -24,8 +24,7 @@
     <div style="font-size:13px;color:#666D80;max-width:280px;margin:0 auto;line-height:1.6;">
         Anda belum terdaftar di praktikum manapun. Daftarkan diri melalui menu Pendaftaran.
     </div>
-    <a href="{{ route('eoffice.manprak.mahasiswa.pendaftaran-praktikan.index') }}"
-       class="mp-btn primary md" style="display:inline-flex;margin-top:20px;text-decoration:none;">Daftar Praktikum</a>
+
 </div>
 
 @else

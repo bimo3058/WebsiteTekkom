@@ -91,9 +91,6 @@
                 @if($isMine)
                 <span class="mp-badge success sm"><span class="dot"></span>Diampu Anda</span>
                 @endif
-                @if($modul->kode_modul)
-                <span class="mp-badge navy sm" style="font-family:monospace;">{{ $modul->kode_modul }}</span>
-                @endif
             </div>
             <div style="font-size:12px;color:#666D80;margin-bottom:4px;">{{ $modul->jadwal_minggu ?? '—' }}</div>
             @if($modul->deskripsi)
@@ -107,16 +104,18 @@
         </div>
 
         <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
-            <a href="{{ route('eoffice.manprak.asprak.modul.show', $modul->id) }}" class="mp-btn primary sm" style="text-decoration:none;">Detail</a>
-
-            <button onclick="openEdit({{ $modul->id }}, '{{ addslashes($modul->nama) }}', {{ $modul->urutan }}, '{{ addslashes($modul->jadwal_minggu ?? '') }}', '{{ addslashes($modul->deskripsi ?? '') }}')"
-                    class="mp-btn secondary sm">Edit</button>
-
-            <form method="POST" action="{{ route('eoffice.manprak.asprak.modul.destroy', $modul->id) }}"
-                  onsubmit="return confirm('Hapus modul {{ addslashes($modul->nama) }}? Materi dan tugas di dalamnya juga akan dihapus.')">
-                @csrf @method('DELETE')
-                <button class="mp-btn secondary sm" style="color:#DF1C41;border-color:#DF1C41;">Hapus</button>
-            </form>
+            @if($isMine)
+                <a href="{{ route('eoffice.manprak.asprak.modul.show', $modul->id) }}" class="mp-btn primary sm" style="text-decoration:none;">Detail</a>
+                <button onclick="openEdit({{ $modul->id }}, '{{ addslashes($modul->nama) }}', {{ $modul->urutan }}, '{{ addslashes($modul->jadwal_minggu ?? '') }}', '{{ addslashes($modul->deskripsi ?? '') }}')"
+                        class="mp-btn secondary sm">Edit</button>
+                <form method="POST" action="{{ route('eoffice.manprak.asprak.modul.destroy', $modul->id) }}"
+                      onsubmit="return confirm('Hapus modul {{ addslashes($modul->nama) }}? Materi dan tugas di dalamnya juga akan dihapus.')">
+                    @csrf @method('DELETE')
+                    <button class="mp-btn secondary sm" style="color:#DF1C41;border-color:#DF1C41;">Hapus</button>
+                </form>
+            @else
+                <button class="mp-btn secondary sm" disabled title="Anda bukan pengampu modul ini" style="opacity:0.5;cursor:not-allowed;">Tidak ada akses</button>
+            @endif
         </div>
     </div>
     @empty

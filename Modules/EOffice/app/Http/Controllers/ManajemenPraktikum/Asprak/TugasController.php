@@ -26,6 +26,10 @@ class TugasController extends Controller
         $modulIds = $asprak
             ? ModulAsprak::where('asprak_id', $asprak->id)->pluck('modul_id')
             : collect();
+            
+        if ($asprak && $modulIds->isEmpty()) {
+            session()->now('error', 'Akses terbatas: Anda belum di-assign sebagai pengampu pada modul manapun di praktikum ini.');
+        }
 
         $tugasList = Tugas::whereIn('modul_id', $modulIds)
             ->with(['modul.praktikum', 'pengumpulan.daftarPraktikan.user', 'pengumpulan.riwayat'])

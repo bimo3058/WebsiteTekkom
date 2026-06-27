@@ -51,8 +51,7 @@ class PendaftaranPraktikanController extends Controller
             $periodeByPraktikum[$p->id] = $this->getPeriodeAktif($p->id);
         }
 
-        // Ambil praktikum yang diikuti mahasiswa (dari daftar_praktikan)
-        $daftarPraktikan = DaftarPraktikan::with(['praktikum.dosen', 'praktikum.koordinator'])
+        $daftarPraktikan = DaftarPraktikan::with(['praktikum.dosens', 'praktikum.koordinator'])
             ->where('user_id', $user->id)
             ->get();
 

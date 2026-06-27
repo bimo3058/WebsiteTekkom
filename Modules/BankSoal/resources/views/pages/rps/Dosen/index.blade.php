@@ -1,7 +1,11 @@
 <x-banksoal::layouts.dosen-admin>
     @section('breadcrumbs')
-        <span class="text-slate-800 font-semibold">Manajemen RPS</span>
+    <span class="text-slate-500 hover:text-primary transition-colors">Manajemen Modul</span>
+    <span class="mx-2 text-slate-300">/</span>
+    <span class="text-slate-800 font-semibold">Manajemen RPS</span>
     @endsection
+
+    <link rel="stylesheet" href="{{ asset('css/banksoal-ui.css') }}">
     <style>
         .controls-section {
             padding: 12px 14px;
@@ -123,102 +127,6 @@
             opacity: 0.45;
             cursor: not-allowed;
         }
-
-        /* ── 3-dot dropdown ── */
-        .dots-wrap { 
-            position: relative; 
-            display: inline-block;
-            line-height: 1;
-        }
-        .btn-dots {
-            display: inline-flex; 
-            align-items: center; 
-            justify-content: center;
-            width: 32px; 
-            height: 32px; 
-            border-radius: 8px;
-            border: 1px solid #e2e8f0; 
-            background: #fff;
-            font-size: 18px; 
-            cursor: pointer; 
-            color: #64748b;
-            transition: all 0.2s;
-        }
-        .btn-dots:hover { 
-            border-color: rgb(11, 38, 110); 
-            color: rgb(11, 38, 110); 
-            background: #f8fafc; 
-        }
-        .dots-menu {
-            display: none; 
-            position: absolute; 
-            right: 0; 
-            top: calc(100% + 5px);
-            background: #fff; 
-            border: 1px solid #e2e8f0;
-            border-radius: 12px; 
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            min-width: 160px; 
-            z-index: 100; 
-            overflow: hidden;
-            padding: 4px;
-        }
-        .dots-menu.open { 
-            display: block; 
-            animation: menuFadeIn 0.2s ease-out;
-        }
-        @keyframes menuFadeIn {
-            from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        .dots-menu button, .dots-menu a {
-            display: flex !important; 
-            align-items: center !important; 
-            justify-content: flex-start !important;
-            gap: 10px !important;
-            width: 100% !important; 
-            padding: 10px 12px !important;
-            background: none !important; 
-            border: none !important; 
-            border-radius: 8px !important;
-            font-size: 13px !important; 
-            font-weight: 500 !important; 
-            color: #334155 !important;
-            cursor: pointer !important; 
-            text-align: left !important;
-            text-decoration: none !important;
-            transition: all 0.15s !important;
-            margin: 0 !important;
-            line-height: 1.2 !important;
-        }
-        .dots-menu button:hover:not(:disabled), .dots-menu a:hover:not(:disabled) { 
-            background: #f1f5f9 !important; 
-            color: rgb(11, 38, 110) !important;
-        }
-        .dots-menu button:disabled, .dots-menu a:disabled {
-            color: #94a3b8 !important;
-            cursor: not-allowed !important;
-            opacity: 0.7;
-        }
-        .dots-menu button:disabled svg, .dots-menu a:disabled svg, .dots-menu button:disabled i, .dots-menu a:disabled i {
-            opacity: 0.6;
-        }
-        .dots-menu i, .dots-menu svg {
-            font-size: 14px !important;
-            width: 18px !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            flex-shrink: 0 !important;
-            margin: 0 !important;
-        }
-        .dots-menu .menu-delete:not(:disabled) { 
-            color: #ef4444 !important; 
-        }
-        .dots-menu .menu-delete:hover:not(:disabled) { 
-            background: #fef2f2 !important; 
-            color: #dc2626 !important;
-        }
     </style>
 
     <x-banksoal::notification.alerts />
@@ -235,22 +143,23 @@
     />
 
     <div class="mb-6 flex items-center justify-end">
-        @if($isUploadOpen ?? false)
-            <a href="{{ route('banksoal.rps.dosen.create') }}"
-                class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40"
-                title="Ajukan RPS baru"
-            >
-                <i class="fas fa-plus"></i> Ajukan RPS
-            </a>
+        @if(!($isUploadOpen ?? false))
+        <button
+            type="button"
+            class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
+            disabled
+            title="Periode upload RPS saat ini tidak aktif"
+        >
+            <i class="fas fa-plus"></i> Ajukan RPS
+        </button>
         @else
-            <button
-                type="button"
-                class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors disabled:cursor-not-allowed disabled:bg-slate-300 disabled:text-slate-500"
-                disabled
-                title="Periode upload RPS saat ini tidak aktif"
-            >
-                <i class="fas fa-plus"></i> Ajukan RPS
-            </button>
+        <a
+            href="{{ route('banksoal.rps.dosen.create') }}"
+            class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary/40"
+            title="Ajukan RPS baru"
+        >
+            <i class="fas fa-plus"></i> Ajukan RPS
+        </a>
         @endif
     </div>
 
@@ -270,7 +179,32 @@
         <x-banksoal::ui.riwayat-rps-disetujui :riwayatMkDisetujui="$riwayatMkDisetujui" />
     </div>
 
+    <!-- Modal Ajukan RPS Baru -->
+    <div id="rpsUploadModal" data-has-validation-errors="{{ $errors->any() ? '1' : '0' }}" class="fixed inset-0 bg-black/70 z-50 items-start justify-center overflow-y-auto hidden">
+        <div class="relative w-full max-w-5xl mx-4 my-8">
+            <button type="button" onclick="closeRpsUploadModal()" class="absolute right-3 top-3 z-10 h-9 w-9 rounded-full bg-white text-slate-500 shadow hover:text-slate-700" aria-label="Tutup modal">
+                ×
+            </button>
 
+            <x-banksoal::ui.rps-form
+                :mataKuliahs="$mataKuliahs"
+                :tahunAjarans="$tahunAjarans"
+                :isUploadOpen="$isUploadOpen ?? false"
+                :semester="$semester ?? 'Genap'"
+                :academicYear="$academicYear ?? date('Y') . '/' . (date('Y') + 1)"
+            />
+        </div>
+    </div>
+
+    <!-- Modal Edit RPS (Revisi) -->
+    <div id="rpsEditModal" class="fixed inset-0 bg-black/70 z-50 items-start justify-center overflow-y-auto hidden">
+        <div class="relative w-full max-w-5xl mx-4 my-8">
+            <button type="button" onclick="closeRpsEditModal()" class="absolute right-3 top-3 z-10 h-9 w-9 rounded-full bg-white text-slate-500 shadow hover:text-slate-700" aria-label="Tutup modal">
+                ×
+            </button>
+            <div id="editModalContent"></div>
+        </div>
+    </div>
 
     <x-banksoal::ui.dokumen-rps-modal />
 
@@ -279,67 +213,173 @@
     <x-banksoal::ui.rps-script />
 
     <script>
-        (function() {
-            // Klien-side pagination untuk Riwayat Pengajuan RPS
-            initClientSidePagination();
-
-            // Menu toggle logic
-            window.toggleMenu = function(id, event) {
-                event.stopPropagation();
-                const menus = document.querySelectorAll('.dots-menu');
-                const menu = document.getElementById(`menu-${id}`);
-                
-                menus.forEach(m => {
-                    if (m.id !== `menu-${id}`) {
-                        m.classList.remove('open');
-                        m.style.top = '';
-                        m.style.bottom = '';
-                        m.style.left = '';
-                        m.style.right = '';
-                    }
-                });
-                
-                if (menu) {
-                    menu.classList.toggle('open');
-                    
-                    if (menu.classList.contains('open')) {
-                        const rect = menu.getBoundingClientRect();
-                        const viewHeight = Math.max(document.documentElement.clientHeight, window.innerHeight);
-                        const viewWidth = Math.max(document.documentElement.clientWidth, window.innerWidth);
-                        
-                        if (rect.bottom > viewHeight) {
-                            menu.style.top = 'auto';
-                            menu.style.bottom = '100%';
-                            menu.style.marginBottom = '5px';
-                        } else {
-                            menu.style.top = '100%';
-                            menu.style.bottom = 'auto';
-                            menu.style.marginBottom = '0';
-                            menu.style.marginTop = '5px';
-                        }
-                        
-                        if (rect.left < 0) {
-                            menu.style.right = 'auto';
-                            menu.style.left = '0';
-                        }
-                    } else {
-                        menu.style.top = '';
-                        menu.style.bottom = '';
-                        menu.style.left = '';
-                        menu.style.right = '';
-                    }
+        window.toggleMenu = function(id, event) {
+            event.stopPropagation();
+            document.querySelectorAll('.dots-menu').forEach(m => {
+                if (m.id !== 'menu-' + id) {
+                    m.classList.remove('open');
                 }
+            });
+            const menu = document.getElementById('menu-' + id);
+            if (menu) menu.classList.toggle('open');
+        };
+
+        document.addEventListener('click', function() {
+            document.querySelectorAll('.dots-menu').forEach(m => m.classList.remove('open'));
+        });
+
+        (function() {
+            const uploadModal = document.getElementById('rpsUploadModal');
+            const editModal = document.getElementById('rpsEditModal');
+            const hasValidationErrors = uploadModal?.dataset.hasValidationErrors === '1';
+
+            function parseJsonArray(value) {
+                if (!value) return [];
+                try {
+                    const parsed = JSON.parse(value);
+                    return Array.isArray(parsed) ? parsed : [];
+                } catch (error) {
+                    console.warn('Gagal parse data multiselect edit modal:', error);
+                    return [];
+                }
+            }
+
+            function initializeEditModalForm(contentDiv) {
+                const form = contentDiv?.querySelector('form[data-edit-mode="1"]');
+                if (!form || typeof RpsMultiselectHandler !== 'function') return;
+
+                const rpsMultiselect = new RpsMultiselectHandler({
+                    rootElement: form,
+                    routeSourceElement: form,
+                    isEditForm: true,
+                    rpsId: Number(form.dataset.rpsId || 0),
+                    selectedDosenIds: parseJsonArray(form.dataset.selectedDosenIds),
+                    selectedCplIds: parseJsonArray(form.dataset.selectedCplIds),
+                    selectedCpmkIds: parseJsonArray(form.dataset.selectedCpmkIds),
+                });
+
+                rpsMultiselect.init();
+
+                const mkSelect = form.querySelector('#mkSelect');
+                if (mkSelect && mkSelect.value) {
+                    mkSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            }
+
+            function resetUploadModalForm() {
+                const form = uploadModal?.querySelector('form');
+                if (!form) return;
+
+                form.reset();
+
+                if (window.BanksoalRpsUploadForm?.reset) {
+                    window.BanksoalRpsUploadForm.reset();
+                }
+
+                const uploadText = form.querySelector('#uploadText');
+                const uploadSub = form.querySelector('#uploadSub');
+                const fileInput = form.querySelector('#fileInput');
+                if (fileInput) {
+                    fileInput.value = '';
+                }
+                if (uploadText) {
+                    uploadText.textContent = 'Klik untuk unggah atau seret file ke sini';
+                }
+                if (uploadSub) {
+                    uploadSub.textContent = 'PDF (Maks. 1MB)';
+                }
+            }
+
+            window.openRpsUploadModal = function() {
+                if (!uploadModal) return;
+                uploadModal.classList.remove('hidden');
+                uploadModal.classList.add('flex');
+                document.body.classList.add('overflow-hidden');
             };
 
-            document.addEventListener('click', function() {
-                document.querySelectorAll('.dots-menu').forEach(m => {
-                    m.classList.remove('open');
-                    m.style.top = '';
-                    m.style.bottom = '';
-                    m.style.left = '';
-                    m.style.right = '';
-                });
+            window.closeRpsUploadModal = function() {
+                if (!uploadModal) return;
+                uploadModal.classList.remove('flex');
+                uploadModal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+                resetUploadModalForm();
+            };
+
+            window.openRpsEditModal = function(rpsId) {
+                if (!editModal) return;
+                const editLink = document.querySelector(`a[href*="/rps/dosen/${rpsId}/edit"]`);
+                const editModalUrl = '{{ route("banksoal.rps.dosen.edit-modal", ":rpsId") }}'.replace(':rpsId', rpsId);
+                
+                // Load edit form via AJAX dari endpoint edit-modal
+                fetch(editModalUrl)
+                    .then(response => {
+                        if (!response.ok) throw new Error('Network response was not ok');
+                        return response.text();
+                    })
+                    .then(html => {
+                        const contentDiv = document.getElementById('editModalContent');
+                        if (contentDiv) {
+                            contentDiv.innerHTML = html;
+                            initializeEditModalForm(contentDiv);
+                            editModal.classList.remove('hidden');
+                            editModal.classList.add('flex');
+                            document.body.classList.add('overflow-hidden');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading edit form:', error);
+                        alert('Gagal memuat form edit. Silakan coba lagi.');
+                    });
+            };
+
+            window.closeRpsEditModal = function() {
+                if (!editModal) return;
+                editModal.classList.remove('flex');
+                editModal.classList.add('hidden');
+                document.body.classList.remove('overflow-hidden');
+                document.getElementById('editModalContent').innerHTML = '';
+            };
+
+            uploadModal?.addEventListener('click', function(event) {
+                if (event.target === uploadModal) {
+                    window.closeRpsUploadModal();
+                }
             });
+
+            editModal?.addEventListener('click', function(event) {
+                if (event.target === editModal) {
+                    window.closeRpsEditModal();
+                }
+            });
+
+            document.addEventListener('keydown', function(event) {
+                if (event.key === 'Escape') {
+                    if (uploadModal && !uploadModal.classList.contains('hidden')) {
+                        window.closeRpsUploadModal();
+                    }
+                    if (editModal && !editModal.classList.contains('hidden')) {
+                        window.closeRpsEditModal();
+                    }
+                }
+            });
+
+            if (hasValidationErrors) {
+                window.openRpsUploadModal();
+            }
+
+            // Event listener untuk tombol Edit RPS
+            document.addEventListener('click', function(event) {
+                const editBtn = event.target.closest('.edit-rps-btn');
+                if (editBtn) {
+                    const rpsId = editBtn.dataset.rpsid;
+                    if (rpsId) {
+                        window.openRpsEditModal(rpsId);
+                    }
+                }
+            });
+
+            // Klien-side pagination untuk Riwayat Pengajuan RPS
+            initClientSidePagination();
         })();
 
         function initClientSidePagination() {

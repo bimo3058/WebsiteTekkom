@@ -51,24 +51,66 @@ class SnackbarManager {
         snackbar.className = `snackbar snackbar-${type}`;
         snackbar.setAttribute("role", "alert");
 
-        // Pemetaan ikon berdasarkan tipe pesan.
-        const icons = {
-            success: "fas fa-check-circle",
-            error: "fas fa-exclamation-circle",
-            warning: "fas fa-exclamation-triangle",
-            info: "fas fa-info-circle",
+        // Pemetaan judul, ikon, kelas warna berdasarkan tipe pesan.
+        const typeConfig = {
+            success: {
+                title: "BERHASIL",
+                icon: "fas fa-check",
+                iconBg: "bg-emerald-50",
+                iconColor: "text-emerald-600",
+                titleColor: "text-emerald-600"
+            },
+            error: {
+                title: "GAGAL",
+                icon: "fas fa-times",
+                iconBg: "bg-rose-50",
+                iconColor: "text-rose-600",
+                titleColor: "text-rose-600"
+            },
+            warning: {
+                title: "PERINGATAN",
+                icon: "fas fa-exclamation-triangle",
+                iconBg: "bg-amber-50",
+                iconColor: "text-amber-600",
+                titleColor: "text-amber-600"
+            },
+            info: {
+                title: "INFORMASI",
+                icon: "fas fa-info",
+                iconBg: "bg-blue-50",
+                iconColor: "text-blue-600",
+                titleColor: "text-blue-600"
+            }
         };
 
-        const icon = icons[type] || icons.info;
+        const config = typeConfig[type] || typeConfig.info;
 
         // Menyusun konten HTML snackbar.
         snackbar.innerHTML = `
-      <i class="${icon}"></i>
-      <span>${message}</span>
-      <button type="button" class="snackbar-close" title="Tutup">
-        <i class="fas fa-times"></i>
-      </button>
-    `;
+            <div class="flex items-start gap-3 w-full">
+                <!-- Icon Container -->
+                <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${config.iconBg} ${config.iconColor}">
+                    <i class="${config.icon} text-sm"></i>
+                </div>
+                <!-- Content -->
+                <div class="flex-1 min-w-0 pr-2">
+                    <p class="text-[11px] font-bold ${config.titleColor} tracking-wider uppercase">${config.title}</p>
+                    <div class="text-xs text-slate-600 font-semibold mt-1 leading-relaxed">${message}</div>
+                </div>
+                <!-- Close Button -->
+                <button type="button" class="snackbar-close text-slate-400 hover:text-slate-600 shrink-0 transition-colors" title="Tutup">
+                    <i class="fas fa-times text-xs"></i>
+                </button>
+            </div>
+        `;
+
+        // Menghitung offset top jika sudah ada snackbar lain di layar.
+        const existing = document.querySelectorAll(".snackbar");
+        let topOffset = 24;
+        existing.forEach((el) => {
+            topOffset += el.offsetHeight + 12; // 12px gap
+        });
+        snackbar.style.top = `${topOffset}px`;
 
         // Menambahkan elemen snackbar ke DOM.
         document.body.appendChild(snackbar);
@@ -80,7 +122,7 @@ class SnackbarManager {
         return snackbar;
     }
 
-    // Menambahkan snackbar ke DOM lalu menampilkannya.
+    // Menutup snackbar.
     hide(element) {
         if (!element || !element.classList.contains("snackbar")) return;
 
@@ -89,7 +131,7 @@ class SnackbarManager {
 
         // Memicu animasi keluar.
         element.style.animation =
-            "slideOutDown 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards";
+            "slideOutRight 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards";
 
         // Hapus elemen setelah animasi selesai.
         setTimeout(() => {

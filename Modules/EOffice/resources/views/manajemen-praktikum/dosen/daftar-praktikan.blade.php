@@ -13,7 +13,7 @@
 
 {{-- Info --}}
 <div class="mp-alert info flex-shrink-0">
-    Halaman ini bersifat <strong>read-only</strong>. Penambahan dan impor praktikan dilakukan oleh Admin dan Koordinator.
+    Halaman ini bersifat <strong>read-only</strong>. Penambahan data praktikan dilakukan oleh Admin.
 </div>
 
 {{-- Pilih Praktikum --}}
@@ -34,7 +34,7 @@
                 @foreach($praktikumList as $p)
                 <option value="{{ $p->id }}" {{ ($praktikum?->id == $p->id) ? 'selected' : '' }}>
                     {{ $p->nama }}
-                    @if($p->kode) [{{ $p->kode }}] @endif
+
                     · {{ $p->semester }} {{ $p->tahun_ajaran }}
                 </option>
                 @endforeach
@@ -73,8 +73,8 @@
 </div>
 
 {{-- Tabel --}}
-<div class="mp-card flex-1 min-h-0">
-    <div class="mp-card-header">
+<div class="mp-card flex-1 min-h-0" style="display:flex;flex-direction:column;">
+    <div class="mp-card-header" style="flex-shrink:0;">
         <span class="mp-card-title">Daftar Praktikan</span>
     </div>
         @php
@@ -130,7 +130,8 @@
             }
         @endphp
 
-        <table class="mp-table" style="min-width:700px;">
+        <div style="flex:1; overflow:auto; min-height:0;">
+            <table class="mp-table" style="min-width:700px; margin:0;">
             <thead>
                 <tr style="background:#F9FAFB;">
                     <th class="mp-th text-left" style="padding:10px 20px;width:40px;">#</th>
@@ -214,6 +215,7 @@
                 @endforelse
             </tbody>
         </table>
+        </div>
     @if($praktikans->hasPages())
     <div style="padding:12px 16px;border-top:1px solid #DFE1E7;flex-shrink:0;">{{ $praktikans->links() }}</div>
     @endif

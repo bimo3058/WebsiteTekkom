@@ -12,6 +12,35 @@
     .animate-popup {
         animation: modalPopUp 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
     }
+
+    /* Pagination */
+    .pagination-list { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; }
+    .pagination-btn {
+        display: inline-flex; align-items: center; justify-content: center;
+        min-width: 32px; height: 32px; padding: 0 8px;
+        border: 1px solid #e2e8f0; background: #fff; color: #334155;
+        border-radius: 8px; font-size: 12px; font-weight: 600;
+        text-decoration: none; transition: all 0.2s;
+    }
+    .pagination-btn:hover:not(.opacity-45) { border-color: rgb(11,38,110); color: rgb(11,38,110); }
+    .pagination-btn.active { background: rgb(11,38,110); border-color: rgb(11,38,110); color: #fff; }
+    .pagination-ellipsis { display: inline-flex; align-items: center; justify-content: center; min-width: 32px; height: 32px; font-size: 12px; color: #94a3b8; }
+
+    /* Table loading spinner */
+    .tbl-loading {
+        align-items: center; justify-content: center;
+        gap: 10px; padding: 40px 20px;
+        color: #475569; font-size: 13px;
+    }
+    .tbl-spinner {
+        width: 32px; height: 32px;
+        border: 3px solid #e2e8f0;
+        border-top-color: rgb(11, 38, 110);
+        border-radius: 50%;
+        animation: tbl-spin 0.7s linear infinite;
+        flex-shrink: 0;
+    }
+    @keyframes tbl-spin { to { transform: rotate(360deg); } }
 </style>
 
 <x-banksoal::ui.page-header title="Manajemen Bank Soal" subtitle="Kelola dan organisir repositori pertanyaan Anda">
@@ -49,69 +78,25 @@
 
 <div
     id="banksoal-dosen-page-data"
-    data-success="{{ e(session('success')) }}"
-    data-error="{{ e(session('error')) }}"
     data-mk-json="{{ base64_encode($mataKuliahDosen->toJson()) }}"
     hidden
 ></div>
 
-@if(session('success') || session('error'))
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-@endif
 
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const pageData = document.getElementById('banksoal-dosen-page-data');
-        if (!pageData) return;
-
-        const successMessage = pageData.dataset.success || '';
-        const errorMessage = pageData.dataset.error || '';
-
-        if (successMessage) {
-            Swal.fire({
-                icon: 'success',
-                title: 'Berhasil!',
-                text: successMessage,
-                confirmButtonColor: '#3b82f6',
-                background: '#ffffff',
-                customClass: {
-                    title: 'text-slate-800 text-xl font-bold',
-                    htmlContainer: 'text-slate-600 text-sm',
-                    confirmButton: 'rounded-xl px-5 py-2.5 font-semibold transition-colors'
-                }
-            });
-        }
-
-        if (errorMessage) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Oops...',
-                text: errorMessage,
-                confirmButtonColor: '#ef4444',
-                background: '#ffffff',
-                customClass: {
-                    title: 'text-slate-800 text-xl font-bold',
-                    htmlContainer: 'text-slate-600 text-sm',
-                    confirmButton: 'rounded-xl px-5 py-2.5 font-semibold transition-colors'
-                }
-            });
-        }
-    });
-</script>
 
 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden mb-8">
     <div class="px-6 py-4 border-b border-slate-200 bg-slate-50">
         <h2 class="text-lg font-semibold text-slate-900">Daftar Soal</h2>
     </div>
 
-    <form action="{{ route('banksoal.soal.dosen.index') }}" method="GET" class="p-6 border-b border-slate-200 flex flex-col md:flex-row gap-3 flex-wrap items-center" id="filterForm">
+    <form action="{{ route('banksoal.soal.dosen.index') }}" method="GET" class="p-6 border-b border-slate-200 flex flex-col md:flex-row gap-3 flex-wrap items-center" id="filterForm" onsubmit="window.showLoader();">
         <div class="relative flex-1 min-w-[250px] w-full">
             <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                 <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
                 </svg>
             </div>
-            <input type="text" data-search-tab="soal" name="searchSoal" list="search-suggestions" value="{{ request('searchSoal') }}" placeholder="Cari soal, kursus, atau topik..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none" autocomplete="off" id="searchSoal">
+            <input type="text" data-search-tab="soal" name="searchSoal" list="search-suggestions" value="{{ request('searchSoal') }}" placeholder="Cari soal, kursus, atau topik..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none" autocomplete="off" id="searchSoal">
             <datalist id="search-suggestions">
                 @foreach($mataKuliahDosen as $mk)
                     <option value="{{ $mk->nama }}"></option>
@@ -119,9 +104,7 @@
             </datalist>
         </div>
 
-        <input type="hidden" name="status" id="filterStatusInput" value="{{ request('status') }}">
-
-        <select name="sort" id="sortBy" class="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none cursor-pointer min-w-[140px] flex-shrink-0">
+        <select name="sort" id="sortBy" onchange="this.form.submit()" class="px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none cursor-pointer min-w-[140px] flex-shrink-0 focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none">
             <option value="terbaru" {{ request('sort') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
             <option value="terlama" {{ request('sort') == 'terlama' ? 'selected' : '' }}>Terlama</option>
             <option value="nama-asc" {{ request('sort') == 'nama-asc' ? 'selected' : '' }}>Nama A-Z</option>
@@ -129,49 +112,26 @@
         </select>
 
         <div class="flex items-center gap-2">
-            <button type="button" id="filterBtn" class="inline-flex items-center gap-2 bg-primary/10 hover:bg-primary/20 text-primary rounded-xl px-4 py-2.5 font-medium transition-colors border border-primary/20">
-                <i class="fas fa-filter"></i> Filter
-            </button>
-
-            @if(request()->hasAny(['searchSoal', 'status']))
-                <a href="{{ route('banksoal.soal.dosen.index') }}" class="inline-flex items-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl px-4 py-2.5 font-medium transition-colors border border-red-200">
-                    <i class="fas fa-times"></i> Reset
-                </a>
-            @endif
+            <x-banksoal::ui.filter-panel formId="filterForm" :hasActiveFilter="request('status') ? true : false" resetRoute="{{ route('banksoal.soal.dosen.index') }}" applyLabel="Terapkan">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Status Soal</label>
+                    <div class="space-y-2">
+                        @foreach([
+                            'draft' => '📄 Draft',
+                            'diajukan' => '⏳ Diajukan',
+                            'disetujui' => '✅ Disetujui',
+                            'revisi' => '✕ Perlu Revisi'
+                        ] as $val => $label)
+                        <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer group">
+                            <input type="radio" name="status" value="{{ $val }}" @checked(request('status') == $val) class="w-4 h-4 rounded-full border-slate-300 text-primary focus:ring-primary transition-all">
+                            <span class="text-sm text-slate-700 group-hover:text-primary transition-colors">{{ $label }}</span>
+                        </label>
+                        @endforeach
+                    </div>
+                </div>
+            </x-banksoal::ui.filter-panel>
         </div>
     </form>
-
-    <!-- Filter Modal -->
-    <div id="filterModal" class="hidden fixed inset-0 bg-black/50 z-50 items-start justify-center pt-8 overflow-y-auto">
-        <div class="bg-white rounded-2xl shadow-lg w-full max-w-md mx-auto animate-popup">
-            <div class="border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-                <h3 class="text-lg font-semibold text-slate-900">Filter</h3>
-                <button type="button" id="closeFilterBtn" class="text-slate-400 hover:text-slate-600 transition-colors">
-                    <i class="fas fa-times text-xl"></i>
-                </button>
-            </div>
-            <div class="px-6 py-4 space-y-4">
-                <div>
-                    <label class="block text-sm font-semibold text-slate-700 mb-2">Status</label>
-                    <select id="filterStatus" class="w-full px-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none cursor-pointer">
-                        <option value="">Semua Status</option>
-                        <option value="draft">Draft</option>
-                        <option value="diajukan">Diajukan</option>
-                        <option value="disetujui">Disetujui</option>
-                        <option value="revisi">Perlu Revisi</option>
-                    </select>
-                </div>
-            </div>
-            <div class="border-t border-slate-200 px-6 py-4 flex items-center gap-3">
-                <button type="button" id="applyFilterBtn" class="flex-1 inline-flex items-center justify-center gap-2 bg-primary hover:bg-primary/90 text-white rounded-xl px-4 py-2.5 font-medium transition-colors">
-                    <i class="fas fa-check"></i> Terapkan
-                </button>
-                <button type="button" id="resetFilterBtn" class="flex-1 inline-flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl px-4 py-2.5 font-medium transition-colors">
-                    <i class="fas fa-redo"></i> Reset
-                </button>
-            </div>
-        </div>
-    </div>
 
     <div class="overflow-x-auto" data-tab-panel="soal">
         <table class="w-full" id="tableSoal">
@@ -245,8 +205,32 @@
             <span class="text-sm text-slate-600">
                 Showing {{ $soals->firstItem() }} to {{ $soals->lastItem() }} of {{ $soals->total() }} questions
             </span>
-            <div>
-                {{ $soals->appends(request()->query())->links() }}
+            <div class="pagination-list">
+                @php
+                    $currentPage = $soals->currentPage();
+                    $totalPages  = $soals->lastPage();
+                    $pages = [];
+                    if ($totalPages < 10) {
+                        $start = max(1, $currentPage - 2);
+                        $end   = min($totalPages, $start + 4);
+                        $start = max(1, $end - 4);
+                        $pages = range($start, $end);
+                    } else {
+                        $pages = [1, 2, 3, '...', $totalPages - 1, $totalPages];
+                    }
+                @endphp
+                <a href="{{ $soals->appends(request()->query())->previousPageUrl() ?? '#' }}"
+                   class="pagination-btn {{ $currentPage === 1 ? 'opacity-45 pointer-events-none' : '' }}">&lsaquo;</a>
+                @foreach($pages as $page)
+                    @if($page === '...')
+                        <span class="pagination-ellipsis">...</span>
+                    @else
+                        <a href="{{ $soals->appends(request()->query())->url($page) }}"
+                           class="pagination-btn {{ (int)$page === $currentPage ? 'active' : '' }}">{{ $page }}</a>
+                    @endif
+                @endforeach
+                <a href="{{ $soals->appends(request()->query())->nextPageUrl() ?? '#' }}"
+                   class="pagination-btn {{ $currentPage === $totalPages ? 'opacity-45 pointer-events-none' : '' }}">&rsaquo;</a>
             </div>
         </div>
     @endif
@@ -264,7 +248,7 @@
             </button>
         </div>
 
-        <form action="{{ route('banksoal.soal.dosen.index') }}" method="GET" class="p-6 border-b border-slate-200 flex flex-col sm:flex-row gap-3">
+        <form action="{{ route('banksoal.soal.dosen.index') }}" method="GET" class="p-6 border-b border-slate-200 flex flex-col sm:flex-row gap-3" onsubmit="window.showLoader();">
             <div class="relative flex-1 max-w-md">
                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                     <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -291,14 +275,14 @@
 
         <div class="overflow-x-auto" data-tab-panel="paket">
             <table class="w-full" id="tablePackages">
-                <thead class="bg-slate-50 border-b border-slate-200">
+                <thead class="bg-primary text-white border-b border-primary/20">
                     <tr>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Kode MK</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Mata Kuliah</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Terkait CPL</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Terkait CPMK</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Jumlah Soal</th>
-                        <th class="px-6 py-4 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Tindakan</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Kode MK</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Mata Kuliah</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Terkait CPL</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Terkait CPMK</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Jumlah Soal</th>
+                        <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wider">Tindakan</th>
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-slate-100">
@@ -349,8 +333,32 @@
                 <span class="text-sm text-slate-600">
                     Showing {{ $packages->firstItem() }} to {{ $packages->lastItem() }} of {{ $packages->total() }} packages
                 </span>
-                <div>
-                    {{ $packages->appends(request()->query())->links() }}
+                <div class="pagination-list">
+                    @php
+                        $pkgPage  = $packages->currentPage();
+                        $pkgTotal = $packages->lastPage();
+                        $pkgPages = [];
+                        if ($pkgTotal < 10) {
+                            $s = max(1, $pkgPage - 2);
+                            $e = min($pkgTotal, $s + 4);
+                            $s = max(1, $e - 4);
+                            $pkgPages = range($s, $e);
+                        } else {
+                            $pkgPages = [1, 2, 3, '...', $pkgTotal - 1, $pkgTotal];
+                        }
+                    @endphp
+                    <a href="{{ $packages->appends(request()->query())->previousPageUrl() ?? '#' }}"
+                       class="pagination-btn {{ $pkgPage === 1 ? 'opacity-45 pointer-events-none' : '' }}">&lsaquo;</a>
+                    @foreach($pkgPages as $p)
+                        @if($p === '...')
+                            <span class="pagination-ellipsis">...</span>
+                        @else
+                            <a href="{{ $packages->appends(request()->query())->url($p) }}"
+                               class="pagination-btn {{ (int)$p === $pkgPage ? 'active' : '' }}">{{ $p }}</a>
+                        @endif
+                    @endforeach
+                    <a href="{{ $packages->appends(request()->query())->nextPageUrl() ?? '#' }}"
+                       class="pagination-btn {{ $pkgPage === $pkgTotal ? 'opacity-45 pointer-events-none' : '' }}">&rsaquo;</a>
                 </div>
             </div>
         @endif
@@ -768,6 +776,7 @@
             submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Memproses...';
             submitBtn.disabled = true;
         }
+        window.showLoader();
 
         fetch(form.action, {
             method: 'POST',
@@ -779,6 +788,7 @@
         })
         .then(response => response.json())
         .then(data => {
+            window.hideLoader();
             if (submitBtn) {
                 submitBtn.innerHTML = originalText;
                 submitBtn.disabled = false;
@@ -796,6 +806,7 @@
             }
         })
         .catch(error => {
+            window.hideLoader();
             console.error('Error:', error);
             if (submitBtn) {
                 submitBtn.innerHTML = originalText;
@@ -824,8 +835,8 @@
 
         <!-- Body -->
         <div class="flex-1 overflow-y-auto bg-slate-50/50">
-            <div id="lihatSoalLoading" class="hidden flex-col items-center justify-center py-16">
-                <i class="fas fa-circle-notch fa-spin text-4xl text-primary mb-4"></i>
+            <div id="lihatSoalLoading" class="hidden flex-col items-center justify-center py-16 tbl-loading">
+                <div class="tbl-spinner mb-4"></div>
                 <p class="text-sm font-medium text-slate-500">Memuat rincian soal...</p>
             </div>
             <div id="lihatSoalList" class="flex flex-col">
@@ -844,7 +855,7 @@
 <div id="importModal" class="fixed inset-0 z-[100] hidden items-center justify-center bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0" onclick="if(event.target === this) closeImportModal()">
     <div id="importModalContent" class="relative w-full max-w-lg transform rounded-2xl bg-white shadow-2xl transition-all duration-300 scale-95 opacity-0 translate-y-4">
         
-        <form action="{{ route('banksoal.soal.dosen.import-csv') }}" method="POST" enctype="multipart/form-data">
+        <form action="{{ route('banksoal.soal.dosen.import-csv') }}" method="POST" enctype="multipart/form-data" onsubmit="if(this.checkValidity()){ window.showLoader(); return true; }">
             @csrf
             
             <div class="px-6 py-5 border-b border-slate-100 flex items-center justify-between">
@@ -978,7 +989,7 @@
 <!-- Modal Ajukan Soal -->
 <div id="ajukanModal" tabindex="-1" aria-hidden="true" class="hidden overflow-y-auto overflow-x-hidden fixed inset-0 z-[100] justify-center items-center bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300 opacity-0">
     <div id="ajukanModalContent" class="relative p-4 w-full max-w-lg max-h-full transform transition-all duration-300 scale-95 opacity-0 translate-y-4">
-        <form action="{{ route('banksoal.soal.dosen.ajukan-semua') }}" method="POST" class="relative bg-white rounded-2xl shadow-xl border border-slate-100 flex flex-col max-h-[90vh]">
+        <form action="{{ route('banksoal.soal.dosen.ajukan-semua') }}" method="POST" class="relative bg-white rounded-2xl shadow-xl border border-slate-100 flex flex-col max-h-[90vh]" onsubmit="if(this.checkValidity()){ window.showLoader(); return true; }">
             @csrf
             
             <div class="flex items-center justify-between p-5 border-b border-slate-100 bg-slate-50/50 rounded-t-2xl">
@@ -1125,47 +1136,9 @@
             }, 600));
         });
 
-        // Filter Modal Handlers
-        const filterBtn = document.getElementById('filterBtn');
-        const closeFilterBtn = document.getElementById('closeFilterBtn');
-        const filterModal = document.getElementById('filterModal');
-        const applyFilterBtn = document.getElementById('applyFilterBtn');
-        const resetFilterBtn = document.getElementById('resetFilterBtn');
-        const filterStatus = document.getElementById('filterStatus');
-        const filterStatusInput = document.getElementById('filterStatusInput');
-        const filterForm = document.getElementById('filterForm');
+        // Sort change listener
         const sortBy = document.getElementById('sortBy');
-
-        // Initialize filter modal with current status
-        if (filterStatusInput.value) {
-            filterStatus.value = filterStatusInput.value;
-        }
-
-        filterBtn.addEventListener('click', () => {
-            filterModal.classList.remove('hidden');
-        });
-
-        closeFilterBtn.addEventListener('click', () => {
-            filterModal.classList.add('hidden');
-        });
-
-        filterModal.addEventListener('click', (e) => {
-            if (e.target === filterModal) {
-                filterModal.classList.add('hidden');
-            }
-        });
-
-        applyFilterBtn.addEventListener('click', () => {
-            filterStatusInput.value = filterStatus.value;
-            filterForm.submit();
-            filterModal.classList.add('hidden');
-        });
-
-        resetFilterBtn.addEventListener('click', () => {
-            filterStatus.value = '';
-            filterStatusInput.value = '';
-        });
-
+        const filterForm = document.getElementById('filterForm');
         sortBy.addEventListener('change', function() {
             filterForm.submit();
         });

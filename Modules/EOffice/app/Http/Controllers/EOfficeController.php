@@ -146,12 +146,56 @@ class EOfficeController extends Controller
         // Tugas mendatang — TODO: isi saat tabel tugas siap
         $tugasMendatang = collect();
 
-        // Pengumuman (sementara pakai KpPengumuman)
-        $pengumuman = KpPengumuman::where('is_active', true)
+        // Pengumuman KP
+        $kpPengumuman = KpPengumuman::where('is_active', true)
             ->where('tipe', 'pengumuman')
             ->orderByDesc('created_at')
             ->limit(5)
-            ->get();
+            ->get()
+            ->map(function($p) {
+                return (object)[
+                    'judul' => $p->judul,
+                    'konten' => $p->konten,
+                    'date' => $p->created_at?->diffForHumans(),
+                    'url' => route('eoffice.kp.mahasiswa.pengumuman'),
+                    'ts' => $p->created_at?->timestamp ?? 0,
+                ];
+            });
+
+        // Pengumuman Manajemen Praktikum
+        $praktikumIds = $praktikumAktif ? [$praktikumAktif->id] : [];
+        $mpPengumuman = \Modules\EOffice\Models\Pengumuman::with('praktikum')
+            ->where('is_published', true)
+            ->where(function($q) use ($praktikumIds) {
+                $q->whereIn('tipe_sistem', ['buka', 'tutup']);
+                if (!empty($praktikumIds)) {
+                    $q->orWhereIn('praktikum_id', $praktikumIds);
+                }
+            })
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get()
+            ->map(function($p) {
+                $url = null;
+                if ($p->tipe_sistem === 'buka') {
+                    $url = route('eoffice.manprak.mahasiswa.daftar-asprak.index', ['praktikum_id' => $p->praktikum_id]);
+                } else {
+                    $url = route('eoffice.manprak.mahasiswa.pengumuman.index', ['praktikum_id' => $p->praktikum_id]);
+                }
+                return (object)[
+                    'judul' => $p->judul,
+                    'konten' => $p->konten,
+                    'date' => $p->created_at?->diffForHumans(),
+                    'url' => $url,
+                    'ts' => $p->created_at?->timestamp ?? 0,
+                ];
+            });
+
+        // Gabungkan pengumuman KP dan MP, urutkan berdasarkan waktu terbaru
+        $pengumuman = $kpPengumuman->concat($mpPengumuman)
+            ->sortByDesc('ts')
+            ->take(5)
+            ->values();
 
         // Timeline KP
         $timelineKp = KpPengumuman::where('is_active', true)

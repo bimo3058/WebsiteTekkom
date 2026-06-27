@@ -24,7 +24,7 @@
         </p>
 
         <!-- Form & Actions -->
-        <form action="{{ route('banksoal.arsip.dosen.penarikan.update', $penarikan->id) }}" method="POST" class="flex items-center gap-3">
+        <form action="{{ route('banksoal.arsip.dosen.penarikan.update', $penarikan->id) }}" method="POST" class="flex items-center gap-3" onsubmit="if(this.checkValidity()){ window.showLoader(); return true; }">
             @csrf
             @method('PUT')
             

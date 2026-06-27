@@ -14,17 +14,35 @@
     </div>
 
     <!-- Filter Form -->
-    <form action="{{ route('banksoal.admin.kontrol-banksoal.soal') }}" method="GET" class="mb-6 flex gap-3">
-        <input type="text" name="searchSoal" value="{{ request('searchSoal') }}" placeholder="Cari agenda atau mata kuliah..." class="w-full rounded-xl border border-slate-300 text-sm px-4 py-2.5 outline-none focus:border-[#0f172a] focus:ring-1 focus:ring-[#0f172a]">
-        
-        <select name="filterStatus" class="w-full md:w-64 rounded-xl border border-slate-300 text-sm px-4 py-2.5 outline-none focus:border-[#0f172a] focus:ring-1 focus:ring-[#0f172a]">
-            <option value="">-- Semua Status --</option>
-            <option value="pending" @selected(request('filterStatus') == 'pending')>🕒 Menunggu Dicetak</option>
-            <option value="diproses" @selected(request('filterStatus') == 'diproses')>⏳ Sedang Diproses</option>
-            <option value="selesai" @selected(request('filterStatus') == 'selesai')>✅ Sudah Dicetak</option>
-        </select>
-        
-        <button type="submit" class="bg-slate-800 hover:bg-slate-700 transition lg:px-8 text-white px-5 py-2.5 rounded-xl font-medium">Filter</button>
+    <form action="{{ route('banksoal.admin.kontrol-banksoal.soal') }}" method="GET" class="bg-white rounded-2xl border border-slate-200 p-4 mb-6 flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between" id="filterForm" onsubmit="window.showLoader();">
+        <div class="relative flex-1">
+            <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+            </div>
+            <input type="text" name="searchSoal" value="{{ request('searchSoal') }}" placeholder="Cari agenda atau mata kuliah..." class="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-4 focus:ring-primary/5 focus:border-primary transition-all outline-none">
+        </div>
+
+        <div class="flex items-center gap-3">
+            <x-banksoal::ui.filter-panel formId="filterForm" :hasActiveFilter="request('filterStatus') ? true : false" resetRoute="{{ route('banksoal.admin.kontrol-banksoal.soal') }}" applyLabel="Terapkan">
+                <div>
+                    <label class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3 block">Status Cetak</label>
+                    <div class="space-y-2">
+                        @foreach([
+                            'pending' => '🕒 Menunggu Dicetak',
+                            'diproses' => '⏳ Sedang Diproses',
+                            'selesai' => '✅ Sudah Dicetak'
+                        ] as $val => $label)
+                        <label class="flex items-center gap-3 p-2 rounded-lg hover:bg-slate-50 cursor-pointer group">
+                            <input type="radio" name="filterStatus" value="{{ $val }}" @checked(request('filterStatus') == $val) class="w-4 h-4 rounded-full border-slate-300 text-primary focus:ring-primary transition-all">
+                            <span class="text-sm text-slate-700 group-hover:text-primary transition-colors">{{ $label }}</span>
+                        </label>
+                        @endforeach
+                    </div>
+                </div>
+            </x-banksoal::ui.filter-panel>
+        </div>
     </form>
 
     @if (session('success'))
@@ -93,7 +111,7 @@
                                     <i class="fas fa-print"></i> Cetak
                                 </a>
                                 @if($item->status_cetak != 'selesai')
-                                <form action="{{ route('banksoal.admin.kontrol-banksoal.soal.tandai-selesai', $item->id) }}" method="POST" onsubmit="return confirm('Tandai bahwa berkas fisik soal ini sudah tercetak dan siap dibagikan?');">
+                                <form action="{{ route('banksoal.admin.kontrol-banksoal.soal.tandai-selesai', $item->id) }}" method="POST" onsubmit="if(confirm('Tandai bahwa berkas fisik soal ini sudah tercetak dan siap dibagikan?')) { window.showLoader(); return true; } else { return false; }">
                                     @csrf
                                     <button type="submit" class="inline-flex items-center gap-1.5 bg-[#059669] hover:bg-[#047857] text-white rounded-lg px-3 py-1.5 text-xs font-semibold transition shadow-sm" title="Tandai Selesai Dicetak">
                                         <i class="fas fa-check-double"></i> Selesai
@@ -115,7 +133,7 @@
             </table>
         </div>
         <div class="px-6 py-4 border-t border-slate-200 bg-slate-50/80">
-            {{ $antreanCetak->links() }}
+            {{ $antreanCetak->links('banksoal::components.ui.laravel-pagination') }}
         </div>
     </div>
 </x-banksoal::layouts.admin>

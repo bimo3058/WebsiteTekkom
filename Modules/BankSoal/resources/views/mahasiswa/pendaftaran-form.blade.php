@@ -56,9 +56,9 @@
                 <div>
                     <h4 class="font-bold text-slate-900 text-[10px] tracking-widest uppercase mb-1">Pelaksanaan</h4>
                     <p class="text-xs font-medium text-slate-700">
-                        {{ $activePeriode->tanggal_mulai_ujian ? \Carbon\Carbon::parse($activePeriode->tanggal_mulai_ujian)->translatedFormat('d M Y') : '-' }}
+                        {{ $activePeriode->tanggal_mulai_ujian ? \Carbon\Carbon::parse($activePeriode->tanggal_mulai_ujian)->translatedFormat('d F Y') : '-' }}
                         &ndash;
-                        {{ $activePeriode->tanggal_selesai_ujian ? \Carbon\Carbon::parse($activePeriode->tanggal_selesai_ujian)->translatedFormat('d M Y') : '-' }}
+                        {{ $activePeriode->tanggal_selesai_ujian ? \Carbon\Carbon::parse($activePeriode->tanggal_selesai_ujian)->translatedFormat('d F Y') : '-' }}
                     </p>
                 </div>
                 <div>
@@ -78,7 +78,7 @@
 
         <!-- RIGHT COLUMN: Form -->
         <div class="w-full lg:w-[58%]">
-            <div class="bg-white p-6 border border-slate-300 lg:sticky lg:top-4">
+            <div class="bg-white p-8 border border-slate-200 rounded-2xl shadow-sm lg:sticky lg:top-4">
 
                 <div class="mb-5 pb-4 border-b border-slate-200">
                     <h2 class="text-lg font-extrabold text-slate-900 tracking-tight uppercase">Data Mahasiswa</h2>
@@ -95,14 +95,14 @@
                                 Induk</label>
                             <input type="text" name="nim" required readonly
                                 value="{{ old('nim', optional(auth()->user()->student)->student_number ?? auth()->user()->external_id) }}"
-                                class="w-full h-11 bg-slate-50 border border-slate-200 text-slate-500 font-mono text-sm px-3 outline-none cursor-not-allowed" />
+                                class="w-full h-11 bg-slate-50 border border-slate-200 text-slate-500 font-mono text-sm px-3 outline-none cursor-not-allowed rounded-xl" />
                         </div>
                         <!-- Semester -->
                         <div class="space-y-1">
                             <label
                                 class="block text-[10px] text-slate-900 font-bold uppercase tracking-widest">Semester</label>
                             <input type="number" name="semester" required readonly value="{{ $semesterAktif }}"
-                                class="w-full h-11 bg-slate-50 border border-slate-200 text-slate-500 font-mono text-sm px-3 outline-none cursor-not-allowed" />
+                                class="w-full h-11 bg-slate-50 border border-slate-200 text-slate-500 font-mono text-sm px-3 outline-none cursor-not-allowed rounded-xl" />
                         </div>
                     </div>
 
@@ -111,7 +111,7 @@
                         <label class="block text-[10px] text-slate-900 font-bold uppercase tracking-widest">Nama
                             Lengkap</label>
                         <input type="text" name="nama" required readonly value="{{ old('nama', auth()->user()->name) }}"
-                            class="w-full h-11 bg-slate-50 border border-slate-200 text-slate-500 font-medium text-sm px-3 outline-none cursor-not-allowed" />
+                            class="w-full h-11 bg-slate-50 border border-slate-200 text-slate-500 font-medium text-sm px-3 outline-none cursor-not-allowed rounded-xl" />
                     </div>
 
                     <!-- Seksi 2: Kontak & Akademik -->
@@ -121,7 +121,7 @@
                             <label class="block text-[10px] text-slate-900 font-bold uppercase tracking-widest">WhatsApp
                                 <span class="text-red-500">*</span></label>
                             <input type="text" name="kontak_wa" required value="{{ old('kontak_wa') }}"
-                                class="w-full h-11 bg-white border border-slate-300 focus:border-slate-900 focus:ring-0 text-slate-900 font-mono text-sm px-3 transition-colors outline-none @error('kontak_wa') border-red-500 @enderror"
+                                class="w-full h-11 bg-white border border-slate-300 focus:border-slate-900 focus:ring-0 text-slate-900 font-mono text-sm px-3 transition-colors outline-none @error('kontak_wa') border-red-500 @enderror rounded-xl"
                                 placeholder="08xxxxxxxx" />
                             @error('kontak_wa')
                                 <p class="text-[11px] text-red-600 font-bold">{{ $message }}</p>
@@ -133,7 +133,7 @@
                                 Lulus <span class="text-red-500">*</span></label>
                             @if($activePeriode->target_wisuda_options && count($activePeriode->target_wisuda_options) > 0)
                                 <select name="target_wisuda" required
-                                    class="w-full h-11 bg-white border border-slate-300 focus:border-slate-900 focus:ring-0 text-slate-900 font-medium text-sm px-3 transition-colors outline-none cursor-pointer @error('target_wisuda') border-red-500 @enderror">
+                                    class="w-full h-11 bg-white border border-slate-300 focus:border-slate-900 focus:ring-0 text-slate-900 font-medium text-sm px-3 transition-colors outline-none cursor-pointer @error('target_wisuda') border-red-500 @enderror rounded-xl">
                                     <option value="" disabled {{ old('target_wisuda') ? '' : 'selected' }}>PILIH TARGET WISUDA</option>
                                     @foreach($activePeriode->target_wisuda_options as $opt)
                                         <option value="{{ $opt }}" {{ old('target_wisuda') === $opt ? 'selected' : '' }}>{{ $opt }}</option>
@@ -141,7 +141,7 @@
                                 </select>
                             @else
                                 <input type="text" name="target_wisuda" required value="{{ old('target_wisuda') }}"
-                                    class="w-full h-11 bg-white border border-slate-300 focus:border-slate-900 focus:ring-0 text-slate-900 font-medium text-sm px-3 transition-colors outline-none @error('target_wisuda') border-red-500 @enderror"
+                                    class="w-full h-11 bg-white border border-slate-300 focus:border-slate-900 focus:ring-0 text-slate-900 font-medium text-sm px-3 transition-colors outline-none @error('target_wisuda') border-red-500 @enderror rounded-xl"
                                     placeholder="Contoh: Periode 183 (Apr-Jun '26)" />
                             @endif
                             @error('target_wisuda')
@@ -160,7 +160,7 @@
                                 class="block text-[10px] text-slate-900 font-bold uppercase tracking-widest">Pembimbing
                                 1 <span class="text-red-500">*</span></label>
                             <select name="dosen_pembimbing_1_id" required
-                                class="w-full h-11 bg-white border border-slate-300 focus:border-slate-900 focus:ring-0 text-slate-900 font-medium text-sm px-3 transition-colors outline-none cursor-pointer @error('dosen_pembimbing_1_id') border-red-500 @enderror">
+                                class="w-full h-11 bg-white border border-slate-300 focus:border-slate-900 focus:ring-0 text-slate-900 font-medium text-sm px-3 transition-colors outline-none cursor-pointer @error('dosen_pembimbing_1_id') border-red-500 @enderror rounded-xl">
                                 <option value="" disabled selected>PILIH DOSEN</option>
                                 @foreach($dosens as $dosen)
                                     <option value="{{ $dosen->id }}" {{ old('dosen_pembimbing_1_id') == $dosen->id ? 'selected' : '' }}>
@@ -178,7 +178,7 @@
                                 class="block text-[10px] text-slate-900 font-bold uppercase tracking-widest">Pembimbing
                                 2</label>
                             <select name="dosen_pembimbing_2_id"
-                                class="w-full h-11 bg-white border border-slate-300 focus:border-slate-900 focus:ring-0 text-slate-900 font-medium text-sm px-3 transition-colors outline-none cursor-pointer @error('dosen_pembimbing_2_id') border-red-500 @enderror">
+                                class="w-full h-11 bg-white border border-slate-300 focus:border-slate-900 focus:ring-0 text-slate-900 font-medium text-sm px-3 transition-colors outline-none cursor-pointer @error('dosen_pembimbing_2_id') border-red-500 @enderror rounded-xl">
                                 <option value="" selected>PILIH DOSEN</option>
                                 @foreach($dosens as $dosen)
                                     <option value="{{ $dosen->id }}" {{ old('dosen_pembimbing_2_id') == $dosen->id ? 'selected' : '' }}>
@@ -193,7 +193,7 @@
                     </div>
 
                     <button type="submit"
-                        class="w-full h-12 inline-flex items-center justify-center bg-primary hover:bg-primary/90 text-white text-xs font-bold tracking-widest uppercase transition-colors rounded-xl">
+                        class="w-full h-12 inline-flex items-center justify-center bg-primary hover:bg-primary/90 text-white text-xs font-bold tracking-widest uppercase transition-colors rounded-xl rounded-xl shadow-sm">
                         Submit Pendaftaran &rarr;
                     </button>
                 </form>

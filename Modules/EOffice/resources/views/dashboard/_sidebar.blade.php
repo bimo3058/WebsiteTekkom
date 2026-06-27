@@ -30,7 +30,6 @@
                 ['href' => route('eoffice.manprak.admin.daftar-praktikan.index'),       'label' => 'Daftar Praktikan',   'match' => 'daftar-praktikan'],
                 ['href' => route('eoffice.manprak.admin.periode-pendaftaran.index'),    'label' => 'Periode Pendaftaran','match' => 'periode-pendaftaran'],
                 ['href' => route('eoffice.manprak.admin.pendaftaran-koor.index'),       'label' => 'Pendaftaran Koor',   'match' => 'pendaftaran-koor'],
-                ['href' => route('eoffice.manprak.admin.bagi-asprak.index'),            'label' => 'Bagi Asprak',        'match' => 'bagi-asprak'],
             ],
         ];
     }
@@ -65,7 +64,6 @@
             'subs'  => [
                 ['href' => route('eoffice.manprak.koor.dashboard'),                  'label' => 'Ringkasan',        'match' => 'koor.dashboard'],
                 ['href' => route('eoffice.manprak.koor.pendaftaran-asprak.index'),   'label' => 'Seleksi Asprak',   'match' => 'koor.pendaftaran-asprak'],
-                ['href' => route('eoffice.manprak.koor.pendaftaran-praktikan.index'), 'label' => 'Pendaftaran Praktikan', 'match' => 'koor.pendaftaran-praktikan'],
                 ['href' => route('eoffice.manprak.koor.modul.index'),                'label' => 'Kelola Modul',     'match' => 'koor.modul'],
                 ['href' => route('eoffice.manprak.koor.bagi-modul.index'),           'label' => 'Bagi Modul',       'match' => 'bagi-modul'],
                 ['href' => route('eoffice.manprak.koor.pengumuman.index'),           'label' => 'Pengumuman',       'match' => 'koor.pengumuman'],
@@ -101,7 +99,6 @@
             'icon'  => 'M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z',
             'subs'  => [
                 ['href' => route('eoffice.manprak.mahasiswa.dashboard'),            'label' => 'Ringkasan',    'match' => 'mahasiswa.dashboard'],
-                ['href' => route('eoffice.manprak.mahasiswa.pendaftaran-praktikan.index'), 'label' => 'Daftar Praktikan (IRS)', 'match' => 'mahasiswa.pendaftaran-praktikan'],
                 ['href' => route('eoffice.manprak.mahasiswa.pengumuman.index'),     'label' => 'Pengumuman',   'match' => 'mahasiswa.pengumuman'],
                 ['href' => route('eoffice.manprak.mahasiswa.tugas.index'),          'label' => 'Tugas',        'match' => 'mahasiswa.tugas'],
                 ['href' => route('eoffice.manprak.mahasiswa.nilai.index'),          'label' => 'Nilai',        'match' => 'mahasiswa.nilai'],
@@ -251,6 +248,18 @@
                       :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">Kerja Praktik (KP)</span>
             </a>
         </div>
+
+        {{-- Kembali ke Dashboard Utama SITKOM --}}
+        <div class="h-px bg-[#F0F1F4] mx-[14px] my-[6px]"></div>
+        <a href="{{ route('dashboard') }}"
+           class="flex items-center gap-[10px] px-[10px] py-[9px] rounded-lg no-underline transition-colors hover:bg-[#F6F8FA] text-[#666D80]"
+           :class="sidebarOpen ? '' : 'justify-center'">
+            <svg class="w-[14px] h-[14px] flex-shrink-0 text-[#A4ABB8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <path d="M19 12H5M5 12l7-7M5 12l7 7"/>
+            </svg>
+            <span class="text-[12px] font-medium flex-1 transition-[opacity,width] duration-200"
+                  :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">Kembali ke Dasbor Utama</span>
+        </a>
     </nav>
 
     {{-- User footer --}}

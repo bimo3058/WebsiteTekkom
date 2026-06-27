@@ -175,7 +175,7 @@
                                 Pilih praktikum terlebih dahulu.
                             @endif
                         </div>
-                        <div style="font-size:12px; color:#A4ABB8; margin-top:4px;">Asprak dapat ditambahkan melalui menu Bagi Asprak.</div>
+                        <div style="font-size:12px; color:#A4ABB8; margin-top:4px;">Asprak dapat diterima melalui menu Pendaftaran Asprak.</div>
                     </td>
                 </tr>
                 @endforelse
@@ -193,11 +193,7 @@
         @if($koorCount > 0)
         <span style="font-size:12px; color:#D39C3D;">· <strong>{{ $koorCount }}</strong> juga berperan sebagai Koordinator</span>
         @endif
-        <div style="flex:1;"></div>
-        <a href="{{ route('eoffice.manprak.admin.bagi-asprak.index', ['praktikum_id' => $praktikum?->id]) }}"
-           class="mp-btn secondary sm" style="font-size:12px;">
-            Kelola Penugasan Modul →
-        </a>
+
     </div>
     @endif
 

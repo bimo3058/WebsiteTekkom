@@ -25,38 +25,7 @@
             animation: popup 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
-        /* Loading Spinner */
-        #global-loader {
-            position: fixed;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(4px);
-            z-index: 9999;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid var(--navy-light);
-            border-top: 4px solid var(--navy);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
-
-    <!-- Global Loader Overlay -->
-    <div id="global-loader">
-        <div class="flex flex-col items-center gap-3">
-            <div class="spinner"></div>
-            <p class="text-sm font-bold text-navy">Memproses data...</p>
-        </div>
-    </div>
 
     <x-banksoal::notification.alerts />
 
@@ -83,7 +52,7 @@
             </div>
             
             <div class="p-6">
-                <form action="{{ route('banksoal.arsip.dosen.upload-csv') }}" method="POST" enctype="multipart/form-data" onsubmit="showLoader()">
+                <form id="importCsvForm" action="{{ route('banksoal.arsip.dosen.upload-csv') }}" method="POST" enctype="multipart/form-data" onsubmit="return handleImportSubmit(event)">
                     @csrf
                     
                     <div class="flex items-center justify-between p-4 mb-5 rounded-xl bg-amber-50 border border-amber-100">
@@ -159,23 +128,16 @@
                             <input type="date" name="tanggal_ujian" class="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-2.5 text-sm focus:border-navy focus:ring-4 focus:ring-navy/5 outline-none transition-all">
                         </div>
 
-                        <div class="p-6 mt-4 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 text-center hover:border-navy transition-all cursor-pointer group" onclick="document.getElementById('csv_file').click()">
-                            <div class="h-14 w-14 bg-white rounded-2xl shadow-sm flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
-                                <i class="fas fa-file-excel text-2xl text-emerald-500"></i>
-                            </div>
-                            <p class="text-sm font-bold text-slate-800">Klik atau Tarik File CSV</p>
-                            <p class="text-[10px] text-slate-400 mt-1 uppercase tracking-widest">Format: CSV/XLSX • Maks 1MB</p>
-                            <input type="file" id="csv_file" name="csv_file" class="hidden" accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" onchange="updateFileName(this, 'csv_name_display')" required>
-                        </div>
-                        <div id="csv_name_display" class="hidden animate-popup mt-2">
-                            <div class="flex items-center gap-3 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-xs font-bold">
-                                <i class="fas fa-check-circle"></i>
-                                <span class="file-name truncate"></span>
-                            </div>
-                        </div>
+                        <x-banksoal::ui.upload-zone
+                            name="csv_file"
+                            inputId="csv_file"
+                            accept=".csv,.xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel"
+                            maxLabel="CSV/XLSX (Maks. 1MB)"
+                            :required="true"
+                        />
                     </div>
                     <div class="mt-6 pt-6 border-t border-slate-100">
-                        <button type="submit" class="w-full py-3 rounded-xl bg-navy text-white text-sm font-bold hover:opacity-90 shadow-lg shadow-navy/20 transition-all flex items-center justify-center gap-2">
+                        <button type="submit" id="importSubmitBtn" class="w-full py-3 rounded-xl bg-navy text-white text-sm font-bold hover:opacity-90 shadow-lg shadow-navy/20 transition-all flex items-center justify-center gap-2">
                             <i class="fas fa-upload"></i> Import CSV
                         </button>
                     </div>
@@ -185,18 +147,23 @@
     </div>
 
     <script>
-        function updateFileName(input, displayId) {
-            const display = document.getElementById(displayId);
-            const nameSpan = display.querySelector('.file-name');
-            if (input.files.length > 0) {
-                nameSpan.textContent = input.files[0].name;
-                display.classList.remove('hidden');
-            } else {
-                display.classList.add('hidden');
+        function handleImportSubmit(event) {
+            const form = event.target;
+            const submitButton = document.getElementById('importSubmitBtn');
+
+            if (form.dataset.submitting === '1') {
+                event.preventDefault();
+                return false;
             }
-        }
-        function showLoader() {
-            document.getElementById('global-loader').style.display = 'flex';
+
+            form.dataset.submitting = '1';
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = 'Memproses...';
+            }
+
+            window.showLoader();
+            return true;
         }
     </script>
 </x-banksoal::layouts.dosen-admin>

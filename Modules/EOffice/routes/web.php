@@ -13,7 +13,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\AsprakController a
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\DaftarPraktikanController as AdminDaftarPraktikanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\DashboardController as AdminManprakDashboard;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\DosenController as AdminDosenPrakController;
-use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\KelolaPendaftaranController;
+
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PendaftaranAsprakController as AdminPendaftaranAsprakController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PendaftaranKoorController as AdminPendaftaranKoorController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\KelolRoleController;
@@ -40,7 +40,6 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\DashboardCon
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\ModulController as KoorModulController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\NilaiController as KoorNilaiController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PendaftaranAsprakController as KoorPendaftaranAsprakController;
-use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PendaftaranPraktikanController as KoorPendaftaranPraktikanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PengumumanController as KoorPengumumanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Koordinator\PeriodePendaftaranController as KoorPeriodePendaftaranController;
 
@@ -55,7 +54,6 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Asprak\TugasController a
 
 // ── ManajemenPraktikum Mahasiswa ─────────────────────────────────────────────
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\DaftarAsprakController;
-use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\PendaftaranPraktikanController as MhsPendaftaranPraktikanController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\DashboardController as MhsManprakDashboard;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\ModulController as MhsModulController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Mahasiswa\NilaiController as MhsNilaiController;
@@ -92,8 +90,6 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->names('praktikum');
                 Route::put('praktikum/{id}/assign-koor', [PraktikumController::class, 'assignKoor'])
                     ->name('praktikum.assign-koor');
-                Route::post('praktikum/generate-kode', [PraktikumController::class, 'generateKode'])
-                    ->name('praktikum.generate-kode');
 
                 // Dosen (list)
                 Route::get('dosen', [AdminDosenPrakController::class, 'index'])
@@ -154,11 +150,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::delete('periode-pendaftaran/{id}', [PeriodePendaftaranController::class, 'destroy'])
                     ->name('periode-pendaftaran.destroy');
 
-                // Bagi Asprak ke Modul
-                Route::get('bagi-asprak', [KelolaPendaftaranController::class, 'index'])
-                    ->name('bagi-asprak.index');
-                Route::post('bagi-asprak', [KelolaPendaftaranController::class, 'store'])
-                    ->name('bagi-asprak.store');
+
 
                 // Kelola Role (assign/revoke asprak & koor per praktikum)
                 Route::get('kelola-role', [KelolRoleController::class, 'index'])
@@ -242,8 +234,6 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('dashboard');
                 Route::post('/switch-praktikum', [KoorManprakDashboard::class, 'switchPraktikum'])
                     ->name('switch-praktikum');
-                Route::post('/praktikum/generate-kode', [KoorManprakDashboard::class, 'generateKodePraktikum'])
-                    ->name('praktikum.generate-kode');
 
                 // Daftar Praktikan (lihat + export + import kelompok/shift)
                 Route::get('praktikan', [KoorManprakDashboard::class, 'praktikan'])
@@ -266,8 +256,6 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('modul.update');
                 Route::delete('modul/{id}', [KoorModulController::class, 'destroy'])
                     ->name('modul.destroy');
-                Route::post('modul/{id}/generate-kode', [KoorModulController::class, 'generateKode'])
-                    ->name('modul.generate-kode');
 
                 // Bagi Modul ke Asprak
                 Route::get('bagi-modul', [BagiModulController::class, 'index'])
@@ -287,15 +275,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::delete('pendaftaran-asprak/{id}', [KoorPendaftaranAsprakController::class, 'destroy'])
                     ->name('pendaftaran-asprak.destroy');
 
-                // Pendaftaran Praktikan (verifikasi IRS)
-                Route::get('pendaftaran-praktikan', [KoorPendaftaranPraktikanController::class, 'index'])
-                    ->name('pendaftaran-praktikan.index');
-                Route::post('pendaftaran-praktikan/{id}/approve', [KoorPendaftaranPraktikanController::class, 'approve'])
-                    ->name('pendaftaran-praktikan.approve');
-                Route::post('pendaftaran-praktikan/{id}/reject', [KoorPendaftaranPraktikanController::class, 'reject'])
-                    ->name('pendaftaran-praktikan.reject');
-                Route::post('pendaftaran-praktikan/{id}/reject-irs-default', [KoorPendaftaranPraktikanController::class, 'rejectIrsDefault'])
-                    ->name('pendaftaran-praktikan.reject-irs-default');
+
                 Route::get('periode-pendaftaran', [KoorPeriodePendaftaranController::class, 'index'])
                     ->name('periode-pendaftaran.index');
                 Route::post('periode-pendaftaran', [KoorPeriodePendaftaranController::class, 'store'])
@@ -423,9 +403,6 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::get('/dashboard', [MhsManprakDashboard::class, 'index'])
                     ->name('dashboard');
 
-                // Input kode praktikum
-                Route::post('masuk', [MhsManprakDashboard::class, 'masukkanKode'])
-                    ->name('masuk');
 
                 // Pengumuman (lihat)
                 Route::get('pengumuman', [MhsPengumumanController::class, 'index'])
@@ -455,11 +432,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::post('daftar-koor', [DaftarAsprakController::class, 'daftarKoor'])
                     ->name('daftar-koor.store');
 
-                // Pendaftaran Praktikan (IRS)
-                Route::get('pendaftaran-praktikan', [MhsPendaftaranPraktikanController::class, 'index'])
-                    ->name('pendaftaran-praktikan.index');
-                Route::post('pendaftaran-praktikan', [MhsPendaftaranPraktikanController::class, 'store'])
-                    ->name('pendaftaran-praktikan.store');
+
             });
 
         // ── Redirect root manprak ke dashboard sesuai role ───────────────────
