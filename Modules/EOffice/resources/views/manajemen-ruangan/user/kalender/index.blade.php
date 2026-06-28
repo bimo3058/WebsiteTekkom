@@ -17,7 +17,38 @@
             $selesai = (int) \Carbon\Carbon::parse($b->jam_selesai)->format('H');
             $tgl = is_string($b->tanggal_pinjam) ? $b->tanggal_pinjam : $b->tanggal_pinjam->format('Y-m-d');
             for ($h = $mulai; $h < $selesai; $h++) {
-                $slotMap[$tgl][$b->ruangan_id][$h] = $b->status;
+                $slotMap[$tgl][$b->ruangan_id][$h] = [
+                    'status' => $b->status,
+                    'tujuan' => $b->tujuan ?? ''
+                ];
+            }
+        }
+
+        // Parse and superimpose MrJadwalInternal events (Blocks entire slot)
+        foreach ($internalSchedules as $j) {
+            $mulai = (int) \Carbon\Carbon::parse($j->jam_mulai)->format('H');
+            $selesai = (int) \Carbon\Carbon::parse($j->jam_selesai)->format('H');
+
+            if ($j->tipe_jadwal === 'spesifik') {
+                $tgl = \Carbon\Carbon::parse($j->tanggal_spesifik)->format('Y-m-d');
+                for ($h = $mulai; $h < $selesai; $h++) {
+                    $slotMap[$tgl][$j->ruangan_id][$h] = [
+                        'status' => 'internal',
+                        'tujuan' => $j->keterangan ?? ''
+                    ];
+                }
+            } else if ($j->tipe_jadwal === 'rutin') {
+                foreach ($weekDays as $day) {
+                    if ($day->dayOfWeekIso == $j->hari) {
+                        $tgl = $day->format('Y-m-d');
+                        for ($h = $mulai; $h < $selesai; $h++) {
+                            $slotMap[$tgl][$j->ruangan_id][$h] = [
+                                'status' => 'internal',
+                                'tujuan' => $j->keterangan ?? ''
+                            ];
+                        }
+                    }
+                }
             }
         }
 
@@ -36,6 +67,14 @@
         $nextWeek = $weekStart->copy()->addWeek()->format('Y-m-d');
         $prevMonth = $monthDate->copy()->subMonth()->format('Y-m');
         $nextMonth = $monthDate->copy()->addMonth()->format('Y-m');
+
+        // Time travel restrictions
+        $now = \Carbon\Carbon::now();
+        $currentWeekStart = $now->copy()->startOfWeek(\Carbon\Carbon::MONDAY)->format('Y-m-d');
+        $currentMonthStart = $now->copy()->startOfMonth()->format('Y-m');
+
+        $canGoBackWeek = $weekStart->format('Y-m-d') > $currentWeekStart;
+        $canGoBackMonth = $monthDate->format('Y-m') > $currentMonthStart;
     @endphp
 
     {{-- =================== PAGE HEADER =================== --}}
@@ -83,7 +122,7 @@
     </div>
 
     {{-- Alpine Wrapper Start --}}
-    <div x-data="bookingKalender()">
+    <div x-data="bookingKalender()" @mouseup.window="stopDrag()">
 
         {{-- =================== LEGEND =================== --}}
         <div class="flex items-center gap-4 mt-3 mb-5 text-[12px] font-medium text-gray-600">
@@ -102,10 +141,14 @@
         @if($mode === 'week')
             {{-- Week Nav --}}
             <div class="flex items-center justify-between mb-4">
-                <a href="{{ request()->fullUrlWithQuery(['week_start' => $prevWeek]) }}"
-                    class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
-                    ← Minggu Lalu
-                </a>
+                @if($canGoBackWeek)
+                    <a href="{{ request()->fullUrlWithQuery(['week_start' => $prevWeek]) }}"
+                        class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
+                        ← Minggu Lalu
+                    </a>
+                @else
+                    <div class="px-3 py-2 w-[120px]"></div>
+                @endif
                 <div class="text-[15px] font-bold text-gray-800">
                     {{ $weekStart->translatedFormat('d M Y') }} — {{ $weekEnd->translatedFormat('d M Y') }}
                 </div>
@@ -115,10 +158,82 @@
                 </a>
             </div>
 
-            {{-- Calendar Grid: Time (rows) × Day (columns) × Room (sub-columns) --}}
+            @php
+                $cellMatrix = [];
+                foreach ($weekDays as $day) {
+                    foreach ($ruangans as $ruang) {
+                        $dateStr = $day->format('Y-m-d');
+                        $rId = $ruang->id;
+                        $hourStatuses = [];
+                        foreach ($jamList as $hIndex => $jam) {
+                            $slotData = $slotMap[$dateStr][$rId][$jam] ?? ['status' => 'tersedia', 'tujuan' => ''];
+                            $slotStatus = $slotData['status'];
+                            $tujuan = $slotData['tujuan'];
+
+                            $isPastDay = $day->isPast() && !$day->isToday();
+                            $isPastHourToday = $day->isToday() && $jam <= (int) now()->format('H');
+                            $isPast = $isPastDay || $isPastHourToday;
+                            $isHoliday = isset($holidays[$dateStr]);
+                            $isWeekend = $day->isWeekend();
+                            $isClosedWeekend = !$bukaAkhirPekan && $isWeekend;
+                            $minDate = \Carbon\Carbon::today()->addDays($batasHMinBooking);
+                            $isTooEarly = $day->copy()->startOfDay()->lt($minDate);
+                            $jamStr = str_pad($jam, 2, '0', STR_PAD_LEFT) . ':00';
+                            $isOutOfHours = ($jamStr < $jamBuka) || ($jamStr >= $jamTutup);
+
+                            if ($isPast || $isClosedWeekend || $isOutOfHours)
+                                $fKey = 'tutup';
+                            elseif ($slotStatus === 'disetujui')
+                                $fKey = 'penuh';
+                            elseif ($slotStatus === 'internal')
+                                $fKey = 'internal';
+                            elseif ($slotStatus === 'menunggu')
+                                $fKey = 'menunggu';
+                            elseif ($isHoliday)
+                                $fKey = 'libur';
+                            elseif ($isTooEarly)
+                                $fKey = 'too_early';
+                            else
+                                $fKey = 'tersedia';
+
+                            $hourStatuses[$jam] = ['st' => $fKey, 'tujuan' => $tujuan];
+                        }
+                        $skipCount = 0;
+                        foreach ($jamList as $hIndex => $jam) {
+                            if ($skipCount > 0) {
+                                $cellMatrix[$dateStr][$rId][$jam] = ['skip' => true];
+                                $skipCount--;
+                                continue;
+                            }
+                            $stObj = $hourStatuses[$jam];
+                            $rowspan = 1;
+                            if ($stObj['st'] !== 'tersedia' && $stObj['st'] !== 'menunggu') {
+                                for ($k = $hIndex + 1; $k < count($jamList); $k++) {
+                                    $nextStObj = $hourStatuses[$jamList[$k]];
+                                    // if it's an event (internal/penuh), we must match the identical event string
+                                    if ($nextStObj['st'] === $stObj['st']) {
+                                        if (($stObj['st'] === 'internal' || $stObj['st'] === 'penuh') && $nextStObj['tujuan'] !== $stObj['tujuan']) {
+                                            break;
+                                        }
+                                        $rowspan++;
+                                    } else {
+                                        break;
+                                    }
+                                }
+                            }
+                            $cellMatrix[$dateStr][$rId][$jam] = ['skip' => false, 'rowspan' => $rowspan];
+                            $skipCount = $rowspan - 1;
+                        }
+                    }
+                }
+            @endphp
+
+            @php $minTWidth = 64 + (7 * $ruangans->count() * 75); @endphp
+            {{-- Calendar Grid --}}
             <div class="mp-card overflow-hidden">
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px;">
+                <div id="table-scroll-container" style="overflow-x: auto;">
+                    <table
+                        style="width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px; min-width: {{ max(900, $minTWidth) }}px;">
                         <thead>
                             {{-- Row 1: Day headers spanning all rooms --}}
                             <tr style="background: #F1F3F9;">
@@ -127,9 +242,9 @@
                                     Jam
                                 </th>
                                 @foreach($weekDays as $day)
-                                    <th colspan="{{ $ruangans->count() }}"
+                                    <th colspan="{{ $ruangans->count() }}" {{ $day->isToday() ? 'id=col-today' : '' }}
                                         style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; color: #111827; font-weight: 700;
-                                                                                {{ $day->isToday() ? 'background: #EEF2FF; color: #4338CA;' : 'background: #F8F9FB;' }}">
+                                                                                                                                                                {{ $day->isToday() ? 'background: #EEF2FF; color: #4338CA;' : 'background: #F8F9FB;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
                                         <div
                                             style="font-size:11px; font-weight:500; color: {{ $day->isToday() ? '#6366f1' : '#6B7280' }}; margin-top:2px;">
@@ -166,7 +281,28 @@
                                         @foreach($ruangans as $ruang)
                                             @php
                                                 $dateStr = $day->format('Y-m-d');
-                                                $slotStatus = $slotMap[$dateStr][$ruang->id][$jam] ?? 'tersedia';
+                                                $cData = $cellMatrix[$dateStr][$ruang->id][$jam] ?? ['skip' => false, 'rowspan' => 1];
+                                            @endphp
+
+                                            @if($cData['skip'])
+                                                @continue
+                                            @endif
+
+                                            @php
+                                                $slotData = $slotMap[$dateStr][$ruang->id][$jam] ?? ['status' => 'tersedia', 'tujuan' => ''];
+                                                $slotStatus = $slotData['status'];
+                                                $rawTujuan = $slotData['tujuan'];
+
+                                                // Membersihkan text agar pas (hapus "digunakan untuk")
+                                                $cleanTujuan = trim(str_ireplace('digunakan untuk', '', $rawTujuan));
+                                                $words = explode(' ', $cleanTujuan);
+                                                if (count($words) > 3) {
+                                                    $cleanTujuan = implode(' ', array_slice($words, 0, 3)) . '..';
+                                                }
+                                                // Jika status Internal (Jadwal Kuliah), gunakan default jika kosong
+                                                if ($slotStatus === 'internal' && empty($cleanTujuan)) {
+                                                    $cleanTujuan = 'Jadwal Kuliah';
+                                                }
 
                                                 // Validasi Past, Holiday, dan Operasional
                                                 $isPastDay = $day->isPast() && !$day->isToday();
@@ -186,7 +322,25 @@
                                                 if ($isPast || $isClosedWeekend || $isOutOfHours) {
                                                     $bg = '#F3F4F6';
                                                     $border = '#D1D5DB';
-                                                    $label = 'Tutup';
+                                                    $label = ''; // Render as blank closed block
+                                                    $cursor = 'not-allowed';
+                                                    $href = null;
+                                                } elseif ($slotStatus === 'disetujui') {
+                                                    $bg = '#FEE2E2';
+                                                    $border = '#F87171';
+                                                    $label = strtoupper($cleanTujuan) ?: 'TERISI';
+                                                    $cursor = 'not-allowed';
+                                                    $href = null;
+                                                } elseif ($slotStatus === 'internal') {
+                                                    $bg = '#EDE9FE';
+                                                    $border = '#C4B5FD';
+                                                    $label = strtoupper($cleanTujuan);
+                                                    $cursor = 'not-allowed';
+                                                    $href = null;
+                                                } elseif ($slotStatus === 'menunggu') {
+                                                    $bg = '#FEF9C3';
+                                                    $border = '#FBBF24';
+                                                    $label = 'Menunggu';
                                                     $cursor = 'not-allowed';
                                                     $href = null;
                                                 } elseif ($isHoliday) {
@@ -201,18 +355,6 @@
                                                     $label = 'H-' . $batasHMinBooking;
                                                     $cursor = 'not-allowed';
                                                     $href = null;
-                                                } elseif ($slotStatus === 'disetujui') {
-                                                    $bg = '#FEE2E2';
-                                                    $border = '#F87171';
-                                                    $label = 'Penuh';
-                                                    $cursor = 'not-allowed';
-                                                    $href = null;
-                                                } elseif ($slotStatus === 'menunggu') {
-                                                    $bg = '#FEF9C3';
-                                                    $border = '#FBBF24';
-                                                    $label = 'Menunggu';
-                                                    $cursor = 'not-allowed';
-                                                    $href = null;
                                                 } else {
                                                     $bg = '#D1FAE5';
                                                     $border = '#34D399';
@@ -221,25 +363,42 @@
                                                     $href = route('eoffice.peminjaman.user.booking') . "?ruangan={$ruang->id}&tanggal={$dateStr}&jam=" . str_pad($jam, 2, '0', STR_PAD_LEFT) . ":00";
                                                 }
                                             @endphp
-                                            <td style="border: 1px solid #E5E7EB; padding: 3px;">
+                                            <td rowspan="{{ $cData['rowspan'] }}"
+                                                style="border: 1px solid #E5E7EB; padding: 3px; height: 1px;">
                                                 @if($href)
+                                                    @php $hStr = str_pad($jam, 2, '0', STR_PAD_LEFT) . ':00'; @endphp
                                                     <button type="button"
-                                                        @click="openBookingModal('{{ $ruang->id }}', '{{ $ruang->nama }}', '{{ $dateStr }}', '{{ str_pad($jam, 2, '0', STR_PAD_LEFT) }}:00')"
-                                                        title="Booking {{ $ruang->nama }} — {{ $day->translatedFormat('D, d M') }} pukul {{ str_pad($jam, 2, '0', STR_PAD_LEFT) }}:00"
-                                                        style="display:flex; align-items:center; justify-content:center; min-height:34px; width:100%;
-                                                                                                                                                                              background:{{ $bg }}; border:1px solid {{ $border }}; border-radius:5px;
-                                                                                                                                                                              font-size:9px; font-weight:700; color:#065F46; text-decoration:none;
-                                                                                                                                                                              cursor:{{ $cursor }}; transition:all 0.15s;"
-                                                        onmouseover="this.style.background='#A7F3D0'; this.style.transform='scale(1.03)'"
-                                                        onmouseout="this.style.background='{{ $bg }}'; this.style.transform='scale(1)'">
+                                                        @mousedown.prevent="startDrag('{{ $ruang->id }}', '{{ $ruang->nama }}', '{{ $dateStr }}', '{{ $hStr }}')"
+                                                        @mouseenter="enterDrag('{{ $ruang->id }}', '{{ $dateStr }}', '{{ $hStr }}')"
+                                                        @mouseup="stopDrag()"
+                                                        @mouseover="!isDragging && ($el.style.background = '#A7F3D0'); !isDragging && ($el.style.transform = 'scale(1.03)')"
+                                                        @mouseout="!isDragging && ($el.style.background = '{{ $bg }}'); !isDragging && ($el.style.transform = 'scale(1)')"
+                                                        class="select-none"
+                                                        :style="isDragging && dragStartPoint?.roomId === '{{ $ruang->id }}' && dragStartPoint?.dateStr === '{{ $dateStr }}' && dragSelection.includes('{{ $hStr }}') 
+                                                                                                                                                                                        ? 'display:flex; align-items:center; justify-content:center; min-height:34px; height: 100%; width:100%; font-size:9px; font-weight:700; color:#065F46; cursor:pointer; background: #6EE7B7; border: 1px solid #10B981; border-radius:5px; transform: scale(1.05); z-index: 10; transition:all 0.15s;' 
+                                                                                                                                                                                        : 'display:flex; align-items:center; justify-content:center; min-height:34px; height: 100%; width:100%; font-size:9px; font-weight:700; color:#065F46; cursor:pointer; background: {{ $bg }}; border:1px solid {{ $border }}; border-radius:5px; transition:all 0.15s;'"
+                                                        title="Booking {{ $ruang->nama }} — {{ $day->translatedFormat('D, d M') }} pukul {{ $hStr }}">
                                                         ✓
                                                     </button>
                                                 @else
+                                                    @php
+                                                        if ($isPast)
+                                                            $tColor = '#9CA3AF';
+                                                        elseif ($slotStatus === 'disetujui')
+                                                            $tColor = '#B91C1C';
+                                                        elseif ($slotStatus === 'internal')
+                                                            $tColor = '#5B21B6';
+                                                        elseif ($slotStatus === 'menunggu')
+                                                            $tColor = '#B45309';
+                                                        else
+                                                            $tColor = '#374151';
+                                                    @endphp
                                                     <div
-                                                        style="display:flex; align-items:center; justify-content:center; min-height:34px; width:100%;
-                                                                                                                                                                                background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
-                                                                                                                                                                                font-size:9px; font-weight:700; color:{{ $isPast ? '#9CA3AF' : ($slotStatus == 'disetujui' ? '#B91C1C' : '#B45309') }};
-                                                                                                                                                                                cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '0.9' }};">
+                                                        style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:34px; height:100%; width:100%; padding: 4px; overflow:hidden;
+                                                                                                                                                                       background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
+                                                                                                                                                                       text-align:center; white-space:normal; word-break:break-word; line-height:1.25; max-width:100%;
+                                                                                                                                                                       font-size:9px; font-weight:800; color:{{ $tColor }};
+                                                                                                                                                                       cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '1' }};">
                                                         {{ $label }}
                                                     </div>
                                                 @endif
@@ -262,10 +421,14 @@
         @else
             {{-- Month Nav --}}
             <div class="flex items-center justify-between mb-4">
-                <a href="{{ request()->fullUrlWithQuery(['month' => $prevMonth]) }}"
-                    class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
-                    ← Bulan Lalu
-                </a>
+                @if($canGoBackMonth)
+                    <a href="{{ request()->fullUrlWithQuery(['month' => $prevMonth]) }}"
+                        class="inline-flex items-center gap-1.5 text-[13px] text-gray-600 hover:text-indigo-600 font-semibold px-3 py-2 rounded-lg hover:bg-indigo-50 transition-colors">
+                        ← Bulan Lalu
+                    </a>
+                @else
+                    <div class="px-3 py-2 w-[120px]"></div>
+                @endif
                 <div class="text-[15px] font-bold text-gray-800">
                     {{ $monthDate->translatedFormat('F Y') }}
                 </div>
@@ -328,8 +491,8 @@
                                 <a href="{{ $weekLink }}"
                                     title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
                                     style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                                                                          background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #6366F1' : '1px solid #E5E7EB' }};
-                                                                                                          transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
+                                                                                                                                                                                                                      background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #6366F1' : '1px solid #E5E7EB' }};
+                                                                                                                                                                                                                      transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                     <div
@@ -513,11 +676,60 @@
                 showModal: false,
                 selectedRoomId: '',
                 selectedDate: '',
+                isDragging: false,
+                dragStartPoint: null,
+                dragSelection: [],
                 bookingData: {
                     roomName: '',
                     waktu: '',
                     jamMulai: '',
                     jamSelesai: ''
+                },
+
+                startDrag(roomId, roomName, date, hourStart) {
+                    this.isDragging = true;
+                    this.dragStartPoint = { roomId, dateStr: date, hourStart };
+                    this.bookingData.roomName = roomName;
+                    this.dragSelection = [hourStart];
+                },
+
+                enterDrag(roomId, date, hourStart) {
+                    if (!this.isDragging) return;
+                    if (this.dragStartPoint.roomId !== roomId || this.dragStartPoint.dateStr !== date) return;
+
+                    let sh = parseInt(this.dragStartPoint.hourStart.substring(0, 2));
+                    let eh = parseInt(hourStart.substring(0, 2));
+                    let minH = Math.min(sh, eh);
+                    let maxH = Math.max(sh, eh);
+
+                    let newSel = [];
+                    for (let i = minH; i <= maxH; i++) {
+                        newSel.push(i.toString().padStart(2, '0') + ':00');
+                    }
+                    this.dragSelection = newSel;
+                },
+
+                stopDrag() {
+                    if (this.isDragging && this.dragSelection.length > 0) {
+                        let sorted = this.dragSelection.map(h => parseInt(h.substring(0, 2))).sort((a, b) => a - b);
+                        let startH = sorted[0].toString().padStart(2, '0') + ':00';
+                        let endHStr = (sorted[sorted.length - 1] + 1).toString().padStart(2, '0') + ':00';
+
+                        this.selectedRoomId = this.dragStartPoint.roomId;
+                        this.selectedDate = this.dragStartPoint.dateStr;
+
+                        let d = new Date(this.dragStartPoint.dateStr);
+                        let dateStr = d.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+                        this.bookingData.waktu = dateStr + ' Pukul ' + startH + ' - ' + endHStr;
+                        this.bookingData.jamMulai = startH;
+                        this.bookingData.jamSelesai = endHStr;
+
+                        this.showModal = true;
+                    }
+                    this.isDragging = false;
+                    this.dragStartPoint = null;
+                    this.dragSelection = [];
                 },
 
                 openBookingModal(roomId, roomName, date, hourStart) {

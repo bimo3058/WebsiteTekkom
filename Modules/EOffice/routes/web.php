@@ -593,6 +593,10 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::get('/riwayat-peminjaman', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'riwayat'])->name('riwayat.index');
                 Route::post('/persetujuan/{id}', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\PersetujuanController::class, 'updateStatus'])->name('persetujuan.update');
 
+                // Jadwal Internal Administrator (Rutin/Spesifik)
+                Route::resource('jadwal-internal', \Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\JadwalController::class)->except(['show', 'edit']);
+                Route::get('kalender-global', [\Modules\EOffice\Http\Controllers\ManajemenRuangan\Admin\KalenderController::class, 'index'])->name('kalender-global.index');
+
                 // Settings
                 Route::get('/pengaturan', [$MRAdminPengaturanController, 'index'])->name('pengaturan.index');
                 Route::post('/pengaturan/operasional', [$MRAdminPengaturanController, 'updateOperasional'])->name('pengaturan.operasional');

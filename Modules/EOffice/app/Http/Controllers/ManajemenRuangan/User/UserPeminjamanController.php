@@ -105,7 +105,7 @@ class UserPeminjamanController extends Controller
             return redirect()->back()->withErrors("Peminjaman gagal! Pengajuan harus dilakukan sekurang-kurangnya H-{$batasHMinBooking} dari tanggal pemakaian.");
         }
 
-        // Pengecekan Bentrok Jadwal Peminjaman
+        // Pengecekan Bentrok Jadwal Peminjaman (Sesama Mahasiswa)
         $isConflict = Peminjaman::where('ruangan_id', $request->ruangan_id)
             ->where('tanggal_pinjam', $request->tanggal_pinjam)
             ->where('status', 'disetujui') // Hanya memblokir jam yang SUDAH PASTI dipakai (disetujui)
@@ -122,6 +122,31 @@ class UserPeminjamanController extends Controller
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['Bentrok' => 'Mohon maaf, Ruangan tersebut telah lebih dulu dipesan dan DISETUJUI oleh pihak lain pada rentang jam tersebut.']);
+        }
+
+        // Pengecekan Bentrok: Jadwal Internal (Akademik, Kuliah, Rapat)
+        $isInternalConflict = \Modules\EOffice\Models\MrJadwalInternal::where('ruangan_id', $request->ruangan_id)
+            ->where(function ($query) use ($request, $dayOfWeek) {
+                // Skenario A: Jadwal Rutin yang berjalan pada Hari yang sama
+                $query->where(function ($q) use ($dayOfWeek) {
+                    $q->where('tipe_jadwal', 'rutin')->where('hari', $dayOfWeek);
+                })
+                    // Skenario B: Jadwal Spesifik yang berjalan pada Tanggal yang sama
+                    ->orWhere(function ($q) use ($request) {
+                    $q->where('tipe_jadwal', 'spesifik')->where('tanggal_spesifik', $request->tanggal_pinjam);
+                });
+            })
+            ->where(function ($query) use ($request) {
+                // Berlaku aturan perpotongan waktu
+                $query->where('jam_mulai', '<', $request->jam_selesai)
+                    ->where('jam_selesai', '>', $request->jam_mulai);
+            })
+            ->first();
+
+        if ($isInternalConflict) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['Sistem Internal' => 'Ruangan terblokir secara otomatis. Terbentrok dengan Jadwal ' . $isInternalConflict->kategori . ': ' . $isInternalConflict->keterangan]);
         }
 
         Peminjaman::create([
@@ -174,7 +199,7 @@ class UserPeminjamanController extends Controller
         // Fetch bookings for the week range
         $bookingsRaw = Peminjaman::whereBetween('tanggal_pinjam', [$weekStart->format('Y-m-d'), $weekEnd->format('Y-m-d')])
             ->whereIn('status', ['menunggu', 'disetujui'])
-            ->get(['ruangan_id', 'tanggal_pinjam', 'jam_mulai', 'jam_selesai', 'status']);
+            ->get(['ruangan_id', 'tanggal_pinjam', 'jam_mulai', 'jam_selesai', 'status', 'tujuan']);
 
         // For month heatmap - count bookings per day
         $monthStart = $monthDate->copy()->startOfMonth();
@@ -197,11 +222,14 @@ class UserPeminjamanController extends Controller
         $nim = explode('@', $user->email)[0];
         $phone = ''; // User model currently may not have phone natively unless it does, we can leave blank.
 
+        $internalSchedules = \Modules\EOffice\Models\MrJadwalInternal::all();
+
         return view('eoffice::manajemen-ruangan.user.kalender.index', compact(
             'ruangans',
             'allRuangansDaftar',
             'selectedRoomId',
             'bookingsRaw',
+            'internalSchedules',
             'weekStart',
             'weekEnd',
             'mode',

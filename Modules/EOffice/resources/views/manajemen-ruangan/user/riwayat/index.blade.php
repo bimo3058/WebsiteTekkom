@@ -42,7 +42,8 @@
                                     <p class="text-[12px] text-gray-500">Diajukan pada: {{ $riwayat->created_at->translatedFormat('d F Y, H:i') }}</p>
                                     <div class="mt-2 text-[13px] text-gray-600">
                                         <span class="font-semibold">Jadwal:</span> {{ \Carbon\Carbon::parse($riwayat->tanggal_pinjam)->translatedFormat('l, d F Y') }} <br>
-                                        <span class="font-semibold">Waktu:</span> {{ \Carbon\Carbon::parse($riwayat->jam_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($riwayat->jam_selesai)->format('H:i') }} WIB
+                                        <span class="font-semibold">Waktu:</span> {{ \Carbon\Carbon::parse($riwayat->jam_mulai)->format('H:i') }} - {{ \Carbon\Carbon::parse($riwayat->jam_selesai)->format('H:i') }} WIB <br>
+                                        <span class="font-semibold">Tujuan:</span> {{ $riwayat->tujuan }}
                                     </div>
                                 </div>
                             </div>
