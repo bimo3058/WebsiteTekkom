@@ -145,7 +145,7 @@
                                             <div>
                                                 <p class="text-base font-semibold text-slate-900">{{ $dok->jenis_dokumen }} KP</p>
                                                 <div class="flex items-center gap-2 mt-1">
-                                                    <a href="#" class="text-xs text-blue-600 hover:text-blue-800 underline font-medium">Lihat File ({{ basename($dok->file_path) }})</a>
+                                                    <a href="{{ $dok->file_url }}" class="text-xs text-blue-600 hover:text-blue-800 underline font-medium">Lihat File ({{ basename($dok->file_path) }})</a>
                                                     <span class="text-slate-300">•</span>
                                                     <span class="text-xs text-slate-500">{{ \Carbon\Carbon::parse($dok->tanggal_upload)->format('d M Y') }}</span>
                                                 </div>

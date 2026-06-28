@@ -289,7 +289,7 @@
                                             </td>
                                             <td class="px-5 py-4">
                                                 @if($dok->file_path)
-                                                    <a href="/storage/{{ $dok->file_path }}" target="_blank"
+                                                    <a href="{{ $dok->file_url }}" target="_blank"
                                                         class="text-xs text-blue-600 hover:text-blue-800 underline font-medium flex items-center gap-1">
                                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor"
                                                             viewBox="0 0 24 24">
@@ -394,7 +394,7 @@
                                         @endif
                                     </div>
                                     @if($dok->file_path)
-                                        <a href="/storage/{{ $dok->file_path }}" target="_blank"
+                                        <a href="{{ $dok->file_url }}" target="_blank"
                                             class="text-xs text-blue-600 underline mb-3 block">
                                             {{ basename($dok->file_path) }}
                                         </a>

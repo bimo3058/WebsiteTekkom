@@ -92,7 +92,7 @@
                 <nav class="hidden sm:flex items-center space-x-2 text-sm text-slate-500 font-medium">
                     <span class="text-slate-400 hover:text-slate-600 transition-colors cursor-pointer">Sistem</span>
                     <svg class="w-4 h-4 text-slate-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
-                    <span class="text-indigo-700 font-semibold bg-indigo-50 px-2.5 py-1 rounded-md">Validasi Timeline & Transkrip</span>
+                    <span class="text-indigo-700 font-semibold bg-indigo-50 px-2.5 py-1 rounded-md">Validasi Timeline & KHS</span>
                 </nav>
             </div>
             <div class="flex items-center gap-3">
@@ -108,7 +108,7 @@
             <div class="max-w-6xl mx-auto">
                 <div class="mb-8">
                     <h2 class="text-2xl font-extrabold text-slate-900 tracking-tight">Validasi Pra-Pendaftaran KP</h2>
-                    <p class="text-sm text-slate-500 mt-1">Lakukan pemeriksaan kelayakan timeline dan transkrip mahasiswa sebelum mendaftar Kerja Praktik.</p>
+                    <p class="text-sm text-slate-500 mt-1">Lakukan pemeriksaan kelayakan timeline dan KHS mahasiswa sebelum mendaftar Kerja Praktik.</p>
                 </div>
 
                 <div class="bg-white rounded-3xl border border-slate-200 shadow-sm p-12 text-center">

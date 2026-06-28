@@ -48,7 +48,11 @@ _ds_tmp/
 
 # Zip export
 *.zip
+<<<<<<< Updated upstream
 *.kiro
 .kiro/specs/ui-standardization/.config.kiro
 # Redis dump
 dump.rdb
+=======
+Modules/EOffice/node_modules
+>>>>>>> Stashed changes
