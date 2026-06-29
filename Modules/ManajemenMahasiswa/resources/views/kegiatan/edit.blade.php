@@ -1358,7 +1358,9 @@ function handleKategoriChange() {
 function toggleBidangField() {
     const checked = document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked');
     const bidangRequired = document.getElementById('bidangRequired');
+    const bidangWrapper = document.getElementById('bidangFieldWrapper');
 
+    // "Hanya Prodi" = ada kategori terpilih DAN semuanya prodi (tidak ada Himpunan)
     let allProdi = checked.length > 0;
     checked.forEach(cb => {
         if (cb.getAttribute('data-is-prodi') !== '1') {
@@ -1367,8 +1369,18 @@ function toggleBidangField() {
     });
 
     if (allProdi && checked.length > 0) {
+        // Hanya Kegiatan Prodi → sembunyikan kolom Bidang & kosongkan pilihannya
+        if (bidangWrapper) bidangWrapper.style.display = 'none';
         if (bidangRequired) bidangRequired.style.display = 'none';
+        document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(cb => {
+            if (cb.checked) {
+                cb.checked = false;
+                cb.dispatchEvent(new Event('change'));
+            }
+        });
     } else {
+        // Ada Kegiatan Himpunan (atau belum memilih) → tampilkan kolom Bidang
+        if (bidangWrapper) bidangWrapper.style.display = '';
         if (bidangRequired) bidangRequired.style.display = '';
     }
 }
