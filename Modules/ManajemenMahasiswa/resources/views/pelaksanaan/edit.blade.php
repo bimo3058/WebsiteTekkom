@@ -658,8 +658,10 @@
 
         <div class="mb-3">
             <label class="form-label-custom">Judul Kegiatan <span class="required">*</span></label>
-            <input type="text" name="judul" class="form-control form-control-custom"
-                   value="{{ old('judul', $proker->judul) }}" required maxlength="255">
+            <input type="text" name="judul" id="judulInput" class="form-control form-control-custom"
+                   value="{{ old('judul', $proker->judul) }}" required maxlength="255"
+                   oninput="updateCharCount('judulInput','judulCount',255)">
+            <div style="font-size:11px;color:#666D80;text-align:right;margin-top:4px;font-weight:500;"><span id="judulCount">0</span>/255 karakter</div>
         </div>
 
         <div class="row g-3 mb-3">
@@ -697,7 +699,13 @@
 
         <div class="mb-3">
             <label class="form-label-custom">Deskripsi <span class="required">*</span></label>
-            <textarea name="deskripsi" class="form-control form-control-custom" required>{{ old('deskripsi', $proker->deskripsi) }}</textarea>
+            <textarea name="deskripsi" id="deskripsiInput" class="form-control form-control-custom"
+                      required minlength="20" maxlength="3000"
+                      oninput="updateCharCount('deskripsiInput','deskripsiCount',3000)">{{ old('deskripsi', $proker->deskripsi) }}</textarea>
+            <div class="d-flex justify-content-between align-items-center" style="margin-top:4px;">
+                <span style="font-size:11px;color:#666D80;font-weight:500;">Minimal 20 karakter</span>
+                <span style="font-size:11px;color:#666D80;font-weight:500;"><span id="deskripsiCount">0</span>/3000 karakter</span>
+            </div>
         </div>
 
     </div>
@@ -868,7 +876,7 @@
 
     <!-- Banner -->
     <div class="form-card">
-        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg> Banner Kegiatan</div>
+        <div class="form-card-title"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><rect width="18" height="18" x="3" y="3" rx="2" ry="2"></rect><circle cx="9" cy="9" r="2"></circle><path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21"></path></svg> Banner Kegiatan *</div>
 
         @if($proker->banner)
             <div class="banner-current">
@@ -972,6 +980,22 @@
 </div>
 
 <script>
+// ── Char counter (judul & deskripsi) ──
+function updateCharCount(inputId, countId, max) {
+    const el  = document.getElementById(inputId);
+    const cnt = document.getElementById(countId);
+    if (!el || !cnt) return;
+    const len = el.value.length;
+    cnt.textContent = len;
+    cnt.style.color = len >= max ? '#dc2626' : (len > max * 0.9 ? '#f59e0b' : '#666D80');
+}
+document.addEventListener('DOMContentLoaded', () => {
+    ['judulInput','deskripsiInput'].forEach(id => {
+        const el = document.getElementById(id);
+        if (el) el.dispatchEvent(new Event('input'));
+    });
+});
+
 // ── Banner Preview ──
 function previewBanner(input) {
     const preview = document.getElementById('bannerPreview');
@@ -1344,18 +1368,33 @@ function handleKategoriChange() {
 function toggleBidangField() {
     const checked = document.querySelectorAll('#kategoriGroup input[type="checkbox"]:checked');
     const bidangRequired = document.getElementById('bidangRequired');
+    const bidangWrapper  = document.getElementById('bidangFieldWrapper');
 
+    // "Hanya Prodi" = ada kategori dicentang DAN semuanya berflag prodi
     let allProdi = checked.length > 0;
     checked.forEach(cb => {
         if (cb.getAttribute('data-is-prodi') !== '1') {
             allProdi = false;
         }
     });
+    const isOnlyProdi = allProdi && checked.length > 0;
 
-    if (allProdi && checked.length > 0) {
-        if (bidangRequired) bidangRequired.style.display = 'none';
-    } else {
-        if (bidangRequired) bidangRequired.style.display = '';
+    if (bidangRequired) bidangRequired.style.display = isOnlyProdi ? 'none' : '';
+
+    // Sembunyikan SELURUH kolom Bidang saat hanya Kegiatan Prodi yang dipilih.
+    // Saat disembunyikan, lepas centang bidang agar tidak ikut tersimpan.
+    if (bidangWrapper) {
+        if (isOnlyProdi) {
+            bidangWrapper.style.display = 'none';
+            document.querySelectorAll('#bidangGroup input[type="checkbox"]').forEach(inp => {
+                if (inp.checked) {
+                    inp.checked = false;
+                    inp.closest('.checkbox-card').classList.remove('checked');
+                }
+            });
+        } else {
+            bidangWrapper.style.display = '';
+        }
     }
 }
 

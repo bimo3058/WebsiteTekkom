@@ -76,17 +76,17 @@ class KegiatanController extends Controller
         // Cek apakah user adalah admin/pengurus (untuk tombol Tambah)
         $user  = Auth::user();
         $roles = $user->roles->pluck('name');
-        // GPM & Kadep view-only — tidak masuk daftar pengelola (hanya bisa lihat)
+        // GPM, Kadep & DPM view-only — tidak masuk daftar pengelola (hanya bisa lihat)
         $isAdmin = $roles->intersect([
             'superadmin', 'admin', 'admin_kemahasiswaan',
             'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
-            'dpm',
         ])->isNotEmpty();
 
-        // Tombol "Tambah Kegiatan" (create langsung ke arsip) hanya untuk role kurasi
+        // Tombol "Tambah Kegiatan" (create langsung ke arsip) hanya untuk role kurasi admin
         // di luar alur himpunan — role himpunan wajib lewat Proker → Pelaksanaan → publish.
+        // DPM = pembina view-only, tidak menambah kegiatan.
         $canTambahKegiatan = $roles->intersect([
-            'superadmin', 'admin', 'admin_kemahasiswaan', 'dpm',
+            'superadmin', 'admin', 'admin_kemahasiswaan',
         ])->isNotEmpty();
 
         return view('manajemenmahasiswa::kegiatan.index', compact(
@@ -118,11 +118,10 @@ class KegiatanController extends Controller
         // Cek apakah user adalah admin/pengurus (untuk tombol Edit/Hapus)
         $user  = Auth::user();
         $roles = $user->roles->pluck('name');
-        // GPM & Kadep view-only — tidak masuk daftar pengelola (hanya bisa lihat)
+        // GPM, Kadep & DPM view-only — tidak masuk daftar pengelola (hanya bisa lihat)
         $isAdmin = $roles->intersect([
             'superadmin', 'admin', 'admin_kemahasiswaan',
             'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
-            'dpm',
         ])->isNotEmpty();
 
         return view('manajemenmahasiswa::kegiatan.show', compact('kegiatan', 'isAdmin'));
@@ -130,7 +129,7 @@ class KegiatanController extends Controller
 
     /**
      * Form buat kegiatan baru.
-     * Akses: admin_kemahasiswaan, superadmin, dpm (role kurasi di luar alur himpunan).
+     * Akses: admin_kemahasiswaan, superadmin (role kurasi di luar alur himpunan; DPM view-only).
      */
     public function create()
     {
@@ -167,7 +166,8 @@ class KegiatanController extends Controller
             'tanggal_selesai'     => 'nullable|date|after_or_equal:tanggal_mulai',
             'jam_selesai'         => 'nullable|date_format:H:i',
             'lokasi'              => 'nullable|string|max:255',
-            'banner'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
+            // Banner wajib diisi saat menambah kegiatan langsung ke Laporan & Arsip (subbab 3).
+            'banner'              => 'required|image|mimes:jpg,jpeg,png,webp|max:10240',
             'anggaran'            => 'nullable|numeric|min:0|max:9999999999999',
             'ketua_pelaksana_id'  => 'nullable|exists:students,id',
             'dosen_pendamping_id' => 'nullable|exists:lecturers,id',
@@ -180,6 +180,8 @@ class KegiatanController extends Controller
             'foto_kegiatan.*'     => 'image|mimes:jpg,jpeg,png,webp|max:10240',
             'dokumen_kegiatan'    => 'nullable|array|max:10',
             'dokumen_kegiatan.*'  => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
+        ], [
+            'banner.required' => 'Banner kegiatan wajib diunggah.',
         ]);
 
         $validated['status'] = 'selesai';
@@ -279,7 +281,9 @@ class KegiatanController extends Controller
             'tanggal_selesai'     => 'nullable|date|after_or_equal:tanggal_mulai',
             'jam_selesai'         => 'nullable|date_format:H:i',
             'lokasi'              => 'nullable|string|max:255',
-            'banner'              => 'nullable|image|mimes:jpg,jpeg,png,webp|max:10240',
+            // Banner wajib ada: kalau kegiatan belum punya banner, unggahan baru diwajibkan;
+            // kalau sudah punya, boleh dikosongkan (banner lama dipertahankan).
+            'banner'              => ($kegiatan->banner ? 'nullable' : 'required') . '|image|mimes:jpg,jpeg,png,webp|max:10240',
             'anggaran'            => 'nullable|numeric|min:0|max:9999999999999',
             'ketua_pelaksana_id'  => 'nullable|exists:students,id',
             'dosen_pendamping_id' => 'nullable|exists:lecturers,id',
@@ -294,6 +298,8 @@ class KegiatanController extends Controller
             'dokumen_kegiatan.*'  => 'file|mimes:pdf,doc,docx,xls,xlsx,ppt,pptx|max:10240',
             'hapus_file'          => 'nullable|array',
             'hapus_file.*'        => 'integer|exists:mk_repo_mulmed,id',
+        ], [
+            'banner.required' => 'Banner kegiatan wajib diunggah.',
         ]);
 
         $validated['status'] = 'selesai';

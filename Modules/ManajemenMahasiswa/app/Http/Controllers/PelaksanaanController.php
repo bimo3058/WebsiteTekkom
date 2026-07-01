@@ -44,7 +44,7 @@ class PelaksanaanController extends Controller
         $roles   = $user->roles->pluck('name');
         $isAdmin = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
         $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
-        $canManage = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm'])->isNotEmpty() || $isPengurus; // GPM & Kadep view-only
+        $canManage = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan'])->isNotEmpty() || $isPengurus; // GPM, Kadep & DPM view-only
 
         $query = Kegiatan::with(['bidangs', 'kategoris', 'ketuaPelaksana.user'])
             ->where('status', Kegiatan::STATUS_DISETUJUI)
@@ -102,20 +102,20 @@ class PelaksanaanController extends Controller
         $roles   = $user->roles->pluck('name');
         $isAdmin = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
         $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
-        $canManage = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm'])->isNotEmpty() || $isPengurus; // GPM & Kadep view-only
+        $canManage = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan'])->isNotEmpty() || $isPengurus; // GPM, Kadep & DPM view-only
         // Anggaran & Dokumen tampil untuk SEMUA role kecuali mahasiswa & alumni murni.
         // (denylist agar konsisten dengan halaman Arsip dan tidak ada role pengelola yang terlewat — mis. DPM)
         $canViewRestricted = $roles->diff(['mahasiswa', 'alumni'])->isNotEmpty();
         // Hanya role tertentu yang boleh menekan "Unggah ke Arsip"
         // (staff_himpunan TIDAK termasuk, dosen DPM/GPM juga tidak — hanya pengurus inti + admin)
         $canArsip = $roles->intersect([
-            'superadmin', 'admin', 'admin_kemahasiswaan', 'dpm',
+            'superadmin', 'admin', 'admin_kemahasiswaan',
             'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
 
-        // Hak hapus pelaksanaan: admin + dpm + ketua-ketua himpunan (GPM & Kadep view-only)
+        // Hak hapus pelaksanaan: admin + ketua-ketua himpunan (GPM, Kadep & DPM view-only)
         $canDelete = $roles->intersect([
-            'superadmin', 'admin', 'admin_kemahasiswaan', 'dpm',
+            'superadmin', 'admin', 'admin_kemahasiswaan',
             'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
 
@@ -148,7 +148,7 @@ class PelaksanaanController extends Controller
         $roles   = $user->roles->pluck('name');
         $isAdmin = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
         $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
-        $canManage = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm'])->isNotEmpty() || $isPengurus; // GPM & Kadep view-only
+        $canManage = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan'])->isNotEmpty() || $isPengurus; // GPM, Kadep & DPM view-only
 
         if (!$canManage) {
             abort(403, 'Akses ditolak.');
@@ -319,9 +319,9 @@ class PelaksanaanController extends Controller
     public function publishToArsip($id)
     {
         // Proteksi backend: sinkron dengan route middleware + $canArsip di show()
-        // GPM adalah view-only — TIDAK boleh melakukan arsip
+        // GPM & DPM adalah view-only — TIDAK boleh melakukan arsip
         $allowedRoles = [
-            'superadmin', 'admin', 'admin_kemahasiswaan', 'dpm',
+            'superadmin', 'admin', 'admin_kemahasiswaan',
             'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ];
         $userRoles = Auth::user()->roles->pluck('name');
@@ -341,10 +341,20 @@ class PelaksanaanController extends Controller
                 ->with('error', 'Silakan edit/update data pelaksanaan kegiatan terlebih dahulu sebelum mengunggah ke arsip.');
         }
 
+        // Banner wajib diisi sebelum kegiatan boleh diunggah ke arsip (subbab 3).
+        if (empty($proker->banner)) {
+            return redirect()
+                ->back()
+                ->with('error', 'Banner kegiatan wajib diunggah terlebih dahulu sebelum mengunggah ke arsip.');
+        }
+
         $proker->update(['status' => Kegiatan::STATUS_SELESAI]);
 
+        // Konsisten dengan alur subbab 1 → 2 (ajukan() yang mengarahkan ke
+        // pelaksanaan.index): setelah unggah ke arsip, arahkan ke daftar
+        // subbab 3 (Laporan & Arsip), bukan kembali ke detail pelaksanaan.
         return redirect()
-            ->route('manajemenmahasiswa.pelaksanaan.show', $proker->id)
+            ->route('manajemenmahasiswa.kegiatan.index')
             ->with('success', 'Kegiatan berhasil diunggah ke Laporan & Arsip.');
     }
 

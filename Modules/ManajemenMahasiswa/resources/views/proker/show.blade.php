@@ -76,13 +76,20 @@
         @endif
         @if($proker->status === 'draft' && !$isPengawas)
             @if($canAjukan)
-                <form action="{{ route('manajemenmahasiswa.proker.ajukan', $proker->id) }}" method="POST" style="margin:0;">
-                    @csrf @method('PATCH')
-                    <button type="submit" class="btn-ajukan" style="height:38px;padding:0 20px;font-size:13px;">
+                @if($proker->banner)
+                    <button type="button" class="btn-ajukan" style="height:38px;padding:0 20px;font-size:13px;"
+                            onclick="document.getElementById('ajukanModal').style.display='flex'">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9 22 2z"/></svg>
                         Ajukan Proker
                     </button>
-                </form>
+                @else
+                    <button type="button" disabled
+                        title="Banner proker wajib diunggah terlebih dahulu sebelum mengajukan proker"
+                        style="height:38px;padding:0 20px;font-size:13px;font-weight:600;border-radius:10px;border:none;display:inline-flex;align-items:center;gap:8px;background:#DFE1E7;color:#666D80;cursor:not-allowed;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9 22 2z"/></svg>
+                        Ajukan Proker
+                    </button>
+                @endif
             @else
                 <button type="button" disabled
                     title="Hanya Ketua / Ketua Bidang / Ketua Unit yang dapat mengajukan proker"
@@ -179,6 +186,25 @@
 @endif
 
 {{-- Modals --}}
+@if($canAjukan && $proker->status === 'draft' && !$isPengawas)
+<div id="ajukanModal" class="modal-overlay" style="display:none;">
+    <div class="modal-box">
+        <div style="width:56px;height:56px;border-radius:50%;background:#eef2ff;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2L11 13"/><path d="M22 2L15 22 11 13 2 9 22 2z"/></svg>
+        </div>
+        <h5 class="fw-bold mb-2">Ajukan Proker?</h5>
+        <p style="color:#666D80;font-size:14px;">Rencana proker "<strong>{{ $proker->judul }}</strong>" akan diajukan dan masuk ke tahap <strong>Pelaksanaan Kegiatan</strong>.</p>
+        <div class="d-flex gap-2 justify-content-center mt-3">
+            <button type="button" class="btn" style="background:#f3f4f6;color:#374151;font-weight:600;border-radius:10px;" onclick="document.getElementById('ajukanModal').style.display='none'">Batal</button>
+            <form action="{{ route('manajemenmahasiswa.proker.ajukan', $proker->id) }}" method="POST" style="margin:0;">
+                @csrf @method('PATCH')
+                <button type="submit" class="btn-ajukan" style="border-radius:10px;">Ajukan</button>
+            </form>
+        </div>
+    </div>
+</div>
+@endif
+
 @if($canDelete && $proker->status === 'draft')
 <div id="deleteModal" class="modal-overlay" style="display:none;">
     <div class="modal-box">

@@ -122,19 +122,16 @@
         @endif
         @if($proker->status !== 'selesai')
             @if($canArsip)
-                @if($proker->is_pelaksanaan_updated)
-                    <form action="{{ route('manajemenmahasiswa.pelaksanaan.publish', $proker->id) }}" method="POST"
-                          style="display:inline;" onsubmit="return confirm('Unggah kegiatan ini ke Laporan & Arsip?\n\nSemua data akan tersinkron ke subbab 3. Kegiatan akan ditandai sebagai Selesai.')">
-                        @csrf
-                        <button type="submit" class="btn"
-                                style="background:linear-gradient(135deg,#0B266E,#0B266E);color:#fff;font-weight:600;font-size:13px;padding:8px 18px;border-radius:10px;display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(11,38,110,.25);">
-                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
-                            Unggah ke Arsip
-                        </button>
-                    </form>
+                @if($proker->is_pelaksanaan_updated && $proker->banner)
+                    <button type="button" class="btn"
+                            onclick="document.getElementById('arsipModal').style.display='flex'"
+                            style="background:linear-gradient(135deg,#0B266E,#0B266E);color:#fff;font-weight:600;font-size:13px;padding:8px 18px;border-radius:10px;display:inline-flex;align-items:center;gap:6px;border:none;cursor:pointer;transition:all .2s;box-shadow:0 2px 8px rgba(11,38,110,.25);">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+                        Unggah ke Arsip
+                    </button>
                 @else
                     <button type="button" disabled
-                        title="Silakan edit/update data pelaksanaan kegiatan terlebih dahulu sebelum mengunggah ke arsip"
+                        title="{{ !$proker->is_pelaksanaan_updated ? 'Silakan edit/update data pelaksanaan kegiatan terlebih dahulu sebelum mengunggah ke arsip' : 'Banner kegiatan wajib diunggah terlebih dahulu sebelum mengunggah ke arsip' }}"
                         style="background:#DFE1E7;color:#666D80;font-weight:600;font-size:13px;padding:8px 18px;border-radius:10px;display:inline-flex;align-items:center;gap:6px;border:none;cursor:not-allowed;">
                         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
                         Unggah ke Arsip
@@ -454,6 +451,36 @@
             <p style="font-size: 13px; color: #666D80; margin: 0;">Foto dan dokumen kegiatan akan ditampilkan di sini setelah diunggah oleh admin</p>
         </div>
     </div>
+@endif
+
+<!-- Unggah ke Arsip Confirmation Modal -->
+@if($canArsip && $proker->status !== 'selesai' && $proker->is_pelaksanaan_updated && $proker->banner)
+<div id="arsipModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center;"
+     onclick="if(event.target===this)this.style.display='none'">
+    <div style="background: #fff; border-radius: 16px; padding: 32px; max-width: 440px; width: 90%; text-align: center; box-shadow: 0 25px 60px rgba(0,0,0,0.15);">
+        <div style="width: 56px; height: 56px; border-radius: 50%; background: #eef2ff; display: flex; align-items: center; justify-content: center; margin: 0 auto 16px;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        </div>
+        <h5 style="font-weight: 700; color: #0D0D12; margin-bottom: 8px;">Unggah ke Laporan & Arsip?</h5>
+        <p style="color: #666D80; font-size: 14px; margin-bottom: 24px;">
+            Semua data kegiatan <strong>{{ $proker->judul }}</strong> akan tersinkron ke subbab Laporan &amp; Arsip dan ditandai sebagai <strong>Selesai</strong>.
+        </p>
+        <div class="d-flex gap-3 justify-content-center">
+            <button type="button"
+                    onclick="document.getElementById('arsipModal').style.display='none'"
+                    style="padding: 10px 24px; border-radius: 10px; border: 1px solid #DFE1E7; background: #fff; color: #374151; font-weight: 600; font-size: 14px; cursor: pointer;">
+                Batal
+            </button>
+            <form action="{{ route('manajemenmahasiswa.pelaksanaan.publish', $proker->id) }}" method="POST">
+                @csrf
+                <button type="submit"
+                        style="padding: 10px 24px; border-radius: 10px; border: none; background: #0B266E; color: #fff; font-weight: 600; font-size: 14px; cursor: pointer;">
+                    Unggah
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
 @endif
 
 <!-- Delete Confirmation Modal -->

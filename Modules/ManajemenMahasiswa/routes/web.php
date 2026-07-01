@@ -244,8 +244,13 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::get('/', [ProkerController::class, 'index'])->name('index');
             Route::get('/{id}', [ProkerController::class, 'show'])->name('show')->where('id', '[0-9]+');
 
-            // Pengurus: buat, edit, ajukan — GPM & Kadep hanya lihat (view-only)
-            Route::middleware('role:ketua_himpunan|ketua_bidang|ketua_unit|admin|admin_kemahasiswaan|superadmin|dpm')
+            // GET ke endpoint aksi (PATCH-only) — mis. user mengetik URL .../ajukan
+            // langsung di browser — kembalikan 403 ramah, bukan halaman debug 405.
+            Route::get('/{id}/ajukan', fn () => abort(403))->where('id', '[0-9]+');
+
+            // Pengurus: buat, edit, ajukan — GPM, Kadep & DPM hanya lihat (view-only).
+            // DPM = pembina himpunan: memantau saja, yang membuat & mengajukan = pengurus.
+            Route::middleware('role:ketua_himpunan|ketua_bidang|ketua_unit|admin|admin_kemahasiswaan|superadmin')
                 ->group(function () {
                 Route::get('/create', [ProkerController::class, 'create'])->name('create');
                 Route::post('/', [ProkerController::class, 'store'])->name('store');
@@ -254,8 +259,8 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
                 Route::patch('/{id}/ajukan', [ProkerController::class, 'ajukan'])->name('ajukan')->where('id', '[0-9]+');
             });
 
-            // Hapus — admin, dpm, pengurus inti himpunan (GPM & Kadep view-only)
-            Route::middleware('role:admin|admin_kemahasiswaan|superadmin|dpm|ketua_himpunan|ketua_bidang|ketua_unit')
+            // Hapus — admin & pengurus inti himpunan (GPM, Kadep & DPM view-only)
+            Route::middleware('role:admin|admin_kemahasiswaan|superadmin|ketua_himpunan|ketua_bidang|ketua_unit')
                 ->group(function () {
                 Route::delete('/{id}', [ProkerController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
             });
@@ -273,16 +278,20 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::get('/', [PelaksanaanController::class, 'index'])->name('index');
             Route::get('/{id}', [PelaksanaanController::class, 'show'])->name('show')->where('id', '[0-9]+');
 
-            // Edit & publish — GPM & Kadep hanya lihat (view-only)
-            Route::middleware('role:ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|admin|admin_kemahasiswaan|superadmin|dpm')
+            // GET ke endpoint aksi (POST-only) — mis. user mengetik URL .../publish
+            // langsung di browser — kembalikan 403 ramah, bukan halaman debug 405.
+            Route::get('/{id}/publish', fn () => abort(403))->where('id', '[0-9]+');
+
+            // Edit & publish — GPM, Kadep & DPM hanya lihat (view-only)
+            Route::middleware('role:ketua_himpunan|ketua_bidang|ketua_unit|staff_himpunan|admin|admin_kemahasiswaan|superadmin')
                 ->group(function () {
                 Route::get('/{id}/edit', [PelaksanaanController::class, 'edit'])->name('edit')->where('id', '[0-9]+');
                 Route::put('/{id}', [PelaksanaanController::class, 'update'])->name('update')->where('id', '[0-9]+');
                 Route::post('/{id}/publish', [PelaksanaanController::class, 'publishToArsip'])->name('publish')->where('id', '[0-9]+');
             });
 
-            // Hapus — admin kemahasiswaan, superadmin, dpm, dan ketua-ketua himpunan (GPM & Kadep view-only)
-            Route::middleware('role:admin|admin_kemahasiswaan|superadmin|dpm|ketua_himpunan|ketua_bidang|ketua_unit')
+            // Hapus — admin kemahasiswaan, superadmin, dan ketua-ketua himpunan (GPM, Kadep & DPM view-only)
+            Route::middleware('role:admin|admin_kemahasiswaan|superadmin|ketua_himpunan|ketua_bidang|ketua_unit')
                 ->group(function () {
                 Route::delete('/{id}', [PelaksanaanController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
             });
@@ -294,19 +303,28 @@ Route::middleware(['auth', 'module.active:manajemen_mahasiswa'])
             Route::get('/', [KegiatanController::class, 'index'])->name('index');
             Route::get('/{id}', [KegiatanController::class, 'show'])->name('show')->where('id', '[0-9]+');
 
-            // Tambah Kegiatan — hanya role kurasi di luar alur himpunan (admin + dpm).
-            // Role himpunan wajib lewat alur Proker → Pelaksanaan → publish.
-            Route::middleware('role:admin|admin_kemahasiswaan|superadmin|dpm')->group(function () {
+            // Tambah Kegiatan — hanya role kurasi admin di luar alur himpunan.
+            // Role himpunan wajib lewat alur Proker → Pelaksanaan → publish; DPM = pembina view-only.
+            Route::middleware('role:admin|admin_kemahasiswaan|superadmin')->group(function () {
                 Route::get('/create', [KegiatanController::class, 'create'])->name('create');
                 Route::post('/', [KegiatanController::class, 'store'])->name('store');
             });
 
-            // Edit & Hapus — ketua + admin + dpm (GPM, Kadep & staff_himpunan TIDAK termasuk)
-            Route::middleware('role:ketua_himpunan|ketua_bidang|ketua_unit|admin|admin_kemahasiswaan|superadmin|dpm')->group(function () {
-                Route::get('/{id}/edit', [KegiatanController::class, 'edit'])->name('edit');
-                Route::put('/{id}', [KegiatanController::class, 'update'])->name('update');
-                Route::delete('/{id}', [KegiatanController::class, 'destroy'])->name('destroy');
+            // Edit & Hapus — ketua + admin (GPM, Kadep, DPM & staff_himpunan TIDAK termasuk)
+            // Batasi {id} ke numerik (selaras grup Proker & Pelaksanaan) agar segmen non-numerik
+            // tidak jatuh ke route PUT/DELETE ini dan memunculkan 405.
+            Route::middleware('role:ketua_himpunan|ketua_bidang|ketua_unit|admin|admin_kemahasiswaan|superadmin')->group(function () {
+                Route::get('/{id}/edit', [KegiatanController::class, 'edit'])->name('edit')->where('id', '[0-9]+');
+                Route::put('/{id}', [KegiatanController::class, 'update'])->name('update')->where('id', '[0-9]+');
+                Route::delete('/{id}', [KegiatanController::class, 'destroy'])->name('destroy')->where('id', '[0-9]+');
             });
+
+            // Segmen non-numerik di /kegiatan/{...} — mis. user UAT mengetik .../kegiatan/proker.
+            // Tanpa ini, segmen non-numerik jatuh ke route PUT/DELETE /kegiatan/{id} dan memunculkan
+            // halaman debug 405 (MethodNotAllowed tidak ditangani handler global). Kembalikan 403 agar
+            // diteruskan ke halaman "Akses Ditolak". Harus diletakkan paling akhir agar tidak menutup
+            // route /create (alpha) yang sudah terdaftar lebih dulu.
+            Route::get('/{slug}', fn () => abort(403))->where('slug', '[A-Za-z].*');
         });
 
         // ── Manajemen Pengguna (Role Assignment) ─────────────────────────

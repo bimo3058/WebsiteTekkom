@@ -31,9 +31,9 @@ class ProkerController extends Controller
         // Sebelumnya 'dpm' hilang di sini sehingga DPM diperlakukan berbeda di daftar Rencana Proker.
         $isAdmin = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm'])->isNotEmpty();
         $isPengurus = $roles->intersect(['pengurus_himpunan', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit', 'staff_himpunan'])->isNotEmpty();
-        // GPM & Kadep view-only — admin, DPM & pengurus yang boleh kelola
-        // (DPM disertakan agar sinkron dengan akses route create/edit/destroy & flag canEdit/canDelete di show())
-        $canManage = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan', 'dpm'])->isNotEmpty() || $isPengurus;
+        // GPM, Kadep & DPM view-only — hanya admin & pengurus yang boleh kelola.
+        // DPM = pembina himpunan: hanya memantau Rencana Proker, tidak membuat/edit/hapus/ajukan.
+        $canManage = $roles->intersect(['superadmin', 'admin', 'admin_kemahasiswaan'])->isNotEmpty() || $isPengurus;
 
         $query = Kegiatan::with(['bidangs', 'kategoris', 'ketuaPelaksana.user'])
             ->where('status', Kegiatan::STATUS_DRAFT)
@@ -90,18 +90,19 @@ class ProkerController extends Controller
         $canAjukan = $roles->intersect([
             'superadmin', 'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
-        // GPM & Ketua Departemen = pengawas (view-only): tidak melakukan aksi apa pun,
+        // GPM, Ketua Departemen & DPM = pengawas (view-only): tidak melakukan aksi apa pun,
         // jadi tombol "Ajukan Proker" (bahkan versi disabled) disembunyikan agar konsisten
         // dengan subbab Pelaksanaan yang juga tidak menampilkan tombol untuk role view-only.
-        $isPengawas = $roles->intersect(['gpm', 'ketua_departemen'])->isNotEmpty();
-        // Role yang boleh edit proker (sinkron dengan route middleware edit) — GPM & Kadep view-only
+        // DPM = pembina himpunan: hanya memantau, tidak membuat/edit/hapus/ajukan proker.
+        $isPengawas = $roles->intersect(['gpm', 'ketua_departemen', 'dpm'])->isNotEmpty();
+        // Role yang boleh edit proker (sinkron dengan route middleware edit) — GPM, Kadep & DPM view-only
         $canEdit = $roles->intersect([
-            'superadmin', 'admin', 'admin_kemahasiswaan', 'dpm',
+            'superadmin', 'admin', 'admin_kemahasiswaan',
             'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
-        // Role yang boleh hapus proker (sinkron dengan route middleware destroy) — GPM & Kadep view-only
+        // Role yang boleh hapus proker (sinkron dengan route middleware destroy) — GPM, Kadep & DPM view-only
         $canDelete = $roles->intersect([
-            'superadmin', 'admin', 'admin_kemahasiswaan', 'dpm',
+            'superadmin', 'admin', 'admin_kemahasiswaan',
             'ketua_himpunan', 'ketua_bidang', 'ketua_unit',
         ])->isNotEmpty();
         $isCreator = $proker->user_id === Auth::id();
@@ -225,6 +226,13 @@ class ProkerController extends Controller
 
         $proker = Kegiatan::where('status', Kegiatan::STATUS_DRAFT)->findOrFail($id);
 
+        // Banner wajib diisi sebelum proker boleh diajukan ke tahap Pelaksanaan (subbab 2).
+        if (empty($proker->banner)) {
+            return redirect()
+                ->back()
+                ->with('error', 'Banner proker wajib diunggah terlebih dahulu sebelum mengajukan proker.');
+        }
+
         $proker->update(['status' => Kegiatan::STATUS_DISETUJUI]);
 
         return redirect()
@@ -238,7 +246,20 @@ class ProkerController extends Controller
 
     public function destroy($id)
     {
-        $proker = Kegiatan::where('status', Kegiatan::STATUS_DRAFT)->findOrFail($id);
+        // Cari proker by id saja (TIDAK difilter status). Sebelumnya findOrFail
+        // dibatasi STATUS_DRAFT — sama seperti bug lama di show() — sehingga begitu
+        // status proker bukan 'draft' lagi (mis. halaman daftar/detail basi karena
+        // bfcache), DELETE melempar ModelNotFoundException → handler global
+        // mengalihkan ke /error/404 alih-alih kembali ke daftar rencana proker.
+        $proker = Kegiatan::findOrFail($id);
+
+        // Hanya proker berstatus draft yang boleh dihapus. Jika sudah diajukan/
+        // diarsipkan, kembalikan ke daftar dengan pesan, bukan halaman 404.
+        if ($proker->status !== Kegiatan::STATUS_DRAFT) {
+            return redirect()
+                ->route('manajemenmahasiswa.proker.index')
+                ->with('error', 'Hanya rencana proker berstatus draft yang dapat dihapus.');
+        }
 
         if ($proker->banner) {
             $this->supabase->delete($proker->banner);
