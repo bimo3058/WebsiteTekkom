@@ -59,7 +59,6 @@ class KalenderController extends Controller
         $jamBuka = Pengaturan::where('key', 'jam_buka')->value('value') ?? '08:00';
         $jamTutup = Pengaturan::where('key', 'jam_tutup')->value('value') ?? '16:00';
         $bukaAkhirPekan = filter_var(Pengaturan::where('key', 'buka_akhir_pekan')->value('value') ?? false, FILTER_VALIDATE_BOOLEAN);
-        $batasHMinBooking = (int) (Pengaturan::where('key', 'batas_h_min_booking')->value('value') ?? 0);
 
         $internalSchedules = MrJadwalInternal::with('ruangan')->get();
 
@@ -80,8 +79,72 @@ class KalenderController extends Controller
             'holidays',
             'jamBuka',
             'jamTutup',
-            'bukaAkhirPekan',
-            'batasHMinBooking'
+            'bukaAkhirPekan'
         ));
+    }
+
+    /**
+     * Jalur Tol: Express Booking Bypass 
+     * Injects either a direct 'Disetujui' booking or a 'Jadwal Internal Spesifik' schedule.
+     */
+    public function expressBooking(Request $request)
+    {
+        $request->validate([
+            'ruangan_id' => 'required|exists:eo_mr_ruangans,id',
+            'tipe_aksi' => 'required|in:internal,dosen',
+            'tanggal' => 'required|date',
+            'jam_mulai' => 'required',
+            'jam_selesai' => 'required|after:jam_mulai',
+            'keterangan' => 'required|string',
+            'nim' => 'required_if:tipe_aksi,dosen',
+            'kategori' => 'required_if:tipe_aksi,internal|string',
+            'mata_kuliah' => 'nullable|string|max:255',
+            'kode_mk' => 'nullable|string|max:100',
+            'kelas' => 'nullable|string|max:50',
+            'sks' => 'nullable|integer',
+            'kuota' => 'nullable|integer',
+            'pengampu' => 'nullable|string|max:255'
+        ]);
+
+        if ($request->tipe_aksi === 'internal') {
+            // Path A: Register an Ad-Hoc block (Maintenance / Internal Academic)
+            MrJadwalInternal::create([
+                'ruangan_id' => $request->ruangan_id,
+                'tipe_jadwal' => 'spesifik',
+                'kategori' => $request->kategori,
+                'tanggal_spesifik' => $request->tanggal,
+                'jam_mulai' => $request->jam_mulai,
+                'jam_selesai' => $request->jam_selesai,
+                'keterangan' => $request->keterangan,
+                'mata_kuliah' => $request->mata_kuliah,
+                'kode_mk' => $request->kode_mk,
+                'kelas' => $request->kelas,
+                'sks' => $request->sks,
+                'kuota' => $request->kuota,
+                'pengampu' => $request->pengampu
+            ]);
+
+            return redirect()->back()->with('success', 'Jadwal Internal Express berhasil diblokir ke ruangan.');
+        } else {
+            // Path B: Register an auto-approved booking on behalf of an external User (Dosen)
+            // Resolve User by NIM/NIP first
+            $targetUser = \App\Models\User::where('nim', $request->nim)->first();
+
+            if (!$targetUser) {
+                return redirect()->back()->with('error', 'Peminjam dengan NIM/NIP tersebut tidak ditemukan di sistem.');
+            }
+
+            Peminjaman::create([
+                'user_id' => $targetUser->id,
+                'ruangan_id' => $request->ruangan_id,
+                'tanggal_pinjam' => $request->tanggal,
+                'jam_mulai' => $request->jam_mulai,
+                'jam_selesai' => $request->jam_selesai,
+                'tujuan' => $request->keterangan,
+                'status' => 'disetujui'
+            ]);
+
+            return redirect()->back()->with('success', 'Booking Ekspres berhasil dimasukkan atas nama ' . $targetUser->name . ' dan otomatis Disetujui.');
+        }
     }
 }

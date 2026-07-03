@@ -77,6 +77,11 @@
                 foreach ($weekDays as $day) {
                     if ($day->dayOfWeekIso == $j->hari) {
                         $tgl = $day->format('Y-m-d');
+
+                        // Temporal Boundary Check: Skip drawing if outside active boundaries
+                        if (!empty($j->tgl_mulai_efektif) && $tgl < $j->tgl_mulai_efektif) continue;
+                        if (!empty($j->tgl_selesai_efektif) && $tgl > $j->tgl_selesai_efektif) continue;
+
                         for ($h = $mulai; $h < $selesai; $h++) {
                             $slotMap[$tgl][$j->ruangan_id][$h] = $payload;
                         }
@@ -328,9 +333,17 @@
                                             <td rowspan="{{ $cData['rowspan'] }}"
                                                 style="border: 1px solid #E5E7EB; padding: 4px; vertical-align: top; height: 1px;">
                                                 @if($st === 'tersedia')
-                                                    <div
-                                                        style="display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; font-size:12px; font-weight:bold; color:#059669; background: #D1FAE5; border:1px solid #6EE7B7; border-radius:6px; opacity: {{ $payload['opacity'] ?? '1' }};">
-                                                        ✓
+                                                    <div @click.stop="window.dispatchEvent(new CustomEvent('open-jalur-tol', {
+                                                                    detail: {
+                                                                        ruangan_id: '{{ $ruang->id }}',
+                                                                        ruangan_nama: '{{ addslashes($ruang->nama) }}',
+                                                                        tanggal: '{{ $dateStr }}',
+                                                                        jam: '{{ str_pad($jam, 2, "0", STR_PAD_LEFT).":00" }}'
+                                                                    }
+                                                                }))"
+                                                        style="cursor:pointer; display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; font-size:12px; stroke: #059669; color:#059669; background: #D1FAE5; border:1px solid #6EE7B7; border-radius:6px; opacity: {{ $payload['opacity'] ?? '1' }}; transition:all 0.1s;"
+                                                        onmouseover="this.style.background='#A7F3D0'" onmouseout="this.style.background='#D1FAE5'">
+                                                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
                                                     </div>
                                                 @elseif($st === 'event')
                                                     <div @click.stop="window.dispatchEvent(new CustomEvent('open-event-modal', {
@@ -583,6 +596,149 @@
                             </div>
                         </div>
                     </div>
+
+                    <div class="mt-6 flex justify-end">
+                        <button @click="show = false"
+                            class="px-5 py-2.5 rounded-lg text-sm font-bold text-gray-700 bg-gray-100 hover:bg-gray-200 transition-colors">
+                            Tutup
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- =================== JALUR TOL MODAL (Alpine) =================== --}}
+        <div x-data="{
+                show: false,
+                ruangan_id: '',
+                ruangan_nama: '',
+                tanggal: '',
+                jam: '',
+                modeAction: 'internal',
+                kategoriType: 'Maintenance / Perbaikan',
+                keterangan: '',
+                nim: '',
+                jam_selesai: ''
+            }"  
+            x-show="show" 
+            @open-jalur-tol.window="
+                show = true;
+                ruangan_id = $event.detail.ruangan_id;
+                ruangan_nama = $event.detail.ruangan_nama;
+                tanggal = $event.detail.tanggal;
+                jam = $event.detail.jam;
+                jam_selesai = (parseInt(jam.split(':')[0]) + 1).toString().padStart(2, '0') + ':00';
+            "
+            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity"
+            style="display: none;"
+            x-transition>
+            
+            <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden transform transition-all"
+                @click.away="show = false">
+                <div class="bg-indigo-600 p-5 text-white flex justify-between items-center relative overflow-hidden">
+                    <div class="relative z-10">
+                        <h2 class="text-lg font-bold">Fast-Track / Jalur Tol Booking</h2>
+                        <p class="text-indigo-100 font-medium text-xs mt-1" x-text="ruangan_nama + ' - ' + tanggal + ' pukul ' + jam + ' WIB'"></p>
+                    </div>
+                    <button @click="show = false" class="text-indigo-100 hover:text-white transition-colors relative z-10 p-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+
+                <div class="p-6">
+                    <form method="POST" action="{{ route('eoffice.peminjaman.admin.kalender-global.express') }}">
+                        @csrf
+                        <input type="hidden" name="ruangan_id" x-model="ruangan_id">
+                        <input type="hidden" name="tanggal" x-model="tanggal">
+                        <input type="hidden" name="jam_mulai" x-model="jam">
+
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold text-gray-700 uppercase mb-2 tracking-wide">Pilih Mode Tindakan</label>
+                            <div class="grid grid-cols-2 gap-3">
+                                <label class="border rounded-lg p-3 cursor-pointer transition-colors" :class="modeAction === 'internal' ? 'bg-indigo-50 border-indigo-500' : 'bg-white border-gray-200 hover:bg-gray-50'">
+                                    <input type="radio" name="tipe_aksi" value="internal" x-model="modeAction" class="hidden">
+                                    <div class="font-bold text-sm" :class="modeAction === 'internal' ? 'text-indigo-700' : 'text-gray-700'">Jadwal Internal</div>
+                                    <div class="text-[10px] text-gray-500 mt-1">Blokir Kuliah / Maintenance</div>
+                                </label>
+                                <label class="border rounded-lg p-3 cursor-pointer transition-colors" :class="modeAction === 'dosen' ? 'bg-emerald-50 border-emerald-500' : 'bg-white border-gray-200 hover:bg-gray-50'">
+                                    <input type="radio" name="tipe_aksi" value="dosen" x-model="modeAction" class="hidden">
+                                    <div class="font-bold text-sm" :class="modeAction === 'dosen' ? 'text-emerald-700' : 'text-gray-700'">Booking Ekspres</div>
+                                    <div class="text-[10px] text-gray-500 mt-1">Suntik Peminjaman Disetujui</div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1 tracking-wide">Jam Selesai</label>
+                            <input type="time" name="jam_selesai" x-model="jam_selesai" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-medium">
+                        </div>
+
+                        <div class="mb-4" x-show="modeAction === 'internal'" style="display:none;">
+                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1 tracking-wide">Kategori Acara</label>
+                            <select name="kategori" x-model="kategoriType" :required="modeAction === 'internal'" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                                <option value="Jadwal Akademik (Kuliah)">Jadwal Akademik (Kuliah)</option>
+                                <option value="Sidang / Ujian Akademik">Sidang / Ujian Akademik</option>
+                                <option value="Rapat Internal Jurusan">Rapat Internal Jurusan</option>
+                                <option value="Bimbingan Mahasiswa">Bimbingan Mahasiswa</option>
+                                <option value="Maintenance / Perbaikan">Maintenance / Perbaikan</option>
+                                <option value="Acara Kemahasiswaan">Acara Kemahasiswaan Khusus</option>
+                            </select>
+                        </div>
+
+                        <!-- Academic Metadata Panel (Dynamic) -->
+                        <div x-show="kategoriType === 'Jadwal Akademik (Kuliah)' && modeAction === 'internal'" style="display:none;" class="mb-4 p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl space-y-4">
+                            <h4 class="text-[12px] font-bold text-indigo-900 border-b border-indigo-100 pb-2 mb-2">Metadata Akademik Tambahan (Opsional)</h4>
+                            <div class="grid grid-cols-2 gap-3">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">Mata Kuliah</label>
+                                    <input type="text" name="mata_kuliah" :required="kategoriType === 'Jadwal Akademik (Kuliah)'" class="w-full border-gray-300 rounded-lg shadow-sm text-sm p-2" placeholder="Nama Kelas">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">Kode MK</label>
+                                    <input type="text" name="kode_mk" class="w-full border-gray-300 rounded-lg shadow-sm text-sm p-2" placeholder="Contoh: TKK102">
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">Kelas</label>
+                                    <input type="text" name="kelas" class="w-full border-gray-300 rounded-lg shadow-sm text-sm p-2" placeholder="Misal: A">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">SKS</label>
+                                    <input type="number" name="sks" class="w-full border-gray-300 rounded-lg shadow-sm text-sm p-2" placeholder="SKS (0-4)">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">Kuota</label>
+                                    <input type="number" name="kuota" class="w-full border-gray-300 rounded-lg shadow-sm text-sm p-2" placeholder="Kuota">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">Nama Dosen Pengampu</label>
+                                <input type="text" name="pengampu" class="w-full border-gray-300 rounded-lg shadow-sm text-sm p-2" placeholder="Dosen Pengampu Mata Kuliah">
+                            </div>
+                        </div>
+
+
+                        <div class="mb-4" x-show="modeAction === 'dosen'">
+                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1 tracking-wide">NIM / NIP Peminjam</label>
+                            <input type="text" name="nim" x-model="nim" placeholder="Masukkan ID Pengguna Institusi..." class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
+                            <p class="text-[10px] text-gray-500 mt-1">Booking ini akan langsung dianggap sah dan berstatus 'disetujui'.</p>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1 tracking-wide">Tujuan / Agenda Utama</label>
+                            <textarea name="keterangan" x-model="keterangan" rows="3" required placeholder="Jelaskan secara ringkas acara/kegiatan ini..." class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"></textarea>
+                        </div>
+
+                        <div class="mt-6 flex justify-end gap-2">
+                            <button type="button" @click="show = false" class="px-4 py-2.5 rounded-lg text-sm font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">Batal</button>
+                            <button type="submit" class="px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm">Eksekusi Jalur Tol</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
                 </div>
             </div>
         </div>

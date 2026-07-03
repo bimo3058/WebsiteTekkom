@@ -29,9 +29,19 @@ return new class extends Migration {
             $table->date('tanggal_spesifik')->nullable();
             $table->time('jam_mulai');
             $table->time('jam_selesai');
+            $table->date('tgl_mulai_efektif')->nullable()->comment('Batas Awal Periode aktif (Semester)');
+            $table->date('tgl_selesai_efektif')->nullable()->comment('Batas Akhir Periode aktif (Semester)');
+
+            // Academic Metadata (Excel Import targets) - Nullable for non-academic specific closures
+            $table->string('mata_kuliah')->nullable();
+            $table->string('kode_mk')->nullable();
+            $table->string('kelas', 10)->nullable();
+            $table->integer('sks')->nullable();
+            $table->integer('kuota')->nullable();
+            $table->text('pengampu')->nullable(); // Text to support highly-decorated long names
 
             // Log Keterangan Acara
-            $table->string('keterangan');
+            $table->string('keterangan')->nullable();
 
             $table->timestamps();
         });

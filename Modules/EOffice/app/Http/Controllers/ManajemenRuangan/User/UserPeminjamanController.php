@@ -127,9 +127,18 @@ class UserPeminjamanController extends Controller
         // Pengecekan Bentrok: Jadwal Internal (Akademik, Kuliah, Rapat)
         $isInternalConflict = \Modules\EOffice\Models\MrJadwalInternal::where('ruangan_id', $request->ruangan_id)
             ->where(function ($query) use ($request, $dayOfWeek) {
-                // Skenario A: Jadwal Rutin yang berjalan pada Hari yang sama
-                $query->where(function ($q) use ($dayOfWeek) {
-                    $q->where('tipe_jadwal', 'rutin')->where('hari', $dayOfWeek);
+                // Skenario A: Jadwal Rutin yang berjalan pada Hari yang sama + Mengecek batas kadaluarsa
+                $query->where(function ($q) use ($dayOfWeek, $request) {
+                    $q->where('tipe_jadwal', 'rutin')
+                        ->where('hari', $dayOfWeek)
+                        ->where(function ($tq) use ($request) {
+                            $tq->whereNull('tgl_mulai_efektif')
+                                ->orWhere('tgl_mulai_efektif', '<=', $request->tanggal_pinjam);
+                        })
+                        ->where(function ($tq) use ($request) {
+                            $tq->whereNull('tgl_selesai_efektif')
+                                ->orWhere('tgl_selesai_efektif', '>=', $request->tanggal_pinjam);
+                        });
                 })
                     // Skenario B: Jadwal Spesifik yang berjalan pada Tanggal yang sama
                     ->orWhere(function ($q) use ($request) {

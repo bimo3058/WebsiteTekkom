@@ -41,6 +41,12 @@
                 foreach ($weekDays as $day) {
                     if ($day->dayOfWeekIso == $j->hari) {
                         $tgl = $day->format('Y-m-d');
+
+                        if (!empty($j->tgl_mulai_efektif) && $tgl < $j->tgl_mulai_efektif)
+                            continue;
+                        if (!empty($j->tgl_selesai_efektif) && $tgl > $j->tgl_selesai_efektif)
+                            continue;
+
                         for ($h = $mulai; $h < $selesai; $h++) {
                             $slotMap[$tgl][$j->ruangan_id][$h] = [
                                 'status' => 'internal',
@@ -244,7 +250,7 @@
                                 @foreach($weekDays as $day)
                                     <th colspan="{{ $ruangans->count() }}" {{ $day->isToday() ? 'id=col-today' : '' }}
                                         style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; color: #111827; font-weight: 700;
-                                                                                                                                                                {{ $day->isToday() ? 'background: #EEF2FF; color: #4338CA;' : 'background: #F8F9FB;' }}">
+                                                                                                                                                                                {{ $day->isToday() ? 'background: #EEF2FF; color: #4338CA;' : 'background: #F8F9FB;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
                                         <div
                                             style="font-size:11px; font-weight:500; color: {{ $day->isToday() ? '#6366f1' : '#6B7280' }}; margin-top:2px;">
@@ -295,6 +301,11 @@
 
                                                 // Membersihkan text agar pas (hapus "digunakan untuk")
                                                 $cleanTujuan = trim(str_ireplace('digunakan untuk', '', $rawTujuan));
+
+                                                // Dynamic truncation: Hapus teks "Kelas" agar singkatan Matkul dan Abjad Kelas menyatu
+                                                $cleanTujuan = str_ireplace(' - Kelas ', '-', $cleanTujuan);
+                                                $cleanTujuan = str_ireplace(' (Kelas ', '-', $cleanTujuan);
+                                                $cleanTujuan = str_replace(')', '', $cleanTujuan);
                                                 $words = explode(' ', $cleanTujuan);
                                                 if (count($words) > 3) {
                                                     $cleanTujuan = implode(' ', array_slice($words, 0, 3)) . '..';
@@ -375,8 +386,8 @@
                                                         @mouseout="!isDragging && ($el.style.background = '{{ $bg }}'); !isDragging && ($el.style.transform = 'scale(1)')"
                                                         class="select-none"
                                                         :style="isDragging && dragStartPoint?.roomId === '{{ $ruang->id }}' && dragStartPoint?.dateStr === '{{ $dateStr }}' && dragSelection.includes('{{ $hStr }}') 
-                                                                                                                                                                                        ? 'display:flex; align-items:center; justify-content:center; min-height:34px; height: 100%; width:100%; font-size:9px; font-weight:700; color:#065F46; cursor:pointer; background: #6EE7B7; border: 1px solid #10B981; border-radius:5px; transform: scale(1.05); z-index: 10; transition:all 0.15s;' 
-                                                                                                                                                                                        : 'display:flex; align-items:center; justify-content:center; min-height:34px; height: 100%; width:100%; font-size:9px; font-weight:700; color:#065F46; cursor:pointer; background: {{ $bg }}; border:1px solid {{ $border }}; border-radius:5px; transition:all 0.15s;'"
+                                                                                                                                                                                                                                ? 'display:flex; align-items:center; justify-content:center; min-height:34px; height: 100%; width:100%; font-size:9px; font-weight:700; color:#065F46; cursor:pointer; background: #6EE7B7; border: 1px solid #10B981; border-radius:5px; transform: scale(1.05); z-index: 10; transition:all 0.15s;' 
+                                                                                                                                                                                                                                : 'display:flex; align-items:center; justify-content:center; min-height:34px; height: 100%; width:100%; font-size:9px; font-weight:700; color:#065F46; cursor:pointer; background: {{ $bg }}; border:1px solid {{ $border }}; border-radius:5px; transition:all 0.15s;'"
                                                         title="Booking {{ $ruang->nama }} — {{ $day->translatedFormat('D, d M') }} pukul {{ $hStr }}">
                                                         ✓
                                                     </button>
@@ -395,10 +406,10 @@
                                                     @endphp
                                                     <div
                                                         style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:34px; height:100%; width:100%; padding: 4px; overflow:hidden;
-                                                                                                                                                                       background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
-                                                                                                                                                                       text-align:center; white-space:normal; word-break:break-word; line-height:1.25; max-width:100%;
-                                                                                                                                                                       font-size:9px; font-weight:800; color:{{ $tColor }};
-                                                                                                                                                                       cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '1' }};">
+                                                                                                                                                                                                               background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:5px;
+                                                                                                                                                                                                               text-align:center; white-space:normal; word-break:break-word; line-height:1.25; max-width:100%;
+                                                                                                                                                                                                               font-size:9px; font-weight:800; color:{{ $tColor }};
+                                                                                                                                                                                                               cursor:{{ $cursor }}; opacity: {{ $isPast ? '0.5' : '1' }};">
                                                         {{ $label }}
                                                     </div>
                                                 @endif
@@ -491,8 +502,8 @@
                                 <a href="{{ $weekLink }}"
                                     title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
                                     style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                                                                                                                                                                                      background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #6366F1' : '1px solid #E5E7EB' }};
-                                                                                                                                                                                                                      transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
+                                                                                                                                                                                                                                              background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #6366F1' : '1px solid #E5E7EB' }};
+                                                                                                                                                                                                                                              transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                     <div
@@ -758,6 +769,6 @@
                     document.body.style.overflow = '';
                 }
             }))
-        })
+    })
     </script>
 </x-eoffice::manajemen-ruangan.layout>

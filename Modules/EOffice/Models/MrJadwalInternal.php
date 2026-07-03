@@ -21,6 +21,14 @@ class MrJadwalInternal extends Model
         'tanggal_spesifik',
         'jam_mulai',
         'jam_selesai',
+        'tgl_mulai_efektif',
+        'tgl_selesai_efektif',
+        'mata_kuliah',
+        'kode_mk',
+        'kelas',
+        'sks',
+        'kuota',
+        'pengampu',
         'keterangan',
     ];
 
