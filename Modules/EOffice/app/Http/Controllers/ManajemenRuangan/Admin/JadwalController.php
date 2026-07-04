@@ -256,6 +256,7 @@ class JadwalController extends Controller
 
             $failHariCount = 0;
             $failGateCount = 0;
+            $trackedSchedules = [];
 
             foreach ($sheet as $i => $row) {
                 if (empty($row[0]) || strpos((string) $row[0], ',') === false) {
@@ -305,6 +306,25 @@ class JadwalController extends Controller
                     continue;
                 }
 
+                // Collision Check (Hanya cek dalam file Excel yang sama)
+                $conflictMsg = '';
+                if (!isset($trackedSchedules[$ruanganIdTarget][$hariId])) {
+                    $trackedSchedules[$ruanganIdTarget][$hariId] = [];
+                }
+                foreach ($trackedSchedules[$ruanganIdTarget][$hariId] as $exist) {
+                    // Cek Irisan Waktu (Overlap)
+                    if ($jamMulai < $exist['selesai'] && $jamSelesai > $exist['mulai']) {
+                        if (trim($matkulRaw) === trim($exist['matkul'])) {
+                            // Abaikan warning: Ini adalah tabrakan fiktif karena SIAP 
+                            // seringkali mengulang baris data yang sama persis jika dosen pengampunya lebih dari 1
+                            continue;
+                        }
+                        $conflictMsg = 'Konflik jam dengan: ' . $exist['matkul'];
+                        break;
+                    }
+                }
+                $trackedSchedules[$ruanganIdTarget][$hariId][] = ['mulai' => $jamMulai, 'selesai' => $jamSelesai, 'matkul' => $matkulRaw];
+
                 $csvData[] = [
                     $hariId,
                     $ruanganIdTarget,   // NO CAST to (int)
@@ -316,6 +336,7 @@ class JadwalController extends Controller
                     $sks,
                     (int) ($row[5] ?? 0),
                     trim($pengampu),
+                    $conflictMsg // [10] Peringatan Tabrakan Soft-Warning
                 ];
             }
 
