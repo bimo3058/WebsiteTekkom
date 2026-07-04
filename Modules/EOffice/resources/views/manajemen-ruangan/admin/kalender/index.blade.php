@@ -79,8 +79,10 @@
                         $tgl = $day->format('Y-m-d');
 
                         // Temporal Boundary Check: Skip drawing if outside active boundaries
-                        if (!empty($j->tgl_mulai_efektif) && $tgl < $j->tgl_mulai_efektif) continue;
-                        if (!empty($j->tgl_selesai_efektif) && $tgl > $j->tgl_selesai_efektif) continue;
+                        if (!empty($j->tgl_mulai_efektif) && $tgl < $j->tgl_mulai_efektif)
+                            continue;
+                        if (!empty($j->tgl_selesai_efektif) && $tgl > $j->tgl_selesai_efektif)
+                            continue;
 
                         for ($h = $mulai; $h < $selesai; $h++) {
                             $slotMap[$tgl][$j->ruangan_id][$h] = $payload;
@@ -160,7 +162,7 @@
     </div>
 
     {{-- Alpine Wrapper Start --}}
-    <div x-data="{}">
+    <div x-data="bookingKalender()" @mouseup.window="stopDrag()" class="w-full min-w-0 max-w-full">
 
         {{-- =================== LEGEND =================== --}}
         <div class="flex items-center gap-4 mt-3 mb-5 text-[12px] font-medium text-gray-600">
@@ -207,7 +209,7 @@
                             $slotData = $slotMap[$dateStr][$rId][$jam] ?? ['st' => 'tersedia'];
 
                             $isPastDay = $day->copy()->startOfDay()->lt(\Carbon\Carbon::today());
-                            $isPastHourToday = $day->isToday() && (int)$jam <= (int) now()->format('H');
+                            $isPastHourToday = $day->isToday() && (int) $jam <= (int) now()->format('H');
                             $isPast = $isPastDay || $isPastHourToday;
                             $isHoliday = isset($holidays[$dateStr]);
                             $isWeekend = $day->isWeekend();
@@ -251,8 +253,10 @@
                             if ($st['st'] === 'event' && isset($st['id'])) {
                                 for ($k = $hIndex + 1; $k < count($jamList); $k++) {
                                     $nextSt = $hourStatuses[$jamList[$k]];
-                                    if ($nextSt['st'] !== 'event') break;
-                                    if (($nextSt['id'] ?? '') !== $st['id']) break;
+                                    if ($nextSt['st'] !== 'event')
+                                        break;
+                                    if (($nextSt['id'] ?? '') !== $st['id'])
+                                        break;
                                     $rowspan++;
                                 }
                             }
@@ -261,12 +265,12 @@
                         }
                     }
                 }
+                $minTWidth = 64 + (7 * $ruangans->count() * 75);
             @endphp
-
             {{-- Calendar Grid --}}
             <div class="mp-card overflow-hidden">
-                <div style="overflow-x: auto;">
-                    <table style="width: 100%; border-collapse: collapse; font-size: 12px; min-width: 900px;">
+                <div style="overflow-x: auto; width: 100%;">
+                    <table style="width: 100%; table-layout: fixed; border-collapse: collapse; font-size: 12px; min-width: {{ max(900, $minTWidth) }}px;">
                         <thead>
                             {{-- Row 1: Day headers spanning all rooms --}}
                             <tr style="background: #F1F3F9;">
@@ -277,7 +281,7 @@
                                 @foreach($weekDays as $day)
                                     <th colspan="{{ $ruangans->count() }}"
                                         style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; color: #111827; font-weight: 700;
-                                                                                                                                {{ $day->isToday() ? 'background: #EEF2FF; color: #4338CA;' : 'background: #F8F9FB;' }}">
+                                                                                                                                        {{ $day->isToday() ? 'background: #EEF2FF; color: #4338CA;' : 'background: #F8F9FB;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
                                         <div
                                             style="font-size:11px; font-weight:500; color: {{ $day->isToday() ? '#6366f1' : '#6B7280' }}; margin-top:2px;">
@@ -333,40 +337,52 @@
                                             <td rowspan="{{ $cData['rowspan'] }}"
                                                 style="border: 1px solid #E5E7EB; padding: 4px; vertical-align: top; height: 1px;">
                                                 @if($st === 'tersedia')
-                                                    <div @click.stop="window.dispatchEvent(new CustomEvent('open-jalur-tol', {
-                                                                    detail: {
-                                                                        ruangan_id: '{{ $ruang->id }}',
-                                                                        ruangan_nama: '{{ addslashes($ruang->nama) }}',
-                                                                        tanggal: '{{ $dateStr }}',
-                                                                        jam: '{{ str_pad($jam, 2, "0", STR_PAD_LEFT).":00" }}'
-                                                                    }
-                                                                }))"
-                                                        style="cursor:pointer; display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; font-size:12px; stroke: #059669; color:#059669; background: #D1FAE5; border:1px solid #6EE7B7; border-radius:6px; opacity: {{ $payload['opacity'] ?? '1' }}; transition:all 0.1s;"
-                                                        onmouseover="this.style.background='#A7F3D0'" onmouseout="this.style.background='#D1FAE5'">
-                                                        <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"></path></svg>
-                                                    </div>
+                                                    @php $hStr = str_pad($jam, 2, '0', STR_PAD_LEFT) . ':00';
+                                                        $bgT = '#D1FAE5';
+                                                    $borderT = '#6EE7B7'; @endphp
+                                                    <button type="button"
+                                                        @mousedown.prevent="startDrag('{{ $ruang->id }}', '{{ addslashes($ruang->nama) }}', '{{ $dateStr }}', '{{ $hStr }}')"
+                                                        @mouseenter="enterDrag('{{ $ruang->id }}', '{{ $dateStr }}', '{{ $hStr }}')"
+                                                        @mouseup="stopDrag()"
+                                                        @mouseover="!isDragging && ($el.style.background = '#A7F3D0'); !isDragging && ($el.style.transform = 'scale(1.03)')"
+                                                        @mouseout="!isDragging && ($el.style.background = '{{ $bgT }}'); !isDragging && ($el.style.transform = 'scale(1)')"
+                                                        class="select-none"
+                                                        :style="isDragging && dragStartPoint?.roomId === '{{ $ruang->id }}' && dragStartPoint?.dateStr === '{{ $dateStr }}' && dragSelection.includes('{{ $hStr }}') 
+                                                                                ? 'display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; color:#059669; cursor:pointer; background: #6EE7B7; border: 1px solid #059669; border-radius:6px; transform: scale(1.05); z-index: 10; transition:all 0.15s; opacity: {{ $payload['opacity'] ?? '1' }};' 
+                                                                                : 'display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; color:#059669; cursor:pointer; background: {{ $bgT }}; border:1px solid {{ $borderT }}; border-radius:6px; transition:all 0.15s; opacity: {{ $payload['opacity'] ?? '1' }};'"
+                                                        title="Booking Jalur Tol {{ $ruang->nama }} — pukul {{ $hStr }}">
+                                                        <svg x-show="!(isDragging && dragStartPoint?.roomId === '{{ $ruang->id }}' && dragStartPoint?.dateStr === '{{ $dateStr }}' && dragSelection.includes('{{ $hStr }}'))"
+                                                            width="18" height="18" fill="none" stroke="currentColor" stroke-width="3"
+                                                            stroke-linecap="round">
+                                                            <path d="M12 5v14M5 12h14"></path>
+                                                        </svg>
+                                                        <span
+                                                            x-show="isDragging && dragStartPoint?.roomId === '{{ $ruang->id }}' && dragStartPoint?.dateStr === '{{ $dateStr }}' && dragSelection.includes('{{ $hStr }}')"
+                                                            style="display:none; font-size:12px; font-weight:700;">✓</span>
+                                                    </button>
                                                 @elseif($st === 'event')
                                                     <div @click.stop="window.dispatchEvent(new CustomEvent('open-event-modal', {
-                                                                                                    detail: {
-                                                                                                        title: '{{ addslashes($label) }}',
-                                                                                                        pengguna: '{{ addslashes($payload["pengguna"] ?? "") }}',
-                                                                                                        ruangan: '{{ addslashes($ruang->nama) }}',
-                                                                                                        tujuan: '{{ addslashes($payload["tujuan"] ?? "") }}',
-                                                                                                        waktu: '{{ addslashes($payload["waktu"] ?? "") }}',
-                                                                                                        type: '{{ addslashes($payload["type"] ?? "") }}',
-                                                                                                        telepon: '{{ addslashes($payload["telepon"] ?? "-") }}'
-                                                                                                    }
-                                                                                                }))"
+                                                                                                                        detail: {
+                                                                                                                            title: '{{ addslashes($label) }}',
+                                                                                                                            pengguna: '{{ addslashes($payload["pengguna"] ?? "") }}',
+                                                                                                                            ruangan: '{{ addslashes($ruang->nama) }}',
+                                                                                                                            tujuan: '{{ addslashes($payload["tujuan"] ?? "") }}',
+                                                                                                                            waktu: '{{ addslashes($payload["waktu"] ?? "") }}',
+                                                                                                                            type: '{{ addslashes($payload["type"] ?? "") }}',
+                                                                                                                            telepon: '{{ addslashes($payload["telepon"] ?? "-") }}'
+                                                                                                                        }
+                                                                                                                    }))"
                                                         style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; padding:0 4px; overflow:hidden;
-                                                                                                       background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:6px;
-                                                                                                       font-size:10px; font-weight:700; color:{{ $text }};
-                                                                                                       cursor:pointer; opacity: {{ $payload['opacity'] ?? '1' }}; transition: transform 0.1s;"
+                                                                                                                           background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:6px;
+                                                                                                                           font-size:10px; font-weight:700; color:{{ $text }};
+                                                                                                                           cursor:pointer; opacity: {{ $payload['opacity'] ?? '1' }}; transition: transform 0.1s;"
                                                         onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 6px -1px rgba(0, 0, 0, 0.1)'"
                                                         onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                                         {{ $label }}
                                                     </div>
                                                 @else
-                                                    <div style="height: 100%; width:100%; background: #F9FAFB; border: 1px dashed #D1D5DB; border-radius: 6px;">
+                                                    <div
+                                                        style="height: 100%; width:100%; background: #F9FAFB; border: 1px dashed #D1D5DB; border-radius: 6px;">
                                                     </div>
                                                 @endif
                                             </td>
@@ -456,8 +472,8 @@
                                 <a href="{{ $weekLink }}"
                                     title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
                                     style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                                                                                                                                                  background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #6366F1' : '1px solid #E5E7EB' }};
-                                                                                                                                                                                  transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
+                                                                                                                                                                                              background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #6366F1' : '1px solid #E5E7EB' }};
+                                                                                                                                                                                              transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                     <div
@@ -507,8 +523,8 @@
                 class="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6" aria-labelledby="modal-title"
                 role="dialog" aria-modal="true">
                 <div x-show="open" x-transition.opacity
-                    class="fixed inset-0 transition-opacity bg-gray-500/20 backdrop-blur-md"
-                    @click="open = false"></div>
+                    class="fixed inset-0 transition-opacity bg-gray-500/20 backdrop-blur-md" @click="open = false">
+                </div>
                 <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
                 <div x-show="open" x-transition:enter="ease-out duration-300"
                     x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
@@ -567,8 +583,9 @@
                         <div class="flex items-start gap-3" x-show="telepon && telepon !== '-'">
                             <div class="mt-0.5 p-1.5 bg-indigo-50 rounded text-indigo-500">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" 
-                                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"></path>
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                        d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z">
+                                    </path>
                                 </svg>
                             </div>
                             <div>
@@ -619,122 +636,166 @@
                 keterangan: '',
                 nim: '',
                 jam_selesai: ''
-            }"  
-            x-show="show" 
-            @open-jalur-tol.window="
+            }" @open-jalur-tol.window="
                 show = true;
                 ruangan_id = $event.detail.ruangan_id;
                 ruangan_nama = $event.detail.ruangan_nama;
                 tanggal = $event.detail.tanggal;
                 jam = $event.detail.jam;
-                jam_selesai = (parseInt(jam.split(':')[0]) + 1).toString().padStart(2, '0') + ':00';
-            "
-            class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm transition-opacity"
-            style="display: none;"
-            x-transition>
+                jam_selesai = $event.detail.jam_selesai || (parseInt(jam.split(':')[0]) + 1).toString().padStart(2, '0') + ':00';
+            ">
+            <div x-show="show" class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
+                aria-labelledby="modal-title" role="dialog" aria-modal="true"
+                style="display: none;" x-cloak>
             
-            <div class="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden transform transition-all"
-                @click.away="show = false">
-                <div class="bg-indigo-600 p-5 text-white flex justify-between items-center relative overflow-hidden">
-                    <div class="relative z-10">
-                        <h2 class="text-lg font-bold">Fast-Track / Jalur Tol Booking</h2>
-                        <p class="text-indigo-100 font-medium text-xs mt-1" x-text="ruangan_nama + ' - ' + tanggal + ' pukul ' + jam + ' WIB'"></p>
-                    </div>
-                    <button @click="show = false" class="text-indigo-100 hover:text-white transition-colors relative z-10 p-1">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                </div>
+            {{-- Backdrop --}}
+            <div x-show="show"
+                x-transition:enter="transition ease-out duration-300"
+                x-transition:enter-start="opacity-0"
+                x-transition:enter-end="opacity-100"
+                x-transition:leave="transition ease-in duration-200"
+                x-transition:leave-start="opacity-100"
+                x-transition:leave-end="opacity-0"
+                class="fixed inset-0 transition-opacity bg-slate-900/40 backdrop-blur-md"
+                aria-hidden="true" @click="show = false">
+            </div>
 
-                <div class="p-6">
-                    <form method="POST" action="{{ route('eoffice.peminjaman.admin.kalender-global.express') }}">
+                <div x-show="show"
+                    x-transition:enter="ease-out duration-300"
+                    x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave="ease-in duration-200"
+                    x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100"
+                    x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                    class="relative bg-white rounded-xl shadow-2xl w-full max-w-xl max-h-[90vh] flex flex-col overflow-hidden">
+
+                    {{-- Header --}}
+                    <div class="bg-white px-6 py-5 border-b border-gray-100 flex-shrink-0 flex justify-between items-start">
+                        <div>
+                            <h3 class="text-lg leading-6 font-bold text-gray-900" id="modal-title">Fast-Track / Jalur Tol Booking</h3>
+                            <p class="text-sm text-gray-500 mt-1">Mengunci penjadwalan paksa untuk <span class="font-semibold text-indigo-600" x-text="ruangan_nama"></span> pada <span class="font-semibold text-indigo-600" x-text="tanggal + ' pukul ' + jam + ' WIB'"></span>.</p>
+                        </div>
+                        <button type="button" @click="show = false" class="text-gray-400 hover:text-gray-500 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                            <span class="sr-only">Close menu</span>
+                            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
+
+                    {{-- Scrollable Body --}}
+                    <div class="px-6 py-5 overflow-y-auto flex-1 bg-white">
+                        <form id="expressBookingForm" method="POST" action="{{ route('eoffice.peminjaman.admin.kalender-global.express') }}">
                         @csrf
                         <input type="hidden" name="ruangan_id" x-model="ruangan_id">
                         <input type="hidden" name="tanggal" x-model="tanggal">
                         <input type="hidden" name="jam_mulai" x-model="jam">
 
-                        <div class="mb-4">
-                            <label class="block text-xs font-bold text-gray-700 uppercase mb-2 tracking-wide">Pilih Mode Tindakan</label>
-                            <div class="grid grid-cols-2 gap-3">
-                                <label class="border rounded-lg p-3 cursor-pointer transition-colors" :class="modeAction === 'internal' ? 'bg-indigo-50 border-indigo-500' : 'bg-white border-gray-200 hover:bg-gray-50'">
-                                    <input type="radio" name="tipe_aksi" value="internal" x-model="modeAction" class="hidden">
-                                    <div class="font-bold text-sm" :class="modeAction === 'internal' ? 'text-indigo-700' : 'text-gray-700'">Jadwal Internal</div>
-                                    <div class="text-[10px] text-gray-500 mt-1">Blokir Kuliah / Maintenance</div>
-                                </label>
-                                <label class="border rounded-lg p-3 cursor-pointer transition-colors" :class="modeAction === 'dosen' ? 'bg-emerald-50 border-emerald-500' : 'bg-white border-gray-200 hover:bg-gray-50'">
-                                    <input type="radio" name="tipe_aksi" value="dosen" x-model="modeAction" class="hidden">
-                                    <div class="font-bold text-sm" :class="modeAction === 'dosen' ? 'text-emerald-700' : 'text-gray-700'">Booking Ekspres</div>
-                                    <div class="text-[10px] text-gray-500 mt-1">Suntik Peminjaman Disetujui</div>
-                                </label>
-                            </div>
-                        </div>
-
-                        <div class="mb-4">
-                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1 tracking-wide">Jam Selesai</label>
-                            <input type="time" name="jam_selesai" x-model="jam_selesai" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 font-medium">
-                        </div>
-
-                        <div class="mb-4" x-show="modeAction === 'internal'" style="display:none;">
-                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1 tracking-wide">Kategori Acara</label>
-                            <select name="kategori" x-model="kategoriType" :required="modeAction === 'internal'" class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
-                                <option value="Jadwal Akademik (Kuliah)">Jadwal Akademik (Kuliah)</option>
-                                <option value="Sidang / Ujian Akademik">Sidang / Ujian Akademik</option>
-                                <option value="Rapat Internal Jurusan">Rapat Internal Jurusan</option>
-                                <option value="Bimbingan Mahasiswa">Bimbingan Mahasiswa</option>
-                                <option value="Maintenance / Perbaikan">Maintenance / Perbaikan</option>
-                                <option value="Acara Kemahasiswaan">Acara Kemahasiswaan Khusus</option>
-                            </select>
-                        </div>
-
-                        <!-- Academic Metadata Panel (Dynamic) -->
-                        <div x-show="kategoriType === 'Jadwal Akademik (Kuliah)' && modeAction === 'internal'" style="display:none;" class="mb-4 p-4 bg-indigo-50/50 border border-indigo-100 rounded-xl space-y-4">
-                            <h4 class="text-[12px] font-bold text-indigo-900 border-b border-indigo-100 pb-2 mb-2">Metadata Akademik Tambahan (Opsional)</h4>
-                            <div class="grid grid-cols-2 gap-3">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">Mata Kuliah</label>
-                                    <input type="text" name="mata_kuliah" :required="kategoriType === 'Jadwal Akademik (Kuliah)'" class="w-full border-gray-300 rounded-lg shadow-sm text-sm p-2" placeholder="Nama Kelas">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">Kode MK</label>
-                                    <input type="text" name="kode_mk" class="w-full border-gray-300 rounded-lg shadow-sm text-sm p-2" placeholder="Contoh: TKK102">
-                                </div>
-                            </div>
-                            <div class="grid grid-cols-3 gap-3">
-                                <div>
-                                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">Kelas</label>
-                                    <input type="text" name="kelas" class="w-full border-gray-300 rounded-lg shadow-sm text-sm p-2" placeholder="Misal: A">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">SKS</label>
-                                    <input type="number" name="sks" class="w-full border-gray-300 rounded-lg shadow-sm text-sm p-2" placeholder="SKS (0-4)">
-                                </div>
-                                <div>
-                                    <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">Kuota</label>
-                                    <input type="number" name="kuota" class="w-full border-gray-300 rounded-lg shadow-sm text-sm p-2" placeholder="Kuota">
-                                </div>
-                            </div>
+                        <div class="space-y-5">
                             <div>
-                                <label class="block text-[10px] font-bold text-gray-700 uppercase mb-1">Nama Dosen Pengampu</label>
-                                <input type="text" name="pengampu" class="w-full border-gray-300 rounded-lg shadow-sm text-sm p-2" placeholder="Dosen Pengampu Mata Kuliah">
+                                <label class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-2">Pilih Mode Tindakan</label>
+                                <div class="grid grid-cols-2 gap-3">
+                                    <label class="border rounded-lg p-3 cursor-pointer transition-colors" :class="modeAction === 'internal' ? 'bg-indigo-50 border-indigo-500' : 'bg-white border-gray-200 hover:bg-gray-50'">
+                                        <input type="radio" name="tipe_aksi" value="internal" x-model="modeAction" class="hidden">
+                                        <div class="font-bold text-sm" :class="modeAction === 'internal' ? 'text-indigo-700' : 'text-gray-700'">Jadwal Internal</div>
+                                        <div class="text-[10px] text-gray-500 mt-1">Blokir Kuliah / Maintenance</div>
+                                    </label>
+                                    <label class="border rounded-lg p-3 cursor-pointer transition-colors" :class="modeAction === 'dosen' ? 'bg-emerald-50 border-emerald-500' : 'bg-white border-gray-200 hover:bg-gray-50'">
+                                        <input type="radio" name="tipe_aksi" value="dosen" x-model="modeAction" class="hidden">
+                                        <div class="font-bold text-sm" :class="modeAction === 'dosen' ? 'text-emerald-700' : 'text-gray-700'">Booking Ekspres</div>
+                                        <div class="text-[10px] text-gray-500 mt-1">Suntik Peminjaman Disetujui</div>
+                                    </label>
+                                </div>
                             </div>
-                        </div>
 
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Mulai Menit Ke</label>
+                                    <input type="time" class="mp-input w-full bg-gray-50 text-gray-700 font-medium cursor-not-allowed" :value="jam" disabled>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Hingga Jam <span class="text-red-500">*</span></label>
+                                    <input type="time" name="jam_selesai" x-model="jam_selesai" class="mp-input w-full bg-emerald-50 border-emerald-300 text-emerald-800 font-semibold focus:ring-emerald-500" required>
+                                </div>
+                            </div>
 
-                        <div class="mb-4" x-show="modeAction === 'dosen'">
-                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1 tracking-wide">NIM / NIP Peminjam</label>
-                            <input type="text" name="nim" x-model="nim" placeholder="Masukkan ID Pengguna Institusi..." class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm">
-                            <p class="text-[10px] text-gray-500 mt-1">Booking ini akan langsung dianggap sah dan berstatus 'disetujui'.</p>
-                        </div>
+                            <div x-show="modeAction === 'internal'" style="display:none;">
+                                <label class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Kategori Acara <span class="text-red-500">*</span></label>
+                                <select name="kategori" x-model="kategoriType" :required="modeAction === 'internal'" class="mp-input w-full">
+                                    <option value="Jadwal Akademik (Kuliah)">Jadwal Akademik (Kuliah)</option>
+                                    <option value="Sidang / Ujian Akademik">Sidang / Ujian Akademik</option>
+                                    <option value="Rapat Internal Jurusan">Rapat Internal Jurusan</option>
+                                    <option value="Bimbingan Mahasiswa">Bimbingan Mahasiswa</option>
+                                    <option value="Maintenance / Perbaikan">Maintenance / Perbaikan</option>
+                                    <option value="Acara Kemahasiswaan">Acara Kemahasiswaan Khusus</option>
+                                </select>
+                            </div>
 
-                        <div class="mb-4">
-                            <label class="block text-xs font-bold text-gray-700 uppercase mb-1 tracking-wide">Tujuan / Agenda Utama</label>
-                            <textarea name="keterangan" x-model="keterangan" rows="3" required placeholder="Jelaskan secara ringkas acara/kegiatan ini..." class="w-full border-gray-300 rounded-lg shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"></textarea>
-                        </div>
+                            <!-- Academic Metadata Panel (Dynamic) -->
+                            <div x-show="kategoriType === 'Jadwal Akademik (Kuliah)' && modeAction === 'internal'" style="display:none;" class="bg-indigo-50 border border-indigo-100 p-4 rounded-lg space-y-4 mt-2">
+                                <label class="block text-[11px] uppercase tracking-wider font-bold text-indigo-800 mb-1.5 flex items-center gap-1.5">
+                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                    </svg>
+                                    Metadata Akademik Tambahan <span class="text-indigo-500 font-normal">(Opsional)</span>
+                                </label>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-[11px] uppercase tracking-wider font-bold text-indigo-700/70 mb-1.5">Mata Kuliah</label>
+                                        <input type="text" name="mata_kuliah" :required="kategoriType === 'Jadwal Akademik (Kuliah)'" class="mp-input w-full" placeholder="Nama Lengkap Matkul">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] uppercase tracking-wider font-bold text-indigo-700/70 mb-1.5">Kode MK</label>
+                                        <input type="text" name="kode_mk" class="mp-input w-full" placeholder="Contoh: TKK102">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-4">
+                                    <div>
+                                        <label class="block text-[11px] uppercase tracking-wider font-bold text-indigo-700/70 mb-1.5">Kelas</label>
+                                        <input type="text" name="kelas" class="mp-input w-full" placeholder="Misal: A">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] uppercase tracking-wider font-bold text-indigo-700/70 mb-1.5">SKS</label>
+                                        <input type="number" name="sks" class="mp-input w-full" placeholder="0-4">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] uppercase tracking-wider font-bold text-indigo-700/70 mb-1.5">Kuota</label>
+                                        <input type="number" name="kuota" class="mp-input w-full" placeholder="Kuota">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] uppercase tracking-wider font-bold text-indigo-700/70 mb-1.5">Nama Dosen Pengampu</label>
+                                    <input type="text" name="pengampu" class="mp-input w-full" placeholder="Dosen Pengampu Mata Kuliah">
+                                </div>
+                            </div>
 
-                        <div class="mt-6 flex justify-end gap-2">
-                            <button type="button" @click="show = false" class="px-4 py-2.5 rounded-lg text-sm font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors">Batal</button>
-                            <button type="submit" class="px-5 py-2.5 rounded-lg text-sm font-bold text-white bg-indigo-600 hover:bg-indigo-700 transition-colors shadow-sm">Eksekusi Jalur Tol</button>
+                            <div x-show="modeAction === 'dosen'">
+                                <label class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">NIM / NIP Peminjam</label>
+                                <input type="text" name="nim" x-model="nim" placeholder="Masukkan ID Pengguna Institusi..." class="mp-input w-full">
+                                <p class="text-[10px] text-gray-400 mt-1">Booking ini akan langsung terinjeksi ke sistem mahasiswa & berstatus 'disetujui'.</p>
+                            </div>
+
+                            <div>
+                                <label class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Tujuan / Agenda Utama <span class="text-red-500">*</span></label>
+                                <textarea name="keterangan" x-model="keterangan" rows="3" class="mp-input w-full resize-none" placeholder="Misal: Maintenance AC Ruangan Utama..." required></textarea>
+                            </div>
                         </div>
                     </form>
+                </div>
+                
+                {{-- Footer / Actions --}}
+                <div class="bg-gray-50 px-6 py-4 flex items-center justify-end gap-3 flex-shrink-0">
+                    <button type="button" @click="show = false"
+                        class="px-5 py-2.5 text-sm font-semibold text-gray-600 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-colors focus:ring-2 focus:ring-gray-200">
+                        Batal
+                    </button>
+                    <button type="submit" form="expressBookingForm"
+                        class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 border border-transparent rounded-lg shadow-sm hover:bg-indigo-700 transition-colors focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                        Eksekusi Jalur Tol
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
@@ -742,4 +803,58 @@
                 </div>
             </div>
         </div>
+
+    <script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('bookingKalender', () => ({
+            isDragging: false,
+            dragStartPoint: null,
+            dragSelection: [],
+            
+            startDrag(roomId, roomName, date, hourStart) {
+                this.isDragging = true;
+                this.dragStartPoint = { roomId, roomName, dateStr: date, hourStart };
+                this.dragSelection = [hourStart];
+            },
+
+            enterDrag(roomId, date, hourStart) {
+                if (!this.isDragging) return;
+                if (this.dragStartPoint.roomId !== roomId || this.dragStartPoint.dateStr !== date) return;
+
+                let sh = parseInt(this.dragStartPoint.hourStart.substring(0, 2));
+                let eh = parseInt(hourStart.substring(0, 2));
+                let minH = Math.min(sh, eh);
+                let maxH = Math.max(sh, eh);
+
+                let newSel = [];
+                for (let i = minH; i <= maxH; i++) {
+                    newSel.push(i.toString().padStart(2, '0') + ':00');
+                }
+                this.dragSelection = newSel;
+            },
+
+            stopDrag() {
+                if (this.isDragging && this.dragSelection.length > 0) {
+                    let sorted = this.dragSelection.map(h => parseInt(h.substring(0, 2))).sort((a, b) => a - b);
+                    let startH = sorted[0].toString().padStart(2, '0') + ':00';
+                    let endHStr = (sorted[sorted.length - 1] + 1).toString().padStart(2, '0') + ':00';
+
+                    // Dispatch event for Admin Modal
+                    window.dispatchEvent(new CustomEvent('open-jalur-tol', {
+                        detail: {
+                            ruangan_id: this.dragStartPoint.roomId,
+                            ruangan_nama: this.dragStartPoint.roomName,
+                            tanggal: this.dragStartPoint.dateStr,
+                            jam: startH,
+                            jam_selesai: endHStr
+                        }
+                    }));
+                }
+                this.isDragging = false;
+                this.dragStartPoint = null;
+                this.dragSelection = [];
+            }
+        }))
+    });
+    </script>
 </x-eoffice::manajemen-ruangan.layout>

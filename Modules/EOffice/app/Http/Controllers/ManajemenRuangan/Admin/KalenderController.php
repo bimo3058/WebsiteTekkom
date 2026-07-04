@@ -128,7 +128,7 @@ class KalenderController extends Controller
         } else {
             // Path B: Register an auto-approved booking on behalf of an external User (Dosen)
             // Resolve User by NIM/NIP first
-            $targetUser = \App\Models\User::where('nim', $request->nim)->first();
+            $targetUser = \App\Models\User::where('external_id', $request->nim)->first();
 
             if (!$targetUser) {
                 return redirect()->back()->with('error', 'Peminjam dengan NIM/NIP tersebut tidak ditemukan di sistem.');

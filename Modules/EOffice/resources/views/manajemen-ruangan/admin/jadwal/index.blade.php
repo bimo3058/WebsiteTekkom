@@ -476,6 +476,7 @@
                                 <th>MATA KULIAH</th>
                                 <th style="text-align: center;">KELAS</th>
                                 <th>RUANGAN</th>
+                                <th>PERIODE</th>
                                 <th style="width: 80px; text-align: center;">AKSI</th>
                             </tr>
                         </thead>
@@ -512,6 +513,16 @@
                                             <span
                                                 style="font-size: 12px; color: #666D80; margin-left: 4px; font-weight: 500;">(Lt.
                                                 {{ $j->ruangan->lantai ?? '-' }})</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div style="font-size: 12px; font-weight: 600; color: #4B5563;">
+                                            @if($j->tgl_mulai_efektif && $j->tgl_selesai_efektif)
+                                                {{ \Carbon\Carbon::parse($j->tgl_mulai_efektif)->format('d/m/Y') }}<br>
+                                                <span style="color: #9CA3AF;">s.d</span> {{ \Carbon\Carbon::parse($j->tgl_selesai_efektif)->format('d/m/Y') }}
+                                            @else
+                                                <span style="color: #9CA3AF; font-style: italic;">Sepanjang Waktu</span>
+                                            @endif
                                         </div>
                                     </td>
                                     <td style="text-align: center;"
