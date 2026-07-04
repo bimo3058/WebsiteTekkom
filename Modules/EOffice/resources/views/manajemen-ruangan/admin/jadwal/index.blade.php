@@ -71,54 +71,7 @@
             </div>
         </div> <!-- Close mp-page-header -->
 
-        @if($viewMode === 'akademik')
-            <div class="mp-card" style="margin-bottom: 20px; padding: 12px 16px;">
-                <form action="{{ route('eoffice.peminjaman.admin.jadwal-akademik.index') }}" method="GET"
-                    class="flex flex-wrap gap-3 items-center">
-                    <div class="flex-1 min-w-[200px] relative">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-4 w-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                                    d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-                            </svg>
-                        </div>
-                        <input type="text" name="search" value="{{ request('search') }}"
-                            placeholder="Cari matkul, kelas, dosen..." class="mp-input !py-2 !text-sm"
-                            style="padding-left: 38px;">
-                    </div>
-                    <div class="w-[180px]">
-                        <select name="hari" class="mp-input !py-2 !text-sm !bg-white">
-                            <option value="">Semua Hari</option>
-                            <option value="1" {{ request('hari') == '1' ? 'selected' : '' }}>Senin</option>
-                            <option value="2" {{ request('hari') == '2' ? 'selected' : '' }}>Selasa</option>
-                            <option value="3" {{ request('hari') == '3' ? 'selected' : '' }}>Rabu</option>
-                            <option value="4" {{ request('hari') == '4' ? 'selected' : '' }}>Kamis</option>
-                            <option value="5" {{ request('hari') == '5' ? 'selected' : '' }}>Jumat</option>
-                            <option value="6" {{ request('hari') == '6' ? 'selected' : '' }}>Sabtu</option>
-                        </select>
-                    </div>
-                    <div class="w-[200px]">
-                        <select name="ruangan_id" class="mp-input !py-2 !text-sm !bg-white">
-                            <option value="">Semua Ruangan</option>
-                            @foreach($ruangans as $r)
-                                <option value="{{ $r->id }}" {{ request('ruangan_id') == $r->id ? 'selected' : '' }}>
-                                    {{ $r->nama }}
-                                </option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div>
-                        <button type="submit" class="mp-btn primary md">Filter</button>
-                    </div>
-                    @if(request('search') || request('hari') || request('ruangan_id'))
-                        <div>
-                            <a href="{{ route('eoffice.peminjaman.admin.jadwal-akademik.index') }}"
-                                class="mp-btn secondary md">Reset</a>
-                        </div>
-                    @endif
-                </form>
-            </div>
-        @endif
+
 
         <!-- Add Modal Alpine Component -->
         <div x-show="showModal" style="display: none;" class="fixed inset-0 z-50 overflow-y-auto"
@@ -372,6 +325,147 @@
         @endif
 
         <div class="mp-card" style="margin-top: 15px;">
+            <!-- NEW CARD HEADER MATCHING MOCKUP -->
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between px-5 py-4 border-b border-gray-100 gap-4 relative z-10 w-full"
+                style="padding-bottom: 20px;">
+                <h2 class="text-[16px] font-bold text-gray-800 tracking-tight">
+                    {{ $viewMode === 'akademik' ? 'Jadwal Akademik Table' : 'Event & Maintenance Table' }}</h2>
+
+                @if($viewMode === 'akademik')
+                    <div class="flex items-center gap-2" x-data="{ openFilter: false, openSort: false }">
+                        <form action="{{ route('eoffice.peminjaman.admin.jadwal-akademik.index') }}" method="GET"
+                            class="flex items-center gap-2 m-0 relative">
+                            <!-- Search Bar -->
+                            <div class="relative">
+                                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <svg class="h-[18px] w-[18px] text-gray-400" fill="none" stroke="currentColor"
+                                        stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z">
+                                        </path>
+                                    </svg>
+                                </div>
+                                <input type="text" name="search" value="{{ request('search') }}" onblur="this.form.submit()"
+                                    placeholder="Search"
+                                    class="w-full sm:w-[240px] pl-10 pr-3 py-[9px] text-[13px] bg-white border border-gray-200 rounded-lg focus:ring-2 focus:ring-indigo-100 focus:border-indigo-400 outline-none transition-all placeholder-gray-400">
+                            </div>
+
+                            <!-- Filter Button -->
+                            <div class="relative" @click.away="openFilter = false">
+                                <button type="button" @click="openFilter = !openFilter"
+                                    class="inline-flex items-center gap-2 px-4 py-[9px] text-[13px] font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-100 transition-colors shadow-sm whitespace-nowrap">
+                                    <svg class="w-[18px] h-[18px] text-gray-500" fill="none" stroke="currentColor"
+                                        stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z">
+                                        </path>
+                                    </svg>
+                                    Filter
+                                </button>
+                                <!-- Filter Popover -->
+                                <div x-show="openFilter" x-cloak x-transition:enter="transition ease-out duration-100"
+                                    x-transition:enter-start="transform opacity-0 scale-95"
+                                    x-transition:enter-end="transform opacity-100 scale-100"
+                                    x-transition:leave="transition ease-in duration-75"
+                                    x-transition:leave-start="transform opacity-100 scale-100"
+                                    x-transition:leave-end="transform opacity-0 scale-95"
+                                    class="absolute right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 p-4"
+                                    style="display:none; z-index: 50; width: 280px;">
+                                    <div class="space-y-4">
+                                        <div class="border-b border-gray-100 pb-2 mb-2">
+                                            <h3 class="text-[13px] font-bold text-gray-800">Advanced Filters</h3>
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Pilih
+                                                Hari</label>
+                                            <select name="hari"
+                                                class="w-full px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-400 focus:bg-white transition-colors">
+                                                <option value="">Semua Hari</option>
+                                                <option value="1" {{ request('hari') == '1' ? 'selected' : '' }}>Senin
+                                                </option>
+                                                <option value="2" {{ request('hari') == '2' ? 'selected' : '' }}>Selasa
+                                                </option>
+                                                <option value="3" {{ request('hari') == '3' ? 'selected' : '' }}>Rabu</option>
+                                                <option value="4" {{ request('hari') == '4' ? 'selected' : '' }}>Kamis
+                                                </option>
+                                                <option value="5" {{ request('hari') == '5' ? 'selected' : '' }}>Jumat
+                                                </option>
+                                                <option value="6" {{ request('hari') == '6' ? 'selected' : '' }}>Sabtu
+                                                </option>
+                                            </select>
+                                        </div>
+                                        <div>
+                                            <label
+                                                class="block text-xs font-semibold text-gray-700 mb-1.5 uppercase tracking-wide">Pilih
+                                                Ruangan</label>
+                                            <select name="ruangan_id"
+                                                class="w-full px-3 py-2 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-400 focus:bg-white transition-colors">
+                                                <option value="">Semua Ruangan</option>
+                                                @foreach($ruangans as $r)
+                                                    <option value="{{ $r->id }}" {{ request('ruangan_id') == $r->id ? 'selected' : '' }}>
+                                                        {{ $r->nama }}
+                                                    </option>
+                                                @endforeach
+                                            </select>
+                                        </div>
+                                        <div class="flex gap-2 pt-3 border-t border-gray-100 mt-2">
+                                            <button type="submit"
+                                                class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-[13px] py-2 rounded-lg transition-colors text-center">Terapkan</button>
+                                            @if(request('search') || request('hari') || request('ruangan_id'))
+                                                <a href="{{ route('eoffice.peminjaman.admin.jadwal-akademik.index') }}"
+                                                    class="flex-1 bg-white border border-gray-200 hover:bg-gray-50 text-gray-700 font-semibold text-[13px] py-2 rounded-lg transition-colors text-center">Reset</a>
+                                            @endif
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Sort By Button -->
+                            <div class="relative" @click.away="openSort = false">
+                                <button type="button" @click="openSort = !openSort"
+                                    class="inline-flex items-center gap-2 px-4 py-[9px] text-[13px] font-semibold text-gray-600 bg-white border border-gray-200 rounded-lg hover:bg-gray-50 focus:ring-2 focus:ring-gray-100 transition-colors shadow-sm whitespace-nowrap">
+                                    <svg class="w-[18px] h-[18px] text-gray-500" fill="none" stroke="currentColor"
+                                        stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"
+                                            style="display:none;"></path>
+                                        <path stroke-linecap="round" stroke-linejoin="round"
+                                            d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"></path>
+                                    </svg>
+                                    Sort by
+                                </button>
+                                <!-- Sort Popover -->
+                                <div x-show="openSort" x-cloak x-transition:enter="transition ease-out duration-100"
+                                    x-transition:enter-start="transform opacity-0 scale-95"
+                                    x-transition:enter-end="transform opacity-100 scale-100"
+                                    x-transition:leave="transition ease-in duration-75"
+                                    x-transition:leave-start="transform opacity-100 scale-100"
+                                    x-transition:leave-end="transform opacity-0 scale-95"
+                                    class="absolute right-0 mt-2 bg-white rounded-xl shadow-lg border border-gray-100 p-4"
+                                    style="display:none; z-index: 50; width: 260px;">
+                                    <div class="space-y-4">
+                                        <div class="border-b border-gray-100 pb-2 mb-2">
+                                            <h3 class="text-[13px] font-bold text-gray-800">Urutkan Berdasarkan</h3>
+                                        </div>
+                                        <div>
+                                            <select name="sort" onchange="this.form.submit()"
+                                                class="w-full px-3 py-3 text-[13px] bg-gray-50 border border-gray-200 rounded-lg focus:outline-none focus:border-indigo-400 focus:bg-white transition-colors cursor-pointer">
+                                                <option value="waktu" {{ request('sort', 'waktu') === 'waktu' ? 'selected' : '' }}>Hari & Waktu Terawal</option>
+                                                <option value="matkul_asc" {{ request('sort') === 'matkul_asc' ? 'selected' : '' }}>Mata Kuliah (A-Z)</option>
+                                                <option value="matkul_desc" {{ request('sort') === 'matkul_desc' ? 'selected' : '' }}>Mata Kuliah (Z-A)</option>
+                                                <option value="ruangan" {{ request('sort') === 'ruangan' ? 'selected' : '' }}>Ruangan (A-Z)</option>
+                                                <option value="terbaru" {{ request('sort') === 'terbaru' ? 'selected' : '' }}>Waktu Ditambahkan</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                @endif
+            </div>
+
             <div class="mp-card-body">
                 <div class="mp-table-wrap">
                     <table class="mp-table">
@@ -422,10 +516,10 @@
                                     </td>
                                     <td style="text-align: center;"
                                         x-data="{ showDropdown: false, showEditModal: false, formType: '{{ $j->tipe_jadwal }}', kategoriType: '{{ $j->kategori }}' }">
-                                        <div class="relative inline-block text-left relative z-[1]">
+                                        <div class="relative inline-flex justify-center w-full relative z-[1]">
                                             <button type="button" @click="showDropdown = !showDropdown"
                                                 @click.away="showDropdown = false"
-                                                class="text-gray-400 hover:text-gray-700 bg-gray-50 hover:bg-gray-200 p-1.5 rounded-md transition-colors mr-2">
+                                                class="text-gray-500 hover:text-gray-800 hover:bg-gray-100 p-1.5 rounded-md transition-colors">
                                                 <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
                                                     <path
                                                         d="M6 10a2 2 0 11-4 0 2 2 0 014 0zM12 10a2 2 0 11-4 0 2 2 0 014 0zM16 12a2 2 0 100-4 2 2 0 000 4z" />

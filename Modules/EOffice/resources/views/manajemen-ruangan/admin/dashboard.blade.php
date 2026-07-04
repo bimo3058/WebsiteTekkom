@@ -7,9 +7,23 @@
             </p>
         </div>
     </div>
+    <style>
+        .mp-stat.clickable {
+            text-decoration: none;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            display: block;
+        }
+
+        .mp-stat.clickable:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05), 0 4px 6px -2px rgba(0, 0, 0, 0.025);
+            border-color: #d1d5db;
+        }
+    </style>
 
     <div class="mp-stats-grid cols-3" style="margin-top: 20px;">
-        <div class="mp-stat">
+        <a href="{{ route('eoffice.peminjaman.admin.ruangan.index') }}" class="mp-stat clickable">
             <div class="mp-stat-icon sky"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round">
                     <path d="M4 19.5V4.5C4 3.11929 5.11929 2 6.5 2H20V22H6.5C5.11929 22 4 20.8807 4 19.5Z" />
@@ -17,17 +31,18 @@
             <div class="mp-stat-label">Total Ruangan Aktif</div>
             <div class="mp-stat-value">{{ number_format($totalRuangan ?? 0) }}</div>
             <div class="mp-stat-sub">Siap dipinjam</div>
-        </div>
-        <div class="mp-stat">
+        </a>
+        <a href="{{ route('eoffice.peminjaman.admin.persetujuan.index') }}" class="mp-stat clickable">
             <div class="mp-stat-icon yellow"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round">
                     <circle cx="12" cy="12" r="10" />
                     <polyline points="12 6 12 12 16 14" />
                 </svg></div>
             <div class="mp-stat-label">Menunggu Approval</div>
-            <div class="mp-stat-value">{{ number_format($pendingApproval ?? 0) }}</div>
+            <div class="mp-stat-value" {!! ($pendingApproval ?? 0) > 0 ? 'style="color: #D97706;"' : '' !!}>
+                {{ number_format($pendingApproval ?? 0) }}</div>
             <div class="mp-stat-sub">Butuh tindakan admin</div>
-        </div>
+        </a>
         <div class="mp-stat">
             <div class="mp-stat-icon violet"><svg width="18" height="18" viewBox="0 0 24 24" fill="none"
                     stroke="currentColor" stroke-width="2" stroke-linecap="round">

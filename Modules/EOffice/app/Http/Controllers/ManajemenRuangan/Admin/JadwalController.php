@@ -24,8 +24,25 @@ class JadwalController extends Controller
         $search = $request->query('search');
         $filterHari = $request->query('hari');
         $filterRuangan = $request->query('ruangan_id');
+        $sort = $request->query('sort', 'waktu');
 
-        $query = MrJadwalInternal::with('ruangan')->orderBy('created_at', 'desc');
+        $query = MrJadwalInternal::with('ruangan');
+
+        if ($sort === 'waktu') {
+            $query->orderBy('hari', 'asc')->orderBy('jam_mulai', 'asc');
+        } elseif ($sort === 'matkul_asc') {
+            $query->orderBy('mata_kuliah', 'asc');
+        } elseif ($sort === 'matkul_desc') {
+            $query->orderBy('mata_kuliah', 'desc');
+        } elseif ($sort === 'ruangan') {
+            $query->join('eo_mr_ruangan', 'eo_mr_jadwal_internal.ruangan_id', '=', 'eo_mr_ruangan.id')
+                ->orderBy('eo_mr_ruangan.nama', 'asc')
+                ->select('eo_mr_jadwal_internal.*');
+        } elseif ($sort === 'terbaru') {
+            $query->orderBy('created_at', 'desc');
+        } else {
+            $query->orderBy('hari', 'asc')->orderBy('jam_mulai', 'asc');
+        }
 
         if ($isAkademik) {
             $query->where('kategori', 'Jadwal Akademik (Kuliah)');
@@ -58,7 +75,7 @@ class JadwalController extends Controller
         $ruangans = Ruangan::where('is_active', true)->get();
 
         $bladeFile = $isAkademik ? 'index' : 'maintenance';
-        return view('eoffice::manajemen-ruangan.admin.jadwal.' . $bladeFile, compact('jadwals', 'tipe', 'ruangans', 'viewMode', 'search', 'filterHari', 'filterRuangan'));
+        return view('eoffice::manajemen-ruangan.admin.jadwal.' . $bladeFile, compact('jadwals', 'tipe', 'ruangans', 'viewMode', 'search', 'filterHari', 'filterRuangan', 'sort'));
     }
 
     public function store(Request $request)
@@ -84,6 +101,26 @@ class JadwalController extends Controller
             $request->validate(['hari' => 'required|integer|between:1,7']);
         } else {
             $request->validate(['tanggal_spesifik' => 'required|date']);
+        }
+
+        // Backend Collision Prevention
+        $queryCheck = MrJadwalInternal::where('ruangan_id', $request->ruangan_id)
+            ->where(function ($q) use ($request) {
+                $q->where('jam_mulai', '<', $request->jam_selesai)
+                    ->where('jam_selesai', '>', $request->jam_mulai);
+            });
+
+        if ($request->tipe_jadwal === 'rutin' || $request->kategori === 'Jadwal Akademik (Kuliah)') {
+            $queryCheck->where('hari', $request->hari);
+        } else {
+            $queryCheck->where('tanggal_spesifik', $request->tanggal_spesifik);
+        }
+
+        $conflict = $queryCheck->first();
+        if ($conflict) {
+            $nama = $conflict->kategori === 'Jadwal Akademik (Kuliah)' ? ($conflict->mata_kuliah . ' - ' . $conflict->kelas) : $conflict->keterangan;
+            $msg = "Gagal menyimpan! Ruangan beririsan dengan jadwal: {$nama} (" . substr($conflict->jam_mulai, 0, 5) . " s.d " . substr($conflict->jam_selesai, 0, 5) . ")";
+            return redirect()->back()->withErrors(['collision' => $msg])->withInput();
         }
 
         MrJadwalInternal::create([
@@ -138,6 +175,27 @@ class JadwalController extends Controller
             $request->validate(['hari' => 'required|integer|between:1,7']);
         } else {
             $request->validate(['tanggal_spesifik' => 'required|date']);
+        }
+
+        // Backend Collision Prevention (Update Mode)
+        $queryCheckUpdate = MrJadwalInternal::where('ruangan_id', $request->ruangan_id)
+            ->where('id', '!=', $id)
+            ->where(function ($q) use ($request) {
+                $q->where('jam_mulai', '<', $request->jam_selesai)
+                    ->where('jam_selesai', '>', $request->jam_mulai);
+            });
+
+        if ($request->tipe_jadwal === 'rutin' || $request->kategori === 'Jadwal Akademik (Kuliah)') {
+            $queryCheckUpdate->where('hari', $request->hari);
+        } else {
+            $queryCheckUpdate->where('tanggal_spesifik', $request->tanggal_spesifik);
+        }
+
+        $conflictUpdate = $queryCheckUpdate->first();
+        if ($conflictUpdate) {
+            $namaUpdate = $conflictUpdate->kategori === 'Jadwal Akademik (Kuliah)' ? ($conflictUpdate->mata_kuliah . ' - ' . $conflictUpdate->kelas) : $conflictUpdate->keterangan;
+            $msgUpdate = "Gagal memperbarui! Waktu beririsan dengan jadwal: {$namaUpdate} (" . substr($conflictUpdate->jam_mulai, 0, 5) . " s.d " . substr($conflictUpdate->jam_selesai, 0, 5) . ")";
+            return redirect()->back()->withErrors(['collision' => $msgUpdate])->withInput();
         }
 
         $jadwal->update([
