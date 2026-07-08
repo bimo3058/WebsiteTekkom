@@ -25,7 +25,7 @@
                 foreach ($csvData as $row) {
                     $payloadArray[] = [
                         'hari' => (int) $row[0],
-                        'ruangan_id' => (int) $row[1],
+                        'ruangan_id' => $row[1] ?: null,
                         'jam_mulai' => $row[2],
                         'jam_selesai' => $row[3],
                         'mata_kuliah' => $row[4],
@@ -80,8 +80,10 @@
 
     <div class="mp-card" style="margin-top: 15px;">
         <style>
-            .preview-table th, .preview-table td {
-                white-space: normal !important; /* Allow text wrapping to prevent forced wide tables */
+            .preview-table th,
+            .preview-table td {
+                white-space: normal !important;
+                /* Allow text wrapping to prevent forced wide tables */
             }
         </style>
         <div class="mp-card-body">
@@ -114,8 +116,18 @@
                             @endphp
                             <tr class="mp-tr" id="preview-row-{{ $loop->index }}"
                                 style="{{ $conflictMsg ? 'background-color: #FEF2F2;' : '' }}">
-                                <td style="text-align:center;">
-                                    @if($conflictMsg)
+                                <td style="text-align:center;" id="icon-container-{{ $loop->index }}">
+                                    @if(empty($ruangId))
+                                        <div
+                                            style="margin:0 auto; width:24px; height:24px; border-radius:6px; background:#FEF3C7; display:flex; align-items:center; justify-content:center; color:#B45309;">
+                                            <svg style="width:14px;height:14px;" fill="none" stroke="currentColor"
+                                                viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5"
+                                                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z">
+                                                </path>
+                                            </svg>
+                                        </div>
+                                    @elseif($conflictMsg)
                                         <div
                                             style="margin:0 auto; width:24px; height:24px; border-radius:6px; background:#FEE2E2; display:flex; align-items:center; justify-content:center; color:#991B1B;">
                                             <svg style="width:14px;height:14px;" fill="none" stroke="currentColor"
@@ -150,12 +162,12 @@
                                     <div style="font-size:13px; font-weight:700; color:#0D0D12;">
                                         {{ $matkul }}
                                     </div>
-                                    @if($conflictMsg)
-                                        <div style="font-size:11px; font-weight:600; color:#DC2626; margin-top:2px;">
-                                            <span
-                                                class="inline-block w-1.5 h-1.5 rounded-full bg-red-600 mr-1 align-middle"></span>{{ $conflictMsg }}
-                                        </div>
-                                    @endif
+                                    <div id="msg-container-{{ $loop->index }}"
+                                        style="font-size:11px; font-weight:600; color:#DC2626; margin-top:2px; display: {{ $conflictMsg ? 'block' : 'none' }};">
+                                        <span
+                                            class="inline-block w-1.5 h-1.5 rounded-full bg-red-600 mr-1 align-middle"></span><span
+                                            id="msg-text-{{ $loop->index }}">{{ $conflictMsg }}</span>
+                                    </div>
                                 </td>
                                 <td style="text-align:center;">
                                     <div
@@ -164,11 +176,26 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <div style="font-weight:700; color:#0D0D12;">
-                                        {{ $ruanganObj->nama ?? 'Tidak Diketahui' }}
-                                        <span style="font-size:12px; color:#666D80; margin-left:4px; font-weight:500;">(Lt.
-                                            {{ $ruanganObj->lantai ?? '-' }})</span>
-                                    </div>
+                                    @if($ruanganObj)
+                                        <div style="font-weight:700; color:#0D0D12;">
+                                            {{ $ruanganObj->nama }}
+                                            <span style="font-size:12px; color:#666D80; margin-left:4px; font-weight:500;">(Lt.
+                                                {{ $ruanganObj->lantai ?? '-' }})</span>
+                                        </div>
+                                    @else
+                                        <div style="font-weight:700; color:#B45309; margin-bottom: 4px; font-size: 11px;">
+                                            Tidak Dikenal: <span class="bg-orange-100 px-1 rounded">{{ $row[11] ?? '?' }}</span>
+                                        </div>
+                                        <select
+                                            class="mp-input !py-1 !px-2 !text-xs !bg-orange-50 hover:bg-orange-100 border-orange-200 text-orange-900 cursor-pointer"
+                                            onchange="updateRuangan({{ $loop->index }}, this.value)"
+                                            style="width: 100%; border-radius: 6px;">
+                                            <option value="">-- Pilih Manual --</option>
+                                            @foreach($ruangans as $r)
+                                                <option value="{{ $r->id }}">{{ $r->nama }}</option>
+                                            @endforeach
+                                        </select>
+                                    @endif
                                 </td>
                                 <td style="text-align:center;">
                                     <button type="button" onclick="removeTableRow({{ $loop->index }})"
@@ -191,6 +218,78 @@
             <script>
                 let rawPayload = {!! json_encode($payloadArray) !!};
 
+                function updateRuangan(index, newRuanganId) {
+                    if (rawPayload[index]) {
+                        rawPayload[index].ruangan_id = newRuanganId || null;
+                        syncPayload();
+                    }
+                }
+
+                function syncPayload() {
+                    let cleanPayload = rawPayload.filter(item => item !== null);
+                    document.querySelector('textarea[name="validated_payload"]').value = JSON.stringify(cleanPayload);
+                    document.getElementById('simpan-btn-counter').innerText = cleanPayload.length;
+                    document.getElementById('simpan-btn').disabled = cleanPayload.length === 0;
+
+                    recalculateCollisions();
+                }
+
+                function recalculateCollisions() {
+                    let tracked = {};
+                    rawPayload.forEach((row, idx) => {
+                        if (!row) return;
+
+                        let ruangId = row.ruangan_id;
+                        let tr = document.getElementById('preview-row-' + idx);
+                        let iconContainer = document.getElementById('icon-container-' + idx);
+                        let msgContainer = document.getElementById('msg-container-' + idx);
+                        let msgText = document.getElementById('msg-text-' + idx);
+
+                        if (!tr) return;
+
+                        if (!ruangId) {
+                            tr.style.backgroundColor = '';
+                            if (msgContainer) msgContainer.style.display = 'none';
+                            if (iconContainer) iconContainer.innerHTML = '<div style="margin:0 auto; width:24px; height:24px; border-radius:6px; background:#FEF3C7; display:flex; align-items:center; justify-content:center; color:#B45309;"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>';
+                            return;
+                        }
+
+                        let key = ruangId + '-' + row.hari;
+                        if (!tracked[key]) tracked[key] = [];
+
+                        let hasConflict = false;
+                        let conflictWith = '';
+
+                        for (let exist of tracked[key]) {
+                            if (row.jam_mulai < exist.selesai && row.jam_selesai > exist.mulai) {
+                                if (row.mata_kuliah.trim() === exist.matkul.trim()) {
+                                    continue;
+                                }
+                                hasConflict = true;
+                                conflictWith = exist.matkul;
+                                break;
+                            }
+                        }
+
+                        tracked[key].push({
+                            mulai: row.jam_mulai,
+                            selesai: row.jam_selesai,
+                            matkul: row.mata_kuliah
+                        });
+
+                        if (hasConflict) {
+                            tr.style.backgroundColor = '#FEF2F2';
+                            if (msgText) msgText.innerText = 'Konflik jam dengan: ' + conflictWith;
+                            if (msgContainer) msgContainer.style.display = 'block';
+                            if (iconContainer) iconContainer.innerHTML = '<div style="margin:0 auto; width:24px; height:24px; border-radius:6px; background:#FEE2E2; display:flex; align-items:center; justify-content:center; color:#991B1B;"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg></div>';
+                        } else {
+                            tr.style.backgroundColor = '';
+                            if (msgContainer) msgContainer.style.display = 'none';
+                            if (iconContainer) iconContainer.innerHTML = '<div style="margin:0 auto; width:24px; height:24px; border-radius:6px; background:#D1FAE5; display:flex; align-items:center; justify-content:center; color:#065F46;"><svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"></path></svg></div>';
+                        }
+                    });
+                }
+
                 function removeTableRow(index) {
                     // Sembunyikan baris tabel secara visual
                     let rowEl = document.getElementById('preview-row-' + index);
@@ -201,17 +300,8 @@
                     // Kosongkan indeks terkait dari keranjang payload asli
                     rawPayload[index] = null;
 
-                    // Filter seluruh kotak kosong (null) agar output JSON bersih utuh
-                    let cleanPayload = rawPayload.filter(item => item !== null);
-
-                    // Timpa ulang Value TextBox JSON rahasia agar dibawa POST Form
-                    document.querySelector('textarea[name="validated_payload"]').value = JSON.stringify(cleanPayload);
-
-                    // Perbarui hitungan konter pada Tombol SIMPAN
-                    document.getElementById('simpan-btn-counter').innerText = cleanPayload.length;
-                    if (cleanPayload.length === 0) {
-                        document.getElementById('simpan-btn').disabled = true;
-                    }
+                    // Filter dan update textarea
+                    syncPayload();
                 }
             </script>
 

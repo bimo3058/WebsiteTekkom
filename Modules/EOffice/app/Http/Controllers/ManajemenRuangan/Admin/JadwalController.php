@@ -356,7 +356,7 @@ class JadwalController extends Controller
                 $sks = (int) filter_var($row[4] ?? '0', FILTER_SANITIZE_NUMBER_INT);
                 $pengampu = str_replace("\n", " / ", (string) ($row[$pengIdx] ?? ''));
 
-                if (empty($ruanganIdTarget) || empty($matkulRaw) || empty($kelasRaw) || empty($jamMulai)) {
+                if (empty($matkulRaw) || empty($kelasRaw) || empty($jamMulai)) {
                     if ($failGateCount < 10) {
                         $debugLog .= "Fail Gate pada Row $i. Data: RTarget($ruanganIdTarget) Matkul($matkulRaw) Kelas($kelasRaw) Jam($jamMulai)\n";
                     }
@@ -394,7 +394,8 @@ class JadwalController extends Controller
                     $sks,
                     (int) ($row[5] ?? 0),
                     trim($pengampu),
-                    $conflictMsg // [10] Peringatan Tabrakan Soft-Warning
+                    $conflictMsg, // [10] Peringatan Tabrakan Soft-Warning
+                    trim($rawRoom) // [11] Raw Room String if not mapped
                 ];
             }
 
@@ -432,6 +433,10 @@ class JadwalController extends Controller
         $now = now();
 
         foreach ($payload as $row) {
+            // Jika ruangan masih kosong karena manual mapping dibiarkan kosong, maka diskip!
+            if (empty($row['ruangan_id']))
+                continue;
+
             $insertBatch[] = [
                 'id' => \Illuminate\Support\Str::uuid()->toString(),
                 'ruangan_id' => $row['ruangan_id'],
