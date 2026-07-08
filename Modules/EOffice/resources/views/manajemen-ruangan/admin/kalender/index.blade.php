@@ -635,7 +635,28 @@
                 kategoriType: 'Maintenance / Perbaikan',
                 keterangan: '',
                 nim: '',
-                jam_selesai: ''
+                jam_selesai: '',
+                searchQuery: '',
+                isSearching: false,
+                suggestions: [],
+                searchUsers() {
+                    if (this.searchQuery.length < 2) {
+                        this.suggestions = [];
+                        return;
+                    }
+                    this.isSearching = true;
+                    fetch(`{{ route('eoffice.peminjaman.admin.kalender-global.search-users') }}?q=${encodeURIComponent(this.searchQuery)}`)
+                        .then(res => res.json())
+                        .then(data => {
+                            this.suggestions = data;
+                            this.isSearching = false;
+                        }).catch(() => { this.isSearching = false; });
+                },
+                selectUser(user) {
+                    this.nim = user.external_id || user.email;
+                    this.searchQuery = user.name + ' (' + this.nim + ')';
+                    this.suggestions = [];
+                }
             }" @open-jalur-tol.window="
                 show = true;
                 ruangan_id = $event.detail.ruangan_id;
@@ -643,7 +664,13 @@
                 tanggal = $event.detail.tanggal;
                 jam = $event.detail.jam;
                 jam_selesai = $event.detail.jam_selesai || (parseInt(jam.split(':')[0]) + 1).toString().padStart(2, '0') + ':00';
-            ">
+                searchQuery = '';
+                nim = '';
+                suggestions = [];
+            "
+            x-init="$watch('searchQuery', value => { 
+                if(nim && !value.includes(nim)) nim = ''; 
+            })">
             <div x-show="show" class="fixed inset-0 z-[100] flex items-center justify-center p-4 sm:p-6"
                 aria-labelledby="modal-title" role="dialog" aria-modal="true"
                 style="display: none;" x-cloak>
@@ -769,10 +796,33 @@
                                 </div>
                             </div>
 
-                            <div x-show="modeAction === 'dosen'">
-                                <label class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">NIM / NIP Peminjam</label>
-                                <input type="text" name="nim" x-model="nim" placeholder="Masukkan ID Pengguna Institusi..." class="mp-input w-full">
-                                <p class="text-[10px] text-gray-400 mt-1">Booking ini akan langsung terinjeksi ke sistem mahasiswa & berstatus 'disetujui'.</p>
+                            <div x-show="modeAction === 'dosen'" class="relative">
+                                <label class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Nama, NIM, atau Email Target <span class="text-red-500">*</span></label>
+                                <!-- HIDDEN ACTUAL INPUT -->
+                                <input type="hidden" name="nim" x-model="nim">
+                                <!-- SEARCH INPUT -->
+                                <input type="text" x-model="searchQuery" @input.debounce.500ms="searchUsers" placeholder="Ketik nama atau email peminjam..." class="mp-input w-full" autocomplete="off" :required="modeAction === 'dosen'">
+                                
+                                <!-- LOADING SPINNER -->
+                                <div x-show="isSearching" class="absolute right-3 top-8 text-indigo-500">
+                                    <svg class="animate-spin h-4 w-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path></svg>
+                                </div>
+
+                                <!-- DROPDOWN SUGGESTIONS -->
+                                <ul x-show="suggestions.length > 0" @click.away="suggestions = []" class="absolute z-[100] w-full bg-white mt-1 border border-gray-200 rounded-md shadow-lg max-h-48 overflow-y-auto" style="display: none;">
+                                    <template x-for="user in suggestions" :key="user.id">
+                                        <li @click="selectUser(user)" class="px-4 py-2.5 hover:bg-indigo-50 cursor-pointer border-b border-gray-100 last:border-b-0">
+                                            <div class="font-bold text-sm text-gray-800" x-text="user.name"></div>
+                                            <div class="flex items-center gap-2 mt-0.5 text-[11px] font-medium text-gray-500">
+                                                <span x-text="user.external_id || 'N/A'"></span>
+                                                <span class="text-gray-300">•</span>
+                                                <span x-text="user.email"></span>
+                                            </div>
+                                        </li>
+                                    </template>
+                                </ul>
+
+                                <p class="text-[10px] text-gray-400 mt-1">Sistem akan melakukan autorisasi instan, peminjaman ini akan dikunci dan langsung berstatus 'Disetujui'.</p>
                             </div>
 
                             <div>

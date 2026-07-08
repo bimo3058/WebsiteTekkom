@@ -126,12 +126,13 @@ class KalenderController extends Controller
 
             return redirect()->back()->with('success', 'Jadwal Internal Express berhasil diblokir ke ruangan.');
         } else {
-            // Path B: Register an auto-approved booking on behalf of an external User (Dosen)
-            // Resolve User by NIM/NIP first
-            $targetUser = \App\Models\User::where('external_id', $request->nim)->first();
+            // Resolve User by NIM/NIP or Email first
+            $targetUser = \App\Models\User::where('external_id', $request->nim)
+                ->orWhere('email', $request->nim)
+                ->first();
 
             if (!$targetUser) {
-                return redirect()->back()->with('error', 'Peminjam dengan NIM/NIP tersebut tidak ditemukan di sistem.');
+                return redirect()->back()->with('error', 'Peminjam dengan identitas tersebut tidak ditemukan di sistem.');
             }
 
             Peminjaman::create([
@@ -146,5 +147,26 @@ class KalenderController extends Controller
 
             return redirect()->back()->with('success', 'Booking Ekspres berhasil dimasukkan atas nama ' . $targetUser->name . ' dan otomatis Disetujui.');
         }
+    }
+
+    /**
+     * API Endpoint for Autocomplete JSON search.
+     */
+    public function searchUsers(Request $request)
+    {
+        $query = $request->query('q');
+        if (!$query || strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $searchTerm = '%' . strtolower($query) . '%';
+
+        $users = \App\Models\User::whereRaw('LOWER(name) LIKE ?', [$searchTerm])
+            ->orWhereRaw('LOWER(email) LIKE ?', [$searchTerm])
+            ->orWhereRaw('LOWER(external_id) LIKE ?', [$searchTerm])
+            ->take(5)
+            ->get(['id', 'name', 'email', 'external_id']);
+
+        return response()->json($users);
     }
 }
