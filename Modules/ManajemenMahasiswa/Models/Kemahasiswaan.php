@@ -20,6 +20,7 @@ class Kemahasiswaan extends Model
         'nim',
         'angkatan',
         'status',
+        'ipk',
         'tahun_lulus',
         'profesi',
         'kontak',
@@ -28,6 +29,7 @@ class Kemahasiswaan extends Model
     protected $casts = [
         'angkatan'    => 'integer',
         'tahun_lulus' => 'integer',
+        'ipk'         => 'decimal:2',
     ];
 
     // -------------------------------------------------------------------------

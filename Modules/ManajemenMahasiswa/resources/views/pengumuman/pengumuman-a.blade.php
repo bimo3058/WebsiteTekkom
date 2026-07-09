@@ -251,7 +251,7 @@
 
     @php
         $authUser       = Auth::user();
-        $canPinGlobal   = $authUser->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan', 'gpm']);
+        $canPinGlobal   = $authUser->hasAnyRole(['superadmin', 'admin', 'admin_kemahasiswaan']);
         $isAdminOrKoor  = $authUser->roles->pluck('name')->intersect(['superadmin','admin','dosen_koordinator'])->isNotEmpty();
 
         $kategoriMap = [

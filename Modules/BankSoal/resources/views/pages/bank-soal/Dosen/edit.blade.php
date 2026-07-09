@@ -10,26 +10,6 @@
         </x-slot:actions>
     </x-banksoal::ui.page-header>
 
-    @if(session('error'))
-        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        <script>
-            document.addEventListener('DOMContentLoaded', function() {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Waduh, Gagal...',
-                    text: @json(session('error')),
-                    confirmButtonColor: '#ef4444',
-                    background: '#ffffff',
-                    customClass: {
-                        title: 'text-slate-800 text-xl font-bold',
-                        htmlContainer: 'text-slate-600 text-sm',
-                        confirmButton: 'rounded-xl px-5 py-2.5 font-semibold transition-colors'
-                    }
-                });
-            });
-        </script>
-    @endif
-
     <x-banksoal::ui.panel title="Form Edit Soal" subtitle="Pastikan jawaban benar tetap ditandai sebelum menyimpan." padding="p-0">
         @if(isset($review) && !empty($review->catatan))
         <div class="p-6 pb-0">
@@ -64,7 +44,7 @@
                 <div><label for="mk_id" class="mb-2 block text-sm font-semibold text-slate-700">Mata Kuliah</label><select name="mk_id" id="mk_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="">Pilih Mata Kuliah...</option>@foreach($mataKuliahDosen as $mk)<option value="{{ $mk->id }}" {{ old('mk_id', $soal->mk_id) == $mk->id ? 'selected' : '' }}>{{ $mk->kode }} - {{ $mk->nama }}</option>@endforeach</select></div>
                 <div><label for="cpl_id" class="mb-2 block text-sm font-semibold text-slate-700">Keterkaitan CPL / Topik</label><select name="cpl_id" id="cpl_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="">Pilih CPL...</option></select></div>
                 <div><label for="cpmk_id" class="mb-2 block text-sm font-semibold text-slate-700">Keterkaitan CPMK</label><select name="cpmk_id" id="cpmk_id" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="">Pilih CPMK...</option></select></div>
-                <div><label for="kesulitan" class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label><select name="kesulitan" id="kesulitan" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="easy" {{ old('kesulitan', $soal->kesulitan) == 'easy' ? 'selected' : '' }}>Mudah (easy)</option><option value="intermediate" {{ old('kesulitan', $soal->kesulitan) == 'intermediate' ? 'selected' : '' }}>Sedang (intermediate)</option><option value="advanced" {{ old('kesulitan', $soal->kesulitan) == 'advanced' ? 'selected' : '' }}>Sulit (advanced)</option></select></div>
+                <div><label for="kesulitan" class="mb-2 block text-sm font-semibold text-slate-700">Tingkat Kesulitan</label><select name="kesulitan" id="kesulitan" class="w-full px-3 py-2.5 text-sm rounded-lg border border-slate-200 focus:outline-none" required><option value="easy" {{ old('kesulitan', $soal->kesulitan) == 'easy' ? 'selected' : '' }}>Easy</option><option value="intermediate" {{ old('kesulitan', $soal->kesulitan) == 'intermediate' ? 'selected' : '' }}>Intermediate</option><option value="advanced" {{ old('kesulitan', $soal->kesulitan) == 'advanced' ? 'selected' : '' }}>Advanced</option></select></div>
                 <div>
                     <label class="mb-2 block text-sm font-semibold text-slate-700">Tipe Pertanyaan</label>
                     <div class="flex items-center gap-5 text-sm font-medium text-slate-700 mt-3">
@@ -182,7 +162,7 @@
             });
 
             var form = document.getElementById('formSoal');
-            form.onsubmit = function() {
+            form.addEventListener('submit', function() {
                 var soalInput = document.getElementById('soalInput');
                 var htmlContent = quill.root.innerHTML;
                 if (quill.getText().trim().length === 0 && !htmlContent.includes('<img')) {
@@ -190,7 +170,11 @@
                 } else {
                     soalInput.value = htmlContent;
                 }
-            };
+                
+                if (form.checkValidity()) {
+                    window.showLoader();
+                }
+            });
 
             const mkSelect = document.getElementById('mk_id');
             const cplSelect = document.getElementById('cpl_id');

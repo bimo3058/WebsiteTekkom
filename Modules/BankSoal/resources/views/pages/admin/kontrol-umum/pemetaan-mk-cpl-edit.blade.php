@@ -8,7 +8,6 @@
     @endsection
 
     @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
         .pm-page{--pm:rgb(11,38,110);--pm-hover:rgb(8,28,82);--pm-light:rgba(11,38,110,.08);--s50:#f8fafc;--s100:#f1f5f9;--s200:#e2e8f0;--s300:#cbd5e1;--s400:#94a3b8;--s500:#64748b;--s700:#334155;--s800:#1e293b}
         .pm-page *{box-sizing:border-box}
@@ -46,14 +45,8 @@
         .pm-page .sa-row input{width:16px;height:16px;accent-color:var(--pm);cursor:pointer}
         .pm-page .sa-row label{font-size:12px;font-weight:600;color:var(--s500);cursor:pointer}
         .pm-page .form-actions{display:flex;justify-content:flex-end;gap:12px;margin-top:24px}
-        .pm-loader{position:fixed;inset:0;background:rgba(255,255,255,.7);display:none;align-items:center;justify-content:center;z-index:50}
-        .pm-loader.show{display:flex}
-        .pm-spinner{width:36px;height:36px;border:3px solid #e2e8f0;border-top-color:rgb(11,38,110);border-radius:50%;animation:pm-spin .7s linear infinite}
-        @keyframes pm-spin{to{transform:rotate(360deg)}}
     </style>
     @endpush
-
-    <div class="pm-loader" id="loaderOverlay"><div class="pm-spinner"></div></div>
     <div class="pm-page">
     <div class="page-header">
         <div>
@@ -109,15 +102,14 @@
     </div>
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
     <script>
     const CSRF='{{ csrf_token() }}',BASE_API='{{ url("/bank-soal/admin/api") }}',BACK_URL='{{ route("banksoal.admin.kontrol-umum.pemetaan") }}';
     const MK_ID={{ $mk->id }},RS=10;
     const s={pool:[],sel:new Set({{ json_encode($selectedIds) }}),q:'',p:1};
     document.addEventListener('DOMContentLoaded',async()=>{
-        document.getElementById('loaderOverlay').classList.add('show');
+        window.showLoader();
         try{const r=await fetch(BASE_API+'/pemetaan/options',{headers:{'Accept':'application/json','X-CSRF-TOKEN':CSRF}});const d=await r.json();if(d.success)s.pool=d.data.cpl.sort((a,b)=>a.kode.localeCompare(b.kode,undefined,{numeric:true}));}catch(e){console.error(e);}
-        document.getElementById('loaderOverlay').classList.remove('show');render();
+        window.hideLoader();render();
     });
     function onSearch(v){s.q=v;s.p=1;render();}
     function filt(){return s.pool.filter(c=>c.kode.toLowerCase().includes(s.q.toLowerCase()));}
@@ -140,11 +132,13 @@
     function toggleSelectAll(chk){const paged=filt().slice((s.p-1)*RS,s.p*RS);paged.forEach(c=>chk?s.sel.add(c.id):s.sel.delete(c.id));render();}
     function setP(p){s.p=p;render();}
     async function submitMapping(){
-        const btn=document.getElementById('btnSimpan');btn.disabled=true;btn.innerHTML='<div class="pm-spinner" style="width:16px;height:16px;border-width:2px;"></div> Menyimpan...';
+        const btn=document.getElementById('btnSimpan');btn.disabled=true;btn.innerHTML='Simpan Perubahan';
+        window.showLoader();
         try{const r=await fetch(BASE_API+'/pemetaan/mk-cpl/sync',{method:'POST',headers:{'Content-Type':'application/json','Accept':'application/json','X-CSRF-TOKEN':CSRF},body:JSON.stringify({mk_id:MK_ID,cpl_ids:[...s.sel]})});const d=await r.json();
-        if(r.ok&&d.success){await Swal.fire({icon:'success',title:'Berhasil',text:d.message,timer:1600,showConfirmButton:false});window.location.href=BACK_URL;}
-        else{Swal.fire({icon:'error',title:'Gagal',text:d.message||'Terjadi kesalahan'});btn.disabled=false;btn.innerHTML='Simpan Perubahan';}
-        }catch(e){Swal.fire({icon:'error',title:'Error',text:e.message});btn.disabled=false;btn.innerHTML='Simpan Perubahan';}
+        if(r.ok&&d.success){window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'success', message: d.message || 'Pemetaan berhasil diperbarui.' } }));setTimeout(() => { window.location.href=BACK_URL; }, 1500);}
+        else{window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: d.message || 'Terjadi kesalahan.' } }));btn.disabled=false;btn.innerHTML='Simpan Perubahan';}
+        }catch(e){window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: e.message || 'Terjadi kesalahan jaringan.' } }));btn.disabled=false;btn.innerHTML='Simpan Perubahan';}
+        finally { window.hideLoader(); }
     }
     </script>
     @endpush

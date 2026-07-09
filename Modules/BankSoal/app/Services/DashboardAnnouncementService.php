@@ -5,34 +5,32 @@ namespace Modules\BankSoal\Services;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Modules\BankSoal\Enums\PendaftaranStatus;
-
 use Modules\BankSoal\Models\Komprehensif\PendaftarUjian;
 use Modules\BankSoal\Models\Komprehensif\PeriodeUjian;
 
 class DashboardAnnouncementService
 {
     /**
-     * Generate dynamic announcements for the main dashboard.
-     * Announcements are derived from existing models — no new tables required.
+     * Generate personalised announcements for the main dashboard.
      *
-     * Logic per active period:
-     *   - If student HAS registration  → show registration status + closing date
-     *   - If student has NO registration and period is open → show open invitation + closing date
-     *   - If approved + jadwal exists → show confirmed schedule notice
-     * Additionally: recent exam results (last 14 days)
+     * 4 notification types (ordered by priority):
+     *   1. Periode pendaftaran dibuka   — mahasiswa belum mendaftar + periode terbuka
+     *   2. Pendaftaran disetujui        — approved, belum ada jadwal
+     *   3. Pendaftaran ditolak          — rejected
+     *   4. Jadwal dikonfirmasi          — approved + jadwal tersedia
      *
      * @param  int  $userId
-     * @return array<int, array{title: string, body: string, date: string, module: string, pinned: bool}>
+     * @return array<int, array{title: string, body: string, date: string, module: string, pinned: bool, link: string|null, _ts: int}>
      */
     public function getForDashboard(int $userId): array
     {
         $items = collect();
 
-        // Pre-load all active periods once
+        // Pre-load active periods
         $activePeriodes = PeriodeUjian::currentlyActive()->get();
+        $periodeIds     = $activePeriodes->pluck('id');
 
         // Pre-load this user's registrations for active periods
-        $periodeIds = $activePeriodes->pluck('id');
         $userRegistrations = PendaftarUjian::where('mahasiswa_id', $userId)
             ->whereIn('periode_ujian_id', $periodeIds)
             ->with(['jadwal', 'periode'])
@@ -40,25 +38,36 @@ class DashboardAnnouncementService
             ->keyBy('periode_ujian_id');
 
         foreach ($activePeriodes as $periode) {
-            $tutup = Carbon::parse($periode->tanggal_selesai)->translatedFormat('d F Y');
-            $sisaHari = now()->diffInDays(Carbon::parse($periode->tanggal_selesai)->endOfDay(), false);
-            $waktuTutup = $sisaHari <= 0 ? 'hari ini' : "dalam {$sisaHari} hari";
-
             $pendaftar = $userRegistrations->get($periode->id);
 
-            if ($pendaftar) {
-                // ── Mahasiswa SUDAH mendaftar pada periode ini ────────────────
-                $this->addRegistrationStatusNotice($items, $pendaftar, $periode, $tutup, $waktuTutup);
-            } elseif ($periode->pendaftaran_terbuka) {
-                // ── Mahasiswa BELUM mendaftar, periode masih terbuka ──────────
-                $this->addOpenPeriodeNotice($items, $periode, $tutup, $waktuTutup, $sisaHari);
+            if (! $pendaftar) {
+                // Tipe 1: Periode dibuka — mahasiswa belum mendaftar
+                if ($periode->pendaftaran_terbuka) {
+                    $this->notifPeriodeDibuka($items, $periode);
+                }
+                continue;
             }
+
+            $status = $pendaftar->status_pendaftaran;
+
+            if ($status === PendaftaranStatus::Approved) {
+                if ($pendaftar->jadwal) {
+                    // Tipe 4: Jadwal dikonfirmasi
+                    $this->notifJadwalDikonfirmasi($items, $pendaftar, $periode);
+                } else {
+                    // Tipe 2: Disetujui — menunggu jadwal
+                    $this->notifDisetujui($items, $pendaftar, $periode);
+                }
+            } elseif ($status === PendaftaranStatus::Rejected) {
+                // Tipe 3: Ditolak
+                $this->notifDitolak($items, $pendaftar, $periode);
+            }
+            // Pending: tidak ditampilkan di dashboard utama
         }
 
         return $items
-            ->sortByDesc(fn($item) => $item['_sort_key'] ?? 0)
+            ->sortByDesc(fn ($item) => [$item['pinned'] ? 1 : 0, $item['_ts']])
             ->take(10)
-            ->map(fn($item) => array_diff_key($item, ['_sort_key' => null]))
             ->values()
             ->toArray();
     }
@@ -66,102 +75,76 @@ class DashboardAnnouncementService
     // ──────────────────────────────────────────────────────────────────────────
 
     /**
-     * Mahasiswa sudah mendaftar — tampilkan status + info penutupan / jadwal.
+     * Tipe 1: Periode pendaftaran dibuka — mahasiswa belum mendaftar.
      */
-    private function addRegistrationStatusNotice(
-        Collection &$items,
-        PendaftarUjian $pendaftar,
-        PeriodeUjian $periode,
-        string $tutup,
-        string $waktuTutup
-    ): void {
-        $status = $pendaftar->status_pendaftaran; // PendaftaranStatus enum
-        $namaPeriode = $periode->nama_periode;
-
-        switch ($status) {
-            case PendaftaranStatus::Pending:
-                $items->push([
-                    'title'     => "Pendaftaran {$namaPeriode} — Menunggu Review",
-                    'body'      => "Formulir pendaftaran Anda sedang dalam proses verifikasi admin. Pantau status ini secara berkala.",
-                    'date'      => now()->format('d M Y'),
-                    'module'    => 'bank_soal',
-                    'pinned'    => true,
-                    'link'      => route('komprehensif.mahasiswa.dashboard'),
-                    '_sort_key' => now()->timestamp + 9000,
-                ]);
-                break;
-
-            case PendaftaranStatus::Approved:
-                $jadwal = $pendaftar->jadwal;
-                if ($jadwal) {
-                    // Jadwal sudah dikonfirmasi
-                    $tglUjian = Carbon::parse($jadwal->tanggal_ujian)->translatedFormat('l, d F Y');
-                    $mulai = Carbon::parse($jadwal->waktu_mulai)->format('H:i');
-                    $selesai = Carbon::parse($jadwal->waktu_selesai)->format('H:i');
-                    $sesi = $jadwal->nama_sesi;
-
-                    $items->push([
-                        'title'     => "Jadwal Ujian Dikonfirmasi — {$namaPeriode}",
-                        'body'      => "Anda terjadwal pada Sesi {$sesi}, {$tglUjian}, pukul {$mulai}–{$selesai} WIB. Hadir 15 menit sebelum ujian dimulai.",
-                        'date'      => Carbon::parse($jadwal->tanggal_ujian)->format('d M Y'),
-                        'module'    => 'bank_soal',
-                        'pinned'    => true,
-                        'link'      => route('komprehensif.mahasiswa.dashboard'),
-                        '_sort_key' => now()->timestamp + 9500,
-                    ]);
-                } else {
-                    // Disetujui tapi jadwal belum dialokasikan
-                    $items->push([
-                        'title'     => "Pendaftaran {$namaPeriode} Disetujui",
-                        'body'      => "Pendaftaran Anda telah disetujui. Jadwal ujian akan segera dialokasikan oleh admin — pantau halaman ini.",
-                        'date'      => now()->format('d M Y'),
-                        'module'    => 'bank_soal',
-                        'pinned'    => true,
-                        'link'      => route('komprehensif.mahasiswa.dashboard'),
-                        '_sort_key' => now()->timestamp + 9200,
-                    ]);
-                }
-                break;
-
-            case PendaftaranStatus::Rejected:
-                $items->push([
-                    'title'     => "Pendaftaran {$namaPeriode} Ditolak",
-                    'body'      => "Pendaftaran Anda ditolak. Anda hanya dapat mendaftar kembali pada periode ujian berikutnya.",
-                    'date'      => now()->format('d M Y'),
-                    'module'    => 'bank_soal',
-                    'pinned'    => false,
-                    'link'      => route('komprehensif.mahasiswa.dashboard'),
-                    '_sort_key' => now()->timestamp + 8000,
-                ]);
-                break;
-        }
-    }
-
-    /**
-     * Mahasiswa belum mendaftar, periode terbuka — undang mendaftar.
-     */
-    private function addOpenPeriodeNotice(
-        Collection &$items,
-        PeriodeUjian $periode,
-        string $tutup,
-        string $waktuTutup,
-        int $sisaHari
-    ): void {
-        $pinned = $sisaHari <= 3; // Urgent jika ≤ 3 hari lagi
-
-        $body = "Pendaftaran {$periode->nama_periode} telah dibuka sampai dengan tanggal {$tutup}.";
+    private function notifPeriodeDibuka(Collection &$items, PeriodeUjian $periode): void
+    {
+        $tutup    = Carbon::parse($periode->tanggal_selesai)->translatedFormat('d F Y');
+        $sisaHari = (int) now()->diffInDays(Carbon::parse($periode->tanggal_selesai)->endOfDay(), false);
+        $urgensi  = $sisaHari <= 3 ? " Hanya tersisa {$sisaHari} hari lagi!" : '';
 
         $items->push([
-            'title'     => '[PENGUMUMAN PENDAFTARAN]',
-            'body'      => $body,
-            'date'      => Carbon::parse($periode->tanggal_mulai)->format('d M Y'),
-            'module'    => 'bank_soal',
-            'pinned'    => $pinned,
-            'link'      => route('komprehensif.mahasiswa.pendaftaran.form'),
-            '_sort_key' => $pinned
-                ? now()->timestamp + 8500
-                : Carbon::parse($periode->tanggal_mulai)->timestamp,
+            'title'  => "📢 Pendaftaran Ujian Komprehensif Dibuka — {$periode->nama_periode}",
+            'body'   => "Periode pendaftaran telah dibuka hingga {$tutup}.{$urgensi} Segera lengkapi formulir pendaftaran Anda.",
+            'date'   => Carbon::parse($periode->tanggal_mulai)->translatedFormat('d M Y'),
+            'module' => 'bank_soal',
+            'pinned' => true,
+            'url'    => route('komprehensif.mahasiswa.dashboard'),
+            '_ts'    => Carbon::parse($periode->tanggal_mulai)->timestamp + 8000,
         ]);
     }
 
+    /**
+     * Tipe 2: Pendaftaran disetujui — menunggu alokasi jadwal.
+     */
+    private function notifDisetujui(Collection &$items, PendaftarUjian $pendaftar, PeriodeUjian $periode): void
+    {
+        $items->push([
+            'title'  => "✅ Pendaftaran Disetujui — {$periode->nama_periode}",
+            'body'   => "Pendaftaran Anda telah disetujui. Jadwal ujian akan segera dialokasikan oleh admin — pantau halaman ini secara berkala.",
+            'date'   => ($pendaftar->updated_at ?? now())->translatedFormat('d M Y'),
+            'module' => 'bank_soal',
+            'pinned' => true,
+            'url'    => route('komprehensif.mahasiswa.dashboard'),
+            '_ts'    => ($pendaftar->updated_at ?? now())->timestamp + 9000,
+        ]);
+    }
+
+    /**
+     * Tipe 3: Pendaftaran ditolak.
+     */
+    private function notifDitolak(Collection &$items, PendaftarUjian $pendaftar, PeriodeUjian $periode): void
+    {
+        $items->push([
+            'title'  => "❌ Pendaftaran Ditolak — {$periode->nama_periode}",
+            'body'   => "Pendaftaran Anda tidak memenuhi persyaratan. Anda dapat mendaftar kembali pada periode ujian komprehensif berikutnya.",
+            'date'   => ($pendaftar->updated_at ?? now())->translatedFormat('d M Y'),
+            'module' => 'bank_soal',
+            'pinned' => false,
+            'url'    => route('komprehensif.mahasiswa.dashboard'),
+            '_ts'    => ($pendaftar->updated_at ?? now())->timestamp + 5000,
+        ]);
+    }
+
+    /**
+     * Tipe 4: Jadwal ujian dikonfirmasi.
+     */
+    private function notifJadwalDikonfirmasi(Collection &$items, PendaftarUjian $pendaftar, PeriodeUjian $periode): void
+    {
+        $jadwal   = $pendaftar->jadwal;
+        $tglUjian = Carbon::parse($jadwal->tanggal_ujian)->translatedFormat('l, d F Y');
+        $mulai    = Carbon::parse($jadwal->waktu_mulai)->format('H:i');
+        $selesai  = Carbon::parse($jadwal->waktu_selesai)->format('H:i');
+        $sesi     = $jadwal->nama_sesi;
+
+        $items->push([
+            'title'  => "📅 Jadwal Ujian Dikonfirmasi — {$periode->nama_periode}",
+            'body'   => "Anda terjadwal pada Sesi {$sesi}, {$tglUjian}, pukul {$mulai}–{$selesai} WIB. Hadir 15 menit sebelum ujian dimulai.",
+            'date'   => Carbon::parse($jadwal->tanggal_ujian)->translatedFormat('d M Y'),
+            'module' => 'bank_soal',
+            'pinned' => true,
+            'url'    => route('komprehensif.mahasiswa.dashboard'),
+            '_ts'    => Carbon::parse($jadwal->tanggal_ujian)->timestamp + 9500,
+        ]);
+    }
 }

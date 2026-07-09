@@ -61,7 +61,7 @@ class AdminCbtController extends Controller
 
         // Filter periode
         if ($request->filled('periode_id')) {
-            $query->whereHas('jadwal', fn($q) => $q->where('periode_id', $request->periode_id));
+            $query->whereHas('jadwal', fn($q) => $q->where('periode_ujian_id', $request->periode_id));
         }
 
         // Filter keterangan (LULUS / TIDAK LULUS)
@@ -97,7 +97,7 @@ class AdminCbtController extends Controller
         $session = KompreSession::with([
             'user.student',
             'jadwal.periode',
-            'jawabans.pertanyaan.jawabans',
+            'jawabans.pertanyaan.jawaban',
             'jawabans.pertanyaan.cpl',
             'jawabans.opsiTerpilih',
         ])->findOrFail($id);

@@ -11,15 +11,15 @@
     <div x-data="periodeWizard()" x-init="initDates()" class="w-full pb-20">
 
         {{-- Header & Back Button --}}
-        <div class="mb-4">
+        <div class="mb-6">
             <a href="{{ route('eoffice.kp.koordinator.periode') }}" style="
                 display:inline-flex; align-items:center; gap:8px;
-                padding:8px 16px;
-                background:#ffffff; border:1px solid #E2E8F0; border-radius:8px;
-                font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:600; color:#4B5563;
-                transition:all 0.2s;
+                padding:8px 14px;
+                background:#fff; border:1px solid #E4E7EC; border-radius:8px;
+                font-family:'Inter Tight',sans-serif; font-size:13px; font-weight:600; color:#4B5563;
+                transition:background 0.2s;
             " class="hover:bg-gray-50">
-                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"></path>
                 </svg>
                 Kembali
@@ -28,34 +28,22 @@
 
         <div class="flex justify-between items-center mb-8">
             <div>
-                <h1 style="font-family:'Inter Tight',sans-serif; font-size:24px; font-weight:700; color:#0D0D12;">
+                <h1 style="font-family:'Inter Tight',sans-serif; font-size:18px; font-weight:700; color:#0D0D12;">
                     Tambah Periode Baru
                 </h1>
-                <p style="font-family:'Inter Tight',sans-serif; font-size:16px; color:#666D80; margin-top:4px;">
+                <p style="font-family:'Inter Tight',sans-serif; font-size:13px; color:#666D80; margin-top:4px;">
                     Buat periode baru dengan konfigurasi langkah demi langkah.
                 </p>
             </div>
 
             {{-- Submit/Next Button top right (optional, keep at bottom if preferred, but image has Lanjut at top right)
             --}}
-            <button x-show="step < 3" @click="nextStep()" style="
-                padding:10px 24px;
-                background:#0B266E;
-                color:#ffffff;
-                font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:600;
-                border-radius:10px;
-                transition:background 0.2s;
-            " class="hover:bg-[#233C7D]">
+            <button type="button" x-show="step < 3" @click="nextStep()"
+                class="flex items-center justify-center px-4 py-2 bg-slate-900 border border-transparent text-white rounded-xl hover:bg-slate-800 transition-colors shadow-sm text-sm font-semibold">
                 Lanjut
             </button>
-            <button x-show="step === 3" @click="$refs.form.submit()" style="
-                padding:10px 24px;
-                background:#15803D;
-                color:#ffffff;
-                font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:600;
-                border-radius:10px;
-                transition:background 0.2s;
-            " class="hover:bg-[#166534]">
+            <button type="button" x-show="step === 3" @click="$refs.form.submit()"
+                class="flex items-center justify-center px-4 py-2 bg-emerald-600 border border-transparent text-white rounded-xl hover:bg-emerald-700 transition-colors shadow-sm text-sm font-semibold">
                 Simpan
             </button>
         </div>
@@ -93,9 +81,9 @@
                         :class="step === index + 1 ? 'border-[#0B266E] text-[#0B266E] bg-[#F8F5FF]' : (step > index + 1 ? 'border-transparent text-[#666D80] hover:text-[#0D0D12]' : 'border-transparent text-[#A0AABF]')"
                         style="
                         display:flex; align-items:center; gap:8px;
-                        padding:10px 16px;
+                        padding:8px 12px;
                         border-radius:10px; border-width:1px;
-                        font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:600;
+                        font-size:13px; font-weight:600;
                         transition:all 0.2s;
                         whitespace:nowrap;
                     ">
@@ -142,7 +130,7 @@
             @csrf
 
             <div
-                style="background:#ffffff; border-radius:16px; border:1px solid #F1F1F3; box-shadow:0px 1px 3px rgba(0,0,0,0.06), 0px 1px 2px rgba(0,0,0,0.04); padding:32px;">
+                style="background:#fff; border:1px solid #EAECF0; border-radius:12px; box-shadow:0 1px 2px rgba(16, 24, 40, 0.05); padding:24px;">
 
                 {{-- STEP 1: INFORMASI DASAR --}}
                 <div x-show="step === 1" x-transition>
@@ -160,11 +148,11 @@
                             {{-- Nama Periode / Semester --}}
                             <div>
                                 <label
-                                    style="font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:600; color:#272835; margin-bottom:8px; display:block;">Semester
+                                    style="font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#272835; margin-bottom:6px; display:block;">Semester
                                     <span class="text-red-500">*</span></label>
                                 <select name="semester" x-model="formData.semester"
-                                    class="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] font-medium"
-                                    style="font-family:'Inter Tight',sans-serif; font-size:14px;">
+                                    class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] font-medium"
+                                    style="font-family:'Inter Tight',sans-serif; font-size:13px;">
                                     <option value="Ganjil">Ganjil</option>
                                     <option value="Genap">Genap</option>
                                 </select>
@@ -172,43 +160,43 @@
 
                             <div>
                                 <label
-                                    style="font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:600; color:#272835; margin-bottom:8px; display:block;">Tahun
+                                    style="font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#272835; margin-bottom:6px; display:block;">Tahun
                                     Ajaran <span class="text-red-500">*</span></label>
                                 <input type="text" name="tahun_ajaran" x-model="formData.tahun_ajaran"
                                     placeholder="contoh: 2026/2027"
-                                    class="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] font-medium"
-                                    style="font-family:'Inter Tight',sans-serif; font-size:14px;">
+                                    class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] font-medium"
+                                    style="font-family:'Inter Tight',sans-serif; font-size:13px;">
                             </div>
 
                             <div>
                                 <label
-                                    style="font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:600; color:#272835; margin-bottom:8px; display:block;">Pilihan
+                                    style="font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#272835; margin-bottom:6px; display:block;">Pilihan
                                     Kelas yang Dibuka
                                     <span class="text-gray-400 font-normal text-xs ml-1">(Pisahkan dengan
                                         koma)</span></label>
                                 <input type="text" name="kelas_dibuka" x-model="formData.kelas_dibuka"
                                     placeholder="contoh: A, B, C, Paralel, Unggulan"
-                                    class="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] font-medium"
-                                    style="font-family:'Inter Tight',sans-serif; font-size:14px;">
+                                    class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] font-medium"
+                                    style="font-family:'Inter Tight',sans-serif; font-size:13px;">
                             </div>
 
                             {{-- Dates --}}
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div>
                                     <label
-                                        style="font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:600; color:#272835; margin-bottom:8px; display:block;">Start
+                                        style="font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#272835; margin-bottom:6px; display:block;">Start
                                         Date <span class="text-red-500">*</span></label>
                                     <input type="date" name="tanggal_buka" x-model="formData.tanggal_buka"
-                                        class="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] font-medium text-gray-700"
-                                        style="font-family:'Inter Tight',sans-serif; font-size:14px;">
+                                        class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] font-medium text-gray-700"
+                                        style="font-family:'Inter Tight',sans-serif; font-size:13px;">
                                 </div>
                                 <div>
                                     <label
-                                        style="font-family:'Inter Tight',sans-serif; font-size:14px; font-weight:600; color:#272835; margin-bottom:8px; display:block;">End
+                                        style="font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#272835; margin-bottom:6px; display:block;">End
                                         Date <span class="text-red-500">*</span></label>
                                     <input type="date" name="tanggal_tutup" x-model="formData.tanggal_tutup"
-                                        class="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] font-medium text-gray-700"
-                                        style="font-family:'Inter Tight',sans-serif; font-size:14px;">
+                                        class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1 focus:ring-[#0B266E] font-medium text-gray-700"
+                                        style="font-family:'Inter Tight',sans-serif; font-size:13px;">
                                 </div>
                             </div>
 
@@ -252,18 +240,20 @@
                         <div class="md:col-span-8 flex flex-col gap-6">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div>
-                                    <label class="block mb-2 font-semibold text-sm text-[#272835]"
-                                        style="font-family:'Inter Tight',sans-serif;">Tanggal Mulai <span
-                                            class="text-red-500">*</span></label>
+                                    <label
+                                        style="font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#272835; margin-bottom:6px; display:block;">Tanggal
+                                        Mulai <span class="text-red-500">*</span></label>
                                     <input type="date" name="pra_kp_mulai" x-model="formData.pra_kp_mulai"
-                                        class="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none focus:border-[#0B266E] focus:ring-1">
+                                        class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1"
+                                        style="font-family:'Inter Tight',sans-serif; font-size:13px;">
                                 </div>
                                 <div>
-                                    <label class="block mb-2 font-semibold text-sm text-[#272835]"
-                                        style="font-family:'Inter Tight',sans-serif;">Tanggal Berakhir <span
-                                            class="text-red-500">*</span></label>
+                                    <label
+                                        style="font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#272835; margin-bottom:6px; display:block;">Tanggal
+                                        Berakhir <span class="text-red-500">*</span></label>
                                     <input type="date" name="pra_kp_akhir" x-model="formData.pra_kp_akhir"
-                                        class="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none focus:border-[#0B266E] focus:ring-1">
+                                        class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1"
+                                        style="font-family:'Inter Tight',sans-serif; font-size:13px;">
                                 </div>
                             </div>
                             <div>
@@ -271,7 +261,8 @@
                                     style="font-family:'Inter Tight',sans-serif;">Tanggal Pengingat <span
                                         class="text-red-500">*</span></label>
                                 <input type="date" name="pra_kp_pengingat" x-model="formData.pra_kp_pengingat"
-                                    class="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none focus:border-[#0B266E] focus:ring-1">
+                                    class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1"
+                                    style="font-family:'Inter Tight',sans-serif; font-size:13px;">
                             </div>
                         </div>
                     </div>
@@ -289,18 +280,20 @@
                         <div class="md:col-span-8 flex flex-col gap-6">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div>
-                                    <label class="block mb-2 font-semibold text-sm text-[#272835]"
-                                        style="font-family:'Inter Tight',sans-serif;">Tanggal Mulai <span
-                                            class="text-red-500">*</span></label>
+                                    <label
+                                        style="font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#272835; margin-bottom:6px; display:block;">Tanggal
+                                        Mulai <span class="text-red-500">*</span></label>
                                     <input type="date" name="saat_kp_mulai" x-model="formData.saat_kp_mulai"
-                                        class="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none focus:border-[#0B266E] focus:ring-1">
+                                        class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1"
+                                        style="font-family:'Inter Tight',sans-serif; font-size:13px;">
                                 </div>
                                 <div>
-                                    <label class="block mb-2 font-semibold text-sm text-[#272835]"
-                                        style="font-family:'Inter Tight',sans-serif;">Tanggal Berakhir <span
-                                            class="text-red-500">*</span></label>
+                                    <label
+                                        style="font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#272835; margin-bottom:6px; display:block;">Tanggal
+                                        Berakhir <span class="text-red-500">*</span></label>
                                     <input type="date" name="saat_kp_akhir" x-model="formData.saat_kp_akhir"
-                                        class="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none focus:border-[#0B266E] focus:ring-1">
+                                        class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1"
+                                        style="font-family:'Inter Tight',sans-serif; font-size:13px;">
                                 </div>
                             </div>
                             <div>
@@ -308,7 +301,8 @@
                                     style="font-family:'Inter Tight',sans-serif;">Tanggal Pengingat <span
                                         class="text-red-500">*</span></label>
                                 <input type="date" name="saat_kp_pengingat" x-model="formData.saat_kp_pengingat"
-                                    class="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none focus:border-[#0B266E] focus:ring-1">
+                                    class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1"
+                                    style="font-family:'Inter Tight',sans-serif; font-size:13px;">
                             </div>
                         </div>
                     </div>
@@ -326,18 +320,20 @@
                         <div class="md:col-span-8 flex flex-col gap-6">
                             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                                 <div>
-                                    <label class="block mb-2 font-semibold text-sm text-[#272835]"
-                                        style="font-family:'Inter Tight',sans-serif;">Tanggal Mulai <span
-                                            class="text-red-500">*</span></label>
+                                    <label
+                                        style="font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#272835; margin-bottom:6px; display:block;">Tanggal
+                                        Mulai <span class="text-red-500">*</span></label>
                                     <input type="date" name="pasca_kp_mulai" x-model="formData.pasca_kp_mulai"
-                                        class="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none focus:border-[#0B266E] focus:ring-1">
+                                        class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1"
+                                        style="font-family:'Inter Tight',sans-serif; font-size:13px;">
                                 </div>
                                 <div>
-                                    <label class="block mb-2 font-semibold text-sm text-[#272835]"
-                                        style="font-family:'Inter Tight',sans-serif;">Tanggal Berakhir <span
-                                            class="text-red-500">*</span></label>
+                                    <label
+                                        style="font-family:'Inter Tight',sans-serif; font-size:12px; font-weight:600; color:#272835; margin-bottom:6px; display:block;">Tanggal
+                                        Berakhir <span class="text-red-500">*</span></label>
                                     <input type="date" name="pasca_kp_akhir" x-model="formData.pasca_kp_akhir"
-                                        class="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none focus:border-[#0B266E] focus:ring-1">
+                                        class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1"
+                                        style="font-family:'Inter Tight',sans-serif; font-size:13px;">
                                 </div>
                             </div>
                             <div>
@@ -345,7 +341,8 @@
                                     style="font-family:'Inter Tight',sans-serif;">Tanggal Pengingat <span
                                         class="text-red-500">*</span></label>
                                 <input type="date" name="pasca_kp_pengingat" x-model="formData.pasca_kp_pengingat"
-                                    class="w-full border border-[#E2E8F0] rounded-xl px-4 py-3 outline-none focus:border-[#0B266E] focus:ring-1">
+                                    class="w-full border border-[#E2E8F0] rounded-lg px-3 py-2 outline-none focus:border-[#0B266E] focus:ring-1"
+                                    style="font-family:'Inter Tight',sans-serif; font-size:13px;">
                             </div>
                         </div>
                     </div>

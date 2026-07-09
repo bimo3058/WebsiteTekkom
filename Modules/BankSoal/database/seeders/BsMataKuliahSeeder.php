@@ -9,13 +9,13 @@ class BsMataKuliahSeeder extends Seeder
 {
     public function run(): void
     {
-        DB::table('bs_mata_kuliah')->insert([
+        $mataKuliah = [
             [
                 'id' => 1,
                 'kode' => 'TSK6208',
                 'nama' => 'Algoritma dan Pemrograman',
                 'sks' => 2,
-                'semester' => null,
+                'semester' => '3',
                 'created_at' => '2026-03-13 13:12:48',
                 'updated_at' => '2026-03-13 13:12:51',
             ],
@@ -24,7 +24,7 @@ class BsMataKuliahSeeder extends Seeder
                 'kode' => 'TSK6206',
                 'nama' => 'Elektronika Dasar',
                 'sks' => 2,
-                'semester' => null,
+                'semester' => '2',
                 'created_at' => '2026-03-13 13:14:21',
                 'updated_at' => '2026-03-13 13:14:21',
             ],
@@ -33,7 +33,7 @@ class BsMataKuliahSeeder extends Seeder
                 'kode' => 'TSK6211',
                 'nama' => 'Matematika Teknik',
                 'sks' => 3,
-                'semester' => null,
+                'semester' => '2',
                 'created_at' => '2026-03-13 06:16:10',
                 'updated_at' => '2026-03-13 06:16:10',
             ],
@@ -42,10 +42,17 @@ class BsMataKuliahSeeder extends Seeder
                 'kode' => 'TSK6305',
                 'nama' => 'Sistem Digital',
                 'sks' => 2,
-                'semester' => null,
+                'semester' => '4',
                 'created_at' => '2026-03-13 06:16:23',
                 'updated_at' => '2026-03-13 06:16:23',
             ],
-        ]);
+        ];
+
+        foreach ($mataKuliah as $mataKuliahItem) {
+            DB::table('bs_mata_kuliah')->updateOrInsert(
+                ['id' => $mataKuliahItem['id']],
+                $mataKuliahItem
+            );
+        }
     }
 }

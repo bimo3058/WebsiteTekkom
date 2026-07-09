@@ -8,7 +8,7 @@
                 <i class="fas fa-upload text-primary"></i> Upload Template RPS Baru
             </h3>
 
-            <form action="{{ route('banksoal.rps.gpm.template.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4">
+            <form action="{{ route('banksoal.rps.gpm.template.store') }}" method="POST" enctype="multipart/form-data" class="space-y-4" onsubmit="if(this.checkValidity()){ window.showLoader(); return true; }">
                 @csrf
 
                 <div>
@@ -99,7 +99,7 @@
                                     @if($template->is_latest)
                                         <span class="rounded-lg bg-emerald-50 px-3 py-1 text-[11px] font-semibold text-emerald-700">AKTIF</span>
                                     @else
-                                        <form action="{{ route('banksoal.rps.gpm.template.destroy', $template->id) }}" method="POST" onsubmit="return confirm('Yakin ingin menghapus template ini?');">
+                                        <form action="{{ route('banksoal.rps.gpm.template.destroy', $template->id) }}" method="POST" onsubmit="if(confirm('Yakin ingin menghapus template ini?')){ window.showLoader(); return true; } else { return false; }">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" class="inline-flex items-center justify-center rounded-lg border border-rose-200 px-3 py-2 text-xs font-semibold text-rose-600 hover:bg-rose-50" title="Hapus template">

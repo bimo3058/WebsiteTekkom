@@ -1,6 +1,5 @@
 <x-banksoal::layouts.admin>
     @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-blue: rgb(11, 38, 110);
@@ -494,7 +493,6 @@
     </div>
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
     <script>
         const API_URL = '{{ url("/bank-soal/admin/api/mata-kuliah") }}';
         const IMPORT_URL = '{{ route("banksoal.api.v1.admin.mata-kuliah.import") }}';
@@ -550,6 +548,7 @@
             const originalText = submitBtn.textContent;
             submitBtn.disabled = true;
             submitBtn.textContent = 'Menyimpan...';
+            window.showLoader();
 
             const payload = {
                 kode: document.getElementById('kode').value,
@@ -572,15 +571,10 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: data.message || 'Mata kuliah berhasil ditambahkan',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                    
-                    window.location.href = '{{ route("banksoal.admin.kontrol-umum.mata-kuliah") }}';
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'success', message: data.message || 'Mata kuliah berhasil ditambahkan' } }));
+                    setTimeout(() => {
+                        window.location.href = '{{ route("banksoal.admin.kontrol-umum.mata-kuliah") }}';
+                    }, 1500);
                 } else {
                     if (response.status === 422 && data.errors) {
                         for (const [field, messages] of Object.entries(data.errors)) {
@@ -595,14 +589,11 @@
                     }
                 }
             } catch (error) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: error.message || 'Terjadi kesalahan sistem'
-                });
+                window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: error.message || 'Terjadi kesalahan sistem' } }));
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
+                window.hideLoader();
             }
         }
 
@@ -614,18 +605,16 @@
             const originalText = submitBtn.textContent;
             submitBtn.disabled = true;
             submitBtn.textContent = 'Mengunggah...';
+            window.showLoader();
 
             const formData = new FormData();
             const fileInput = document.getElementById('import_file');
             
             if (!fileInput.files[0]) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'File Kosong',
-                    text: 'Silakan pilih file terlebih dahulu'
-                });
+                window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'warning', message: 'Silakan pilih file terlebih dahulu' } }));
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
+                window.hideLoader();
                 return;
             }
 
@@ -644,27 +633,19 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: data.message || 'Data berhasil diunggah',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                    
-                    window.location.href = '{{ route("banksoal.admin.kontrol-umum.mata-kuliah") }}';
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'success', message: data.message || 'Data berhasil diunggah' } }));
+                    setTimeout(() => {
+                        window.location.href = '{{ route("banksoal.admin.kontrol-umum.mata-kuliah") }}';
+                    }, 1500);
                 } else {
                     throw new Error(data.message || 'Gagal mengunggah data');
                 }
             } catch (error) {
-                Swal.fire({
-                    icon: 'error',
-                    title: 'Oops...',
-                    text: error.message || 'Terjadi kesalahan sistem saat mengunggah file'
-                });
+                window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: error.message || 'Terjadi kesalahan sistem saat mengunggah file' } }));
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
+                window.hideLoader();
             }
         }
     </script>

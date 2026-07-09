@@ -9,13 +9,18 @@ use Modules\BankSoal\Enums\RpsStatus;
 class RpsDetail extends Model
 {
     protected $table    = 'bs_rps_detail';
-    protected $fillable = ['mk_id', 'semester', 'tahun_ajaran', 'dokumen', 'status', 'catatan'];
+    protected $fillable = ['mk_id', 'semester', 'tahun_ajaran', 'dokumen', 'status', 'catatan', 'creation_method'];
 
     protected $casts = [
         'status' => RpsStatus::class,
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+
+    public function generateDetail()
+    {
+        return $this->hasOne(RpsGenerateDetail::class, 'rps_detail_id');
+    }
 
     public function mataKuliah()
     {

@@ -1,6 +1,6 @@
 <x-banksoal::layouts.admin>
     @section('breadcrumbs')
-        <a href="#" class="hover:text-[#2A3A7C] transition-colors text-gray-500">Ujian Komprehensif</a>
+        <a href="#" class="hover:text-primary transition-colors text-gray-500">Ujian Komprehensif</a>
         <span class="mx-2 text-gray-300">/</span>
         <span class="text-gray-900 font-semibold">Riwayat Ujian</span>
     @endsection
@@ -44,7 +44,7 @@
         >
 
         {{-- Table Container --}}
-        <div class="bg-white border border-gray-200 rounded-xl shadow-sm mb-8 overflow-hidden">
+        <div class="bg-white border border-gray-200 rounded-xl shadow-sm mb-8 relative">
             {{-- Table Toolbar --}}
             <div class="p-4 sm:px-6 border-b border-gray-200 flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white">
                 <h2 class="text-[15px] font-semibold text-gray-900">Tabel Riwayat Ujian</h2>
@@ -63,20 +63,20 @@
                         </div>
                         <input type="text" name="q" value="{{ request('q') }}"
                             placeholder="Search mahasiswa..."
-                            class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-[#2A3A7C] focus:ring-0 transition-all placeholder:text-gray-400 bg-white text-gray-700">
+                            class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-primary focus:ring-0 transition-all placeholder:text-gray-400 bg-white text-gray-700">
                     </form>
 
                     <!-- Filter Button -->
                     <div class="relative">
                         <button @click="openFilter = !openFilter" type="button"
                             class="relative inline-flex items-center gap-2 px-4 py-2 bg-white border rounded-lg text-[13px] font-medium transition-all"
-                            :class="activeCount > 0 ? 'border-[#2A3A7C] text-[#2A3A7C] bg-[#2A3A7C]/5' : 'border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-800'">
+                            :class="activeCount > 0 ? 'border-primary text-primary bg-primary/5' : 'border-gray-200 text-gray-600 hover:bg-gray-50 hover:text-gray-800'">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.8" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path>
                             </svg>
                             Filter
                             <span x-show="activeCount > 0"
-                                class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold bg-[#2A3A7C] text-white rounded-full"
+                                class="inline-flex items-center justify-center w-4 h-4 text-[10px] font-bold bg-primary text-white rounded-full"
                                 x-text="activeCount">
                             </span>
                         </button>
@@ -107,7 +107,7 @@
                                 <div>
                                     <label class="block text-[12px] font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Periode Ujian</label>
                                     <select x-model="pendingPeriode"
-                                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-[#2A3A7C] transition-all cursor-pointer bg-white text-gray-700">
+                                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-primary transition-all cursor-pointer bg-white text-gray-700">
                                         <option value="">Semua Periode</option>
                                         @foreach($periodes as $periode)
                                             <option value="{{ $periode->id }}">{{ $periode->nama_periode }}</option>
@@ -119,7 +119,7 @@
                                 <div>
                                     <label class="block text-[12px] font-semibold text-gray-600 mb-1.5 uppercase tracking-wide">Keterangan</label>
                                     <select x-model="pendingKeterangan"
-                                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-[#2A3A7C] transition-all cursor-pointer bg-white text-gray-700">
+                                        class="w-full px-3 py-2 border border-gray-200 rounded-lg text-[13px] focus:outline-none focus:border-primary transition-all cursor-pointer bg-white text-gray-700">
                                         <option value="">Semua Keterangan</option>
                                         <option value="lulus">Lulus</option>
                                         <option value="tidak_lulus">Tidak Lulus</option>
@@ -134,7 +134,7 @@
                                     Clear
                                 </button>
                                 <button @click="applyFilters()" type="button"
-                                    class="px-5 py-1.5 text-[13px] font-semibold bg-[#2A3A7C] text-white rounded-lg hover:bg-[#1e2d60] transition-colors shadow-sm">
+                                    class="px-5 py-1.5 text-[13px] font-semibold bg-primary text-white rounded-lg hover:bg-[#1e2d60] transition-colors shadow-sm">
                                     Terapkan
                                 </button>
                             </div>
@@ -195,8 +195,7 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center justify-center w-7 h-7 rounded-full text-[12px] font-bold
-                                        {{ $ujianKe > 1 ? 'bg-amber-100 text-amber-700' : 'bg-gray-100 text-gray-600' }}">
+                                    <span class="text-[13px] font-medium text-gray-800">
                                         {{ $ujianKe }}
                                     </span>
                                 </td>
@@ -229,7 +228,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <a href="{{ route('banksoal.admin.cbt.detail', $session->id) }}"
-                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold text-[#2A3A7C] bg-[#2A3A7C]/10 border border-[#2A3A7C]/20 rounded-md hover:bg-[#2A3A7C]/20 transition-colors">
+                                       class="inline-flex items-center gap-1.5 px-3 py-1.5 text-[12px] font-semibold text-primary bg-primary/10 border border-primary/20 rounded-md hover:bg-primary/20 transition-colors">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                                   d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0z"/>
@@ -268,7 +267,7 @@
                     <div class="flex items-center gap-2">
                         <span class="text-[13px] text-gray-700 font-medium whitespace-nowrap">Per page</span>
                         <div class="relative">
-                            <select onchange="const url = new URL(window.location.href); url.searchParams.set('per_page', this.value); url.searchParams.delete('page'); window.location.href = url.toString();" class="pl-3 pr-8 py-1.5 bg-white border border-gray-300 rounded-lg text-[13px] text-gray-700 font-medium focus:ring-2 focus:ring-[#2A3A7C]/20 focus:border-[#2A3A7C] transition-all cursor-pointer outline-none disabled:bg-gray-50 disabled:cursor-not-allowed">
+                            <select onchange="const url = new URL(window.location.href); url.searchParams.set('per_page', this.value); url.searchParams.delete('page'); window.location.href = url.toString();" class="pl-3 pr-8 py-1.5 bg-white border border-gray-300 rounded-lg text-[13px] text-gray-700 font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all cursor-pointer outline-none disabled:bg-gray-50 disabled:cursor-not-allowed">
                                 <option value="5"  {{ request('per_page', 5) == 5  ? 'selected' : '' }}>5</option>
                                 <option value="10" {{ request('per_page', 5) == 10 ? 'selected' : '' }}>10</option>
                                 <option value="15" {{ request('per_page', 5) == 15 ? 'selected' : '' }}>15</option>
@@ -295,7 +294,7 @@
         {{-- ============================================== --}}
         {{-- ZONA BERBAHAYA: Reset Data Ujian              --}}
         {{-- ============================================== --}}
-        <div id="reset-section" x-data="{ showResetModal: false }" class="mt-4 mb-8">
+        <div id="reset-section" x-data="{ showResetModal: false }" class="hidden mt-4 mb-8">
             <div class="border border-rose-200 bg-rose-50 rounded-2xl p-6 shadow-sm">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div class="flex items-start gap-4">
@@ -364,7 +363,7 @@
                             <label class="block text-[13px] font-semibold text-gray-700">Masukkan password akun Anda untuk konfirmasi:</label>
                             <input type="password" name="konfirmasi_password" required
                                 placeholder="Password Anda"
-                                class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-[#2A3A7C]/20 focus:border-[#2A3A7C] transition-all placeholder-gray-400">
+                                class="w-full px-4 py-2 bg-white border border-gray-300 rounded-lg text-[13px] focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all placeholder-gray-400">
                         </div>
                         <div class="flex gap-3 pt-2">
                             <button type="button" @click="showResetModal = false"
@@ -386,3 +385,4 @@
 </div>{{-- /end Alpine x-data wrapper --}}
 
 </x-banksoal::layouts.admin>
+

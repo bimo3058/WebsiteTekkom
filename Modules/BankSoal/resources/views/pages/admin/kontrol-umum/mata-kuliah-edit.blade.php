@@ -1,6 +1,5 @@
 <x-banksoal::layouts.admin>
     @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-blue: rgb(11, 38, 110);
@@ -208,7 +207,6 @@
     </div>
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
     <script>
         const UPDATE_URL = '{{ route("banksoal.api.v1.admin.mata-kuliah.update", $mataKuliah->id) }}';
         const csrfToken = '{{ csrf_token() }}';
@@ -235,6 +233,7 @@
             const originalText = submitBtn.textContent;
             submitBtn.disabled = true;
             submitBtn.textContent = 'Menyimpan...';
+            window.showLoader();
 
             const payload = {
                 _method: 'PUT',
@@ -258,14 +257,10 @@
                 const data = await response.json();
 
                 if (response.ok && data.success) {
-                    await Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: data.message || 'Mata kuliah berhasil diperbarui',
-                        timer: 1500,
-                        showConfirmButton: false
-                    });
-                    window.location.href = '{{ route("banksoal.admin.kontrol-umum.mata-kuliah") }}';
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'success', message: data.message || 'Mata kuliah berhasil diperbarui' } }));
+                    setTimeout(() => {
+                        window.location.href = '{{ route("banksoal.admin.kontrol-umum.mata-kuliah") }}';
+                    }, 1500);
                 } else {
                     if (response.status === 422 && data.errors) {
                         for (const [field, messages] of Object.entries(data.errors)) {
@@ -280,10 +275,11 @@
                     }
                 }
             } catch (error) {
-                Swal.fire({ icon: 'error', title: 'Oops...', text: error.message || 'Terjadi kesalahan sistem' });
+                window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: error.message || 'Terjadi kesalahan sistem' } }));
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
+                window.hideLoader();
             }
         }
     </script>

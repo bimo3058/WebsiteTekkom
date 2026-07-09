@@ -9,7 +9,7 @@
     }
 
     .page-header-profil {
-        background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        background: linear-gradient(135deg, #0B266E 0%, #091958 100%);
         border-radius: 16px;
         padding: 28px 32px;
         margin-bottom: 24px;
@@ -41,7 +41,7 @@
     .card-section {
         background: #fff;
         border-radius: 14px;
-        border: 1px solid #e5e7eb;
+        border: 1px solid #DFE1E7;
         padding: 28px;
     }
 
@@ -53,8 +53,8 @@
         width: 100px;
         height: 100px;
         border-radius: 50%;
-        background: linear-gradient(135deg, #e0e7ff, #c7d2fe);
-        color: #4f46e5;
+        background: linear-gradient(135deg, #eef2ff, #dbe4f5);
+        color: #0B266E;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -62,7 +62,7 @@
         font-weight: bold;
         margin: 0 auto 16px;
         overflow: hidden;
-        border: 3px solid #e0e7ff;
+        border: 3px solid #eef2ff;
     }
     .identity-avatar img {
         width: 100%;
@@ -72,12 +72,12 @@
     .identity-name {
         font-size: 18px;
         font-weight: 700;
-        color: #111827;
+        color: #0D0D12;
         margin-bottom: 4px;
     }
     .identity-nim {
         font-family: monospace;
-        color: #6b7280;
+        color: #666D80;
         font-size: 14px;
         margin-bottom: 12px;
     }
@@ -98,46 +98,46 @@
     .identity-note {
         margin-top: 20px;
         padding-top: 20px;
-        border-top: 1px dashed #e2e8f0;
+        border-top: 1px dashed #DFE1E7;
         font-size: 12.5px;
-        color: #94a3b8;
+        color: #808897;
         line-height: 1.6;
     }
 
     .form-title {
         font-size: 16px;
         font-weight: 700;
-        color: #111827;
+        color: #0D0D12;
         margin-bottom: 20px;
         padding-bottom: 12px;
-        border-bottom: 2px solid #f1f5f9;
+        border-bottom: 2px solid #F6F8FA;
     }
     .form-label {
         font-size: 13px;
         font-weight: 600;
-        color: #475569;
+        color: #353849;
         margin-bottom: 6px;
     }
     .form-control-custom,
     .form-select-custom {
-        border: 1.5px solid #e2e8f0;
+        border: 1.5px solid #DFE1E7;
         border-radius: 10px;
         padding: 10px 14px;
         font-size: 14px;
-        color: #1e293b;
-        background: #f8fafc;
+        color: #0D0D12;
+        background: #FAFAFA;
         transition: all 0.2s;
         width: 100%;
     }
     .form-control-custom:focus,
     .form-select-custom:focus {
-        border-color: #6366f1;
-        box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+        border-color: #0B266E;
+        box-shadow: 0 0 0 3px rgba(11, 38, 110, 0.1);
         background: #ffffff;
         outline: none;
     }
     .btn-submit {
-        background: linear-gradient(135deg, #4f46e5, #6366f1);
+        background: linear-gradient(135deg, #0B266E, #091958);
         color: #ffffff;
         border: none;
         padding: 11px 28px;
@@ -148,9 +148,9 @@
         transition: all 0.2s;
     }
     .btn-submit:hover {
-        background: linear-gradient(135deg, #4338ca, #4f46e5);
+        background: linear-gradient(135deg, #091958, #0B266E);
         transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+        box-shadow: 0 4px 12px rgba(11, 38, 110, 0.3);
     }
 </style>
 @endpush
@@ -158,7 +158,7 @@
 <!-- Flash Messages -->
 @if(session('success'))
     <div class="alert alert-success alert-dismissible fade show mb-4" role="alert"
-         style="border-radius: 10px; border: none; background: #dcfce7; color: #166534; font-weight: 500; font-size: 14px;">
+         style="border-radius: 10px; border: none; background: #ECFDF5; color: #059669; font-weight: 500; font-size: 14px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align: -2px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
         {{ session('success') }}
         <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
@@ -277,7 +277,7 @@
                     </div>
                 </div>
 
-                <div class="d-flex justify-content-end pt-4 mt-3" style="border-top: 1px solid #f1f5f9;">
+                <div class="d-flex justify-content-end pt-4 mt-3" style="border-top: 1px solid #F6F8FA;">
                     <button type="submit" class="btn-submit">
                         Simpan Perubahan
                     </button>

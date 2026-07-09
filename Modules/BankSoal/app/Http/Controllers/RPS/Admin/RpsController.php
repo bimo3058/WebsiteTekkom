@@ -60,16 +60,87 @@ class RpsController extends Controller
 
     public function previewDokumen(int $rpsId)
     {
-        $rps = RpsDetail::findOrFail($rpsId);
+        try {
+            $rpsService = app(\Modules\BankSoal\Services\RpsService::class);
+            $data = $rpsService->getRpsReviewData($rpsId);
+            $rps = $data['rps'];
 
-        if (!$rps->dokumen) {
-            abort(404, 'Dokumen RPS tidak ditemukan');
+            $fileUrl = null;
+            $downloadUrl = null;
+            $errorMessage = null;
+
+            if ($rps->dokumen) {
+                $supabaseStorage = new SupabaseStorage();
+                $fileUrl = $supabaseStorage->getPublicUrl($rps->dokumen, 'rps');
+                
+                try {
+                    $response = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(2)->get($fileUrl);
+                    if ($response->status() === 404) {
+                        $versionCount = DB::table('bs_audit_logs')
+                            ->where('subject_type', 'rps')
+                            ->where('subject_id', $rpsId)
+                            ->whereIn('action', ['created', 'updated'])
+                            ->count();
+                        $version = 'V' . max(1, $versionCount);
+
+                        $baseFileName = sprintf('RPS_%s_%s_%s_%s', $mkName, $tahunAjaranSafe, $semesterSafe, $version);
+                        $baseFileName = preg_replace('/[\\\\:*?"<>|]+/', '', $baseFileName);
+                        $baseFileName = trim((string) $baseFileName, " \t\n\r\0\x0B._");
+                        
+                        $healedPath = 'rps/' . $baseFileName . '.pdf';
+                        $healedUrl = $supabaseStorage->getPublicUrl($healedPath, 'rps');
+                        
+                        $healedResponse = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(2)->get($healedUrl);
+                        if ($healedResponse->status() === 200) {
+                            // Berkas ditemukan di Supabase! Lakukan self-healing sinkronisasi database
+                            DB::table('bs_rps_detail')->where('id', $rpsId)->update(['dokumen' => $healedPath]);
+                            $rps->dokumen = $healedPath;
+                            $fileUrl = $healedUrl;
+                            $errorMessage = null;
+                        } else {
+                            $fileUrl = null;
+                            $errorMessage = 'Berkas PDF tidak ditemukan di server penyimpanan (Supabase Storage). Silakan hubungi dosen pengampu atau unggah ulang dokumen RPS.';
+                        }
+                    }
+                } catch (\Exception $ex) {
+                    // Fallback to let the browser attempt loading if network check fails/timeouts
+                }
+
+                if ($fileUrl) {
+                    $downloadUrl = route('banksoal.admin.kontrol-banksoal.rps.download', ['rpsId' => $rpsId]);
+                }
+            } else {
+                $errorMessage = 'Dokumen RPS belum diunggah atau tidak dapat ditemukan.';
+            }
+
+            $data['fileUrl'] = $fileUrl;
+            $data['downloadUrl'] = $downloadUrl;
+            $data['errorMessage'] = $errorMessage;
+
+            return view('banksoal::pages.rps.preview-page', $data);
+
+        } catch (\Exception $e) {
+            $rps = null;
+            $fileUrl = null;
+            $downloadUrl = null;
+            $errorMessage = 'Terjadi kesalahan saat memuat dokumen: ' . $e->getMessage();
+            
+            $data = [
+                'rps' => null,
+                'fileUrl' => null,
+                'downloadUrl' => null,
+                'errorMessage' => $errorMessage,
+                'parameters' => collect(),
+                'existingReview' => null,
+                'history' => collect(),
+                'selectedCpls' => collect(),
+                'cplCpmkMappings' => collect(),
+                'draftCpmkItems' => collect(),
+                'dosenPengampu' => collect(),
+                'totalBobot' => 0
+            ];
+            return view('banksoal::pages.rps.preview-page', $data);
         }
-
-        $supabaseStorage = new SupabaseStorage();
-        $publicUrl = $supabaseStorage->getPublicUrl($rps->dokumen, 'rps');
-
-        return redirect($publicUrl);
     }
 
     public function downloadDokumen(int $rpsId)

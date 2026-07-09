@@ -33,7 +33,7 @@ class XpLog extends Model
     const ACTION_DAILY_LOGIN           = 'daily_login';
     const ACTION_STREAK_BONUS          = 'streak_bonus';
     const ACTION_STREAK_BONUS_30       = 'streak_bonus_30';
-    const ACTION_DOWNVOTE_PENALTY      = 'downvote_penalty';
+
 
     const XP_MAP = [
         self::ACTION_CREATE_THREAD         => 10,
@@ -44,7 +44,7 @@ class XpLog extends Model
         self::ACTION_DAILY_LOGIN           => 3,
         self::ACTION_STREAK_BONUS          => 20,
         self::ACTION_STREAK_BONUS_30       => 100,
-        self::ACTION_DOWNVOTE_PENALTY      => -1,
+
     ];
 
     // -------------------------------------------------------------------------

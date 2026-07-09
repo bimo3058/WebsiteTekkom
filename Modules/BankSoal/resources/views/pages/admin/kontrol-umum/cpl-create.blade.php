@@ -1,6 +1,5 @@
 <x-banksoal::layouts.admin>
     @push('styles')
-    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.min.css" rel="stylesheet">
     <style>
         :root {
             --primary-blue: rgb(11, 38, 110);
@@ -239,7 +238,6 @@
     </div>
 
     @push('scripts')
-    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.10.5/dist/sweetalert2.all.min.js"></script>
     <script>
         const API_URL = '{{ route("banksoal.api.v1.admin.cpl.store") }}';
         const IMPORT_URL = '{{ route("banksoal.api.v1.admin.cpl.import") }}';
@@ -263,6 +261,7 @@
             e.preventDefault();
             const submitBtn = e.target.querySelector('button[type="submit"]');
             submitBtn.disabled = true;
+            window.showLoader();
 
             const payload = {
                 kode: document.getElementById('kode').value,
@@ -277,18 +276,27 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                    Swal.fire({ icon: 'success', title: 'Berhasil', timer: 1500, showConfirmButton: false });
-                    window.location.href = '{{ route("banksoal.admin.kontrol-umum.mata-kuliah") }}';
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'success', message: 'Data berhasil disimpan.' } }));
+                    setTimeout(() => {
+                        window.location.href = '{{ route("banksoal.admin.kontrol-umum.mata-kuliah") }}';
+                    }, 1500);
                 } else {
-                    Swal.fire({ icon: 'error', title: 'Gagal', text: data.message });
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: data.message || 'Terjadi kesalahan.' } }));
                 }
             } catch (error) {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan' });
-            } finally { submitBtn.disabled = false; }
+                window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: 'Terjadi kesalahan sistem.' } }));
+            } finally { 
+                submitBtn.disabled = false; 
+                window.hideLoader();
+            }
         }
 
         async function handleImportSubmit(e) {
             e.preventDefault();
+            const submitBtn = e.target.querySelector('button[type="submit"]');
+            submitBtn.disabled = true;
+            window.showLoader();
+
             const formData = new FormData();
             formData.append('file', document.getElementById('import_file').files[0]);
 
@@ -300,13 +308,18 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                    Swal.fire({ icon: 'success', title: 'Berhasil', timer: 1500, showConfirmButton: false });
-                    window.location.href = '{{ route("banksoal.admin.kontrol-umum.mata-kuliah") }}';
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'success', message: 'Data berhasil disimpan.' } }));
+                    setTimeout(() => {
+                        window.location.href = '{{ route("banksoal.admin.kontrol-umum.mata-kuliah") }}';
+                    }, 1500);
                 } else {
-                    Swal.fire({ icon: 'error', title: 'Gagal', text: data.message });
+                    window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: data.message || 'Terjadi kesalahan.' } }));
                 }
             } catch (error) {
-                Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan' });
+                window.dispatchEvent(new CustomEvent('notify', { detail: { type: 'error', message: 'Terjadi kesalahan sistem.' } }));
+            } finally {
+                submitBtn.disabled = false;
+                window.hideLoader();
             }
         }
     </script>

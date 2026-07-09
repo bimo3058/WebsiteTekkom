@@ -14,7 +14,7 @@
         </div>
 
         <div class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-            <form action="{{ route('banksoal.soal.gpm.parameter.store') }}" method="POST" class="p-8 space-y-6">
+            <form action="{{ route('banksoal.soal.gpm.parameter.store') }}" method="POST" class="p-8 space-y-6" onsubmit="if(this.checkValidity()){ window.showLoader(); return true; }">
                 @csrf
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">

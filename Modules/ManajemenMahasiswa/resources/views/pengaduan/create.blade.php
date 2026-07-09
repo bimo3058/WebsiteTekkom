@@ -2,100 +2,126 @@
 
     @push('styles')
         <style>
-            .custom-card {
-                background: #ffffff;
-                border-radius: 12px;
-                padding: 32px;
-                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-                border: none;
+            .main-wrapper { background: transparent !important; box-shadow: none !important; padding: 0 !important; }
+
+            /* ── Card (Forum pattern) ── */
+            .form-card {
+                background: #ffffff; border-radius: 12px; padding: 32px;
+                box-shadow: 0 1px 3px rgba(22,22,43,.06), 0 1px 2px rgba(22,22,43,.04);
+                border: 1px solid #DDE1E8;
             }
-            .btn-custom {
-                background-color: #4D4DFF;
-                color: white;
-                border: none;
-                border-radius: 8px;
-                padding: 10px 24px;
-                font-weight: 600;
-                transition: all 0.2s;
+
+            /* ── Page Title ── */
+            .page-title h4 {
+                font-size: 1.5rem; font-weight: 700; color: #1e1b4b;
+                margin: 0 0 4px; letter-spacing: -.02em;
             }
-            .btn-custom:hover {
-                background-color: #3b3be5;
-                color: white;
+            .page-title p { font-size: .95rem; color: #6b7280; margin: 0; }
+
+            /* ── Buttons (Forum pattern) ── */
+            .btn-post {
+                display: inline-flex; align-items: center; gap: 8px;
+                background-color: #293C79; color: white; border: none;
+                border-radius: 12px; padding: 10px 24px;
+                font-weight: 600; transition: all 0.2s; text-decoration: none;
+            }
+            .btn-post:hover {
+                background-color: #415086; color: white;
                 transform: translateY(-1px);
+                box-shadow: 0 4px 12px rgba(41,60,121,.3);
             }
-            .btn-outline-custom {
-                background-color: transparent;
-                color: #6b7280;
-                border: 2px solid #e5e7eb;
-                border-radius: 8px;
-                padding: 8px 20px;
-                font-weight: 600;
-                transition: all 0.2s;
+            .btn-back {
+                font-weight: 600; font-size: 13px; text-decoration: none;
+                border-radius: 12px; padding: 8px 16px;
+                display: inline-flex; align-items: center; gap: 6px;
+                transition: all 0.2s; background: transparent;
+                border: 1px solid #DDE1E8; color: #6b7280;
             }
-            .btn-outline-custom:hover {
-                background-color: #f3f4f6;
-                color: #374151;
-            }
+            .btn-back:hover { background: #E7E8F0; color: #374151; border-color: #293C79; }
+
+            /* ── Form Controls ── */
             .form-control-custom, .form-select-custom {
-                background-color: #f9fafb;
-                border: 2px solid #f3f4f6;
-                border-radius: 8px;
-                padding: 12px 16px;
-                font-size: 14px;
-                transition: all 0.2s;
-                font-weight: 500;
+                background-color: #f9fafb; border: 1px solid #DDE1E8;
+                border-radius: 12px; padding: 12px 16px;
+                font-size: 14px; transition: all 0.2s; font-weight: 500;
             }
             .form-control-custom:focus, .form-select-custom:focus {
-                background-color: #ffffff;
-                border-color: #a5a5ff;
-                box-shadow: 0 0 0 4px rgba(77, 77, 255, 0.1);
-                outline: none;
+                background-color: #ffffff; border-color: #293C79;
+                box-shadow: 0 0 0 3px rgba(41,60,121,.12); outline: none;
             }
             .form-label-custom {
-                font-size: 13px;
-                font-weight: 600;
-                color: #4b5563;
-                text-transform: uppercase;
-                letter-spacing: 0.5px;
-                margin-bottom: 8px;
+                font-size: 13px; font-weight: 600; color: #4b5563;
+                text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;
             }
+
+            /* ── Section Title ── */
             .section-title {
-                display: flex;
-                align-items: center;
-                gap: 12px;
-                font-weight: 700;
-                color: #111827;
-                font-size: 16px;
-                margin-bottom: 24px;
-                padding-bottom: 12px;
-                border-bottom: 2px solid #f3f4f6;
+                display: flex; align-items: center; gap: 10px;
+                font-weight: 700; color: #111827; font-size: 16px;
+                margin-bottom: 24px; padding-bottom: 12px;
+                border-bottom: 1px solid #DDE1E8;
             }
-            .checkbox-wrapper {
-                background: #f8fafc;
-                border: 2px solid #e2e8f0;
-                padding: 16px;
-                border-radius: 12px;
-                transition: all 0.2s;
+
+            /* ── Kategori Radio ── */
+            .kategori-option {
+                border: 2px solid #f3f4f6; border-radius: 10px;
+                background: #f9fafb; padding: 14px 16px; cursor: pointer;
+                transition: all .2s;
             }
-            .checkbox-wrapper:hover {
-                border-color: #cbd5e1;
+            .kategori-option:has(:checked) {
+                border-color: #293C79; background: #f0f2ff;
             }
+            .kategori-option:hover { border-color: #c7d2fe; }
         </style>
     @endpush
 
+    @php
+        $jalur = request()->query('jalur', old('jalur_query'));
+        if (!in_array($jalur, ['reguler', 'konfidensial'])) {
+            // Redirect ke halaman pilihan jalur jika tidak ada param valid
+        }
+        $isAnonim = $jalur === 'konfidensial' ? '1' : '0';
+    @endphp
+
+    {{-- ── Header ── --}}
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h3 class="fw-bold mb-1 text-dark">Buat Pengaduan</h3>
-            <p class="text-muted mb-0 fw-medium">Isi form di bawah ini dengan detail yang jelas dan valid.</p>
+        <div class="page-title">
+            <h4>Buat Pengaduan</h4>
+            <p>Isi form di bawah ini dengan detail yang jelas dan valid.</p>
         </div>
-        <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="btn-outline-custom text-decoration-none">
-            ← Kembali
+        <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" class="btn-back">
+            <x-manajemenmahasiswa::ui.icon name="chevron-left" size="14" /> Kembali
         </a>
     </div>
 
+    {{-- Jalur Indicator Banner --}}
+    @if($jalur === 'konfidensial')
+        <div class="d-flex align-items-center gap-3 mb-4 p-3 px-4 rounded-3" style="background: #f8fafc; border: 1.5px solid #e2e8f0;">
+            <div style="width: 36px; height: 36px; border-radius: 10px; background: #f1f5f9; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #64748b;">
+                <x-manajemenmahasiswa::ui.icon name="shield-02" size="20" />
+            </div>
+            <div>
+                <div class="fw-bold text-dark" style="font-size: 14px;">Jalur Konfidensial</div>
+                <div class="text-muted" style="font-size: 12px;">Identitas Anda tidak akan ditampilkan di sistem. <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" style="color: #6b7280;">Ganti jalur</a></div>
+            </div>
+        </div>
+    @else
+        <div class="d-flex align-items-center gap-3 mb-4 p-3 px-4 rounded-3" style="background: #f5f5ff; border: 1.5px solid #c7d2fe;">
+            <div style="width: 36px; height: 36px; border-radius: 10px; background: #eef2ff; display: flex; align-items: center; justify-content: center; flex-shrink: 0; color: #4f46e5;">
+                <x-manajemenmahasiswa::ui.icon name="user-circle" size="20" />
+            </div>
+            <div>
+                <div class="fw-bold text-dark" style="font-size: 14px;">Jalur Reguler</div>
+                <div class="text-muted" style="font-size: 12px;">Identitas Anda terlihat oleh Admin. <a href="{{ route('manajemenmahasiswa.pengaduan.jalur') }}" style="color: #6b7280;">Ganti jalur</a></div>
+            </div>
+        </div>
+    @endif
+
     @if ($errors->any())
-        <div class="alert alert-danger border-0 shadow-sm" style="background-color: #fee2e2; color: #dc2626; border-radius: 12px;">
-            <div class="fw-bold mb-2">⚠ Terdapat kesalahan pada input:</div>
+        <div class="alert alert-danger border-0" style="background-color: #fee2e2; color: #dc2626; border-radius: 12px;">
+            <div class="fw-bold mb-2 d-flex align-items-center gap-2">
+                <x-manajemenmahasiswa::ui.icon name="alert-triangle" size="16" /> Terdapat kesalahan pada input:
+            </div>
             <ul class="mb-0 fw-medium" style="font-size: 14px;">
                 @foreach ($errors->all() as $error)
                     <li>{{ $error }}</li>
@@ -104,35 +130,23 @@
         </div>
     @endif
 
-    <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.confirm') }}" class="custom-card">
+    <form method="POST" action="{{ route('manajemenmahasiswa.pengaduan.confirm') }}" class="form-card">
         @csrf
-
-        <div class="checkbox-wrapper d-flex align-items-center gap-3 mb-4">
-            <input class="form-check-input" type="checkbox" name="is_anonim" value="1" id="isAnonim" {{ old('is_anonim') ? 'checked' : '' }} style="width: 20px; height: 20px; cursor: pointer; flex-shrink: 0;">
-            <label class="form-check-label mb-0" for="isAnonim" style="cursor: pointer;">
-                <span class="fw-bold text-dark d-block">Sembunyikan Identitas (Anonim)</span>
-                <span class="text-muted" style="font-size: 13px;">Identitas Anda tidak akan ditampilkan kepada siapapun di dalam sistem.</span>
-            </label>
-        </div>
+        <input type="hidden" name="is_anonim" value="{{ $isAnonim }}">
+        <input type="hidden" name="jalur_query" value="{{ $jalur }}">
 
         <div class="mb-4">
             <label class="form-label-custom d-block">Kategori Pengaduan <span class="text-danger">*</span></label>
             <div class="d-flex flex-column gap-2">
                 @foreach($kategoriList as $value => $meta)
-                    <label class="d-flex align-items-start justify-content-between gap-3 p-3" style="border: 2px solid #f3f4f6; border-radius: 10px; background: #f9fafb; cursor: pointer;">
-                        <span class="d-flex align-items-start gap-2" style="min-width: 0;">
-                            <input
-                                class="form-check-input mt-1"
-                                type="radio"
-                                name="kategori"
-                                value="{{ $value }}"
-                                {{ old('kategori') === $value ? 'checked' : '' }}
-                                {{ $loop->first ? 'required' : '' }}
-                                style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;">
-                            <span style="min-width: 0;">
-                                <span class="fw-bold text-dark d-block" style="font-size: 14px;">{{ $meta['label'] }}</span>
-                                <span class="text-muted d-block" style="font-size: 12px; line-height: 1.4;">Contoh: {{ $meta['example'] }}</span>
-                            </span>
+                    <label class="kategori-option d-flex align-items-start gap-3">
+                        <input class="form-check-input mt-1" type="radio" name="kategori"
+                            value="{{ $value }}" {{ old('kategori') === $value ? 'checked' : '' }}
+                            {{ $loop->first ? 'required' : '' }}
+                            style="width: 18px; height: 18px; cursor: pointer; flex-shrink: 0;">
+                        <span style="min-width: 0;">
+                            <span class="fw-bold text-dark d-block" style="font-size: 14px;">{{ $meta['label'] }}</span>
+                            <span class="text-muted d-block" style="font-size: 12px; line-height: 1.4;">Contoh: {{ $meta['example'] }}</span>
                         </span>
                     </label>
                 @endforeach
@@ -141,10 +155,10 @@
 
         <div class="row g-4 mb-4">
             <div class="col-md-6">
-                <label class="form-label-custom d-block">Nama Mahasiswa <span class="text-muted fw-normal text-lowercase">(akan dirahasiakan)</span></label>
+                <label class="form-label-custom d-block">Nama Mahasiswa</label>
                 <input type="text" class="form-control form-control-custom" value="{{ auth()->user()->name ?? '-' }}" disabled>
                 <div class="form-text mt-2 fw-medium" style="color: #9ca3af; font-size: 13px;">
-                    Identitas disimpan oleh sistem dan bisa disembunyikan dengan opsi anonim.
+                    Identitas tersimpan di database. Jika memilih jalur <strong>Konfidensial</strong>, identitas tidak ditampilkan di sistem.
                 </div>
             </div>
             <div class="col-md-6">
@@ -156,7 +170,8 @@
 
         <div class="mt-5">
             <h6 class="section-title">
-                <span class="material-symbols-outlined" style="vertical-align: text-bottom; margin-right: 6px;">edit_document</span> Detail Pengaduan
+                <x-manajemenmahasiswa::ui.icon name="file-01" size="18" />
+                Detail Pengaduan
             </h6>
 
             <div class="mb-4">
@@ -241,8 +256,8 @@
         </div>
 
         <div class="d-flex justify-content-end gap-3 mt-5 pt-4" style="border-top: 1px solid #f3f4f6;">
-            <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="btn-outline-custom text-decoration-none">Batal</a>
-            <button type="submit" class="btn-custom">Lanjut Konfirmasi</button>
+            <a href="{{ route('manajemenmahasiswa.pengaduan.index') }}" class="btn-back text-decoration-none">Batal</a>
+            <button type="submit" class="btn-post">Lanjut Konfirmasi</button>
         </div>
     </form>
 

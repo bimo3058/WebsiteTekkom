@@ -1,11 +1,11 @@
 <div>
     <h3 class="text-lg font-bold text-slate-800 mb-6">Pendidikan & Bahasa</h3>
 
-    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-xl">
+    <div class="p-4 mb-6 rounded-xl border" style="background: var(--c-primary-subtle); border-color: rgba(11,38,110,0.12);">
         <div class="flex items-start gap-3">
-            <span class="material-symbols-outlined text-blue-500 text-[20px]">info</span>
-            <p class="text-sm text-blue-700">
-                Data dengan label <strong>Auto-Sync</strong> diambil secara otomatis dari rekam jejak akademik Anda. Jika ada kesalahan, silakan perbarui data Anda di menu Profil / Akademik terkait.
+            <span class="material-symbols-outlined text-[20px] mt-0.5 flex-shrink-0" style="color: var(--c-primary);">info</span>
+            <p class="text-sm" style="color: var(--c-fg-sec);">
+                Data dengan label <strong style="color: var(--c-primary);">Auto-Sync</strong> diambil secara otomatis dari rekam jejak akademik Anda. Jika ada kesalahan, silakan perbarui data Anda di menu Profil / Akademik terkait.
             </p>
         </div>
     </div>
@@ -18,13 +18,13 @@
         </h4>
         <div class="space-y-3">
             <template x-for="edu in data.pendidikan_sync" :key="edu.tahun_masuk">
-                <div class="bg-indigo-50/50 border border-indigo-100 rounded-xl p-4 flex justify-between items-start">
+                <div class="rounded-xl p-4 flex justify-between items-start border" style="background: var(--c-primary-subtle); border-color: rgba(11,38,110,0.15);">
                     <div>
                         <h5 class="font-bold text-slate-800 text-sm" x-text="edu.institusi"></h5>
-                        <p class="text-sm text-indigo-600 font-medium" x-text="edu.jurusan"></p>
+                        <p class="text-sm font-medium" style="color: var(--c-primary);" x-text="edu.jurusan"></p>
                         <p class="text-xs text-slate-500 mt-1" x-text="`${edu.tahun_masuk} - ${edu.tahun_lulus || 'Sekarang'}`"></p>
                     </div>
-                    <span class="text-[9px] font-bold uppercase tracking-wider bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-md">Auto-Sync</span>
+                    <span class="text-[9px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md" style="background: var(--c-primary-subtle); color: var(--c-primary); border: 1px solid rgba(11,38,110,0.15);">Auto-Sync</span>
                 </div>
             </template>
             <div x-show="data.pendidikan_sync.length === 0" class="text-sm text-slate-500 italic p-4 bg-slate-50 rounded-xl border border-slate-200 text-center">
@@ -56,23 +56,23 @@
         <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Nama Institusi (SMA/Kursus)</label>
-                    <input type="text" x-model="newEdu.institusi" class="w-full text-sm border-slate-200 rounded-lg p-2 outline-none focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4]">
+                    <label class="form-label" style="font-size: 11px;">Nama Institusi (SMA/Kursus)</label>
+                    <input type="text" x-model="newEdu.institusi" class="form-control">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Jurusan / Bidang</label>
-                    <input type="text" x-model="newEdu.jurusan" class="w-full text-sm border-slate-200 rounded-lg p-2 outline-none focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4]">
+                    <label class="form-label" style="font-size: 11px;">Jurusan / Bidang</label>
+                    <input type="text" x-model="newEdu.jurusan" class="form-control">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Tahun Masuk</label>
-                    <input type="text" x-model="newEdu.tahun_masuk" class="w-full text-sm border-slate-200 rounded-lg p-2 outline-none focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4]">
+                    <label class="form-label" style="font-size: 11px;">Tahun Masuk</label>
+                    <input type="text" x-model="newEdu.tahun_masuk" class="form-control">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Tahun Lulus (Kosongkan jika belum)</label>
-                    <input type="text" x-model="newEdu.tahun_lulus" class="w-full text-sm border-slate-200 rounded-lg p-2 outline-none focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4]">
+                    <label class="form-label" style="font-size: 11px;">Tahun Lulus (Kosongkan jika belum)</label>
+                    <input type="text" x-model="newEdu.tahun_lulus" class="form-control">
                 </div>
             </div>
-            <button @click="addEdu()" class="text-xs font-bold bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+            <button @click="addEdu()" class="btn-secondary text-xs">
                 + Tambah Pendidikan
             </button>
         </div>
@@ -88,7 +88,7 @@
                 <div class="bg-white border border-slate-200 rounded-xl p-4 flex justify-between items-start">
                     <div>
                         <h5 class="font-bold text-slate-800 text-sm" x-text="lang.nama"></h5>
-                        <p class="text-sm text-indigo-600" x-text="lang.level"></p>
+                        <p class="text-sm" style="color: var(--c-primary);" x-text="lang.level"></p>
                         <p class="text-xs text-slate-500 mt-1" x-show="lang.skor" x-text="`Skor / Nilai: ${lang.skor}`"></p>
                     </div>
                     <button @click="removeLang(index)" class="text-red-400 hover:text-red-600 transition-colors">
@@ -102,12 +102,12 @@
         <div class="bg-slate-50 rounded-xl p-5 border border-slate-200">
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Bahasa</label>
-                    <input type="text" x-model="newLang.nama" placeholder="Contoh: Inggris" class="w-full text-sm border-slate-200 rounded-lg p-2 outline-none focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4]">
+                    <label class="form-label" style="font-size: 11px;">Bahasa</label>
+                    <input type="text" x-model="newLang.nama" placeholder="Contoh: Inggris" class="form-control">
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Tingkat Kemahiran</label>
-                    <select x-model="newLang.level" class="w-full text-sm border-slate-200 rounded-lg p-2 outline-none focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4] bg-white">
+                    <label class="form-label" style="font-size: 11px;">Tingkat Kemahiran</label>
+                    <select x-model="newLang.level" class="form-control">
                         <option>Dasar (Basic)</option>
                         <option>Menengah (Intermediate)</option>
                         <option>Fasih (Fluent)</option>
@@ -115,11 +115,11 @@
                     </select>
                 </div>
                 <div>
-                    <label class="block text-xs font-bold text-slate-500 mb-1">Skor / Nilai (Opsional)</label>
-                    <input type="text" x-model="newLang.skor" placeholder="Contoh: TOEFL 550" class="w-full text-sm border-slate-200 rounded-lg p-2 outline-none focus:border-[#5E53F4] focus:ring-1 focus:ring-[#5E53F4]">
+                    <label class="form-label" style="font-size: 11px;">Skor / Nilai (Opsional)</label>
+                    <input type="text" x-model="newLang.skor" placeholder="Contoh: TOEFL 550" class="form-control">
                 </div>
             </div>
-            <button @click="addLang()" class="text-xs font-bold bg-white border border-slate-200 text-slate-700 px-4 py-2 rounded-lg hover:bg-slate-50 hover:border-slate-300 transition-all shadow-sm">
+            <button @click="addLang()" class="btn-secondary text-xs">
                 + Tambah Bahasa
             </button>
         </div>

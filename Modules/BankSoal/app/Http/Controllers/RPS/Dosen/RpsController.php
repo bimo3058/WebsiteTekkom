@@ -355,10 +355,12 @@ class RpsController extends Controller
     }
 
     // Proses penyimpanan RPS baru
-    public function store(Request $request): RedirectResponse
+    public function store(Request $request): RedirectResponse|JsonResponse
     {
+        $creationMethod = $request->input('creation_method', 'upload');
+
         // Validasi Input 
-        $validated = $request->validate([
+        $rules = [
             'mata_kuliah_id' => ['required', 'exists:bs_mata_kuliah,id'],
             'dosen_lain'     => ['nullable', 'array'],
             'dosen_lain.*'   => ['exists:users,id'],
@@ -370,13 +372,27 @@ class RpsController extends Controller
             'cpmk_rows.*.kko'        => ['required', 'string', 'max:20'],
             'cpmk_rows.*.objek'      => ['required', 'string', 'max:1000'],
             'cpmk_rows.*.konteks'    => ['nullable', 'string', 'max:1000'],
-            'dokumen'        => ['required', 'file', 'mimes:pdf', 'max:5120'], 
             'catatan'        => ['nullable', 'string', 'max:1000'],
-        ], [
+        ];
+
+        if ($creationMethod === 'upload') {
+            $rules['dokumen'] = ['required', 'file', 'mimes:pdf', 'max:5120'];
+        } else {
+            $rules['deskripsi_mk'] = ['required', 'string'];
+            $rules['penilaian_data'] = ['required', 'array', 'min:1'];
+            $rules['pertemuan_data'] = ['required', 'array', 'min:1'];
+            $rules['referensi_data'] = ['required', 'array', 'min:1'];
+        }
+
+        $validated = $request->validate($rules, [
             'dokumen.max' => 'Ukuran file maksimal 5MB',
             'dokumen.mimes' => 'Hanya menerima File berformat PDF',
             'dokumen.required' => 'File RPS harus diunggah',
             'cpmk_rows.required' => 'Minimal satu baris CPMK harus diisi',
+            'deskripsi_mk.required' => 'Deskripsi MK wajib diisi',
+            'penilaian_data.required' => 'Data penilaian wajib diisi',
+            'pertemuan_data.required' => 'Data pertemuan wajib diisi',
+            'referensi_data.required' => 'Data referensi wajib diisi',
         ]);
 
         // Cek apakah Periode RPS Aktif dan Valid
@@ -419,34 +435,151 @@ class RpsController extends Controller
         DB::beginTransaction();
 
         try {
-            // Upload File ke Supabase
-            $file = $request->file('dokumen');
-            
-            // Ambil informasi yang diperlukan untuk naming
-            $mataKuliah = MataKuliah::findOrFail($validated['mata_kuliah_id']);
-            $kodeMk = $mataKuliah->kode;  
-            $tahun = now()->year;          
-            $semester = $validated['semester'];
-            $employeeNumber = Auth::user()->load('lecturer')->lecturer->employee_number;
-            
-            // Format nama file: kodeMK_tahun_semester_employeeNumber
-            $fileName = "{$kodeMk}_{$tahun}_{$semester}_{$employeeNumber}";
-            
+            $uploadedDokumenPath = null;
             $supabaseStorage = new SupabaseStorage();
-            $pathDokumen = $supabaseStorage->upload($file, 'rps', 'rps', $fileName);
 
-            if (!$pathDokumen) {
-                throw new \Exception('Gagal mengupload file ke Supabase. Silakan periksa koneksi internet atau coba lagi');
+            $mataKuliah = MataKuliah::findOrFail($validated['mata_kuliah_id']);
+            $mkNama = trim($mataKuliah->nama);
+            $mkNama = preg_replace('/\s+/', ' ', $mkNama);
+            $mkNama = preg_replace('/[\\\\:*?"<>|]+/', '', $mkNama);
+            $tahunAjaranSafe = str_replace('/', '-', $validated['tahun_ajaran']);
+            $semesterSafe = ucfirst(strtolower($validated['semester']));
+            
+            $fileName = "RPS_{$mkNama}_{$tahunAjaranSafe}_{$semesterSafe}_V1";
+
+            if ($creationMethod === 'generator') {
+                // Map CPMK rows for PDF
+                $createdCpmkRowsTemp = [];
+                $kkoService = new KkoService();
+                foreach ($validated['cpmk_rows'] as $row) {
+                    $kkoLabel = $kkoService->label($row['kko']);
+                    $deskripsi = $this->buildCpmkDeskripsi($kkoLabel, $row['objek'], $row['konteks']);
+                    $cplObj = Cpl::find($row['cpl_id']);
+                    $cplKode = $cplObj ? $cplObj->kode : '';
+                    
+                    $cplNum = '';
+                    if (preg_match('/\d+/', $cplKode, $matches)) {
+                        $cplNum = $matches[0];
+                    } else {
+                        $cplNum = $cplKode;
+                    }
+                    $cpmkKode = "CPMK " . intval($cplNum) . "." . trim($row['kode']);
+
+                    $createdCpmkRowsTemp[] = [
+                        'cpl_kode' => $cplKode,
+                        'cpmk_kode' => $cpmkKode,
+                        'cpmk_deskripsi' => $deskripsi,
+                    ];
+                }
+
+                $cplIds = collect($validated['cpmk_rows'])->pluck('cpl_id')->filter()->unique()->values()->all();
+                $cpls = Cpl::whereIn('id', $cplIds)->orderBy('kode')->get(['kode', 'deskripsi'])->toArray();
+
+                $dosenIds = $validated['dosen_lain'] ?? [];
+                $dosenIds[] = Auth::id();
+                $dosenIds = array_unique($dosenIds);
+                $dosens = User::whereIn('id', $dosenIds)->orderBy('name')->get(['name'])->toArray();
+
+                // Normalisasi target_cpmk on pertemuan_data
+                $normalizedPertemuan = $validated['pertemuan_data'];
+                foreach ($normalizedPertemuan as $i => $meeting) {
+                    if (isset($meeting['target_cpmk'])) {
+                        $cpmkVal = $meeting['target_cpmk'];
+                        if (is_array($cpmkVal)) {
+                            $normalizedPertemuan[$i]['target_cpmk'] = implode(', ', array_map(function($v) {
+                                return 'CPMK ' . $v;
+                            }, $cpmkVal));
+                        } else {
+                            $normalizedPertemuan[$i]['target_cpmk'] = 'CPMK ' . $cpmkVal;
+                        }
+                    }
+                }
+
+                // Normalisasi cpmk on penilaian_data
+                $normalizedPenilaian = $validated['penilaian_data'];
+                foreach ($normalizedPenilaian as $i => $item) {
+                    if (isset($item['cpmk']) && is_array($item['cpmk'])) {
+                        $normalizedPenilaian[$i]['cpmk'] = implode(', ', array_map(function($v) {
+                            return 'CPMK ' . $v;
+                        }, $item['cpmk']));
+                    }
+                    if (isset($item['sub_rows'])) {
+                        foreach ($item['sub_rows'] as $j => $sub) {
+                            if (isset($sub['cpmk']) && is_array($sub['cpmk'])) {
+                                $normalizedPenilaian[$i]['sub_rows'][$j]['cpmk'] = implode(', ', array_map(function($v) {
+                                    return 'CPMK ' . $v;
+                                }, $sub['cpmk']));
+                            }
+                        }
+                    }
+                }
+
+                $pdfData = [
+                    'tahun_akademik' => $validated['tahun_ajaran'],
+                    'mata_kuliah' => [
+                        'nama' => $mataKuliah->nama,
+                        'kode' => $mataKuliah->kode,
+                        'sks' => $mataKuliah->sks,
+                    ],
+                    'dosens' => $dosens,
+                    'penilaian' => $normalizedPenilaian,
+                    'cpl' => $cpls,
+                    'cpmk' => $createdCpmkRowsTemp,
+                    'deskripsi_mk' => $validated['deskripsi_mk'],
+                    'pertemuan' => $normalizedPertemuan,
+                    'referensi' => $validated['referensi_data'],
+                    'semester' => $validated['semester'],
+                ];
+
+                $pdfContent = $this->generateRpsPdf($pdfData);
+
+                // Save PDF to temp file
+                $tempPath = tempnam(sys_get_temp_dir(), 'rps_');
+                rename($tempPath, $tempPath . '.pdf');
+                $tempPath = $tempPath . '.pdf';
+                file_put_contents($tempPath, $pdfContent);
+
+                $uploadedFile = new \Illuminate\Http\UploadedFile(
+                    $tempPath,
+                    "{$mataKuliah->kode}_{$validated['semester']}.pdf",
+                    'application/pdf',
+                    null,
+                    true
+                );
+
+                $pathDokumen = $supabaseStorage->upload($uploadedFile, 'rps', 'rps', $fileName);
+
+                if (file_exists($tempPath)) {
+                    unlink($tempPath);
+                }
+
+                if (!$pathDokumen) {
+                    throw new \Exception('Gagal mengupload file ke Supabase. Silakan periksa koneksi internet atau coba lagi');
+                }
+
+                $uploadedDokumenPath = $pathDokumen;
+
+            } else {
+                // Upload File ke Supabase secara manual
+                $file = $request->file('dokumen');
+                $pathDokumen = $supabaseStorage->upload($file, 'rps', 'rps', $fileName);
+
+                if (!$pathDokumen) {
+                    throw new \Exception('Gagal mengupload file ke Supabase. Silakan periksa koneksi internet atau coba lagi');
+                }
+
+                $uploadedDokumenPath = $pathDokumen;
             }
 
             // Simpan data ke Tabel RPS
             $rps = RpsDetail::create([
-                'mk_id'        => $validated['mata_kuliah_id'],
-                'semester'     => $validated['semester'],
-                'tahun_ajaran' => $validated['tahun_ajaran'],
-                'dokumen'      => $pathDokumen,
-                'status'       => RpsStatus::DIAJUKAN, 
-                'catatan'      => $validated['catatan'] ?? null,
+                'mk_id'           => $validated['mata_kuliah_id'],
+                'semester'        => $validated['semester'],
+                'tahun_ajaran'    => $validated['tahun_ajaran'],
+                'dokumen'         => $uploadedDokumenPath,
+                'status'          => RpsStatus::DIAJUKAN, 
+                'catatan'         => $validated['catatan'] ?? null,
+                'creation_method' => $creationMethod,
             ]);
 
             // Informasi Data Dosen Terkait
@@ -473,6 +606,20 @@ class RpsController extends Controller
                     'cpmk_id' => $row['cpmk_id'],
                 ];
             }, $createdCpmkRows));
+
+            // Simpan data terstruktur generator jika menggunakan mode generator
+            if ($creationMethod === 'generator') {
+                $rps->generateDetail()->create([
+                    'created_by'     => Auth::id(),
+                    'deskripsi_mk'   => $validated['deskripsi_mk'],
+                    'penilaian_data' => $validated['penilaian_data'],
+                    'pertemuan_data' => $validated['pertemuan_data'],
+                    'referensi_data' => $validated['referensi_data'],
+                ]);
+
+                // Clear wizard cache
+                session()->forget("rps_wizard_cache_" . Auth::id() . "_" . $validated['mata_kuliah_id']);
+            }
 
             // Update is_rps menjadi 'TRUE' di bs_dosen_pengampu_mk untuk semua dosen
             DB::table('bs_dosen_pengampu_mk')
@@ -501,6 +648,15 @@ class RpsController extends Controller
             // Commit perubahan ke DB
             DB::commit();
 
+            $isAjax = $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
+            if ($isAjax) {
+                return response()->json([
+                    'success' => true,
+                    'redirect' => route('banksoal.rps.dosen.index'),
+                    'message' => 'RPS berhasil disimpan dan sedang menunggu verifikasi GPM.'
+                ]);
+            }
+
             return redirect()->route('banksoal.rps.dosen.index')
                 ->with('success', 'RPS berhasil disimpan dan sedang menunggu verifikasi GPM.');
 
@@ -515,6 +671,14 @@ class RpsController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             
+            $isAjax = $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+                ], 500);
+            }
+
             return back()->withInput()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
         }
     }
@@ -808,23 +972,85 @@ class RpsController extends Controller
     public function previewDokumen(int $rpsId)
     {
         try {
-            // Fetch RPS record atau throw 404
-            $rps = RpsDetail::findOrFail($rpsId);
-            
-            if (!$rps->dokumen) {
-                abort(404, 'Dokumen tidak ditemukan');
+            $rpsService = app(\Modules\BankSoal\Services\RpsService::class);
+            $data = $rpsService->getRpsReviewData($rpsId);
+            $rps = $data['rps'];
+
+            $fileUrl = null;
+            $downloadUrl = null;
+            $errorMessage = null;
+
+            if ($rps->dokumen) {
+                $supabaseStorage = new SupabaseStorage();
+                $fileUrl = $supabaseStorage->getPublicUrl($rps->dokumen, 'rps');
+                
+                try {
+                    $response = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(2)->get($fileUrl);
+                    if ($response->status() === 404) {
+                        // Coba lakukan pencarian self-healing dengan nama berkas baru yang mungkin sudah direname
+                        $mkName = trim($rps->mk_nama ?? 'MataKuliah');
+                        $mkName = preg_replace('/\s+/', ' ', $mkName);
+                        $tahunAjaranSafe = str_replace('/', '-', (string) $rps->tahun_ajaran);
+                        $semesterSafe = ucfirst(strtolower((string) $rps->semester));
+                        
+                        $baseFileName = sprintf('RPS_%s_%s_%s', $mkName, $tahunAjaranSafe, $semesterSafe);
+                        $baseFileName = preg_replace('/[\\\\:*?"<>|]+/', '', $baseFileName);
+                        $baseFileName = trim((string) $baseFileName, " \t\n\r\0\x0B._");
+                        
+                        $healedPath = 'rps/' . $baseFileName . '.pdf';
+                        $healedUrl = $supabaseStorage->getPublicUrl($healedPath, 'rps');
+                        
+                        $healedResponse = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(2)->get($healedUrl);
+                        if ($healedResponse->status() === 200) {
+                            // Berkas ditemukan di Supabase! Lakukan self-healing sinkronisasi database
+                            DB::table('bs_rps_detail')->where('id', $rpsId)->update(['dokumen' => $healedPath]);
+                            $rps->dokumen = $healedPath;
+                            $fileUrl = $healedUrl;
+                            $errorMessage = null;
+                        } else {
+                            $fileUrl = null;
+                            $errorMessage = 'Berkas PDF tidak ditemukan di server penyimpanan (Supabase Storage). Silakan hubungi dosen pengampu atau unggah ulang dokumen RPS.';
+                        }
+                    }
+                } catch (\Exception $ex) {
+                    // Fallback to let the browser attempt loading if network check fails/timeouts
+                }
+
+                if ($fileUrl) {
+                    $downloadUrl = route('banksoal.rps.dosen.download', ['rpsId' => $rpsId]);
+                }
+            } else {
+                $errorMessage = 'Dokumen RPS belum diunggah atau tidak dapat ditemukan.';
             }
 
-            // Generate Supabase public URL dari path yang disimpan
-            $supabaseStorage = new SupabaseStorage();
-            $publicUrl = $supabaseStorage->getPublicUrl($rps->dokumen, 'rps');
-            
-            // Redirect ke Supabase untuk preview
-            return redirect($publicUrl);
-                
+            $data['fileUrl'] = $fileUrl;
+            $data['downloadUrl'] = $downloadUrl;
+            $data['errorMessage'] = $errorMessage;
+
+            return view('banksoal::pages.rps.preview-page', $data);
+
         } catch (\Exception $e) {
             \Log::error('previewDokumen Error', ['rps_id' => $rpsId, 'error' => $e->getMessage()]);
-            abort(404, 'Dokumen tidak ditemukan');
+            $rps = null;
+            $fileUrl = null;
+            $downloadUrl = null;
+            $errorMessage = 'Terjadi kesalahan saat memuat dokumen: ' . $e->getMessage();
+            
+            $data = [
+                'rps' => null,
+                'fileUrl' => null,
+                'downloadUrl' => null,
+                'errorMessage' => $errorMessage,
+                'parameters' => collect(),
+                'existingReview' => null,
+                'history' => collect(),
+                'selectedCpls' => collect(),
+                'cplCpmkMappings' => collect(),
+                'draftCpmkItems' => collect(),
+                'dosenPengampu' => collect(),
+                'totalBobot' => 0
+            ];
+            return view('banksoal::pages.rps.preview-page', $data);
         }
     }
 
@@ -953,20 +1179,26 @@ class RpsController extends Controller
                 return $item;
             });
 
+        $generateDetail = null;
+        if ($rps->creation_method === 'generator') {
+            $generateDetail = $rps->generateDetail;
+        }
+
         return view('banksoal::pages.rps.dosen.edit', compact(
             'rps',
             'tahunAjarans',
             'selectedDosenIds',
             'existingCpmkRows',
             'isUploadOpen',
-            'history'
+            'history',
+            'generateDetail'
         ));
     }
 
-    /**
+            /**
      * Update RPS yang sudah ada
      */
-    public function update(int $rpsId, Request $request): RedirectResponse
+    public function update(int $rpsId, Request $request): RedirectResponse|JsonResponse
     {
         $user = Auth::user()->load('lecturer');
         $rps = RpsDetail::with('dosens')->findOrFail($rpsId);
@@ -980,8 +1212,10 @@ class RpsController extends Controller
         $editableStatuses = [RpsStatus::DIAJUKAN->value, RpsStatus::REVISI->value];
         abort_if(!in_array($rps->status->value, $editableStatuses), 403, 'RPS dengan status ' . $rps->status->label() . ' tidak dapat diedit.');
 
+        $creationMethod = $request->input('creation_method', $rps->creation_method ?? 'upload');
+
         // Validasi Input
-        $validated = $request->validate([
+        $rules = [
             'mata_kuliah_id'         => ['required', 'exists:bs_mata_kuliah,id'],
             'dosen_lain'             => ['nullable', 'array'],
             'dosen_lain.*'           => ['exists:users,id'],
@@ -994,13 +1228,27 @@ class RpsController extends Controller
             'cpmk_rows.*.objek'      => ['required', 'string', 'max:1000'],
             'cpmk_rows.*.konteks'    => ['nullable', 'string', 'max:1000'],
             'catatan'                => [$isRevisionResubmit ? 'required' : 'nullable', 'string', 'max:1000'],
-            'dokumen'                => [$isRevisionResubmit ? 'required' : 'nullable', 'file', 'mimes:pdf', 'max:5120'],
-        ], [
+        ];
+
+        if ($creationMethod === 'upload') {
+            $rules['dokumen'] = [$isRevisionResubmit ? 'required' : 'nullable', 'file', 'mimes:pdf', 'max:5120'];
+        } else {
+            $rules['deskripsi_mk'] = ['required', 'string'];
+            $rules['penilaian_data'] = ['required', 'array', 'min:1'];
+            $rules['pertemuan_data'] = ['required', 'array', 'min:1'];
+            $rules['referensi_data'] = ['required', 'array', 'min:1'];
+        }
+
+        $validated = $request->validate($rules, [
             'dokumen.max'            => 'Ukuran file maksimal 5MB',
             'dokumen.mimes'          => 'Hanya menerima File berformat PDF',
             'dokumen.required'       => 'File RPS baru wajib diunggah saat revisi',
             'catatan.required'       => 'Catatan revisi wajib diisi',
             'cpmk_rows.required'     => 'Minimal satu baris CPMK harus diisi',
+            'deskripsi_mk.required'  => 'Deskripsi MK wajib diisi',
+            'penilaian_data.required'=> 'Data penilaian wajib diisi',
+            'pertemuan_data.required'=> 'Data pertemuan wajib diisi',
+            'referensi_data.required'=> 'Data referensi wajib diisi',
         ]);
 
         // Cek apakah Periode RPS Aktif
@@ -1032,44 +1280,169 @@ class RpsController extends Controller
                 'dosen_ids' => $rps->dosens()->pluck('id')->toArray(),
             ];
 
-            // Update dokumen jika ada file baru
-            if ($request->hasFile('dokumen')) {
-                $file = $request->file('dokumen');
-                
-                // Ambil informasi untuk naming
-                $mataKuliah = MataKuliah::findOrFail($validated['mata_kuliah_id']);
-                $kodeMk = $mataKuliah->kode;
-                $tahun = now()->year;
-                $semester = $validated['semester'];
-                $employeeNumber = $user->lecturer->employee_number;
-                
-                // Format nama file
-                $fileName = "{$kodeMk}_{$tahun}_{$semester}_{$employeeNumber}";
-                
-                $supabaseStorage = new SupabaseStorage();
-                $pathDokumen = $supabaseStorage->upload($file, 'rps', 'rps', $fileName);
+            // Naming components
+            $mataKuliah = MataKuliah::findOrFail($validated['mata_kuliah_id']);
+            $mkNama = trim($mataKuliah->nama);
+            $mkNama = preg_replace('/\s+/', ' ', $mkNama);
+            $mkNama = preg_replace('/[\\\\:*?"<>|]+/', '', $mkNama);
+            $tahunAjaranSafe = str_replace('/', '-', $validated['tahun_ajaran']);
+            $semesterSafe = ucfirst(strtolower($validated['semester']));
+            
+            // Version count based on audit logs of submissions
+            $versionCount = DB::table('bs_audit_logs')
+                ->where('subject_type', 'rps')
+                ->where('subject_id', $rps->id)
+                ->whereIn('action', ['created', 'updated'])
+                ->count();
+            $version = 'V' . ($versionCount + 1);
+            
+            // Format nama file: RPS_Nama MK_Tahun Ajaran_Semester_Versi
+            $fileName = "RPS_{$mkNama}_{$tahunAjaranSafe}_{$semesterSafe}_{$version}";
+
+            $supabaseStorage = new SupabaseStorage();
+            $uploadedDokumenPath = $rps->dokumen;
+
+            if ($creationMethod === 'generator') {
+                // Generate PDF from wizard input
+                $createdCpmkRowsTemp = [];
+                $kkoService = new KkoService();
+                foreach ($validated['cpmk_rows'] as $row) {
+                    $kkoLabel = $kkoService->label($row['kko']);
+                    $deskripsi = $this->buildCpmkDeskripsi($kkoLabel, $row['objek'], $row['konteks']);
+                    $cplObj = Cpl::find($row['cpl_id']);
+                    $cplKode = $cplObj ? $cplObj->kode : '';
+                    
+                    $cplNum = '';
+                    if (preg_match('/\d+/', $cplKode, $matches)) {
+                        $cplNum = $matches[0];
+                    } else {
+                        $cplNum = $cplKode;
+                    }
+                    $cpmkKode = "CPMK " . intval($cplNum) . "." . trim($row['kode']);
+
+                    $createdCpmkRowsTemp[] = [
+                        'cpl_kode' => $cplKode,
+                        'cpmk_kode' => $cpmkKode,
+                        'cpmk_deskripsi' => $deskripsi,
+                    ];
+                }
+
+                $cplIds = collect($validated['cpmk_rows'])->pluck('cpl_id')->filter()->unique()->values()->all();
+                $cpls = Cpl::whereIn('id', $cplIds)->orderBy('kode')->get(['kode', 'deskripsi'])->toArray();
+
+                $dosenIds = $validated['dosen_lain'] ?? [];
+                $dosenIds[] = Auth::id();
+                $dosenIds = array_unique($dosenIds);
+                $dosens = User::whereIn('id', $dosenIds)->orderBy('name')->get(['name'])->toArray();
+
+                // Normalisasi target_cpmk on pertemuan_data
+                $normalizedPertemuan = $validated['pertemuan_data'];
+                foreach ($normalizedPertemuan as $i => $meeting) {
+                    if (isset($meeting['target_cpmk'])) {
+                        $cpmkVal = $meeting['target_cpmk'];
+                        if (is_array($cpmkVal)) {
+                            $normalizedPertemuan[$i]['target_cpmk'] = implode(', ', array_map(function($v) {
+                                return 'CPMK ' . $v;
+                            }, $cpmkVal));
+                        } else {
+                            $normalizedPertemuan[$i]['target_cpmk'] = 'CPMK ' . $cpmkVal;
+                        }
+                    }
+                }
+
+                // Normalisasi cpmk on penilaian_data
+                $normalizedPenilaian = $validated['penilaian_data'];
+                foreach ($normalizedPenilaian as $i => $item) {
+                    if (isset($item['cpmk']) && is_array($item['cpmk'])) {
+                        $normalizedPenilaian[$i]['cpmk'] = implode(', ', array_map(function($v) {
+                            return 'CPMK ' . $v;
+                        }, $item['cpmk']));
+                    }
+                    if (isset($item['sub_rows'])) {
+                        foreach ($item['sub_rows'] as $j => $sub) {
+                            if (isset($sub['cpmk']) && is_array($sub['cpmk'])) {
+                                $normalizedPenilaian[$i]['sub_rows'][$j]['cpmk'] = implode(', ', array_map(function($v) {
+                                    return 'CPMK ' . $v;
+                                }, $sub['cpmk']));
+                            }
+                        }
+                    }
+                }
+
+                $pdfData = [
+                    'tahun_akademik' => $validated['tahun_ajaran'],
+                    'mata_kuliah' => [
+                        'nama' => $mataKuliah->nama,
+                        'kode' => $mataKuliah->kode,
+                        'sks' => $mataKuliah->sks,
+                    ],
+                    'dosens' => $dosens,
+                    'penilaian' => $normalizedPenilaian,
+                    'cpl' => $cpls,
+                    'cpmk' => $createdCpmkRowsTemp,
+                    'deskripsi_mk' => $validated['deskripsi_mk'],
+                    'pertemuan' => $normalizedPertemuan,
+                    'referensi' => $validated['referensi_data'],
+                    'semester' => $validated['semester'],
+                ];
+
+                $pdfContent = $this->generateRpsPdf($pdfData);
+
+                # Save PDF to temp file
+                $tempPath = tempnam(sys_get_temp_dir(), 'rps_');
+                rename($tempPath, $tempPath . '.pdf');
+                $tempPath = $tempPath . '.pdf';
+                file_put_contents($tempPath, $pdfContent);
+
+                $uploadedFile = new \Illuminate\Http\UploadedFile(
+                    $tempPath,
+                    "{$mataKuliah->kode}_{$validated['semester']}.pdf",
+                    'application/pdf',
+                    null,
+                    true
+                );
+
+                $pathDokumen = $supabaseStorage->upload($uploadedFile, 'rps', 'rps', $fileName);
+
+                if (file_exists($tempPath)) {
+                    unlink($tempPath);
+                }
 
                 if (!$pathDokumen) {
                     throw new \Exception('Gagal mengupload file ke Supabase. Silakan periksa koneksi internet atau coba lagi');
                 }
 
-                $rps->dokumen = $pathDokumen;
+                $uploadedDokumenPath = $pathDokumen;
+
+            } else {
+                # Update dokumen jika ada file baru
+                if ($request->hasFile('dokumen')) {
+                    $file = $request->file('dokumen');
+                    $pathDokumen = $supabaseStorage->upload($file, 'rps', 'rps', $fileName);
+
+                    if (!$pathDokumen) {
+                        throw new \Exception('Gagal mengupload file ke Supabase. Silakan periksa koneksi internet atau coba lagi');
+                    }
+
+                    $uploadedDokumenPath = $pathDokumen;
+                }
             }
 
-            // Update data RPS
+            # Update data RPS
             $rps->mk_id = $validated['mata_kuliah_id'];
             $rps->semester = $validated['semester'];
             $rps->tahun_ajaran = $validated['tahun_ajaran'];
             $rps->catatan = $validated['catatan'];
+            $rps->dokumen = $uploadedDokumenPath;
             
-            // Jika status saat ini 'revisi', ubah menjadi 'diajukan' (re-submission setelah revisi)
+            # Jika status saat ini 'revisi', ubah menjadi 'diajukan' (re-submission setelah revisi)
             if ($isRevisionResubmit) {
                 $rps->status = RpsStatus::DIAJUKAN;
             }
             
             $rps->save();
 
-            // Buat CPMK baru dari baris form (format sama dengan store)
+            # Buat CPMK baru dari baris form (format sama dengan store)
             $duplicateCpmkCodes = collect($validated['cpmk_rows'])
                 ->map(fn (array $row) => $this->normalizeCpmkKode((string) ($row['kode'] ?? '')))
                 ->filter()
@@ -1087,10 +1460,10 @@ class RpsController extends Controller
                 ->values()
                 ->all();
 
-            // Update relasi CPL, CPMK, dan Dosen
+            # Update relasi CPL, CPMK, dan Dosen
             $dosenIds = $validated['dosen_lain'] ?? [];
             $dosenIds[] = $user->id;
-            $dosenIds = array_unique($dosenIds); // Remove duplicates
+            $dosenIds = array_unique($dosenIds); # Remove duplicates
 
             $rps->cpls()->sync(collect($createdCpmkRows)->pluck('cpl_id')->filter()->unique()->values()->all());
             $rps->dosens()->sync($dosenIds);
@@ -1104,13 +1477,30 @@ class RpsController extends Controller
                 ];
             }, $createdCpmkRows));
 
-            // Update is_rps di bs_dosen_pengampu_mk
+            # Simpan / update generator detail
+            if ($creationMethod === 'generator') {
+                $rps->generateDetail()->updateOrCreate(
+                    ['rps_detail_id' => $rps->id],
+                    [
+                        'created_by'     => Auth::id(),
+                        'deskripsi_mk'   => $validated['deskripsi_mk'],
+                        'penilaian_data' => $validated['penilaian_data'],
+                        'pertemuan_data' => $validated['pertemuan_data'],
+                        'referensi_data' => $validated['referensi_data'],
+                    ]
+                );
+
+                # Clear wizard cache
+                session()->forget("rps_wizard_cache_" . Auth::id() . "_" . $validated['mata_kuliah_id']);
+            }
+
+            # Update is_rps di bs_dosen_pengampu_mk
             DB::table('bs_dosen_pengampu_mk')
                 ->whereIn('user_id', $dosenIds)
                 ->where('mk_id', $validated['mata_kuliah_id'])
                 ->update(['is_rps' => 'TRUE']);
 
-            // Log audit
+            # Log audit
             BsAuditLog::create([
                 'user_id'      => Auth::id(),
                 'action'       => 'updated',
@@ -1133,6 +1523,15 @@ class RpsController extends Controller
 
             DB::commit();
 
+            $isAjax = $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
+            if ($isAjax) {
+                return response()->json([
+                    'success' => true,
+                    'redirect' => route('banksoal.rps.dosen.index'),
+                    'message' => 'RPS berhasil diperbarui.'
+                ]);
+            }
+
             return redirect()->route('banksoal.rps.dosen.index')
                 ->with('success', 'RPS berhasil diperbarui.');
 
@@ -1146,14 +1545,17 @@ class RpsController extends Controller
                 'trace' => $e->getTraceAsString(),
             ]);
             
+            $isAjax = $request->ajax() || $request->wantsJson() || $request->header('X-Requested-With') === 'XMLHttpRequest';
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan sistem: ' . $e->getMessage()
+                ], 500);
+            }
+
             return back()->withInput()->with('error', 'Terjadi kesalahan sistem: ' . $e->getMessage());
         }
-    }
-
-    /**
-     * Hapus RPS (Hard Delete)
-     */
-    public function destroy(int $rpsId, Request $request): RedirectResponse|JsonResponse
+    }public function destroy(int $rpsId, Request $request): RedirectResponse|JsonResponse
     {
         $user = Auth::user()->load('lecturer');
         $rps = RpsDetail::with('dosens')->findOrFail($rpsId);
@@ -1290,5 +1692,49 @@ class RpsController extends Controller
             'isUploadOpen',
             'rpsId'
         ));
+    }
+
+    public function saveWizardCache(Request $request): JsonResponse
+    {
+        $userId = Auth::id();
+        $mkId = $request->input('mata_kuliah_id');
+        if (!$mkId) {
+            return response()->json(['success' => false, 'message' => 'Mata kuliah ID wajib diisi.'], 400);
+        }
+
+        $sessionKey = "rps_wizard_cache_{$userId}_{$mkId}";
+        $existingData = session()->get($sessionKey, []);
+        $newData = $request->except(['_token']);
+        $mergedData = array_merge($existingData, $newData);
+        
+        session()->put($sessionKey, $mergedData);
+        session()->save();
+
+        return response()->json(['success' => true, 'message' => 'Draft progress berhasil disimpan.']);
+    }
+
+    public function clearWizardCache(Request $request): JsonResponse
+    {
+        $userId = Auth::id();
+        $mkId = $request->input('mata_kuliah_id');
+        if ($mkId) {
+            session()->forget("rps_wizard_cache_{$userId}_{$mkId}");
+        }
+        return response()->json(['success' => true]);
+    }
+
+    public function getWizardCache(int $mkId): JsonResponse
+    {
+        $userId = Auth::id();
+        $sessionKey = "rps_wizard_cache_{$userId}_{$mkId}";
+        $data = session()->get($sessionKey, null);
+        return response()->json(['success' => true, 'data' => $data]);
+    }
+
+    private function generateRpsPdf(array $data)
+    {
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('banksoal::pdf.rps', $data);
+        $pdf->setPaper('a4', 'portrait');
+        return $pdf->output();
     }
 }

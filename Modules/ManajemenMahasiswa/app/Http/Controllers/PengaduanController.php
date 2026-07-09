@@ -3,9 +3,11 @@
 namespace Modules\ManajemenMahasiswa\Http\Controllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Modules\ManajemenMahasiswa\Models\Pengaduan;
+use Modules\ManajemenMahasiswa\Models\PengaduanDelegasi;
 use Modules\ManajemenMahasiswa\Services\PengaduanService;
 
 class PengaduanController extends Controller
@@ -14,31 +16,43 @@ class PengaduanController extends Controller
         'mahasiswa',
         'dosen',
         'gpm',
+        'kaprodi',
+        'dpm',
         'admin',
         'superadmin',
         'admin_kemahasiswaan',
+        'ketua_departemen',
     ];
 
     private const STAFF_VIEW_ROLES = [
         'dosen',
         'gpm',
+        'kaprodi',
+        'dpm',
         'admin',
         'superadmin',
         'admin_kemahasiswaan',
+        'ketua_departemen',
     ];
 
     private const REPLY_ROLES = [
         'gpm',
+        'kaprodi',
+        'dpm',
         'admin',
         'superadmin',
         'admin_kemahasiswaan',
+        'ketua_departemen',
     ];
 
     private const DELETE_ROLES = [
         'gpm',
+        'kaprodi',
+        'dpm',
         'admin',
         'superadmin',
         'admin_kemahasiswaan',
+        'ketua_departemen',
     ];
 
     public function __construct(private PengaduanService $pengaduanService)
@@ -63,14 +77,34 @@ class PengaduanController extends Controller
         ];
 
         $allowedKategori = Pengaduan::KATEGORI_LIST;
-        $allowedStatus = [Pengaduan::STATUS_BARU, Pengaduan::STATUS_DIBACA, Pengaduan::STATUS_DIJAWAB];
+        $allowedStatus = [
+            Pengaduan::STATUS_BARU,
+            Pengaduan::STATUS_DIBACA,
+            Pengaduan::STATUS_DIDELEGASIKAN,
+            Pengaduan::STATUS_SELESAI,
+        ];
+
+        $isDosenOnly = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['dosen', 'dosen_koordinator']) && !$user->hasAnyRole(['admin', 'superadmin', 'admin_kemahasiswaan', 'gpm', 'kaprodi', 'dpm', 'ketua_departemen']);
 
         $query = Pengaduan::query();
         if ($isStaff) {
-            $query->with(['pelapor']);
+            $query->with(['pelapor', 'delegasiAktif.delegatedTo']);
+            if ($isDosenOnly) {
+                // Dosen hanya bisa melihat tiket yang didelegasikan ke mereka
+                $query->whereHas('delegasi', function($q) use ($user) {
+                    $q->where('delegated_to', $user->id);
+                });
+            }
         } else {
-            $query->where('user_id', $user->id);
+            // Mahasiswa hanya bisa melihat tiket non-anonim di daftar ini
+            $query->where('user_id', $user->id)
+                  ->where('is_anonim', false);
         }
+
+        $query->where('status', '!=', Pengaduan::STATUS_DRAFT);
+
+        // ── Base query untuk stats (sebelum filter user) ─────────
+        $baseQuery = clone $query;
 
         if ($filters['kategori'] !== '' && in_array($filters['kategori'], $allowedKategori, true)) {
             $kategoriUtama = $filters['kategori'];
@@ -96,32 +130,88 @@ class PengaduanController extends Controller
             });
         }
 
-        $belumDijawabCount = (clone $query)
-            ->where('status', '!=', Pengaduan::STATUS_DIJAWAB)
+        $belumDijawabCount = (clone $baseQuery)
+            ->where('status', '!=', Pengaduan::STATUS_SELESAI)
             ->count();
+
+        $selesaiCount = (clone $baseQuery)
+            ->where('status', Pengaduan::STATUS_SELESAI)
+            ->count();
+
+        // ── Stats lanjutan per role ──────────────────────────────
+        $summaryStats = [];
+
+        if ($isStaff) {
+            $perluDitindakCount = (clone $baseQuery)
+                ->where('status', Pengaduan::STATUS_BARU)
+                ->count();
+
+            $baruCount = $perluDitindakCount;
+
+            $menungguDosenCount = (clone $baseQuery)
+                ->where('status', Pengaduan::STATUS_DIDELEGASIKAN)
+                ->count();
+
+            $totalNonDraft = (clone $baseQuery)->count();
+            $ditanganiCount = (clone $baseQuery)
+                ->where('status', Pengaduan::STATUS_SELESAI)
+                ->count();
+            $responsivitas = $totalNonDraft > 0 ? round($ditanganiCount / $totalNonDraft * 100) : 0;
+
+            // Distribusi per kategori (Semua kategori)
+            $kategoriDistribusi = (clone $baseQuery)
+                ->selectRaw("kategori, COUNT(*) as total")
+                ->groupBy('kategori')
+                ->orderByDesc('total')
+                ->pluck('total', 'kategori');
+
+            $summaryStats = compact(
+                'perluDitindakCount', 'baruCount',
+                'menungguDosenCount',
+                'responsivitas', 'ditanganiCount', 'totalNonDraft',
+                'kategoriDistribusi',
+            );
+        } else {
+            // Mahasiswa stats disederhanakan
+            $summaryStats = [];
+        }
 
         $pengaduan = $query
             ->orderByDesc('created_at')
-            ->paginate($isStaff ? 20 : 15)
+            ->paginate(15)
             ->withQueryString();
 
         $kategoriOptions = $this->kategoriMetaNew();
         $statusOptions = [
             Pengaduan::STATUS_BARU => 'Baru',
-            Pengaduan::STATUS_DIBACA => 'Dibaca',
-            Pengaduan::STATUS_DIJAWAB => 'Dijawab',
+            Pengaduan::STATUS_DIBACA => 'Diproses',
+            Pengaduan::STATUS_DIDELEGASIKAN => 'Didelegasikan',
+            Pengaduan::STATUS_SELESAI => 'Selesai',
         ];
+
+        $isDosenOnlyView = $isDosenOnly;
 
         return view('manajemenmahasiswa::pengaduan.index', compact(
             'pengaduan',
             'isStaff',
+            'isDosenOnlyView',
             'canCreate',
             'canDelete',
             'filters',
             'kategoriOptions',
             'statusOptions',
             'belumDijawabCount',
+            'selesaiCount',
+            'summaryStats',
         ));
+    }
+
+    public function jalur(Request $request)
+    {
+        $user = $request->user();
+        $this->ensureMahasiswa($user);
+
+        return view('manajemenmahasiswa::pengaduan.jalur');
     }
 
     public function create(Request $request)
@@ -130,32 +220,20 @@ class PengaduanController extends Controller
 
         $this->ensureMahasiswa($user);
 
+        // Redirect ke halaman pilihan jalur jika tidak ada jalur valid
+        $jalur = $request->query('jalur');
+        if (!in_array($jalur, ['reguler', 'konfidensial'])) {
+            return redirect()->route('manajemenmahasiswa.pengaduan.jalur');
+        }
+
         $isStaff = false;
 
         $kategoriList = $this->kategoriMetaNew();
 
-        $dosenList = [
-            'Prof. Dr. Adian Fatchur Rochim, S.T., M.T.',
-            'Prof. Dr. Ir. R. Rizal Isnanto, S.T., M.M., M.T., IPU, ASEAN Eng.',
-            'Dr. Oky Dwi Nurhayati, S.T., M.T.',
-            'Agung Budi Prasetijo, S.T., M.I.T., Ph.D.',
-            'Dr. Maman Somantri, S.T., M.T.',
-            'Rinta Kridalukmana, S.Kom., M.T., Ph.D.',
-            'Kuntoro Adi Nugroho, S.T., M.Eng., Ph.D.',
-            'Yudi Eko Windarto, S.T., M.Kom.',
-            'Dr. Delphi Hanggoro, S.T., M.T.',
-            'Dania Eridani, S.T., M.Eng.',
-            'Ike Pertiwi Windasari, S.T., M.T.',
-            'Eko Didik Widianto, S.T., M.T.',
-            'Kurniawan Teguh Martono, S.T., M.T.',
-            'Risma Septiana, S.T., M.Eng.',
-            'Adnan Fauzi, S.T., M.Kom.',
-            'Patricia Evericho Mountaines, S.T., M.Cs.',
-            'Bellia Dwi Cahya Putri, S.T., M.T.',
-            'Ilmam Fauzi Hashbil Alim, S.T., M.Kom.',
-            'Erwin Adriono, S.T., M.T.',
-            'Arseto Satriyo Nugroho, S.T., M.Eng.',
-        ];
+        $dosenList = User::whereHas('roles', fn($q) => $q->whereIn('name', ['dosen', 'dosen_koordinator']))
+            ->orderBy('name')
+            ->pluck('name')
+            ->toArray();
 
         $frekuensiList = [
             'Sekali' => 'Sekali',
@@ -167,6 +245,7 @@ class PengaduanController extends Controller
         return view('manajemenmahasiswa::pengaduan.create', compact('kategoriList', 'dosenList', 'frekuensiList', 'isStaff'));
     }
 
+
     public function confirm(Request $request)
     {
         $user = $request->user();
@@ -174,6 +253,8 @@ class PengaduanController extends Controller
         $this->ensureMahasiswa($user);
 
         $validated = $this->validatePengaduanPayload($request);
+
+        $request->flash();
 
         $template = $this->normalizeTemplate($validated['template']);
 
@@ -203,6 +284,11 @@ class PengaduanController extends Controller
             template: $template,
         );
 
+        if ($pengaduan->is_anonim) {
+            return redirect()
+                ->route('manajemenmahasiswa.pengaduan.track.success', ['token' => $pengaduan->anon_token]);
+        }
+
         return redirect()
             ->route('manajemenmahasiswa.pengaduan.show', $pengaduan->id)
             ->with('success', 'Pengaduan berhasil dikirim.');
@@ -222,6 +308,14 @@ class PengaduanController extends Controller
             abort(403, 'Anda tidak memiliki akses ke pengaduan ini.');
         }
 
+        $isDosenOnly = method_exists($user, 'hasAnyRole') && $user->hasAnyRole(['dosen', 'dosen_koordinator']) && !$user->hasAnyRole(['admin', 'superadmin', 'admin_kemahasiswaan', 'gpm', 'kaprodi', 'dpm', 'ketua_departemen']);
+        if ($isDosenOnly) {
+            $hasDelegation = $pengaduan->delegasi()->where('delegated_to', $user->id)->exists();
+            if (!$hasDelegation) {
+                abort(403, 'Anda tidak memiliki akses ke pengaduan ini.');
+            }
+        }
+
         if ($isStaff) {
             $this->pengaduanService->markRead($pengaduan, $user->id);
         }
@@ -230,27 +324,28 @@ class PengaduanController extends Controller
         $kategoriLabel = data_get($this->kategoriMetaNew(), $kategoriUtama . '.label')
             ?? ucwords(str_replace('_', ' ', $kategoriUtama));
 
-        return view('manajemenmahasiswa::pengaduan.show', compact('pengaduan', 'isStaff', 'canReply', 'canDelete', 'kategoriLabel'));
-    }
-
-    public function reply(Request $request, Pengaduan $pengaduan)
-    {
-        $user = $request->user();
-
-        $this->ensureViewer($user);
-
-        if (!$this->canReply($user)) {
-            abort(403, 'Anda tidak memiliki akses untuk menjawab pengaduan.');
+        // Untuk modal delegasi: daftar dosen yang bisa dipilih
+        $dosenList = [];
+        if ($canReply) {
+            $dosenList = User::whereHas('roles', fn($q) => $q->whereIn('name', ['dosen', 'dosen_koordinator']))
+                ->orderBy('name')
+                ->get(['id', 'name']);
         }
 
-        $validated = $request->validate([
-            'jawaban' => ['required', 'string', 'min:5', 'max:5000'],
-        ]);
+        $pengaduan->load(['delegasi.delegatedBy', 'delegasi.delegatedTo', 'logs.actor', 'delegasiAktif', 'delegasiTerakhir.delegatedTo', 'delegasiTerakhir.delegatedBy']);
 
-        $this->pengaduanService->reply($pengaduan, $user->id, $validated['jawaban']);
+        $isDelegatedToMe = $pengaduan->delegasiAktif && $pengaduan->delegasiAktif->delegated_to === $user->id && $pengaduan->delegasiAktif->status === 'aktif';
 
-        return back()->with('success', 'Jawaban berhasil dikirim.');
+        // Referensi delegasi yang ditampilkan di panel:
+        // - delegasiAktif: jika masih berstatus 'aktif' (menunggu respons dosen)
+        // - delegasiTerakhir: digunakan untuk membaca tanggapan dosen setelah delegasi selesai/di-forward
+        $delegasiPanel = $pengaduan->delegasiAktif ?? $pengaduan->delegasiTerakhir;
+
+        return view('manajemenmahasiswa::pengaduan.show', compact(
+            'pengaduan', 'isStaff', 'canReply', 'canDelete', 'kategoriLabel', 'dosenList', 'isDelegatedToMe', 'delegasiPanel'
+        ));
     }
+
 
     public function destroy(Request $request, Pengaduan $pengaduan)
     {
@@ -268,6 +363,67 @@ class PengaduanController extends Controller
             ->route('manajemenmahasiswa.pengaduan.index')
             ->with('success', 'Pengaduan berhasil dihapus.');
     }
+
+    public function delegate(Request $request, Pengaduan $pengaduan)
+    {
+        $user = $request->user();
+        $this->ensureViewer($user);
+        if (!$this->canReply($user)) {
+            abort(403, 'Anda tidak memiliki akses untuk mendelegasikan pengaduan.');
+        }
+        if ($pengaduan->isSelesai()) {
+            abort(403, 'Tiket sudah ditutup.');
+        }
+
+        $validated = $request->validate([
+            'delegated_to' => ['required', 'integer', 'exists:users,id'],
+            'notes_admin'  => ['required', 'string', 'min:5', 'max:2000'],
+        ]);
+
+        $this->pengaduanService->delegate(
+            $pengaduan,
+            $user->id,
+            (int) $validated['delegated_to'],
+            $validated['notes_admin']
+        );
+
+        return back()->with('success', 'Pengaduan berhasil didelegasikan.');
+    }
+
+
+    public function closeByAdmin(Request $request, Pengaduan $pengaduan)
+    {
+        $user = $request->user();
+        $this->ensureViewer($user);
+        if (!$this->canReply($user)) {
+            abort(403);
+        }
+        if ($pengaduan->isSelesai()) {
+            return back()->with('info', 'Tiket sudah selesai.');
+        }
+
+        $this->pengaduanService->closeByAdmin($pengaduan, $user->id);
+
+        return back()->with('success', 'Tiket berhasil ditutup.');
+    }
+
+    public function markProses(Request $request, Pengaduan $pengaduan)
+    {
+        $user = $request->user();
+        $this->ensureViewer($user);
+        if (!$this->canReply($user)) {
+            abort(403);
+        }
+
+        if ($pengaduan->status !== Pengaduan::STATUS_BARU) {
+            return back()->with('info', 'Status tiket tidak valid untuk diproses.');
+        }
+
+        $this->pengaduanService->markProses($pengaduan, $user->id);
+
+        return back()->with('success', 'Status tiket berhasil diubah menjadi Diproses.');
+    }
+
 
     private function ensureViewer($user): void
     {

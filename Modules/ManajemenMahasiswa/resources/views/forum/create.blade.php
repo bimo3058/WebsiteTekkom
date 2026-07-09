@@ -1,4 +1,4 @@
-<x-manajemenmahasiswa::layouts.forum-layout>
+﻿<x-manajemenmahasiswa::layouts.forum-layout>
 
     @push('styles')
         <style>
@@ -432,15 +432,15 @@
             {{-- Media Upload (Collapsible) --}}
             <div class="mb-4">
                 <button type="button" class="section-toggle" id="toggleMedia" onclick="toggleSection('media')">
-                    <x-manajemenmahasiswa::ui.icon name="image-02" size="16" /> Tambah Gambar / Video
+                    <x-manajemenmahasiswa::ui.icon name="image-02" size="16" /> Tambah Gambar
                     <span style="margin-left: auto; font-size: 12px; opacity: 0.6;">▼</span>
                 </button>
                 <div class="section-content" id="sectionMedia">
                     <div class="media-dropzone" id="mediaDropzone">
                         <input type="file" name="media_files[]" id="mediaFileInput" multiple
-                            accept="image/jpeg,image/png,image/gif,image/webp,video/mp4,video/webm">
+                            accept="image/jpeg,image/png,image/webp">
                         <div class="dropzone-text">Click atau drag file ke sini</div>
-                        <div class="dropzone-hint">JPG, PNG, GIF, WEBP, MP4, WEBM • Maks 10MB per file • Maks 5 file
+                        <div class="dropzone-hint">JPG, PNG, WEBP • Maks 10MB per file • Maks 5 file
                         </div>
                     </div>
                     <div id="mediaCounter"></div>
@@ -894,7 +894,7 @@
                     const item = document.createElement('div');
                     item.className = 'media-preview-item';
 
-                    // Thumb wrapper (image/video + remove button)
+                    // Thumb wrapper (image + remove button)
                     const thumb = document.createElement('div');
                     thumb.className = 'media-thumb';
 

@@ -99,35 +99,6 @@ class DashboardController extends Controller
             ],
         ];
 
-        // ── Pengumuman ────────────────────────────────────────────────────────
-        $bankSoalAnnouncements = [];
-
-        try {
-            // Only generate personalised announcements for mahasiswa
-            if ($isMahasiswa) {
-                $service = app(DashboardAnnouncementService::class);
-                $bankSoalAnnouncements = $service->getForDashboard($user->id);
-            }
-        } catch (\Throwable $e) {
-            // Graceful degradation: if BankSoal module is unavailable, show empty list
-            logger()->warning('DashboardAnnouncementService failed: ' . $e->getMessage());
-        }
-
-        $announcements = [
-            'all'           => $bankSoalAnnouncements,
-            'bank_soal'     => $bankSoalAnnouncements,
-            'capstone'      => [],
-            'kemahasiswaan' => [],
-            'eoffice'       => [],
-        ];
-
-        $announcementCounts = [
-            'all'           => count($bankSoalAnnouncements),
-            'bank_soal'     => count($bankSoalAnnouncements),
-            'capstone'      => 0,
-            'kemahasiswaan' => 0,
-            'eoffice'       => 0,
-        ];
         // ── Announcements ────────────────────────────────────────────────────
         // Tab eoffice: gabungan periode pendaftaran aktif + pengumuman praktikum published
         $eofficeItems = collect();
@@ -235,8 +206,19 @@ class DashboardController extends Controller
             ])
             ->all();
 
+        // ── Bank Soal: Personalised announcements (Ujian Komprehensif) ────────
+        $bankSoalAnnouncements = [];
+        if ($isMahasiswa) {
+            try {
+                $bankSoalAnnouncements = app(DashboardAnnouncementService::class)
+                    ->getForDashboard($user->id);
+            } catch (\Throwable $e) {
+                logger()->warning('DashboardAnnouncementService failed: ' . $e->getMessage());
+            }
+        }
+
         $announcements = [
-            'bank_soal'     => [],
+            'bank_soal'     => $bankSoalAnnouncements,
             'capstone'      => [],
             'kemahasiswaan' => $kemahasiswaanItems,
             'eoffice'       => $eofficeItems,
@@ -257,6 +239,7 @@ class DashboardController extends Controller
             ->all();
 
         $announcementCounts = [
+            'all'           => count($announcements['all']),
             'bank_soal'     => count($announcements['bank_soal']),
             'capstone'      => count($announcements['capstone']),
             'kemahasiswaan' => count($announcements['kemahasiswaan']),

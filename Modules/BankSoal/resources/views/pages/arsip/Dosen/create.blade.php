@@ -25,38 +25,7 @@
             animation: popup 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
         }
 
-        /* Loading Spinner */
-        #global-loader {
-            position: fixed;
-            inset: 0;
-            background: rgba(255, 255, 255, 0.7);
-            backdrop-filter: blur(4px);
-            z-index: 9999;
-            display: none;
-            align-items: center;
-            justify-content: center;
-        }
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 4px solid var(--navy-light);
-            border-top: 4px solid var(--navy);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-        }
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
     </style>
-
-    <!-- Global Loader Overlay -->
-    <div id="global-loader">
-        <div class="flex flex-col items-center gap-3">
-            <div class="spinner"></div>
-            <p class="text-sm font-bold text-navy">Memproses data...</p>
-        </div>
-    </div>
 
     <x-banksoal::notification.alerts />
 
@@ -231,7 +200,7 @@
             }
         }
         function showLoader() {
-            document.getElementById('global-loader').style.display = 'flex';
+            window.showLoader();
         }
     </script>
 </x-banksoal::layouts.dosen-admin>

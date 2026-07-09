@@ -97,6 +97,58 @@ class RpsController extends Controller
     public function validasiRpsReview($rpsId)
     {
         $data = $this->getRpsReviewData($rpsId);
+        $rps = $data['rps'];
+
+        $fileUrl = null;
+        $downloadUrl = null;
+        $errorMessage = null;
+
+        if ($rps->dokumen) {
+            $supabaseStorage = new SupabaseStorage();
+            $fileUrl = $supabaseStorage->getPublicUrl($rps->dokumen, 'rps');
+            
+            try {
+                $response = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(2)->get($fileUrl);
+                if ($response->status() === 404) {
+                    // Self-healing: Coba cari file yang mungkin di-rename/di-move saat disetujui
+                    $mkName = trim($rps->mk_nama ?? 'MataKuliah');
+                    $mkName = preg_replace('/\s+/', ' ', $mkName);
+                    $tahunAjaranSafe = str_replace('/', '-', (string) $rps->tahun_ajaran);
+                    $semesterSafe = ucfirst(strtolower((string) $rps->semester));
+                    
+                    $baseFileName = sprintf('RPS_%s_%s_%s', $mkName, $tahunAjaranSafe, $semesterSafe);
+                    $baseFileName = preg_replace('/[\\\\:*?"<>|]+/', '', $baseFileName);
+                    $baseFileName = trim((string) $baseFileName, " \t\n\r\0\x0B._");
+                    
+                    $healedPath = 'rps/' . $baseFileName . '.pdf';
+                    $healedUrl = $supabaseStorage->getPublicUrl($healedPath, 'rps');
+                    
+                    $healedResponse = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(2)->get($healedUrl);
+                    if ($healedResponse->status() === 200) {
+                        DB::table('bs_rps_detail')->where('id', $rpsId)->update(['dokumen' => $healedPath]);
+                        $rps->dokumen = $healedPath;
+                        $fileUrl = $healedUrl;
+                    } else {
+                        // Coba check tanpa folder rps/ di prefix, atau biarkan null
+                        $fileUrl = null;
+                        $errorMessage = 'Berkas PDF tidak ditemukan di server penyimpanan (Supabase Storage).';
+                    }
+                }
+            } catch (\Exception $ex) {
+                // Fallback jika pengecekan HTTP timeout/gagal
+            }
+
+            if ($fileUrl) {
+                $downloadUrl = route('banksoal.rps.gpm.validasi-rps.preview', ['rpsId' => $rpsId]);
+            }
+        } else {
+            $errorMessage = 'Dokumen RPS belum diunggah atau tidak ditemukan.';
+        }
+
+        $data['fileUrl'] = $fileUrl;
+        $data['downloadUrl'] = $downloadUrl;
+        $data['errorMessage'] = $errorMessage;
+
         return view('banksoal::gpm.validasi-rps-review', $data);
     }
 

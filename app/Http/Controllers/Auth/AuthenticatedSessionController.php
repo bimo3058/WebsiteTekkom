@@ -79,8 +79,8 @@ class AuthenticatedSessionController extends Controller
             }
         }
 
-        // Mahasiswa, Dosen, GPM ke dashboard global
-        if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm', 'pengurus_himpunan', 'alumni', 'dosen_koor'])->isNotEmpty()) {
+        // Mahasiswa, Dosen, GPM, DPM, Ketua Departemen ke dashboard global
+        if ($roleNames->intersect(['mahasiswa', 'dosen', 'gpm', 'pengurus_himpunan', 'alumni', 'dosen_koor', 'dpm', 'ketua_departemen'])->isNotEmpty()) {
             return redirect()->intended(route('dashboard'));
         }
 

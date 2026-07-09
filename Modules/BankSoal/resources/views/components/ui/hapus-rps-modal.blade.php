@@ -75,7 +75,7 @@
 
         // Show loading state
         setujuBtn.disabled = true;
-        setujuBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Menghapus...';
+        window.showLoader();
 
         // Send AJAX DELETE request
         fetch(pendingDeleteUrl, {
@@ -107,29 +107,33 @@
         })
         .catch(error => {
             console.error('Error:', error);
+            window.hideLoader();
             showNotification('error', error.message || 'Terjadi kesalahan saat menghapus RPS');
             
             // Reset button state
             setujuBtn.disabled = false;
-            setujuBtn.innerHTML = '<i class="fas fa-trash"></i> Hapus';
         });
     });
 
     // Helper function to show notification
     function showNotification(type, message) {
-        // Create notification element
-        const notification = document.createElement('div');
-        notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-60 shadow-lg ${
-            type === 'success' ? 'bg-green-500' : 'bg-red-500'
-        }`;
-        notification.textContent = message;
-        
-        document.body.appendChild(notification);
-        
-        // Remove after 3 seconds
-        setTimeout(() => {
-            notification.remove();
-        }, 3000);
+        if (typeof Snackbar !== 'undefined' && typeof Snackbar.show === 'function') {
+            Snackbar.show(message, type);
+        } else {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.className = `fixed top-4 right-4 px-6 py-3 rounded-lg text-white z-60 shadow-lg ${
+                type === 'success' ? 'bg-green-500' : 'bg-red-500'
+            }`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
+        }
     }
 })();
 </script>

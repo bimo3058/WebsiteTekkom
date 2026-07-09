@@ -27,12 +27,7 @@ class DosenDashboardComponent {
         const total = chartData.reduce((sum, seg) => sum + seg.value, 0);
 
         let offset = 0;
-        chartData.forEach((seg) => {
-            const pct = seg.value / total;
-            const dash = pct * circ;
-            const gap = circ - dash;
-            const rot = -90 + (offset / total) * 360;
-
+        if (total === 0) {
             const el = document.createElementNS(
                 "http://www.w3.org/2000/svg",
                 "circle",
@@ -41,18 +36,37 @@ class DosenDashboardComponent {
             el.setAttribute("cy", cy);
             el.setAttribute("r", r);
             el.setAttribute("fill", "none");
-            el.setAttribute("stroke", seg.color);
+            el.setAttribute("stroke", "#E2E8F0");
             el.setAttribute("stroke-width", stroke);
-            el.setAttribute(
-                "stroke-dasharray",
-                `${dash.toFixed(2)} ${gap.toFixed(2)}`,
-            );
-            el.setAttribute("stroke-dashoffset", "0");
-            el.setAttribute("transform", `rotate(${rot} ${cx} ${cy})`);
             svg.appendChild(el);
+        } else {
+            chartData.forEach((seg) => {
+                const pct = seg.value / total;
+                const dash = pct * circ;
+                const gap = circ - dash;
+                const rot = -90 + (offset / total) * 360;
 
-            offset += seg.value;
-        });
+                const el = document.createElementNS(
+                    "http://www.w3.org/2000/svg",
+                    "circle",
+                );
+                el.setAttribute("cx", cx);
+                el.setAttribute("cy", cy);
+                el.setAttribute("r", r);
+                el.setAttribute("fill", "none");
+                el.setAttribute("stroke", seg.color);
+                el.setAttribute("stroke-width", stroke);
+                el.setAttribute(
+                    "stroke-dasharray",
+                    `${dash.toFixed(2)} ${gap.toFixed(2)}`,
+                );
+                el.setAttribute("stroke-dashoffset", "0");
+                el.setAttribute("transform", `rotate(${rot} ${cx} ${cy})`);
+                svg.appendChild(el);
+
+                offset += seg.value;
+            });
+        }
 
         // Lingkaran putih di tengah diagram.
         const inner = document.createElementNS(
@@ -80,8 +94,28 @@ class DosenDashboardComponent {
             "CPL 05": 38,
         };
 
-        const max = Math.max(...Object.values(chartData));
+        const isEmpty = !chartData || 
+                        (Array.isArray(chartData) && (chartData.length === 0 || chartData.every(d => d.count === 0))) || 
+                        (typeof chartData === 'object' && (Object.keys(chartData).length === 0 || Object.values(chartData).every(v => v === 0)));
+
+        if (isEmpty) {
+            wrap.className = "h-64 flex flex-col items-center justify-center text-center p-4 w-full";
+            wrap.style.cssText = "";
+            wrap.innerHTML = `
+                <div class="flex flex-col items-center justify-center">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 border border-slate-100 text-slate-400 mb-3 shadow-sm">
+                        <i class="fas fa-chart-bar text-lg"></i>
+                    </div>
+                    <p class="text-sm font-semibold text-slate-700">Belum Ada Pemetaan CPL</p>
+                    <p class="text-xs text-slate-500 max-w-[280px] mt-1 leading-relaxed">Belum ada pemetaan CPL yang dilakukan. Silakan membuat soal terlebih dahulu.</p>
+                </div>
+            `;
+            return;
+        }
+
+        const max = Math.max(...Object.values(chartData)) || 1;
         const BAR_H = 90;
+        wrap.className = "h-64 flex items-end gap-4";
         wrap.style.cssText =
             "display:flex;align-items:flex-end;gap:6px;width:100%;padding-top:8px";
         let html = "";
@@ -110,8 +144,28 @@ class DosenDashboardComponent {
             { mk: "CS-401", count: 0, color: "#CBD5E1" },
         ];
 
+        const isEmpty = !chartData || 
+                        chartData.length === 0 || 
+                        chartData.every(d => d.count === 0);
+
+        if (isEmpty) {
+            wrap.className = "h-64 flex flex-col items-center justify-center text-center p-4 w-full";
+            wrap.style.cssText = "";
+            wrap.innerHTML = `
+                <div class="flex flex-col items-center justify-center">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-slate-50 border border-slate-100 text-slate-400 mb-3 shadow-sm">
+                        <i class="fas fa-book text-lg"></i>
+                    </div>
+                    <p class="text-sm font-semibold text-slate-700">Belum Ada Soal per MK</p>
+                    <p class="text-xs text-slate-500 max-w-[280px] mt-1 leading-relaxed">Belum ada soal yang dibuat untuk mata kuliah yang diampu. Silakan membuat soal terlebih dahulu.</p>
+                </div>
+            `;
+            return;
+        }
+
         const max = Math.max(...chartData.map((d) => d.count)) || 1;
         const BAR_H = 90; // Tinggi maksimum batang dalam piksel.
+        wrap.className = "h-64 flex items-end gap-4";
         wrap.style.cssText =
             "display:flex;align-items:flex-end;gap:10px;width:100%;padding-top:8px";
         let html = "";

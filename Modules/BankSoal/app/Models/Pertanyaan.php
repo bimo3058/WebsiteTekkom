@@ -50,6 +50,11 @@ class Pertanyaan extends Model
         return $this->hasMany(Jawaban::class, 'soal_id');
     }
 
+    public function jawabans(): HasMany
+    {
+        return $this->jawaban();
+    }
+
     public function scopeByMk($query, int $mkId)
     {
         return $query->where('mk_id', $mkId);

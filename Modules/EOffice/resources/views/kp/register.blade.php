@@ -44,15 +44,15 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <!-- Rencana Tempat -->
                         <div class="col-span-2">
-                            <label for="rencana_tempat" class="block text-sm font-medium text-slate-700 mb-1">Nama Instansi / Perusahaan Tujuan</label>
-                            <input type="text" name="rencana_tempat" id="rencana_tempat" placeholder="Contoh: PT. Telekomunikasi Indonesia (Telkom)" required
+                            <label for="instansi_kp" class="block text-sm font-medium text-slate-700 mb-1">Nama Instansi / Perusahaan Tujuan</label>
+                            <input type="text" name="instansi_kp" id="instansi_kp" placeholder="Contoh: PT. Telekomunikasi Indonesia (Telkom)" required
                                 class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out py-3 px-4 border">
                         </div>
 
                         <!-- Rencana Judul -->
                         <div class="col-span-2">
-                            <label for="rencana_judul" class="block text-sm font-medium text-slate-700 mb-1">Rencana Topik / Judul KP</label>
-                            <input type="text" name="rencana_judul" id="rencana_judul" placeholder="Masukkan rencana topik yang akan dikerjakan" required
+                            <label for="judul_kp" class="block text-sm font-medium text-slate-700 mb-1">Rencana Topik / Judul KP</label>
+                            <input type="text" name="judul_kp" id="judul_kp" placeholder="Masukkan rencana topik yang akan dikerjakan" required
                                 class="w-full rounded-lg border-slate-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 transition duration-150 ease-in-out py-3 px-4 border">
                         </div>
 

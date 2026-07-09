@@ -1,89 +1,283 @@
-<aside :class="sidebarOpen ? 'w-72' : 'w-20'" class="h-full bg-white border-r border-slate-200 flex flex-col justify-between flex-shrink-0 font-inter transition-all duration-300 relative z-20">
+@php
+    $iconPortal = 'M3 12l9-9 9 9M5 10v10a1 1 0 001 1h3v-6h6v6h3a1 1 0 001-1V10';
+    $iconRiwayat = 'M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z';
+    $iconLogout = 'M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9';
+    $iconGear = 'M12 15a3 3 0 100-6 3 3 0 000 6zM19.4 15a1.7 1.7 0 00.3 1.8l.1.1a2 2 0 11-2.8 2.8l-.1-.1a1.7 1.7 0 00-1.8-.3 1.7 1.7 0 00-1 1.5V21a2 2 0 11-4 0v-.1a1.7 1.7 0 00-1-1.5 1.7 1.7 0 00-1.8.3l-.1.1A2 2 0 114.4 17l.1-.1a1.7 1.7 0 00.3-1.8 1.7 1.7 0 00-1.5-1H3a2 2 0 110-4h.1a1.7 1.7 0 001.5-1A1.7 1.7 0 004.4 7l-.1-.1A2 2 0 117.1 4l.1.1a1.7 1.7 0 001.8.3 1.7 1.7 0 001-1.5V3a2 2 0 114 0v.1a1.7 1.7 0 001 1.5 1.7 1.7 0 001.8-.3l.1-.1A2 2 0 1119.6 7l-.1.1a1.7 1.7 0 00-.3 1.8 1.7 1.7 0 001.5 1H21a2 2 0 110 4h-.1a1.7 1.7 0 00-1.5 1z';
+    $iconHelp = 'M12 21a9 9 0 100-18 9 9 0 000 18zM9.5 9.5a2.5 2.5 0 015 0c0 1.5-2.5 2-2.5 3.5M12 17h.01';
+@endphp
 
-    <!-- Top Section: Header & Nav -->
-    <div class="flex flex-col flex-1 overflow-y-auto scrollbar-thin scrollbar-thumb-slate-200 pb-4 overflow-x-hidden">
+<aside x-data="{ get open() { return sidebarOpen }, set open(val) { sidebarOpen = val } }"
+    :class="sidebarOpen ? 'is-open' : 'is-collapsed'"
+    class="sitkom-sidebar relative z-20 font-sans">
 
-        <!-- Header -->
-        <div class="px-6 py-8 flex items-center justify-between gap-4">
-            <div class="flex items-center gap-4">
-                <!-- Icon Background -->
-                <div class="w-10 h-10 bg-primary rounded-xl flex items-center justify-center flex-shrink-0 shadow-sm shadow-primary/20">
-                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M12 14l9-5-9-5-9 5 9 5z"></path>
-                        <path d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"></path>
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 14l9-5-9-5-9 5 9 5zm0 0l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14zm-4 6v-7.5l4-2.222"></path>
-                    </svg>
-                </div>
-                <!-- Title Content -->
-                <div x-show="sidebarOpen" class="flex flex-col whitespace-nowrap overflow-hidden" x-transition.opacity.duration.300ms>
-                    <span class="font-bold text-slate-900 text-base leading-tight tracking-tight uppercase">Portal Mahasiswa</span>
-                    <span class="font-semibold text-slate-500 text-[10px] leading-tight tracking-wider uppercase opacity-80 truncate" style="max-width: 170px;">S1 Teknik Komputer</span>
-                </div>
-            </div>
-            <!-- Toggle Button -->
-            <button @click="sidebarOpen = !sidebarOpen" class="absolute -right-3 top-10 bg-white border border-slate-200 text-slate-400 hover:text-primary rounded-lg p-1 shadow-sm transition-colors z-30">
-                <svg :class="sidebarOpen ? '' : 'rotate-180'" class="w-4 h-4 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                </svg>
-            </button>
+    {{-- Brand + Collapse Button --}}
+    <div class="sb-brand">
+        {{-- Logo --}}
+        <div class="sb-brand-logo">
+            <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="UNDIP"
+                style="width:32px;height:32px;object-fit:contain;">
         </div>
 
-        <!-- Navigation Links -->
-        <nav class="flex-1 px-3 space-y-6">
+        {{-- Brand text --}}
+        <div x-show="sidebarOpen" x-transition:enter="transition duration-150 ease-out"
+            x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" class="sb-brand-text">
+            <div class="sb-brand-name">Portal Mahasiswa</div>
+            <div class="sb-brand-tag">S1 Teknik Komputer</div>
+        </div>
 
-            <!-- MAIN MENU GROUP -->
-            <div>
-                <p x-show="sidebarOpen" class="px-4 mb-3 text-[11px] font-semibold text-slate-400 uppercase tracking-widest whitespace-nowrap" x-transition.opacity.duration.300ms>Ujian Komprehensif</p>
-                <div class="space-y-1">
-                    
-                    <!-- Portal Ujian -->
-                    @php $isPortalUjian = request()->routeIs('komprehensif.mahasiswa.dashboard'); @endphp
-                    <a href="{{ route('komprehensif.mahasiswa.dashboard') }}"
-                        class="group relative flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all {{ $isPortalUjian ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}">
-                        @if($isPortalUjian)
-                            <div class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1.5 bg-primary rounded-r-full"></div>
-                        @endif
-                        <svg class="w-5 h-5 flex-shrink-0 {{ $isPortalUjian ? 'text-primary' : 'text-slate-400 group-hover:text-slate-500' }}" 
-                             fill="{{ $isPortalUjian ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
-                        </svg>
-                        <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap" x-transition.opacity.duration.300ms>Portal Ujian</span>
-                    </a>
-
-                    <!-- Riwayat Ujian -->
-                    @php $isRiwayat = request()->routeIs('komprehensif.mahasiswa.riwayat'); @endphp
-                    <a href="{{ route('komprehensif.mahasiswa.riwayat') }}"
-                        class="group relative flex items-center gap-3 py-2.5 px-4 rounded-xl transition-all {{ $isRiwayat ? 'bg-slate-100 text-slate-900' : 'text-slate-500 hover:bg-slate-50 hover:text-slate-700' }}">
-                        @if($isRiwayat)
-                            <div class="absolute left-0 top-1/2 -translate-y-1/2 h-6 w-1.5 bg-primary rounded-r-full"></div>
-                        @endif
-                        <svg class="w-5 h-5 flex-shrink-0 {{ $isRiwayat ? 'text-primary' : 'text-slate-400 group-hover:text-slate-500' }}" 
-                             fill="{{ $isRiwayat ? 'currentColor' : 'none' }}" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <span x-show="sidebarOpen" class="text-sm font-medium whitespace-nowrap" x-transition.opacity.duration.300ms>Riwayat Ujian</span>
-                    </a>
-
-                </div>
-            </div>
-
-        </nav>
+        {{-- Collapse button --}}
+        <button @click="sidebarOpen = !sidebarOpen" class="sb-collapse-btn" title="Toggle Sidebar">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"
+                stroke-linecap="round" stroke-linejoin="round" style="transition:transform .25s ease;"
+                :style="sidebarOpen ? '' : 'transform:rotate(180deg)'">
+                <path d="M15 18l-6-6 6-6" />
+            </svg>
+        </button>
     </div>
 
-    <!-- Bottom Profile Area -->
-    <div class="p-4 mt-auto">
-        
-        <div class="bg-slate-50 rounded-2xl border border-slate-100 flex flex-col items-center">
-            <!-- Logout -->
-            <form method="POST" action="{{ route('logout') }}" class="w-full">
-                @csrf
-                <button type="submit" class="group w-full flex items-center justify-center gap-2 py-2.5 px-4 bg-transparent text-rose-600 hover:bg-rose-50 hover:text-rose-700 rounded-xl transition-all">
-                    <svg class="w-4 h-4 transition-transform group-hover:-translate-x-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-                    </svg>
-                    <span x-show="sidebarOpen" class="text-xs font-bold uppercase tracking-wider whitespace-nowrap">Logout</span>
-                </button>
-            </form>
-        </div>
+    {{-- Nav --}}
+    <nav class="sb-nav">
+        <div x-show="sidebarOpen" class="sb-section-label">Ujian Komprehensif</div>
+
+        <x-sidebar-link :href="route('komprehensif.mahasiswa.dashboard')" :icon="$iconPortal" label="Portal Ujian"
+            :active="request()->routeIs('komprehensif.mahasiswa.dashboard')" />
+            
+        <x-sidebar-link :href="route('komprehensif.mahasiswa.riwayat')" :icon="$iconRiwayat" label="Riwayat Ujian"
+            :active="request()->routeIs('komprehensif.mahasiswa.riwayat')" />
+    </nav>
+
+    {{-- Footer --}}
+    <div class="sb-footer">
+        <x-sidebar-link :href="route('profile.edit')" :icon="$iconGear" label="Settings"
+            :active="request()->routeIs('profile.edit')" />
+        <a class="sb-link" href="#">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="{{ $iconHelp }}" />
+            </svg>
+            <span x-show="sidebarOpen">Help &amp; Center</span>
+        </a>
+        <form method="POST" action="{{ route('logout') }}" style="margin:0;" data-no-loader>
+            @csrf
+            <button type="submit" class="sb-link sb-link-danger w-full">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"
+                    stroke-linejoin="round">
+                    <path d="{{ $iconLogout }}" />
+                </svg>
+                <span x-show="sidebarOpen">Logout</span>
+            </button>
+        </form>
     </div>
 </aside>
+
+<style>
+    /* Mengadopsi CSS Variable & Layout dari Superadmin Sidebar */
+    :root {
+        --c-primary: #0B266E;
+        --c-primary-hover: #091958;
+        --c-primary-subtle: rgba(11, 38, 110, 0.08);
+        --c-primary-border: #5C78B8;
+        --c-bg: #F6F8FA;
+        --c-fg: #0D0D12;
+        --c-fg-sec: #353849;
+        --c-fg-muted: #666D80;
+        --c-fg-placeholder: #808897;
+        --c-border: #DFE1E7;
+        --c-border-strong: #C1C7CF;
+        --c-success: #287F6E;
+        --c-success-subtle: #DDF2EE;
+        --c-error: #DF1C41;
+        --c-error-subtle: #FADAE1;
+        --c-warning: #956321;
+        --c-warning-subtle: #F9ECCB;
+        --c-sky: #0C4D6E;
+        --c-sky-subtle: #D1F0F9;
+    }
+
+    .sitkom-sidebar {
+        background: #fff;
+        border-right: 1px solid var(--c-border);
+        display: flex;
+        flex-direction: column;
+        position: relative;
+        height: 100vh;
+        flex-shrink: 0;
+        transition: width .25s ease;
+        overflow: hidden;
+    }
+
+    .sitkom-sidebar.is-open {
+        width: 240px;
+    }
+
+    .sitkom-sidebar.is-collapsed {
+        width: 64px;
+    }
+
+    /* Brand row */
+    .sb-brand {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 14px 14px;
+        border-bottom: 1px solid var(--c-border);
+        min-height: 60px;
+        flex-shrink: 0;
+    }
+
+    .sb-brand-logo {
+        width: 32px;
+        height: 32px;
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .sb-brand-text {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .sb-brand-name {
+        font-family: 'Geist', 'Inter Tight', system-ui, sans-serif;
+        font-weight: 700;
+        font-size: 14px;
+        color: var(--c-fg);
+        letter-spacing: -.01em;
+        line-height: 1.2;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .sb-brand-tag {
+        font-size: 9px;
+        color: var(--c-fg-placeholder);
+        font-weight: 500;
+        margin-top: 2px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Collapse button */
+    .sb-collapse-btn {
+        flex-shrink: 0;
+        width: 28px;
+        height: 28px;
+        border-radius: 7px;
+        border: 1px solid var(--c-border);
+        background: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: var(--c-fg-muted);
+        transition: background .15s, border-color .15s, color .15s;
+        padding: 0;
+        margin-left: auto;
+    }
+
+    .sb-collapse-btn:hover {
+        background: var(--c-bg);
+        border-color: var(--c-border-strong);
+        color: var(--c-fg);
+    }
+
+    .sitkom-sidebar.is-collapsed .sb-brand {
+        justify-content: center;
+    }
+
+    .sitkom-sidebar.is-collapsed .sb-collapse-btn {
+        margin-left: 0;
+    }
+
+    /* Nav */
+    .sb-nav {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+        padding: 6px 10px 10px;
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+    }
+
+    .sb-nav::-webkit-scrollbar {
+        width: 3px;
+    }
+
+    .sb-nav::-webkit-scrollbar-track {
+        background: transparent;
+    }
+
+    .sb-nav::-webkit-scrollbar-thumb {
+        background: var(--c-border);
+        border-radius: 9999px;
+    }
+
+    .sb-section-label {
+        font-size: 10px;
+        font-weight: 600;
+        color: var(--c-fg-placeholder);
+        letter-spacing: .06em;
+        text-transform: uppercase;
+        padding: 12px 10px 5px;
+        white-space: nowrap;
+    }
+
+    /* Footer */
+    .sb-footer {
+        padding: 8px 10px 12px;
+        border-top: 1px solid var(--c-border);
+        display: flex;
+        flex-direction: column;
+        gap: 1px;
+        flex-shrink: 0;
+    }
+
+    .sb-link {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--c-fg-sec);
+        cursor: pointer;
+        text-decoration: none;
+        background: none;
+        border: none;
+        width: 100%;
+        text-align: left;
+        font-family: inherit;
+        transition: background .12s, color .12s;
+        white-space: nowrap;
+        overflow: hidden;
+    }
+
+    .sb-link:hover {
+        background: var(--c-bg);
+    }
+
+    .sb-link svg {
+        width: 16px;
+        height: 16px;
+        color: var(--c-fg-muted);
+        flex-shrink: 0;
+    }
+
+    .sb-link-danger {
+        color: var(--c-error);
+    }
+
+    .sb-link-danger svg {
+        color: var(--c-error);
+    }
+
+    .sb-link-danger:hover {
+        background: #FEF1F4;
+    }
+</style>

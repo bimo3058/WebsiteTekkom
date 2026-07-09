@@ -35,9 +35,7 @@ class DashboardController extends Controller
 
             // ── Zona C: Status Periode Aktif ──────────────────────────────────────
             $periodeAktif = DB::table('bs_periode_ujians')
-                ->where('status', '!=', 'selesai')
-                ->where('tanggal_mulai', '<=', now())
-                ->where('tanggal_selesai', '>=', now())
+                ->where('status', 'aktif')
                 ->whereNull('deleted_at')
                 ->first();
 
@@ -81,20 +79,26 @@ class DashboardController extends Controller
             };
 
             // ── Zona D: Analitik CBT ──────────────────────────────────────────────
-            $cbtStats = $withPeriode(
+            // Subquery untuk mendapatkan nilai tertinggi per user
+            $userScoresSubquery = $withPeriode(
                 DB::table('bs_kompre_session')->where('bs_kompre_session.status', 'finished')
-            )->selectRaw('
-                COUNT(*) as total,
-                ROUND(AVG(score)::numeric, 1) as rata_rata,
-                MAX(score) as tertinggi,
-                MIN(score) as terendah,
-                SUM(CASE WHEN score >= 60 THEN 1 ELSE 0 END) as lulus
-            ')->first();
+            )
+            ->select('bs_kompre_session.user_id', DB::raw('MAX(score) as max_score'))
+            ->groupBy('bs_kompre_session.user_id');
 
-            $cbTotalPeserta = (int) ($cbtStats->total ?? 0);
+            $cbtStats = DB::query()->fromSub($userScoresSubquery, 'user_scores')
+                ->selectRaw('
+                    COUNT(*) as total_users,
+                    SUM(CASE WHEN max_score >= 60 THEN 1 ELSE 0 END) as lulus,
+                    SUM(CASE WHEN max_score < 60 THEN 1 ELSE 0 END) as tidak_lulus,
+                    ROUND(AVG(max_score)::numeric, 1) as rata_rata
+                ')
+                ->first();
+
+            $cbTotalPeserta = (int) ($cbtStats->total_users ?? 0);
             $cbtRataRata    = $cbTotalPeserta > 0 ? $cbtStats->rata_rata : 0;
             $cbtLulus       = (int) ($cbtStats->lulus ?? 0);
-            $cbtTidakLulus  = $cbTotalPeserta - $cbtLulus;
+            $cbtTidakLulus  = (int) ($cbtStats->tidak_lulus ?? 0);
 
             $cplStats = $withPeriode(
                 DB::table('bs_kompre_jawaban')
@@ -108,7 +112,7 @@ class DashboardController extends Controller
              ->orderBy('bs_cpl.kode')
              ->get()
              ->map(fn($r) => [
-                 'cpl_kode'   => $r->cpl_kode,
+                 'cpl_kode'   => preg_replace('/^CPL-0*/', 'CPL ', $r->cpl_kode),
                  'deskripsi'  => $r->deskripsi,
                  'persentase' => $r->total > 0 ? round(($r->benar / $r->total) * 100, 1) : 0,
              ]);
@@ -127,18 +131,60 @@ class DashboardController extends Controller
              ->limit(5)
              ->get();
 
+            // ── Zona E: Tambahan Statistik (Distribusi) ────────────────────────────────
+            $soalDisetujui = DB::table('bs_pertanyaan')->where('status', 'disetujui')->count();
+            
+            // Distribusi per CPL
+            $distCpl = DB::table('bs_pertanyaan')
+                ->whereNotNull('bs_pertanyaan.cpl_id')
+                ->join('bs_cpl', 'bs_pertanyaan.cpl_id', '=', 'bs_cpl.id')
+                ->select('bs_cpl.kode as label', DB::raw('count(*) as total'))
+                ->groupBy('bs_cpl.id', 'bs_cpl.kode')
+                ->orderBy('bs_cpl.kode', 'asc')
+                ->get()
+                ->map(function ($item) {
+                    $item->label = preg_replace('/^CPL-0*/', 'CPL ', $item->label);
+                    return $item;
+                });
+                
+            // Distribusi per Mata Kuliah
+            $distMk = DB::table('bs_pertanyaan')
+                ->join('bs_mata_kuliah', 'bs_pertanyaan.mk_id', '=', 'bs_mata_kuliah.id')
+                ->select('bs_mata_kuliah.nama as label', DB::raw('count(*) as total'))
+                ->groupBy('bs_mata_kuliah.id', 'bs_mata_kuliah.nama')
+                ->orderByDesc('total')
+                ->get();
+            
+            // Distribusi Kesulitan
+            $rawKesulitan = DB::table('bs_pertanyaan')
+                ->select('kesulitan', DB::raw('count(*) as total'))
+                ->groupBy('kesulitan')
+                ->pluck('total', 'kesulitan')
+                ->toArray();
+                
+            $distKesulitan = [
+                'Easy' => $rawKesulitan['easy'] ?? 0,
+                'Intermediate' => $rawKesulitan['intermediate'] ?? 0,
+                'Advanced' => $rawKesulitan['advanced'] ?? 0,
+            ];
+
+            $jumlahSesi = DB::table('bs_kompre_session')->count();
+            $ujianSelesai = DB::table('bs_kompre_session')->where('status', 'finished')->count();
+
             return view('banksoal::dashboard.admin', compact(
                 'periodeAktif', 'statPendaftar', 'sesiOngoing',
                 'semuaPeriode', 'periodeIdFilters',
                 'cbTotalPeserta', 'cbtRataRata', 'cbtLulus', 'cbtTidakLulus',
-                'cplStats', 'kesalahanPerSoal'
+                'cplStats', 'kesalahanPerSoal', 
+                'soalDisetujui', 'distCpl', 'distMk', 'distKesulitan',
+                'jumlahSesi', 'ujianSelesai'
             ));
         }
 
 
 
-        // GPM
-        if ($roles->contains('gpm')) {
+        // GPM (Hanya jika sesi GPM aktif via switcher)
+        if ($roles->contains('gpm') && session('active_banksoal_role') === 'gpm') {
             // 1. Ambil Antrean Bank Soal (Mata kuliah yang belum direview)
             $prioritasBankSoal = DB::table('bs_mata_kuliah')
                 ->join('bs_pertanyaan', 'bs_mata_kuliah.id', '=', 'bs_pertanyaan.mk_id')
@@ -279,5 +325,27 @@ class DashboardController extends Controller
         }
 
         abort(403, 'Akses ditolak.');
+    }
+
+    /**
+     * Switch user active session role in Bank Soal module.
+     */
+    public function switchRole($role)
+    {
+        if (!in_array($role, ['dosen', 'gpm'])) {
+            abort(400);
+        }
+
+        $user  = Auth::user();
+        $roles = $user->roles->pluck('name');
+        
+        if (!$roles->contains($role)) {
+            abort(403, 'Anda tidak memiliki peran ini.');
+        }
+
+        session(['active_banksoal_role' => $role]);
+
+        $roleLabel = $role === 'gpm' ? 'GPM' : 'Dosen';
+        return redirect()->route('banksoal.dashboard')->with('success', 'Berhasil beralih peran ke ' . $roleLabel);
     }
 }

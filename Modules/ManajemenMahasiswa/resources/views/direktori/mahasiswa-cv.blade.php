@@ -13,7 +13,7 @@
         }
         body {
             font-family: 'Inter Tight', sans-serif;
-            color: #1f2937;
+            color: #0D0D12;
             background: #f5f6fa;
             line-height: 1.6;
         }
@@ -26,7 +26,7 @@
 
         /* Header */
         .cv-header {
-            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            background: linear-gradient(135deg, #0B266E 0%, #091958 100%);
             color: white;
             padding: 48px 48px 40px;
             position: relative;
@@ -41,7 +41,7 @@
             left: 0;
             right: 0;
             height: 4px;
-            background: linear-gradient(90deg, #4f46e5, #7c3aed, #a78bfa);
+            background: linear-gradient(90deg, #0B266E, #5C78B8);
         }
         .cv-photo {
             width: 90px;
@@ -101,10 +101,10 @@
             font-weight: 800;
             text-transform: uppercase;
             letter-spacing: 0.1em;
-            color: #4f46e5;
+            color: #0B266E;
             margin-bottom: 16px;
             padding-bottom: 8px;
-            border-bottom: 2px solid #e0e7ff;
+            border-bottom: 2px solid #eef2ff;
         }
         .cv-info-row {
             display: flex;
@@ -114,12 +114,12 @@
         .cv-info-label {
             width: 160px;
             font-weight: 600;
-            color: #6b7280;
+            color: #666D80;
             flex-shrink: 0;
         }
         .cv-info-value {
             font-weight: 500;
-            color: #1f2937;
+            color: #0D0D12;
         }
 
         /* Tables */
@@ -129,15 +129,15 @@
             font-size: 13px;
         }
         .cv-table th {
-            background: #f8fafc;
+            background: #FAFAFA;
             padding: 10px 12px;
             text-align: left;
             font-weight: 700;
-            color: #64748b;
+            color: #666D80;
             font-size: 11px;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            border-bottom: 2px solid #e5e7eb;
+            border-bottom: 2px solid #DFE1E7;
         }
         .cv-table td {
             padding: 10px 12px;
@@ -158,7 +158,7 @@
             z-index: 100;
         }
         .btn-print {
-            background: #4f46e5;
+            background: #0B266E;
             color: white;
             border: none;
             padding: 12px 24px;
@@ -169,19 +169,19 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.3);
+            box-shadow: 0 4px 12px rgba(11, 38, 110, 0.3);
             transition: all 0.2s;
             font-family: 'Inter Tight', sans-serif;
         }
         .btn-print:hover {
-            background: #4338ca;
+            background: #091958;
             transform: translateY(-1px);
-            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+            box-shadow: 0 6px 16px rgba(11, 38, 110, 0.4);
         }
         .btn-back {
             background: #ffffff;
-            color: #6b7280;
-            border: 1.5px solid #e5e7eb;
+            color: #666D80;
+            border: 1.5px solid #DFE1E7;
             padding: 12px 24px;
             border-radius: 12px;
             font-size: 14px;
@@ -195,8 +195,8 @@
             font-family: 'Inter Tight', sans-serif;
         }
         .btn-back:hover {
-            background: #f8fafc;
-            border-color: #d1d5db;
+            background: #FAFAFA;
+            border-color: #C1C7CF;
             color: #374151;
         }
 
@@ -391,8 +391,8 @@
         @endif
 
         <!-- Footer -->
-        <div style="margin-top: 48px; padding-top: 20px; border-top: 1px solid #e5e7eb; text-align: center;">
-            <p style="font-size: 11px; color: #9ca3af;">
+        <div style="margin-top: 48px; padding-top: 20px; border-top: 1px solid #DFE1E7; text-align: center;">
+            <p style="font-size: 11px; color: #666D80;">
                 Dokumen ini digenerate secara otomatis oleh Sistem Manajemen Kemahasiswaan pada {{ now()->translatedFormat('d F Y, H:i') }} WIB
             </p>
         </div>

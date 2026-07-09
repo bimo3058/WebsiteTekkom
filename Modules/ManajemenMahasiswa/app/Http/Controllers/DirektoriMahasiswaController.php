@@ -273,14 +273,16 @@ class DirektoriMahasiswaController extends Controller
         }
 
         try {
-            $query = Kemahasiswaan::with(['user', 'user.student']);
+            $query = Kemahasiswaan::with(['user', 'user.student'])
+                // Direktori Mahasiswa tidak menampilkan alumni — mereka ada di Direktori Alumni
+                ->where('status', '!=', Kemahasiswaan::STATUS_ALUMNI);
 
             // Filter angkatan
             if ($request->filled('angkatan') && $request->angkatan !== 'semua') {
                 $query->byAngkatan((int) $request->angkatan);
             }
 
-            // Filter status
+            // Filter status (hanya status non-alumni yang bisa dipilih)
             if ($request->filled('status') && $request->status !== 'semua') {
                 $query->where('status', $request->status);
             }
@@ -361,6 +363,8 @@ class DirektoriMahasiswaController extends Controller
             $isMahasiswa = ($this->hasRole('mahasiswa') || $this->hasRole('alumni')) && !$isAdmin && !$isGpm && !$isPengurus;
             // Hanya admin group, GPM, dan DPM yang boleh generate CV mahasiswa lain
             $isCanCv    = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm');
+            // Hanya admin group, GPM, DPM, Dosen yang bisa lihat IPK
+            $isCanSeeIpk = $this->hasRole('superadmin', 'admin', 'admin_kemahasiswaan', 'gpm', 'dpm', 'dosen', 'dosen_koordinator');
 
             return view('manajemenmahasiswa::direktori.mahasiswa-show', compact(
                 'mhs',
@@ -371,6 +375,7 @@ class DirektoriMahasiswaController extends Controller
                 'isGpm',
                 'isMahasiswa',
                 'isCanCv',
+                'isCanSeeIpk',
                 'cvProfile',
             ))->with('layout', $this->resolveLayout());
 
@@ -404,6 +409,7 @@ class DirektoriMahasiswaController extends Controller
             'nim'         => 'required|string|max:30',
             'angkatan'    => 'required|integer|min:2000|max:2099',
             'status'      => 'required|in:' . implode(',', Kemahasiswaan::STATUS_LIST),
+            'ipk'         => 'nullable|numeric|min:0|max:4',
             'tahun_lulus' => 'nullable|integer|min:2000|max:2099',
             'profesi'     => 'nullable|string|max:255',
             'kontak'      => 'nullable|string|max:255',
@@ -418,6 +424,7 @@ class DirektoriMahasiswaController extends Controller
             'nim',
             'angkatan',
             'status',
+            'ipk',
             'tahun_lulus',
             'profesi',
         ]));
@@ -488,15 +495,16 @@ class DirektoriMahasiswaController extends Controller
             $userModel->clearUserCache();
         }
 
-        // Sinkronisasi: jika status baru = alumni, otomatis buat record di mk_alumni
+        // Sinkronisasi: jika status baru = alumni, otomatis buat/perbarui record di mk_alumni
         if ($mhs->status === Kemahasiswaan::STATUS_ALUMNI && $oldStatus !== Kemahasiswaan::STATUS_ALUMNI) {
-            \Modules\ManajemenMahasiswa\Models\Alumni::firstOrCreate(
+            \Modules\ManajemenMahasiswa\Models\Alumni::updateOrCreate(
                 ['user_id' => $mhs->user_id],
                 [
                     'nim' => $mhs->nim,
                     'angkatan' => $mhs->angkatan,
                     'tahun_lulus' => $mhs->tahun_lulus ?? (int) date('Y'),
                     'program_studi' => 'Teknik Komputer',
+                    'ipk' => $mhs->ipk,
                 ]
             );
             \Illuminate\Support\Facades\Cache::forget('mk.alumni.summary');
@@ -507,6 +515,12 @@ class DirektoriMahasiswaController extends Controller
             \Modules\ManajemenMahasiswa\Models\Alumni::where('user_id', $mhs->user_id)->delete();
             \Illuminate\Support\Facades\Cache::forget('mk.alumni.summary');
             \Illuminate\Support\Facades\Cache::forget('mk.dashboard.snapshot');
+        }
+
+        // Sinkronisasi IPK ke mk_alumni jika mahasiswa sudah berstatus alumni
+        if ($mhs->status === Kemahasiswaan::STATUS_ALUMNI && $request->has('ipk')) {
+            \Modules\ManajemenMahasiswa\Models\Alumni::where('user_id', $mhs->user_id)
+                ->update(['ipk' => $mhs->ipk]);
         }
 
         return redirect()

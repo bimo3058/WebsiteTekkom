@@ -518,6 +518,13 @@ class BankSoalController extends Controller
         $mkDosen = $this->mataKuliahService->getMkByDosen($user->id);
         $allowedMkIds = $mkDosen->pluck('id')->toArray();
 
+        $uploadedFile = $request->file('csv_file');
+        $extension = strtolower($uploadedFile?->getClientOriginalExtension() ?? '');
+
+        if (in_array($extension, ['xls', 'xlsx'], true) && !class_exists('\\ZipArchive')) {
+            return back()->with('error', 'File Excel membutuhkan ekstensi PHP Zip (ZipArchive). Aktifkan ekstensi zip/php_zip lalu coba lagi, atau unggah file CSV.');
+        }
+
         DB::beginTransaction();
         try {
             $import = new \Modules\BankSoal\Imports\BankSoalImport(
@@ -527,7 +534,7 @@ class BankSoalController extends Controller
                 $allowedMkIds
             );
             
-            \Maatwebsite\Excel\Facades\Excel::import($import, $request->file('csv_file'));
+            \Maatwebsite\Excel\Facades\Excel::import($import, $uploadedFile);
 
             DB::commit();
             return back()->with('success', "Berhasil import {$import->successCount} soal (berikut opsinya) dari file Spreadsheet.");
