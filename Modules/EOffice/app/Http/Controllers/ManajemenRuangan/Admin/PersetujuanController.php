@@ -74,6 +74,52 @@ class PersetujuanController extends Controller
 
         $peminjaman = Peminjaman::findOrFail($id);
 
+        if ($request->status == 'disetujui') {
+            // Re-check Collision - Peminjaman (Race Condition Guard)
+            $isConflict = Peminjaman::where('ruangan_id', $peminjaman->ruangan_id)
+                ->where('tanggal_pinjam', $peminjaman->tanggal_pinjam)
+                ->where('status', 'disetujui')
+                ->where('id', '!=', $peminjaman->id)
+                ->where(function ($q) use ($peminjaman) {
+                    $q->where('jam_mulai', '<', $peminjaman->jam_selesai)
+                        ->where('jam_selesai', '>', $peminjaman->jam_mulai);
+                })
+                ->exists();
+
+            if ($isConflict) {
+                return redirect()->back()->withErrors(['Bentrok' => 'Gagal menyetujui! Ruangan sudah terlanjur disetujui untuk pihak lain di rentang waktu tersebut.']);
+            }
+
+            // Re-check Collision - Jadwal Internal (Guard against Excel Imports while pending)
+            $dayOfWeek = \Carbon\Carbon::parse($peminjaman->tanggal_pinjam)->format('N');
+            $isInternalConflict = \Modules\EOffice\Models\MrJadwalInternal::where('ruangan_id', $peminjaman->ruangan_id)
+                ->where(function ($query) use ($peminjaman, $dayOfWeek) {
+                    $query->where(function ($q) use ($dayOfWeek, $peminjaman) {
+                        $q->where('tipe_jadwal', 'rutin')
+                            ->where('hari', $dayOfWeek)
+                            ->where(function ($tq) use ($peminjaman) {
+                                $tq->whereNull('tgl_mulai_efektif')
+                                    ->orWhere('tgl_mulai_efektif', '<=', $peminjaman->tanggal_pinjam);
+                            })
+                            ->where(function ($tq) use ($peminjaman) {
+                                $tq->whereNull('tgl_selesai_efektif')
+                                    ->orWhere('tgl_selesai_efektif', '>=', $peminjaman->tanggal_pinjam);
+                            });
+                    })->orWhere(function ($q) use ($peminjaman) {
+                        $q->where('tipe_jadwal', 'spesifik')->where('tanggal_spesifik', $peminjaman->tanggal_pinjam);
+                    });
+                })
+                ->where(function ($query) use ($peminjaman) {
+                    $query->where('jam_mulai', '<', $peminjaman->jam_selesai)
+                        ->where('jam_selesai', '>', $peminjaman->jam_mulai);
+                })
+                ->first();
+
+            if ($isInternalConflict) {
+                return redirect()->back()->withErrors(['Sistem Internal' => 'Gagal menyetujui! Ruangan terblokir otomatis oleh Jadwal Akademik: ' . $isInternalConflict->keterangan]);
+            }
+        }
+
         $peminjaman->update([
             'status' => $request->status,
             'alasan_penolakan' => $request->status == 'ditolak' ? $request->alasan_penolakan : null,

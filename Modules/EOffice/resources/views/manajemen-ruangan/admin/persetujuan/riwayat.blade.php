@@ -128,10 +128,17 @@
                             </td>
                             <td class="py-4 px-5 align-middle">
                                 <div class="text-[13px] text-[#111827]">{{ $pinjam->ruangan->nama ?? 'Dihapus' }}</div>
-                                <div class="text-[11px] text-gray-500 max-w-[200px] truncate mt-0.5" title="{{ $pinjam->tujuan }}">{{ $pinjam->tujuan }}</div>
+                                <div class="text-[11px] text-gray-500 max-w-[200px] truncate mt-0.5"
+                                    title="{{ $pinjam->tujuan }}">{{ $pinjam->tujuan }}</div>
                                 @if($pinjam->berkas_pendukung)
-                                    <a href="{{ asset('storage/' . $pinjam->berkas_pendukung) }}" target="_blank" class="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-800 mt-1">
-                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path></svg>
+                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) }}"
+                                        target="_blank"
+                                        class="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-800 mt-1">
+                                        <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
+                                            <path stroke-linecap="round" stroke-linejoin="round"
+                                                d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14">
+                                            </path>
+                                        </svg>
                                         Lihat Berkas
                                     </a>
                                 @endif

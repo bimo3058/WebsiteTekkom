@@ -75,7 +75,8 @@ class UserPeminjamanController extends Controller
 
         $filePath = null;
         if ($request->hasFile('file_berkas')) {
-            $filePath = $request->file('file_berkas')->store('eo_mr_berkas', 'public');
+            // Upload ke Cloud Supabase
+            $filePath = app(\App\Services\SupabaseStorage::class)->upload($request->file('file_berkas'), 'eo_mr_berkas');
         }
 
         // Cek hari libur

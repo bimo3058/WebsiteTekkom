@@ -90,7 +90,8 @@
 
                             <div class="bg-gray-50 p-4 border-t border-gray-100 flex items-center justify-between rounded-b-xl">
                                 @if($booking->berkas_pendukung)
-                                    <a href="{{ asset('storage/' . $booking->berkas_pendukung) }}" target="_blank"
+                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($booking->berkas_pendukung) }}"
+                                        target="_blank"
                                         class="text-[12px] font-semibold text-gray-600 hover:text-indigo-600 inline-flex items-center gap-1">
                                         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2">
                                             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>

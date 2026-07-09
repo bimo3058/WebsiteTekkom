@@ -41,7 +41,8 @@
                         <tr class="hover:bg-gray-50/50 transition-colors group">
                             <td class="py-4 px-5 align-middle">
                                 <div class="text-[13px] font-medium text-[#111827]">
-                                    {{ $pinjam->user->name ?? 'User Tidak Diketahui' }}</div>
+                                    {{ $pinjam->user->name ?? 'User Tidak Diketahui' }}
+                                </div>
                                 <div class="text-[11px] text-gray-500 mt-0.5">{{ $pinjam->nomor_telepon }}</div>
                             </td>
                             <td class="py-4 px-5 align-middle">
@@ -49,7 +50,8 @@
                                 <div class="text-[11px] text-gray-500 max-w-[200px] truncate mt-0.5"
                                     title="{{ $pinjam->tujuan }}">{{ $pinjam->tujuan }}</div>
                                 @if($pinjam->berkas_pendukung)
-                                    <a href="{{ asset('storage/' . $pinjam->berkas_pendukung) }}" target="_blank"
+                                    <a href="{{ app(\App\Services\SupabaseStorage::class)->getPublicUrl($pinjam->berkas_pendukung) }}"
+                                        target="_blank"
                                         class="inline-flex items-center gap-1 text-[11px] font-medium text-indigo-600 hover:text-indigo-800 mt-1">
                                         <svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2">
                                             <path stroke-linecap="round" stroke-linejoin="round"
