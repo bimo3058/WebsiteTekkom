@@ -7,7 +7,7 @@
             <h1 class="mp-page-title">Periode Pendaftaran</h1>
             <span class="mp-badge error sm"><span class="dot"></span>Admin</span>
         </div>
-        <p class="mp-page-sub">Buka / tutup periode pendaftaran koor, asprak &amp; praktikan per mata kuliah · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
+        <p class="mp-page-sub">Buka / tutup periode pendaftaran koordinator, asisten praktikum &amp; praktikan per mata kuliah · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
     </div>
 </div>
 
@@ -114,7 +114,7 @@
                     <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:4px;">
                         Nama Periode <span style="color:#808897;font-weight:400;">(opsional)</span>
                     </label>
-                    <input type="text" name="nama" placeholder="cth: Koor Ganjil 2025/2026" class="mp-input w-full">
+                    <input type="text" name="nama" placeholder="cth: Koordinator Ganjil 2025/2026" class="mp-input w-full">
                 </div>
                 <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
                     <div>
@@ -186,9 +186,9 @@
                 <span class="mp-badge neutral sm">Ditutup</span>
                 @endif
                 @if($periode->jenis === 'koor')
-                <span class="mp-badge navy sm">Koor</span>
+                <span class="mp-badge navy sm">Koordinator</span>
                 @elseif($periode->jenis === 'asprak')
-                <span class="mp-badge success sm">Asprak</span>
+                <span class="mp-badge success sm">Asisten Praktikum</span>
                 @else
                 <span class="mp-badge sky sm">Praktikan</span>
                 @endif

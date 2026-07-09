@@ -1,5 +1,11 @@
 <x-eoffice::manajemen-praktikum.layout pageTitle="Dashboard Mahasiswa — Manajemen Praktikum">
     @php
+        /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\DaftarPraktikan[] $daftarPraktikan */
+        /** @var \Modules\EOffice\Models\Praktikum|null $terdaftarDi */
+        /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\Tugas[] $tugasMendatang */
+        /** @var \Illuminate\Support\Collection|object[] $nilaiList */
+        /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\Pengumuman[] $pengumuman */
+
         $name = auth()->user()->name;
         $nameParts = explode(' ', $name);
         $firstName = $nameParts[0];
@@ -30,8 +36,7 @@
                     style="font-family:'Inter Tight',sans-serif;font-size:24px;font-weight:700;color:#fff;margin:0 0 8px;line-height:1.2;">
                     Halo, {{ $firstName }}! 👋</h2>
                 <p style="font-size:13.5px;color:rgba(255,255,255,.78);margin:0 0 20px;line-height:1.5;max-width:480px;">
-                    Belum terdaftar di kelas praktikum. Ikuti langkah di bawah untuk bergabung ke kelas praktikum semester
-                    ini.
+                    Belum terdaftar di kelas praktikum. Ikuti langkah di bawah untuk bergabung ke kelas praktikum {{ $semesterLabel }}.
                 </p>
                 <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
                     <span style="display:inline-flex;align-items:center;gap:6px;padding:9px 16px;border-radius:10px;font-family:'Inter Tight',sans-serif;font-size:13.5px;font-weight:600;background:rgba(255,255,255,0.1);color:#fff;">
@@ -139,8 +144,8 @@
                     <h1 class="mp-page-title">Halo, {{ $firstName }}!</h1>
                     <span class="mp-badge warning sm"><span class="dot"></span>Mahasiswa</span>
                 </div>
-                <p class="mp-page-sub">
-                    {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
+                <p class="mp-page-sub">Selamat datang, {{ $firstName }} ·
+            {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }} · {{ $semesterLabel }}
                     @if(isset($terdaftarDi) && $terdaftarDi) · {{ $terdaftarDi->nama }} @endif
                 </p>
             </div>
@@ -421,7 +426,7 @@
 
         </div>
 
-        {{-- Status / CTA Daftar Asprak --}}
+        {{-- Status / CTA Daftar Asisten Praktikum --}}
         <div class="sec-head">
             <span class="sec-bar"></span>
             <span class="sec-title">Asisten Praktikum</span>
@@ -450,7 +455,7 @@
                 <div class="min-w-0">
                     <div style="font-size:13px;font-weight:700;color:#0D0D12;margin-bottom:3px;">Tertarik jadi Asisten
                         Praktikum?</div>
-                    <div style="font-size:12px;color:#666D80;">Daftarkan diri sebagai calon asprak semester ini.</div>
+                    <div style="font-size:12px;color:#666D80;">Daftarkan diri sebagai calon asisten praktikum {{ $semesterLabel }}.</div>
                 </div>
                 <a href="{{ route('eoffice.manprak.mahasiswa.daftar-asprak.index') }}" class="mp-btn primary md flex-shrink-0"
                     style="text-decoration:none;">Daftar Sekarang</a>

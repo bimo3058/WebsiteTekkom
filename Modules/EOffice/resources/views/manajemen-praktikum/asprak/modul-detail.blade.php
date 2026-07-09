@@ -49,7 +49,7 @@
             </svg>
         </div>
         <div>
-            <div class="mp-stat-label">Asprak</div>
+            <div class="mp-stat-label">Asisten Praktikum</div>
             <div class="mp-stat-value">{{ $modul->modulAsprak->count() }}</div>
         </div>
     </div>
@@ -76,7 +76,7 @@
 
 <div style="display:grid;grid-template-columns:340px 1fr;gap:14px;flex:1;min-height:0;">
 
-    {{-- Kolom Kiri: Edit + Asprak Pengampu --}}
+    {{-- Kolom Kiri: Edit + Asisten Praktikum Pengampu --}}
     <div style="display:flex;flex-direction:column;gap:14px;">
 
         {{-- Edit Modul --}}
@@ -110,11 +110,11 @@
             </form>
         </div>
 
-        {{-- Asprak Pengampu Modul ini --}}
+        {{-- Asisten Praktikum Pengampu Modul ini --}}
         <div class="mp-card flex-shrink-0" style="padding:20px;">
             <div class="sec-head" style="margin-bottom:12px;">
                 <span class="sec-bar"></span>
-                <span class="sec-title">Asprak Pengampu</span>
+                <span class="sec-title">Asisten Praktikum Pengampu</span>
             </div>
             @forelse($modul->modulAsprak as $ma)
             <div style="display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid #DFE1E7;">
@@ -125,7 +125,7 @@
                 </div>
             </div>
             @empty
-            <div style="font-size:13px;color:#808897;">Belum ada asprak pengampu.</div>
+            <div style="font-size:13px;color:#808897;">Belum ada asisten praktikum pengampu.</div>
             @endforelse
         </div>
 

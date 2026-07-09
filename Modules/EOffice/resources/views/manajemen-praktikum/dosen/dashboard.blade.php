@@ -13,7 +13,7 @@
                 <span class="mp-badge primary sm"><span class="dot"></span>Dosen</span>
             </div>
             <p class="mp-page-sub">Selamat datang, {{ $firstName }} ·
-                {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
+                {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }} · {{ $semesterLabel }}</p>
         </div>
         <div class="mp-page-actions">
             <a href="{{ route('eoffice.manprak.dosen.pendaftaran-koor.index') }}" class="mp-btn secondary md"
@@ -46,7 +46,7 @@
             </div>
             <div class="mp-stat-label">Praktikum Aktif</div>
             <div class="mp-stat-value">{{ $totalPraktikumAktif ?? 0 }}</div>
-            <div class="mp-stat-sub">diampu semester ini</div>
+            <div class="mp-stat-sub">diampu {{ $semesterLabel }}</div>
         </div>
         <div class="mp-stat">
             <div class="mp-stat-icon yellow">
@@ -104,8 +104,17 @@
                             class="flex items-center gap-2 flex-shrink-0">
                             @csrf
                             <input type="hidden" name="praktikum_id" value="{{ $p->id }}">
-                            <input type="text" name="nim" placeholder="NIM Koordinator" class="mp-input"
-                                style="width:160px;font-size:12px;">
+                            <div x-data="koorSearch('{{ $p->id }}')" class="relative">
+                                <input type="hidden" name="nim" x-model="selectedNim">
+                                <input type="text" x-model="searchQuery" @input="handleInput" @focus="if(searchQuery.length >= 2) showDropdown = true" @click.away="showDropdown = false" placeholder="Cari Nama/NIM..." class="mp-input" style="width:200px;font-size:12px;" autocomplete="off">
+                                <div x-show="showDropdown && searchQuery.length >= 2" class="absolute z-50 w-full mt-1 bg-white border border-[#DFE1E7] rounded-md shadow-lg max-h-48 overflow-y-auto" style="display:none;">
+                                    <template x-for="item in suggestions" :key="item.id">
+                                        <div @click="selectItem(item)" class="px-3 py-2 text-[12px] cursor-pointer hover:bg-[#F6F8FA]" x-text="item.text"></div>
+                                    </template>
+                                    <div x-show="loading" class="px-3 py-2 text-[12px] text-gray-500">Mencari...</div>
+                                    <div x-show="!loading && suggestions.length === 0" class="px-3 py-2 text-[12px] text-red-500">Hasil tidak ditemukan</div>
+                                </div>
+                            </div>
                             <button type="submit" class="mp-btn primary sm">Tunjuk</button>
                         </form>
                     </div>
@@ -172,7 +181,7 @@
                                 style="text-align:center;padding:8px 6px;background:#F9FAFB;border-radius:10px;border:1px solid #DFE1E7;">
                                 <div style="font-size:18px;font-weight:700;color:#0D0D12;line-height:1;">
                                     {{ $p->asisten_praktikum_count ?? 0 }}</div>
-                                <div style="font-size:10px;color:#666D80;margin-top:3px;">Asprak</div>
+                                <div style="font-size:10px;color:#666D80;margin-top:3px;">Asisten Praktikum</div>
                             </div>
                         </div>
 
@@ -203,4 +212,55 @@
         @endif
     </div>
 
+    <script>
+    document.addEventListener('alpine:init', () => {
+        Alpine.data('koorSearch', (praktikumId) => ({
+            praktikumId: praktikumId,
+            searchQuery: '',
+            selectedNim: '',
+            suggestions: [],
+            showDropdown: false,
+            loading: false,
+
+            timeout: null,
+            handleInput() {
+                this.selectedNim = '';
+                if (this.searchQuery.length < 2) {
+                    this.suggestions = [];
+                    this.showDropdown = false;
+                    this.loading = false;
+                    return;
+                }
+                this.loading = true;
+                this.showDropdown = true;
+                
+                clearTimeout(this.timeout);
+                this.timeout = setTimeout(() => {
+                    this.fetchSuggestions();
+                }, 400);
+            },
+
+            async fetchSuggestions() {
+                try {
+                    const response = await fetch(`{{ route('eoffice.manprak.dosen.search-praktikan') }}?q=${encodeURIComponent(this.searchQuery)}&praktikum_id=${this.praktikumId}`);
+                    if (response.ok) {
+                        this.suggestions = await response.json();
+                    } else {
+                        this.suggestions = [];
+                    }
+                } catch (error) {
+                    console.error('Fetch error:', error);
+                    this.suggestions = [];
+                }
+                this.loading = false;
+            },
+
+            selectItem(item) {
+                this.selectedNim = item.id;
+                this.searchQuery = item.text;
+                this.showDropdown = false;
+            }
+        }));
+    });
+    </script>
 </x-eoffice::manajemen-praktikum.layout>

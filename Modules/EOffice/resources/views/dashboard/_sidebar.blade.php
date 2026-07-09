@@ -264,17 +264,7 @@
 
     {{-- User footer --}}
     <div class="px-3 py-[10px] border-t border-[#DFE1E7] flex-shrink-0">
-        {{-- Role badges (multi-role indicator) --}}
-        @if($multiRole)
-        <div class="px-[10px] mb-[6px] flex flex-wrap gap-[4px] overflow-hidden transition-[opacity,height] duration-200"
-             :class="sidebarOpen ? 'opacity-100' : 'opacity-0 h-0'">
-            @if($isAdmin)  <span class="text-[9px] font-bold px-[5px] py-[1px] rounded-full text-white" style="background:#DF1C41;">ADMIN</span> @endif
-            @if($isDosen)  <span class="text-[9px] font-bold px-[5px] py-[1px] rounded-full text-white" style="background:#0B266E;">DOSEN</span> @endif
-            @if($isKoor)   <span class="text-[9px] font-bold px-[5px] py-[1px] rounded-full text-white" style="background:#6366F1;">KOOR</span> @endif
-            @if($isAsprak) <span class="text-[9px] font-bold px-[5px] py-[1px] rounded-full text-white" style="background:#40C4AA;">ASPRAK</span> @endif
-            @if($isMhs)    <span class="text-[9px] font-bold px-[5px] py-[1px] rounded-full text-white" style="background:#D39C3D;">MHS</span> @endif
-        </div>
-        @endif
+
 
         <div class="flex items-center gap-[10px] px-[10px] py-2 rounded-lg cursor-pointer overflow-hidden transition-colors hover:bg-[#F6F8FA]">
             @if($user->avatar_url)

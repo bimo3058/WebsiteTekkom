@@ -1,3 +1,8 @@
+@php
+    /** @var \Modules\EOffice\Models\Praktikum $praktikum */
+    /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\MatkulPraktikum[] $matkulList */
+    /** @var \Illuminate\Support\Collection|object[] $dosenList */
+@endphp
 <x-eoffice::manajemen-praktikum.layout pageTitle="Edit Praktikum — {{ $praktikum->nama }}">
 
     {{-- Header --}}

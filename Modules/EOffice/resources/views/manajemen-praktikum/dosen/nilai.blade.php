@@ -1,5 +1,12 @@
 <x-eoffice::manajemen-praktikum.layout pageTitle="Nilai Praktikum{{ $praktikum ? ' — '.$praktikum->nama : '' }}">
 
+@php
+    /** @var \Modules\EOffice\Models\Praktikum $praktikum */
+    /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\Modul[] $allModuls */
+    /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\Modul[] $moduls */
+    /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\DaftarPraktikan[] $daftarPraktikan */
+@endphp
+
 {{-- Pilih Praktikum --}}
 @if(!$praktikum)
 
@@ -87,11 +94,105 @@
     </form>
 </div>
 
+@php
+    $kelompoks = $daftarPraktikan->pluck('kelompok')->filter()->unique()->sort()->values();
+    $shifts    = $daftarPraktikan->pluck('shift')->filter()->unique()->sort()->values();
+@endphp
+
 {{-- Render per Modul --}}
 @forelse($moduls as $modul)
-<div class="mp-card flex-shrink-0" style="margin-bottom: 24px;">
-    <div class="mp-card-header" style="background:#F9FAFB; border-bottom:1px solid #EDF0F4; border-radius: 12px 12px 0 0;">
+<div class="mp-card flex-shrink-0" style="margin-bottom: 24px;" x-data="{ search: '', kelompok: '', shift: '' }">
+    <div class="mp-card-header" style="background:#F9FAFB; border-bottom:1px solid #EDF0F4; border-radius: 12px 12px 0 0; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
         <span class="mp-card-title" style="font-size:15px; color:#0D0D12;">{{ $modul->nama }}</span>
+        
+        <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+            <input type="text" x-model="search" placeholder="Cari nama atau NIM..." class="mp-input" style="padding:6px 10px; font-size:13px; width:200px;">
+            {{-- Combobox Kelompok --}}
+            <div x-data="{
+                    open: false,
+                    searchStr: '',
+                    options: {{ json_encode($kelompoks) }},
+                    get filtered() {
+                        return this.searchStr === '' 
+                            ? this.options 
+                            : this.options.filter(o => o.toLowerCase().includes(this.searchStr.toLowerCase()))
+                    },
+                    selectOption(opt) {
+                        kelompok = opt;
+                        this.searchStr = '';
+                        this.open = false;
+                    }
+                }" 
+                class="relative" 
+                @click.away="open = false"
+            >
+                <div class="mp-input flex items-center justify-between cursor-pointer" style="padding:6px 10px; font-size:13px; width:150px; background:#fff;" @click="open = !open; if(open) $nextTick(() => $refs.searchKel.focus())">
+                    <span x-text="kelompok === '' ? 'Semua Kelompok' : kelompok" class="truncate" :style="kelompok === '' ? 'color:#808897' : 'color:#0D0D12; font-weight:500;'"></span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="open ? 'transform:rotate(180deg)' : ''" style="transition:transform 0.2s;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+
+                <div x-show="open" x-transition class="absolute z-[50] mt-1 w-full bg-white border border-[#DFE1E7] rounded-[8px] shadow-lg" style="display: none; max-height: 250px; display:flex; flex-direction:column; overflow:hidden;">
+                    <div style="padding: 8px; border-bottom: 1px solid #EDF0F4; background:#F9FAFB;">
+                        <input x-ref="searchKel" type="text" x-model="searchStr" placeholder="Cari kelompok..." class="mp-input" style="padding: 6px 10px; font-size:12px; width:100%; border-color:#DFE1E7; box-shadow:none;">
+                    </div>
+                    <div style="overflow-y:auto; flex:1; max-height: 200px;">
+                        <div @click="selectOption('')" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="kelompok === '' ? 'background:#EEF2FF; color:#4F46E5; font-weight:600;' : 'color:#353849;'" onmouseover="if(kelompok !== '') this.style.background='#F6F8FA'" onmouseout="if(kelompok !== '') this.style.background='transparent'">
+                            Semua Kelompok
+                        </div>
+                        <template x-for="opt in filtered" :key="opt">
+                            <div @click="selectOption(opt)" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="kelompok === opt ? 'background:#EEF2FF; color:#4F46E5; font-weight:600;' : 'color:#353849;'" onmouseover="if(kelompok !== opt) this.style.background='#F6F8FA'" onmouseout="if(kelompok !== opt) this.style.background='transparent'" x-text="opt">
+                            </div>
+                        </template>
+                        <div x-show="filtered.length === 0" class="px-3 py-[12px] text-[12px] text-center" style="color:#A4ABB8;">
+                            Hasil Tidak Ditemukan
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Combobox Shift --}}
+            <div x-data="{
+                    open: false,
+                    searchStr: '',
+                    options: {{ json_encode($shifts) }},
+                    get filtered() {
+                        return this.searchStr === '' 
+                            ? this.options 
+                            : this.options.filter(o => o.toLowerCase().includes(this.searchStr.toLowerCase()))
+                    },
+                    selectOption(opt) {
+                        shift = opt;
+                        this.searchStr = '';
+                        this.open = false;
+                    }
+                }" 
+                class="relative" 
+                @click.away="open = false"
+            >
+                <div class="mp-input flex items-center justify-between cursor-pointer" style="padding:6px 10px; font-size:13px; width:150px; background:#fff;" @click="open = !open; if(open) $nextTick(() => $refs.searchShf.focus())">
+                    <span x-text="shift === '' ? 'Semua Shift' : shift" class="truncate" :style="shift === '' ? 'color:#808897' : 'color:#0D0D12; font-weight:500;'"></span>
+                    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#A4ABB8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" :style="open ? 'transform:rotate(180deg)' : ''" style="transition:transform 0.2s;"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                </div>
+
+                <div x-show="open" x-transition class="absolute z-[50] mt-1 w-full bg-white border border-[#DFE1E7] rounded-[8px] shadow-lg" style="display: none; max-height: 250px; display:flex; flex-direction:column; overflow:hidden;">
+                    <div style="padding: 8px; border-bottom: 1px solid #EDF0F4; background:#F9FAFB;">
+                        <input x-ref="searchShf" type="text" x-model="searchStr" placeholder="Cari shift..." class="mp-input" style="padding: 6px 10px; font-size:12px; width:100%; border-color:#DFE1E7; box-shadow:none;">
+                    </div>
+                    <div style="overflow-y:auto; flex:1; max-height: 200px;">
+                        <div @click="selectOption('')" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="shift === '' ? 'background:#EEF2FF; color:#4F46E5; font-weight:600;' : 'color:#353849;'" onmouseover="if(shift !== '') this.style.background='#F6F8FA'" onmouseout="if(shift !== '') this.style.background='transparent'">
+                            Semua Shift
+                        </div>
+                        <template x-for="opt in filtered" :key="opt">
+                            <div @click="selectOption(opt)" class="px-3 py-[8px] text-[13px] cursor-pointer transition-colors" :style="shift === opt ? 'background:#EEF2FF; color:#4F46E5; font-weight:600;' : 'color:#353849;'" onmouseover="if(shift !== opt) this.style.background='#F6F8FA'" onmouseout="if(shift !== opt) this.style.background='transparent'" x-text="opt">
+                            </div>
+                        </template>
+                        <div x-show="filtered.length === 0" class="px-3 py-[12px] text-[12px] text-center" style="color:#A4ABB8;">
+                            Hasil Tidak Ditemukan
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
     <div style="overflow-x: auto;">
         <table class="mp-table" style="min-width: 900px;">
@@ -100,7 +201,7 @@
                     <th class="mp-th text-left" style="padding:12px 16px; width:40px;">No</th>
                     <th class="mp-th text-left" style="padding:12px 16px; min-width:180px;">Nama Praktikan</th>
                     <th class="mp-th text-left" style="padding:12px 16px;">NIM</th>
-                    <th class="mp-th text-center" style="padding:12px 16px;width:90px;border-left:1px solid #DFE1E7;border-right:1px solid #DFE1E7;">Klp</th>
+                    <th class="mp-th text-center" style="padding:12px 16px;width:90px;border-left:1px solid #DFE1E7;border-right:1px solid #DFE1E7;">Kelompok</th>
                     <th class="mp-th text-center" style="padding:12px 16px;width:70px;border-right:1px solid #DFE1E7;">Shift</th>
                     <th class="mp-th text-center" style="padding:12px 16px; width:90px;">Kehadiran</th>
                     <th class="mp-th text-center" style="padding:12px 16px; min-width:120px; background:#EEF2FF;">Tugas Pendahuluan</th>
@@ -117,7 +218,9 @@
                     $statusAbsen = $absensi?->status;
                     $njMap       = $nilaiJenisMap[$modul->id][$dp->id] ?? [];
                 @endphp
-                <tr class="mp-tr" style="border-bottom:1px solid #DFE1E7;">
+                <tr class="mp-tr" style="border-bottom:1px solid #DFE1E7;"
+                    x-data="{ name: '{{ addslashes(strtolower($dp->user?->name ?? '')) }}', nim: '{{ addslashes(strtolower($dp->user?->student?->student_number ?? $dp->user?->email ?? '')) }}', kel: '{{ addslashes($dp->kelompok ?? '') }}', shf: '{{ addslashes($dp->shift ?? '') }}' }"
+                    x-show="(search === '' || name.includes(search.toLowerCase()) || nim.includes(search.toLowerCase())) && (kelompok === '' || kelompok === kel) && (shift === '' || shift === shf)">
                     <td style="padding:12px 16px; color:#666D80; font-size:13px;">{{ $idx + 1 }}</td>
                     <td style="padding:12px 16px;">
                         <div style="display:flex;align-items:center;gap:10px;">
@@ -216,7 +319,7 @@
                 </label>
             </div>
             <p style="font-size:12px; color:#666D80; line-height:1.6; margin:0; max-width:600px;">
-                <strong style="color:#0D0D12;">Informasi:</strong> Penyetujuan nilai ini dilakukan oleh dosen dan koor, sehingga apabila keduanya belum menyetujui maka kolom dosen dan koor belum terchecklist, jika salah satu sudah menyetujui berarti salah satunya ada tanda checklist, jika keduanya sudah checklist maka nilai tersebut akan dipublikasikan sehingga mahasiswa dapat melihat.
+                <strong style="color:#0D0D12;">Informasi:</strong> Penyetujuan nilai ini dilakukan oleh dosen dan koordinator, sehingga apabila keduanya belum menyetujui maka kolom dosen dan koordinator belum terchecklist, jika salah satu sudah menyetujui berarti salah satunya ada tanda checklist, jika keduanya sudah checklist maka nilai tersebut akan dipublikasikan sehingga mahasiswa dapat melihat.
             </p>
         </div>
 

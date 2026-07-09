@@ -87,7 +87,7 @@
                     <div style="display:flex;align-items:center;gap:12px;margin-top:4px;">
                         <span style="font-size:11px;color:#666D80;">{{ $jumlahMateri }} materi</span>
                         @if($asprakList->isNotEmpty())
-                        <span style="font-size:11px;color:#666D80;">Asprak: {{ $asprakList->join(', ') }}</span>
+                        <span style="font-size:11px;color:#666D80;">Asisten Praktikum: {{ $asprakList->join(', ') }}</span>
                         @endif
                     </div>
                 </div>

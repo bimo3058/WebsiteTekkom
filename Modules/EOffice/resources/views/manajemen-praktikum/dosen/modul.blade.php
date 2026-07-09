@@ -86,10 +86,10 @@
                 <div style="font-size:12px;color:#666D80;margin-bottom:8px;" class="line-clamp-2">{{ $modul->deskripsi }}</div>
                 @endif
 
-                {{-- Asprak --}}
+                {{-- Asisten Praktikum --}}
                 @if($item['asprak']->isNotEmpty())
                 <div class="flex items-center gap-1 flex-wrap">
-                    <span style="font-size:10px;color:#808897;">Asprak:</span>
+                    <span style="font-size:10px;color:#808897;">Asisten Praktikum:</span>
                     @foreach($item['asprak'] as $nama)
                     <span class="mp-badge success sm">{{ $nama }}</span>
                     @endforeach

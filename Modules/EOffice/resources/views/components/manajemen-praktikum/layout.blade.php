@@ -209,13 +209,13 @@
                 ],
                 'Kelola Data' => [
                     ['href' => route('eoffice.manprak.admin.praktikum.index'),              'label' => 'Daftar Praktikum',   'match' => 'admin.praktikum',          'icon' => $iBook],
-                    ['href' => route('eoffice.manprak.admin.matkul-praktikum.index'),       'label' => 'Matkul Praktikum',   'match' => 'matkul-praktikum',         'icon' => $iList],
+                    ['href' => route('eoffice.manprak.admin.matkul-praktikum.index'),       'label' => 'Mata Kuliah Praktikum',   'match' => 'matkul-praktikum',         'icon' => $iList],
                     ['href' => route('eoffice.manprak.admin.dosen.index'),                  'label' => 'Daftar Dosen',       'match' => 'admin.dosen',              'icon' => $iUser],
                 ],
                 'Pendaftaran' => [
                     ['href' => route('eoffice.manprak.admin.periode-pendaftaran.index'),    'label' => 'Periode Pendaftaran','match' => 'periode-pendaftaran',      'icon' => $iCal],
-                    ['href' => route('eoffice.manprak.admin.pendaftaran-koor.index'),       'label' => 'Pendaftaran Koor',   'match' => 'pendaftaran-koor',         'icon' => $iCheck],
-                    ['href' => route('eoffice.manprak.admin.pendaftaran-asprak.index'),     'label' => 'Pendaftaran Asprak', 'match' => 'pendaftaran-asprak',       'icon' => $iList],
+                    ['href' => route('eoffice.manprak.admin.pendaftaran-koor.index'),       'label' => 'Pendaftaran Koordinator',   'match' => 'pendaftaran-koor',         'icon' => $iCheck],
+                    ['href' => route('eoffice.manprak.admin.pendaftaran-asprak.index'),     'label' => 'Pendaftaran Asisten Praktikum', 'match' => 'pendaftaran-asprak',       'icon' => $iList],
                     ['href' => route('eoffice.manprak.admin.kelola-role.index'),            'label' => 'Kelola Role',        'match' => 'kelola-role',              'icon' => $iUser],
                 ],
             ],
@@ -233,8 +233,8 @@
                     ['href' => route('eoffice.manprak.dosen.dashboard'),                             'label' => 'Dashboard',        'match' => 'dosen.dashboard',        'icon' => $iHome],
                 ],
                 'Pendaftaran' => [
-                    ['href' => route('eoffice.manprak.dosen.periode-pendaftaran.index'),             'label' => 'Buka Periode Koor','match' => 'dosen.periode-pendaftaran', 'icon' => $iCal],
-                    ['href' => route('eoffice.manprak.dosen.pendaftaran-koor.index'),                'label' => 'Seleksi Koor',     'match' => 'dosen.pendaftaran-koor', 'icon' => $iCheck],
+                    ['href' => route('eoffice.manprak.dosen.periode-pendaftaran.index'),             'label' => 'Buka Periode Koordinator','match' => 'dosen.periode-pendaftaran', 'icon' => $iCal],
+                    ['href' => route('eoffice.manprak.dosen.pendaftaran-koor.index'),                'label' => 'Seleksi Koordinator',     'match' => 'dosen.pendaftaran-koor', 'icon' => $iCheck],
                 ],
                 'Kelola' => [
                     ['href' => route('eoffice.manprak.dosen.asprak.index'),                          'label' => 'Asisten Praktikum','match' => 'dosen.asprak',           'icon' => $iUser],
@@ -261,8 +261,8 @@
                     ['href' => route('eoffice.manprak.koor.dashboard'),                'label' => 'Dashboard',        'match' => 'koor.dashboard',             'icon' => $iHome],
                 ],
                 'Pendaftaran' => [
-                    ['href' => route('eoffice.manprak.koordinator.periode-pendaftaran.index'), 'label' => 'Buka Periode Asprak','match' => 'koordinator.periode-pendaftaran', 'icon' => $iCal],
-                    ['href' => route('eoffice.manprak.koor.pendaftaran-asprak.index'), 'label' => 'Seleksi Asprak',   'match' => 'koor.pendaftaran-asprak',    'icon' => $iCheck],
+                    ['href' => route('eoffice.manprak.koordinator.periode-pendaftaran.index'), 'label' => 'Buka Periode Asisten Praktikum','match' => 'koordinator.periode-pendaftaran', 'icon' => $iCal],
+                    ['href' => route('eoffice.manprak.koor.pendaftaran-asprak.index'), 'label' => 'Seleksi Asisten Praktikum',   'match' => 'koor.pendaftaran-asprak',    'icon' => $iCheck],
 
                 ],
                 'Kelola' => [
@@ -277,7 +277,7 @@
 
     if ($isAsprak) {
         $sections[] = [
-            'label' => 'Asprak',
+            'label' => 'Asisten Praktikum',
             'color' => '#40C4AA',
             'bg'    => 'rgba(64,196,170,0.10)',
             'match' => 'manprak.asprak',
@@ -312,7 +312,7 @@
                     ['href' => route('eoffice.manprak.mahasiswa.pengumuman.index'),     'label' => 'Pengumuman',        'match' => 'mahasiswa.pengumuman', 'icon' => $iBell],
                     ['href' => route('eoffice.manprak.mahasiswa.tugas.index'),          'label' => 'Tugas',             'match' => 'mahasiswa.tugas',      'icon' => $iEdit],
                     ['href' => route('eoffice.manprak.mahasiswa.nilai.index'),          'label' => 'Absensi & Nilai',   'match' => 'mahasiswa.nilai',      'icon' => $iCheck],
-                    ['href' => route('eoffice.manprak.mahasiswa.daftar-asprak.index'), 'label' => 'Daftar Asprak/Koor','match' => 'daftar-asprak',        'icon' => $iUser],
+                    ['href' => route('eoffice.manprak.mahasiswa.daftar-asprak.index'), 'label' => 'Daftar Asisten/Koordinator','match' => 'daftar-asprak',        'icon' => $iUser],
                 ],
             ],
         ];
@@ -352,17 +352,7 @@
             </button>
         </div>
 
-        {{-- Role badges (multi-role indicator, collapsed = dot only) --}}
-        @if($multiRole)
-        <div class="px-[10px] pb-[6px] flex flex-wrap gap-[3px] overflow-hidden transition-opacity duration-200"
-             :class="sidebarOpen ? 'opacity-100 px-[20px]' : 'opacity-0 h-0 pointer-events-none'">
-            @if($isAdmin)  <span class="text-[9px] font-bold px-[6px] py-[1px] rounded-full text-white whitespace-nowrap" style="background:#DF1C41;">ADMIN</span>  @endif
-            @if($isDosen)  <span class="text-[9px] font-bold px-[6px] py-[1px] rounded-full text-white whitespace-nowrap" style="background:#0B266E;">DOSEN</span>  @endif
-            @if($isKoor)   <span class="text-[9px] font-bold px-[6px] py-[1px] rounded-full text-white whitespace-nowrap" style="background:#6366F1;">KOOR</span>   @endif
-            @if($isAsprak) <span class="text-[9px] font-bold px-[6px] py-[1px] rounded-full text-white whitespace-nowrap" style="background:#40C4AA;">ASPRAK</span> @endif
-            @if($isMhs)    <span class="text-[9px] font-bold px-[6px] py-[1px] rounded-full text-white whitespace-nowrap" style="background:#D39C3D;">MHS</span>    @endif
-        </div>
-        @endif
+
 
         {{-- Nav --}}
         <nav class="flex-1 overflow-y-auto overflow-x-hidden px-[10px] py-1 flex flex-col [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">

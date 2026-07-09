@@ -41,12 +41,12 @@
 
 @if($praktikum)
 
-{{-- Tabel Asprak --}}
+{{-- Tabel Asisten Praktikum --}}
 <div class="sec-head">
     <span class="sec-bar"></span>
-    <span class="sec-title">Daftar Asprak — {{ $praktikum->nama }}</span>
+    <span class="sec-title">Daftar Asisten Praktikum — {{ $praktikum->nama }}</span>
     <span class="sec-rule"></span>
-    <span class="mp-badge navy sm">{{ $aspraks->count() }} asprak</span>
+    <span class="mp-badge navy sm">{{ $aspraks->count() }} asisten praktikum</span>
 </div>
 
 @if($aspraks->isEmpty())
@@ -58,7 +58,7 @@
             <path d="M23 11l-3.5 3.5-1.5-1.5"/>
         </svg>
         <div style="font-size:14px;font-weight:600;color:#0D0D12;margin-bottom:4px;">Belum Ada Asisten Praktikum</div>
-        <div style="font-size:12px;color:#666D80;">Belum ada asprak yang bertugas pada praktikum ini.</div>
+        <div style="font-size:12px;color:#666D80;">Belum ada asisten praktikum yang bertugas pada praktikum ini.</div>
     </div>
 </div>
 @else

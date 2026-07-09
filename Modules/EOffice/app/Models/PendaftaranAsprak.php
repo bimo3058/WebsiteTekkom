@@ -22,6 +22,7 @@ class PendaftaranAsprak extends Model
         'ipk',
         'motivasi',
         'cv_path',
+        'berkas_cerc_path',
         'transkrip_path',
         'jadwal',
         'status',

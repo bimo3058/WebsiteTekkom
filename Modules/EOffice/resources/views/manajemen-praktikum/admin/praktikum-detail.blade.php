@@ -134,7 +134,7 @@
     </div>
     {{-- /Sidebar --}}
 
-    {{-- ══ KONTEN KANAN: Tab Praktikan & Asprak ═══════════════════════════ --}}
+    {{-- ══ KONTEN KANAN: Tab Praktikan & Asisten Praktikum ═══════════════════════════ --}}
     <div style="flex:1;min-width:0;display:flex;flex-direction:column;height:100%;min-height:0;"
          x-data="{ tab: '{{ request()->has('tab') ? request('tab') : 'praktikan' }}' }">
 
@@ -262,26 +262,26 @@
         </div>
         {{-- /Tab Praktikan --}}
 
-        {{-- ── TAB: ASPRAK ──────────────────────────────────────────────── --}}
+        {{-- ── TAB: ASISTEN PRAKTIKUM ──────────────────────────────────────────────── --}}
         <div x-show="tab==='asprak'" style="display:flex;flex-direction:column;flex:1;min-height:0;height:100%;">
 
-            {{-- Toolbar Asprak --}}
+            {{-- Toolbar Asisten Praktikum --}}
             <div style="background:#fff;border:1px solid #DFE1E7;border-radius:13px;padding:13px 16px;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
                 <div>
                     <div style="font-size:13px;font-weight:700;color:#0D0D12;">Daftar Asisten Praktikum</div>
-                    <div style="font-size:11px;color:#A4ABB8;margin-top:1px;">{{ $aspraks->count() }} asprak terdaftar di praktikum ini</div>
+                    <div style="font-size:11px;color:#A4ABB8;margin-top:1px;">{{ $aspraks->count() }} asisten praktikum terdaftar di praktikum ini</div>
                 </div>
 
             </div>
 
-            {{-- Tabel Asprak --}}
+            {{-- Tabel Asisten Praktikum --}}
             <div style="background:#fff;border:1px solid #DFE1E7;border-radius:13px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);display:flex;flex-direction:column;flex:1;min-height:0;margin-bottom:2px;">
                 <div style="overflow-y:auto;flex:1;">
                     <table style="width:100%;border-collapse:collapse;min-width:580px;">
                         <thead style="position:sticky;top:0;z-index:1;">
                             <tr style="border-bottom:1px solid #DFE1E7;background:#FAFAFA;">
                                 <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;color:#A4ABB8;text-transform:uppercase;letter-spacing:.05em;width:36px;">#</th>
-                                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;color:#A4ABB8;text-transform:uppercase;letter-spacing:.05em;">Nama Asprak</th>
+                                <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;color:#A4ABB8;text-transform:uppercase;letter-spacing:.05em;">Nama Asisten Praktikum</th>
                                 <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;color:#A4ABB8;text-transform:uppercase;letter-spacing:.05em;width:140px;">NIM</th>
                                 <th style="padding:10px 14px;text-align:center;font-size:10px;font-weight:700;color:#A4ABB8;text-transform:uppercase;letter-spacing:.05em;width:80px;">Angkatan</th>
                                 <th style="padding:10px 14px;text-align:left;font-size:10px;font-weight:700;color:#A4ABB8;text-transform:uppercase;letter-spacing:.05em;width:200px;">Modul Ditugaskan</th>
@@ -333,9 +333,9 @@
                                 </td>
                                 <td style="padding:12px 14px;text-align:center;">
                                     @if($isKoor)
-                                    <span class="mp-badge warning sm" style="font-size:10px;"><span class="dot"></span>Koor</span>
+                                    <span class="mp-badge warning sm" style="font-size:10px;"><span class="dot"></span>Koordinator</span>
                                     @else
-                                    <span class="mp-badge neutral sm" style="font-size:10px;"><span class="dot"></span>Asprak</span>
+                                    <span class="mp-badge neutral sm" style="font-size:10px;"><span class="dot"></span>Asisten Praktikum</span>
                                     @endif
                                 </td>
                                 <td style="padding:12px 14px;text-align:center;font-size:11px;color:#A4ABB8;white-space:nowrap;">
@@ -357,7 +357,7 @@
             </div>
 
         </div>
-        {{-- /Tab Asprak --}}
+        {{-- /Tab Asisten Praktikum --}}
 
     </div>
     {{-- /Konten Kanan --}}

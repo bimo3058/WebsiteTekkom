@@ -7,7 +7,7 @@
             <h1 class="mp-page-title">Seleksi Asisten Praktikum</h1>
             <span class="mp-badge" style="background:#E0E7FF;color:#6366F1;border-radius:999px;padding:3px 10px;font-size:11px;font-weight:600;display:inline-flex;align-items:center;gap:5px;"><span class="dot" style="background:#6366F1;"></span>Koordinator</span>
         </div>
-        <p class="mp-page-sub">Review dan seleksi calon asprak untuk praktikum yang Anda koordinatori · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
+        <p class="mp-page-sub">Review dan seleksi calon asisten praktikum untuk praktikum yang Anda koordinatori · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
     </div>
 </div>
 
@@ -26,7 +26,7 @@
 
 <div class="sec-head">
     <span class="sec-bar"></span>
-    <span class="sec-title">Daftar Pendaftar Asprak</span>
+    <span class="sec-title">Daftar Pendaftar Asisten Praktikum</span>
     <span class="sec-rule"></span>
 </div>
 
@@ -91,7 +91,11 @@
                         <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->transkrip_path, 'eoffice') }}" target="_blank"
                            style="font-size:11px;font-weight:600;color:#0B266E;text-decoration:none;display:block;" class="hover:underline">Transkrip</a>
                         @endif
-                        @if(!$p->cv_path && !$p->transkrip_path)
+                        @if($p->berkas_cerc_path)
+                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->berkas_cerc_path, 'eoffice') }}" target="_blank"
+                           style="font-size:11px;font-weight:600;color:#0B266E;text-decoration:none;display:block;margin-top:2px;" class="hover:underline">CERC</a>
+                        @endif
+                        @if(!$p->cv_path && !$p->transkrip_path && !$p->berkas_cerc_path)
                         <span style="font-size:11px;color:#808897;">—</span>
                         @endif
                     </td>
@@ -101,7 +105,7 @@
                     <td style="padding:12px 16px;">
                         @if($p->status_koor === 'disetujui')
                         <div>
-                            <span class="mp-badge success sm"><span class="dot"></span>Disetujui Koor</span>
+                            <span class="mp-badge success sm"><span class="dot"></span>Disetujui Koordinator</span>
                             <div style="font-size:10px;color:#666D80;margin-top:2px;">Menunggu Admin</div>
                         </div>
                         @elseif($p->status_koor === 'ditolak' || $p->status === 'rejected')

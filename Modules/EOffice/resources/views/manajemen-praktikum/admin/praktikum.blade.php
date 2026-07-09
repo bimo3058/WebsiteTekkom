@@ -1,4 +1,10 @@
-<x-eoffice::manajemen-praktikum.layout pageTitle="Daftar Praktikum">
+<x-eoffice::manajemen-praktikum.layout pageTitle="Manajemen Praktikum">
+
+@php
+    /** @var \Illuminate\Pagination\LengthAwarePaginator|\Modules\EOffice\Models\Praktikum[] $praktikums */
+    /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\MatkulPraktikum[] $matkulList */
+    /** @var \Illuminate\Support\Collection|object[] $dosenList */
+@endphp
 
 {{-- Header --}}
 <div class="mp-page-header">

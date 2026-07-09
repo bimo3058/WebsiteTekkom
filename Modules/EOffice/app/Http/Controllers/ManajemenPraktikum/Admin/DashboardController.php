@@ -16,8 +16,12 @@ class DashboardController extends Controller
 {
     public function index(Request $request)
     {
-        $tahunAjaran   = $request->input('tahun_ajaran', now()->year);
-        $semester      = $request->input('semester', now()->month <= 6 ? 'Genap' : 'Ganjil');
+        $currentYear = now()->year;
+        $currentSemester = now()->month <= 6 ? 'Genap' : 'Ganjil';
+        $defaultTahunAjaran = $currentSemester === 'Genap' ? $currentYear - 1 : $currentYear;
+        
+        $tahunAjaran   = $request->input('tahun_ajaran', $defaultTahunAjaran);
+        $semester      = $request->input('semester', $currentSemester);
         $semesterLabel = "Semester {$semester} {$tahunAjaran}/" . ($tahunAjaran + 1);
 
         // ── Stat cards ─────────────────────────────────────────────────────────

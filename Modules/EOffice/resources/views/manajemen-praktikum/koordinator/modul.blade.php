@@ -63,7 +63,7 @@
                     <tr style="background:#F9FAFB;">
                         <th class="mp-th text-left" style="padding:10px 16px;">Modul</th>
 
-                        <th class="mp-th text-left" style="padding:10px 16px;">Asprak</th>
+                        <th class="mp-th text-left" style="padding:10px 16px;">Asisten Praktikum</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">Konten</th>
                         <th class="mp-th text-left" style="padding:10px 16px;">Aksi</th>
                     </tr>

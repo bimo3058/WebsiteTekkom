@@ -62,7 +62,7 @@
                                 {{ $praktikumDipilih->semester }}</span>
                         @endif
                         @if($praktikumDipilih->koordinator)
-                            <span style="font-size:11px;color:#666D80;">Koor: {{ $praktikumDipilih->koordinator->name }}</span>
+                            <span style="font-size:11px;color:#666D80;">Koordinator: {{ $praktikumDipilih->koordinator->name }}</span>
                         @else
                             <span class="mp-badge warning sm">Belum Ada Koordinator</span>
                         @endif
@@ -108,7 +108,7 @@
                             </div>
                             <form method="POST"
                                 action="{{ route('eoffice.manprak.dosen.periode-pendaftaran.tutup', $periodeAktif->id) }}"
-                                style="margin-top:12px;" onsubmit="return confirm('Tutup periode pendaftaran koor sekarang?')">
+                                style="margin-top:12px;" onsubmit="return confirm('Tutup periode pendaftaran koordinator sekarang?')">
                                 @csrf
                                 <button type="submit" class="mp-btn error sm">🔒 Tutup Periode Sekarang</button>
                             </form>
@@ -130,7 +130,7 @@
                             <div style="display:flex;align-items:flex-end;">
                                 <div
                                     style="font-size:12px;color:#666D80;padding:8px;background:#F6F8FA;border-radius:8px;width:100%;">
-                                    💡 Membuka periode ini akan otomatis menutup periode koor aktif sebelumnya untuk praktikum
+                                    💡 Membuka periode ini akan otomatis menutup periode koordinator aktif sebelumnya untuk praktikum
                                     ini.
                                 </div>
                             </div>

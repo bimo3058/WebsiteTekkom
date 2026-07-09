@@ -120,6 +120,7 @@ class DaftarAsprakController extends Controller
             'ipk'          => 'required|numeric|min:0|max:4',
             'motivasi'     => 'nullable|string|max:1000',
             'transkrip'    => 'required|file|max:5120|mimes:pdf',
+            'berkas_cerc'  => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png,xlsx,csv',
             'jadwal'       => 'nullable|array',
         ]);
 
@@ -145,6 +146,10 @@ class DaftarAsprakController extends Controller
             ? $this->supabase->upload($request->file('transkrip'), 'asprak-transkrip/' . $user->id, 'eoffice')
             : null;
 
+        $berkasCercPath = $request->hasFile('berkas_cerc')
+            ? $this->supabase->upload($request->file('berkas_cerc'), 'asprak-cerc/' . $user->id, 'eoffice')
+            : null;
+
         PendaftaranAsprak::create([
             'user_id'        => $user->id,
             'praktikum_id'   => $request->praktikum_id,
@@ -152,6 +157,7 @@ class DaftarAsprakController extends Controller
             'motivasi'       => $request->motivasi,
             'cv_path'        => null,
             'transkrip_path' => $transkripPath,
+            'berkas_cerc_path' => $berkasCercPath,
             'jadwal'         => $request->jadwal ?? [],
             'status'         => 'pending',
         ]);
@@ -170,6 +176,7 @@ class DaftarAsprakController extends Controller
             'ipk'          => 'required|numeric|min:0|max:4',
             'motivasi'     => 'nullable|string|max:1000',
             'transkrip'    => 'required|file|max:5120|mimes:pdf',
+            'berkas_cerc'  => 'nullable|file|max:5120|mimes:pdf,jpg,jpeg,png,xlsx,csv',
         ]);
 
         $user = auth()->user();
@@ -193,12 +200,17 @@ class DaftarAsprakController extends Controller
             ? $this->supabase->upload($request->file('transkrip'), 'koor-transkrip/' . $user->id, 'eoffice')
             : null;
 
+        $berkasCercPath = $request->hasFile('berkas_cerc')
+            ? $this->supabase->upload($request->file('berkas_cerc'), 'koor-cerc/' . $user->id, 'eoffice')
+            : null;
+
         PendaftaranKoordinator::create([
             'user_id'        => $user->id,
             'praktikum_id'   => $request->praktikum_id,
             'ipk'            => $request->ipk,
             'motivasi'       => $request->motivasi,
             'transkrip_path' => $transkripPath,
+            'berkas_cerc_path' => $berkasCercPath,
             'status'         => 'pending',
         ]);
 

@@ -25,6 +25,8 @@ class Praktikum extends Model
         'tahun_ajaran',
         'semester',
         'status',
+        'jumlah_kelompok',
+        'jumlah_shift',
     ];
 
     protected function casts(): array

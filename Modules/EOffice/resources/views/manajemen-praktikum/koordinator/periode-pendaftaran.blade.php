@@ -87,7 +87,7 @@
 
         @if($periodeAktif && $periodeAktif->isSedangBuka())
         <div class="mp-alert warning" style="margin-bottom:16px;">
-            <div style="font-size:13px;font-weight:600;color:#7C5309;">Periode Asprak Sedang Dibuka</div>
+            <div style="font-size:13px;font-weight:600;color:#7C5309;">Periode Asisten Praktikum Sedang Dibuka</div>
             <div style="font-size:12px;color:#956321;margin-top:4px;">
                 <strong>{{ $periodeAktif->nama }}</strong>
                 @if($periodeAktif->ditutup_pada)
@@ -97,7 +97,7 @@
                 @endif
             </div>
             <form method="POST" action="{{ route('eoffice.manprak.koordinator.periode-pendaftaran.tutup', $periodeAktif->id) }}"
-                  style="margin-top:12px;" onsubmit="return confirm('Tutup periode pendaftaran asprak sekarang?')">
+                  style="margin-top:12px;" onsubmit="return confirm('Tutup periode pendaftaran asisten praktikum sekarang?')">
                 @csrf
                 <button type="submit" class="mp-btn error sm">🔒 Tutup Periode Sekarang</button>
             </form>
@@ -114,12 +114,12 @@
                         Nama Periode <span style="color:#666D80;font-weight:400;">(opsional)</span>
                     </label>
                     <input type="text" name="nama" class="mp-input w-full"
-                           placeholder="cth. Pendaftaran Asprak Gasal 2025/2026"
+                           placeholder="cth. Pendaftaran Asisten Praktikum Gasal 2025/2026"
                            value="{{ old('nama') }}">
                 </div>
                 <div style="display:flex;align-items:flex-end;">
                     <div style="font-size:12px;color:#666D80;padding:8px;background:#F6F8FA;border-radius:8px;width:100%;">
-                        💡 Hanya mahasiswa yang terlihat di menu Pendaftaran Asprak ketika periode ini aktif.
+                        💡 Hanya mahasiswa yang terlihat di menu Pendaftaran Asisten Praktikum ketika periode ini aktif.
                         Membuka periode baru akan otomatis menutup periode aktif sebelumnya.
                     </div>
                 </div>
@@ -155,7 +155,7 @@
 @if($periodeList->isNotEmpty())
 <div class="sec-head" style="margin-top:24px;">
     <span class="sec-bar"></span>
-    <span class="sec-title">Riwayat Periode Pendaftaran Asprak</span>
+    <span class="sec-title">Riwayat Periode Pendaftaran Asisten Praktikum</span>
     <span class="sec-rule"></span>
 </div>
 

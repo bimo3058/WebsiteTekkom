@@ -193,7 +193,7 @@
     <div style="background:#fff; border:1px solid var(--c-border,#DFE1E7); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04);">
         <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border-bottom:1px solid var(--c-border,#DFE1E7); background:#FAFAFA;">
             <div style="display:flex; align-items:center; gap:8px;">
-                <div style="font-size:14px; font-weight:700; color:var(--c-fg,#0D0D12);">Pendaftaran Koor</div>
+                <div style="font-size:14px; font-weight:700; color:var(--c-fg,#0D0D12);">Pendaftaran Koordinator</div>
                 @if(($totalKoorPending ?? 0) > 0)
                 <span style="font-size:10px; font-weight:700; background:#D39C3D; color:#fff; border-radius:999px; padding:1px 7px;">
                     {{ $totalKoorPending ?? 0 }}
@@ -233,11 +233,11 @@
         @endforelse
     </div>
 
-    {{-- ── Panel 4: Pendaftaran Asprak ───────────────────────────── --}}
+    {{-- ── Panel 4: Pendaftaran Asisten Praktikum ───────────────────────────── --}}
     <div style="background:#fff; border:1px solid var(--c-border,#DFE1E7); border-radius:14px; overflow:hidden; box-shadow:0 1px 3px rgba(0,0,0,.04);">
         <div style="display:flex; align-items:center; justify-content:space-between; padding:13px 16px; border-bottom:1px solid var(--c-border,#DFE1E7); background:#FAFAFA;">
             <div style="display:flex; align-items:center; gap:8px;">
-                <div style="font-size:14px; font-weight:700; color:var(--c-fg,#0D0D12);">Pendaftaran Asprak</div>
+                <div style="font-size:14px; font-weight:700; color:var(--c-fg,#0D0D12);">Pendaftaran Asisten Praktikum</div>
                 @if(($totalAsprakPending ?? 0) > 0)
                 <span style="font-size:10px; font-weight:700; background:#DF1C41; color:#fff; border-radius:999px; padding:1px 7px;">
                     {{ $totalAsprakPending ?? 0 }}
@@ -272,7 +272,7 @@
         @empty
         <div style="padding:32px; text-align:center;">
             <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#DFE1E7" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 8px;display:block;"><circle cx="12" cy="12" r="10"/><path d="M8 12l2.5 2.5L16 9"/></svg>
-            <div style="font-size:12px; color:#A4ABB8;">Tidak ada pendaftaran asprak yang perlu ditinjau.</div>
+            <div style="font-size:12px; color:#A4ABB8;">Tidak ada pendaftaran asisten praktikum yang perlu ditinjau.</div>
         </div>
         @endforelse
     </div>

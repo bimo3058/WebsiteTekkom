@@ -4,7 +4,7 @@
 <div class="mp-page-header">
     <div>
         <h1 class="mp-page-title">Seleksi Koordinator Praktikum</h1>
-        <p class="mp-page-sub">Review pendaftar koor sesuai praktikum yang Anda ampu</p>
+        <p class="mp-page-sub">Review pendaftar koordinator sesuai praktikum yang Anda ampu</p>
     </div>
 </div>
 
@@ -104,7 +104,12 @@
                         @if($p->transkrip_path)
                         <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->transkrip_path, 'eoffice') }}" target="_blank"
                            style="font-size:11px;font-weight:600;color:#0B266E;text-decoration:none;display:block;" class="hover:underline">Transkrip</a>
-                        @else
+                        @endif
+                        @if($p->berkas_cerc_path)
+                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->berkas_cerc_path, 'eoffice') }}" target="_blank"
+                           style="font-size:11px;font-weight:600;color:#0B266E;text-decoration:none;display:block;margin-top:2px;" class="hover:underline">CERC</a>
+                        @endif
+                        @if(!$p->transkrip_path && !$p->berkas_cerc_path)
                         <span style="font-size:11px;color:#808897;">—</span>
                         @endif
                     </td>

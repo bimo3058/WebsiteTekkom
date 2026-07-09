@@ -27,10 +27,10 @@
             @endforeach
         </select>
         <select name="status_koor" class="mp-input mp-select" style="flex: 1; min-width: 150px;">
-            <option value="">Semua Status Koor</option>
-            <option value="menunggu"  {{ request('status_koor')=='menunggu'  ? 'selected' : '' }}>Menunggu Koor</option>
-            <option value="disetujui" {{ request('status_koor')=='disetujui' ? 'selected' : '' }}>Disetujui Koor</option>
-            <option value="ditolak"   {{ request('status_koor')=='ditolak'   ? 'selected' : '' }}>Ditolak Koor</option>
+            <option value="">Semua Status Koordinator</option>
+            <option value="menunggu"  {{ request('status_koor')=='menunggu'  ? 'selected' : '' }}>Menunggu Koordinator</option>
+            <option value="disetujui" {{ request('status_koor')=='disetujui' ? 'selected' : '' }}>Disetujui Koordinator</option>
+            <option value="ditolak"   {{ request('status_koor')=='ditolak'   ? 'selected' : '' }}>Ditolak Koordinator</option>
         </select>
         <select name="status" class="mp-input mp-select" style="flex: 1; min-width: 150px;">
             <option value="">Semua Status Admin</option>
@@ -68,7 +68,7 @@
                     <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">IPK</th>
                     <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Motivasi</th>
                     <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Terdaftar</th>
-                    <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Status Koor</th>
+                    <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Status Koordinator</th>
                     <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Status Admin</th>
                     <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted, #666D80); white-space:nowrap;">Aksi</th>
                 </tr>
@@ -138,7 +138,7 @@
                             </form>
                         </div>
                         @elseif($pend->status === 'pending' && $pend->status_koor === 'menunggu')
-                        <span style="font-size:11px; color:var(--c-fg-muted, #666D80);">Tunggu Koor</span>
+                        <span style="font-size:11px; color:var(--c-fg-muted, #666D80);">Tunggu Koordinator</span>
                         @else
                         <span style="font-size:11px;color:var(--c-fg-muted, #666D80);">Selesai</span>
                         @endif

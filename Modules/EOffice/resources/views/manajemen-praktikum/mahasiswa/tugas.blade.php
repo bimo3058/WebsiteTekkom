@@ -153,10 +153,10 @@
         </div>
         @endif
 
-        {{-- Catatan Revisi dari Asprak --}}
+        {{-- Catatan Revisi dari Asisten Praktikum --}}
         @if($sudahKumpul && ($pengumpulan?->catatan_revisi || $pengumpulan?->file_revisi_asprak))
         <div class="mt-3 p-3 rounded-[8px]" style="background:#FADAE1;border:1px solid #DF1C41;">
-            <div style="font-size:11px;font-weight:700;color:#7C1028;margin-bottom:2px;">Catatan Revisi dari Asprak:</div>
+            <div style="font-size:11px;font-weight:700;color:#7C1028;margin-bottom:2px;">Catatan Revisi dari Asisten Praktikum:</div>
             @if($pengumpulan->catatan_revisi)
             <div style="font-size:12px;color:#7C1028;margin-bottom:6px;">{{ $pengumpulan->catatan_revisi }}</div>
             @endif

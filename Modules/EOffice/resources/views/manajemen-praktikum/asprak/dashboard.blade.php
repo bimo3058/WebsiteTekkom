@@ -1,5 +1,12 @@
 <x-eoffice::manajemen-praktikum.layout pageTitle="Dashboard Asisten Praktikum">
+
 @php
+    /** @var \Modules\EOffice\Models\AsistenPraktikum $asprak */
+    /** @var \Illuminate\Support\Collection|\Modules\EOffice\Models\AsistenPraktikum[] $allAsprak */
+    /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\Tugas[] $tugasMendatang */
+    /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\PengumpulanTugas[] $pengumpulanPending */
+    /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\Pengumuman[] $pengumumanTerbaru */
+@endphp@php
     $name = auth()->user()->name;
     $nameParts = explode(' ', $name);
     $firstName = $nameParts[0];
@@ -9,11 +16,11 @@
 <div class="mp-page-header">
     <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
-            <h1 class="mp-page-title">Dashboard Asprak</h1>
-            <span class="mp-badge success sm"><span class="dot"></span>Asprak</span>
+            <h1 class="mp-page-title">Dashboard Asisten Praktikum</h1>
+            <span class="mp-badge success sm"><span class="dot"></span>Asisten Praktikum</span>
         </div>
         <p class="mp-page-sub">
-            Halo, {{ $firstName }} · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
+            Halo, {{ $firstName }} · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }} · {{ $semesterLabel }}
             @if(isset($asprak) && $asprak?->praktikum) · {{ $asprak->praktikum->nama }} @endif
         </p>
     </div>
@@ -46,7 +53,7 @@
 @if(!isset($asprak) || !$asprak)
 <div class="mp-alert warning flex-shrink-0">
     <div style="font-size:13px;font-weight:600;margin-bottom:4px;">Status asisten praktikum Anda belum aktif.</div>
-    <div style="font-size:12px;">Hubungi koordinator untuk mengaktifkan akun asprak Anda.</div>
+    <div style="font-size:12px;">Hubungi koordinator untuk mengaktifkan akun asisten praktikum Anda.</div>
 </div>
 @else
 

@@ -45,7 +45,9 @@ class DashboardController extends Controller
 
         // Fallback: praktikum aktif pertama
         $fallback = $all->firstWhere('status', 'aktif') ?? $all->first();
-        session(['koor_praktikum_id' => $fallback->id]);
+        if ($fallback) {
+            session(['koor_praktikum_id' => $fallback->id]);
+        }
         return $fallback;
     }
 
@@ -100,6 +102,11 @@ class DashboardController extends Controller
                 ->count()
             : 0;
 
+        $currentYear = now()->year;
+        $currentSemester = now()->month <= 6 ? 'Genap' : 'Ganjil';
+        $defaultTahunAjaran = $currentSemester === 'Genap' ? $currentYear - 1 : $currentYear;
+        $semesterLabel = "Semester {$currentSemester} {$defaultTahunAjaran}/" . ($defaultTahunAjaran + 1);
+
         return view('eoffice::manajemen-praktikum.koordinator.dashboard', compact(
             'praktikum',
             'allPraktikum',
@@ -111,7 +118,8 @@ class DashboardController extends Controller
             'asistenList',
             'pengumuman',
             'pendingPraktikanIrs',
-            'pendingAsprak'
+            'pendingAsprak',
+            'semesterLabel'
         ));
     }
 
@@ -155,9 +163,26 @@ class DashboardController extends Controller
 
         $praktikans = $query->paginate(20)->withQueryString();
 
+        $praktikansSemua = DaftarPraktikan::with(['user', 'user.student'])
+            ->where('praktikum_id', $praktikum?->id)
+            ->get();
+            
+        $praktikansSemuaJSON = $praktikansSemua->map(function($p) {
+            return [
+                'id' => $p->id,
+                'nama' => $p->user?->name ?? '-',
+                'nim' => $p->user?->student?->student_number ?? '-',
+                'inisial' => strtoupper(substr($p->user?->name ?? 'M', 0, 2)),
+                'kel' => $p->kelompok,
+                'shift' => $p->shift
+            ];
+        });
+
         return view('eoffice::manajemen-praktikum.koordinator.daftar-praktikan', compact(
             'praktikum',
             'praktikans',
+            'praktikansSemua',
+            'praktikansSemuaJSON',
             'search'
         ));
     }
@@ -432,5 +457,238 @@ class DashboardController extends Controller
             $msg .= ' Tidak ditemukan di sistem: ' . implode(', ', array_slice($notFound, 0, 5));
         }
         return back()->with('error', $msg);
+    }
+
+    /**
+     * Simpan pengaturan jumlah kelompok dan shift
+     */
+    public function updatePlotSettings(Request $request)
+    {
+        $request->validate([
+            'praktikum_id'    => 'required|uuid|exists:eo_praktikum,id',
+            'jumlah_kelompok' => 'required|integer|min:1',
+            'jumlah_shift'    => 'required|integer|min:1|lte:jumlah_kelompok',
+            'method'          => 'required|in:urutan_sistem,acak',
+        ], [
+            'jumlah_shift.lte' => 'Jumlah shift tidak boleh lebih besar daripada jumlah kelompok.',
+        ]);
+
+        $user = auth()->user();
+        $praktikum = Praktikum::where('id', $request->praktikum_id)
+            ->where('koor_id', $user->id)
+            ->firstOrFail();
+
+        $praktikum->update([
+            'jumlah_kelompok' => $request->jumlah_kelompok,
+            'jumlah_shift'    => $request->jumlah_shift,
+        ]);
+
+        // Auto-plot ulang agar isinya menyesuaikan proporsi baru
+        $praktikans = DaftarPraktikan::where('praktikum_id', $praktikum->id)
+            ->orderBy('created_at', 'asc')
+            ->get();
+            
+        if ($request->method === 'acak') {
+            $praktikans = $praktikans->shuffle()->values();
+        } else {
+            $praktikans = $praktikans->values();
+        }
+
+        if ($praktikans->isNotEmpty()) {
+            $numKel = $request->jumlah_kelompok;
+            $numShift = $request->jumlah_shift;
+            $groupsPerShift = $numKel / $numShift;
+            $total = $praktikans->count();
+                $baseSize = floor($total / $numKel);
+                $remainder = $total % $numKel;
+                
+                $currentIndex = 0;
+                $kelompokIndex = 1;
+                
+                while ($kelompokIndex <= $numKel && $currentIndex < $total) {
+                    $shift = (int) ceil($kelompokIndex / max(1, $groupsPerShift));
+                    if ($shift > $numShift) {
+                        $shift = $numShift;
+                    }
+
+                    $currentGroupSize = $baseSize + ($kelompokIndex <= $remainder ? 1 : 0);
+                    
+                    for ($i = 0; $i < $currentGroupSize; $i++) {
+                        if ($currentIndex >= $total) break;
+                        $dp = $praktikans[$currentIndex];
+                        $dp->update([
+                            'kelompok' => (string) $kelompokIndex,
+                            'shift'    => (string) $shift,
+                        ]);
+                        $currentIndex++;
+                    }
+                    $kelompokIndex++;
+                }
+            }
+        return back()->with('success', 'Pengaturan disimpan dan anggota telah di-redistribusi otomatis.');
+    }
+
+    /**
+     * Plotting otomatis mahasiswa ke kelompok & shift
+     */
+    public function autoPlot(Request $request)
+    {
+        $request->validate([
+            'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
+            'method'       => 'required|in:urutan_sistem,acak',
+        ]);
+
+        $user = auth()->user();
+        $praktikum = Praktikum::where('id', $request->praktikum_id)
+            ->where('koor_id', $user->id)
+            ->firstOrFail();
+
+        $numKel = $praktikum->jumlah_kelompok ?? 1;
+        $numShift = $praktikum->jumlah_shift ?? 1;
+
+        if ($numKel < 1 || $numShift < 1) {
+            return back()->with('error', 'Harap simpan pengaturan jumlah kelompok & shift terlebih dahulu.');
+        }
+
+        $praktikans = DaftarPraktikan::with(['user.student'])
+            ->where('praktikum_id', $praktikum->id)
+            ->orderBy('created_at', 'asc')
+            ->get();
+
+        if ($praktikans->isEmpty()) {
+            return back()->with('error', 'Belum ada praktikan terdaftar.');
+        }
+
+        if ($request->method === 'acak') {
+            $praktikans = $praktikans->shuffle()->values();
+        } else {
+            $praktikans = $praktikans->values();
+        }
+
+        // Tentukan mapping dari kelompok ke shift (tiap shift punya rentang kelompok yang merata)
+        $groupsPerShift = $numKel / $numShift;
+        
+        // Membagi rata mahasiswa ke dalam kelompok-kelompok secara berurutan
+        $total = $praktikans->count();
+        $baseSize = floor($total / $numKel);
+        $remainder = $total % $numKel;
+        
+        $currentIndex = 0;
+        $kelompokIndex = 1;
+        
+        while ($kelompokIndex <= $numKel && $currentIndex < $total) {
+            $shift = (int) ceil($kelompokIndex / max(1, $groupsPerShift));
+            if ($shift > $numShift) {
+                $shift = $numShift;
+            }
+
+            $currentGroupSize = $baseSize + ($kelompokIndex <= $remainder ? 1 : 0);
+            
+            for ($i = 0; $i < $currentGroupSize; $i++) {
+                if ($currentIndex >= $total) break;
+                $dp = $praktikans[$currentIndex];
+                $dp->update([
+                    'kelompok' => (string) $kelompokIndex,
+                    'shift'    => (string) $shift,
+                ]);
+                $currentIndex++;
+            }
+            $kelompokIndex++;
+        }
+
+        return back()->with('success', 'Auto-Plot berhasil dilakukan.');
+    }
+
+    /**
+     * Menghapus seluruh plot kelompok & shift (Reset)
+     */
+    public function resetPlot(Request $request)
+    {
+        $request->validate([
+            'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
+        ]);
+
+        $user = auth()->user();
+        $praktikum = Praktikum::where('id', $request->praktikum_id)
+            ->where('koor_id', $user->id)
+            ->firstOrFail();
+
+        DaftarPraktikan::where('praktikum_id', $praktikum->id)
+            ->update([
+                'kelompok' => null,
+                'shift'    => null,
+            ]);
+
+        return back()->with('success', 'Seluruh data kelompok dan shift berhasil dikosongkan.');
+    }
+
+    /**
+     * Update kelompok/shift manual (via AJAX)
+     */
+    public function updatePlot(Request $request)
+    {
+        $request->validate([
+            'dp_id'    => 'required|uuid|exists:daftar_praktikan,id',
+            'kelompok' => 'nullable|string',
+            'shift'    => 'nullable|string',
+        ]);
+
+        $user = auth()->user();
+        $dp = DaftarPraktikan::with('praktikum')->findOrFail($request->dp_id);
+        
+        if ($dp->praktikum->koor_id !== $user->id) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
+
+        $dp->update([
+            'kelompok' => $request->kelompok ?: null,
+            'shift'    => $request->shift ?: null,
+        ]);
+
+        return response()->json(['success' => true]);
+    }
+
+    /**
+     * Menyimpan anggota kelompok dari Modal Checkbox (Teams style)
+     */
+    public function saveGroupMembers(Request $request)
+    {
+        $request->validate([
+            'praktikum_id' => 'required|uuid|exists:eo_praktikum,id',
+            'kelompok'     => 'required|string',
+            'shift'        => 'required|string',
+            'members'      => 'nullable|array',
+            'members.*'    => 'uuid|exists:daftar_praktikan,id',
+        ]);
+
+        $user = auth()->user();
+        $praktikum = Praktikum::where('id', $request->praktikum_id)
+            ->where('koor_id', $user->id)
+            ->firstOrFail();
+
+        $kelompok = $request->kelompok;
+        $shift    = $request->shift;
+        $members  = $request->members ?? [];
+
+        // 1. Cabut keanggotaan (uncheck) dari mahasiswa yang sblmnya ada di kelompok ini
+        DaftarPraktikan::where('praktikum_id', $praktikum->id)
+            ->where('kelompok', $kelompok)
+            ->whereNotIn('id', $members)
+            ->update([
+                'kelompok' => null,
+                'shift'    => null,
+            ]);
+
+        // 2. Tambahkan mahasiswa yang di-checklist ke kelompok ini
+        if (!empty($members)) {
+            DaftarPraktikan::where('praktikum_id', $praktikum->id)
+                ->whereIn('id', $members)
+                ->update([
+                    'kelompok' => $kelompok,
+                    'shift'    => $shift,
+                ]);
+        }
+
+        return response()->json(['success' => true]);
     }
 }

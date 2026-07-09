@@ -51,9 +51,15 @@ class PraktikumController extends Controller
         $praktikums = $query->paginate(15)->withQueryString();
 
         // Dosen list untuk dropdown di modal create
+        // Filter: hanya tampilkan dosen dengan domain @undip.ac.id (bukan akun seeder @sicata.com)
         $dosenList = \App\Models\Lecturer::with('user')
             ->get()
-            ->map(fn($l) => (object)['id' => $l->user_id, 'name' => $l->user?->name ?? '—']);
+            ->filter(fn($l) => $l->user && !str_contains($l->user->email ?? '', 'sicata.com'))
+            ->map(fn($l) => (object)[
+                'id'    => $l->user_id,
+                'name'  => ($l->user->name ?? '—') . ' · ' . ($l->user->email ?? ''),
+            ])
+            ->values();
 
         // Matkul list untuk dropdown pilih mata kuliah praktikum
         $matkulList = MatkulPraktikum::orderBy('semester')->orderBy('kode')->get();
@@ -200,7 +206,12 @@ class PraktikumController extends Controller
 
         $dosenList = \App\Models\Lecturer::with('user')
             ->get()
-            ->map(fn($l) => (object)['id' => $l->user_id, 'name' => $l->user?->name ?? '—']);
+            ->filter(fn($l) => $l->user && !str_contains($l->user->email ?? '', 'sicata.com'))
+            ->map(fn($l) => (object)[
+                'id'    => $l->user_id,
+                'name'  => ($l->user->name ?? '—') . ' · ' . ($l->user->email ?? ''),
+            ])
+            ->values();
 
         $matkulList = MatkulPraktikum::orderBy('semester')->orderBy('kode')->get();
 

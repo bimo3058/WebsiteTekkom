@@ -5,7 +5,7 @@
     <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
             <h1 class="mp-page-title">Kelola Modul</h1>
-            <span class="mp-badge success sm"><span class="dot"></span>Asprak</span>
+            <span class="mp-badge success sm"><span class="dot"></span>Asisten Praktikum</span>
         </div>
         <p class="mp-page-sub">{{ $praktikum?->nama ?? 'Belum terdaftar di praktikum manapun' }} · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
     </div>
@@ -99,7 +99,7 @@
             <div style="display:flex;gap:12px;font-size:11px;color:#666D80;">
                 <span>{{ $modul->materi->count() }} materi</span>
                 <span>{{ $modul->tugas->count() }} tugas</span>
-                <span>{{ $modul->modulAsprak->count() }} asprak</span>
+                <span>{{ $modul->modulAsprak->count() }} asisten praktikum</span>
             </div>
         </div>
 

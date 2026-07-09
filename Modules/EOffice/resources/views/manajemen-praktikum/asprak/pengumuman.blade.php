@@ -19,14 +19,14 @@
     <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
             <h1 class="mp-page-title">Pengumuman</h1>
-            <span class="mp-badge success sm"><span class="dot"></span>Asprak</span>
+            <span class="mp-badge success sm"><span class="dot"></span>Asisten Praktikum</span>
         </div>
         <p class="mp-page-sub">Kelola pengumuman untuk praktikum yang Anda ampu · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
     </div>
 </div>
 
 @if($praktikumList->isEmpty())
-<div class="mp-alert warning flex-shrink-0">Anda belum terdaftar sebagai asprak di praktikum manapun. Hubungi koordinator untuk aktivasi.</div>
+<div class="mp-alert warning flex-shrink-0">Anda belum terdaftar sebagai asisten praktikum di praktikum manapun. Hubungi koordinator untuk aktivasi.</div>
 @else
 
 {{-- ── Pilih Praktikum ─────────────────────────────────────────────── --}}
@@ -164,7 +164,7 @@
 </div>
 
 @else
-<div class="mp-alert warning flex-shrink-0">Anda tidak terdaftar sebagai asprak di praktikum yang dipilih.</div>
+<div class="mp-alert warning flex-shrink-0">Anda tidak terdaftar sebagai asisten praktikum di praktikum yang dipilih.</div>
 @endif
 
 {{-- ── Daftar Pengumuman ─────────────────────────────────────────────── --}}

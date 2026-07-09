@@ -20,10 +20,10 @@
             @endif
         </div>
         <p class="mp-page-sub">
-            Selamat datang, {{ $firstName }} · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}
+            Halo, {{ $firstName }} · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }} · {{ $semesterLabel }}
             @if(isset($praktikum) && $praktikum) · <strong>{{ $praktikum->nama }}</strong> @endif
         </p>
-        {{-- Hint jika koor punya banyak praktikum --}}
+        {{-- Hint jika koordinator punya banyak praktikum --}}
         @if(isset($allPraktikum) && $allPraktikum->count() > 1)
         <p class="mp-page-sub" style="margin-top:3px;color:#808897;">
             Anda mengampu {{ $allPraktikum->count() }} praktikum · Ganti tampilan via tombol di kanan atas
@@ -71,7 +71,7 @@
         <div class="mp-stat-icon green">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M22 11l-3.5 3.5-1.5-1.5"/></svg>
         </div>
-        <div class="mp-stat-label">Total Asprak</div>
+        <div class="mp-stat-label">Total Asisten Praktikum</div>
         <div class="mp-stat-value">{{ $totalAsprak ?? 0 }}</div>
         <div class="mp-stat-sub">asisten aktif</div>
     </div>
@@ -79,7 +79,7 @@
         <div class="mp-stat-icon green">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
         </div>
-        <div class="mp-stat-label">Asprak Terdistribusi</div>
+        <div class="mp-stat-label">Asisten Praktikum Terdistribusi</div>
         <div class="mp-stat-value">{{ $asprakTerdistribusi ?? 0 }}</div>
         <div class="mp-stat-sub">sudah dapat modul</div>
     </div>
@@ -99,18 +99,18 @@
     <span class="sec-title">Operasional</span>
     <span class="sec-rule"></span>
     @if(($asprakBelumModul ?? 0) > 0)
-    <span class="mp-badge warning sm"><span class="dot"></span>{{ $asprakBelumModul }} asprak belum dapat modul</span>
+    <span class="mp-badge warning sm"><span class="dot"></span>{{ $asprakBelumModul }} asisten praktikum belum dapat modul</span>
     @endif
 </div>
 
 {{-- Progress Distribusi --}}
 <div style="display:grid;grid-template-columns:1fr;gap:14px;flex-shrink:0;">
 
-    {{-- Progress Distribusi Asprak --}}
+    {{-- Progress Distribusi Asisten Praktikum --}}
     <div class="mp-card" style="padding:20px;">
-        <div style="font-size:11px;font-weight:600;color:#666D80;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Distribusi Asprak ke Modul</div>
+        <div style="font-size:11px;font-weight:600;color:#666D80;text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;">Distribusi Asisten Praktikum ke Modul</div>
         <div class="flex items-end justify-between mb-3">
-            <div style="font-size:13px;color:#666D80;">{{ $asprakTerdistribusi ?? 0 }} dari {{ $totalAsprak ?? 0 }} asprak sudah mendapat modul</div>
+            <div style="font-size:13px;color:#666D80;">{{ $asprakTerdistribusi ?? 0 }} dari {{ $totalAsprak ?? 0 }} asisten praktikum sudah mendapat modul</div>
             <div style="font-size:28px;font-weight:700;color:#0B266E;line-height:1;letter-spacing:-.02em;">{{ $pct }}%</div>
         </div>
         <div style="width:100%;background:#ECEFF3;border-radius:999px;height:8px;overflow:hidden;">
@@ -119,14 +119,14 @@
         @if(($asprakBelumModul ?? 0) > 0)
         <div style="margin-top:10px;display:flex;align-items:center;gap:6px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#956321" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/></svg>
-            <span style="font-size:11px;color:#956321;font-weight:500;">{{ $asprakBelumModul }} asprak belum mendapat modul</span>
+            <span style="font-size:11px;color:#956321;font-weight:500;">{{ $asprakBelumModul }} asisten praktikum belum mendapat modul</span>
             <a href="{{ route('eoffice.manprak.koor.bagi-modul.index') }}"
                style="font-size:11px;font-weight:700;color:#0B266E;text-decoration:none;margin-left:4px;" class="hover:underline">Bagi Modul →</a>
         </div>
         @else
         <div style="margin-top:10px;display:flex;align-items:center;gap:6px;">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#287F6E" stroke-width="2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-            <span style="font-size:11px;color:#287F6E;font-weight:500;">Semua asprak sudah mendapat modul</span>
+            <span style="font-size:11px;color:#287F6E;font-weight:500;">Semua asisten praktikum sudah mendapat modul</span>
         </div>
         @endif
     </div>
@@ -142,10 +142,10 @@
     <span class="sec-rule"></span>
 </div>
 
-{{-- Bottom Grid: Daftar Asprak + Pengumuman --}}
+{{-- Bottom Grid: Daftar Asisten Praktikum + Pengumuman --}}
 <div class="flex gap-[14px] flex-1 min-h-0 mb-1">
 
-    {{-- Daftar Asprak --}}
+    {{-- Daftar Asisten Praktikum --}}
     <div class="mp-card min-w-0" style="flex:2;">
         <div class="mp-card-header" style="flex-shrink:0;">
             <span class="mp-card-title">Asisten Praktikum</span>
@@ -155,7 +155,7 @@
             </div>
         </div>
         <div style="display:flex;align-items:center;padding:10px 20px;background:#F9FAFB;border-bottom:1px solid #DFE1E7;flex-shrink:0;">
-            <div class="mp-th flex-1">Nama Asprak</div>
+            <div class="mp-th flex-1">Nama Asisten Praktikum</div>
             <div class="mp-th" style="width:90px;">NIM</div>
             <div class="mp-th" style="width:140px;">Modul Diampu</div>
             <div class="mp-th" style="width:80px;text-align:center;">Status</div>

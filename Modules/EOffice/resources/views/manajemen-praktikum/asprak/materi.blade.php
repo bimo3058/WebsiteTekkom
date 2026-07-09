@@ -5,7 +5,7 @@
     <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
             <h1 class="mp-page-title">Materi Modul</h1>
-            <span class="mp-badge success sm"><span class="dot"></span>Asprak</span>
+            <span class="mp-badge success sm"><span class="dot"></span>Asisten Praktikum</span>
         </div>
         <p class="mp-page-sub">Unggah dan kelola materi untuk modul yang Anda ampu · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
     </div>

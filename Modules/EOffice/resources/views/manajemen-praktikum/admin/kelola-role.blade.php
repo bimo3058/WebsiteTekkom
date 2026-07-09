@@ -9,7 +9,7 @@
             <h1 class="mp-page-title">Kelola Role Praktikum</h1>
             <span class="mp-badge error sm"><span class="dot"></span>Admin</span>
         </div>
-        <p class="mp-page-sub">Assign atau cabut role asprak & koordinator per praktikum · {{ now()->locale('id')->isoFormat('D MMMM YYYY') }}</p>
+        <p class="mp-page-sub">Assign atau cabut role asisten praktikum & koordinator per praktikum · {{ now()->locale('id')->isoFormat('D MMMM YYYY') }}</p>
     </div>
     <div class="mp-page-actions">
         <form method="GET" class="flex gap-2 items-center">
@@ -93,12 +93,12 @@
                         $asprakCount = $anggota->where('role','asprak')->count();
                         $koorCount   = $anggota->where('role','koor')->count();
                     @endphp
-                    {{ $asprakCount }} asprak · {{ $koorCount }} koordinator
+                    {{ $asprakCount }} asisten praktikum · {{ $koorCount }} koordinator
                 </div>
             </div>
             <div style="display:flex;gap:6px;">
-                <span class="mp-badge success sm"><span class="dot"></span>{{ $asprakCount }} Asprak</span>
-                <span class="mp-badge navy sm"><span class="dot"></span>{{ $koorCount }} Koor</span>
+                <span class="mp-badge success sm"><span class="dot"></span>{{ $asprakCount }} Asisten Praktikum</span>
+                <span class="mp-badge navy sm"><span class="dot"></span>{{ $koorCount }} Koordinator</span>
             </div>
         </div>
 
@@ -136,9 +136,9 @@
                             </td>
                             <td style="padding:13px 16px;text-align:center;">
                                 @if($a->role === 'koor')
-                                <span class="mp-badge navy sm"><span class="dot"></span>Koor</span>
+                                <span class="mp-badge navy sm"><span class="dot"></span>Koordinator</span>
                                 @else
-                                <span class="mp-badge success sm"><span class="dot"></span>Asprak</span>
+                                <span class="mp-badge success sm"><span class="dot"></span>Asisten Praktikum</span>
                                 @endif
                             </td>
                             <td style="padding:13px 16px;text-align:center;font-size:11px;color:#A4ABB8;white-space:nowrap;">
@@ -162,7 +162,7 @@
                         <tr>
                             <td colspan="5" style="padding:56px;text-align:center;">
                                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#DFE1E7" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 10px;display:block;"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
-                                <div style="font-size:13px;font-weight:600;color:#666D80;">Belum ada asprak atau koordinator di praktikum ini.</div>
+                                <div style="font-size:13px;font-weight:600;color:#666D80;">Belum ada asisten praktikum atau koordinator di praktikum ini.</div>
                                 <div style="font-size:12px;color:#A4ABB8;margin-top:4px;">Gunakan form Assign Role di sebelah kanan untuk menambahkan.</div>
                             </td>
                         </tr>
@@ -251,7 +251,7 @@
                                    style="accent-color:#0B266E;"
                                    onchange="syncRoleLabels()">
                             <div>
-                                <div style="font-size:12px;font-weight:600;color:#0D0D12;">Asprak</div>
+                                <div style="font-size:12px;font-weight:600;color:#0D0D12;">Asisten Praktikum</div>
                                 <div style="font-size:10px;color:#A4ABB8;">Asisten Praktikum</div>
                             </div>
                         </label>
@@ -263,7 +263,7 @@
                                    style="accent-color:#0B266E;"
                                    onchange="syncRoleLabels()">
                             <div>
-                                <div style="font-size:12px;font-weight:600;color:#0D0D12;">Koor</div>
+                                <div style="font-size:12px;font-weight:600;color:#0D0D12;">Koordinator</div>
                                 <div style="font-size:10px;color:#A4ABB8;">Koordinator</div>
                             </div>
                         </label>
@@ -292,7 +292,7 @@
                 </div>
                 <div style="display:flex;gap:6px;">
                     <span style="flex-shrink:0;margin-top:1px;">•</span>
-                    <span>Jika user tidak terdaftar di praktikum lain, <strong>role Spatie</strong> (<code style="background:#FEF3C7;padding:0 3px;border-radius:3px;font-size:10px;">asprak</code> / <code style="background:#FEF3C7;padding:0 3px;border-radius:3px;font-size:10px;">koor_prak</code>) ikut dicabut dari sistem.</span>
+                    <span>Jika user tidak terdaftar di praktikum lain, <strong>role Spatie</strong> (<code style="background:#FEF3C7;padding:0 3px;border-radius:3px;font-size:10px;">asisten praktikum</code> / <code style="background:#FEF3C7;padding:0 3px;border-radius:3px;font-size:10px;">koor_prak</code>) ikut dicabut dari sistem.</span>
                 </div>
                 <div style="display:flex;gap:6px;">
                     <span style="flex-shrink:0;margin-top:1px;">•</span>
@@ -310,8 +310,8 @@
 
 <script>
 function syncRoleLabels() {
-    const asprak = document.getElementById('r-asprak');
-    const koor   = document.getElementById('r-koor');
+    const asisten praktikum = document.getElementById('r-asprak');
+    const koordinator   = document.getElementById('r-koor');
     const lblA   = document.getElementById('lbl-asprak');
     const lblK   = document.getElementById('lbl-koor');
     lblA.style.borderColor = asprak.checked ? '#0B266E' : '#DFE1E7';

@@ -172,6 +172,8 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 // Tunjuk koordinator dari NIM
                 Route::post('tunjuk-koor', [DosenManprakDashboard::class, 'tunjukKoor'])
                     ->name('tunjuk-koor');
+                Route::get('search-praktikan', [DosenManprakDashboard::class, 'searchPraktikan'])
+                    ->name('search-praktikan');
 
                 // Kelola modul (read-only)
                 Route::get('modul/{praktikumId}', [DosenModulController::class, 'index'])
@@ -244,6 +246,16 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('praktikan.template');
                 Route::post('praktikan/import', [KoorManprakDashboard::class, 'importPraktikan'])
                     ->name('praktikan.import');
+                Route::post('praktikan/settings', [KoorManprakDashboard::class, 'updatePlotSettings'])
+                    ->name('praktikan.settings');
+                Route::post('praktikan/auto-plot', [KoorManprakDashboard::class, 'autoPlot'])
+                    ->name('praktikan.auto-plot');
+                Route::post('praktikan/reset-plot', [KoorManprakDashboard::class, 'resetPlot'])
+                    ->name('praktikan.reset-plot');
+                Route::post('praktikan/update-plot', [KoorManprakDashboard::class, 'updatePlot'])
+                    ->name('praktikan.update-plot');
+                Route::post('praktikan/save-group-members', [KoorManprakDashboard::class, 'saveGroupMembers'])
+                    ->name('praktikan.save-group-members');
 
                 // Modul (CRUD + generate kode + detail)
                 Route::get('modul', [KoorModulController::class, 'index'])
