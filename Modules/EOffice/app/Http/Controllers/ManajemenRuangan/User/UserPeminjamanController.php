@@ -106,10 +106,10 @@ class UserPeminjamanController extends Controller
             return redirect()->back()->withErrors("Peminjaman gagal! Pengajuan harus dilakukan sekurang-kurangnya H-{$batasHMinBooking} dari tanggal pemakaian.");
         }
 
-        // Pengecekan Bentrok Jadwal Peminjaman (Sesama Mahasiswa)
+        // Pengecekan Bentrok Jadwal Peminjaman (Global Checks)
         $isConflict = Peminjaman::where('ruangan_id', $request->ruangan_id)
             ->where('tanggal_pinjam', $request->tanggal_pinjam)
-            ->where('status', 'disetujui') // Hanya memblokir jam yang SUDAH PASTI dipakai (disetujui)
+            ->where('status', 'disetujui')
             ->where(function ($query) use ($request) {
                 // Logika Overlap: Waktu yang diajukan bertabrakan dengan rentang jam sistem
                 $query->where(function ($q) use ($request) {
@@ -119,16 +119,9 @@ class UserPeminjamanController extends Controller
             })
             ->exists();
 
-        if ($isConflict) {
-            return redirect()->back()
-                ->withInput()
-                ->withErrors(['Bentrok' => 'Mohon maaf, Ruangan tersebut telah lebih dulu dipesan dan DISETUJUI oleh pihak lain pada rentang jam tersebut.']);
-        }
-
         // Pengecekan Bentrok: Jadwal Internal (Akademik, Kuliah, Rapat)
         $isInternalConflict = \Modules\EOffice\Models\MrJadwalInternal::where('ruangan_id', $request->ruangan_id)
             ->where(function ($query) use ($request, $dayOfWeek) {
-                // Skenario A: Jadwal Rutin yang berjalan pada Hari yang sama + Mengecek batas kadaluarsa
                 $query->where(function ($q) use ($dayOfWeek, $request) {
                     $q->where('tipe_jadwal', 'rutin')
                         ->where('hari', $dayOfWeek)
@@ -140,24 +133,31 @@ class UserPeminjamanController extends Controller
                             $tq->whereNull('tgl_selesai_efektif')
                                 ->orWhere('tgl_selesai_efektif', '>=', $request->tanggal_pinjam);
                         });
-                })
-                    // Skenario B: Jadwal Spesifik yang berjalan pada Tanggal yang sama
-                    ->orWhere(function ($q) use ($request) {
+                })->orWhere(function ($q) use ($request) {
                     $q->where('tipe_jadwal', 'spesifik')->where('tanggal_spesifik', $request->tanggal_pinjam);
                 });
             })
             ->where(function ($query) use ($request) {
-                // Berlaku aturan perpotongan waktu
                 $query->where('jam_mulai', '<', $request->jam_selesai)
                     ->where('jam_selesai', '>', $request->jam_mulai);
             })
             ->first();
 
+        // Kebijakan Baru: SELURUH Role (Dosen & Mahasiswa) MUTLAK ditolak jika menabrak jadwal yang sudah ada!
+        if ($isConflict) {
+            return redirect()->back()
+                ->withInput()
+                ->withErrors(['Bentrok' => 'Mohon maaf, Ruangan tersebut telah lebih dulu dipesan dan DISETUJUI oleh pihak lain pada rentang jam tersebut.']);
+        }
         if ($isInternalConflict) {
             return redirect()->back()
                 ->withInput()
                 ->withErrors(['Sistem Internal' => 'Ruangan terblokir secara otomatis. Terbentrok dengan Jadwal ' . $isInternalConflict->kategori . ': ' . $isInternalConflict->keterangan]);
         }
+
+        // Arsitektur Status Logika Akhir (VIP Shortcut untuk Dosen HANYA pada ruang yang 100% kosong)
+        $isDosen = auth()->user()->hasRole('dosen');
+        $statusAkhir = $isDosen ? 'disetujui' : 'menunggu';
 
         Peminjaman::create([
             'user_id' => auth()->id(),
@@ -168,11 +168,15 @@ class UserPeminjamanController extends Controller
             'jam_mulai' => $request->jam_mulai,
             'jam_selesai' => $request->jam_selesai,
             'berkas_pendukung' => $filePath,
-            'status' => 'menunggu'
+            'status' => $statusAkhir
         ]);
 
+        $feedbackMsg = $statusAkhir == 'disetujui'
+            ? 'Akses VIP Dosen: Form Booking Ruangan berhasil diajukan dan LANGSUNG DISETUJUI oleh sistem.'
+            : 'Form Booking Ruangan berhasil diajukan dan masuk ke daftar tunggu persetujuan Admin.';
+
         return redirect()->route('eoffice.peminjaman.user.saya')
-            ->with('success', 'Form Booking Ruangan berhasil diajukan dan masuk ke daftar tunggu persetujuan.');
+            ->with('success', $feedbackMsg);
     }
 
     public function kalender(Request $request)
