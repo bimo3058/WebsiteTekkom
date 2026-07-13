@@ -11,15 +11,24 @@
     </div>
     <div class="mp-page-actions">
         <form method="GET" class="flex gap-2 items-center">
-            <select name="praktikum_id" onchange="this.form.submit()" class="mp-input mp-select" style="min-width:220px;">
-                @foreach($praktikumList as $prak)
-                <option value="{{ $prak->id }}" {{ ($prak->id == $praktikum?->id) ? 'selected' : '' }}>
-                    {{ $prak->nama }}
-                    @if($prak->kode) ({{ $prak->kode }}) @endif
-                    · {{ $prak->semester }} {{ $prak->tahun_ajaran }}
-                </option>
-                @endforeach
-            </select>
+            @php
+                $praktikumOptions = [];
+                if(isset($praktikumList)) {
+                    foreach($praktikumList as $p) {
+                        $label = $p->nama;
+                        $label .= " · {$p->semester} {$p->tahun_ajaran}";
+                        $praktikumOptions[] = ['value' => (string)$p->id, 'label' => $label];
+                    }
+                }
+            @endphp
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="praktikum_id"
+                :options="$praktikumOptions"
+                :selected="(string)request('praktikum_id', (isset($praktikum) ? $praktikum?->id : (isset($praktikumId) ? $praktikumId : '')))"
+                placeholder="Pilih Praktikum..."
+                onChange="$event.target.form.submit()"
+                minWidth="240px"
+            />
         </form>
     </div>
 </div>
@@ -32,9 +41,6 @@
     </svg>
     <div style="flex:1;min-width:0;">
         <span style="font-size:13px;font-weight:600;color:var(--c-fg,#0D0D12);">{{ $praktikum->nama }}</span>
-        @if($praktikum->kode)
-        <span style="font-size:11px;font-family:monospace;color:#0B266E;background:rgba(11,38,110,0.08);padding:1px 6px;border-radius:4px;margin-left:6px;">{{ $praktikum->kode }}</span>
-        @endif
         <span style="font-size:12px;color:#666D80;margin-left:8px;">· {{ $praktikum->semester }} {{ $praktikum->tahun_ajaran }}</span>
     </div>
     <div class="flex items-center gap-2 flex-shrink-0">
@@ -42,7 +48,7 @@
         <span style="font-size:12px;color:#666D80;">Dosen: <strong>{{ $praktikum->dosen->name }}</strong></span>
         @endif
         @if($praktikum->koordinator)
-        <span style="margin-left:8px;font-size:12px;color:#666D80;">Koor: <strong>{{ $praktikum->koordinator->name }}</strong></span>
+        <span style="margin-left:8px;font-size:12px;color:#666D80;">Koordinator: <strong>{{ $praktikum->koordinator->name }}</strong></span>
         @endif
     </div>
     <div>
@@ -57,10 +63,10 @@
 {{-- Section title + count --}}
 <div class="sec-head flex-shrink-0">
     <span class="sec-bar"></span>
-    <span class="sec-title">Daftar Asprak</span>
+    <span class="sec-title">Daftar Asisten Praktikum</span>
     <span class="sec-rule"></span>
     @if($praktikum)
-    <span class="mp-badge neutral sm">{{ $aspraks->count() }} asprak</span>
+    <span class="mp-badge neutral sm">{{ $aspraks->count() }} asisten praktikum</span>
     @endif
 </div>
 
@@ -73,11 +79,11 @@
             <thead>
                 <tr style="border-bottom:1px solid var(--c-border, #DFE1E7); background:#FAFAFA;">
                     <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted,#666D80); white-space:nowrap; width:36px;">#</th>
-                    <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted,#666D80); white-space:nowrap;">Asprak</th>
+                    <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted,#666D80); white-space:nowrap;">Asisten Praktikum</th>
                     <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted,#666D80); white-space:nowrap; width:120px;">NIM</th>
                     <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted,#666D80); white-space:nowrap; width:90px;">Angkatan</th>
                     <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted,#666D80); white-space:nowrap; width:200px;">Modul Ditugaskan</th>
-                    <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted,#666D80); white-space:nowrap; width:110px;">Status Koor</th>
+                    <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted,#666D80); white-space:nowrap; width:110px;">Status Koordinator</th>
                     <th style="padding:11px 16px; text-align:center; font-size:11px; font-weight:600; color:var(--c-fg-muted,#666D80); white-space:nowrap; width:90px;">Bergabung</th>
                 </tr>
             </thead>
@@ -95,10 +101,10 @@
                     $nim        = $student?->student_number ?? '—';
                     $angkatan   = $student?->cohort_year ?? '—';
 
-                    // Modul yang ditugaskan ke asprak ini
+                    // Modul yang ditugaskan ke asisten praktikum ini
                     $modulNames = $asprak->modulAsprak?->pluck('modul.nama')->filter()->values() ?? collect();
 
-                    // Cek apakah asprak ini juga terdaftar sebagai koor di praktikum yang sama
+                    // Cek apakah asisten praktikum ini juga terdaftar sebagai koordinator di praktikum yang sama
                     $isKoor = \Modules\EOffice\Models\Praktikum::where('koor_id', $asprak->user_id)
                         ->where('id', $asprak->praktikum_id)
                         ->exists();
@@ -109,7 +115,7 @@
                     {{-- No --}}
                     <td style="padding:14px 16px; font-size:12px; color:#A4ABB8; text-align:center;">{{ $i + 1 }}</td>
 
-                    {{-- Asprak (nama + email) --}}
+                    {{-- Asisten Praktikum (nama + email) --}}
                     <td style="padding:14px 16px;">
                         <div class="flex items-center gap-3">
                             <div class="mp-av {{ $avColor }} flex-shrink-0">{{ $initials }}</div>
@@ -147,10 +153,10 @@
                         @endif
                     </td>
 
-                    {{-- Status Koor --}}
+                    {{-- Status Koordinator --}}
                     <td style="padding:14px 16px; text-align:center;">
                         @if($isKoor)
-                        <span class="mp-badge warning sm"><span class="dot"></span>Juga Koor</span>
+                        <span class="mp-badge warning sm"><span class="dot"></span>Juga Koordinator</span>
                         @else
                         <span style="font-size:11px; color:#A4ABB8;">—</span>
                         @endif
@@ -175,7 +181,7 @@
                                 Pilih praktikum terlebih dahulu.
                             @endif
                         </div>
-                        <div style="font-size:12px; color:#A4ABB8; margin-top:4px;">Asprak dapat diterima melalui menu Pendaftaran Asprak.</div>
+                        <div style="font-size:12px; color:#A4ABB8; margin-top:4px;">Asisten Praktikum dapat diterima melalui menu Pendaftaran Asprak.</div>
                     </td>
                 </tr>
                 @endforelse
@@ -187,7 +193,7 @@
     @if($aspraks->isNotEmpty())
     <div style="padding:10px 16px; border-top:1px solid var(--c-border,#DFE1E7); background:#FAFAFA; flex-shrink:0; display:flex; align-items:center; gap:12px;">
         <span style="font-size:12px; color:#666D80;">
-            Total <strong>{{ $aspraks->count() }}</strong> asprak
+            Total <strong>{{ $aspraks->count() }}</strong> asisten praktikum
         </span>
         @php $koorCount = $aspraks->filter(fn($a) => \Modules\EOffice\Models\Praktikum::where('koor_id', $a->user_id)->where('id', $a->praktikum_id)->exists())->count(); @endphp
         @if($koorCount > 0)

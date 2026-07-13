@@ -28,16 +28,24 @@
         <div class="mp-alert warning">Anda belum mengampu praktikum aktif manapun.</div>
         @else
         <form method="GET" class="flex gap-2 flex-wrap">
-            <select name="praktikum_id" class="mp-input mp-select" style="max-width:320px;"
-                    onchange="this.form.submit()">
-                @foreach($praktikumList as $p)
-                <option value="{{ $p->id }}" {{ ($praktikum?->id == $p->id) ? 'selected' : '' }}>
-                    {{ $p->nama }}
-
-                    · {{ $p->semester }} {{ $p->tahun_ajaran }}
-                </option>
-                @endforeach
-            </select>
+            @php
+                $praktikumOptions = [];
+                if(isset($praktikumList)) {
+                    foreach($praktikumList as $p) {
+                        $label = $p->nama;
+                        $label .= " · {$p->semester} {$p->tahun_ajaran}";
+                        $praktikumOptions[] = ['value' => (string)$p->id, 'label' => $label];
+                    }
+                }
+            @endphp
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="praktikum_id"
+                :options="$praktikumOptions"
+                :selected="(string)request('praktikum_id', (isset($praktikum) ? $praktikum?->id : (isset($praktikumId) ? $praktikumId : '')))"
+                placeholder="Pilih Praktikum..."
+                onChange="$event.target.form.submit()"
+                minWidth="240px"
+            />
         </form>
         @endif
     </div>
@@ -60,7 +68,7 @@
             <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
         </svg>
         <div style="font-size:14px;font-weight:600;color:#0D0D12;margin-bottom:4px;">Belum Ada Tugas</div>
-        <div style="font-size:12px;color:#666D80;">Belum ada tugas yang dibuat oleh asprak pada praktikum ini.</div>
+        <div style="font-size:12px;color:#666D80;">Belum ada tugas yang dibuat oleh asisten praktikum pada praktikum ini.</div>
     </div>
 </div>
 @else

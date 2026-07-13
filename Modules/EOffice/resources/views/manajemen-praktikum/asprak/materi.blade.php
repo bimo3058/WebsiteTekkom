@@ -5,7 +5,7 @@
     <div>
         <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">
             <h1 class="mp-page-title">Materi Modul</h1>
-            <span class="mp-badge success sm"><span class="dot"></span>Asprak</span>
+            <span class="mp-badge success sm"><span class="dot"></span>Asisten Praktikum</span>
         </div>
         <p class="mp-page-sub">Unggah dan kelola materi untuk modul yang Anda ampu · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
     </div>
@@ -15,6 +15,7 @@
 <div style="display:flex;flex-direction:column;gap:24px;min-height:0;flex:1;overflow-y:auto;padding-right:8px;">
 
 {{-- Upload Section --}}
+@if(isset($praktikum) && $praktikum->is_active)
 <div style="flex-shrink:0;">
     <div class="sec-head">
         <span class="sec-bar"></span>
@@ -28,12 +29,22 @@
             
             <div>
                 <label class="block text-[12px] font-semibold text-[#353849] mb-3">Modul <span style="color:#DF1C41;">*</span></label>
-                <select name="modul_id" required class="mp-input w-full" style="min-height:44px;">
-                    <option value="">Pilih modul</option>
-                    @foreach($modulsForSelect as $m)
-                    <option value="{{ $m->id }}">{{ $m->nama }}</option>
-                    @endforeach
-                </select>
+                @php
+                $modulOptions = [];
+                if(isset($modulList)) {
+                    foreach($modulList as $m) {
+                        $modulOptions[] = ['value' => (string)$m->id, 'label' => $m->judul];
+                    }
+                }
+            @endphp
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="modul_id"
+                :options="$modulOptions"
+                :selected="(string)request('modul_id', (isset($modul) ? $modul?->id : ''))"
+                placeholder="Pilih Modul..."
+                onChange="$event.target.form.submit()"
+                minWidth="200px"
+            />
                 @error('modul_id')
                 <div style="font-size:11px;color:#DF1C41;margin-top:4px;">{{ $message }}</div>
                 @enderror
@@ -106,6 +117,7 @@
         </form>
     </div>
 </div>
+@endif
 
 {{-- Daftar Materi Section --}}
 <div style="flex-shrink:0;">
@@ -163,10 +175,12 @@
                         Lihat
                     </a>
                     @endif
+                    @if(isset($praktikum) && $praktikum->is_active)
                     <form method="POST" action="{{ route('eoffice.manprak.asprak.materi.destroy', $materi->id) }}" style="display:inline;" onsubmit="return confirm('Hapus materi ini? Tindakan tidak dapat dibatalkan.')">
                         @csrf @method('DELETE')
                         <button type="submit" class="mp-btn secondary sm" style="color:#DF1C41;">Hapus</button>
                     </form>
+                    @endif
                 </div>
             </div>
         </div>

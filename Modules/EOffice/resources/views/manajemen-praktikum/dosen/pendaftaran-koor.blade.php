@@ -4,7 +4,7 @@
 <div class="mp-page-header">
     <div>
         <h1 class="mp-page-title">Seleksi Koordinator Praktikum</h1>
-        <p class="mp-page-sub">Review pendaftar koor sesuai praktikum yang Anda ampu</p>
+        <p class="mp-page-sub">Review pendaftar koordinator sesuai praktikum yang Anda ampu</p>
     </div>
 </div>
 
@@ -28,16 +28,37 @@
         <form method="GET" class="flex gap-2 flex-wrap">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama mahasiswa..."
                    class="mp-input" style="width:200px;">
-            <select name="sort" class="mp-input mp-select">
-                <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
-                <option value="ipk_tertinggi" {{ request('sort') == 'ipk_tertinggi' ? 'selected' : '' }}>IPK Tertinggi</option>
-            </select>
-            <select name="praktikum_id" class="mp-input mp-select">
-                <option value="">Semua Praktikum</option>
-                @foreach($praktikumList as $pr)
-                <option value="{{ $pr->id }}" {{ request('praktikum_id') == $pr->id ? 'selected' : '' }}>{{ $pr->nama }}</option>
-                @endforeach
-            </select>
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="sort"
+                :options="[
+                    ['value' => 'terbaru', 'label' => 'Terbaru'],
+                    ['value' => 'terlama', 'label' => 'Terlama'],
+                    ['value' => 'nama_asc', 'label' => 'Nama (A-Z)'],
+                    ['value' => 'nama_desc', 'label' => 'Nama (Z-A)']
+                ]"
+                :selected="request('sort', 'terbaru')"
+                placeholder="Urutkan..."
+                onChange="$event.target.form.submit()"
+                minWidth="140px"
+            />
+            @php
+                $praktikumOptions = [];
+                if(isset($praktikumList)) {
+                    foreach($praktikumList as $p) {
+                        $label = $p->nama;
+                        $label .= " · {$p->semester} {$p->tahun_ajaran}";
+                        $praktikumOptions[] = ['value' => (string)$p->id, 'label' => $label];
+                    }
+                }
+            @endphp
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="praktikum_id"
+                :options="$praktikumOptions"
+                :selected="(string)request('praktikum_id', (isset($praktikum) ? $praktikum?->id : (isset($praktikumId) ? $praktikumId : '')))"
+                placeholder="Pilih Praktikum..."
+                onChange="$event.target.form.submit()"
+                minWidth="240px"
+            />
             <select name="status_dosen" class="mp-input mp-select">
                 <option value="">Semua Status</option>
                 <option value="menunggu"  {{ request('status_dosen')=='menunggu'  ? 'selected' : '' }}>Menunggu Review</option>
@@ -104,7 +125,12 @@
                         @if($p->transkrip_path)
                         <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->transkrip_path, 'eoffice') }}" target="_blank"
                            style="font-size:11px;font-weight:600;color:#0B266E;text-decoration:none;display:block;" class="hover:underline">Transkrip</a>
-                        @else
+                        @endif
+                        @if($p->berkas_cerc_path)
+                        <a href="{{ app(\App\Services\SupabaseStorage::class)->publicUrl($p->berkas_cerc_path, 'eoffice') }}" target="_blank"
+                           style="font-size:11px;font-weight:600;color:#0B266E;text-decoration:none;display:block;margin-top:2px;" class="hover:underline">CERC</a>
+                        @endif
+                        @if(!$p->transkrip_path && !$p->berkas_cerc_path)
                         <span style="font-size:11px;color:#808897;">—</span>
                         @endif
                     </td>

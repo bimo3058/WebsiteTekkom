@@ -48,12 +48,19 @@ class PraktikumController extends Controller
             $query->where('tahun_ajaran', $tahunAjaran);
         }
 
-        $praktikums = $query->paginate(15)->withQueryString();
+        $perPage = $request->input('per_page', 10);
+        $praktikums = $query->paginate($perPage)->withQueryString()->fragment('daftar-praktikum');
 
         // Dosen list untuk dropdown di modal create
+        // Filter: hanya tampilkan dosen dengan domain @undip.ac.id (bukan akun seeder @sicata.com)
         $dosenList = \App\Models\Lecturer::with('user')
             ->get()
-            ->map(fn($l) => (object)['id' => $l->user_id, 'name' => $l->user?->name ?? '—']);
+            ->filter(fn($l) => $l->user && !str_contains($l->user->email ?? '', 'sicata.com'))
+            ->map(fn($l) => (object)[
+                'id'    => $l->user_id,
+                'name'  => ($l->user->name ?? '—') . ' · ' . ($l->user->email ?? ''),
+            ])
+            ->values();
 
         // Matkul list untuk dropdown pilih mata kuliah praktikum
         $matkulList = MatkulPraktikum::orderBy('semester')->orderBy('kode')->get();
@@ -86,6 +93,9 @@ class PraktikumController extends Controller
         }
 
         unset($data['dosen_ids']);
+        if (isset($data['status'])) {
+            $data['is_active'] = $data['status'] === 'aktif';
+        }
         $praktikum = Praktikum::create($data);
 
         // Sync dosen
@@ -174,6 +184,9 @@ class PraktikumController extends Controller
         }
 
         unset($data['dosen_ids']);
+        if (isset($data['status'])) {
+            $data['is_active'] = $data['status'] === 'aktif';
+        }
         $praktikum->update($data);
 
         if ($request->wantsJson() || $request->ajax()) {
@@ -185,31 +198,11 @@ class PraktikumController extends Controller
         }
 
         return redirect()
-            ->route('eoffice.manprak.admin.praktikum.detail', $praktikum->id)
+            ->route('eoffice.manprak.admin.praktikum.index')
             ->with('success', 'Praktikum berhasil diperbarui.');
     }
 
 
-    /**
-     * GET /eoffice/manprak/admin/praktikum/{id}/edit
-     * Halaman form edit praktikum.
-     */
-    public function edit(string $id)
-    {
-        $praktikum = Praktikum::with(['dosens', 'koordinator', 'matkul'])->findOrFail($id);
-
-        $dosenList = \App\Models\Lecturer::with('user')
-            ->get()
-            ->map(fn($l) => (object)['id' => $l->user_id, 'name' => $l->user?->name ?? '—']);
-
-        $matkulList = MatkulPraktikum::orderBy('semester')->orderBy('kode')->get();
-
-        return view('eoffice::manajemen-praktikum.admin.praktikum-edit', compact(
-            'praktikum',
-            'dosenList',
-            'matkulList'
-        ));
-    }
 
     /**
      * DELETE /api/eoffice/manprak/admin/praktikum/{id}
@@ -273,6 +266,43 @@ class PraktikumController extends Controller
             'message' => 'Koordinator berhasil diassign ke Praktikum dan otomatis aktif sebagai asprak.',
             'data'    => new PraktikumResource($praktikum->load(['dosens', 'koordinator'])),
         ]);
+    }
+
+    /**
+     * PATCH /eoffice/manprak/admin/praktikum/{id}/toggle-active
+     */
+    public function toggleActive(string $id)
+    {
+        $praktikum = Praktikum::findOrFail($id);
+        $praktikum->is_active = !$praktikum->is_active;
+        $praktikum->status = $praktikum->is_active ? 'aktif' : 'nonaktif';
+        $praktikum->save();
+
+        $statusText = $praktikum->is_active ? 'diaktifkan' : 'ditutup (diarsipkan)';
+        return back()->with('success', "Praktikum {$praktikum->nama} berhasil {$statusText}.");
+    }
+
+    /**
+     * POST /eoffice/manprak/admin/praktikum/bulk-toggle-active
+     */
+    public function bulkToggleActive(Request $request)
+    {
+        $request->validate([
+            'praktikum_ids' => 'required|array',
+            'praktikum_ids.*' => 'exists:eo_praktikum,id',
+            'action' => 'required|in:activate,deactivate'
+        ]);
+
+        $isActive = $request->action === 'activate' ? true : false;
+        $status = $isActive ? 'aktif' : 'nonaktif';
+        
+        Praktikum::whereIn('id', $request->praktikum_ids)->update([
+            'is_active' => $isActive,
+            'status' => $status
+        ]);
+
+        $statusText = $isActive ? 'diaktifkan kembali' : 'ditutup (diarsipkan)';
+        return back()->with('success', "Berhasil! " . count($request->praktikum_ids) . " praktikum telah {$statusText}.");
     }
 
 }

@@ -38,7 +38,7 @@
         <div class="mp-stat-icon green">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
         </div>
-        <div class="mp-stat-label">Asprak</div>
+        <div class="mp-stat-label">Asisten Praktikum</div>
         <div class="mp-stat-value">{{ $modul->modulAsprak->count() }}</div>
     </div>
     <div class="mp-stat">
@@ -59,6 +59,7 @@
 <div class="grid grid-cols-[360px_1fr] gap-[14px] flex-1 min-h-0">
     <div class="flex flex-col gap-[14px]">
         {{-- Edit Form --}}
+        @if($modul->praktikum?->is_active)
         <div class="mp-card flex-shrink-0" style="padding:20px;">
             <div style="font-weight:700;font-size:14px;color:#0D0D12;margin-bottom:16px;">Edit Modul</div>
             <form method="POST" action="{{ route('eoffice.manprak.koor.modul.update', $modul->id) }}" class="flex flex-col gap-3">
@@ -82,11 +83,12 @@
                 <button class="mp-btn primary md w-full">Simpan Perubahan</button>
             </form>
         </div>
+        @endif
 
-        {{-- Asprak Modul --}}
+        {{-- Asisten Praktikum Modul --}}
         <div class="mp-card flex-shrink-0">
             <div class="mp-card-header">
-                <span class="mp-card-title">Asprak Modul</span>
+                <span class="mp-card-title">Asisten Praktikum Modul</span>
                 <div class="right">
                     <span class="mp-badge neutral sm">{{ $modul->modulAsprak->count() }} orang</span>
                 </div>
