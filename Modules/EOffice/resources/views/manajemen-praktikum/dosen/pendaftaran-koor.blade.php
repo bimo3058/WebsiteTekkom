@@ -28,16 +28,37 @@
         <form method="GET" class="flex gap-2 flex-wrap">
             <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama mahasiswa..."
                    class="mp-input" style="width:200px;">
-            <select name="sort" class="mp-input mp-select">
-                <option value="terbaru" {{ request('sort', 'terbaru') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
-                <option value="ipk_tertinggi" {{ request('sort') == 'ipk_tertinggi' ? 'selected' : '' }}>IPK Tertinggi</option>
-            </select>
-            <select name="praktikum_id" class="mp-input mp-select">
-                <option value="">Semua Praktikum</option>
-                @foreach($praktikumList as $pr)
-                <option value="{{ $pr->id }}" {{ request('praktikum_id') == $pr->id ? 'selected' : '' }}>{{ $pr->nama }}</option>
-                @endforeach
-            </select>
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="sort"
+                :options="[
+                    ['value' => 'terbaru', 'label' => 'Terbaru'],
+                    ['value' => 'terlama', 'label' => 'Terlama'],
+                    ['value' => 'nama_asc', 'label' => 'Nama (A-Z)'],
+                    ['value' => 'nama_desc', 'label' => 'Nama (Z-A)']
+                ]"
+                :selected="request('sort', 'terbaru')"
+                placeholder="Urutkan..."
+                onChange="$event.target.form.submit()"
+                minWidth="140px"
+            />
+            @php
+                $praktikumOptions = [];
+                if(isset($praktikumList)) {
+                    foreach($praktikumList as $p) {
+                        $label = $p->nama;
+                        $label .= " · {$p->semester} {$p->tahun_ajaran}";
+                        $praktikumOptions[] = ['value' => (string)$p->id, 'label' => $label];
+                    }
+                }
+            @endphp
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="praktikum_id"
+                :options="$praktikumOptions"
+                :selected="(string)request('praktikum_id', (isset($praktikum) ? $praktikum?->id : (isset($praktikumId) ? $praktikumId : '')))"
+                placeholder="Pilih Praktikum..."
+                onChange="$event.target.form.submit()"
+                minWidth="240px"
+            />
             <select name="status_dosen" class="mp-input mp-select">
                 <option value="">Semua Status</option>
                 <option value="menunggu"  {{ request('status_dosen')=='menunggu'  ? 'selected' : '' }}>Menunggu Review</option>

@@ -1,0 +1,237 @@
+@php
+    /** @var \Modules\EOffice\Models\Praktikum $praktikum */
+    /** @var \Illuminate\Database\Eloquent\Collection|\Modules\EOffice\Models\MatkulPraktikum[] $matkulList */
+    /** @var \Illuminate\Support\Collection|object[] $dosenList */
+@endphp
+<x-eoffice::manajemen-praktikum.layout pageTitle="Edit Praktikum — {{ $praktikum->nama }}">
+
+    {{-- Header --}}
+    <div class="mp-page-header" style="flex-shrink:0;">
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+            <a href="{{ route('eoffice.manprak.admin.praktikum.detail', $praktikum->id) }}"
+                style="display:flex;align-items:center;gap:4px;font-size:12px;color:#A4ABB8;text-decoration:none;white-space:nowrap;flex-shrink:0;transition:color .15s;"
+                onmouseover="this.style.color='#0B266E'" onmouseout="this.style.color='#A4ABB8'">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+                    stroke-linecap="round">
+                    <polyline points="15 18 9 12 15 6" />
+                </svg>
+                Detail Praktikum
+            </a>
+            <span style="color:#DFE1E7;">›</span>
+            <h1 class="mp-page-title">Edit Praktikum</h1>
+            <span class="mp-badge error sm"><span class="dot"></span>Admin</span>
+        </div>
+    </div>
+
+    {{-- Flash messages --}}
+    @if(session('success'))
+        <div class="mp-alert success flex-shrink-0">{{ session('success') }}</div>
+    @endif
+    @if($errors->any())
+        <div class="mp-alert warning flex-shrink-0">
+            <strong>Ada kesalahan:</strong>
+            <ul style="margin:4px 0 0 16px;">
+                @foreach($errors->all() as $e)<li style="font-size:12px;">{{ $e }}</li>@endforeach
+            </ul>
+        </div>
+    @endif
+
+    {{-- Form card --}}
+    <div
+        style="background:#fff;border:1px solid #DFE1E7;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);flex-shrink:0;">
+
+        {{-- Card header --}}
+        <div
+            style="padding:14px 20px;border-bottom:1px solid #DFE1E7;background:#FAFAFA;display:flex;align-items:center;gap:10px;">
+            <div
+                style="width:34px;height:34px;border-radius:9px;background:rgba(11,38,110,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0B266E" stroke-width="1.8"
+                    stroke-linecap="round">
+                    <path
+                        d="M9 21V13H5C3.895 13 3 13.895 3 15v4C3 20.105 3.895 21 5 21H9ZM9 21H15M9 21V10C9 8.895 9.895 8 11 8H15V21M15 21H19C20.105 21 21 20.105 21 19V5C21 3.895 20.105 3 19 3h-2C15.895 3 15 3.895 15 5V21Z" />
+                </svg>
+            </div>
+            <div>
+                <div style="font-size:14px;font-weight:700;color:#0D0D12;">{{ $praktikum->nama }}</div>
+                <div style="font-size:11px;color:#A4ABB8;">
+                    @if($praktikum->kode)<span
+                    style="font-family:monospace;color:#0B266E;">{{ $praktikum->kode }}</span> · @endif
+                    {{ $praktikum->semester }} {{ $praktikum->tahun_ajaran }}
+                </div>
+            </div>
+        </div>
+
+        {{-- Form --}}
+        <form method="POST" action="{{ route('eoffice.manprak.admin.praktikum.update', $praktikum->id) }}"
+            id="editForm">
+            @csrf
+            @method('PUT')
+
+            @if($errors->any())
+                <div
+                    style="margin:20px 20px 0; padding:12px 14px; background:#FFF5F5; border:1px solid #FCA5A5; border-radius:9px;">
+                    <div style="color:#EF4444; font-size:12px; font-weight:700; margin-bottom:4px;">Gagal memperbarui data:
+                    </div>
+                    <ul style="margin:0; padding-left:20px; color:#EF4444; font-size:11px;">
+                        @foreach($errors->all() as $err)
+                            <li>{{ $err }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <div style="padding:24px 20px;display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+
+                {{-- Nama Praktikum --}}
+                <div style="grid-column:1/-1;">
+                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:5px;">
+                        Nama Praktikum <span style="color:#EF4444;">*</span>
+                    </label>
+                    <input type="text" name="nama" required value="{{ old('nama', $praktikum->nama) }}"
+                        placeholder="Contoh: Praktikum Sistem Basis Data" class="mp-input" style="width:100%;">
+                </div>
+
+                {{-- Mata Kuliah --}}
+                <div style="grid-column:1/-1;">
+                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:5px;">
+                        Mata Kuliah Praktikum <span style="color:#EF4444;">*</span>
+                    </label>
+                    <select name="matkul_id" required class="mp-input mp-select" style="width:100%;">
+                        <option value="">— Pilih Mata Kuliah —</option>
+                        @foreach(($matkulList ?? collect())->groupBy('semester') as $sem => $items)
+                            <optgroup label="Semester {{ $sem }}">
+                                @foreach($items as $mk)
+                                    <option value="{{ $mk->id }}" {{ old('matkul_id', $praktikum->matkul_id) == $mk->id ? 'selected' : '' }}>
+                                        [{{ $mk->kode }}] {{ $mk->nama }}
+                                    </option>
+                                @endforeach
+                            </optgroup>
+                        @endforeach
+                    </select>
+                </div>
+
+                {{-- Tahun Ajaran --}}
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:5px;">
+                        Tahun Ajaran <span style="color:#EF4444;">*</span>
+                    </label>
+                    <input type="text" name="tahun_ajaran" required
+                        value="{{ old('tahun_ajaran', $praktikum->tahun_ajaran) }}" placeholder="2025/2026"
+                        class="mp-input" style="width:100%;">
+                </div>
+
+                {{-- Semester --}}
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:5px;">
+                        Semester <span style="color:#EF4444;">*</span>
+                    </label>
+                    <select name="semester" required class="mp-input mp-select" style="width:100%;">
+                        <option value="Ganjil" {{ old('semester', $praktikum->semester) === 'Ganjil' ? 'selected' : '' }}>
+                            Ganjil</option>
+                        <option value="Genap" {{ old('semester', $praktikum->semester) === 'Genap' ? 'selected' : '' }}>
+                            Genap</option>
+                    </select>
+                </div>
+
+                {{-- Dosen Pengampu --}}
+                @php
+                    $dosenIds = old('dosen_ids', $praktikum->dosens->pluck('id')->toArray());
+                    if (empty($dosenIds))
+                        $dosenIds = [''];
+                @endphp
+                <div style="grid-column:1/-1;" x-data="{ dosens: {{ json_encode($dosenIds) }} }">
+                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:5px;">
+                        Dosen Pengampu <span style="color:#EF4444;">*</span>
+                    </label>
+
+                    <template x-for="(dosen, index) in dosens" :key="index">
+                        <div style="display:flex;gap:8px;margin-bottom:8px;">
+                            <select :name="'dosen_ids[' + index + ']'" x-model="dosens[index]" required
+                                class="mp-input mp-select" style="width:100%;">
+                                <option value="">— Pilih Dosen —</option>
+                                @foreach($dosenList ?? [] as $d)
+                                    <option value="{{ $d->id }}">{{ $d->name }}</option>
+                                @endforeach
+                            </select>
+                            <button type="button" x-show="dosens.length > 1" @click="dosens.splice(index, 1)"
+                                class="mp-btn destructive sm" style="padding:0 12px;flex-shrink:0;">✕</button>
+                        </div>
+                    </template>
+
+                    <button type="button" x-show="dosens.length < 3" @click="dosens.push('')"
+                        class="mp-btn secondary sm" style="width:100%;border:1px dashed #A4ABB8;margin-top:4px;">+
+                        Tambah Dosen Pengampu</button>
+                    <div
+                        style="font-size:11px;color:#A4ABB8;margin-top:4px;display:flex;justify-content:space-between;">
+                        <span>Hanya user dengan role dosen yang tersedia.</span>
+                        <span>Maks. 3 Dosen</span>
+                    </div>
+                </div>
+
+                {{-- Status --}}
+                <div>
+                    <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:5px;">
+                        Status <span style="color:#EF4444;">*</span>
+                    </label>
+                    <select name="status" required class="mp-input mp-select" style="width:100%;">
+                        <option value="aktif" {{ old('status', $praktikum->status) === 'aktif' ? 'selected' : '' }}>Aktif
+                        </option>
+                        <option value="nonaktif" {{ old('status', $praktikum->status) === 'nonaktif' ? 'selected' : '' }}>
+                            Nonaktif</option>
+                    </select>
+                </div>
+
+            </div>
+
+            {{-- Footer actions --}}
+            <div
+                style="padding:14px 20px;border-top:1px solid #DFE1E7;background:#FAFAFA;display:flex;align-items:center;justify-content:space-between;gap:10px;">
+                <a href="{{ route('eoffice.manprak.admin.praktikum.detail', $praktikum->id) }}"
+                    class="mp-btn secondary md" style="text-decoration:none;">
+                    Batal
+                </a>
+                <button type="submit" class="mp-btn primary md" style="display:flex;align-items:center;gap:6px;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z" />
+                        <polyline points="17 21 17 13 7 13 7 21" />
+                        <polyline points="7 3 7 8 15 8" />
+                    </svg>
+                    Simpan Perubahan
+                </button>
+            </div>
+        </form>
+    </div>
+
+    {{-- Zona Bahaya --}}
+    <div
+        style="background:#fff;border:1px solid #FADAE1;border-radius:14px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.04);flex-shrink:0;margin-top:4px;">
+        <div style="padding:14px 20px;border-bottom:1px solid #FADAE1;background:#FFF5F6;">
+            <div style="font-size:13px;font-weight:700;color:#DF1C41;">Zona Bahaya</div>
+        </div>
+        <div style="padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;">
+            <div>
+                <div style="font-size:13px;font-weight:600;color:#0D0D12;margin-bottom:2px;">Hapus Praktikum</div>
+                <div style="font-size:12px;color:#666D80;">Data praktikum (praktikan, modul, dan nilai) akan tetap
+                    tersimpan dalam sistem sebagai arsip tetapi tidak akan muncul lagi di halaman Dosen dan Mahasiswa.
+                </div>
+            </div>
+            <form method="POST" action="{{ route('eoffice.manprak.admin.praktikum.destroy', $praktikum->id) }}"
+                onsubmit="return confirm('Hapus praktikum \'{{ addslashes($praktikum->nama) }}\'? (Data akan diarsipkan)')"
+                style="flex-shrink:0;">
+                @csrf @method('DELETE')
+                <button type="submit" class="mp-btn destructive md" style="white-space:nowrap;">
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                        stroke-linecap="round">
+                        <polyline points="3 6 5 6 21 6" />
+                        <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+                        <path d="M10 11v6M14 11v6" />
+                        <path d="M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2" />
+                    </svg>
+                    Hapus Praktikum
+                </button>
+            </form>
+        </div>
+    </div>
+
+</x-eoffice::manajemen-praktikum.layout>

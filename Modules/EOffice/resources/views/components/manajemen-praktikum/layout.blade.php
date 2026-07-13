@@ -1,3 +1,4 @@
+@props(['pageTitle' => null, 'noBox' => false])
 <!DOCTYPE html>
 <html lang="id">
 <head>
@@ -7,7 +8,13 @@
 <title>{{ $pageTitle ?? 'Manajemen Praktikum' }} — SIPERKOM</title>
 @vite(['resources/css/app.css', 'resources/js/app.js'])
 @vite(['resources/assets/sass/app.scss', 'resources/assets/js/app.js'], 'build-eoffice')
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.css" />
 <style>
+/* ─── NProgress Override ─── */
+#nprogress .bar { background: #0B266E !important; height: 3px !important; }
+#nprogress .peg { display: none !important; }
+#nprogress .spinner { display: none !important; }
+
 /* ─── SITKOM Design System — ManajemenPraktikum component layer ─── */
 
 /* Box / Wrap (superadmin pattern) */
@@ -33,24 +40,25 @@
 .mp-page-actions { display:flex; align-items:center; gap:8px; flex-wrap:wrap; }
 
 /* Badges */
-.mp-badge { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:500;
-            padding:3px 8px; border-radius:9999px; letter-spacing:0.01em; line-height:1;
-            white-space:nowrap; font-family:'Inter Tight',sans-serif; }
-.mp-badge.sm { font-size:11px; padding:2px 7px; }
-.mp-badge.lg { font-size:13px; padding:4px 10px; }
-.mp-badge.primary  { background:rgba(11,38,110,0.08); color:#0B266E; }
-.mp-badge.primary-fill { background:#0B266E; color:#fff; }
-.mp-badge.success  { background:#DDF2EE; color:#174E43; }
-.mp-badge.success-fill { background:#40C4AA; color:#fff; }
-.mp-badge.warning  { background:#F9ECCB; color:#5B3D1E; }
-.mp-badge.warning-fill { background:#D39C3D; color:#fff; }
-.mp-badge.error    { background:#FADAE1; color:#710E21; }
-.mp-badge.error-fill { background:#DF1C41; color:#fff; }
-.mp-badge.sky      { background:#D1F0F9; color:#0C4D6E; }
-.mp-badge.sky-fill { background:#106A97; color:#fff; }
-.mp-badge.neutral  { background:#ECEFF3; color:#353849; }
-.mp-badge.neutral-fill { background:#0D0D12; color:#fff; }
-.mp-badge .dot { width:6px; height:6px; border-radius:50%; background:currentColor; flex-shrink:0; }
+.mp-badge { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:600;
+            padding:3px 10px; border-radius:9999px; letter-spacing:0.01em; line-height:1;
+            white-space:nowrap; font-family:'Inter Tight',sans-serif; border:1px solid transparent; }
+.mp-badge.sm { font-size:11px; padding:2px 8px; }
+.mp-badge.lg { font-size:13px; padding:4px 12px; }
+.mp-badge.primary  { background:#EEF2FF; color:#0B266E; border-color:#C7D2FE; }
+.mp-badge.primary-fill { background:#0B266E; color:#fff; border-color:#0B266E; }
+.mp-badge.success  { background:#F0FDF9; color:#0D9488; border-color:#99F6E4; }
+.mp-badge.success-fill { background:#0D9488; color:#fff; border-color:#0D9488; }
+.mp-badge.success .dot { display:none; }
+.mp-badge.warning  { background:#FFFBEB; color:#92400E; border-color:#FCD34D; }
+.mp-badge.warning-fill { background:#D97706; color:#fff; border-color:#D97706; }
+.mp-badge.error    { background:#FFF1F2; color:#BE123C; border-color:#FECDD3; }
+.mp-badge.error-fill { background:#DF1C41; color:#fff; border-color:#DF1C41; }
+.mp-badge.sky      { background:#EFF8FF; color:#075985; border-color:#BAE6FD; }
+.mp-badge.sky-fill { background:#0369A1; color:#fff; border-color:#0369A1; }
+.mp-badge.neutral  { background:#F8FAFC; color:#475569; border-color:#CBD5E1; }
+.mp-badge.neutral-fill { background:#334155; color:#fff; border-color:#334155; }
+.mp-badge .dot { display:none; }
 
 /* Buttons */
 .mp-btn { display:inline-flex; align-items:center; gap:6px; font-family:'Inter Tight',sans-serif;
@@ -84,13 +92,16 @@
 .mp-stat-sub   { font-size:11px; color:var(--c-fg-placeholder); margin-top:4px; }
 
 /* Table / Card containers */
-.mp-card { background:#fff; border:1px solid var(--c-border); border-radius:14px; overflow:hidden;
+.mp-card { background:#fff; border:1px solid var(--c-border); border-radius:14px;
            box-shadow:var(--shadow-card); display:flex; flex-direction:column; width:100%; min-width:0; }
+.mp-card > :first-child { border-top-left-radius: 13px; border-top-right-radius: 13px; }
+.mp-card > :last-child { border-bottom-left-radius: 13px; border-bottom-right-radius: 13px; }
 .mp-card-header { padding:14px 18px; background:#fff; border-bottom:1px solid var(--c-border);
                   display:flex; align-items:center; gap:10px; flex-shrink:0; }
 .mp-card-title { font-size:15px; font-weight:700; color:var(--c-fg); }
 .mp-card-header .right { margin-left:auto; display:flex; align-items:center; gap:8px; }
 .mp-card-body  { flex:1; overflow-y:auto; }
+.mp-card-body > :first-child { border-top-left-radius: 13px; border-top-right-radius: 13px; }
 .mp-th { font-size:11px; font-weight:600; color:var(--c-fg-placeholder); text-transform:uppercase;
          letter-spacing:.06em; }
 .mp-tr { border-bottom:1px solid #F8F9FB; }
@@ -193,30 +204,28 @@
     $iCal     = "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z";
     $iEdit    = "M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z";
     $iGear    = "M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z M15 12a3 3 0 11-6 0 3 3 0 016 0z";
-
+    $iUsers   = "M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75";
+    $iClipboard = "M16 4h2a2 2 0 012 2v14a2 2 0 01-2 2H6a2 2 0 01-2-2V6a2 2 0 012-2h2M8 2h8v4H8z";
+    $iShield  = "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z";
     // Definisi section per role — tiap section muncul jika user punya role terkait
     $sections = [];
 
     if ($isAdmin) {
         $sections[] = [
             'label' => 'Admin',
-            'color' => '#DF1C41',
-            'bg'    => 'rgba(223,28,65,0.08)',
+            'color' => '#293C79',
+            'bg'    => 'var(--c-primary-50)',
             'match' => 'manprak.admin',
             'groups' => [
-                'Utama' => [
-                    ['href' => route('eoffice.manprak.admin.dashboard'),                    'label' => 'Dashboard',          'match' => 'admin.dashboard',          'icon' => $iHome],
+                'Menu Utama' => [
+                    ['href' => route('eoffice.manprak.admin.dashboard'),              'label' => 'Dashboard',          'match' => 'admin.dashboard',          'icon' => $iHome],
                 ],
                 'Kelola Data' => [
-                    ['href' => route('eoffice.manprak.admin.praktikum.index'),              'label' => 'Daftar Praktikum',   'match' => 'admin.praktikum',          'icon' => $iBook],
-                    ['href' => route('eoffice.manprak.admin.matkul-praktikum.index'),       'label' => 'Mata Kuliah Praktikum',   'match' => 'matkul-praktikum',         'icon' => $iList],
-                    ['href' => route('eoffice.manprak.admin.dosen.index'),                  'label' => 'Daftar Dosen',       'match' => 'admin.dosen',              'icon' => $iUser],
-                ],
-                'Pendaftaran' => [
-                    ['href' => route('eoffice.manprak.admin.periode-pendaftaran.index'),    'label' => 'Periode Pendaftaran','match' => 'periode-pendaftaran',      'icon' => $iCal],
-                    ['href' => route('eoffice.manprak.admin.pendaftaran-koor.index'),       'label' => 'Pendaftaran Koordinator',   'match' => 'pendaftaran-koor',         'icon' => $iCheck],
-                    ['href' => route('eoffice.manprak.admin.pendaftaran-asprak.index'),     'label' => 'Pendaftaran Asisten Praktikum', 'match' => 'pendaftaran-asprak',       'icon' => $iList],
-                    ['href' => route('eoffice.manprak.admin.kelola-role.index'),            'label' => 'Kelola Role',        'match' => 'kelola-role',              'icon' => $iUser],
+                    ['href' => route('eoffice.manprak.admin.praktikum.index'),        'label' => 'Daftar Praktikum',   'match' => 'admin.praktikum',          'icon' => $iBook],
+                    ['href' => route('eoffice.manprak.admin.matkul-praktikum.index'), 'label' => 'Mata Kuliah Praktikum', 'match' => 'matkul-praktikum',      'icon' => $iList],
+                    ['href' => route('eoffice.manprak.admin.dosen.index'),            'label' => 'Daftar Dosen',       'match' => 'admin.dosen',              'icon' => $iUsers],
+                    ['href' => route('eoffice.manprak.admin.pendaftaran-koor.index'),'label' => 'Pendaftaran',      'match' => 'pendaftaran',              'icon' => $iClipboard],
+                    ['href' => route('eoffice.manprak.admin.kelola-role.index'),      'label' => 'Kelola Role',        'match' => 'kelola-role',              'icon' => $iShield],
                 ],
             ],
         ];
@@ -330,24 +339,28 @@
     {{-- SIDEBAR                                                        --}}
     {{-- ═══════════════════════════════════════════════════════════════ --}}
     <aside class="flex flex-col flex-shrink-0 bg-white border-r border-[#DFE1E7] relative overflow-visible z-20 transition-all duration-[240ms] ease-[cubic-bezier(.4,0,.2,1)]"
-           :class="sidebarOpen ? 'w-[272px]' : 'w-[64px]'">
+           :class="sidebarOpen ? 'w-[240px]' : 'w-[64px]'">
 
         {{-- Brand --}}
-        <div class="relative px-[10px] pt-[18px] pb-[10px]">
-            <div class="flex items-center gap-[10px] px-[10px] py-2 rounded-[10px]">
-                <div class="flex items-center justify-center w-[34px] h-[34px] rounded-[9px] flex-shrink-0 bg-white shadow-sm overflow-hidden">
-                    <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="UNDIP" class="w-[24px] h-[24px] object-contain">
+        <div class="relative flex items-center" style="height: 60px; padding: 0 16px; border-bottom: 1px solid #DFE1E7;">
+            <div class="flex items-center" style="gap: 8px; overflow: hidden; padding-right: 36px;">
+                <div class="flex items-center justify-center flex-shrink-0" style="width: 32px; height: 32px;">
+                    <img src="{{ asset('images/UNDIPOfficial.png') }}" alt="UNDIP" style="width: 100%; height: 100%; object-fit: contain;">
                 </div>
-                <div class="flex-1 min-w-0 overflow-hidden transition-[opacity,width] duration-200" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">
-                    <div class="font-bold text-[13px] text-[#0D0D12] leading-[1.2] whitespace-nowrap">SIPERKOM</div>
-                    <div class="text-[9px] font-semibold text-[#A4ABB8] uppercase tracking-[.04em] whitespace-nowrap">Man. Praktikum</div>
+                <div class="flex-1 min-w-0 transition-all duration-200" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">
+                    <div style="font-size: 13px; font-weight: 700; color: #0D0D12; letter-spacing: -0.01em; line-height: 1;">SIPERKOM</div>
+                    <div style="font-size: 10px; font-weight: 400; color: #666D80; margin-top: 2px; white-space: nowrap;">Manajemen Praktikum</div>
                 </div>
             </div>
+            
             <button @click="sidebarOpen = !sidebarOpen"
-                    class="absolute right-[-12px] top-[34px] flex items-center justify-center w-6 h-6 rounded-full bg-white border border-[#DFE1E7] shadow-[0_1px_4px_rgba(0,0,0,.08)] cursor-pointer z-30 hover:bg-[#F6F8FA]">
-                <svg class="transition-transform duration-[240ms]" :class="sidebarOpen ? '' : 'rotate-180'"
-                     width="8" height="8" viewBox="0 0 10 10" fill="none" stroke="#666D80" stroke-width="2.2" stroke-linecap="round">
-                    <path d="M7 1L3 5L7 9"/>
+                    class="absolute flex items-center justify-center cursor-pointer transition-all hover:bg-gray-50 z-30"
+                    :style="sidebarOpen 
+                        ? 'width: 26px; height: 26px; border-radius: 6px; border: 1px solid #DFE1E7; background-color: #ffffff; color: #666D80; top: 17px; right: 16px;' 
+                        : 'width: 26px; height: 26px; border-radius: 6px; border: 1px solid #DFE1E7; background-color: #ffffff; color: #666D80; top: 17px; right: -13px;'">
+                <svg class="transition-transform duration-200" :class="sidebarOpen ? '' : 'rotate-180'"
+                     width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                    <polyline points="15 18 9 12 15 6"></polyline>
                 </svg>
             </button>
         </div>
@@ -355,7 +368,8 @@
 
 
         {{-- Nav --}}
-        <nav class="flex-1 overflow-y-auto overflow-x-hidden px-[10px] py-1 flex flex-col [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <nav class="flex-1 overflow-y-auto overflow-x-hidden flex flex-col [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
+             style="padding: 15px 10px 10px 10px;">
 
             @foreach($sections as $section)
             @php
@@ -402,24 +416,29 @@
                     @foreach($section['groups'] as $groupLabel => $items)
 
                     {{-- Group label --}}
-                    <div class="text-[10px] font-semibold text-[#A4ABB8] uppercase tracking-[.06em] px-[10px] pt-[6px] pb-[2px] whitespace-nowrap overflow-hidden transition-opacity duration-200"
+                    <div class="font-semibold uppercase whitespace-nowrap overflow-hidden transition-opacity duration-200"
+                         style="font-size: 10px; color: #A4ACB9; letter-spacing: 0.06em; padding: 6px 10px 2px 10px;"
                          :class="sidebarOpen ? 'opacity-100' : 'opacity-0'">{{ $groupLabel }}</div>
 
                     @foreach($items as $item)
                     @php $active = str_contains($currentRoute, $item['match']); @endphp
                     <a href="{{ $item['href'] }}"
-                       class="flex items-center gap-[10px] px-[12px] py-[9px] rounded-[10px] mb-[1px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap"
+                       class="relative flex items-center gap-[10px] px-[12px] py-[9px] rounded-[10px] mb-[1px] no-underline transition-colors duration-[120ms] whitespace-nowrap"
                        :class="sidebarOpen ? '' : 'justify-center'"
                        @if($active)
-                           style="background:{{ $sectionColor }}; color:white;"
+                           style="background:#EEF1FA; color:#293C79;"
                        @else
-                           style="color:#353849"
-                           onmouseover="this.style.background='#F6F8FA'"
-                           onmouseout="this.style.background='transparent'"
+                           style="color:#353849;"
+                           onmouseover="this.style.background='#F6F8FA'; this.style.color='#0D0D12'"
+                           onmouseout="this.style.background='transparent'; this.style.color='#353849'"
                        @endif>
-                        <svg class="w-[16px] h-[16px] flex-shrink-0"
-                             style="color:{{ $active ? 'white' : '#808897' }}"
-                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                        @if($active)
+                        <div class="absolute left-0 top-1/2 -translate-y-1/2 h-6 rounded-r-md z-10" style="background-color: #293C79; width: 3px;"></div>
+                        @endif
+
+                        <svg class="w-[18px] h-[18px] flex-shrink-0 transition-colors"
+                             style="color:{{ $active ? '#293C79' : '#666D80' }}"
+                             viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="{{ $item['icon'] }}"/>
                         </svg>
                         <span class="text-[13px] flex-1 overflow-hidden text-ellipsis transition-[opacity,width] duration-200
@@ -439,43 +458,49 @@
 
             @endforeach
 
-            {{-- Kembali ke EOffice --}}
-            <div class="h-px bg-[#F0F1F4] mx-[14px] my-[6px]"></div>
-            <a href="{{ route('eoffice.dashboard') }}"
-               class="flex items-center gap-[10px] px-[10px] py-[9px] rounded-lg no-underline transition-colors hover:bg-[#F6F8FA] text-[#666D80]"
-               :class="sidebarOpen ? '' : 'justify-center'">
-                <svg class="w-[14px] h-[14px] flex-shrink-0 text-[#A4ABB8]" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                    <path d="{{ $iBack }}"/>
-                </svg>
-                <span class="text-[12px] font-medium flex-1 transition-[opacity,width] duration-200"
-                      :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">Kembali ke EOffice</span>
-            </a>
         </nav>
 
-        {{-- User footer --}}
-        <div class="px-3 py-[10px] border-t border-[#DFE1E7] flex-shrink-0">
-            <div class="flex items-center gap-[10px] px-[10px] py-2 rounded-lg overflow-hidden transition-colors hover:bg-[#F6F8FA]">
-                @if($user->avatar_url)
-                <img src="{{ $user->avatar_url }}" alt="{{ $name }}"
-                     class="w-[30px] h-[30px] rounded-full object-cover flex-shrink-0">
-                @else
-                <div class="flex items-center justify-center w-[30px] h-[30px] rounded-full flex-shrink-0 text-white text-[11px] font-bold"
-                     style="background:linear-gradient(135deg,#3C518B,#0B266E);">{{ $initials }}</div>
-                @endif
-                <div class="flex-1 min-w-0 overflow-hidden transition-[opacity,width] duration-200" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">
-                    <div class="text-[12px] font-semibold text-[#0D0D12] whitespace-nowrap overflow-hidden text-ellipsis leading-[1.2]">{{ $name }}</div>
-                    <div class="text-[10px] text-[#666D80] whitespace-nowrap overflow-hidden text-ellipsis">{{ $user->email }}</div>
-                </div>
-                <form method="POST" action="{{ route('logout') }}" class="flex-shrink-0"
-                      :class="sidebarOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'">
-                    @csrf
-                    <button type="submit" class="p-1 rounded text-[#A4ABB8] hover:text-red-500 bg-transparent border-none cursor-pointer">
-                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                            <path d="{{ $iLogout }}"/>
-                        </svg>
-                    </button>
-                </form>
-            </div>
+        {{-- Bottom Menu --}}
+        <style>
+            .b-menu-item { color: #666D80; }
+            .b-menu-item:hover { color: #0D0D12; background-color: #F6F8FA; }
+            .b-menu-logout { color: #EF4444; }
+            .b-menu-logout:hover { color: #B91C1C; background-color: #FEF2F2; }
+        </style>
+        <div class="px-[10px] py-[10px] flex-shrink-0" style="border-top: 1px solid #DFE1E7;">
+            <a href="{{ route('eoffice.dashboard') }}"
+               class="b-menu-item flex items-center gap-[10px] px-[12px] py-[9px] rounded-[10px] mb-[1px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap"
+               :class="sidebarOpen ? '' : 'justify-center'">
+                <svg class="w-[18px] h-[18px] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="{{ $iBack }}"/></svg>
+                <span class="text-[13px] font-medium flex-1 transition-[opacity,width] duration-200" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">Kembali ke E-Office</span>
+            </a>
+
+            <a href="#"
+               class="b-menu-item flex items-center gap-[10px] px-[12px] py-[9px] rounded-[10px] mb-[1px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap"
+               :class="sidebarOpen ? '' : 'justify-center'">
+                <svg class="w-[18px] h-[18px] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="{{ $iGear }}"/></svg>
+                <span class="text-[13px] font-medium flex-1 transition-[opacity,width] duration-200" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">Settings</span>
+            </a>
+
+            <a href="#"
+               class="b-menu-item flex items-center gap-[10px] px-[12px] py-[9px] rounded-[10px] mb-[1px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap"
+               :class="sidebarOpen ? '' : 'justify-center'">
+                <svg class="w-[18px] h-[18px] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                    <circle cx="12" cy="12" r="10"></circle><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path><line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <span class="text-[13px] font-medium flex-1 transition-[opacity,width] duration-200" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">Help & Center</span>
+            </a>
+
+            <form method="POST" action="{{ route('logout') }}" class="w-full m-0 p-0">
+                @csrf
+                <button type="submit" class="b-menu-logout w-full flex items-center gap-[10px] px-[12px] py-[9px] rounded-[10px] mb-[1px] no-underline transition-colors duration-[120ms] overflow-hidden whitespace-nowrap border-none bg-transparent cursor-pointer"
+                        :class="sidebarOpen ? '' : 'justify-center'">
+                    <svg class="w-[18px] h-[18px] flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                        <path d="{{ $iLogout }}"/>
+                    </svg>
+                    <span class="text-[13px] font-medium flex-1 text-left transition-[opacity,width] duration-200" :class="sidebarOpen ? 'opacity-100' : 'opacity-0 w-0'">Logout</span>
+                </button>
+            </form>
         </div>
     </aside>
 
@@ -485,14 +510,15 @@
     <div class="flex-1 flex flex-col overflow-hidden">
 
         {{-- Topbar --}}
-        <div class="flex items-center justify-between px-6 bg-white border-b border-[#DFE1E7] flex-shrink-0" style="height:56px;">
+        <div class="flex items-center justify-between pr-8 bg-white border-b border-[#DFE1E7] flex-shrink-0" style="height:60px; padding-left:28px;">
             <div class="flex items-center gap-3 min-w-0">
                 <div>
-                    <div class="font-bold text-[15px] text-[#0D0D12] leading-[1.2]">{{ $pageTitle ?? 'Dashboard' }}</div>
-                    <div class="text-[11px] text-[#666D80]">Manajemen Praktikum · SIPERKOM</div>
+                    <div class="leading-[1.5] tracking-[0.02em]" style="color: #818898; font-size: 12px; font-weight: normal;">
+                        SIPERKOM <span class="mx-[6px] text-[#D1D5DB]">/</span> MANAJEMEN PRAKTIKUM <span class="mx-[6px] text-[#D1D5DB]">/</span> <span class="text-[#0D0D12]" style="font-weight: 600;">{{ $pageTitle ?? 'Dashboard' }}</span>
+                    </div>
                 </div>
             </div>
-            <div class="flex items-center gap-2">
+            <div class="flex items-center gap-5">
 
                 {{-- ── Praktikum Switcher Kontekstual ── --}}
                 @php
@@ -608,13 +634,46 @@
                 @endif
                 {{-- ── /Praktikum Switcher Kontekstual ── --}}
 
-                <div class="relative flex items-center justify-center w-[34px] h-[34px] rounded-lg border border-[#DFE1E7] bg-white cursor-pointer hover:bg-[#F6F8FA]">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#666D80" stroke-width="1.8" stroke-linecap="round">
-                        <path d="{{ $iBell }}"/>
-                    </svg>
-                    @if($notifCount > 0)
-                    <span class="absolute top-[6px] right-[6px] w-[6px] h-[6px] rounded-full bg-[#DF1C41] border-[1.5px] border-white"></span>
-                    @endif
+                {{-- ── Right Actions ── --}}
+                <div class="flex items-center" style="gap: 16px;">
+                    {{-- Notification Bell --}}
+                    <div class="relative flex items-center justify-center cursor-pointer transition-colors hover:bg-gray-50"
+                         style="width: 36px; height: 36px; border-radius: 10px; border: 1px solid #DFE1E7; background-color: #ffffff; color: #666D80;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M6 8a6 6 0 1112 0c0 7 3 9 3 9H3s3-2 3-9" />
+                            <path d="M10 21a2 2 0 004 0" />
+                        </svg>
+                        @if($notifCount > 0)
+                        <span class="absolute rounded-full" style="top: 8px; right: 8px; width: 6px; height: 6px; background-color: #DF1C41; border: 1.5px solid #ffffff;"></span>
+                        @endif
+                    </div>
+
+                    {{-- Separator --}}
+                    <div style="width: 1px; height: 24px; background-color: #DFE1E7;"></div>
+
+                    {{-- User Profile --}}
+                    <div class="flex items-center" style="gap: 10px;">
+                        <div class="flex items-center justify-center text-white font-bold flex-shrink-0 overflow-hidden"
+                             style="width: 36px; height: 36px; border-radius: 50%; background-color: #293C79; font-size: 13px;">
+                            @if($user->avatar_url)
+                            <img src="{{ $user->avatar_url }}" alt="{{ $name }}" class="w-full h-full object-cover">
+                            @else
+                            {{ $initials }}
+                            @endif
+                        </div>
+                        <div class="hidden sm:block">
+                            <div class="font-semibold leading-tight tracking-tight" style="font-size: 13px; color: #0D0D12;">{{ $user->name }}</div>
+                            <div style="font-size: 11px; color: #A4ABB8; margin-top: 2px;">
+                                @if($isAdmin) Super Admin
+                                @elseif($isDosen) Dosen
+                                @elseif($isKoor) Koordinator
+                                @elseif($isAsprak) Asisten Praktikum
+                                @elseif($isMhs) Mahasiswa
+                                @else User
+                                @endif
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -622,29 +681,83 @@
         {{-- Content Box (SITKOM box/wrap pattern) --}}
         <div class="mp-wrap">
             <div class="mp-box">
-
-                {{-- Flash alerts --}}
-                @if(session('success'))
-                <div class="mp-flash mp-flash-success">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
-                    {{ session('success') }}
+                @if(isset($header))
+                <div class="bg-white border-b border-[var(--c-border)] flex-shrink-0 w-full" style="padding:16px 24px;">
+                    {{ $header }}
                 </div>
                 @endif
-                @if(session('error'))
-                <div class="mp-flash mp-flash-error">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-                    {{ session('error') }}
-                </div>
-                @endif
-
-                {{-- Scrollable page body --}}
                 <div class="mp-box-body">
+                    {{-- Flash alerts --}}
+                    @if(session('success'))
+                    <div class="mp-flash mp-flash-success mb-4" style="border-radius:12px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg>
+                        {{ session('success') }}
+                    </div>
+                    @endif
+                    @if(session('error'))
+                    <div class="mp-flash mp-flash-error mb-4" style="border-radius:12px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        {{ session('error') }}
+                    </div>
+                    @endif
+                    @if(isset($praktikum) && $praktikum && !$praktikum->is_active && !str_contains(request()->route()?->getName() ?? '', 'manprak.admin'))
+                    <div class="mp-flash mb-4 flex items-start gap-2" style="border-radius:12px; background-color:#FFFBEB; border:1px solid #FDE68A; color:#92400E; padding:12px 16px;">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" class="mt-0.5 flex-shrink-0"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+                        <div class="text-[13px]">
+                            <strong>Praktikum Selesai (Arsip):</strong> Anda berada dalam mode <em>read-only</em>. Data historis masih dapat dilihat, tetapi tidak dapat diubah (CUD).
+                        </div>
+                    </div>
+                    @endif
+
                     {{ $slot }}
                 </div>
-
             </div>
         </div>
     </div>
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/nprogress/0.2.0/nprogress.min.js"></script>
+<script>
+    // NProgress configuration
+    NProgress.configure({ 
+        showSpinner: false, 
+        minimum: 0.1,
+        speed: 200,          // Animation speed (ms)
+        trickleSpeed: 100    // How often to trickle (ms)
+    });
+
+    // Start NProgress immediately as the page is parsing
+    NProgress.start();
+
+    // Finish NProgress when the page finishes loading
+    window.addEventListener('load', () => {
+        NProgress.done();
+    });
+
+    // Intercept clicks on links to show NProgress
+    document.addEventListener('click', function(e) {
+        const link = e.target.closest('a');
+        if (link && link.href && !link.href.includes('javascript:') && !link.href.startsWith('#') && link.target !== '_blank') {
+            // Check if it's the same page anchor
+            const url = new URL(link.href, window.location.href);
+            if (url.pathname === window.location.pathname && url.hash) {
+                return; // Same page anchor, don't show loading
+            }
+            NProgress.start();
+        }
+    });
+
+    // Intercept form submissions
+    document.addEventListener('submit', function() {
+        NProgress.start();
+    });
+
+    // Handle back/forward cache (bfcache)
+    window.addEventListener('pageshow', function(e) {
+        if (e.persisted) {
+            NProgress.done();
+        }
+    });
+</script>
 </body>
 </html>

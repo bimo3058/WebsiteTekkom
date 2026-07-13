@@ -59,6 +59,7 @@
 <div class="grid grid-cols-[360px_1fr] gap-[14px] flex-1 min-h-0">
     <div class="flex flex-col gap-[14px]">
         {{-- Edit Form --}}
+        @if($modul->praktikum?->is_active)
         <div class="mp-card flex-shrink-0" style="padding:20px;">
             <div style="font-weight:700;font-size:14px;color:#0D0D12;margin-bottom:16px;">Edit Modul</div>
             <form method="POST" action="{{ route('eoffice.manprak.koor.modul.update', $modul->id) }}" class="flex flex-col gap-3">
@@ -82,6 +83,7 @@
                 <button class="mp-btn primary md w-full">Simpan Perubahan</button>
             </form>
         </div>
+        @endif
 
         {{-- Asisten Praktikum Modul --}}
         <div class="mp-card flex-shrink-0">

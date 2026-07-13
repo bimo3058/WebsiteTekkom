@@ -11,6 +11,7 @@ use Modules\EOffice\Models\Modul;
 use Modules\EOffice\Models\PendaftaranAsprak;
 use Modules\EOffice\Models\PendaftaranKoordinator;
 use Modules\EOffice\Models\Praktikum;
+use Modules\EOffice\Models\PeriodePendaftaran;
 
 class DashboardController extends Controller
 {
@@ -35,9 +36,13 @@ class DashboardController extends Controller
             $query->where('status', 'aktif');
         })->count();
 
-        // Pendaftaran pending
-        $totalAsprakPending = PendaftaranAsprak::where('status', 'pending')->count();
-        $totalKoorPending   = PendaftaranKoordinator::where('status', 'pending')->count();
+        // Pendaftaran pending yang siap dieksekusi Admin
+        $totalAsprakPending = PendaftaranAsprak::where('status', 'pending')
+                                ->where('status_koor', 'disetujui')
+                                ->count();
+        $totalKoorPending   = PendaftaranKoordinator::where('status', 'pending')
+                                ->where('status_dosen', 'disetujui')
+                                ->count();
         $pendingTindakan    = $totalAsprakPending + $totalKoorPending;
 
         // Modul, Dosen, Mahasiswa
@@ -49,22 +54,37 @@ class DashboardController extends Controller
 
         $praktikums = Praktikum::with(['dosens', 'koordinator'])
             ->withCount('daftarPraktikan')
+            ->where('status', 'aktif')
             ->orderByDesc('created_at')
             ->limit(5)
             ->get();
 
-        // ── Daftar dosen terbaru ────────────────────────────────────────────────
+        $searchDosen = $request->input('search_dosen');
+        $perPage = $request->input('per_page', 5);
 
-        $dosenTerbaru = Lecturer::with('user')
-            ->orderByDesc('created_at')
-            ->limit(5)
-            ->get()
-            ->map(fn($l) => [
-                'name'            => $l->user?->name ?? '—',
-                'email'           => $l->user?->email ?? '—',
-                'employee_number' => $l->employee_number,
-                'jumlah_praktikum'=> Praktikum::whereHas('dosens', fn($q) => $q->where('users.id', $l->user_id))->count(),
-            ]);
+        $dosenQuery = Lecturer::with('user');
+
+        if ($searchDosen) {
+            $dosenQuery->where(function($q) use ($searchDosen) {
+                $q->whereHas('user', function($qu) use ($searchDosen) {
+                    $qu->where('name', 'like', "%{$searchDosen}%")
+                       ->orWhere('email', 'like', "%{$searchDosen}%");
+                })->orWhere('employee_number', 'like', "%{$searchDosen}%");
+            });
+        }
+
+        $dosenPaginate = $dosenQuery->orderByDesc('created_at')->paginate($perPage)->withQueryString()->fragment('daftar-dosen');
+        
+        $dosenTerbaru = collect($dosenPaginate->items())->map(fn($l) => [
+            'name'            => $l->user?->name ?? '—',
+            'email'           => $l->user?->email ?? '—',
+            'employee_number' => $l->employee_number,
+            'avatar_url'      => $l->user?->avatar_url,
+            'jumlah_praktikum'=> Praktikum::whereHas('dosens', fn($q) => $q->where('users.id', $l->user_id))->count(),
+        ]);
+        
+        // Simpan paginatornya untuk view
+        $dosenPaginator = $dosenPaginate;
 
         // ── Daftar mahasiswa terbaru ─────────────────────────────────────────────
 
@@ -81,19 +101,19 @@ class DashboardController extends Controller
                 'jumlah_praktikum' => \DB::table('daftar_praktikan')->where('user_id', $s->user_id)->count(),
             ]);
 
-        // ── Pendaftaran asprak terbaru yang perlu di-approve ────────────────────
+        // ── Periode Pendaftaran yang sedang buka ────────────────────
 
-        $pendaftaranTerbaru = PendaftaranAsprak::with(['user', 'praktikum'])
-            ->where('status', 'pending')
-            ->orderByDesc('created_at')
-            ->limit(5)
-            ->get();
-
-        // ── Pendaftaran koor terbaru yang perlu di-approve ────────────────────
-
-        $pendaftaranKoorTerbaru = PendaftaranKoordinator::with(['user', 'praktikum'])
-            ->where('status', 'pending')
-            ->orderByDesc('created_at')
+        $now = now();
+        $periodeBuka = PeriodePendaftaran::with('praktikum')
+            ->where('is_aktif', true)
+            ->whereIn('jenis', ['koor', 'asprak'])
+            ->where(function($q) use ($now) {
+                $q->whereNull('dibuka_pada')->orWhere('dibuka_pada', '<=', $now);
+            })
+            ->where(function($q) use ($now) {
+                $q->whereNull('ditutup_pada')->orWhere('ditutup_pada', '>=', $now);
+            })
+            ->orderBy('ditutup_pada', 'asc')
             ->limit(5)
             ->get();
 
@@ -120,13 +140,13 @@ class DashboardController extends Controller
             'totalModul',
             'totalDosen',
             'totalMahasiswa',
-            'pendingTindakan',
             'praktikums',
             'dosenTerbaru',
+            'dosenPaginator',
             'mahasiswaTerbaru',
-            'pendaftaranTerbaru',
-            'pendaftaranKoorTerbaru',
-            'recentActivities'
+            'periodeBuka',
+            'recentActivities',
+            'pendingTindakan'
         ));
     }
 }

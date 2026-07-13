@@ -11,15 +11,24 @@
     </div>
     <div class="mp-page-actions">
         <form method="GET" class="flex gap-2 items-center">
-            <select name="praktikum_id" onchange="this.form.submit()" class="mp-input mp-select" style="min-width:220px;">
-                @foreach($praktikumList as $prak)
-                <option value="{{ $prak->id }}" {{ ($prak->id == $praktikum?->id) ? 'selected' : '' }}>
-                    {{ $prak->nama }}
-                    @if($prak->kode) ({{ $prak->kode }}) @endif
-                    · {{ $prak->semester }} {{ $prak->tahun_ajaran }}
-                </option>
-                @endforeach
-            </select>
+            @php
+                $praktikumOptions = [];
+                if(isset($praktikumList)) {
+                    foreach($praktikumList as $p) {
+                        $label = $p->nama;
+                        $label .= " · {$p->semester} {$p->tahun_ajaran}";
+                        $praktikumOptions[] = ['value' => (string)$p->id, 'label' => $label];
+                    }
+                }
+            @endphp
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="praktikum_id"
+                :options="$praktikumOptions"
+                :selected="(string)request('praktikum_id', (isset($praktikum) ? $praktikum?->id : (isset($praktikumId) ? $praktikumId : '')))"
+                placeholder="Pilih Praktikum..."
+                onChange="$event.target.form.submit()"
+                minWidth="240px"
+            />
         </form>
     </div>
 </div>
@@ -32,9 +41,6 @@
     </svg>
     <div style="flex:1;min-width:0;">
         <span style="font-size:13px;font-weight:600;color:var(--c-fg,#0D0D12);">{{ $praktikum->nama }}</span>
-        @if($praktikum->kode)
-        <span style="font-size:11px;font-family:monospace;color:#0B266E;background:rgba(11,38,110,0.08);padding:1px 6px;border-radius:4px;margin-left:6px;">{{ $praktikum->kode }}</span>
-        @endif
         <span style="font-size:12px;color:#666D80;margin-left:8px;">· {{ $praktikum->semester }} {{ $praktikum->tahun_ajaran }}</span>
     </div>
     <div class="flex items-center gap-2 flex-shrink-0">

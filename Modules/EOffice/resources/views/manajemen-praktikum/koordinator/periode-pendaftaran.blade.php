@@ -40,16 +40,24 @@
             <label style="display:block;font-size:12px;font-weight:600;color:#353849;margin-bottom:4px;">
                 Pilih Praktikum <span style="color:#DF1C41;">*</span>
             </label>
-            <select name="praktikum_id" onchange="document.getElementById('form-praktikum').submit()"
-                    class="mp-input mp-select w-full">
-                @foreach($praktikumList as $p)
-                <option value="{{ $p->id }}" {{ $praktikumId == $p->id ? 'selected' : '' }}>
-                    {{ $p->nama }}
-                    @if($p->matkul) — [{{ $p->matkul->kode }}] {{ $p->matkul->nama }} @endif
-                    · Sem {{ $p->semester }} {{ $p->tahun_ajaran }}
-                </option>
-                @endforeach
-            </select>
+            @php
+                $praktikumOptions = [];
+                if(isset($praktikumList)) {
+                    foreach($praktikumList as $p) {
+                        $label = $p->nama;
+                        $label .= " · {$p->semester} {$p->tahun_ajaran}";
+                        $praktikumOptions[] = ['value' => (string)$p->id, 'label' => $label];
+                    }
+                }
+            @endphp
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="praktikum_id"
+                :options="$praktikumOptions"
+                :selected="(string)request('praktikum_id', (isset($praktikum) ? $praktikum?->id : (isset($praktikumId) ? $praktikumId : '')))"
+                placeholder="Pilih Praktikum..."
+                onChange="$event.target.form.submit()"
+                minWidth="240px"
+            />
         </form>
 
         @if($praktikumDipilih)
@@ -69,6 +77,7 @@
 
 @if($praktikumDipilih)
 
+@if($praktikumDipilih->is_active)
 {{-- ── BUKA PERIODE BARU ────────────────────────────────────────────────────── --}}
 <div class="sec-head" style="margin-top:24px;">
     <span class="sec-bar"></span>
@@ -150,6 +159,7 @@
         </form>
     </div>
 </div>
+@endif
 
 {{-- ── RIWAYAT PERIODE ─────────────────────────────────────────────────────── --}}
 @if($periodeList->isNotEmpty())
@@ -198,18 +208,22 @@
                     </td>
                     <td>
                         <div style="display:flex;gap:6px;flex-wrap:wrap;">
-                            @if($p->is_aktif)
-                            <form method="POST" action="{{ route('eoffice.manprak.koordinator.periode-pendaftaran.tutup', $p->id) }}"
-                                  onsubmit="return confirm('Tutup periode ini?')">
-                                @csrf
-                                <button type="submit" class="mp-btn error xs">Tutup</button>
-                            </form>
+                            @if($praktikumDipilih->is_active)
+                                @if($p->is_aktif)
+                                <form method="POST" action="{{ route('eoffice.manprak.koordinator.periode-pendaftaran.tutup', $p->id) }}"
+                                      onsubmit="return confirm('Tutup periode ini?')">
+                                    @csrf
+                                    <button type="submit" class="mp-btn error xs">Tutup</button>
+                                </form>
+                                @endif
+                                <form method="POST" action="{{ route('eoffice.manprak.koordinator.periode-pendaftaran.destroy', $p->id) }}"
+                                      onsubmit="return confirm('Hapus periode ini?')">
+                                    @csrf @method('DELETE')
+                                    <button type="submit" class="mp-btn neutral xs">Hapus</button>
+                                </form>
+                            @else
+                                <span class="mp-badge neutral sm">Read-only</span>
                             @endif
-                            <form method="POST" action="{{ route('eoffice.manprak.koordinator.periode-pendaftaran.destroy', $p->id) }}"
-                                  onsubmit="return confirm('Hapus periode ini?')">
-                                @csrf @method('DELETE')
-                                <button type="submit" class="mp-btn neutral xs">Hapus</button>
-                            </form>
                         </div>
                     </td>
                 </tr>

@@ -10,10 +10,12 @@
         <p class="mp-page-sub">Buat dan kelola pengumuman untuk praktikan · {{ now()->locale('id')->isoFormat('dddd, D MMMM YYYY') }}</p>
     </div>
     <div class="mp-page-actions">
+        @if($praktikum->is_active)
         <button onclick="document.getElementById('modalCreate').classList.remove('hidden')" class="mp-btn primary md">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
             Buat Pengumuman
         </button>
+        @endif
     </div>
 </div>
 
@@ -43,11 +45,13 @@
                 <div style="font-size:13px;color:#353849;margin-top:8px;line-height:1.6;">{{ $p->konten }}</div>
             </div>
             <div class="flex gap-2 flex-shrink-0">
+                @if($praktikum->is_active)
                 <form method="POST" action="{{ route('eoffice.manprak.koor.pengumuman.destroy', $p->id) }}"
                       onsubmit="return confirm('Hapus pengumuman ini?')">
                     @csrf @method('DELETE')
                     <button type="submit" class="mp-btn destructive sm">Hapus</button>
                 </form>
+                @endif
             </div>
         </div>
     </div>

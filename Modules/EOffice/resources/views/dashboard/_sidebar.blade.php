@@ -28,8 +28,7 @@
                 ['href' => route('eoffice.manprak.admin.dosen.index'),                  'label' => 'Daftar Dosen',       'match' => 'admin.dosen'],
                 ['href' => route('eoffice.manprak.admin.asprak.index'),                 'label' => 'Asisten Praktikum',  'match' => 'admin.asprak'],
                 ['href' => route('eoffice.manprak.admin.daftar-praktikan.index'),       'label' => 'Daftar Praktikan',   'match' => 'daftar-praktikan'],
-                ['href' => route('eoffice.manprak.admin.periode-pendaftaran.index'),    'label' => 'Periode Pendaftaran','match' => 'periode-pendaftaran'],
-                ['href' => route('eoffice.manprak.admin.pendaftaran-koor.index'),       'label' => 'Pendaftaran Koor',   'match' => 'pendaftaran-koor'],
+                ['href' => route('eoffice.manprak.admin.pendaftaran-koor.index'),       'label' => 'Pendaftaran',   'match' => 'pendaftaran-koor'],
             ],
         ];
     }

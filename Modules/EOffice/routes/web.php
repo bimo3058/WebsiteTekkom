@@ -19,7 +19,7 @@ use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PendaftaranKoorCon
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\KelolRoleController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PraktikumController;
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\MatkulPraktikumController;
-use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PeriodePendaftaranController;
+
 use Modules\EOffice\Http\Controllers\ManajemenPraktikum\Admin\PraktikumDetailController;
 
 
@@ -88,6 +88,10 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 // CRUD Praktikum
                 Route::resource('praktikum', PraktikumController::class)
                     ->names('praktikum');
+                Route::patch('praktikum/{id}/toggle-active', [PraktikumController::class, 'toggleActive'])
+                    ->name('praktikum.toggle-active');
+                Route::post('praktikum/bulk-toggle-active', [PraktikumController::class, 'bulkToggleActive'])
+                    ->name('praktikum.bulk-toggle-active');
                 Route::put('praktikum/{id}/assign-koor', [PraktikumController::class, 'assignKoor'])
                     ->name('praktikum.assign-koor');
 
@@ -134,21 +138,7 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                 Route::delete('matkul-praktikum/{id}', [MatkulPraktikumController::class, 'destroy'])
                     ->name('matkul-praktikum.destroy');
 
-                // Periode Pendaftaran (koor & asprak)
-                Route::get('periode-pendaftaran', [PeriodePendaftaranController::class, 'index'])
-                    ->name('periode-pendaftaran.index');
-                Route::post('periode-pendaftaran', [PeriodePendaftaranController::class, 'store'])
-                    ->name('periode-pendaftaran.store');
-                Route::get('periode-pendaftaran/{id}/edit', [PeriodePendaftaranController::class, 'edit'])
-                    ->name('periode-pendaftaran.edit');
-                Route::put('periode-pendaftaran/{id}', [PeriodePendaftaranController::class, 'update'])
-                    ->name('periode-pendaftaran.update');
-                Route::post('periode-pendaftaran/assign-matkul', [PeriodePendaftaranController::class, 'assignMatkul'])
-                    ->name('periode-pendaftaran.assign-matkul');
-                Route::post('periode-pendaftaran/{id}/tutup', [PeriodePendaftaranController::class, 'tutup'])
-                    ->name('periode-pendaftaran.tutup');
-                Route::delete('periode-pendaftaran/{id}', [PeriodePendaftaranController::class, 'destroy'])
-                    ->name('periode-pendaftaran.destroy');
+
 
 
 
@@ -159,6 +149,10 @@ Route::middleware(['auth', 'module.active:eoffice'])->group(function () {
                     ->name('kelola-role.assign');
                 Route::delete('kelola-role/{id}', [KelolRoleController::class, 'revokeRole'])
                     ->name('kelola-role.revoke');
+                Route::post('kelola-role/revoke-all/{praktikumId}', [KelolRoleController::class, 'revokeAll'])
+                    ->name('kelola-role.revokeAll');
+                Route::post('kelola-role/restore/{id}', [KelolRoleController::class, 'restoreRole'])
+                    ->name('kelola-role.restore');
             });
 
         // ── DOSEN ────────────────────────────────────────────────────────────

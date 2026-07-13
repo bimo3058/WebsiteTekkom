@@ -488,7 +488,7 @@ class DashboardController extends Controller
             ->orderBy('created_at', 'asc')
             ->get();
             
-        if ($request->method === 'acak') {
+        if ($request->input('method') === 'acak') {
             $praktikans = $praktikans->shuffle()->values();
         } else {
             $praktikans = $praktikans->values();
@@ -559,7 +559,7 @@ class DashboardController extends Controller
             return back()->with('error', 'Belum ada praktikan terdaftar.');
         }
 
-        if ($request->method === 'acak') {
+        if ($request->input('method') === 'acak') {
             $praktikans = $praktikans->shuffle()->values();
         } else {
             $praktikans = $praktikans->values();

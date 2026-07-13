@@ -30,16 +30,24 @@
                         stroke-linecap="round" style="flex-shrink:0;">
                         <path d="M2 3h6a4 4 0 014 4v14a3 3 0 00-3-3H2zM22 3h-6a4 4 0 00-4 4v14a3 3 0 013-3h7z" />
                     </svg>
-                    <select name="praktikum_id" class="mp-input mp-select" style="max-width:360px;"
-                        onchange="this.form.submit()">
-                        @foreach($praktikumList as $p)
-                            <option value="{{ $p->id }}" {{ ($praktikum?->id == $p->id) ? 'selected' : '' }}>
-                                {{ $p->nama }}
-                                @if($p->kode) [{{ $p->kode }}] @endif
-                                · {{ $p->semester }} {{ $p->tahun_ajaran }}
-                            </option>
-                        @endforeach
-                    </select>
+                    @php
+                $praktikumOptions = [];
+                if(isset($praktikumList)) {
+                    foreach($praktikumList as $p) {
+                        $label = $p->nama;
+                        $label .= " · {$p->semester} {$p->tahun_ajaran}";
+                        $praktikumOptions[] = ['value' => (string)$p->id, 'label' => $label];
+                    }
+                }
+            @endphp
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="praktikum_id"
+                :options="$praktikumOptions"
+                :selected="(string)request('praktikum_id', (isset($praktikum) ? $praktikum?->id : (isset($praktikumId) ? $praktikumId : '')))"
+                placeholder="Pilih Praktikum..."
+                onChange="$event.target.form.submit()"
+                minWidth="240px"
+            />
                     @if($praktikum)
                         <span class="mp-badge warning sm"><span
                                 class="dot"></span>{{ $pengumumans instanceof \Illuminate\Pagination\LengthAwarePaginator ? $pengumumans->total() : $pengumumans->count() }}

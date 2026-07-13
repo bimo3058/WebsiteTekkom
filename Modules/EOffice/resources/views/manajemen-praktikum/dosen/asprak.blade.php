@@ -24,16 +24,24 @@
         <div class="mp-alert warning">Anda belum mengampu praktikum aktif manapun.</div>
         @else
         <form method="GET" class="flex gap-2 flex-wrap">
-            <select name="praktikum_id" class="mp-input mp-select" style="max-width:320px;"
-                    onchange="this.form.submit()">
-                @foreach($praktikumList as $p)
-                <option value="{{ $p->id }}" {{ ($praktikum?->id == $p->id) ? 'selected' : '' }}>
-                    {{ $p->nama }}
-
-                    · {{ $p->semester }} {{ $p->tahun_ajaran }}
-                </option>
-                @endforeach
-            </select>
+            @php
+                $praktikumOptions = [];
+                if(isset($praktikumList)) {
+                    foreach($praktikumList as $p) {
+                        $label = $p->nama;
+                        $label .= " · {$p->semester} {$p->tahun_ajaran}";
+                        $praktikumOptions[] = ['value' => (string)$p->id, 'label' => $label];
+                    }
+                }
+            @endphp
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="praktikum_id"
+                :options="$praktikumOptions"
+                :selected="(string)request('praktikum_id', (isset($praktikum) ? $praktikum?->id : (isset($praktikumId) ? $praktikumId : '')))"
+                placeholder="Pilih Praktikum..."
+                onChange="$event.target.form.submit()"
+                minWidth="240px"
+            />
         </form>
         @endif
     </div>

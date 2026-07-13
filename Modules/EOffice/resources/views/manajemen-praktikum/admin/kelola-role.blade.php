@@ -13,15 +13,24 @@
     </div>
     <div class="mp-page-actions">
         <form method="GET" class="flex gap-2 items-center">
-            <select name="praktikum_id" onchange="this.form.submit()" class="mp-input mp-select" style="min-width:240px;">
-                @foreach($praktikumList as $prak)
-                <option value="{{ $prak->id }}" {{ $prak->id == $praktikumId ? 'selected' : '' }}>
-                    {{ $prak->nama }}
-                    @if($prak->kode) [{{ $prak->kode }}] @endif
-                    · {{ $prak->semester }} {{ $prak->tahun_ajaran }}
-                </option>
-                @endforeach
-            </select>
+            @php
+                $praktikumOptions = [];
+                foreach($praktikumList as $prak) {
+                    $label = $prak->nama;
+                    $label .= " · {$prak->semester} {$prak->tahun_ajaran}";
+                    $praktikumOptions[] = ['value' => (string)$prak->id, 'label' => $label];
+                }
+            @endphp
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="praktikum_id"
+                :options="$praktikumOptions"
+                :selected="(string)$praktikumId"
+                placeholder="Pilih Praktikum..."
+                onChange="$event.target.form.submit()"
+                minWidth="240px"
+                searchable="true"
+                searchPlaceholder="Cari Praktikum..."
+            />
         </form>
     </div>
 </div>
@@ -52,7 +61,12 @@
 @if($praktikum)
 <div style="background:#fff;border:1px solid #DFE1E7;border-radius:11px;padding:12px 16px;display:flex;align-items:center;gap:16px;flex-shrink:0;box-shadow:0 1px 2px rgba(0,0,0,.04);">
     <div style="flex:1;min-width:0;">
-        <div style="font-size:13px;font-weight:700;color:#0D0D12;">{{ $praktikum->nama }}</div>
+        <div style="font-size:13px;font-weight:700;color:#0D0D12;">
+            {{ $praktikum->nama }}
+            @if(!$praktikum->is_active)
+            <span class="mp-badge warning sm" style="margin-left:8px;"><span class="dot"></span>Non-Aktif</span>
+            @endif
+        </div>
         <div style="font-size:11px;color:#A4ABB8;margin-top:1px;">{{ $praktikum->semester }} {{ $praktikum->tahun_ajaran }}</div>
     </div>
     <div style="display:flex;gap:16px;flex-shrink:0;">
@@ -78,6 +92,7 @@
 </div>
 @endif
 
+@if($praktikum)
 {{-- Main layout: tabel kiri + form assign kanan --}}
 <div style="display:flex;gap:14px;flex:1;min-height:0;">
 
@@ -96,9 +111,19 @@
                     {{ $asprakCount }} asisten praktikum · {{ $koorCount }} koordinator
                 </div>
             </div>
-            <div style="display:flex;gap:6px;">
-                <span class="mp-badge success sm"><span class="dot"></span>{{ $asprakCount }} Asisten Praktikum</span>
-                <span class="mp-badge navy sm"><span class="dot"></span>{{ $koorCount }} Koordinator</span>
+            <div style="display:flex;gap:6px;align-items:center;">
+                <span class="mp-badge success sm" style="height:fit-content;"><span class="dot"></span>{{ $asprakCount }} Asisten Praktikum</span>
+                <span class="mp-badge navy sm" style="height:fit-content;"><span class="dot"></span>{{ $koorCount }} Koordinator</span>
+                @if($asprakCount > 0 || $koorCount > 0)
+                <div style="width:1px;height:24px;background:#DFE1E7;margin:0 4px;"></div>
+                <form method="POST" action="{{ route('eoffice.manprak.admin.kelola-role.revokeAll', $praktikum->id) }}" onsubmit="return confirm('PENTING: Anda akan mencabut SELURUH role Asisten Praktikum dan Koordinator pada praktikum ini.\n\nPraktikum ini akan otomatis dinonaktifkan (mode read-only) setelah proses selesai.\nLanjutkan?')">
+                    @csrf
+                    <button type="submit" class="mp-btn destructive md" style="height:30px;font-size:12px;padding:0 12px;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-right:4px;"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                        Cabut Semua Role
+                    </button>
+                </form>
+                @endif
             </div>
         </div>
 
@@ -140,22 +165,43 @@
                                 @else
                                 <span class="mp-badge success sm"><span class="dot"></span>Asisten Praktikum</span>
                                 @endif
+                                @if($a->trashed())
+                                    <span class="mp-badge error sm" style="margin-top:4px;"><span class="dot"></span>Dicabut</span>
+                                @endif
                             </td>
                             <td style="padding:13px 16px;text-align:center;font-size:11px;color:#A4ABB8;white-space:nowrap;">
                                 {{ $a->created_at?->locale('id')->isoFormat('D MMM YY') ?? '—' }}
                             </td>
                             <td style="padding:13px 16px;text-align:center;">
+                                @if($a->trashed())
+                                <form method="POST"
+                                      action="{{ route('eoffice.manprak.admin.kelola-role.restore', $a->id) }}"
+                                      onsubmit="return confirm('Kembalikan role {{ $a->role }} untuk {{ addslashes($a->user?->name ?? '') }}?')"
+                                      style="display:inline;">
+                                    @csrf
+                                    <button type="submit"
+                                            class="mp-btn"
+                                            style="font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;border:1px solid #D1FAE5;background:#ECFDF5;color:#059669;cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:4px;white-space:nowrap;"
+                                            onmouseover="this.style.background='#D1FAE5'" onmouseout="this.style.background='#ECFDF5'">
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                                        Kembalikan Role
+                                    </button>
+                                </form>
+                                @else
                                 <form method="POST"
                                       action="{{ route('eoffice.manprak.admin.kelola-role.revoke', $a->id) }}"
                                       onsubmit="return confirm('Cabut role {{ $a->role }} dari {{ addslashes($a->user?->name ?? '') }}?\n\nJika user tidak terdaftar di praktikum lain, role Spatie akan ikut dicabut.')"
                                       style="display:inline;">
                                     @csrf @method('DELETE')
                                     <button type="submit"
-                                            style="font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;border:1px solid #FADAE1;background:#FFF5F6;color:#DF1C41;cursor:pointer;transition:all .12s;white-space:nowrap;"
+                                            class="mp-btn"
+                                            style="font-size:11px;font-weight:600;padding:5px 10px;border-radius:6px;border:1px solid #FADAE1;background:#FFF5F6;color:#DF1C41;cursor:pointer;transition:all .12s;display:flex;align-items:center;gap:4px;white-space:nowrap;"
                                             onmouseover="this.style.background='#FADAE1'" onmouseout="this.style.background='#FFF5F6'">
-                                        Cabut
+                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+                                        Cabut Role
                                     </button>
                                 </form>
+                                @endif
                             </td>
                         </tr>
                         @empty
@@ -163,7 +209,7 @@
                             <td colspan="5" style="padding:56px;text-align:center;">
                                 <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#DFE1E7" stroke-width="1.5" stroke-linecap="round" style="margin:0 auto 10px;display:block;"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2M9 11a4 4 0 100-8 4 4 0 000 8M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
                                 <div style="font-size:13px;font-weight:600;color:#666D80;">Belum ada asisten praktikum atau koordinator di praktikum ini.</div>
-                                <div style="font-size:12px;color:#A4ABB8;margin-top:4px;">Gunakan form Assign Role di sebelah kanan untuk menambahkan.</div>
+                                <div style="font-size:12px;color:#A4ABB8;margin-top:4px;">Asisten dan Koordinator yang diterima pada menu Pendaftaran akan muncul di sini.</div>
                             </td>
                         </tr>
                         @endforelse
@@ -174,152 +220,8 @@
 
     </div>
     {{-- /Tabel --}}
-
-    {{-- ══ SIDEBAR: ASSIGN ROLE ═══════════════════════════════════════════ --}}
-    <div style="width:272px;flex-shrink:0;display:flex;flex-direction:column;gap:12px;">
-
-        {{-- Form Assign --}}
-        <div style="background:#fff;border:1px solid #DFE1E7;border-radius:13px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,.04);">
-            <div style="padding:12px 16px;border-bottom:1px solid #F3F4F6;background:#FAFAFA;">
-                <div style="font-size:12px;font-weight:700;color:#0D0D12;text-transform:uppercase;letter-spacing:.06em;">Assign Role Baru</div>
-            </div>
-            <form method="POST" action="{{ route('eoffice.manprak.admin.kelola-role.assign') }}"
-                  style="padding:16px;display:flex;flex-direction:column;gap:14px;">
-                @csrf
-                <input type="hidden" name="praktikum_id" value="{{ $praktikumId }}">
-
-                {{-- Pilih User --}}
-                <div>
-                    <label style="display:block;font-size:11px;font-weight:600;color:#666D80;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;">Pilih User</label>
-                    <div x-data="{
-                        open: false,
-                        search: '',
-                        selected: '{{ old('user_id') }}',
-                        options: {{ json_encode($users->map(fn($u) => ['id' => $u->id, 'name' => $u->name])) }},
-                        get filteredOptions() {
-                            if (this.search === '') return this.options.slice(0, 50);
-                            const lowerSearch = this.search.toLowerCase();
-                            return this.options.filter(o => o.name.toLowerCase().includes(lowerSearch)).slice(0, 50);
-                        },
-                        selectOption(opt) {
-                            this.selected = opt.id;
-                            this.search = opt.name;
-                            this.open = false;
-                        },
-                        init() {
-                            if (this.selected) {
-                                const opt = this.options.find(o => o.id == this.selected);
-                                if (opt) this.search = opt.name;
-                            }
-                        }
-                    }" class="relative">
-                        <input type="hidden" name="user_id" :value="selected">
-                        <div class="relative">
-                            <input type="text" x-model="search" @focus="open = true" @click.away="open = false"
-                                   placeholder="Ketik nama mahasiswa..." class="mp-input" autocomplete="off"
-                                   @input="selected = ''" style="width:100%; padding-right: 30px;">
-                            <svg class="absolute right-3 top-1/2 transform -translate-y-1/2 text-[#A4ABB8] pointer-events-none" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="margin-top:-7px;"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                        </div>
-                        
-                        <div x-show="open" style="display:none; position:absolute; z-index:50; width:100%; background:#fff; border:1px solid #DFE1E7; border-radius:6px; margin-top:4px; max-height:192px; overflow-y:auto; box-shadow:0 4px 12px rgba(0,0,0,0.1);">
-                            <template x-for="opt in filteredOptions" :key="opt.id">
-                                <div @click="selectOption(opt)"
-                                     style="padding:8px 12px; cursor:pointer; font-size:12px; color:#0D0D12; border-bottom:1px solid #F3F4F6;"
-                                     onmouseover="this.style.background='#F6F8FA'" onmouseout="this.style.background='transparent'"
-                                     x-text="opt.name">
-                                </div>
-                            </template>
-                            <div x-show="filteredOptions.length === 0" style="padding:12px; text-align:center; font-size:11px; color:#A4ABB8;">
-                                Tidak ada nama yang ditampilkan
-                            </div>
-                        </div>
-                    </div>
-                    @error('user_id')
-                    <div style="font-size:11px;color:#DF1C41;margin-top:4px;">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                {{-- Pilih Role --}}
-                <div>
-                    <label style="display:block;font-size:11px;font-weight:600;color:#666D80;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">Role</label>
-                    <div style="display:flex;gap:8px;">
-                        <label style="flex:1;display:flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid #DFE1E7;border-radius:8px;cursor:pointer;transition:all .15s;"
-                               id="lbl-asprak"
-                               onmouseover="this.style.borderColor='#0B266E'" onmouseout="if(!document.getElementById('r-asprak').checked)this.style.borderColor='#DFE1E7'">
-                            <input type="radio" name="role" value="asprak" id="r-asprak"
-                                   {{ old('role','asprak') === 'asprak' ? 'checked' : '' }}
-                                   style="accent-color:#0B266E;"
-                                   onchange="syncRoleLabels()">
-                            <div>
-                                <div style="font-size:12px;font-weight:600;color:#0D0D12;">Asisten Praktikum</div>
-                                <div style="font-size:10px;color:#A4ABB8;">Asisten Praktikum</div>
-                            </div>
-                        </label>
-                        <label style="flex:1;display:flex;align-items:center;gap:7px;padding:9px 12px;border:1px solid #DFE1E7;border-radius:8px;cursor:pointer;transition:all .15s;"
-                               id="lbl-koor"
-                               onmouseover="this.style.borderColor='#0B266E'" onmouseout="if(!document.getElementById('r-koor').checked)this.style.borderColor='#DFE1E7'">
-                            <input type="radio" name="role" value="koor" id="r-koor"
-                                   {{ old('role') === 'koor' ? 'checked' : '' }}
-                                   style="accent-color:#0B266E;"
-                                   onchange="syncRoleLabels()">
-                            <div>
-                                <div style="font-size:12px;font-weight:600;color:#0D0D12;">Koordinator</div>
-                                <div style="font-size:10px;color:#A4ABB8;">Koordinator</div>
-                            </div>
-                        </label>
-                    </div>
-                    @error('role')
-                    <div style="font-size:11px;color:#DF1C41;margin-top:4px;">{{ $message }}</div>
-                    @enderror
-                </div>
-
-                <button type="submit" class="mp-btn primary md" style="width:100%;justify-content:center;">
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                    Assign Role
-                </button>
-            </form>
-        </div>
-
-        {{-- Penjelasan alur cabut role --}}
-        <div style="background:#FFFBF0;border:1px solid #FDE68A;border-radius:13px;padding:14px 16px;">
-            <div style="font-size:11px;font-weight:700;color:#92400E;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;">
-                ⚠️ Catatan Penting
-            </div>
-            <div style="font-size:12px;color:#78350F;line-height:1.6;display:flex;flex-direction:column;gap:6px;">
-                <div style="display:flex;gap:6px;">
-                    <span style="flex-shrink:0;margin-top:1px;">•</span>
-                    <span><strong>Cabut</strong> akan menghapus user dari daftar praktikum ini.</span>
-                </div>
-                <div style="display:flex;gap:6px;">
-                    <span style="flex-shrink:0;margin-top:1px;">•</span>
-                    <span>Jika user tidak terdaftar di praktikum lain, <strong>role Spatie</strong> (<code style="background:#FEF3C7;padding:0 3px;border-radius:3px;font-size:10px;">asisten praktikum</code> / <code style="background:#FEF3C7;padding:0 3px;border-radius:3px;font-size:10px;">koor_prak</code>) ikut dicabut dari sistem.</span>
-                </div>
-                <div style="display:flex;gap:6px;">
-                    <span style="flex-shrink:0;margin-top:1px;">•</span>
-                    <span>Jika masih terdaftar di praktikum lain, role <strong>tidak</strong> dicabut.</span>
-                </div>
-            </div>
-        </div>
-
-    </div>
-    {{-- /Sidebar --}}
-
 </div>
-
 @endif
-
-<script>
-function syncRoleLabels() {
-    const asisten praktikum = document.getElementById('r-asprak');
-    const koordinator   = document.getElementById('r-koor');
-    const lblA   = document.getElementById('lbl-asprak');
-    const lblK   = document.getElementById('lbl-koor');
-    lblA.style.borderColor = asprak.checked ? '#0B266E' : '#DFE1E7';
-    lblA.style.background  = asprak.checked ? 'rgba(11,38,110,0.04)' : '';
-    lblK.style.borderColor = koor.checked   ? '#0B266E' : '#DFE1E7';
-    lblK.style.background  = koor.checked   ? 'rgba(11,38,110,0.04)' : '';
-}
-document.addEventListener('DOMContentLoaded', syncRoleLabels);
-</script>
+@endif
 
 </x-eoffice::manajemen-praktikum.layout>

@@ -35,16 +35,32 @@
     <form method="GET" class="flex gap-2 flex-wrap">
         <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama..."
                class="mp-input" style="width:180px;">
-        <select name="status" class="mp-input mp-select">
-            <option value="">Semua Status</option>
-            <option value="pending"  {{ request('status')=='pending'  ? 'selected' : '' }}>Menunggu</option>
-            <option value="approved" {{ request('status')=='approved' ? 'selected' : '' }}>Diterima</option>
-            <option value="rejected" {{ request('status')=='rejected' ? 'selected' : '' }}>Ditolak</option>
-        </select>
-        <select name="sort" class="mp-input mp-select">
-            <option value="terbaru" {{ request('sort') == 'terbaru' ? 'selected' : '' }}>Terbaru</option>
-            <option value="ipk_tertinggi" {{ request('sort') == 'ipk_tertinggi' ? 'selected' : '' }}>IPK Tertinggi</option>
-        </select>
+        <x-eoffice::manajemen-praktikum.ui.select 
+                name="status"
+                :options="[
+                    ['value' => '', 'label' => 'Semua Status'],
+                    ['value' => 'pending', 'label' => 'Menunggu'],
+                    ['value' => 'approved', 'label' => 'Disetujui'],
+                    ['value' => 'rejected', 'label' => 'Ditolak']
+                ]"
+                :selected="request('status', '')"
+                placeholder="Semua Status"
+                onChange="$event.target.form.submit()"
+                minWidth="160px"
+            />
+        <x-eoffice::manajemen-praktikum.ui.select 
+                name="sort"
+                :options="[
+                    ['value' => 'terbaru', 'label' => 'Terbaru'],
+                    ['value' => 'terlama', 'label' => 'Terlama'],
+                    ['value' => 'nama_asc', 'label' => 'Nama (A-Z)'],
+                    ['value' => 'nama_desc', 'label' => 'Nama (Z-A)']
+                ]"
+                :selected="request('sort', 'terbaru')"
+                placeholder="Urutkan..."
+                onChange="$event.target.form.submit()"
+                minWidth="140px"
+            />
         <button type="submit" class="mp-btn primary sm">Filter</button>
     </form>
 </div>
@@ -116,19 +132,23 @@
                     </td>
                     <td style="padding:12px 16px;">
                         @if($p->status_koor === 'menunggu')
-                        <div class="flex gap-2">
-                            <form method="POST" action="{{ route('eoffice.manprak.koor.pendaftaran-asprak.approve', $p->id) }}">
-                                @csrf
-                                <button type="submit" class="mp-btn primary sm">Terima</button>
-                            </form>
-                            <form method="POST" action="{{ route('eoffice.manprak.koor.pendaftaran-asprak.reject', $p->id) }}" x-data="{ alasan: '' }">
-                                @csrf
-                                <input type="hidden" name="alasan_penolakan" :value="alasan">
-                                <button type="button"
-                                        @click="alasan = prompt('Alasan penolakan:'); if(alasan !== null) $el.closest('form').submit()"
-                                        class="mp-btn destructive sm">Tolak</button>
-                            </form>
-                        </div>
+                            @if(isset($praktikum) && $praktikum->is_active)
+                            <div class="flex gap-2">
+                                <form method="POST" action="{{ route('eoffice.manprak.koor.pendaftaran-asprak.approve', $p->id) }}">
+                                    @csrf
+                                    <button type="submit" class="mp-btn primary sm">Terima</button>
+                                </form>
+                                <form method="POST" action="{{ route('eoffice.manprak.koor.pendaftaran-asprak.reject', $p->id) }}" x-data="{ alasan: '' }">
+                                    @csrf
+                                    <input type="hidden" name="alasan_penolakan" :value="alasan">
+                                    <button type="button"
+                                            @click="alasan = prompt('Alasan penolakan:'); if(alasan !== null) $el.closest('form').submit()"
+                                            class="mp-btn destructive sm">Tolak</button>
+                                </form>
+                            </div>
+                            @else
+                            <span style="font-size:11px;color:#808897;">Menunggu Review</span>
+                            @endif
                         @else
                         <span style="font-size:11px;color:#808897;">Sudah diproses</span>
                         @endif

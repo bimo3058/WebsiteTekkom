@@ -34,14 +34,16 @@ class PraktikumDetailController extends Controller
             );
         }
 
-        $praktikans = $query->paginate(20)->withQueryString();
+        $perPage = $request->input('per_page', 10);
+        $praktikans = $query->paginate($perPage)->withQueryString();
 
-        // ── Daftar Asprak ──────────────────────────────────────────────────
+        $perPageAsprak = $request->input('per_page_asprak', 10);
         $aspraks = AsprakPraktikum::with(['user', 'modulAsprak.modul'])
             ->where('praktikum_id', $id)
             ->where('role', 'asprak')
             ->whereNull('deleted_at')
-            ->get();
+            ->paginate($perPageAsprak, ['*'], 'page_asprak')
+            ->withQueryString();
 
         // ── Total Modul ────────────────────────────────────────────────────
         $totalModul = Modul::where('praktikum_id', $id)->count();

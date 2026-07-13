@@ -104,10 +104,12 @@
 
             {{-- Action buttons --}}
             <div class="flex gap-2 flex-shrink-0">
-                @if(!$sudahKumpul && !$lewatMutlak)
-                <button @click="open = !open" class="mp-btn primary sm">Upload</button>
-                @elseif($statusTugas === 'revisi' && !$lewatMutlak)
-                <button @click="open = !open" class="mp-btn warning sm">Kirim Ulang</button>
+                @if(isset($daftarPraktikan) && $daftarPraktikan?->praktikum?->is_active)
+                    @if(!$sudahKumpul && !$lewatMutlak)
+                    <button @click="open = !open" class="mp-btn primary sm">Upload</button>
+                    @elseif($statusTugas === 'revisi' && !$lewatMutlak)
+                    <button @click="open = !open" class="mp-btn warning sm">Kirim Ulang</button>
+                    @endif
                 @endif
             </div>
         </div>

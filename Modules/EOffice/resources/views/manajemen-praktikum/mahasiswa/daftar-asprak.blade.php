@@ -52,25 +52,24 @@
 <div class="mp-card flex-shrink-0">
     <div style="padding:14px 18px;">
         <form method="GET" class="flex gap-2 flex-wrap">
-            <select name="praktikum_id" class="mp-input mp-select" style="max-width:360px;"
-                    onchange="this.form.submit()">
-                <option value="">-- Pilih Praktikum --</option>
-                @foreach($praktikumDenganPeriode as $p)
-                @php
-                    $pAsprak = $periodeAktif[$p->id]['asprak'] ?? null;
-                    $pKoor = $periodeAktif[$p->id]['koor'] ?? null;
-                    $badge = [];
-                    if($pAsprak) $badge[] = 'Asprak';
-                    if($pKoor) $badge[] = 'Koor';
-                @endphp
-                <option value="{{ $p->id }}" {{ request('praktikum_id') == $p->id ? 'selected' : '' }}>
-                    {{ $p->nama }}
-
-                    {{ $p->semester }} {{ $p->tahun_ajaran }}
-                    {{ count($badge) ? '(' . implode('+', $badge) . ')' : '' }}
-                </option>
-                @endforeach
-            </select>
+            @php
+                $praktikumOptions = [];
+                if(isset($praktikumList)) {
+                    foreach($praktikumList as $p) {
+                        $label = $p->nama;
+                        $label .= " · {$p->semester} {$p->tahun_ajaran}";
+                        $praktikumOptions[] = ['value' => (string)$p->id, 'label' => $label];
+                    }
+                }
+            @endphp
+            <x-eoffice::manajemen-praktikum.ui.select 
+                name="praktikum_id"
+                :options="$praktikumOptions"
+                :selected="(string)request('praktikum_id', (isset($praktikum) ? $praktikum?->id : (isset($praktikumId) ? $praktikumId : '')))"
+                placeholder="Pilih Praktikum..."
+                onChange="$event.target.form.submit()"
+                minWidth="240px"
+            />
         </form>
     </div>
 </div>
