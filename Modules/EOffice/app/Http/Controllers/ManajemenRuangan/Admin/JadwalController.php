@@ -18,12 +18,13 @@ class JadwalController extends Controller
         $routeName = $request->route()->getName();
         $isAkademik = strpos($routeName, 'jadwal-akademik') !== false;
 
-        $tipe = $request->query('tipe', 'rutin');
         $viewMode = $isAkademik ? 'akademik' : 'event';
+        $tipe = $request->query('tipe', $isAkademik ? 'rutin' : 'spesifik');
 
         $search = $request->query('search');
         $filterHari = $request->query('hari');
         $filterRuangan = $request->query('ruangan_id');
+        $filterKategori = $request->query('kategori');
         $sort = $request->query('sort', 'waktu');
 
         $query = MrJadwalInternal::with('ruangan');
@@ -65,6 +66,9 @@ class JadwalController extends Controller
             }
         } else {
             $query->where('kategori', '!=', 'Jadwal Akademik (Kuliah)');
+            if ($filterKategori) {
+                $query->where('kategori', $filterKategori);
+            }
         }
 
         if ($tipe === 'rutin' || $tipe === 'spesifik') {
@@ -75,7 +79,7 @@ class JadwalController extends Controller
         $ruangans = Ruangan::where('is_active', true)->get();
 
         $bladeFile = $isAkademik ? 'index' : 'maintenance';
-        return view('eoffice::manajemen-ruangan.admin.jadwal.' . $bladeFile, compact('jadwals', 'tipe', 'ruangans', 'viewMode', 'search', 'filterHari', 'filterRuangan', 'sort'));
+        return view('eoffice::manajemen-ruangan.admin.jadwal.' . $bladeFile, compact('jadwals', 'tipe', 'ruangans', 'viewMode', 'search', 'filterHari', 'filterRuangan', 'sort', 'filterKategori'));
     }
 
     public function store(Request $request)
