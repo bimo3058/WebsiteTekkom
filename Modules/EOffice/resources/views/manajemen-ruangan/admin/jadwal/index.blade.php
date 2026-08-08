@@ -43,7 +43,7 @@
                                 <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2">
                                 </path>
                             </svg>
-                            Reset Semester
+                            Hapus Semua
                         </button>
                     </form>
 
@@ -66,7 +66,7 @@
                         <line x1="12" y1="5" x2="12" y2="19"></line>
                         <line x1="5" y1="12" x2="19" y2="12"></line>
                     </svg>
-                    Tambah Manual
+                    Tambah
                 </button>
             </div>
         </div> <!-- Close mp-page-header -->
@@ -242,7 +242,7 @@
                             </button>
                         </div>
 
-                        <form action="{{ route('eoffice.peminjaman.admin.jadwal-internal.import-preview') }}"
+                        <form action="{{ route('eoffice.peminjaman.admin.jadwal-akademik.import-preview') }}"
                             method="POST" enctype="multipart/form-data">
                             @csrf
                             <div class="p-4 mb-4 rounded-xl relative overflow-hidden"

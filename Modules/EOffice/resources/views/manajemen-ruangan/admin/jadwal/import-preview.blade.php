@@ -37,7 +37,7 @@
                     ];
                 }
             @endphp
-            <form action="{{ route('eoffice.peminjaman.admin.jadwal-internal.import-execute') }}" method="POST"
+            <form action="{{ route('eoffice.peminjaman.admin.jadwal-akademik.import-execute') }}" method="POST"
                 id="executeImportForm"
                 class="flex items-center gap-3 bg-white p-2 rounded-xl border border-gray-200 shadow-sm">
                 @csrf
