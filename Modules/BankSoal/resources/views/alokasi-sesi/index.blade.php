@@ -180,7 +180,7 @@
                         @endphp
                         <div class="bg-white border border-slate-200 rounded-[12px] overflow-hidden shadow-[0_1px_3px_rgba(0,0,0,0.04)] flex flex-col">
                             <div class="px-5 py-4 border-b border-slate-200 bg-slate-50">
-                                <h3 class="font-bold text-[15px] text-primary mb-0 m-0">
+                                <h3 class="font-bold text-[15px] text-slate-900 mb-0 m-0">
                                     {{ is_numeric($jadwal->nama_sesi) ? 'Sesi ' . $jadwal->nama_sesi : ($jadwal->nama_sesi ?? 'Nama Sesi Kosong') }}: {{ $tanggal }} pukul {{ $mulai }}-{{ $selesai }} WIB
                                 </h3>
                             </div>
