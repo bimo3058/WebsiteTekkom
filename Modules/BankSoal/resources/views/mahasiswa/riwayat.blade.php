@@ -113,7 +113,7 @@
         <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm flex flex-col justify-center">
             <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Tertinggi</p>
             <div class="flex items-baseline gap-2">
-                <p class="text-4xl font-bold tracking-tight {{ $nilaiTertinggi >= 60 ? 'text-emerald-600' : 'text-rose-600' }}">
+                <p class="text-4xl font-bold tracking-tight text-gray-900">
                     {{ $nilaiTertinggi > 0 ? (int)$nilaiTertinggi : '—' }}
                 </p>
                 @if($nilaiTertinggi > 0)
@@ -126,11 +126,10 @@
         <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm flex flex-col justify-center col-span-2 md:col-span-1">
             <p class="text-xs font-semibold uppercase tracking-wider text-gray-500 mb-2">Rata-rata</p>
             <div class="flex items-baseline gap-2">
-                <p class="text-4xl font-bold tracking-tight {{ $nilaiRataRata >= 60 ? 'text-gray-900' : 'text-rose-600' }}">
+                <p class="text-4xl font-bold tracking-tight text-gray-900">
                     {{ $nilaiRataRata > 0 ? $nilaiRataRata : '—' }}
                 </p>
                 @if($nilaiRataRata > 0)
-                <p class="text-sm text-gray-400 font-medium">poin</p>
                 @endif
             </div>
         </div>
@@ -215,14 +214,14 @@
                             <button type="button" onclick="setSortRiwayat('score', 'desc')" style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; border:none; border-radius:7px; background:{{ $skorTinggi ? 'rgba(11,38,110,0.06)' : 'transparent' }}; font-size:12px; font-weight:{{ $skorTinggi ? '700' : '500' }}; color:{{ $skorTinggi ? 'var(--c-primary)' : 'var(--c-fg-sec)' }}; cursor:pointer; font-family:inherit; text-align:left; transition:background .12s;" onmouseover="if(!{{ $skorTinggi ? 'true' : 'false' }}) this.style.background='var(--c-bg)'" onmouseout="if(!{{ $skorTinggi ? 'true' : 'false' }}) this.style.background='transparent'">
                                 <div style="display:flex; align-items:center; gap:7px;">
                                     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M19 15v6m0 0l-2-2m2 2l2-2"/><path d="M3 6h18M3 12h12M3 18h6"/></svg>
-                                    <span>Skor Tertinggi</span>
+                                    <span>Poin Tertinggi</span>
                                 </div>
                                 @if($skorTinggi)<svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>@endif
                             </button>
                             <button type="button" onclick="setSortRiwayat('score', 'asc')" style="width:100%; display:flex; align-items:center; justify-content:space-between; gap:8px; padding:7px 10px; border:none; border-radius:7px; background:{{ $skorRendah ? 'rgba(11,38,110,0.06)' : 'transparent' }}; font-size:12px; font-weight:{{ $skorRendah ? '700' : '500' }}; color:{{ $skorRendah ? 'var(--c-primary)' : 'var(--c-fg-sec)' }}; cursor:pointer; font-family:inherit; text-align:left; transition:background .12s;" onmouseover="if(!{{ $skorRendah ? 'true' : 'false' }}) this.style.background='var(--c-bg)'" onmouseout="if(!{{ $skorRendah ? 'true' : 'false' }}) this.style.background='transparent'">
                                 <div style="display:flex; align-items:center; gap:7px;">
                                     <svg width="13" height="13" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2" stroke-linecap="round"><path d="M19 9V3m0 0l-2 2m2-2l2 2"/><path d="M3 6h18M3 12h12M3 18h6"/></svg>
-                                    <span>Skor Terendah</span>
+                                    <span>Poin Terendah</span>
                                 </div>
                                 @if($skorRendah)<svg width="11" height="11" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2.5" stroke-linecap="round"><path d="M20 6L9 17l-5-5"/></svg>@endif
                             </button>
@@ -241,7 +240,7 @@
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; min-width:200px;">Periode Ujian</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Tanggal & Waktu</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Durasi</th>
-                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Skor</th>
+                        <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Poin</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap;">Status</th>
                         <th style="padding:11px 16px; text-align:left; font-size:11px; font-weight:600; color:var(--c-fg-muted); white-space:nowrap; text-align:center;">Aksi</th>
                     </tr>
@@ -319,7 +318,7 @@
                             {{-- Skor --}}
                             <td style="padding:14px 16px;">
                                 <div style="display:flex; align-items:baseline; gap:2px;">
-                                    <span style="font-size:14px; font-weight:700; color:{{ $lulus ? 'var(--c-success)' : 'var(--c-error)' }};">
+                                    <span style="font-size:14px; font-weight:700; color:#0D0D12;">
                                         {{ $score }}
                                     </span>
                                     <span style="font-size:11px; font-weight:500; color:var(--c-fg-muted);">/100</span>
