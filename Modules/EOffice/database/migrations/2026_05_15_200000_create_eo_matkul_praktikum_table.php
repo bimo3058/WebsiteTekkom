@@ -8,6 +8,10 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (Schema::hasTable('eo_matkul_praktikum')) {
+            return;
+        }
+
         Schema::create('eo_matkul_praktikum', function (Blueprint $table) {
             $table->bigIncrements('id');
             $table->string('kode')->unique();
@@ -20,6 +24,6 @@ return new class extends Migration
 
     public function down(): void
     {
-        Schema::dropIfExists('eo_matkul_praktikum');
+        // Tabel dapat dimiliki migration 2026_05_15_095100.
     }
 };

@@ -5,17 +5,24 @@ use App\Http\Controllers\Controller;
 
 use App\Models\User;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\Rule;
+use Modules\Capstone\Support\CapstoneActor;
 
 class UserController extends Controller
 {
     public function index(Request $request)
     {
+        $requestedRole = $request->string('role')->toString();
         $query = User::query();
 
         if ($request->has('role')) {
-            $query->where('role', $request->role);
+            $roles = match ($request->role) {
+                'admin' => ['superadmin', 'admin_capstone'],
+                'dosen' => ['dosen'],
+                'mahasiswa' => ['mahasiswa'],
+                default => [],
+            };
+
+            $query->whereHas('roles', fn ($roleQuery) => $roleQuery->whereIn('name', $roles));
         }
 
         if ($request->has('search')) {
@@ -26,59 +33,24 @@ class UserController extends Controller
             });
         }
 
-        return $query->orderBy('name')->paginate(100);
-    }
-
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'role' => ['required', Rule::in(['admin', 'dosen', 'mahasiswa'])],
-        ]);
-
-        $user = User::create([
-            'name' => $validated['name'],
-            'email' => $validated['email'],
-            'password' => Hash::make($validated['password']),
-            'role' => $validated['role'],
-        ]);
-
-        return response()->json($user, 201);
-    }
-
-    public function update(Request $request, User $user)
-    {
-        if ($user->id === 1) {
-            return response()->json(['message' => 'Super admin account cannot be modified.'], 403);
-        }
-
-        $validated = $request->validate([
-            'name' => 'sometimes|string|max:255',
-            'email' => ['sometimes', 'email', Rule::unique('users')->ignore($user->id)],
-            'password' => 'nullable|string|min:8',
-            'role' => ['sometimes', Rule::in(['admin', 'dosen', 'mahasiswa'])],
-        ]);
-
-        if (isset($validated['password'])) {
-            $validated['password'] = Hash::make($validated['password']);
-        } else {
-            unset($validated['password']);
-        }
-
-        $user->update($validated);
-
-        return response()->json($user);
-    }
-
-    public function destroy(User $user)
-    {
-        if ($user->id === 1) {
-            return response()->json(['message' => 'Super admin account cannot be deleted.'], 403);
-        }
-
-        $user->delete();
-        return response()->json(['message' => 'User deleted']);
+        return $query->with(['roles', 'student', 'lecturer'])
+            ->orderBy('name')
+            ->paginate(100)
+            ->through(fn (User $user) => [
+                // Academic selectors in CTMS submit students.id/lecturers.id.
+                // Keep user_id alongside it for audit/account screens.
+                'id' => match ($requestedRole) {
+                    'dosen' => $user->lecturer?->id,
+                    'mahasiswa' => $user->student?->id,
+                    default => $user->id,
+                },
+                'user_id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'role' => CapstoneActor::role($user),
+                'student_id' => $user->student?->id,
+                'lecturer_id' => $user->lecturer?->id,
+                'created_at' => $user->created_at,
+            ]);
     }
 }

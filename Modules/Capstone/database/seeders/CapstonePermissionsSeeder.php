@@ -33,24 +33,24 @@ class CapstonePermissionsSeeder extends Seeder
 
         foreach ($perms as $name => $display) {
             Permission::firstOrCreate(
-                ['name' => $name],
+                ['name' => $name, 'guard_name' => 'web'],
                 ['display_name' => $display, 'module' => 'capstone']
             );
         }
 
         // Roles
         $adminCapstone = Role::firstOrCreate(
-            ['name' => 'admin_capstone'],
-            ['module' => 'capstone']
+            ['name' => 'admin_capstone', 'guard_name' => 'web'],
+            ['module' => 'capstone', 'is_academic' => false]
         );
 
         $dosen = Role::firstOrCreate(
-            ['name' => 'dosen'],
+            ['name' => 'dosen', 'guard_name' => 'web'],
             ['module' => 'global', 'is_academic' => true]
         );
 
         $mahasiswa = Role::firstOrCreate(
-            ['name' => 'mahasiswa'],
+            ['name' => 'mahasiswa', 'guard_name' => 'web'],
             ['module' => 'global', 'is_academic' => true]
         );
 
@@ -78,6 +78,11 @@ class CapstonePermissionsSeeder extends Seeder
                 'capstone.bids.create',
                 'capstone.documents.upload',
             ])->pluck('id')
+        );
+
+        $superadmin = Role::where('name', 'superadmin')->where('guard_name', 'web')->first();
+        $superadmin?->permissions()->syncWithoutDetaching(
+            Permission::where('module', 'capstone')->pluck('id')
         );
     }
 }

@@ -2,6 +2,8 @@
 
 namespace Modules\Capstone\Models;
 
+use App\Models\Lecturer;
+use App\Models\Student;
 use Illuminate\Database\Eloquent\Model;
 
 class Group extends Model
@@ -11,7 +13,12 @@ class Group extends Model
     // They are intentionally excluded from $fillable.
     // Use assignTitleFromFinalization() and assignTypeFromFinalization() only.
     // These methods are called exclusively by FinalizationService.
-    protected $fillable = ['period_id', 'status', 'supervisor_1_id', 'supervisor_2_id', 'group_mode', 'has_existing_group'];
+    protected $fillable = [
+        'period_id', 'status', 'supervisor_1_id', 'supervisor_2_id',
+        'group_mode', 'has_existing_group', 'code', 'is_solo',
+        'has_active_proposal', 'readiness_status', 'finalization_notes',
+        'finalized_at', 'finalized_by',
+    ];
 
     /**
      * Assign title_id — ONLY callable from FinalizationService.
@@ -48,7 +55,7 @@ class Group extends Model
 
     public function students()
     {
-        return $this->belongsToMany(User::class, 'group_members', 'group_id', 'student_id');
+        return $this->belongsToMany(Student::class, 'capstone_group_members', 'group_id', 'student_id');
     }
 
     public function bids()
@@ -66,6 +73,12 @@ class Group extends Model
         return $this->hasMany(Supervision::class);
     }
 
+    public function supervisors()
+    {
+        return $this->belongsToMany(Lecturer::class, 'capstone_supervisions', 'group_id', 'supervisor_id')
+            ->withPivot('role');
+    }
+
     public function taSubmissions()
     {
         return $this->hasMany(TaSubmission::class);
@@ -81,7 +94,7 @@ class Group extends Model
      */
     public function supervisor1()
     {
-        return $this->belongsTo(User::class, 'supervisor_1_id');
+        return $this->belongsTo(Lecturer::class, 'supervisor_1_id');
     }
 
     /**
@@ -89,7 +102,7 @@ class Group extends Model
      */
     public function supervisor2()
     {
-        return $this->belongsTo(User::class, 'supervisor_2_id');
+        return $this->belongsTo(Lecturer::class, 'supervisor_2_id');
     }
 
     public function schedules()

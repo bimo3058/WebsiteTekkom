@@ -7,7 +7,7 @@ use Modules\Capstone\Models\Title;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
+use Modules\Capstone\Support\CapstoneActor;
 
 class TitleController extends Controller
 {
@@ -16,7 +16,7 @@ class TitleController extends Controller
         $user = $request->user();
 
         if ($user->hasRole('dosen')) {
-            return Title::where('lecturer_id', $user->id)
+            return Title::where('lecturer_id', CapstoneActor::lecturer($user)->id)
                 ->with('lecturer')
                 ->withCount([
                     'groups as active_groups_count' => function ($query) {
@@ -63,7 +63,7 @@ class TitleController extends Controller
         ]);
 
         $title = Title::create([
-            'lecturer_id' => $request->user()->id,
+            'lecturer_id' => CapstoneActor::lecturer($request->user())->id,
             'title' => $validated['title'],
             'description' => $validated['description'],
             'problem_statement' => $validated['problem_statement'],
@@ -89,7 +89,7 @@ class TitleController extends Controller
 
     public function update(Request $request, Title $title)
     {
-        if ($request->user()->id !== $title->lecturer_id && $request->user()->role !== 'admin') {
+        if (CapstoneActor::lecturer($request->user())->id !== $title->lecturer_id) {
             abort(403, 'Unauthorized');
         }
 
@@ -111,7 +111,7 @@ class TitleController extends Controller
 
     public function destroy(Request $request, Title $title)
     {
-        if ($request->user()->id !== $title->lecturer_id && $request->user()->role !== 'admin') {
+        if (CapstoneActor::lecturer($request->user())->id !== $title->lecturer_id) {
             abort(403, 'Unauthorized');
         }
 

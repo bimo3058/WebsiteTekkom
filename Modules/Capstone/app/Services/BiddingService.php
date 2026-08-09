@@ -2,7 +2,7 @@
 
 namespace Modules\Capstone\Services;
 
-use App\Models\Period;
+use Modules\Capstone\Models\Period;
 
 class BiddingService
 {

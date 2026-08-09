@@ -5,6 +5,8 @@ use App\Http\Controllers\Controller;
 
 use Modules\Capstone\Models\Schedule;
 use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\GroupMember;
+use Modules\Capstone\Support\CapstoneActor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -28,9 +30,9 @@ class ScheduleController extends Controller
 
         // Dosen can only see BIMBINGAN schedules for their own groups
         if ($user->hasRole('dosen')) {
-            $groupIds = Group::whereHas('title', function ($q) use ($user) {
-                $q->where('lecturer_id', $user->id);
-            })->pluck('id');
+            $lecturerId = CapstoneActor::lecturer($user)->id;
+            $groupIds = Group::whereHas('supervisions', fn ($query) => $query->where('supervisor_id', $lecturerId))
+                ->pluck('id');
 
             return response()->json([
                 'data' => Schedule::whereIn('group_id', $groupIds)
@@ -42,7 +44,7 @@ class ScheduleController extends Controller
 
         // Mahasiswa can only see their own group's schedule (exclude rejected groups)
         if ($user->hasRole('mahasiswa')) {
-            $groupMember = \App\Models\GroupMember::where('student_id', $user->id)
+            $groupMember = GroupMember::where('student_id', CapstoneActor::student($user)->id)
                 ->whereHas('group', function ($q) {
                     $q->where('status', '!=', 'REJECTED');
                 })
@@ -77,13 +79,23 @@ class ScheduleController extends Controller
             : ['SEMPRO', 'SIDANG', 'EXPO'];
 
         $request->validate([
-            'group_id' => 'required|exists:groups,id',
+            'group_id' => 'required|exists:capstone_groups,id',
             'type' => ['required', 'string', 'in:' . implode(',', $allowedTypes)],
             'date' => 'required|date',
             'room' => 'required|string',
             'mode' => 'nullable|string|in:online,offline',
             'notes' => 'nullable|string|max:1000',
         ]);
+
+        if ($user->hasRole('dosen')) {
+            abort_unless(
+                Group::whereKey($request->group_id)
+                    ->whereHas('supervisions', fn ($query) => $query->where('supervisor_id', CapstoneActor::lecturer($user)->id))
+                    ->exists(),
+                403,
+                'Anda bukan dosen pembimbing kelompok ini.'
+            );
+        }
 
         $schedule = Schedule::create($request->all());
 
@@ -114,7 +126,7 @@ class ScheduleController extends Controller
             : ['SEMPRO', 'SIDANG', 'EXPO'];
 
         $request->validate([
-            'group_id' => 'exists:groups,id',
+            'group_id' => 'exists:capstone_groups,id',
             'type' => ['string', 'in:' . implode(',', $allowedTypes)],
             'date' => 'date',
             'room' => 'string',
@@ -123,6 +135,16 @@ class ScheduleController extends Controller
         ]);
 
         $schedule = Schedule::findOrFail($id);
+
+        if ($user->hasRole('dosen')) {
+            abort_unless(
+                Group::whereKey($schedule->group_id)
+                    ->whereHas('supervisions', fn ($query) => $query->where('supervisor_id', CapstoneActor::lecturer($user)->id))
+                    ->exists(),
+                403,
+                'Anda bukan dosen pembimbing kelompok ini.'
+            );
+        }
         $schedule->update($request->all());
 
         return response()->json(['message' => 'Schedule updated successfully', 'data' => $schedule]);
@@ -133,11 +155,23 @@ class ScheduleController extends Controller
      */
     public function destroy(string $id)
     {
-        if (Auth::user()->hasRole('mahasiswa')) {
+        $user = Auth::user();
+        if ($user->hasRole('mahasiswa')) {
             return response()->json(['message' => 'Unauthorized'], 403);
         }
 
-        Schedule::destroy($id);
+        $schedule = Schedule::findOrFail($id);
+        if ($user->hasRole('dosen')) {
+            abort_unless(
+                Group::whereKey($schedule->group_id)
+                    ->whereHas('supervisions', fn ($query) => $query->where('supervisor_id', CapstoneActor::lecturer($user)->id))
+                    ->exists(),
+                403,
+                'Anda bukan dosen pembimbing kelompok ini.'
+            );
+        }
+
+        $schedule->delete();
         return response()->json(['message' => 'Schedule deleted successfully']);
     }
 }

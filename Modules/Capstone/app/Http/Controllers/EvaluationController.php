@@ -9,6 +9,7 @@ use Modules\Capstone\Models\GroupMember;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Modules\Capstone\Support\CapstoneActor;
 
 class EvaluationController extends Controller
 {
@@ -20,17 +21,22 @@ class EvaluationController extends Controller
         $user = Auth::user();
 
         if ($user->hasRole('dosen')) {
+            $lecturerId = CapstoneActor::lecturer($user)->id;
             // Return evaluations made by this dosen? Or for groups supervised?
             // Since evaluations are usually per student per phase
             // Let's allow filtering by group_id
             if ($request->has('group_id')) {
-                return response()->json(['data' => Evaluation::where('group_id', $request->group_id)->with('student')->get()]);
+                $allowed = Group::whereKey($request->group_id)
+                    ->whereHas('supervisions', fn ($query) => $query->where('supervisor_id', $lecturerId))
+                    ->exists();
+                abort_unless($allowed, 403, 'Anda bukan dosen pembimbing kelompok ini.');
+                return response()->json(['data' => Evaluation::where('group_id', $request->group_id)->where('evaluator_id', $lecturerId)->with('student')->get()]);
             }
             return response()->json(['data' => []]);
         }
 
         if ($user->hasRole('mahasiswa')) {
-            return response()->json(['data' => Evaluation::where('student_id', $user->id)->get()]);
+            return response()->json(['data' => Evaluation::where('student_id', CapstoneActor::student($user)->id)->get()]);
         }
 
         return response()->json(['data' => []]);
@@ -41,17 +47,24 @@ class EvaluationController extends Controller
      */
     public function store(Request $request)
     {
-        if (Auth::user()->role !== 'dosen') {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+        $lecturerId = CapstoneActor::lecturer(Auth::user())->id;
 
         $request->validate([
-            'group_id' => 'required|exists:groups,id',
-            'student_id' => 'required|exists:users,id', // Evaluate individual student
+            'group_id' => 'required|exists:capstone_groups,id',
+            'student_id' => 'required|exists:students,id',
             'type' => ['required', Rule::in(['bimbingan', 'proposal', 'skripsi'])], // Using lowercase to match migration or enum? Migration said string.
             'score' => 'required|numeric|min:0|max:100',
             'feedback' => 'nullable|string',
         ]);
+
+        abort_unless(
+            Group::whereKey($request->group_id)
+                ->whereHas('supervisions', fn ($query) => $query->where('supervisor_id', $lecturerId))
+                ->whereHas('members', fn ($query) => $query->where('student_id', $request->student_id))
+                ->exists(),
+            403,
+            'Mahasiswa tidak berada pada kelompok bimbingan Anda.'
+        );
 
         $evaluation = Evaluation::updateOrCreate(
             [
@@ -60,7 +73,7 @@ class EvaluationController extends Controller
                 'type' => $request->type,
             ],
             [
-                'evaluator_id' => Auth::id(),
+                'evaluator_id' => $lecturerId,
                 'score' => $request->score,
                 'feedback' => $request->feedback,
             ]

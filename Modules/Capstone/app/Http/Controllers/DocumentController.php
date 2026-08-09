@@ -6,10 +6,13 @@ use App\Http\Controllers\Controller;
 use Modules\Capstone\Models\Document;
 use Modules\Capstone\Models\Group;
 use Modules\Capstone\Models\GroupMember;
-use App\Services\GroupStateMachine;
+use Modules\Capstone\Models\TaSubmission;
+use Modules\Capstone\Services\GroupStateMachine;
+use Modules\Capstone\Services\DocumentStorageService;
+use Modules\Capstone\Services\NotificationService;
+use Modules\Capstone\Support\CapstoneActor;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
 use Modules\Capstone\Models\PhaseDocumentRequirement;
 
@@ -17,7 +20,10 @@ class DocumentController extends Controller
 {
     protected GroupStateMachine $stateMachine;
 
-    public function __construct(GroupStateMachine $stateMachine)
+    public function __construct(
+        GroupStateMachine $stateMachine,
+        private readonly DocumentStorageService $documentStorage,
+    )
     {
         $this->stateMachine = $stateMachine;
     }
@@ -41,7 +47,9 @@ class DocumentController extends Controller
     public function workflow(Request $request)
     {
         $user = Auth::user();
-        $groupMember = GroupMember::with('group')->where('student_id', $user->id)->first();
+        $groupMember = GroupMember::with('group')
+            ->where('student_id', CapstoneActor::student($user)->id)
+            ->first();
 
         if (!$groupMember || !$groupMember->group) {
             return response()->json(['phases' => [], 'current_phase' => null]);
@@ -131,7 +139,7 @@ class DocumentController extends Controller
             if ($phaseStatus === 'unlocked') {
                 if ($phase === 'EXPO') {
                     // Custom rule for EXPO: requires at least 1 TA draft submitted by any member
-                    $hasTaDraft = \App\Models\TaSubmission::where('group_id', $groupMember->group_id)->exists();
+                    $hasTaDraft = TaSubmission::where('group_id', $groupMember->group_id)->exists();
                     if (!$hasTaDraft) {
                         $phaseStatus = 'locked';
                     }
@@ -186,7 +194,7 @@ class DocumentController extends Controller
         $user = Auth::user();
 
         if ($user->hasRole('mahasiswa')) {
-            $groupMember = GroupMember::where('student_id', $user->id)->first();
+            $groupMember = GroupMember::where('student_id', CapstoneActor::student($user)->id)->first();
             if (!$groupMember) {
                 return response()->json(['data' => []]);
             }
@@ -198,15 +206,16 @@ class DocumentController extends Controller
         }
 
         if ($user->hasRole('dosen')) {
+            $lecturerId = CapstoneActor::lecturer($user)->id;
             $query = Document::with(['student', 'group.title']);
+            $supervisedGroupIds = Group::whereHas('supervisions', function ($q) use ($lecturerId) {
+                $q->where('supervisor_id', $lecturerId);
+            })->pluck('id');
+
+            $query->whereIn('group_id', $supervisedGroupIds);
 
             if ($request->has('group_id')) {
                 $query->where('group_id', $request->group_id);
-            } else {
-                $supervisedGroupIds = Group::whereHas('supervisions', function ($q) use ($user) {
-                    $q->where('supervisor_id', $user->id);
-                })->pluck('id');
-                $query->whereIn('group_id', $supervisedGroupIds);
             }
 
             $documents = $query->orderBy('created_at', 'desc')->get();
@@ -227,7 +236,8 @@ class DocumentController extends Controller
         ];
 
         $user = Auth::user();
-        $groupMember = GroupMember::with('group')->where('student_id', $user->id)->first();
+        $studentId = CapstoneActor::student($user)->id;
+        $groupMember = GroupMember::with('group')->where('student_id', $studentId)->first();
 
         if (!$groupMember) {
             return response()->json(['message' => 'You are not in any group.'], 400);
@@ -264,7 +274,11 @@ class DocumentController extends Controller
             }
         }
 
-        $path = $request->file('file')->store('documents', 'public');
+        $path = $this->documentStorage->store(
+            $request->file('file'),
+            'documents',
+            $groupMember->group_id.'/'.$request->phase
+        );
 
         // V5: Replace (overwrite) existing document instead of creating new version
         $existingDoc = Document::where('group_id', $groupMember->group_id)
@@ -274,8 +288,8 @@ class DocumentController extends Controller
 
         if ($existingDoc) {
             // Delete old file from storage
-            if ($existingDoc->file_path && Storage::disk('public')->exists($existingDoc->file_path)) {
-                Storage::disk('public')->delete($existingDoc->file_path);
+            if ($existingDoc->file_path) {
+                $this->documentStorage->delete($existingDoc->file_path);
             }
 
             // Update existing record (overwrite)
@@ -291,7 +305,7 @@ class DocumentController extends Controller
         // First-time upload
         $document = Document::create([
             'group_id' => $groupMember->group_id,
-            'student_id' => $user->id,
+            'student_id' => $studentId,
             'phase' => $request->phase,
             'document_type' => $request->document_type ?? 'GENERAL',
             'file_path' => $path,
@@ -310,15 +324,51 @@ class DocumentController extends Controller
         //
     }
 
+    public function download(Request $request, string $id)
+    {
+        $document = Document::findOrFail($id);
+        $user = $request->user();
+        $role = CapstoneActor::role(
+            $user,
+            $request->attributes->get('capstone_role') ?? $request->header('X-Capstone-Role')
+        );
+
+        $allowed = $role === 'admin';
+        if ($role === 'mahasiswa') {
+            $student = CapstoneActor::student($user);
+            $allowed = $student && GroupMember::where('group_id', $document->group_id)
+                ->where('student_id', $student->id)
+                ->exists();
+        }
+        if ($role === 'dosen') {
+            $lecturer = CapstoneActor::lecturer($user);
+            $allowed = $lecturer && Group::whereKey($document->group_id)
+                ->where(function ($query) use ($lecturer) {
+                    $query->where('supervisor_1_id', $lecturer->id)
+                        ->orWhere('supervisor_2_id', $lecturer->id)
+                        ->orWhereHas('supervisions', fn ($supervision) => $supervision->where('supervisor_id', $lecturer->id));
+                })
+                ->exists();
+        }
+
+        abort_unless($allowed, 403);
+
+        $file = $this->documentStorage->get($document->file_path);
+        abort_unless($file, 404, 'File not found');
+
+        return response($file['content'], 200, [
+            'Content-Type' => $file['mime_type'],
+            'Content-Disposition' => 'attachment; filename="'.basename($document->file_path).'"',
+        ]);
+    }
+
     /**
      * Update the specified resource in storage (Dosen review).
      */
     public function update(Request $request, string $id)
     {
         $user = Auth::user();
-        if ($user->role !== 'dosen') {
-            return response()->json(['message' => 'Unauthorized'], 403);
-        }
+        $lecturerId = CapstoneActor::lecturer($user)->id;
 
         $request->validate([
             'status' => ['required', Rule::in(['APPROVED', 'REJECTED'])],
@@ -326,6 +376,13 @@ class DocumentController extends Controller
         ]);
 
         $document = Document::findOrFail($id);
+        abort_unless(
+            Group::whereKey($document->group_id)
+                ->whereHas('supervisions', fn ($query) => $query->where('supervisor_id', $lecturerId))
+                ->exists(),
+            403,
+            'Anda bukan dosen pembimbing kelompok ini.'
+        );
         $document->update([
             'status' => $request->status,
             'feedback' => $request->feedback,
@@ -344,8 +401,12 @@ class DocumentController extends Controller
         }
 
         // Send notifications
-        $notificationService = app(\App\Services\NotificationService::class);
-        $studentIds = $group->members()->pluck('student_id')->toArray();
+        $notificationService = app(NotificationService::class);
+        $studentIds = $group->members()->with('student')->get()
+            ->pluck('student.user_id')
+            ->filter()
+            ->values()
+            ->all();
         $statusStr = strtolower($request->status);
         $notificationService->sendToMany(
             $studentIds,
