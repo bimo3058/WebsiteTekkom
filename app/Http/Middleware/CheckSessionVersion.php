@@ -14,7 +14,9 @@ class CheckSessionVersion
             $user                  = Auth::user();
             $currentSessionVersion = (int) session('session_version', 0);
 
-            if ($currentSessionVersion !== (int) $user->session_version) {
+            $userSessionVersion = (int) ($user->getAttributes()['session_version'] ?? 0);
+
+            if ($currentSessionVersion !== $userSessionVersion) {
                 Auth::logout();
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();

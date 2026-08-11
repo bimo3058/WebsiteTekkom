@@ -1,82 +1,122 @@
-﻿"use client";
-import { useEffect, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+"use client";
+
+import { Suspense, useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { isAxiosError, type AxiosResponse } from "axios";
 import api from "@/lib/api";
+import { createSingleFlightByKey } from "@/lib/single-flight";
+import {
+  redirectToWebsiteLogin,
+  clearSsoSession,
+  saveSsoSession,
+  SSO_ROLE_KEY,
+} from "@/lib/sso";
 
-export default function ExchangePage() {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const [error, setError] = useState<string | null>(null);
+interface ExchangePayload {
+  access_token: string;
+  user: {
+    roles?: string[];
+    role?: string;
+    active_role?: string;
+  };
+  logout?: {
+    url: string;
+    csrf_token: string | null;
+  };
+}
 
-    useEffect(() => {
-        const ott = searchParams.get("ott");
+interface ExchangeEnvelope {
+  data?: ExchangePayload;
+  access_token?: string;
+  user?: ExchangePayload["user"];
+  logout?: ExchangePayload["logout"];
+}
 
-        // Tidak ada OTT = bukan dari redirect webtekkom, abaikan
-        if (!ott) return;
+interface ExchangeError {
+  code?: string;
+  redirect_url?: string;
+}
 
-        // Cek apakah OTT ini sudah pernah diproses (cegah React Strict Mode double-fire)
-        const processedOtt = sessionStorage.getItem("processed_ott");
-        if (processedOtt === ott) return;
+// The backend deliberately consumes an OTT only once. React may re-run an
+// effect while checking it in development, so every component instance must
+// share the same in-flight request for a given OTT.
+const exchangeOttOnce = createSingleFlightByKey(
+  (ott): Promise<AxiosResponse<ExchangeEnvelope>> =>
+    api.post<ExchangeEnvelope>("/auth/exchange", { ott })
+);
 
-        sessionStorage.setItem("processed_ott", ott);
+function ExchangeContent() {
+  const searchParams = useSearchParams();
+  const [message, setMessage] = useState("Menghubungkan sesi SSO…");
 
-        api.post("/auth/exchange", { ott })
-            .then((res) => {
-                // Handle double-encoded JSON dari Laravel
-                console.log("typeof res.data:", typeof res.data);
-                console.log(
-                    "res.data === object?",
-                    typeof res.data === "object",
-                );
-                console.log("res.data keys:", Object.keys(res.data || {}));
-                console.log(
-                    "res.data.access_token:",
-                    res.data?.access_token,
-                );
-                console.log("res.data.user:", res.data?.user);
-                const data = typeof res.data === 'string' ? JSON.parse(res.data) : res.data;
-                const { access_token, user } = data;
+  useEffect(() => {
+    const ott = searchParams.get("ott");
 
-                if (!access_token || !user || !user.role) {
-                    console.error("Response tidak lengkap:", data);
-                    sessionStorage.removeItem("processed_ott");
-                    setError("Response tidak lengkap.");
-                    return;
-                }
-
-                window.history.replaceState({}, "", "/auth/exchange");
-                localStorage.setItem("token", access_token);
-                localStorage.setItem("user", JSON.stringify(user));
-                api.defaults.headers.common["Authorization"] = `Bearer ${access_token}`;
-                sessionStorage.removeItem("processed_ott");
-                router.replace(`/${user.role}/dashboard`);
-            })
-            .catch((err) => {
-                console.error("CATCH:", err);
-                sessionStorage.removeItem("processed_ott");
-                setError(
-                    err.response?.data?.message || "Gagal verifikasi token.",
-                );
-            });
-    }, [searchParams, router]);
-
-    if (error) {
-        return (
-            <div className="min-h-screen flex flex-col items-center justify-center gap-4">
-                <p className="text-red-600">{error}</p>
-                <a
-                    href={process.env.NEXT_PUBLIC_WEBTEKKOM_URL || "/"}
-                    className="underline"
-                >
-                    Kembali ke beranda
-                </a>
-            </div>
-        );
+    if (!ott) {
+      redirectToWebsiteLogin();
+      return;
     }
 
-    return (
-        <div className="min-h-screen flex items-center justify-center">
-            <p>Memverifikasi sesi...</p>
-        </div>
-    );
+    let cancelled = false;
+
+    exchangeOttOnce(ott)
+      .then((response) => {
+        if (cancelled) return;
+
+        const payload = (response.data?.data ??
+          response.data) as ExchangePayload;
+        if (!payload.access_token || !payload.user) {
+          throw new Error("Respons pertukaran sesi tidak lengkap.");
+        }
+
+        // Persist the verified user snapshot before redirecting. The dashboard
+        // can render immediately while AuthContext revalidates it in background.
+        saveSsoSession(payload.access_token, payload.logout, payload.user);
+
+        const roles = payload.user.roles ?? [payload.user.role ?? "mahasiswa"];
+        const activeRole = payload.user.active_role ?? roles[0] ?? "mahasiswa";
+        window.sessionStorage.setItem(SSO_ROLE_KEY, activeRole);
+        window.location.replace(`/${activeRole}/dashboard`);
+      })
+      .catch((error: unknown) => {
+        if (cancelled) return;
+
+        if (isAxiosError<ExchangeError>(error)) {
+          const data = error.response?.data;
+          if (
+            data?.code === "SICATA_STUDENT_NOT_REGISTERED" &&
+            data.redirect_url
+          ) {
+            clearSsoSession();
+            window.location.replace(data.redirect_url);
+            return;
+          }
+        }
+
+        setMessage("Sesi SSO tidak valid. Mengalihkan ke halaman login…");
+        window.setTimeout(redirectToWebsiteLogin, 300);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [searchParams]);
+
+  return <p className="text-muted-foreground text-sm">{message}</p>;
+}
+
+export default function ExchangePage() {
+  return (
+    <main className="flex min-h-screen items-center justify-center">
+      <Suspense
+        fallback={
+          <p className="text-muted-foreground text-sm">
+            Menghubungkan sesi SSO…
+          </p>
+        }
+      >
+        <ExchangeContent />
+      </Suspense>
+    </main>
+  );
 }

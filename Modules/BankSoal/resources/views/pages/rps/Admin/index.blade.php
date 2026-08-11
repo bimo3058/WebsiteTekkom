@@ -1,4 +1,6 @@
-<x-banksoal::layouts.master>
+@extends('banksoal::layouts.master')
+
+@section('content')
 
 <!-- [Admin - RPS] View untuk manajemen semua RPS tingkat Admin -->
 
@@ -13,4 +15,4 @@
     <p><em>Status: Dalam Pengembangan</em></p>
 </div>
 
-</x-banksoal::layouts.master>
+@endsection

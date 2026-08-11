@@ -3,8 +3,7 @@
 namespace Modules\Capstone\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use App\Models\Group;
-use App\Models\User;
+use App\Models\Student;
 
 class GroupMember extends Model
 {
@@ -22,6 +21,6 @@ class GroupMember extends Model
 
     public function student()
     {
-        return $this->belongsTo(User::class, 'student_id');
+        return $this->belongsTo(Student::class, 'student_id');
     }
 }

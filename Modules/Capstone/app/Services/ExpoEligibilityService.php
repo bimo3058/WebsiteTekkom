@@ -2,8 +2,8 @@
 
 namespace Modules\Capstone\Services;
 
-use App\Models\Group;
-use App\Models\TaSubmission;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\TaSubmission;
 
 class ExpoEligibilityService
 {

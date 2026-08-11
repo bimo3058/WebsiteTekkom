@@ -2,6 +2,8 @@
 
 namespace Modules\Capstone\Models;
 
+use App\Models\Lecturer;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 
 class Supervision extends Model
@@ -21,7 +23,7 @@ class Supervision extends Model
 
     public function supervisor()
     {
-        return $this->belongsTo(User::class, 'supervisor_id');
+        return $this->belongsTo(Lecturer::class, 'supervisor_id');
     }
 
     public function assignedBy()
