@@ -1,51 +1,52 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Modules\Capstone\Http\Controllers\AuthBridgeController;
-use Modules\Capstone\Http\Controllers\DashboardController;
-use Modules\Capstone\Http\Controllers\TitleController;
-use Modules\Capstone\Http\Controllers\UserController;
-use Modules\Capstone\Http\Controllers\PeriodController;
-use Modules\Capstone\Http\Controllers\GroupController;
-use Modules\Capstone\Http\Controllers\BidController;
-use Modules\Capstone\Http\Controllers\DocumentController;
-use Modules\Capstone\Http\Controllers\DocumentTypeController;
-use Modules\Capstone\Http\Controllers\ScheduleController;
-use Modules\Capstone\Http\Controllers\SemproController;
-use Modules\Capstone\Http\Controllers\ExpoController;
-use Modules\Capstone\Http\Controllers\ExpoEventController;
-use Modules\Capstone\Http\Controllers\TaSubmissionController;
-use Modules\Capstone\Http\Controllers\TaDefenseController;
-use Modules\Capstone\Http\Controllers\SeminarDashboardController;
-use Modules\Capstone\Http\Controllers\NotificationController;
-use Modules\Capstone\Http\Controllers\StudentProposalController;
-use Modules\Capstone\Http\Controllers\TitleApprovalController;
-use Modules\Capstone\Http\Controllers\FinalizationController;
-use Modules\Capstone\Http\Controllers\EvaluationController;
-use Modules\Capstone\Http\Controllers\AssessmentComponentController;
-use Modules\Capstone\Http\Controllers\AssessmentScoreController;
-use Modules\Capstone\Http\Controllers\PeerReviewController;
-use Modules\Capstone\Http\Controllers\GradeConsistencyController;
-use Modules\Capstone\Http\Controllers\DigitalSignatureController;
-use Modules\Capstone\Http\Controllers\ReportExportController;
 use Modules\Capstone\Http\Controllers\Admin\AuditLogController;
 use Modules\Capstone\Http\Controllers\Admin\DocumentUploadController;
 use Modules\Capstone\Http\Controllers\Admin\PhaseDocumentRequirementController;
 use Modules\Capstone\Http\Controllers\Admin\StakeholderController;
+use Modules\Capstone\Http\Controllers\AssessmentComponentController;
 use Modules\Capstone\Http\Controllers\AssessmentComponentTemplateController;
+use Modules\Capstone\Http\Controllers\AssessmentScoreController;
+use Modules\Capstone\Http\Controllers\AuthBridgeController;
+use Modules\Capstone\Http\Controllers\BidController;
 use Modules\Capstone\Http\Controllers\BursaIdeController;
+use Modules\Capstone\Http\Controllers\DashboardController;
+use Modules\Capstone\Http\Controllers\DigitalSignatureController;
+use Modules\Capstone\Http\Controllers\DocumentController;
+use Modules\Capstone\Http\Controllers\DocumentTypeController;
+use Modules\Capstone\Http\Controllers\EvaluationController;
+use Modules\Capstone\Http\Controllers\ExpoController;
+use Modules\Capstone\Http\Controllers\ExpoEventController;
 use Modules\Capstone\Http\Controllers\FileController;
+use Modules\Capstone\Http\Controllers\FinalizationController;
 use Modules\Capstone\Http\Controllers\GradeConfigurationController;
+use Modules\Capstone\Http\Controllers\GradeConsistencyController;
+use Modules\Capstone\Http\Controllers\GroupController;
 use Modules\Capstone\Http\Controllers\LocationController;
+use Modules\Capstone\Http\Controllers\NotificationController;
+use Modules\Capstone\Http\Controllers\PeerReviewController;
 use Modules\Capstone\Http\Controllers\PeriodAssessmentConfigController;
+use Modules\Capstone\Http\Controllers\PeriodController;
 use Modules\Capstone\Http\Controllers\PeriodPeerReviewConfigController;
 use Modules\Capstone\Http\Controllers\RegistrationController;
 use Modules\Capstone\Http\Controllers\ReportDetailController;
+use Modules\Capstone\Http\Controllers\ReportExportController;
 use Modules\Capstone\Http\Controllers\ReportSummaryController;
+use Modules\Capstone\Http\Controllers\ScheduleController;
+use Modules\Capstone\Http\Controllers\SeminarDashboardController;
+use Modules\Capstone\Http\Controllers\SemproController;
 use Modules\Capstone\Http\Controllers\SoloTitleController;
+use Modules\Capstone\Http\Controllers\StudentProposalController;
 use Modules\Capstone\Http\Controllers\StudentStateController;
 use Modules\Capstone\Http\Controllers\SupervisorEvaluationController;
+use Modules\Capstone\Http\Controllers\TaDefenseController;
 use Modules\Capstone\Http\Controllers\TaDefenseScheduleController;
+use Modules\Capstone\Http\Controllers\TaSubmissionController;
+use Modules\Capstone\Http\Controllers\TitleApprovalController;
+use Modules\Capstone\Http\Controllers\TitleController;
+use Modules\Capstone\Http\Controllers\UserController;
+use Modules\Capstone\Http\Middleware\CacheCapstoneResponse;
 
 /*
 |--------------------------------------------------------------------------
@@ -65,7 +66,7 @@ Route::prefix('capstone')->group(function () {
         'auth:sanctum',
         'capstone.access',
         'module.active:capstone',
-        \Modules\Capstone\Http\Middleware\CacheCapstoneResponse::class,
+        CacheCapstoneResponse::class,
     ])->group(function () {
 
         // Get current user (semua role)
@@ -91,7 +92,10 @@ Route::prefix('capstone')->group(function () {
             Route::put('/expo-events/{expoEvent}/publish', [ExpoEventController::class, 'publish']);
             Route::apiResource('document-types', DocumentTypeController::class);
 
-            Route::get('/groups', [GroupController::class, 'listGroups']);
+            Route::get('/groups', [GroupController::class, 'listGroups'])
+                ->middleware('permission:capstone.groups.view');
+            Route::get('/groups/{group}', [GroupController::class, 'show'])
+                ->middleware('permission:capstone.groups.view');
             Route::get('/schedules', [ScheduleController::class, 'index']);
 
             Route::get('/ta-defense-schedules/eligible-students', [TaDefenseScheduleController::class, 'eligibleStudents']);
@@ -134,7 +138,8 @@ Route::prefix('capstone')->group(function () {
             Route::put('/ta-defense/schedules/{id}/reject', [TaDefenseController::class, 'reject']);
 
             // Group operations
-            Route::post('/groups/{group}/assign-supervisor-2', [GroupController::class, 'assignSupervisor2']);
+            Route::post('/groups/{group}/assign-supervisor-2', [GroupController::class, 'assignSupervisor2'])
+                ->middleware('permission:capstone.groups.manage');
 
             // Assessment Components
             Route::get('/assessment-components', [AssessmentComponentController::class, 'index']);
@@ -205,9 +210,11 @@ Route::prefix('capstone')->group(function () {
             Route::get('/audit-logs/action-types', [AuditLogController::class, 'actionTypes']);
             Route::get('/audit-logs', [AuditLogController::class, 'index']);
             Route::get('/audit-logs/{id}', [AuditLogController::class, 'show']);
-            Route::get('/document-uploads/summary', [DocumentUploadController::class, 'summary']);
-            Route::get('/document-uploads', [DocumentUploadController::class, 'index']);
-            Route::get('/document-uploads/{id}/download', [DocumentUploadController::class, 'download']);
+            Route::middleware('permission:capstone.documents.review')->group(function () {
+                Route::get('/document-uploads/summary', [DocumentUploadController::class, 'summary']);
+                Route::get('/document-uploads', [DocumentUploadController::class, 'index']);
+                Route::get('/document-uploads/{id}/download', [DocumentUploadController::class, 'download']);
+            });
         });
 
         // â”€â”€ Dosen â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -215,16 +222,24 @@ Route::prefix('capstone')->group(function () {
             Route::get('/dashboard', [DashboardController::class, 'dosen']);
             Route::apiResource('titles', TitleController::class);
 
-            Route::get('/documents', [DocumentController::class, 'index']);
-            Route::get('/documents/{id}/download', [DocumentController::class, 'download']);
-            Route::put('/documents/{id}', [DocumentController::class, 'update']);
+            Route::middleware('permission:capstone.documents.review')->group(function () {
+                Route::get('/documents', [DocumentController::class, 'index']);
+                Route::get('/documents/{id}/download', [DocumentController::class, 'download']);
+                Route::put('/documents/{id}', [DocumentController::class, 'update']);
+            });
 
-            Route::get('/evaluations', [EvaluationController::class, 'index']);
-            Route::post('/evaluations', [EvaluationController::class, 'store']);
+            Route::middleware('permission:capstone.evaluations.submit')->group(function () {
+                Route::get('/evaluations', [EvaluationController::class, 'index']);
+                Route::post('/evaluations', [EvaluationController::class, 'store']);
+            });
 
-            Route::get('/groups/pending', [GroupController::class, 'pendingGroups']);
-            Route::get('/groups/supervised', [GroupController::class, 'supervisedGroups']);
-            Route::get('/groups', [GroupController::class, 'listGroups']);
+            Route::middleware('permission:capstone.groups.view')->group(function () {
+                Route::get('/groups/pending', [GroupController::class, 'pendingGroups']);
+                Route::get('/groups/supervised', [GroupController::class, 'supervisedGroups']);
+                Route::get('/groups', [GroupController::class, 'listGroups']);
+                Route::get('/groups/{group}', [GroupController::class, 'show']);
+                Route::get('/students', [GroupController::class, 'supervisedStudents']);
+            });
             Route::get('/schedules', [ScheduleController::class, 'index']);
 
             // Title approvals

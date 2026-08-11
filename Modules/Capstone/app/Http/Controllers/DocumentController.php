@@ -1,20 +1,20 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
-use Modules\Capstone\Models\Document;
-use Modules\Capstone\Models\Group;
-use Modules\Capstone\Models\GroupMember;
-use Modules\Capstone\Models\TaSubmission;
-use Modules\Capstone\Services\GroupStateMachine;
-use Modules\Capstone\Services\DocumentStorageService;
-use Modules\Capstone\Services\NotificationService;
-use Modules\Capstone\Support\CapstoneActor;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Modules\Capstone\Models\Document;
+use Modules\Capstone\Models\Group;
+use Modules\Capstone\Models\GroupMember;
 use Modules\Capstone\Models\PhaseDocumentRequirement;
+use Modules\Capstone\Models\TaSubmission;
+use Modules\Capstone\Services\DocumentStorageService;
+use Modules\Capstone\Services\GroupStateMachine;
+use Modules\Capstone\Services\NotificationService;
+use Modules\Capstone\Support\CapstoneActor;
 
 class DocumentController extends Controller
 {
@@ -23,8 +23,7 @@ class DocumentController extends Controller
     public function __construct(
         GroupStateMachine $stateMachine,
         private readonly DocumentStorageService $documentStorage,
-    )
-    {
+    ) {
         $this->stateMachine = $stateMachine;
     }
 
@@ -51,7 +50,7 @@ class DocumentController extends Controller
             ->where('student_id', CapstoneActor::student($user)->id)
             ->first();
 
-        if (!$groupMember || !$groupMember->group) {
+        if (! $groupMember || ! $groupMember->group) {
             return response()->json(['phases' => [], 'current_phase' => null]);
         }
 
@@ -88,12 +87,15 @@ class DocumentController extends Controller
                 if ($latestForType) {
                     $status = $latestForType->status;
                     $uploadedCount++;
-                    if ($status === 'REJECTED')
+                    if ($status === 'REJECTED') {
                         $anyRejected = true;
-                    if ($status === 'SUBMITTED')
+                    }
+                    if ($status === 'SUBMITTED') {
                         $anySubmitted = true;
-                    if ($status !== 'APPROVED')
+                    }
+                    if ($status !== 'APPROVED') {
                         $allApproved = false;
+                    }
                 } else {
                     $allApproved = false;
                 }
@@ -101,10 +103,9 @@ class DocumentController extends Controller
                 $typesStatus[] = [
                     'type' => $type,
                     'status' => $status,
-                    'latest_document' => $latestForType
+                    'latest_document' => $latestForType,
                 ];
             }
-
 
             $phaseStatus = 'locked';
             $prereq = self::UNLOCK_RULES[$phase];
@@ -115,8 +116,9 @@ class DocumentController extends Controller
             } else {
                 // Prerequisite must be fully approved based on its own requirements
                 $prereqReqs = $allRequirements->where('phase', $prereq)->where('is_required', true)->pluck('name')->toArray();
-                if (empty($prereqReqs))
+                if (empty($prereqReqs)) {
                     $prereqReqs = ['GENERAL'];
+                }
 
                 $prereqAllApproved = true;
                 foreach ($prereqReqs as $pType) {
@@ -124,7 +126,7 @@ class DocumentController extends Controller
                     if ($pType === 'GENERAL' && empty($allRequirements->where('phase', $prereq)->toArray())) {
                         $pDoc = $documents->where('phase', $prereq)->where('status', 'APPROVED')->first();
                     }
-                    if (!$pDoc) {
+                    if (! $pDoc) {
                         $prereqAllApproved = false;
                         break;
                     }
@@ -140,7 +142,7 @@ class DocumentController extends Controller
                 if ($phase === 'EXPO') {
                     // Custom rule for EXPO: requires at least 1 TA draft submitted by any member
                     $hasTaDraft = TaSubmission::where('group_id', $groupMember->group_id)->exists();
-                    if (!$hasTaDraft) {
+                    if (! $hasTaDraft) {
                         $phaseStatus = 'locked';
                     }
                 }
@@ -177,7 +179,7 @@ class DocumentController extends Controller
         }
 
         // Check if all done = GRADUATED
-        $allCompleted = collect($phases)->every(fn($p) => $p['status'] === 'completed');
+        $allCompleted = collect($phases)->every(fn ($p) => $p['status'] === 'completed');
 
         return response()->json([
             'phases' => $phases,
@@ -192,25 +194,28 @@ class DocumentController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $role = CapstoneActor::role(
+            $user,
+            $request->attributes->get('capstone_role') ?? $request->header('X-Capstone-Role')
+        );
 
-        if ($user->hasRole('mahasiswa')) {
+        if ($role === 'mahasiswa') {
             $groupMember = GroupMember::where('student_id', CapstoneActor::student($user)->id)->first();
-            if (!$groupMember) {
+            if (! $groupMember) {
                 return response()->json(['data' => []]);
             }
             $documents = Document::where('group_id', $groupMember->group_id)
                 ->with('student')
                 ->orderBy('created_at', 'desc')
                 ->get();
+
             return response()->json(['data' => $documents]);
         }
 
-        if ($user->hasRole('dosen')) {
+        if ($role === 'dosen') {
             $lecturerId = CapstoneActor::lecturer($user)->id;
             $query = Document::with(['student', 'group.title']);
-            $supervisedGroupIds = Group::whereHas('supervisions', function ($q) use ($lecturerId) {
-                $q->where('supervisor_id', $lecturerId);
-            })->pluck('id');
+            $supervisedGroupIds = Group::supervisedBy($lecturerId)->pluck('id');
 
             $query->whereIn('group_id', $supervisedGroupIds);
 
@@ -219,6 +224,7 @@ class DocumentController extends Controller
             }
 
             $documents = $query->orderBy('created_at', 'desc')->get();
+
             return response()->json(['data' => $documents]);
         }
 
@@ -239,7 +245,7 @@ class DocumentController extends Controller
         $studentId = CapstoneActor::student($user)->id;
         $groupMember = GroupMember::with('group')->where('student_id', $studentId)->first();
 
-        if (!$groupMember) {
+        if (! $groupMember) {
             return response()->json(['message' => 'You are not in any group.'], 400);
         }
 
@@ -250,7 +256,7 @@ class DocumentController extends Controller
                 ->where('phase', $request->phase)
                 ->pluck('name')->toArray();
 
-            if (!empty($requirements)) {
+            if (! empty($requirements)) {
                 $validationRules['document_type'] = ['required', 'string', Rule::in($requirements)];
             } else {
                 $validationRules['document_type'] = ['nullable', 'string'];
@@ -267,9 +273,9 @@ class DocumentController extends Controller
                 ->where('status', 'APPROVED')
                 ->exists();
 
-            if (!$prereqApproved) {
+            if (! $prereqApproved) {
                 return response()->json([
-                    'message' => "You must have an approved {$prereq} document before uploading {$request->phase}."
+                    'message' => "You must have an approved {$prereq} document before uploading {$request->phase}.",
                 ], 400);
             }
         }
@@ -283,7 +289,7 @@ class DocumentController extends Controller
         // V5: Replace (overwrite) existing document instead of creating new version
         $existingDoc = Document::where('group_id', $groupMember->group_id)
             ->where('phase', $request->phase)
-            ->when($request->document_type, fn($q) => $q->where('document_type', $request->document_type))
+            ->when($request->document_type, fn ($q) => $q->where('document_type', $request->document_type))
             ->first();
 
         if ($existingDoc) {
@@ -343,11 +349,7 @@ class DocumentController extends Controller
         if ($role === 'dosen') {
             $lecturer = CapstoneActor::lecturer($user);
             $allowed = $lecturer && Group::whereKey($document->group_id)
-                ->where(function ($query) use ($lecturer) {
-                    $query->where('supervisor_1_id', $lecturer->id)
-                        ->orWhere('supervisor_2_id', $lecturer->id)
-                        ->orWhereHas('supervisions', fn ($supervision) => $supervision->where('supervisor_id', $lecturer->id));
-                })
+                ->supervisedBy($lecturer->id)
                 ->exists();
         }
 
@@ -378,7 +380,7 @@ class DocumentController extends Controller
         $document = Document::findOrFail($id);
         abort_unless(
             Group::whereKey($document->group_id)
-                ->whereHas('supervisions', fn ($query) => $query->where('supervisor_id', $lecturerId))
+                ->supervisedBy($lecturerId)
                 ->exists(),
             403,
             'Anda bukan dosen pembimbing kelompok ini.'
@@ -410,9 +412,9 @@ class DocumentController extends Controller
         $statusStr = strtolower($request->status);
         $notificationService->sendToMany(
             $studentIds,
-            'PROPOSAL_' . strtoupper($request->status), // e.g. PROPOSAL_APPROVED, PROPOSAL_REJECTED (reused for doc status)
+            'PROPOSAL_'.strtoupper($request->status), // e.g. PROPOSAL_APPROVED, PROPOSAL_REJECTED (reused for doc status)
             "Document {$request->status}",
-            "Your {$document->phase} document ({$document->document_type}) has been {$statusStr}" . ($request->feedback ? " with feedback: {$request->feedback}" : "."),
+            "Your {$document->phase} document ({$document->document_type}) has been {$statusStr}".($request->feedback ? " with feedback: {$request->feedback}" : '.'),
             'documents',
             $document->id
         );
@@ -431,8 +433,9 @@ class DocumentController extends Controller
             ->where('is_required', true)
             ->pluck('name')->toArray();
 
-        if (empty($requiredTypes))
+        if (empty($requiredTypes)) {
             return;
+        }
 
         foreach ($requiredTypes as $type) {
             $hasApproved = Document::where('group_id', $groupId)
@@ -441,8 +444,9 @@ class DocumentController extends Controller
                 ->where('status', 'APPROVED')
                 ->exists();
 
-            if (!$hasApproved)
-                return; // Not all types approved yet
+            if (! $hasApproved) {
+                return;
+            } // Not all types approved yet
         }
 
         // All required types approved â€” trigger transition

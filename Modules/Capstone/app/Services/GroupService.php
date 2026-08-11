@@ -2,6 +2,14 @@
 
 namespace Modules\Capstone\Services;
 
+use App\Models\Lecturer;
+use App\Models\Student;
+use App\Models\User;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Modules\Capstone\Concerns\RequiresActivePeriod;
 use Modules\Capstone\Exceptions\ConflictRuleException;
 use Modules\Capstone\Exceptions\DomainRuleException;
@@ -16,13 +24,6 @@ use Modules\Capstone\Models\Period;
 use Modules\Capstone\Models\PeriodRegistration;
 use Modules\Capstone\Models\Supervision;
 use Modules\Capstone\Models\Title;
-use App\Models\Lecturer;
-use App\Models\Student;
-use App\Models\User;
-use Illuminate\Database\QueryException;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Throwable;
 
 class GroupService
@@ -303,7 +304,7 @@ class GroupService
         // Cancel Associated Titles
         $titles = Title::where('proposed_by_group_id', $group->id)->get();
         foreach ($titles as $title) {
-            /** @var \Modules\Capstone\Models\Title $title */
+            /** @var Title $title */
             $this->cancelAssociatedTitle($title, $student);
         }
 
@@ -1369,19 +1370,21 @@ class GroupService
     /**
      * Enrich supervised groups with supervisor role data.
      *
-     * @param  \Illuminate\Database\Eloquent\Collection  $groups
+     * @param  Collection  $groups
      */
-    public function enrichSupervisedGroups($groups, User $user): \Illuminate\Database\Eloquent\Collection
+    public function enrichSupervisedGroups($groups, Lecturer $lecturer): Collection
     {
-        return $groups->map(function ($group) use ($user) {
-            $supervision = $group->supervisions->firstWhere('supervisor_id', $user->id);
+        return $groups->map(function ($group) use ($lecturer) {
+            $supervision = $group->supervisions->firstWhere('supervisor_id', $lecturer->id);
             $dosbing1 = $group->supervisions->firstWhere('role', 'SUPERVISOR_1');
             $dosbing2 = $group->supervisions->firstWhere('role', 'SUPERVISOR_2');
 
-            $group->dosbing_1_name = $dosbing1?->supervisor?->name;
-            $group->dosbing_2_name = $dosbing2?->supervisor?->name;
-            $group->is_dosbing_1 = $supervision?->role === 'SUPERVISOR_1';
-            $group->is_dosbing_2 = $supervision?->role === 'SUPERVISOR_2';
+            $group->dosbing_1_name = $dosbing1?->supervisor?->name ?? $group->supervisor1?->name;
+            $group->dosbing_2_name = $dosbing2?->supervisor?->name ?? $group->supervisor2?->name;
+            $group->is_dosbing_1 = $supervision?->role === 'SUPERVISOR_1'
+                || (int) $group->supervisor_1_id === $lecturer->id;
+            $group->is_dosbing_2 = $supervision?->role === 'SUPERVISOR_2'
+                || (int) $group->supervisor_2_id === $lecturer->id;
 
             return $group;
         });

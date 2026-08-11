@@ -1,14 +1,13 @@
 <?php
 
 namespace Modules\Capstone\Http\Controllers;
-use App\Http\Controllers\Controller;
 
-use Modules\Capstone\Models\Evaluation;
-use Modules\Capstone\Models\Group;
-use Modules\Capstone\Models\GroupMember;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
+use Modules\Capstone\Models\Evaluation;
+use Modules\Capstone\Models\Group;
 use Modules\Capstone\Support\CapstoneActor;
 
 class EvaluationController extends Controller
@@ -19,23 +18,29 @@ class EvaluationController extends Controller
     public function index(Request $request)
     {
         $user = Auth::user();
+        $role = CapstoneActor::role(
+            $user,
+            $request->attributes->get('capstone_role') ?? $request->header('X-Capstone-Role')
+        );
 
-        if ($user->hasRole('dosen')) {
+        if ($role === 'dosen') {
             $lecturerId = CapstoneActor::lecturer($user)->id;
             // Return evaluations made by this dosen? Or for groups supervised?
             // Since evaluations are usually per student per phase
             // Let's allow filtering by group_id
             if ($request->has('group_id')) {
                 $allowed = Group::whereKey($request->group_id)
-                    ->whereHas('supervisions', fn ($query) => $query->where('supervisor_id', $lecturerId))
+                    ->supervisedBy($lecturerId)
                     ->exists();
                 abort_unless($allowed, 403, 'Anda bukan dosen pembimbing kelompok ini.');
+
                 return response()->json(['data' => Evaluation::where('group_id', $request->group_id)->where('evaluator_id', $lecturerId)->with('student')->get()]);
             }
+
             return response()->json(['data' => []]);
         }
 
-        if ($user->hasRole('mahasiswa')) {
+        if ($role === 'mahasiswa') {
             return response()->json(['data' => Evaluation::where('student_id', CapstoneActor::student($user)->id)->get()]);
         }
 
@@ -59,7 +64,7 @@ class EvaluationController extends Controller
 
         abort_unless(
             Group::whereKey($request->group_id)
-                ->whereHas('supervisions', fn ($query) => $query->where('supervisor_id', $lecturerId))
+                ->supervisedBy($lecturerId)
                 ->whereHas('members', fn ($query) => $query->where('student_id', $request->student_id))
                 ->exists(),
             403,

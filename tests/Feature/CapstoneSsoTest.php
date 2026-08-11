@@ -10,8 +10,10 @@ use App\Models\SystemModule;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Laravel\Sanctum\PersonalAccessToken;
+use Modules\Capstone\Database\Seeders\CapstonePermissionsSeeder;
 use Modules\Capstone\Models\Period;
 use Tests\TestCase;
 
@@ -81,6 +83,76 @@ class CapstoneSsoTest extends TestCase
         $this->withHeader('User-Agent', 'Browser-A/1.0')
             ->postJson('/api/capstone/auth/exchange', ['ott' => $expiredTicket])
             ->assertUnauthorized();
+    }
+
+    public function test_admin_capstone_can_exchange_ticket_and_open_admin_dashboard(): void
+    {
+        $user = $this->capstoneUser('admin_capstone');
+        $ticket = $this->launchTicket($user, 'AdminCapstoneBrowser/1.0');
+
+        $exchange = $this->withHeader('User-Agent', 'AdminCapstoneBrowser/1.0')
+            ->postJson('/api/capstone/auth/exchange', ['ott' => $ticket]);
+
+        $exchange->assertOk()
+            ->assertJsonPath('data.user.active_role', 'admin')
+            ->assertJsonPath('data.user.roles.0', 'admin');
+
+        $this->withToken($exchange->json('data.access_token'))
+            ->withHeader('X-Capstone-Role', 'admin')
+            ->getJson('/api/capstone/admin/dashboard')
+            ->assertOk();
+    }
+
+    public function test_global_dosen_role_can_enter_when_legacy_duplicate_role_exists(): void
+    {
+        $legacyRoleId = DB::table('roles')->insertGetId([
+            'name' => 'dosen',
+            'guard_name' => 'web',
+            'module' => 'capstone',
+            'is_academic' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $globalRoleId = DB::table('roles')->insertGetId([
+            'name' => 'dosen',
+            'guard_name' => 'web',
+            'module' => 'global',
+            'is_academic' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        $this->seed(CapstonePermissionsSeeder::class);
+
+        $permissionId = Permission::where('name', 'capstone.view')->value('id');
+        $this->assertDatabaseHas('role_has_permissions', [
+            'role_id' => $legacyRoleId,
+            'permission_id' => $permissionId,
+        ]);
+        $this->assertDatabaseHas('role_has_permissions', [
+            'role_id' => $globalRoleId,
+            'permission_id' => $permissionId,
+        ]);
+
+        $user = $this->newUser('global-dosen@example.test');
+        $user->roles()->attach($globalRoleId);
+        $lecturer = Lecturer::create([
+            'user_id' => $user->id,
+            'employee_number' => '198501012010121001',
+        ]);
+        $ticket = $this->launchTicket($user->fresh(['roles']), 'GlobalDosenBrowser/1.0');
+
+        $exchange = $this->withHeader('User-Agent', 'GlobalDosenBrowser/1.0')
+            ->postJson('/api/capstone/auth/exchange', ['ott' => $ticket]);
+
+        $exchange->assertOk()
+            ->assertJsonPath('data.user.active_role', 'dosen')
+            ->assertJsonPath('data.user.lecturer_id', $lecturer->id);
+
+        $this->withToken($exchange->json('data.access_token'))
+            ->withHeader('X-Capstone-Role', 'dosen')
+            ->getJson('/api/capstone/dosen/dashboard')
+            ->assertOk();
     }
 
     public function test_user_without_capstone_permission_is_rejected_before_ticket_creation(): void

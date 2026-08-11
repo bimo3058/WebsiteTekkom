@@ -12,16 +12,20 @@ final class CapstoneActor
     public static function roles(User $user): array
     {
         $roles = [];
+        $roleNames = $user->loadMissing('roles')->roles->pluck('name');
 
-        if ($user->hasRole('superadmin') || $user->hasRole('admin_capstone')) {
+        // The legacy Capstone database can contain a module role and a global
+        // role with the same name. Spatie's hasRole(string) resolves only one
+        // matching role ID, so inspect every role attached to the user here.
+        if ($roleNames->contains('superadmin') || $roleNames->contains('admin_capstone')) {
             $roles[] = 'admin';
         }
 
-        if ($user->hasRole('dosen')) {
+        if ($roleNames->contains('dosen')) {
             $roles[] = 'dosen';
         }
 
-        if ($user->hasRole('mahasiswa')) {
+        if ($roleNames->contains('mahasiswa')) {
             $roles[] = 'mahasiswa';
         }
 

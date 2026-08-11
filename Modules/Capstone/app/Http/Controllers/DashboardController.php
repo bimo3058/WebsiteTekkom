@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Lecturer;
 use App\Models\Student;
 use App\Models\User;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Modules\Capstone\Models\Document;
 use Modules\Capstone\Models\Group;
@@ -25,7 +26,7 @@ class DashboardController extends Controller
         ]);
     }
 
-    public function dosen()
+    public function dosen(Request $request)
     {
         $user = Auth::user();
         $lecturer = $user->lecturer;
@@ -36,11 +37,10 @@ class DashboardController extends Controller
 
         $totalTitles = Title::where('lecturer_id', $lecturer->id)->count();
 
-        $activeGroups = Group::whereHas(
-            'title',
-            fn ($query) => $query->where('lecturer_id', $lecturer->id)
-        )
-            ->where('status', 'APPROVED')
+        $periodId = $request->input('period_id');
+        $activeGroups = Group::supervisedBy($lecturer->id)
+            ->whereNotIn('status', ['FORMING', 'CLOSED', 'DISSOLVED', 'REJECTED'])
+            ->when($periodId && $periodId !== 'all', fn ($query) => $query->where('period_id', $periodId))
             ->count();
 
         $pendingProposals = Title::where('proposed_supervisor_id', $lecturer->id)
@@ -53,6 +53,8 @@ class DashboardController extends Controller
             'active_groups' => $activeGroups,
             'pending_bimbingan' => 0,
             'pending_proposals' => $pendingProposals,
+            'available_periods' => Period::orderByDesc('created_at')->get(['id', 'name', 'is_active']),
+            'selected_period_id' => $periodId ?: 'all',
         ]);
     }
 

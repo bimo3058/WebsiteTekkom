@@ -4,11 +4,13 @@ namespace Modules\Capstone\Models;
 
 use App\Models\Lecturer;
 use App\Models\Student;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 
 class Group extends Model
 {
     protected $table = 'capstone_groups';
+
     // WARNING: Do not mutate title_id or assignment_type directly.
     // They are intentionally excluded from $fillable.
     // Use assignTitleFromFinalization() and assignTypeFromFinalization() only.
@@ -113,6 +115,29 @@ class Group extends Model
     public function evaluations()
     {
         return $this->hasMany(Evaluation::class);
+    }
+
+    /**
+     * Scope groups supervised by a lecturer.
+     *
+     * capstone_supervisions is the source of truth, while supervisor_1_id and
+     * supervisor_2_id keep imported/legacy records accessible during repair.
+     */
+    public function scopeSupervisedBy(Builder $query, int $lecturerId): Builder
+    {
+        return $query->where(function (Builder $scope) use ($lecturerId) {
+            $scope->where('supervisor_1_id', $lecturerId)
+                ->orWhere('supervisor_2_id', $lecturerId)
+                ->orWhereHas('supervisions', fn (Builder $supervisions) => $supervisions
+                    ->where('supervisor_id', $lecturerId));
+        });
+    }
+
+    public function isSupervisedBy(int $lecturerId): bool
+    {
+        return (int) $this->supervisor_1_id === $lecturerId
+            || (int) $this->supervisor_2_id === $lecturerId
+            || $this->supervisions()->where('supervisor_id', $lecturerId)->exists();
     }
 
     /**
