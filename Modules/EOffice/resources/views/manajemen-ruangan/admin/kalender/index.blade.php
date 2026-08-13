@@ -283,7 +283,7 @@
                                 @foreach($weekDays as $day)
                                     <th colspan="{{ $ruangans->count() }}"
                                         style="border: 1px solid #E5E7EB; padding: 10px 8px; text-align:center; color: #111827; font-weight: 700;
-                                                                                                                                                        {{ $day->isToday() ? 'background: #EEF2FF; color: #4338CA;' : 'background: #F8F9FB;' }}">
+                                                                                                                                                                                        {{ $day->isToday() ? 'background: #EEF2FF; color: #4338CA;' : 'background: #F8F9FB;' }}">
                                         <div style="font-size:13px;">{{ $day->translatedFormat('D') }}</div>
                                         <div
                                             style="font-size:11px; font-weight:500; color: {{ $day->isToday() ? '#6366f1' : '#6B7280' }}; margin-top:2px;">
@@ -350,8 +350,8 @@
                                                         @mouseout="!isDragging && ($el.style.background = '{{ $bgT }}'); !isDragging && ($el.style.transform = 'scale(1)')"
                                                         class="select-none"
                                                         :style="isDragging && dragStartPoint?.roomId === '{{ $ruang->id }}' && dragStartPoint?.dateStr === '{{ $dateStr }}' && dragSelection.includes('{{ $hStr }}') 
-                                                                                                                        ? 'display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; color:#059669; cursor:pointer; background: #6EE7B7; border: 1px solid #059669; border-radius:6px; transform: scale(1.05); z-index: 10; transition:all 0.15s; opacity: {{ $payload['opacity'] ?? '1' }};' 
-                                                                                                                        : 'display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; color:#059669; cursor:pointer; background: {{ $bgT }}; border:1px solid {{ $borderT }}; border-radius:6px; transition:all 0.15s; opacity: {{ $payload['opacity'] ?? '1' }};'"
+                                                                                                                                                                                                        ? 'display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; color:#059669; cursor:pointer; background: #6EE7B7; border: 1px solid #059669; border-radius:6px; transform: scale(1.05); z-index: 10; transition:all 0.15s; opacity: {{ $payload['opacity'] ?? '1' }};' 
+                                                                                                                                                                                                        : 'display:flex; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; color:#059669; cursor:pointer; background: {{ $bgT }}; border:1px solid {{ $borderT }}; border-radius:6px; transition:all 0.15s; opacity: {{ $payload['opacity'] ?? '1' }};'"
                                                         title="Booking Jalur Tol {{ $ruang->nama }} — pukul {{ $hStr }}">
                                                         <span
                                                             x-show="isDragging && dragStartPoint?.roomId === '{{ $ruang->id }}' && dragStartPoint?.dateStr === '{{ $dateStr }}' && dragSelection.includes('{{ $hStr }}')"
@@ -359,20 +359,20 @@
                                                     </button>
                                                 @elseif($st === 'event')
                                                     <div @click.stop="window.dispatchEvent(new CustomEvent('open-event-modal', {
-                                                                                                                                                                detail: {
-                                                                                                                                                                    title: '{{ addslashes($label) }}',
-                                                                                                                                                                    pengguna: '{{ addslashes($payload["pengguna"] ?? "") }}',
-                                                                                                                                                                    ruangan: '{{ addslashes($ruang->nama) }}',
-                                                                                                                                                                    tujuan: '{{ addslashes($payload["tujuan"] ?? "") }}',
-                                                                                                                                                                    waktu: '{{ addslashes($payload["waktu"] ?? "") }}',
-                                                                                                                                                                    type: '{{ addslashes($payload["type"] ?? "") }}',
-                                                                                                                                                                    telepon: '{{ addslashes($payload["telepon"] ?? "-") }}'
-                                                                                                                                                                }
-                                                                                                                                                            }))"
+                                                                                                                                                                                                                                                detail: {
+                                                                                                                                                                                                                                                    title: '{{ addslashes($label) }}',
+                                                                                                                                                                                                                                                    pengguna: '{{ addslashes($payload["pengguna"] ?? "") }}',
+                                                                                                                                                                                                                                                    ruangan: '{{ addslashes($ruang->nama) }}',
+                                                                                                                                                                                                                                                    tujuan: '{{ addslashes($payload["tujuan"] ?? "") }}',
+                                                                                                                                                                                                                                                    waktu: '{{ addslashes($payload["waktu"] ?? "") }}',
+                                                                                                                                                                                                                                                    type: '{{ addslashes($payload["type"] ?? "") }}',
+                                                                                                                                                                                                                                                    telepon: '{{ addslashes($payload["telepon"] ?? "-") }}'
+                                                                                                                                                                                                                                                }
+                                                                                                                                                                                                                                            }))"
                                                         style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:41px; height: 100%; width:100%; padding:0 4px; overflow:hidden;
-                                                                                                                                                                   background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:6px;
-                                                                                                                                                                   font-size:10px; font-weight:700; color:{{ $text }};
-                                                                                                                                                                   cursor:pointer; opacity: {{ $payload['opacity'] ?? '1' }}; transition: transform 0.1s;"
+                                                                                                                                                                                                                                                   background:{{ $bg }}; border:1px dashed {{ $border }}; border-radius:6px;
+                                                                                                                                                                                                                                                   font-size:10px; font-weight:700; color:{{ $text }};
+                                                                                                                                                                                                                                                   cursor:pointer; opacity: {{ $payload['opacity'] ?? '1' }}; transition: transform 0.1s;"
                                                         onmouseover="this.style.transform='scale(1.02)'; this.style.boxShadow='0 4px 6px -1px rgba(0, 0, 0, 0.1)'"
                                                         onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                                         {{ $label }}
@@ -469,8 +469,8 @@
                                 <a href="{{ $weekLink }}"
                                     title="{{ $cell->translatedFormat('d F Y') }}{{ $isHoliday ? ' (Libur: ' . $holidays[$dateKey] . ')' : '' }}"
                                     style="display:block; text-align:center; padding: 10px 6px; border-radius:8px; text-decoration:none;
-                                                                                                                                                                                                                      background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #6366F1' : '1px solid #E5E7EB' }};
-                                                                                                                                                                                                                      transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
+                                                                                                                                                                                                                                                                      background: {{ $cellBg }}; border: {{ $isToday ? '2px solid #6366F1' : '1px solid #E5E7EB' }};
+                                                                                                                                                                                                                                                                      transition: all 0.15s; {{ $isPast ? 'opacity:0.55;' : '' }}"
                                     onmouseover="this.style.transform='scale(1.05)'; this.style.boxShadow='0 2px 8px rgba(0,0,0,0.1)'"
                                     onmouseout="this.style.transform='scale(1)'; this.style.boxShadow='none'">
                                     <div
@@ -691,8 +691,7 @@
                     <div
                         class="bg-white px-6 py-5 border-b border-gray-100 flex-shrink-0 flex justify-between items-start">
                         <div>
-                            <h3 class="text-lg leading-6 font-bold text-gray-900" id="modal-title">Fast-Track / Jalur
-                                Tol Booking</h3>
+                            <h3 class="text-lg leading-6 font-bold text-gray-900" id="modal-title">Input Peminjaman</h3>
                             <p class="text-sm text-gray-500 mt-1">Mengunci penjadwalan paksa untuk <span
                                     class="font-semibold text-indigo-600" x-text="ruangan_nama"></span> pada <span
                                     class="font-semibold text-indigo-600"
@@ -739,8 +738,8 @@
                                                 class="hidden">
                                             <div class="font-bold text-sm"
                                                 :class="modeAction === 'dosen' ? 'text-emerald-700' : 'text-gray-700'">
-                                                Booking Ekspres</div>
-                                            <div class="text-[10px] text-gray-500 mt-1">Suntik Peminjaman Disetujui
+                                                Peminjaman Manual</div>
+                                            <div class="text-[10px] text-gray-500 mt-1">Peminjaman langsung disetujui
                                             </div>
                                         </label>
                                     </div>
@@ -768,15 +767,14 @@
                                 <div x-show="modeAction === 'internal'" style="display:none;">
                                     <label
                                         class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Kategori
-                                        Acara <span class="text-red-500">*</span></label>
+                                        <span class="text-red-500">*</span></label>
                                     <select name="kategori" x-model="kategoriType" :required="modeAction === 'internal'"
                                         class="mp-input w-full">
-                                        <option value="Jadwal Akademik (Kuliah)">Jadwal Akademik (Kuliah)</option>
-                                        <option value="Sidang / Ujian Akademik">Sidang / Ujian Akademik</option>
-                                        <option value="Rapat Internal Jurusan">Rapat Internal Jurusan</option>
-                                        <option value="Bimbingan Mahasiswa">Bimbingan Mahasiswa</option>
+                                        <option value="Event / Kegiatan">Event / Kegiatan Mahasiswa</option>
+                                        <option value="Rapat Internal">Rapat Internal Dosen</option>
+                                        <option value="Ujian / Evaluasi">Ujian / Evaluasi (UTS/UAS)</option>
                                         <option value="Maintenance / Perbaikan">Maintenance / Perbaikan</option>
-                                        <option value="Acara Kemahasiswaan">Acara Kemahasiswaan Khusus</option>
+                                        <option value="Lainnya">Lainnya...</option>
                                     </select>
                                 </div>
 
@@ -884,11 +882,9 @@
 
                                 <div>
                                     <label
-                                        class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Tujuan
-                                        / Agenda Utama <span class="text-red-500">*</span></label>
-                                    <textarea name="keterangan" x-model="keterangan" rows="3"
-                                        class="mp-input w-full resize-none"
-                                        placeholder="Misal: Maintenance AC Ruangan Utama..." required></textarea>
+                                        class="block text-[11px] uppercase tracking-wider font-bold text-gray-500 mb-1.5">Nama Kegiatan <span class="text-red-500">*</span></label>
+                                    <input type="text" name="keterangan" x-model="keterangan" class="mp-input w-full"
+                                        placeholder="Misal: Kuliah Pengganti / Rapat Evaluasi..." required>
                                 </div>
                             </div>
                         </form>
@@ -902,7 +898,7 @@
                         </button>
                         <button type="submit" form="expressBookingForm"
                             class="inline-flex items-center gap-2 px-5 py-2.5 text-sm font-semibold text-white bg-indigo-600 border border-transparent rounded-lg shadow-sm hover:bg-indigo-700 transition-colors focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                            Eksekusi Jalur Tol
+                            Simpan
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                                     d="M13 10V3L4 14h7v7l9-11h-7z" />
