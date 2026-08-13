@@ -1,39 +1,12 @@
-<!DOCTYPE html>
-<html lang="id">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SIKP - Form Penilaian KP</title>
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
-</head>
-
-<body class="bg-slate-50 text-slate-800 antialiased">
-
-    <!-- Topbar -->
-    <nav class="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-50">
-        <div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div class="flex h-16 items-center gap-4">
-                <a href="{{ route('eoffice.kp.dosen.bimbingan.show', $kp->id) }}"
-                    class="text-slate-400 hover:text-slate-700 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                </a>
-                <div class="h-6 w-px bg-slate-200"></div>
-                <span class="font-bold text-slate-900">Form Penilaian Dosen Pembimbing</span>
-            </div>
-        </div>
-    </nav>
-
-    <main class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<x-eoffice::layouts.dosen title="Form Penilaian KP">
+    @section('breadcrumbs')
+        <a href="{{ route('eoffice.kp.dosen.bimbingan.show', $kp->id) }}" class="text-slate-400 hover:text-slate-700 transition-colors mr-2">
+            <svg class="w-5 h-5 inline-block" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+        </a>
+        <span class="text-[#272835] font-semibold" style="font-family:'Inter Tight',sans-serif;">Form Penilaian Dosen Pembimbing</span>
+    @endsection
 
         @if(session('success'))
             <div
@@ -233,8 +206,8 @@
                 </div>
             </div>
         </form>
-    </main>
 
+    @push('scripts')
     <script>
         function getGrade(nilai) {
             const n = parseFloat(nilai);
@@ -287,6 +260,5 @@
         updateAverage();
         updateLegacyGrade();
     </script>
-</body>
-
-</html>
+    @endpush
+</x-eoffice::layouts.dosen>
